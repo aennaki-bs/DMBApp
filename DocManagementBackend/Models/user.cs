@@ -40,8 +40,12 @@ namespace DocManagementBackend.Models
 
         public int RoleId { get; set; }
 
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiry { get; set; }
+
         [ForeignKey("RoleId")]
-        public required Role Role { get; set; }
+        [JsonIgnore] // Already ignoring it for JSON output.
+        public Role? Role { get; set; }
 
         [JsonIgnore]
         public ICollection<LogHistory> LogHistories { get; set; } = new List<LogHistory>();
@@ -56,7 +60,7 @@ namespace DocManagementBackend.Models
         public int Id { get; set; }
 
         [Required]
-        public string RoleName { get; set; } = string.Empty;
+        public string? RoleName { get; set; } = string.Empty;
 
         public bool IsAdmin { get; set; } = false;
         public bool IsSimpleUser { get; set; } = false;
