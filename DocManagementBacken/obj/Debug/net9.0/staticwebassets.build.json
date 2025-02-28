@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "R24nmghi5+E5a4gti1Kkhi5mzQQ7zUXsPJaBUtLm1pg=",
+  "Source": "DocManagementBackend",
+  "BasePath": "_content/DocManagementBackend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

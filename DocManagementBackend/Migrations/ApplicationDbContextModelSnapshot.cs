@@ -39,6 +39,12 @@ namespace DocManagementBackend.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("DocDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -46,11 +52,75 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TypeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
 
+                    b.HasIndex("TypeId");
+
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.DocumentType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("TypeAttr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TypeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentTypes");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Article")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Prix")
+                        .HasColumnType("real");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("Lignes");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.LogHistory", b =>
@@ -129,6 +199,38 @@ namespace DocManagementBackend.Migrations
                         });
                 });
 
+            modelBuilder.Entity("DocManagementBackend.Models.SousLigne", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Attribute")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LigneId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LigneId");
+
+                    b.ToTable("SousLignes");
+                });
+
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -185,8 +287,7 @@ namespace DocManagementBackend.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -203,7 +304,26 @@ namespace DocManagementBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DocManagementBackend.Models.DocumentType", "DocumentType")
+                        .WithMany("Documents")
+                        .HasForeignKey("TypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("CreatedBy");
+
+                    b.Navigation("DocumentType");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Document", "Document")
+                        .WithMany("Lignes")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.LogHistory", b =>
@@ -217,6 +337,17 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DocManagementBackend.Models.SousLigne", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Ligne", "Ligne")
+                        .WithMany("SousLignes")
+                        .HasForeignKey("LigneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ligne");
+                });
+
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>
                 {
                     b.HasOne("DocManagementBackend.Models.Role", "Role")
@@ -226,6 +357,21 @@ namespace DocManagementBackend.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
+                {
+                    b.Navigation("Lignes");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.DocumentType", b =>
+                {
+                    b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
+                {
+                    b.Navigation("SousLignes");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Role", b =>

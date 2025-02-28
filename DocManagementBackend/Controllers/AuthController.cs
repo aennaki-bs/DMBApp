@@ -18,26 +18,45 @@ namespace DocManagementBackend.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _config;
 
-        public AuthController(ApplicationDbContext context, IConfiguration config) {
+        public AuthController(ApplicationDbContext context, IConfiguration config)
+        {
             _context = context;
             _config = config;
         }
 
+        [HttpPost("valide-username")]
+        public async Task<IActionResult> ValideUsername([FromBody] ValideUsernameRequest request)
+        {
+            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
+                return Ok("False");
+            return Ok("True");
+        }
+
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] User user) {
-            if (await _context.Users.AnyAsync(u => u.Email == user.Email))
+        public async Task<IActionResult> Register([FromBody] User user)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var existingUser = await _context.Users.AnyAsync(u => u.Email == user.Email);
+            if (existingUser)
                 return BadRequest("Email is already in use.");
-            if (await _context.Users.AnyAsync(u => u.Username == user.Username))
+
+            var existingUsername = await _context.Users.AnyAsync(u => u.Username == user.Username);
+            if (existingUsername)
                 return BadRequest("Username is already in use.");
+
             if (!IsValidPassword(user.PasswordHash))
                 return BadRequest("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.");
 
             var adminSecretHeader = Request.Headers["AdminSecret"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(adminSecretHeader)) {
+            if (!string.IsNullOrEmpty(adminSecretHeader))
+            {
                 var expectedAdminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET");
-                if (adminSecretHeader == expectedAdminSecret) {
+                if (adminSecretHeader == expectedAdminSecret)
+                {
                     var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
-                    if (adminRole != null) {
+                    if (adminRole != null)
+                    {
                         user.RoleId = adminRole.Id;
                         user.Role = adminRole;
                     }
@@ -45,9 +64,11 @@ namespace DocManagementBackend.Controllers
                 else
                     return Unauthorized("Invalid admin secret.");
             }
-            else {
+            else
+            {
                 var simpleUserRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "SimpleUser");
-                if (simpleUserRole != null) {
+                if (simpleUserRole != null)
+                {
                     user.RoleId = simpleUserRole.Id;
                     user.Role = simpleUserRole;
                 }
@@ -59,15 +80,25 @@ namespace DocManagementBackend.Controllers
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.IsActive = false;
             user.IsEmailConfirmed = false;
-        
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            SendEmail(user.Email, "Email Verification", $"Your verification code is: {user.EmailVerificationCode}");
-        
-            return Ok("Registration successful! Please check your email for the verification code.");
+
+            try
+            {
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                SendEmail(user.Email, "Email Verification", $"Your verification code is: \"{user.EmailVerificationCode}\"");
+                return Ok("Registration successful! Please check your email for the verification code.");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"An error occurred. Please try again. {ex.Message}");
+            }
         }
 
-        private bool IsValidPassword(string password) {
+        private bool IsValidPassword(string password)
+        {
             return password.Length >= 8 &&
                    password.Any(char.IsLower) &&
                    password.Any(char.IsUpper) &&
@@ -75,14 +106,16 @@ namespace DocManagementBackend.Controllers
                    password.Any(ch => !char.IsLetterOrDigit(ch));
         }
 
-        private void SendEmail(string to, string subject, string body) {
+        private void SendEmail(string to, string subject, string body)
+        {
             string? emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
             string? emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
 
             if (string.IsNullOrEmpty(emailAddress) || string.IsNullOrEmpty(emailPassword))
                 throw new InvalidOperationException("Email address or password is not set in environment variables.");
 
-            using (var smtp = new SmtpClient("smtp.gmail.com", 587)) {
+            using (var smtp = new SmtpClient("smtp.gmail.com", 587))
+            {
                 smtp.Credentials = new System.Net.NetworkCredential(emailAddress, emailPassword);
                 smtp.EnableSsl = true;
 
@@ -98,7 +131,8 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPost("verify-email")]
-        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request) {
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
+        {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
                 return NotFound("User not found.");
@@ -114,13 +148,15 @@ namespace DocManagementBackend.Controllers
             return Ok("Email verified successfully!");
         }
 
-        public class VerifyEmailRequest {
+        public class VerifyEmailRequest
+        {
             public string? Email { get; set; }
             public string? VerificationCode { get; set; }
         }
 
         [HttpPost("clear-users")]
-        public async Task<IActionResult> ClearUsers() {
+        public async Task<IActionResult> ClearUsers()
+        {
             var users = _context.Users.Where(u => u.Email != null).ToList();
             _context.Users.RemoveRange(users);
             await _context.SaveChangesAsync();
@@ -128,7 +164,8 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest model) {
+        public async Task<IActionResult> Login([FromBody] LoginRequest model)
+        {
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == model.EmailOrUsername || u.Username == model.EmailOrUsername);
@@ -136,7 +173,7 @@ namespace DocManagementBackend.Controllers
             if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
                 return Unauthorized("Invalid email or password.");
             if (!user.IsEmailConfirmed)
-                return Unauthorized("Please verify your email before logging in.");       
+                return Unauthorized("Please verify your email before logging in.");
             if (!user.IsActive)
                 return Unauthorized("User Account Is Desactivated!");
 
@@ -147,7 +184,8 @@ namespace DocManagementBackend.Controllers
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             await _context.SaveChangesAsync();
 
-            Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions {
+            Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+            {
                 HttpOnly = true,
                 Secure = false,
                 SameSite = SameSiteMode.Lax,
@@ -156,9 +194,10 @@ namespace DocManagementBackend.Controllers
 
             return Ok(new { accessToken });
         }
-        
+
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken() {
+        public async Task<IActionResult> RefreshToken()
+        {
             var refreshToken = Request.Cookies["refresh_token"];
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("No refresh token provided.");
@@ -174,7 +213,8 @@ namespace DocManagementBackend.Controllers
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             await _context.SaveChangesAsync();
 
-            Response.Cookies.Append("refresh_token", newRefreshToken, new CookieOptions {
+            Response.Cookies.Append("refresh_token", newRefreshToken, new CookieOptions
+            {
                 HttpOnly = true,
                 Secure = false,
                 SameSite = SameSiteMode.Lax,
@@ -185,7 +225,8 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout() {
+        public async Task<IActionResult> Logout()
+        {
             var refreshToken = Request.Cookies["refresh_token"];
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("No refresh token found.");
@@ -194,7 +235,8 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return Unauthorized("Invalid refresh token.");
 
-            var logEntry = new LogHistory {
+            var logEntry = new LogHistory
+            {
                 UserId = user.Id,
                 User = user,
                 Timestamp = DateTime.UtcNow,
@@ -204,18 +246,19 @@ namespace DocManagementBackend.Controllers
 
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
-            
+
             await _context.SaveChangesAsync();
 
             Response.Cookies.Delete("refresh_token");
-        
+
             return Ok("Logged out successfully.");
         }
 
-        private string GenerateAccessToken(User user) {
+        private string GenerateAccessToken(User user)
+        {
             var jwtSettings = _config.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"];
-            if (string.IsNullOrEmpty(secretKey)) 
+            if (string.IsNullOrEmpty(secretKey))
                 throw new InvalidOperationException("JWT configuration is missing.");
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -245,17 +288,20 @@ namespace DocManagementBackend.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private string GenerateRefreshToken() {
+        private string GenerateRefreshToken()
+        {
             return Convert.ToBase64String(Guid.NewGuid().ToByteArray());
         }
     }
 }
 
-public class LoginRequest {
+public class LoginRequest
+{
     public string EmailOrUsername { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 }
 
-public class LogoutRequest {
+public class LogoutRequest
+{
     public int UserId { get; set; }
 }

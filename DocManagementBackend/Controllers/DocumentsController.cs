@@ -25,7 +25,7 @@ namespace DocManagementBackend.Controllers
             if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized("User Account Desactivated!");
 
-            var documents = await _context.Documents
+            var documents = await _context.Documents.Where(d => !d.IsDeleted)
                 .Include(d => d.CreatedBy)
                     .ThenInclude(u => u.Role)
                 .Select(d => new DocumentDto
@@ -34,6 +34,7 @@ namespace DocManagementBackend.Controllers
                     Title = d.Title,
                     Content = d.Content,
                     CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt,
                     Status = d.Status,
                     CreatedByUserId = d.CreatedByUserId,
                     CreatedBy = new DocumentUserDto
@@ -57,7 +58,7 @@ namespace DocManagementBackend.Controllers
             if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized("User Account Deactivated!");
 
-            var documentDto = await _context.Documents
+            var documentDto = await _context.Documents.Where(d => !d.IsDeleted)
                 .Include(d => d.CreatedBy)
                     .ThenInclude(u => u.Role)
                 .Where(d => d.Id == id)
@@ -67,6 +68,7 @@ namespace DocManagementBackend.Controllers
                     Title = d.Title,
                     Content = d.Content,
                     CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt,
                     Status = d.Status,
                     CreatedByUserId = d.CreatedByUserId,
                     CreatedBy = new DocumentUserDto
@@ -104,7 +106,7 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
 
-            if (roleClaim == "SimpleUser")
+            if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To Create Documents.");
 
             var document = new Document {
@@ -113,7 +115,8 @@ namespace DocManagementBackend.Controllers
                 CreatedByUserId = userId,
                 CreatedBy = user,
                 Status = request.Status,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.Documents.Add(document);
@@ -124,6 +127,7 @@ namespace DocManagementBackend.Controllers
                 Title = document.Title,
                 Content = document.Content,
                 CreatedAt = document.CreatedAt,
+                UpdatedAt = document.UpdatedAt,
                 Status = document.Status,
                 CreatedByUserId = document.CreatedByUserId,
                 CreatedBy = new DocumentUserDto {
@@ -145,7 +149,7 @@ namespace DocManagementBackend.Controllers
             if (userIdClaim == null || roleClaim == null)
                 return Unauthorized("User ID or Role claim is missing.");
 
-            if (roleClaim == "SimpleUser")
+            if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To EditDocuments.");
         
             var IsActiveClaim =  User.FindFirst("IsActive")?.Value;
@@ -164,6 +168,8 @@ namespace DocManagementBackend.Controllers
 
             if (request.Status.HasValue)
                 existingDocument.Status = request.Status.Value;
+
+            existingDocument.UpdatedAt = DateTime.UtcNow;
         
             _context.Entry(existingDocument).State = EntityState.Modified;
         
@@ -189,14 +195,15 @@ namespace DocManagementBackend.Controllers
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             if (roleClaim == null)
                 return Unauthorized("Role claim is missing.");
-            if (roleClaim == "SimpleUser")
+            if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To Delete Document.");
 
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound();
 
-            _context.Documents.Remove(document);
+            document.IsDeleted = true;
+            document.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             return NoContent();

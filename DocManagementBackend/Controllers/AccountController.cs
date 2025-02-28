@@ -27,13 +27,11 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("Invalid user ID.");
 
             var user = await _context.Users
-                .Include(u => u.Role) // Include the Role navigation property
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Id == userId);
-
             if (user == null)
                 return NotFound("User not found.");
 
-            // Return the required user data
             var userInfo = new {
                 userid = user.Id,
                 username = user.Username,
@@ -45,6 +43,30 @@ namespace DocManagementBackend.Controllers
             };
 
             return Ok(userInfo);
+        }
+
+        [Authorize]
+        [HttpGet("user-role")]
+        public async Task<IActionResult> GetUserRole()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized("User ID claim is missing.");
+            if (!int.TryParse(userIdClaim, out var userId))
+                return BadRequest("Invalid user ID.");
+
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return NotFound("User not found.");
+
+            var userRole = new {
+                role = user.Role?.RoleName ?? "SimpleUser",
+            };
+
+            return Ok(userRole);
         }
 
         [HttpPost("forgot-password")]
@@ -61,9 +83,25 @@ namespace DocManagementBackend.Controllers
             var Password = PasswordGenerator.GenerateRandomPassword();
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password);
 
-            SendEmail(user.Email, "Password Reset", $"{Password} Is your password. YOU NEED TO CHANGE IT LATER!");
+            SendEmail(user.Email, "Password Reset", $"Yoiur new password is:  \"{Password}\". Go to ... to reset your password"); //todo
             await _context.SaveChangesAsync();
             return Ok("A New Password Is Sent To Your Email.");
+        }
+
+        [HttpPost("resend-code")]
+        public async Task<IActionResult> ResendCode([FromBody] ForgotPasswordRequest request)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+                return NotFound("No user found with that email address.");
+
+            var verifCode = new Random().Next(100000, 999999).ToString();
+            if (string.IsNullOrEmpty(user.EmailVerificationCode))
+                user.EmailVerificationCode = verifCode;
+
+            SendEmail(user.Email, "Password Reset", $"Your verification Email is :  \"{user.EmailVerificationCode}\""); //todo
+            await _context.SaveChangesAsync();
+            return Ok("A Verification Code Is Sent To Your Email.");
         }
 
         [Authorize]
@@ -84,8 +122,10 @@ namespace DocManagementBackend.Controllers
             user.BackgroundPicture = request.BackgroundPicture ?? user.BackgroundPicture;
 
             if (!string.IsNullOrEmpty(request.NewPassword)) {
-                if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
-                    return BadRequest("Current password is incorrect.");
+                if (!string.IsNullOrEmpty(request.CurrentPassword)) {
+                    if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+                        return BadRequest("Current password is incorrect.");
+                } else { return BadRequest("Current password is required.");}
 
                 if (!IsValidPassword(request.NewPassword))
                     return BadRequest("New password does not meet complexity requirements.");

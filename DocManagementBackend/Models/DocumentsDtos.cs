@@ -21,10 +21,17 @@ namespace DocManagementBackend.Models
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
+        public DocumentTypeDto DocumentType { get; set; } = new DocumentTypeDto();
         public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
         public int Status { get; set; }
         public int CreatedByUserId { get; set; }
         public DocumentUserDto CreatedBy { get; set; } = new DocumentUserDto();
+    }
+
+    public class DocumentTypeDto {
+        public string TypeName { get; set; } = string.Empty;
+        public string TypeAttr { get; set; } = string.Empty;
     }
 
     public class DocumentUserDto
