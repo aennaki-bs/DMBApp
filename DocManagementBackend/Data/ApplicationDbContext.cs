@@ -24,9 +24,10 @@ namespace DocManagementBackend.Data
             // modelBuilder.Entity<DocumentType>().HasNoKey();
 
             // Seed initial data
-            // modelBuilder.Entity<DocumentType>().HasData(
-            //     new DocumentType { Id = 1, TypeName = "Facture", TypeAttr = "lkdfklf" }
-            // );
+            modelBuilder.Entity<DocumentType>().HasData(
+                new DocumentType { Id = 1, TypeName = "Facture" },
+                new DocumentType { Id = 2, TypeName = "Article" }
+            );
 
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, RoleName = "Admin", IsAdmin = true },

@@ -5,6 +5,7 @@ using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using System.Security.Claims;
 using DocManagementBackend.utils;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DocManagementBackend.Controllers
 {
@@ -80,12 +81,31 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User Account Desactivated!");
 
-            var Password = PasswordGenerator.GenerateRandomPassword();
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password);
+            // var Password = PasswordGenerator.GenerateRandomPassword();
+            // user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password);
+            var verificationLink = $"http://192.168.1.93:5174/update-password/{user.Email}";
+            var emailBody = createPassEmailBody(verificationLink);
 
-            SendEmail(user.Email, "Password Reset", $"Yoiur new password is:  \"{Password}\". Go to ... to reset your password"); //todo
+            SendEmail(user.Email, "Password Reset", emailBody);
+            // await _context.SaveChangesAsync();
+            return Ok("A Link Is Sent To Your Email.");
+        }
+
+        [HttpPut("update-password")]
+        public async Task<IActionResult> UpdatePassword([FromBody] ForgotPasswordRequest request) {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+                return NotFound("No user found with that email address.");
+            if (!user.IsEmailConfirmed)
+                return Unauthorized("Email Not Verified!");
+            if (!user.IsActive)
+                return Unauthorized("User Account Desactivated!");
+            if (!IsValidPassword(request.NewPassword))
+                return BadRequest("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             await _context.SaveChangesAsync();
-            return Ok("A New Password Is Sent To Your Email.");
+            return Ok("Your password is updated successfully!");
         }
 
         [HttpPost("resend-code")]
@@ -99,7 +119,10 @@ namespace DocManagementBackend.Controllers
             if (string.IsNullOrEmpty(user.EmailVerificationCode))
                 user.EmailVerificationCode = verifCode;
 
-            SendEmail(user.Email, "Password Reset", $"Your verification Email is :  \"{user.EmailVerificationCode}\""); //todo
+            var verificationLink = $"http://192.168.1.93:5174/verify/{user.Email}";
+            string emailBody = CreateEmailBody(verificationLink, user.EmailVerificationCode);
+
+            SendEmail(user.Email, "Email Verification", emailBody);
             await _context.SaveChangesAsync();
             return Ok("A Verification Code Is Sent To Your Email.");
         }
@@ -163,7 +186,189 @@ namespace DocManagementBackend.Controllers
                 message.From = new System.Net.Mail.MailAddress(emailAddress);
 
                 smtp.Send(message);
-            }
+            }}
+
+        private string CreateEmailBody(string verificationLink, string verificationCode)
+        {
+            return $@"
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #fff;
+                            width: 100vw;
+                            height: 80vh;
+                            background-color: #333333;
+                            margin: 0;
+                            padding: 0;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                        }}
+                        h2 {{
+                            font-size: 24px;
+                            color: #c3c3c7;
+                        }}
+                        p {{
+                            margin: 0 0 20px;
+                        }}
+                        .button {{
+                            display: inline-block;
+                            padding: 10px 20px;
+                            margin: 20px 0;
+                            font-size: 16px;
+                            color: #fff;
+                            background-color: #007bff;
+                            text-decoration: none;
+                            border-radius: 5px;
+                        }}
+                        .button:hover {{
+                            background-color: rgb(6, 75, 214);
+                        }}
+                        .footer {{
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #f8f6f6;
+                        }}
+                        span {{
+                            display: inline-block;
+                            font-size: 1.5rem;
+                            font-weight: bold;
+                            color: #2d89ff;
+                            background: #f0f6ff;
+                            padding: 10px 15px;
+                            border-radius: 8px;
+                            letter-spacing: 3px;
+                            font-family: monospace;
+                            border: 2px solid #ffffff;
+                            margin: 5px;
+                        }}
+                        .card {{
+                            padding: 20px;
+                            width: 50%;
+                            background-color: #555555;
+                            margin: auto;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='card'>
+                        <h2>Email Verification</h2>
+                        <p>
+                            Thank you for registering with us! To complete your registration, please
+                            verify your email address, your verification code is
+                            <br />
+                            <span>{verificationCode}</span> <br />
+                            by clicking the button below you will be redirected to the verification
+                            page:
+                        </p>
+                        <a href='{verificationLink}' class='button'>Verify Email</a>
+                        <p>
+                            If the button doesn't work, you can also copy and paste the following
+                            link into your browser:
+                        </p>
+                        <p><a href='{verificationLink}'>{verificationLink}</a></p>
+                        <div class='footer'>
+                            <p>
+                                If you did not request this verification, please ignore this email.
+                            </p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+        }
+
+        private string createPassEmailBody(string verificationLink) {
+                return $@"
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #fff;
+                            width: 100vw;
+                            height: 80vh;
+                            background-color: #333333;
+                            margin: 0;
+                            padding: 0;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                        }}
+                        h2 {{
+                            font-size: 24px;
+                            color: #c3c3c7;
+                        }}
+                        p {{
+                            margin: 0 0 20px;
+                        }}
+                        .button {{
+                            display: inline-block;
+                            padding: 10px 20px;
+                            margin: 20px 0;
+                            font-size: 16px;
+                            color: #fff;
+                            background-color: #007bff;
+                            text-decoration: none;
+                            border-radius: 5px;
+                        }}
+                        .button:hover {{
+                            background-color: rgb(6, 75, 214);
+                        }}
+                        .footer {{
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #f8f6f6;
+                        }}
+                        span {{
+                            display: inline-block;
+                            font-size: 1.5rem;
+                            font-weight: bold;
+                            color: #2d89ff;
+                            background: #f0f6ff;
+                            padding: 10px 15px;
+                            border-radius: 8px;
+                            letter-spacing: 3px;
+                            font-family: monospace;
+                            border: 2px solid #ffffff;
+                            margin: 5px;
+                        }}
+                        .card {{
+                            padding: 20px;
+                            width: 50%;
+                            background-color: #555555;
+                            margin: auto;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='card'>
+                        <h2>Email Verification</h2>
+                        <p>
+                            To reset your password click on the button bellow:
+                        </p>
+                        <a href='{verificationLink}' class='button'>Verify Email</a>
+                        <p>
+                            If the button doesn't work, you can also copy and paste the following
+                            link into your browser:
+                        </p>
+                        <p><a href='{verificationLink}'>{verificationLink}</a></p>
+                        <div class='footer'>
+                            <p>
+                                If you did not request this verification, please ignore this email.
+                            </p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
         }
     }
 }

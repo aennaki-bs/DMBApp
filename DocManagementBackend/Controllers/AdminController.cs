@@ -192,11 +192,21 @@ namespace DocManagementBackend.Controllers
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To Create Documents.");
 
+            // var type_id = request.TypeId;
+            // if (request.TypeId.HasValue)
+            //     type_id = request.TypeId?? 0;
+
+            var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
+            if (docType == null)
+                return BadRequest("check the type!!");
+
             var document = new Document {
                 Title = request.Title,
                 Content = request.Content,
                 CreatedByUserId = userId,
                 CreatedBy = user,
+                TypeId = request.TypeId,
+                DocumentType = docType,
                 Status = request.Status,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -211,6 +221,8 @@ namespace DocManagementBackend.Controllers
                 Content = document.Content,
                 CreatedAt = document.CreatedAt,
                 UpdatedAt = document.UpdatedAt,
+                TypeId = document.TypeId,
+                DocumentType = new DocumentTypeDto {TypeName = docType.TypeName},
                 Status = document.Status,
                 CreatedByUserId = document.CreatedByUserId,
                 CreatedBy = new DocumentUserDto {

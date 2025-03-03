@@ -5,6 +5,7 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
         public int CreatedByUserId { get; set; }
+        public int TypeId { get; set; }
 
         public int Status { get; set; }
     }
@@ -21,6 +22,7 @@ namespace DocManagementBackend.Models
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
+        public int TypeId { get; set; }
         public DocumentTypeDto DocumentType { get; set; } = new DocumentTypeDto();
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

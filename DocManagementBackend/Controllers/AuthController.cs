@@ -24,6 +24,14 @@ namespace DocManagementBackend.Controllers
             _config = config;
         }
 
+        [HttpPost("valide-email")]
+        public async Task<IActionResult> ValideEmail([FromBody] ValideUsernameRequest request)
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                return Ok("False");
+            return Ok("True");
+        }
+
         [HttpPost("valide-username")]
         public async Task<IActionResult> ValideUsername([FromBody] ValideUsernameRequest request)
         {
@@ -80,6 +88,8 @@ namespace DocManagementBackend.Controllers
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.IsActive = false;
             user.IsEmailConfirmed = false;
+            var verificationLink = $"http://192.168.1.93:5174/verify/{user.Email}";
+            string emailBody = createEmailBody(verificationLink, user.EmailVerificationCode);
 
             try
             {
@@ -87,7 +97,7 @@ namespace DocManagementBackend.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                SendEmail(user.Email, "Email Verification", $"Your verification code is: \"{user.EmailVerificationCode}\"");
+                SendEmail(user.Email, "Email Verification", emailBody);
                 return Ok("Registration successful! Please check your email for the verification code.");
             }
             catch (Exception ex)
@@ -291,6 +301,103 @@ namespace DocManagementBackend.Controllers
         private string GenerateRefreshToken()
         {
             return Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+        }
+        private string createEmailBody(string verificationLink, string verificationCode)
+        {
+            return $@"
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #fff;
+                            width: 100vw;
+                            height: 80vh;
+                            background-color: #333333;
+                            margin: 0;
+                            padding: 0;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            color:white;
+                        }}
+                        h2 {{
+                            font-size: 24px;
+                            color: #c3c3c7;
+                        }}
+                        p {{
+                            color: #c3c3c7;
+                            margin: 0 0 20px;
+
+                        }}
+                        .button {{
+                            display: inline-block;
+                            padding: 10px 20px;
+                            margin: 20px 0;
+                            font-size: 16px;
+                            color: #fff;
+                            background-color: #007bff;
+                            text-decoration: none;
+                            border-radius: 5px;
+                        }}
+                        .button:hover {{
+                            background-color: rgb(6, 75, 214);
+                        }}
+                        .footer {{
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #f8f6f6;
+                        }}
+                        span {{
+                            display: inline-block;
+                            font-size: 1rem;
+                            font-weight: bold;
+                            color: #2d89ff;
+                            background: #f0f6ff;
+                            padding: 10px 10px;
+                            border-radius: 8px;
+                            letter-spacing: 3px;
+                            font-family: monospace;
+                            border: 2px solid #ffffff;
+                            margin: 5px;
+                        }}
+                        .card {{
+                            padding: 20px;
+                            background-color: #555555;
+                            margin: auto;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            color: #c3c3c7;
+                            
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='card'>
+                        <h2>Email Verification</h2>
+                        <p>
+                            Thank you for registering with us! To complete your registration, please
+                            verify your email address, your verification code is
+                            <br />
+                            <span>{verificationCode}</span> <br />
+                            by clicking the button below you will be redirected to the verification
+                            page:
+                        </p>
+                        <a href='{verificationLink}' class='button'>Verify Email</a>
+                        <p>
+                            If the button doesn't work, you can also copy and paste the following
+                            link into your browser:
+                        </p>
+                        <p><a href='{verificationLink}'>{verificationLink}</a></p>
+                        <div class='footer'>
+                            <p>
+                                If you did not request this verification, please ignore this email.
+                            </p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
         }
     }
 }
