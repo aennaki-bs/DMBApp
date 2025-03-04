@@ -19,7 +19,17 @@ namespace DocManagementBackend.Controllers
 
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers() {
-            var users = await _context.Users.Include(u => u.Role).ToListAsync();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized("User is not authenticated.");
+            int userId = int.Parse(userIdClaim);
+
+            var users = await _context.Users
+                .Include(u => u.Role)
+                .Where(u => u.Id != userId)
+                .ToListAsync();
+
             return Ok(users);
         }
 
@@ -192,10 +202,6 @@ namespace DocManagementBackend.Controllers
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To Create Documents.");
 
-            // var type_id = request.TypeId;
-            // if (request.TypeId.HasValue)
-            //     type_id = request.TypeId?? 0;
-
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
                 return BadRequest("check the type!!");
@@ -244,12 +250,22 @@ namespace DocManagementBackend.Controllers
             if (document.IsDeleted)
                 return BadRequest("Document Is Deleted!");
 
+            if (document.Status == 1)
+                return BadRequest("This Document can't be changed!");
+
             if (!string.IsNullOrEmpty(request.Title))
                 document.Title = request.Title;
             if (!string.IsNullOrEmpty(request.Content))
                 document.Content = request.Content;
             if (request.Status.HasValue)
                 document.Status = request.Status.Value;
+            if (request.TypeId.HasValue)
+                document.TypeId = request.TypeId.Value;
+
+            var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
+            if (docType == null)
+                return BadRequest("check the type!!");
+            document.DocumentType = docType;
 
             document.UpdatedAt = DateTime.UtcNow;
 

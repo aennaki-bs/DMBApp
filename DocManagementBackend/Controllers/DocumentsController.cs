@@ -4,6 +4,7 @@ using DocManagementBackend.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using DocManagementBackend.Mappings;
 
 namespace DocManagementBackend.Controllers
 {
@@ -28,24 +29,7 @@ namespace DocManagementBackend.Controllers
             var documents = await _context.Documents.Where(d => !d.IsDeleted)
                 .Include(d => d.CreatedBy)
                     .ThenInclude(u => u.Role)
-                .Select(d => new DocumentDto
-                {
-                    Id = d.Id,
-                    Title = d.Title,
-                    Content = d.Content,
-                    CreatedAt = d.CreatedAt,
-                    UpdatedAt = d.UpdatedAt,
-                    Status = d.Status,
-                    CreatedByUserId = d.CreatedByUserId,
-                    CreatedBy = new DocumentUserDto
-                    {
-                        Email = d.CreatedBy.Email,
-                        Username = d.CreatedBy.Username,
-                        FirstName = d.CreatedBy.FirstName,
-                        LastName = d.CreatedBy.LastName,
-                        Role = d.CreatedBy.Role != null ? d.CreatedBy.Role.RoleName : string.Empty
-                    }
-                })
+                .Select(DocumentMappings.ToDocumentDto)
                 .ToListAsync();
 
             return Ok(documents);
@@ -62,24 +46,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.CreatedBy)
                     .ThenInclude(u => u.Role)
                 .Where(d => d.Id == id)
-                .Select(d => new DocumentDto
-                {
-                    Id = d.Id,
-                    Title = d.Title,
-                    Content = d.Content,
-                    CreatedAt = d.CreatedAt,
-                    UpdatedAt = d.UpdatedAt,
-                    Status = d.Status,
-                    CreatedByUserId = d.CreatedByUserId,
-                    CreatedBy = new DocumentUserDto
-                    {
-                        Email = d.CreatedBy.Email,
-                        Username = d.CreatedBy.Username,
-                        FirstName = d.CreatedBy.FirstName,
-                        LastName = d.CreatedBy.LastName,
-                        Role = d.CreatedBy.Role != null ? d.CreatedBy.Role.RoleName : string.Empty
-                    }
-                })
+                .Select(DocumentMappings.ToDocumentDto)
                 .FirstOrDefaultAsync();
 
             if (documentDto == null)
@@ -109,12 +76,23 @@ namespace DocManagementBackend.Controllers
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To Create Documents.");
 
+            var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
+            if (docType == null)
+                return BadRequest("check the type!!");
+
+            var docDate = DateTime.UtcNow;
+            if (request.DocDate != default(DateTime))
+                docDate = request.DocDate;
+
             var document = new Document {
                 Title = request.Title,
                 Content = request.Content,
                 CreatedByUserId = userId,
                 CreatedBy = user,
-                Status = request.Status,
+                DocDate = docDate,
+                TypeId = request.TypeId,
+                DocumentType = docType,
+                Status = 0,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -129,6 +107,9 @@ namespace DocManagementBackend.Controllers
                 CreatedAt = document.CreatedAt,
                 UpdatedAt = document.UpdatedAt,
                 Status = document.Status,
+                TypeId = document.TypeId,
+                DocDate = document.DocDate,
+                DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
                 CreatedByUserId = document.CreatedByUserId,
                 CreatedBy = new DocumentUserDto {
                     Username = user.Username,
@@ -159,15 +140,22 @@ namespace DocManagementBackend.Controllers
             var existingDocument = await _context.Documents.FindAsync(id);
             if (existingDocument == null)
                 return NotFound("Document not found.");
+            if (existingDocument.Status == 1)
+                return BadRequest("This Document can't be changed!");
 
             if (!string.IsNullOrEmpty(request.Title))
                 existingDocument.Title = request.Title;
-        
             if (!string.IsNullOrEmpty(request.Content))
                 existingDocument.Content = request.Content;
+            if (!request.DocDate.HasValue)
+                existingDocument.DocDate = request.DocDate?? DateTime.UtcNow;
+            if (request.TypeId.HasValue)
+                existingDocument.TypeId = request.TypeId.Value;
 
-            if (request.Status.HasValue)
-                existingDocument.Status = request.Status.Value;
+            var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
+            if (docType == null)
+                return BadRequest("check the type!!");
+            existingDocument.DocumentType = docType;
 
             existingDocument.UpdatedAt = DateTime.UtcNow;
         
@@ -201,12 +189,20 @@ namespace DocManagementBackend.Controllers
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound();
+            if (document.Status == 0)
+                return Unauthorized("Ask an admin for deleting this document!");
 
             document.IsDeleted = true;
             document.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("Types")]
+        public async Task<ActionResult> GetTypes() {
+            var types = await _context.DocumentTypes.ToListAsync();
+            return Ok(types);
         }
     }
 }

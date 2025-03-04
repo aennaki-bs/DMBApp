@@ -30,6 +30,7 @@ namespace DocManagementBackend.Models
     {
         public string? Title { get; set; }
         public string? Content { get; set; }
+        public int? TypeId { get; set; }
         // For example, 0 for Open and 1 for Posted:
         public int? Status { get; set; }
     }

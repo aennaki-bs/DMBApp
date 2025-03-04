@@ -20,13 +20,13 @@ namespace DocManagementBackend.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Define the primary key correctly
-            // modelBuilder.Entity<DocumentType>().HasNoKey();
-
-            // Seed initial data
             modelBuilder.Entity<DocumentType>().HasData(
                 new DocumentType { Id = 1, TypeName = "Facture" },
-                new DocumentType { Id = 2, TypeName = "Article" }
+                new DocumentType { Id = 2, TypeName = "Releve" },
+                new DocumentType { Id = 3, TypeName = "Bilan" },
+                new DocumentType { Id = 4, TypeName = "Register" },
+                new DocumentType { Id = 5, TypeName = "Planing" },
+                new DocumentType { Id = 6, TypeName = "Rapport" }
             );
 
             modelBuilder.Entity<Role>().HasData(

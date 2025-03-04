@@ -98,7 +98,31 @@ namespace DocManagementBackend.Migrations
                         {
                             Id = 2,
                             TypeAttr = "",
-                            TypeName = "Article"
+                            TypeName = "Releve"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            TypeAttr = "",
+                            TypeName = "Bilan"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            TypeAttr = "",
+                            TypeName = "Register"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            TypeAttr = "",
+                            TypeName = "Planing"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            TypeAttr = "",
+                            TypeName = "Rapport"
                         });
                 });
 

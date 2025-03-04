@@ -98,7 +98,8 @@ namespace DocManagementBackend.Models {
         [Required]
         public int DocumentId { get; set; }
         [ForeignKey("DocumentId")]
-        public required Document Document { get; set; }
+        [JsonIgnore]
+        public Document? Document { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Article { get; set; } = string.Empty;
         public float Prix { get; set; }

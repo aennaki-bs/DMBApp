@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
-using System.Security.Claims;
-using System.Threading.Tasks;
+using DocManagementBackend.Mappings;
 
 namespace DocManagementBackend.Controllers
 {
@@ -20,32 +19,58 @@ namespace DocManagementBackend.Controllers
             _context = context;
         }
 
-        // GET: api/Lignes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ligne>>> GetLignes()
+        public async Task<ActionResult<IEnumerable<LigneDto>>> GetLignes()
         {
-            return await _context.Lignes
-                .Include(l => l.Document)
+            var lignes = await _context.Lignes
+                .Include(l => l.Document!)
+                    .ThenInclude(d => d.DocumentType)
+                .Include(l => l.Document!)
+                    .ThenInclude(d => d.CreatedBy)
+                        .ThenInclude(u => u.Role)
+                .Select(LigneMappings.ToLigneDto)
                 .ToListAsync();
+
+            return Ok(lignes);
         }
 
-        // GET: api/Lignes/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<Ligne>> GetLigne(int id)
+        public async Task<ActionResult<LigneDto>> GetLigne(int id)
         {
-            var ligne = await _context.Lignes
-                .Include(l => l.Document)
-                .FirstOrDefaultAsync(l => l.Id == id);
+            var ligneDto = await _context.Lignes
+                .Include(l => l.Document!)
+                    .ThenInclude(d => d.DocumentType)
+                .Include(l => l.Document!)
+                    .ThenInclude(d => d.CreatedBy)
+                        .ThenInclude(u => u.Role)
+                .Where(l => l.Id == id)
+                .Select(LigneMappings.ToLigneDto)
+                .FirstOrDefaultAsync();
 
-            if (ligne == null)
+            if (ligneDto == null)
                 return NotFound("Ligne not found.");
 
-            return Ok(ligne);
+            return Ok(ligneDto);
         }
 
-        // POST: api/Lignes
+        [HttpGet("by-document/{documentId}")]
+        public async Task<ActionResult<IEnumerable<LigneDto>>> GetLignesByDocumentId(int documentId)
+        {
+            var lignes = await _context.Lignes
+                .Where(l => l.DocumentId == documentId)
+                .Include(l => l.Document!)
+                    .ThenInclude(d => d.DocumentType)
+                .Include(l => l.Document!)
+                    .ThenInclude(d => d.CreatedBy)
+                        .ThenInclude(u => u.Role)
+                .Select(LigneMappings.ToLigneDto)
+                .ToListAsync();
+
+            return Ok(lignes);
+        }
+
         [HttpPost]
-        public async Task<ActionResult<Ligne>> CreateLigne([FromBody] Ligne ligne)
+        public async Task<ActionResult<LigneDto>> CreateLigne([FromBody] Ligne ligne)
         {
             var document = await _context.Documents.FindAsync(ligne.DocumentId);
             if (document == null)
@@ -57,10 +82,20 @@ namespace DocManagementBackend.Controllers
             _context.Lignes.Add(ligne);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetLigne), new { id = ligne.Id }, ligne);
+            var ligneDto = await _context.Lignes
+                .Include(l => l.Document!)
+                    .ThenInclude(d => d.DocumentType)
+                .Include(l => l.Document!)
+                    .ThenInclude(d => d.CreatedBy)
+                        .ThenInclude(u => u.Role)
+                .Where(l => l.Id == ligne.Id)
+                .Select(LigneMappings.ToLigneDto)
+                .FirstOrDefaultAsync();
+
+            return CreatedAtAction(nameof(GetLigne), new { id = ligne.Id }, ligneDto);
         }
 
-        // PUT: api/Lignes/{id}
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLigne(int id, [FromBody] Ligne updatedLigne)
         {
@@ -83,7 +118,6 @@ namespace DocManagementBackend.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Lignes/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLigne(int id)
         {

@@ -1,9 +1,12 @@
+using System.ComponentModel;
+
 namespace DocManagementBackend.Models
 {
     public class CreateDocumentRequest
     {
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
+        public DateTime DocDate { get; set; }
         public int CreatedByUserId { get; set; }
         public int TypeId { get; set; }
 
@@ -14,7 +17,8 @@ namespace DocManagementBackend.Models
     {
         public string? Title { get; set; }
         public string? Content { get; set; }
-
+        public DateTime? DocDate { get; set; }
+        public int? TypeId { get; set; }
         public int? Status { get; set; }
     }
     public class DocumentDto
@@ -23,12 +27,25 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
         public int TypeId { get; set; }
-        public DocumentTypeDto DocumentType { get; set; } = new DocumentTypeDto();
+        public DateTime DocDate { get; set; }
+        public DocumentTypeDto? DocumentType { get; set; } = new DocumentTypeDto();
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int Status { get; set; }
         public int CreatedByUserId { get; set; }
-        public DocumentUserDto CreatedBy { get; set; } = new DocumentUserDto();
+        public DocumentUserDto? CreatedBy { get; set; } = new DocumentUserDto();
+    }
+
+    public class LigneDto
+    {
+        public int Id { get; set; }
+        public int DocumentId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Article { get; set; } = string.Empty;
+        public float Prix { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public DocumentDto Document { get; set; } = new DocumentDto();
     }
 
     public class DocumentTypeDto {
@@ -45,4 +62,6 @@ namespace DocManagementBackend.Models
         public string? Role { get; set; } = string.Empty;
     }
 }
+
+
 
