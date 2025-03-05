@@ -115,7 +115,8 @@ namespace DocManagementBackend.Models {
         [Required]
         public int LigneId { get; set; }
         [ForeignKey("LigneId")]
-        public required Ligne Ligne { get; set; }
+        [JsonIgnore]
+        public Ligne? Ligne { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Attribute { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

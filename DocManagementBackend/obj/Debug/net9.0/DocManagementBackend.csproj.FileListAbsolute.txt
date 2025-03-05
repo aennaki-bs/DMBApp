@@ -160,3 +160,4 @@ C:\Users\Admin\ahmed\DocManagementBackend\obj\Debug\net9.0\refint\DocManagementB
 C:\Users\Admin\ahmed\DocManagementBackend\obj\Debug\net9.0\DocManagementBackend.pdb
 C:\Users\Admin\ahmed\DocManagementBackend\obj\Debug\net9.0\DocManagementBackend.genruntimeconfig.cache
 C:\Users\Admin\ahmed\DocManagementBackend\obj\Debug\net9.0\ref\DocManagementBackend.dll
+C:\Users\Admin\ahmed\DocManagementBackend\bin\Debug\net9.0\DocManagementBackend.staticwebassets.runtime.json

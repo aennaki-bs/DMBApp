@@ -1,12 +1,20 @@
 {
   "Version": 1,
-  "Hash": "R24nmghi5+E5a4gti1Kkhi5mzQQ7zUXsPJaBUtLm1pg=",
+  "Hash": "3AD/FJ23mvcMExm1qidqBvkTKv249iGSIQe9yAmkiak=",
   "Source": "DocManagementBackend",
   "BasePath": "_content/DocManagementBackend",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "DocManagementBackend\\wwwroot",
+      "Source": "DocManagementBackend",
+      "ContentRoot": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\",
+      "BasePath": "_content/DocManagementBackend",
+      "Pattern": "**"
+    }
+  ],
   "Assets": [],
   "Endpoints": []
 }

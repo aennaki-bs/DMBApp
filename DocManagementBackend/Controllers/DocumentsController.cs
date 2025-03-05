@@ -84,41 +84,27 @@ namespace DocManagementBackend.Controllers
             if (request.DocDate != default(DateTime))
                 docDate = request.DocDate;
 
-            var document = new Document {
-                Title = request.Title,
-                Content = request.Content,
-                CreatedByUserId = userId,
-                CreatedBy = user,
-                DocDate = docDate,
-                TypeId = request.TypeId,
-                DocumentType = docType,
-                Status = 0,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var document = new Document {Title = request.Title,
+                Content = request.Content, CreatedByUserId = userId,
+                CreatedBy = user, DocDate = docDate,
+                TypeId = request.TypeId, DocumentType = docType,
+                Status = 0, CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow};
 
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
 
             var documentDto = new DocumentDto {
-                Id = document.Id,
-                Title = document.Title,
-                Content = document.Content,
-                CreatedAt = document.CreatedAt,
-                UpdatedAt = document.UpdatedAt,
-                Status = document.Status,
-                TypeId = document.TypeId,
-                DocDate = document.DocDate,
+                Id = document.Id, Title = document.Title,
+                Content = document.Content, Status = document.Status,
+                CreatedAt = document.CreatedAt, UpdatedAt = document.UpdatedAt,
+                TypeId = document.TypeId, DocDate = document.DocDate,
                 DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
                 CreatedByUserId = document.CreatedByUserId,
                 CreatedBy = new DocumentUserDto {
-                    Username = user.Username,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
+                    Username = user.Username, FirstName = user.FirstName, LastName = user.LastName,
                     Role = user.Role != null ? user.Role.RoleName : string.Empty
-                }
-            };
-
+                }};
             return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
         }
 
@@ -156,9 +142,7 @@ namespace DocManagementBackend.Controllers
             if (docType == null)
                 return BadRequest("check the type!!");
             existingDocument.DocumentType = docType;
-
-            existingDocument.UpdatedAt = DateTime.UtcNow;
-        
+            existingDocument.UpdatedAt = DateTime.UtcNow; 
             _context.Entry(existingDocument).State = EntityState.Modified;
         
             try {
@@ -189,7 +173,7 @@ namespace DocManagementBackend.Controllers
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound();
-            if (document.Status == 0)
+            if (document.Status == 1 && roleClaim != "Admin")
                 return Unauthorized("Ask an admin for deleting this document!");
 
             document.IsDeleted = true;

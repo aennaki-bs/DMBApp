@@ -47,6 +47,16 @@ namespace DocManagementBackend.Models
         public DateTime UpdatedAt { get; set; }
         public DocumentDto Document { get; set; } = new DocumentDto();
     }
+    public class SousLigneDto
+    {
+        public int Id { get; set; }
+        public int LigneId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Attribute { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public LigneDto Ligne { get; set; } = new LigneDto();
+    }
 
     public class DocumentTypeDto {
         public string TypeName { get; set; } = string.Empty;
@@ -62,6 +72,3 @@ namespace DocManagementBackend.Models
         public string? Role { get; set; } = string.Empty;
     }
 }
-
-
-

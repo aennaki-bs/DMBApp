@@ -14,38 +14,24 @@ namespace DocManagementBackend.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public LignesController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        public LignesController(ApplicationDbContext context) { _context = context; }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LigneDto>>> GetLignes()
-        {
+        public async Task<ActionResult<IEnumerable<LigneDto>>> GetLignes() {
             var lignes = await _context.Lignes
-                .Include(l => l.Document!)
-                    .ThenInclude(d => d.DocumentType)
-                .Include(l => l.Document!)
-                    .ThenInclude(d => d.CreatedBy)
-                        .ThenInclude(u => u.Role)
-                .Select(LigneMappings.ToLigneDto)
-                .ToListAsync();
+                .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
+                .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Select(LigneMappings.ToLigneDto).ToListAsync();
 
             return Ok(lignes);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<LigneDto>> GetLigne(int id)
-        {
+        public async Task<ActionResult<LigneDto>> GetLigne(int id) {
             var ligneDto = await _context.Lignes
-                .Include(l => l.Document!)
-                    .ThenInclude(d => d.DocumentType)
-                .Include(l => l.Document!)
-                    .ThenInclude(d => d.CreatedBy)
-                        .ThenInclude(u => u.Role)
-                .Where(l => l.Id == id)
-                .Select(LigneMappings.ToLigneDto)
-                .FirstOrDefaultAsync();
+                .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
+                .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Where(l => l.Id == id).Select(LigneMappings.ToLigneDto).FirstOrDefaultAsync();
 
             if (ligneDto == null)
                 return NotFound("Ligne not found.");
@@ -54,51 +40,38 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpGet("by-document/{documentId}")]
-        public async Task<ActionResult<IEnumerable<LigneDto>>> GetLignesByDocumentId(int documentId)
-        {
+        public async Task<ActionResult<IEnumerable<LigneDto>>> GetLignesByDocumentId(int documentId) {
             var lignes = await _context.Lignes
                 .Where(l => l.DocumentId == documentId)
-                .Include(l => l.Document!)
-                    .ThenInclude(d => d.DocumentType)
-                .Include(l => l.Document!)
-                    .ThenInclude(d => d.CreatedBy)
-                        .ThenInclude(u => u.Role)
-                .Select(LigneMappings.ToLigneDto)
-                .ToListAsync();
+                .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
+                .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Select(LigneMappings.ToLigneDto).ToListAsync();
 
             return Ok(lignes);
         }
 
         [HttpPost]
-        public async Task<ActionResult<LigneDto>> CreateLigne([FromBody] Ligne ligne)
-        {
+        public async Task<ActionResult<LigneDto>> CreateLigne([FromBody] Ligne ligne) {
             var document = await _context.Documents.FindAsync(ligne.DocumentId);
             if (document == null)
                 return BadRequest("Invalid DocumentId. Document not found.");
 
             ligne.CreatedAt = DateTime.UtcNow;
             ligne.UpdatedAt = DateTime.UtcNow;
-
             _context.Lignes.Add(ligne);
             await _context.SaveChangesAsync();
 
             var ligneDto = await _context.Lignes
-                .Include(l => l.Document!)
-                    .ThenInclude(d => d.DocumentType)
-                .Include(l => l.Document!)
-                    .ThenInclude(d => d.CreatedBy)
-                        .ThenInclude(u => u.Role)
-                .Where(l => l.Id == ligne.Id)
-                .Select(LigneMappings.ToLigneDto)
-                .FirstOrDefaultAsync();
+                .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
+                .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Where(l => l.Id == ligne.Id).Select(LigneMappings.ToLigneDto).FirstOrDefaultAsync();
 
             return CreatedAtAction(nameof(GetLigne), new { id = ligne.Id }, ligneDto);
         }
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateLigne(int id, [FromBody] Ligne updatedLigne)
-        {
+        public async Task<IActionResult> UpdateLigne(int id, [FromBody] Ligne updatedLigne) {
             var ligne = await _context.Lignes.FindAsync(id);
             if (ligne == null)
                 return NotFound("Ligne not found.");
@@ -113,14 +86,12 @@ namespace DocManagementBackend.Controllers
                 ligne.Prix = updatedLigne.Prix;
 
             ligne.UpdatedAt = DateTime.UtcNow;
-
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLigne(int id)
-        {
+        public async Task<IActionResult> DeleteLigne(int id) {
             var ligne = await _context.Lignes.FindAsync(id);
             if (ligne == null)
                 return NotFound("Ligne not found.");

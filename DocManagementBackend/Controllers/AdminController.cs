@@ -13,9 +13,7 @@ namespace DocManagementBackend.Controllers
     public class AdminController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        public AdminController(ApplicationDbContext context) {
-            _context = context;
-        }
+        public AdminController(ApplicationDbContext context) {_context = context;}
 
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers() {
@@ -26,17 +24,14 @@ namespace DocManagementBackend.Controllers
             int userId = int.Parse(userIdClaim);
 
             var users = await _context.Users
-                .Include(u => u.Role)
-                .Where(u => u.Id != userId)
-                .ToListAsync();
+                .Include(u => u.Role).Where(u => u.Id != userId).ToListAsync();
 
             return Ok(users);
         }
 
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUser(int id) {
-            var user = await _context.Users.Include(u => u.Role)
-                                           .FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
                 return NotFound("User not found.");
             return Ok(user);
@@ -64,31 +59,20 @@ namespace DocManagementBackend.Controllers
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash);
 
-            var newUser = new User {
-                Email = request.Email,
-                Username = request.Username,
-                PasswordHash = hashedPassword,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                IsEmailConfirmed = true,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                RoleId = roleId
-            };
+            var newUser = new User {Email = request.Email,
+                Username = request.Username, PasswordHash = hashedPassword,
+                FirstName = request.FirstName, LastName = request.LastName,
+                IsEmailConfirmed = true, IsActive = true,
+                CreatedAt = DateTime.UtcNow, RoleId = roleId};
 
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, new {
-                newUser.Id,
-                newUser.Username,
-                newUser.Email,
-                newUser.FirstName,
-                newUser.LastName,
-                Role = role.RoleName,
-                newUser.IsActive,
-                newUser.CreatedAt
-            });
+                newUser.Id, newUser.Username,
+                newUser.Email, newUser.FirstName,
+                newUser.LastName, Role = role.RoleName,
+                newUser.IsActive, newUser.CreatedAt});
         }
 
         [HttpPut("users/{id}")]
@@ -124,31 +108,23 @@ namespace DocManagementBackend.Controllers
                 user.IsActive = request.IsActive.Value;
             if (!string.IsNullOrEmpty(request.RoleName)) {
                 int roleId = 0;
-                if (request.RoleName == "Admin")
-                    roleId = 1;
-                if (request.RoleName == "SimpleUser")
-                    roleId = 2;
-                if (request.RoleName == "FullUser")
-                    roleId = 3;
+                if (request.RoleName == "Admin") {roleId = 1;}
+                if (request.RoleName == "SimpleUser") {roleId = 2;}
+                if (request.RoleName == "FullUser") {roleId = 3;}
                 var role = await _context.Roles.FindAsync(roleId);
                 if (role == null)
-                    return BadRequest("Invalid RoleId.");
-                user.RoleId = role.Id;
-                user.Role = role;
+                    return BadRequest("Invalid RoleName.");
+                user.RoleId = role.Id; user.Role = role;
             }
 
             await _context.SaveChangesAsync();
             return Ok("User updated successfully.");
         }
 
-        private bool IsValidPassword(string password)
-        {
-            return password.Length >= 8 &&
-                   password.Any(char.IsLower) &&
-                   password.Any(char.IsUpper) &&
-                   password.Any(char.IsDigit) &&
-                   password.Any(ch => !char.IsLetterOrDigit(ch));
-        }
+        private bool IsValidPassword(string password) {
+            return password.Length >= 8 && password.Any(char.IsLower) &&
+                   password.Any(char.IsUpper) && password.Any(char.IsDigit) &&
+                   password.Any(ch => !char.IsLetterOrDigit(ch)); }
 
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id) {
@@ -175,8 +151,7 @@ namespace DocManagementBackend.Controllers
 
         [HttpGet("documents/{id}")]
         public async Task<IActionResult> GetDocument(int id) {
-            var document = await _context.Documents.Include(d => d.CreatedBy)
-                                                   .FirstOrDefaultAsync(d => d.Id == id);
+            var document = await _context.Documents.Include(d => d.CreatedBy).FirstOrDefaultAsync(d => d.Id == id);
             if (document == null)
                 return NotFound("Document not found.");
             return Ok(document);
@@ -186,19 +161,16 @@ namespace DocManagementBackend.Controllers
         public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request) {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-
             if (userIdClaim == null || roleClaim == null)
                 return Unauthorized("User ID or Role claim is missing.");
 
             int userId = int.Parse(userIdClaim);
-
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
-
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To Create Documents.");
 
@@ -206,37 +178,30 @@ namespace DocManagementBackend.Controllers
             if (docType == null)
                 return BadRequest("check the type!!");
 
-            var document = new Document {
-                Title = request.Title,
-                Content = request.Content,
-                CreatedByUserId = userId,
-                CreatedBy = user,
-                TypeId = request.TypeId,
-                DocumentType = docType,
-                Status = request.Status,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var docDate = DateTime.UtcNow;
+            if (request.DocDate != default(DateTime))
+                docDate = request.DocDate;
+
+            var document = new Document {Title = request.Title,
+                Content = request.Content, CreatedByUserId = userId,
+                CreatedBy = user, TypeId = request.TypeId,
+                DocumentType = docType, Status = request.Status,
+                CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow,
+                DocDate = docDate};
 
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
 
             var documentDto = new DocumentDto {
-                Id = document.Id,
-                Title = document.Title,
-                Content = document.Content,
-                CreatedAt = document.CreatedAt,
-                UpdatedAt = document.UpdatedAt,
+                Id = document.Id, Title = document.Title,
+                Content = document.Content, CreatedAt = document.CreatedAt,
+                UpdatedAt = document.UpdatedAt, DocDate = document.DocDate,
                 TypeId = document.TypeId,
                 DocumentType = new DocumentTypeDto {TypeName = docType.TypeName},
-                Status = document.Status,
-                CreatedByUserId = document.CreatedByUserId,
+                Status = document.Status, CreatedByUserId = document.CreatedByUserId,
                 CreatedBy = new DocumentUserDto {
-                    Username = user.Username,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Role = user.Role != null ? user.Role.RoleName : string.Empty
-                }
+                    Username = user.Username, FirstName = user.FirstName, LastName = user.LastName,
+                    Role = user.Role != null ? user.Role.RoleName : string.Empty}
             };
 
             return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
@@ -266,7 +231,6 @@ namespace DocManagementBackend.Controllers
             if (docType == null)
                 return BadRequest("check the type!!");
             document.DocumentType = docType;
-
             document.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
