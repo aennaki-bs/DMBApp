@@ -44,8 +44,11 @@ namespace DocManagementBackend.Mappings
                         Role = l.Document.CreatedBy.Role != null
                             ? l.Document.CreatedBy.Role.RoleName
                             : "SimpleUser"
-                    }
-            }
+                    },
+                LignesCount = l.Document.Lignes.Count,
+                SousLignesCount = l.Document.Lignes.Sum(ll => ll.SousLignes.Count)
+            },
+            SousLignesCount = l.SousLignes.Count
         };
 
     }
@@ -115,7 +118,9 @@ namespace DocManagementBackend.Mappings
                 FirstName = d.CreatedBy.FirstName,
                 LastName = d.CreatedBy.LastName,
                 Role = d.CreatedBy.Role != null ? d.CreatedBy.Role.RoleName : string.Empty
-            }
+            },
+            LignesCount = d.Lignes.Count,
+            SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count)
         };
     }
 }

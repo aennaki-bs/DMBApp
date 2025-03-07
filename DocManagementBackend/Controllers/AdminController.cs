@@ -5,27 +5,22 @@ using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using System.Security.Claims;
 
-namespace DocManagementBackend.Controllers
-{
+namespace DocManagementBackend.Controllers {
     [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
-    public class AdminController : ControllerBase
-    {
+    public class AdminController : ControllerBase {
         private readonly ApplicationDbContext _context;
         public AdminController(ApplicationDbContext context) {_context = context;}
 
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers() {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             if (string.IsNullOrEmpty(userIdClaim))
                 return Unauthorized("User is not authenticated.");
             int userId = int.Parse(userIdClaim);
-
             var users = await _context.Users
                 .Include(u => u.Role).Where(u => u.Id != userId).ToListAsync();
-
             return Ok(users);
         }
 
@@ -38,20 +33,16 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPost("users")]
-        public async Task<IActionResult> CreateUser([FromBody] AdminCreateUserRequest request)
-        {
+        public async Task<IActionResult> CreateUser([FromBody] AdminCreateUserRequest request) {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest("Email is already in use.");
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
                 return BadRequest("Username is already in use.");
 
             int roleId = 0;
-            if (request.RoleName == "Admin")
-                roleId = 1;
-            if (request.RoleName == "SimpleUser")
-                roleId = 2;
-            if (request.RoleName == "FullUser")
-                roleId = 3;
+            if (request.RoleName == "Admin") {roleId = 1;}
+            if (request.RoleName == "SimpleUser") {roleId = 2;}
+            if (request.RoleName == "FullUser") {roleId = 3;}
 
             var role = await _context.Roles.FindAsync(roleId);
             if (role == null)
@@ -88,7 +79,6 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("Email is already in use.");
             if (!string.IsNullOrEmpty(request.Email) && await _context.Users.AnyAsync(u => u.Email == request.Email) && user.Email != request.Email)
                 return BadRequest("Username is already in use.");
-
             if (!string.IsNullOrEmpty(request.Email))
                 user.Email = request.Email;
             if (!string.IsNullOrEmpty(request.Username))
@@ -124,14 +114,13 @@ namespace DocManagementBackend.Controllers
         private bool IsValidPassword(string password) {
             return password.Length >= 8 && password.Any(char.IsLower) &&
                    password.Any(char.IsUpper) && password.Any(char.IsDigit) &&
-                   password.Any(ch => !char.IsLetterOrDigit(ch)); }
+                   password.Any(ch => !char.IsLetterOrDigit(ch));}
 
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id) {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound("User not found.");
-
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return Ok("User deleted successfully.");
@@ -168,7 +157,6 @@ namespace DocManagementBackend.Controllers
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return BadRequest("User not found.");
-
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
             if (roleClaim != "Admin" && roleClaim != "FullUser")
@@ -193,10 +181,9 @@ namespace DocManagementBackend.Controllers
             await _context.SaveChangesAsync();
 
             var documentDto = new DocumentDto {
-                Id = document.Id, Title = document.Title,
-                Content = document.Content, CreatedAt = document.CreatedAt,
-                UpdatedAt = document.UpdatedAt, DocDate = document.DocDate,
-                TypeId = document.TypeId,
+                Id = document.Id, Title = document.Title, Content = document.Content, 
+                CreatedAt = document.CreatedAt, UpdatedAt = document.UpdatedAt, 
+                DocDate = document.DocDate, TypeId = document.TypeId,
                 DocumentType = new DocumentTypeDto {TypeName = docType.TypeName},
                 Status = document.Status, CreatedByUserId = document.CreatedByUserId,
                 CreatedBy = new DocumentUserDto {
@@ -214,7 +201,6 @@ namespace DocManagementBackend.Controllers
                 return NotFound("Document not found.");
             if (document.IsDeleted)
                 return BadRequest("Document Is Deleted!");
-
             if (document.Status == 1)
                 return BadRequest("This Document can't be changed!");
 
@@ -256,7 +242,6 @@ namespace DocManagementBackend.Controllers
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound("Document not found.");
-
             _context.Documents.Remove(document);
             await _context.SaveChangesAsync();
             return Ok("Document deleted successfully.");

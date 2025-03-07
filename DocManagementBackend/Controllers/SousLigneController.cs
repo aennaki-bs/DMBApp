@@ -97,15 +97,11 @@ namespace DocManagementBackend.Controllers
             var sousLigne = await _context.SousLignes.FindAsync(id);
             if (sousLigne == null)
                 return NotFound("SousLigne not found.");
-
             if (!string.IsNullOrEmpty(updatedSousLigne.Title))
                 sousLigne.Title = updatedSousLigne.Title;
-
             if (!string.IsNullOrEmpty(updatedSousLigne.Attribute))
                 sousLigne.Attribute = updatedSousLigne.Attribute;
-
             sousLigne.UpdatedAt = DateTime.UtcNow;
-
             await _context.SaveChangesAsync();
             return NoContent();
         }

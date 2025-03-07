@@ -6,55 +6,43 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using DocManagementBackend.Mappings;
 
-namespace DocManagementBackend.Controllers
-{
+namespace DocManagementBackend.Controllers {
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class DocumentsController : ControllerBase
-    {
+    public class DocumentsController : ControllerBase {
         private readonly ApplicationDbContext _context;
-
-        public DocumentsController(ApplicationDbContext context) {
-            _context = context;
-        }
+        public DocumentsController(ApplicationDbContext context) {_context = context;}
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDocuments()
-        {
+        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDocuments() {
             var isActiveClaim = User.FindFirst("IsActive")?.Value;
             if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized("User Account Desactivated!");
 
             var documents = await _context.Documents.Where(d => !d.IsDeleted)
-                .Include(d => d.CreatedBy)
-                    .ThenInclude(u => u.Role)
-                .Select(DocumentMappings.ToDocumentDto)
-                .ToListAsync();
+                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.Lignes).Select(DocumentMappings.ToDocumentDto).ToListAsync();
 
             return Ok(documents);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<DocumentDto>> GetDocument(int id)
-        {
+        public async Task<ActionResult<DocumentDto>> GetDocument(int id) {
             var isActiveClaim = User.FindFirst("IsActive")?.Value;
             if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized("User Account Deactivated!");
 
             var documentDto = await _context.Documents.Where(d => !d.IsDeleted)
-                .Include(d => d.CreatedBy)
-                    .ThenInclude(u => u.Role)
-                .Where(d => d.Id == id)
-                .Select(DocumentMappings.ToDocumentDto)
-                .FirstOrDefaultAsync();
+                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Where(d => d.Id == id).Include(d => d.Lignes)
+                .Select(DocumentMappings.ToDocumentDto).FirstOrDefaultAsync();
 
             if (documentDto == null)
                 return NotFound();
 
             return Ok(documentDto);
         }
-
 
         [HttpPost]
         public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request) {
@@ -108,7 +96,6 @@ namespace DocManagementBackend.Controllers
             return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
         }
 
-
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateDocument(int id, [FromBody] UpdateDocumentRequest request) {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -158,8 +145,7 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDocument(int id)
-        {
+        public async Task<IActionResult> DeleteDocument(int id) {
             var IsActiveClaim =  User.FindFirst("IsActive")?.Value;
             if (IsActiveClaim == null || IsActiveClaim == "False")
                 return Unauthorized("User Account Desactivated!");
@@ -186,7 +172,6 @@ namespace DocManagementBackend.Controllers
         [HttpGet("Types")]
         public async Task<ActionResult> GetTypes() {
             var types = await _context.DocumentTypes.ToListAsync();
-            return Ok(types);
-        }
+            return Ok(types);}
     }
 }

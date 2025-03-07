@@ -24,7 +24,6 @@ namespace DocManagementBackend.Models
         public string? LastName { get; set; }
         public string? ProfilePicture { get; set; }
         public string? BackgroundPicture { get; set; }
-        // Optional: for password update
         public string? CurrentPassword { get; set; }
         public string? NewPassword { get; set; }
     }

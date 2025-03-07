@@ -32,6 +32,8 @@ namespace DocManagementBackend.Models
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int Status { get; set; }
+        public int LignesCount { get; set; }
+        public int SousLignesCount { get; set; }
         public int CreatedByUserId { get; set; }
         public DocumentUserDto? CreatedBy { get; set; } = new DocumentUserDto();
     }
@@ -43,6 +45,7 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string Article { get; set; } = string.Empty;
         public float Prix { get; set; }
+        public int SousLignesCount { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DocumentDto Document { get; set; } = new DocumentDto();

@@ -7,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-// using BCrypt.Net;
 
 namespace DocManagementBackend.Controllers
 {
@@ -23,15 +22,13 @@ namespace DocManagementBackend.Controllers
         public async Task<IActionResult> ValideEmail([FromBody] ValideUsernameRequest request) {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return Ok("False");
-            return Ok("True");
-        }
+            return Ok("True");}
 
         [HttpPost("valide-username")]
         public async Task<IActionResult> ValideUsername([FromBody] ValideUsernameRequest request) {
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
                 return Ok("False");
-            return Ok("True");
-        }
+            return Ok("True");}
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] User user) {
@@ -39,14 +36,11 @@ namespace DocManagementBackend.Controllers
             var existingUser = await _context.Users.AnyAsync(u => u.Email == user.Email);
             if (existingUser)
                 return BadRequest("Email is already in use.");
-
             var existingUsername = await _context.Users.AnyAsync(u => u.Username == user.Username);
             if (existingUsername)
                 return BadRequest("Username is already in use.");
-
             if (!IsValidPassword(user.PasswordHash))
                 return BadRequest("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.");
-
             var adminSecretHeader = Request.Headers["AdminSecret"].FirstOrDefault();
             if (!string.IsNullOrEmpty(adminSecretHeader)) {
                 var expectedAdminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET");
@@ -70,7 +64,6 @@ namespace DocManagementBackend.Controllers
             user.IsEmailConfirmed = false;
             var verificationLink = $"http://192.168.1.93:5174/verify/{user.Email}";
             string emailBody = createEmailBody(verificationLink, user.EmailVerificationCode);
-
             try {
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
@@ -79,32 +72,7 @@ namespace DocManagementBackend.Controllers
                 return Ok("Registration successful! Please check your email for the verification code."); }
             catch (Exception ex) {
                 await transaction.RollbackAsync();
-                return StatusCode(500, $"An error occurred. Please try again. {ex.Message}");}
-        }
-
-        private bool IsValidPassword(string password) {
-            return password.Length >= 8 && password.Any(char.IsLower) &&
-                   password.Any(char.IsUpper) && password.Any(char.IsDigit) &&
-                   password.Any(ch => !char.IsLetterOrDigit(ch));}
-
-        private void SendEmail(string to, string subject, string body) {
-            string? emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
-            string? emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
-
-            if (string.IsNullOrEmpty(emailAddress) || string.IsNullOrEmpty(emailPassword))
-                throw new InvalidOperationException("Email address or password is not set in environment variables.");
-
-            using (var smtp = new SmtpClient("smtp.gmail.com", 587)) {
-                smtp.Credentials = new System.Net.NetworkCredential(emailAddress, emailPassword);
-                smtp.EnableSsl = true;
-                var message = new MailMessage();
-                message.To.Add(to);
-                message.Subject = subject;
-                message.Body = body;
-                message.IsBodyHtml = true;
-                message.From = new MailAddress(emailAddress);
-                smtp.Send(message);}
-        }
+                return StatusCode(500, $"An error occurred. Please try again. {ex.Message}");}}
 
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request) {
@@ -113,18 +81,12 @@ namespace DocManagementBackend.Controllers
                 return NotFound("User not found.");
             if (user.EmailVerificationCode != request.VerificationCode)
                 return BadRequest("Invalid verification code.");
-
             user.IsEmailConfirmed = true;
             user.IsActive = true;
             user.EmailVerificationCode = null;
             await _context.SaveChangesAsync();
 
-            return Ok("Email verified successfully!");
-        }
-
-        public class VerifyEmailRequest {
-            public string? Email { get; set; }
-            public string? VerificationCode { get; set; }}
+            return Ok("Email verified successfully!");}
 
         [HttpPost("clear-users")]
         public async Task<IActionResult> ClearUsers() {
@@ -145,64 +107,55 @@ namespace DocManagementBackend.Controllers
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == model.EmailOrUsername || u.Username == model.EmailOrUsername);
-
             if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
                 return Unauthorized("Invalid email or password.");
             if (!user.IsEmailConfirmed)
                 return Unauthorized("Please verify your email before logging in.");
             if (!user.IsActive)
                 return Unauthorized("User Account Is Desactivated!");
-
             var accessToken = GenerateAccessToken(user);
             var refreshToken = GenerateRefreshToken();
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            var login = new LogHistory {UserId = user.Id, User = user, ActionType = 1, Timestamp = DateTime.UtcNow};
+            _context.LogHistories.Add(login);
             await _context.SaveChangesAsync();
-
             Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
             {HttpOnly = true, Secure = false, SameSite = SameSiteMode.Lax, Expires = DateTime.UtcNow.AddDays(7)});
 
-            return Ok(new { accessToken });
-        }
+            return Ok(new { accessToken });}
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken() {
             var refreshToken = Request.Cookies["refresh_token"];
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("No refresh token provided.");
-
             var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
             if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
                 return Unauthorized("Invalid or expired refresh token.");
-
             var newAccessToken = GenerateAccessToken(user);
             var newRefreshToken = GenerateRefreshToken();
             user.RefreshToken = newRefreshToken;
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             await _context.SaveChangesAsync();
-
             Response.Cookies.Append("refresh_token", newRefreshToken, new CookieOptions
             {HttpOnly = true, Secure = false,
                 SameSite = SameSiteMode.Lax,
                 Expires = DateTime.UtcNow.AddDays(7)});
 
-            return Ok(new { accessToken = newAccessToken });
-        }
+            return Ok(new { accessToken = newAccessToken });}
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout() {
             var refreshToken = Request.Cookies["refresh_token"];
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("No refresh token found.");
-
             var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
             if (user == null)
                 return Unauthorized("Invalid refresh token.");
-
             var logEntry = new LogHistory {UserId = user.Id, User = user,
                 Timestamp = DateTime.UtcNow, ActionType = 0 };
             _context.LogHistories.Add(logEntry);
-
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
             await _context.SaveChangesAsync();
@@ -210,25 +163,46 @@ namespace DocManagementBackend.Controllers
 
             return Ok("Logged out successfully.");
         }
-
+        private bool IsValidPassword(string password) {
+            return password.Length >= 8 && password.Any(char.IsLower) &&
+                   password.Any(char.IsUpper) && password.Any(char.IsDigit) &&
+                   password.Any(ch => !char.IsLetterOrDigit(ch));
+        }
+        private void SendEmail(string to, string subject, string body) {
+            string? emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
+            string? emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+            if (string.IsNullOrEmpty(emailAddress) || string.IsNullOrEmpty(emailPassword))
+                throw new InvalidOperationException("Email address or password is not set in environment variables.");
+            using (var smtp = new SmtpClient("smtp.gmail.com", 587)) {
+                smtp.Credentials = new System.Net.NetworkCredential(emailAddress, emailPassword);
+                smtp.EnableSsl = true;
+                var message = new MailMessage();
+                message.To.Add(to);
+                message.Subject = subject;
+                message.Body = body;
+                message.IsBodyHtml = true;
+                message.From = new MailAddress(emailAddress);
+                smtp.Send(message);}
+        }
+        public class VerifyEmailRequest {
+            public string? Email { get; set; }
+            public string? VerificationCode { get; set; }
+        }
         private string GenerateAccessToken(User user) {
             var jwtSettings = _config.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"];
             if (string.IsNullOrEmpty(secretKey))
                 throw new InvalidOperationException("JWT configuration is missing.");
-
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var claims = new[] {new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("Username", user.Username),
                 new Claim("IsActive", user.IsActive.ToString()),
                 new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "SimpleUser")};
-
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expMinutes = jwtSettings["ExpiryMinutes"];
             if (string.IsNullOrEmpty(expMinutes))
                 throw new InvalidOperationException("ExpiryMinutes is missing.");
-
             var token = new JwtSecurityToken(issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"], claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(int.Parse(expMinutes)),
@@ -236,35 +210,25 @@ namespace DocManagementBackend.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
         private string GenerateRefreshToken(){
             return Convert.ToBase64String(Guid.NewGuid().ToByteArray());
         }
         private string createEmailBody(string verificationLink, string verificationCode) {
             return $@"
                 <html><head><style>
-                        body {{font-family: Arial, sans-serif; line-height: 1.6;
-                            color: #fff; width: 100vw; height: 80vh;
-                            background-color: #333333; margin: 0; padding: 0;
-                            display: flex; justify-content: center;
-                            align-items: center; color:white;}}
+                        body {{font-family: Arial, sans-serif; line-height: 1.6; color: #fff; width: 100vw; height: 80vh; align-items: center;
+                            background-color: #333333; margin: 0; padding: 0; display: flex; justify-content: center; color:white;}}
                         h2 {{font-size: 24px; color: #c3c3c7;}}
                         p {{color: #c3c3c7; margin: 0 0 20px;}}
-                        .button {{display: inline-block; padding: 10px 20px;
-                            margin: 20px 0; font-size: 16px;
-                            color: #fff; background-color: #007bff;
-                            text-decoration: none; border-radius: 5px;}}
+                        .button {{display: inline-block; padding: 10px 20px; margin: 20px 0; font-size: 16px;
+                            color: #fff; background-color: #007bff; text-decoration: none; border-radius: 5px;}}
                         .button:hover {{background-color: rgb(6, 75, 214);}}
                         .footer {{margin-top: 20px; font-size: 12px; color: #f8f6f6;}}
-                        span {{display: inline-block; font-size: 1rem;
-                            font-weight: bold; color: #2d89ff;
-                            background: #f0f6ff; padding: 10px 10px;
-                            border-radius: 8px; letter-spacing: 3px;
+                        span {{display: inline-block; font-size: 1rem; font-weight: bold; color: #2d89ff;
+                            background: #f0f6ff; padding: 10px 10px; border-radius: 8px; letter-spacing: 3px;
                             font-family: monospace; border: 2px solid #ffffff; margin: 5px;}}
-                        .card {{padding: 20px; background-color: #555555;
-                            margin: auto; border-radius: 12px;
-                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                            color: #c3c3c7;}}
+                        .card {{padding: 20px; background-color: #555555; margin: auto; border-radius: 12px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); color: #c3c3c7;}}
                     </style></head>
                 <body><div class='card'>
                         <h2>Email Verification</h2>
@@ -282,9 +246,3 @@ namespace DocManagementBackend.Controllers
         }
     }
 }
-
-public class LoginRequest {
-    public string EmailOrUsername { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;}
-
-public class LogoutRequest  {public int UserId { get; set; }}

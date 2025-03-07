@@ -26,7 +26,7 @@ namespace DocManagementBackend.Models {
         public DateTime? RefreshTokenExpiry { get; set; }
         public int RoleId { get; set; }
         [ForeignKey("RoleId")]
-        [JsonIgnore] // Already ignoring it for JSON output.
+        [JsonIgnore]
         public Role? Role { get; set; }
         [JsonIgnore]
         public ICollection<LogHistory> LogHistories { get; set; } = new List<LogHistory>();
@@ -34,7 +34,7 @@ namespace DocManagementBackend.Models {
         public ICollection<Document> Documents { get; set; } = new List<Document>();
     }
 
-    public class Role    {
+    public class Role {
         [Key]
         public int Id { get; set; }
         [Required]
@@ -42,8 +42,8 @@ namespace DocManagementBackend.Models {
         public bool IsAdmin { get; set; } = false;
         public bool IsSimpleUser { get; set; } = false;
         public bool IsFullUser { get; set; } = false;
-        [JsonIgnore]
-        public ICollection<User> Users { get; set; } = new List<User>();
+        // [JsonIgnore]
+        // public ICollection<User> Users { get; set; } = new List<User>();
     }
 
     public class LogHistory {
@@ -59,7 +59,7 @@ namespace DocManagementBackend.Models {
         public int ActionType { get; set; } // 1 for Login, 0 for Logout
     }
 
-    public class Document    {
+    public class Document {
         [Key]
         public int Id { get; set; }
         [Required]
@@ -82,7 +82,7 @@ namespace DocManagementBackend.Models {
         public ICollection<Ligne> Lignes { get; set; } = new List<Ligne>();
     }
 
-    public class DocumentType    {
+    public class DocumentType {
         [Key]
         public int Id { get; set; }
         public string TypeName { get; set; } = string.Empty;
@@ -91,8 +91,7 @@ namespace DocManagementBackend.Models {
         public ICollection<Document> Documents { get; set; } = new List<Document>();
     }
 
-    public class Ligne
-    {
+    public class Ligne {
         [Key]
         public int Id { get; set; }
         [Required]

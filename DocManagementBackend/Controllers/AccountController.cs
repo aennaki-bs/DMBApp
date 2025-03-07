@@ -4,23 +4,17 @@ using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using System.Security.Claims;
-using DocManagementBackend.utils;
-using Microsoft.IdentityModel.Tokens;
 
-namespace DocManagementBackend.Controllers
-{
+namespace DocManagementBackend.Controllers {
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase {
         private readonly ApplicationDbContext _context;
-        public AccountController(ApplicationDbContext context) {
-            _context = context;
-        }
+        public AccountController(ApplicationDbContext context) {_context = context;}
 
         [Authorize]
         [HttpGet("user-info")]
-        public async Task<IActionResult> GetUserInfo()
-        {
+        public async Task<IActionResult> GetUserInfo() {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
                 return Unauthorized("User ID claim is missing.");
@@ -102,7 +96,6 @@ namespace DocManagementBackend.Controllers
             var verifCode = new Random().Next(100000, 999999).ToString();
             if (string.IsNullOrEmpty(user.EmailVerificationCode))
                 user.EmailVerificationCode = verifCode;
-
             var verificationLink = $"http://192.168.1.93:5174/verify/{user.Email}";
             string emailBody = CreateEmailBody(verificationLink, user.EmailVerificationCode);
 
@@ -122,7 +115,6 @@ namespace DocManagementBackend.Controllers
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return NotFound("User not found.");
-
             user.FirstName = request.FirstName ?? user.FirstName;
             user.LastName = request.LastName ?? user.LastName;
             user.ProfilePicture = request.ProfilePicture ?? user.ProfilePicture;
@@ -138,7 +130,6 @@ namespace DocManagementBackend.Controllers
                     return BadRequest("New password does not meet complexity requirements.");
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             }
-
             await _context.SaveChangesAsync();
             return Ok("Profile updated successfully.");
         }
@@ -155,18 +146,15 @@ namespace DocManagementBackend.Controllers
 
             if (file.Length > 5 * 1024 * 1024) // 5 MB limit
                 return BadRequest("File size exceeds the limit (5 MB).");
+
             var fileName = $"{Guid.NewGuid()}{fileExtension}";
             var filePath = Path.Combine("wwwroot/images/profile", fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            using (var stream = new FileStream(filePath, FileMode.Create)) {
+                await file.CopyToAsync(stream);}
 
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return NotFound("User not found.");
-
             user.ProfilePicture = $"/images/profile/{fileName}";
             await _context.SaveChangesAsync();
 
@@ -180,7 +168,6 @@ namespace DocManagementBackend.Controllers
                 return NotFound("Profile image not found.");
             return Ok(new { ProfilePicture = user.ProfilePicture });
         }
-
         private bool IsValidPassword(string password) {
             return password.Length >= 8 && password.Any(char.IsLower) &&
                    password.Any(char.IsUpper) && password.Any(char.IsDigit) &&
@@ -201,27 +188,22 @@ namespace DocManagementBackend.Controllers
                 message.Body = body;
                 message.IsBodyHtml = true;
                 message.From = new System.Net.Mail.MailAddress(emailAddress);
-                smtp.Send(message);}}
-
+                smtp.Send(message);}
+        }
         private string CreateEmailBody(string verificationLink, string verificationCode) {
             return $@"
                 <html><head><style>
                         body {{font-family: Arial, sans-serif; line-height: 1.6;
-                            color: #fff; width: 100vw; height: 80vh;
-                            background-color: #333333;
-                            margin: 0; padding: 0; display: flex;
-                            justify-content: center; align-items: center;}}
+                            color: #fff; width: 100vw; height: 80vh; background-color: #333333;
+                            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;}}
                         h2 {{font-size: 24px; color: #c3c3c7;}}
                         p {{margin: 0 0 20px;}}
-                        .button {{display: inline-block; padding: 10px 20px;
-                            margin: 20px 0; font-size: 16px; color: #fff;
+                        .button {{display: inline-block; padding: 10px 20px; margin: 20px 0; font-size: 16px; color: #fff;
                             background-color: #007bff; text-decoration: none; border-radius: 5px;}}
                         .button:hover {{background-color: rgb(6, 75, 214);}}
                         .footer {{margin-top: 20px; font-size: 12px; color: #f8f6f6;}}
-                        span {{display: inline-block; font-size: 1.5rem;
-                            font-weight: bold; color: #2d89ff;
-                            background: #f0f6ff; padding: 10px 15px;
-                            border-radius: 8px; letter-spacing: 3px;
+                        span {{display: inline-block; font-size: 1.5rem; font-weight: bold; color: #2d89ff;
+                            background: #f0f6ff; padding: 10px 15px; border-radius: 8px; letter-spacing: 3px;
                             font-family: monospace; border: 2px solid #ffffff; margin: 5px;}}
                         .card {{padding: 20px; width: 50%; background-color: #555555;
                             margin: auto; border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}}
@@ -238,25 +220,20 @@ namespace DocManagementBackend.Controllers
                         <div class='footer'><p>If you did not request this verification, please ignore this email.</p>
                         </div></div></body></html>";
         }
-
         private string createPassEmailBody(string verificationLink) {
                 return $@"
                 <html><head><style>
                         body {{font-family: Arial, sans-serif; line-height: 1.6;
-                            color: #fff; width: 100vw; height: 80vh;
-                            background-color: #333333; margin: 0; padding: 0;
+                            color: #fff; width: 100vw; height: 80vh; background-color: #333333; margin: 0; padding: 0;
                             display: flex; justify-content: center; align-items: center;}}
                         h2 {{font-size: 24px; color: #c3c3c7;}}
                         p {{margin: 0 0 20px;}}
-                        .button {{display: inline-block; padding: 10px 20px;
-                            margin: 20px 0; font-size: 16px; color: #fff;
+                        .button {{display: inline-block; padding: 10px 20px; margin: 20px 0; font-size: 16px; color: #fff;
                             background-color: #007bff; text-decoration: none; border-radius: 5px;}}
                         .button:hover {{background-color: rgb(6, 75, 214);}}
                         .footer {{margin-top: 20px; font-size: 12px; color: #f8f6f6;}}
-                        span {{display: inline-block; font-size: 1.5rem;
-                            font-weight: bold; color: #2d89ff; background: #f0f6ff;
-                            padding: 10px 15px; border-radius: 8px; letter-spacing: 3px;
-                            font-family: monospace; border: 2px solid #ffffff; margin: 5px;}}
+                        span {{display: inline-block; font-size: 1.5rem; font-weight: bold; color: #2d89ff; background: #f0f6ff;
+                            padding: 10px 15px; border-radius: 8px; letter-spacing: 3px; font-family: monospace; border: 2px solid #ffffff; margin: 5px;}}
                         .card {{padding: 20px; width: 50%; background-color: #555555; margin: auto;
                             border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}}
                     </style></head>
@@ -268,7 +245,6 @@ namespace DocManagementBackend.Controllers
                         <p><a href='{verificationLink}'>{verificationLink}</a></p>
                         <div class='footer'><p>If you did not request this verification, please ignore this email.</p>
                         </div></div></body></html>";
-
         }
     }
 }

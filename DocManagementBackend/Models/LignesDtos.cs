@@ -4,6 +4,5 @@ namespace DocManagementBackend.Models
     {
         public string Title { get; set; } = string.Empty;
         public string Attribute { get; set; } = string.Empty;
-        // public string NewPassword { get; set; } = string.Empty;
     }
 }

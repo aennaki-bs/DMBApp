@@ -161,3 +161,9 @@ C:\Users\Admin\ahmed\DocManagementBackend\obj\Debug\net9.0\DocManagementBackend.
 C:\Users\Admin\ahmed\DocManagementBackend\obj\Debug\net9.0\DocManagementBackend.genruntimeconfig.cache
 C:\Users\Admin\ahmed\DocManagementBackend\obj\Debug\net9.0\ref\DocManagementBackend.dll
 C:\Users\Admin\ahmed\DocManagementBackend\bin\Debug\net9.0\DocManagementBackend.staticwebassets.runtime.json
+C:\Users\Admin\ahmed\DocManagementBackend\bin\Debug\net9.0\Google.Apis.dll
+C:\Users\Admin\ahmed\DocManagementBackend\bin\Debug\net9.0\Google.Apis.Auth.dll
+C:\Users\Admin\ahmed\DocManagementBackend\bin\Debug\net9.0\Google.Apis.Core.dll
+C:\Users\Admin\ahmed\DocManagementBackend\bin\Debug\net9.0\Newtonsoft.Json.dll
+C:\Users\Admin\ahmed\DocManagementBackend\bin\Debug\net9.0\System.Management.dll
+C:\Users\Admin\ahmed\DocManagementBackend\bin\Debug\net9.0\runtimes\win\lib\net7.0\System.Management.dll
