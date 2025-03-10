@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DocManagementBackend.Controllers
 {
@@ -120,10 +121,12 @@ namespace DocManagementBackend.Controllers
             var login = new LogHistory {UserId = user.Id, User = user, ActionType = 1, Timestamp = DateTime.UtcNow};
             _context.LogHistories.Add(login);
             await _context.SaveChangesAsync();
-            Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
-            {HttpOnly = true, Secure = false, SameSite = SameSiteMode.Lax, Expires = DateTime.UtcNow.AddDays(7)});
+            var cookieOptions = new CookieOptions {HttpOnly = true, Secure = false,
+                SameSite = SameSiteMode.None, Expires = DateTime.UtcNow.AddHours(3)};
+            Response.Cookies.Append("accessToken", accessToken, cookieOptions);
+            Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
 
-            return Ok(new { accessToken });}
+            return Ok(new { accessToken, refreshToken });}
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken() {
@@ -136,25 +139,22 @@ namespace DocManagementBackend.Controllers
             var newAccessToken = GenerateAccessToken(user);
             var newRefreshToken = GenerateRefreshToken();
             user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddHours(3);
             await _context.SaveChangesAsync();
-            Response.Cookies.Append("refresh_token", newRefreshToken, new CookieOptions
-            {HttpOnly = true, Secure = false,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddDays(7)});
+            var cookieOptions = new CookieOptions {HttpOnly = true, Secure = false,
+                SameSite = SameSiteMode.None, Expires = DateTime.UtcNow.AddDays(7)};
+            // Response.Cookies.Append("accessToken", accessToken, cookieOptions);
+            Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
 
             return Ok(new { accessToken = newAccessToken });}
 
+        [Authorize]
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout() {
-            var refreshToken = Request.Cookies["refresh_token"];
-            if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized("No refresh token found.");
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        public async Task<IActionResult> Logout([FromBody] LogoutRequest request) {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
             if (user == null)
-                return Unauthorized("Invalid refresh token.");
-            var logEntry = new LogHistory {UserId = user.Id, User = user,
-                Timestamp = DateTime.UtcNow, ActionType = 0 };
+                return Unauthorized("User Not Found!");
+            var logEntry = new LogHistory {UserId = user.Id, User = user, Timestamp = DateTime.UtcNow, ActionType = 0 };
             _context.LogHistories.Add(logEntry);
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using DocManagementBackend.Data;
 using System.Text;
 using DotNetEnv;
+using Microsoft.Extensions.FileProviders;
 
 Env.Load();
 
@@ -33,12 +34,16 @@ builder.Services.AddAuthentication(options => {
     };
 });
 
-builder.Services.AddCors(options => {
-    options.AddPolicy("AllowAll",
-        policy => policy.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        );
+// Update CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5174")
+              .AllowCredentials()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
 builder.Services.AddControllers();
@@ -56,8 +61,14 @@ if (app.Environment.IsDevelopment()) {
 }
 
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/profile")),
+    RequestPath = "/images/profile"
+});
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

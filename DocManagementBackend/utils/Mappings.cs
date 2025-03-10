@@ -109,7 +109,12 @@ namespace DocManagementBackend.Mappings
             Content = d.Content,
             CreatedAt = d.CreatedAt,
             UpdatedAt = d.UpdatedAt,
+            DocDate = d.DocDate,
             Status = d.Status,
+            DocumentType = new DocumentTypeDto {
+                TypeName = d.DocumentType!.TypeName,
+                TypeAttr = d.DocumentType.TypeAttr
+            },
             CreatedByUserId = d.CreatedByUserId,
             CreatedBy = new DocumentUserDto
             {

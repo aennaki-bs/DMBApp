@@ -1,0 +1,37 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\155e64a0-9f5c-4492-876b-50ca5777deab.png",
+      "PackagePath": "staticwebassets\\images\\profile\\155e64a0-9f5c-4492-876b-50ca5777deab.png"
+    },
+    {
+      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\303a94ec-43a7-4585-ba48-f7bac924d84a.png",
+      "PackagePath": "staticwebassets\\images\\profile\\303a94ec-43a7-4585-ba48-f7bac924d84a.png"
+    },
+    {
+      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\8ab50158-8ac9-493f-8537-949a99bfe1a2.png",
+      "PackagePath": "staticwebassets\\images\\profile\\8ab50158-8ac9-493f-8537-949a99bfe1a2.png"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.DocManagementBackend.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.DocManagementBackend.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.build.DocManagementBackend.props",
+      "PackagePath": "build\\DocManagementBackend.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildMultiTargeting.DocManagementBackend.props",
+      "PackagePath": "buildMultiTargeting\\DocManagementBackend.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildTransitive.DocManagementBackend.props",
+      "PackagePath": "buildTransitive\\DocManagementBackend.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

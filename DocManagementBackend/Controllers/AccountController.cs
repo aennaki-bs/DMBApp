@@ -115,6 +115,10 @@ namespace DocManagementBackend.Controllers {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return NotFound("User not found.");
+            if (!string.IsNullOrEmpty(request.Username))
+                {var userName = await _context.Users.AnyAsync(u => u.Username == request.Username);
+                if (userName)
+                    return BadRequest("Username is already in use.");}
             user.FirstName = request.FirstName ?? user.FirstName;
             user.LastName = request.LastName ?? user.LastName;
             user.ProfilePicture = request.ProfilePicture ?? user.ProfilePicture;
@@ -134,31 +138,57 @@ namespace DocManagementBackend.Controllers {
             return Ok("Profile updated successfully.");
         }
 
-        [HttpPost("upload-image/{userId}")]
-        public async Task<IActionResult> UploadProfileImage(int userId, IFormFile file) {
-            if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded.");
+        // Update the UploadProfileImage endpoint
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadProfileImage(IFormFile file)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                    return Unauthorized("User ID claim is missing.");
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var fileExtension = Path.GetExtension(file.FileName).ToLower();
-            if (!allowedExtensions.Contains(fileExtension))
-                return BadRequest("Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.");
+                if (!int.TryParse(userIdClaim, out int userId))
+                    return BadRequest("Invalid user ID format.");
 
-            if (file.Length > 5 * 1024 * 1024) // 5 MB limit
-                return BadRequest("File size exceeds the limit (5 MB).");
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                    return NotFound("User not found.");
 
-            var fileName = $"{Guid.NewGuid()}{fileExtension}";
-            var filePath = Path.Combine("wwwroot/images/profile", fileName);
-            using (var stream = new FileStream(filePath, FileMode.Create)) {
-                await file.CopyToAsync(stream);}
+                if (file == null || file.Length == 0)
+                    return BadRequest("No file uploaded.");
 
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
-                return NotFound("User not found.");
-            user.ProfilePicture = $"/images/profile/{fileName}";
-            await _context.SaveChangesAsync();
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/profile");
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
 
-            return Ok(new { filePath = user.ProfilePicture});
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest("Invalid file type. Allowed: JPG, JPEG, PNG, GIF");
+
+                if (file.Length > 5 * 1024 * 1024)
+                    return BadRequest("File size exceeds 5MB limit");
+
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create)) {await file.CopyToAsync(stream);}
+
+                user.ProfilePicture = $"/images/profile/{fileName}";
+                await _context.SaveChangesAsync();
+
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                return Ok(new
+                {
+                    filePath = $"{baseUrl}/images/profile/{fileName}",
+                    message = "Image uploaded successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpGet("profile-image/{userId}")]
@@ -237,9 +267,9 @@ namespace DocManagementBackend.Controllers {
                         .card {{padding: 20px; width: 50%; background-color: #555555; margin: auto;
                             border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}}
                     </style></head>
-                <body><div class='card'><h2>Email Verification</h2>
+                <body><div class='card'><h2>Reset Password</h2>
                         <p>To reset your password click on the button bellow:</p>
-                        <a href='{verificationLink}' class='button'>Verify Email</a>
+                        <a href='{verificationLink}' class='button'>Reset Password</a>
                         <p>If the button doesn't work, you can also copy and paste the following
                             link into your browser:</p>
                         <p><a href='{verificationLink}'>{verificationLink}</a></p>

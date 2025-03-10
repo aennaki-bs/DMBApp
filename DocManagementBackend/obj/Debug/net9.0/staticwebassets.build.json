@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "3AD/FJ23mvcMExm1qidqBvkTKv249iGSIQe9yAmkiak=",
+  "Hash": "rvzxKGGTc9R44/B/a5mgsNls+rkGikhJb8iUQxfRRho=",
   "Source": "DocManagementBackend",
   "BasePath": "_content/DocManagementBackend",
   "Mode": "Default",
@@ -15,6 +15,317 @@
       "Pattern": "**"
     }
   ],
-  "Assets": [],
-  "Endpoints": []
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\155e64a0-9f5c-4492-876b-50ca5777deab.png",
+      "SourceId": "DocManagementBackend",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\",
+      "BasePath": "_content/DocManagementBackend",
+      "RelativePath": "images/profile/155e64a0-9f5c-4492-876b-50ca5777deab#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "xrhr7bfl2w",
+      "Integrity": "vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\profile\\155e64a0-9f5c-4492-876b-50ca5777deab.png"
+    },
+    {
+      "Identity": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\303a94ec-43a7-4585-ba48-f7bac924d84a.png",
+      "SourceId": "DocManagementBackend",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\",
+      "BasePath": "_content/DocManagementBackend",
+      "RelativePath": "images/profile/303a94ec-43a7-4585-ba48-f7bac924d84a#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "xrhr7bfl2w",
+      "Integrity": "vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\profile\\303a94ec-43a7-4585-ba48-f7bac924d84a.png"
+    },
+    {
+      "Identity": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\8ab50158-8ac9-493f-8537-949a99bfe1a2.png",
+      "SourceId": "DocManagementBackend",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\",
+      "BasePath": "_content/DocManagementBackend",
+      "RelativePath": "images/profile/8ab50158-8ac9-493f-8537-949a99bfe1a2#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "p86kp3i19b",
+      "Integrity": "mWFRkfaMmqds4aX+pNzWCywCr5b4EQhjPE39iHMhMAM=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\profile\\8ab50158-8ac9-493f-8537-949a99bfe1a2.png"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "images/profile/155e64a0-9f5c-4492-876b-50ca5777deab.png",
+      "AssetFile": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\155e64a0-9f5c-4492-876b-50ca5777deab.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "872726"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 10 Mar 2025 14:56:22 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/155e64a0-9f5c-4492-876b-50ca5777deab.xrhr7bfl2w.png",
+      "AssetFile": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\155e64a0-9f5c-4492-876b-50ca5777deab.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "872726"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 10 Mar 2025 14:56:22 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "xrhr7bfl2w"
+        },
+        {
+          "Name": "label",
+          "Value": "images/profile/155e64a0-9f5c-4492-876b-50ca5777deab.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/303a94ec-43a7-4585-ba48-f7bac924d84a.png",
+      "AssetFile": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\303a94ec-43a7-4585-ba48-f7bac924d84a.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "872726"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 10 Mar 2025 14:49:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/303a94ec-43a7-4585-ba48-f7bac924d84a.xrhr7bfl2w.png",
+      "AssetFile": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\303a94ec-43a7-4585-ba48-f7bac924d84a.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "872726"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 10 Mar 2025 14:49:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "xrhr7bfl2w"
+        },
+        {
+          "Name": "label",
+          "Value": "images/profile/303a94ec-43a7-4585-ba48-f7bac924d84a.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-vTWbiDn9yOpMXIgxqrgHYwedVlB77XWtpyuLtHNoS60="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/8ab50158-8ac9-493f-8537-949a99bfe1a2.p86kp3i19b.png",
+      "AssetFile": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\8ab50158-8ac9-493f-8537-949a99bfe1a2.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "3502"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"mWFRkfaMmqds4aX+pNzWCywCr5b4EQhjPE39iHMhMAM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 10 Mar 2025 14:48:31 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "p86kp3i19b"
+        },
+        {
+          "Name": "label",
+          "Value": "images/profile/8ab50158-8ac9-493f-8537-949a99bfe1a2.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-mWFRkfaMmqds4aX+pNzWCywCr5b4EQhjPE39iHMhMAM="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/8ab50158-8ac9-493f-8537-949a99bfe1a2.png",
+      "AssetFile": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\8ab50158-8ac9-493f-8537-949a99bfe1a2.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "3502"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"mWFRkfaMmqds4aX+pNzWCywCr5b4EQhjPE39iHMhMAM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 10 Mar 2025 14:48:31 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-mWFRkfaMmqds4aX+pNzWCywCr5b4EQhjPE39iHMhMAM="
+        }
+      ]
+    }
+  ]
 }
