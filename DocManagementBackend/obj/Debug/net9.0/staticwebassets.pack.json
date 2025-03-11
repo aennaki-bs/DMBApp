@@ -1,16 +1,20 @@
 {
   "Files": [
     {
-      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\155e64a0-9f5c-4492-876b-50ca5777deab.png",
-      "PackagePath": "staticwebassets\\images\\profile\\155e64a0-9f5c-4492-876b-50ca5777deab.png"
+      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\admin675.png",
+      "PackagePath": "staticwebassets\\images\\profile\\admin675.png"
     },
     {
-      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\303a94ec-43a7-4585-ba48-f7bac924d84a.png",
-      "PackagePath": "staticwebassets\\images\\profile\\303a94ec-43a7-4585-ba48-f7bac924d84a.png"
+      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\admin698.png",
+      "PackagePath": "staticwebassets\\images\\profile\\admin698.png"
     },
     {
-      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\8ab50158-8ac9-493f-8537-949a99bfe1a2.png",
-      "PackagePath": "staticwebassets\\images\\profile\\8ab50158-8ac9-493f-8537-949a99bfe1a2.png"
+      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\admin80.png",
+      "PackagePath": "staticwebassets\\images\\profile\\admin80.png"
+    },
+    {
+      "Id": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\wwwroot\\images\\profile\\admin924.png",
+      "PackagePath": "staticwebassets\\images\\profile\\admin924.png"
     },
     {
       "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.DocManagementBackend.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
