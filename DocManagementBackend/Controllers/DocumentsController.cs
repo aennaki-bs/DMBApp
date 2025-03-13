@@ -114,7 +114,7 @@ namespace DocManagementBackend.Controllers {
             if (request.TypeId.HasValue) {
                 var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
                 if (docType == null)
-                    return BadRequest("check the type!!");
+                    return BadRequest("Invalide type!");
                 document.DocumentType = docType;
                 docType.DocumentCounter++;
                 document.DocumentKey = $"{docType.TypeKey}-{document.DocumentAlias}{docType.DocumentCounter}";

@@ -32,21 +32,13 @@ namespace DocManagementBackend.Controllers
             var picture = string.Empty;
             if (!string.IsNullOrEmpty(user.ProfilePicture))
             { picture = $"{Request.Scheme}://{Request.Host}{user.ProfilePicture}"; }
-            var userInfo = new
-            {
-                userid = user.Id,
-                username = user.Username,
-                email = user.Email,
+            var userInfo = new {userid = user.Id,
+                username = user.Username, email = user.Email,
                 role = user.Role?.RoleName ?? "SimpleUser",
-                firstName = user.FirstName,
-                profilePicture = picture,
-                lastName = user.LastName,
-                isActive = user.IsActive,
-                address = user.Address,
-                city = user.City,
-                country = user.Country,
-                phoneNumber = user.PhoneNumber,
-                isOnline = user.IsOnline,
+                firstName = user.FirstName, lastName = user.LastName,
+                profilePicture = picture, isActive = user.IsActive,
+                address = user.Address, city = user.City, country = user.Country,
+                phoneNumber = user.PhoneNumber, isOnline = user.IsOnline,
             };
 
             return Ok(userInfo);
