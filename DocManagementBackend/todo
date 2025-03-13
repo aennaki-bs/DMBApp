@@ -1,4 +1,6 @@
-password in register 
+password in register -Valide
+
+resend button : resend vereficaton code 
 
 after register should show a message 
 
@@ -8,7 +10,6 @@ message significative
 
 exit
 
-resend button : resend vereficaton code 
 
 add page to create a new type of document
 

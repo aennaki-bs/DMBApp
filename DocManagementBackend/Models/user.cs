@@ -76,6 +76,7 @@ namespace DocManagementBackend.Models {
         public DocumentType? DocumentType { get; set; }
         [Required]
         public string DocumentKey { get; set; } = string.Empty;
+        public string DocumentAlias { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
         [Required]

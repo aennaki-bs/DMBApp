@@ -5,16 +5,19 @@ using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using System.Security.Claims;
 
-namespace DocManagementBackend.Controllers {
+namespace DocManagementBackend.Controllers
+{
     [Route("api/[controller]")]
     [ApiController]
-    public class AccountController : ControllerBase {
+    public class AccountController : ControllerBase
+    {
         private readonly ApplicationDbContext _context;
-        public AccountController(ApplicationDbContext context) {_context = context;}
+        public AccountController(ApplicationDbContext context) { _context = context; }
 
         [Authorize]
         [HttpGet("user-info")]
-        public async Task<IActionResult> GetUserInfo() {
+        public async Task<IActionResult> GetUserInfo()
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
                 return Unauthorized("User ID claim is missing.");
@@ -28,21 +31,31 @@ namespace DocManagementBackend.Controllers {
                 return NotFound("User not found.");
             var picture = string.Empty;
             if (!string.IsNullOrEmpty(user.ProfilePicture))
-                { picture = $"{Request.Scheme}://{Request.Host}{user.ProfilePicture}";}
-            var userInfo = new {userid = user.Id,
-                username = user.Username, email = user.Email,
+            { picture = $"{Request.Scheme}://{Request.Host}{user.ProfilePicture}"; }
+            var userInfo = new
+            {
+                userid = user.Id,
+                username = user.Username,
+                email = user.Email,
                 role = user.Role?.RoleName ?? "SimpleUser",
-                firstName = user.FirstName, profilePicture = picture,
-                lastName = user.LastName, isActive = user.IsActive,
-                address = user.Address, city = user.City, country = user.Country,
-                phoneNumber = user.PhoneNumber, isOnline = user.IsOnline,};
+                firstName = user.FirstName,
+                profilePicture = picture,
+                lastName = user.LastName,
+                isActive = user.IsActive,
+                address = user.Address,
+                city = user.City,
+                country = user.Country,
+                phoneNumber = user.PhoneNumber,
+                isOnline = user.IsOnline,
+            };
 
             return Ok(userInfo);
         }
 
         [Authorize]
         [HttpGet("user-role")]
-        public async Task<IActionResult> GetUserRole() {
+        public async Task<IActionResult> GetUserRole()
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
                 return Unauthorized("User ID claim is missing.");
@@ -52,13 +65,14 @@ namespace DocManagementBackend.Controllers {
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return NotFound("User not found.");
-            var userRole = new {role = user.Role?.RoleName ?? "SimpleUser"};
+            var userRole = new { role = user.Role?.RoleName ?? "SimpleUser" };
 
             return Ok(userRole);
         }
 
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request) {
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
                 return NotFound("No user found with that email address.");
@@ -66,15 +80,15 @@ namespace DocManagementBackend.Controllers {
                 return Unauthorized("Email Not Verified!");
             if (!user.IsActive)
                 return Unauthorized("User Account Desactivated!");
-
-            var verificationLink = $"http://192.168.1.93:5174/update-password/{user.Email}";
+            var verificationLink = $"http://192.168.1.54:5174/update-password/{user.Email}";
             var emailBody = createPassEmailBody(verificationLink);
             SendEmail(user.Email, "Password Reset", emailBody);
             return Ok("A Link Is Sent To Your Email.");
         }
 
         [HttpPut("update-password")]
-        public async Task<IActionResult> UpdatePassword([FromBody] ForgotPasswordRequest request) {
+        public async Task<IActionResult> UpdatePassword([FromBody] ForgotPasswordRequest request)
+        {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
                 return NotFound("No user found with that email address.");
@@ -84,7 +98,6 @@ namespace DocManagementBackend.Controllers {
                 return Unauthorized("User Account Desactivated!");
             if (!IsValidPassword(request.NewPassword))
                 return BadRequest("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.");
-
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             await _context.SaveChangesAsync();
             return Ok("Your password is updated successfully!");
@@ -100,16 +113,17 @@ namespace DocManagementBackend.Controllers {
             var verifCode = new Random().Next(100000, 999999).ToString();
             if (string.IsNullOrEmpty(user.EmailVerificationCode))
                 user.EmailVerificationCode = verifCode;
-            var verificationLink = $"http://192.168.1.93:5174/verify/{user.Email}";
+            var verificationLink = $"http://192.168.1.54:5174/verify/{user.Email}";
             string emailBody = CreateEmailBody(verificationLink, user.EmailVerificationCode);
             SendEmail(user.Email, "Email Verification", emailBody);
             await _context.SaveChangesAsync();
-            return Ok("A Verification Code Is Sent To Your Email.");
+            return Ok("A Verification Code Is reSent To Your Email.");
         }
 
         [Authorize]
         [HttpPut("update-profile")]
-        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request) {
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
                 return Unauthorized("User ID claim is missing.");
@@ -118,10 +132,12 @@ namespace DocManagementBackend.Controllers {
             if (user == null)
                 return NotFound("User not found.");
             if (!string.IsNullOrEmpty(request.Username) && user.Username != request.Username)
-                {var userName = await _context.Users.AnyAsync(u => u.Username == request.Username);
+            {
+                var userName = await _context.Users.AnyAsync(u => u.Username == request.Username);
                 if (userName)
-                    return BadRequest("Username is already in use.");}
-            user.Username = request.Username;
+                    return BadRequest("Username is already in use.");
+            }
+            user.Username = request.Username ?? user.Username;
             user.FirstName = request.FirstName ?? user.FirstName;
             user.Address = request.Address ?? user.Address;
             user.City = request.City ?? user.City;
@@ -129,11 +145,14 @@ namespace DocManagementBackend.Controllers {
             user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
             user.LastName = request.LastName ?? user.LastName;
 
-            if (!string.IsNullOrEmpty(request.NewPassword)) {
-                if (!string.IsNullOrEmpty(request.CurrentPassword)) {
+            if (!string.IsNullOrEmpty(request.NewPassword))
+            {
+                if (!string.IsNullOrEmpty(request.CurrentPassword))
+                {
                     if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
                         return BadRequest("Current password is incorrect.");
-                } else { return BadRequest("Current password is required.");}
+                }
+                else { return BadRequest("Current password is required."); }
 
                 if (!IsValidPassword(request.NewPassword))
                     return BadRequest("New password does not meet complexity requirements.");
@@ -143,10 +162,11 @@ namespace DocManagementBackend.Controllers {
             return Ok("Profile updated successfully.");
         }
 
-        // Update the UploadProfileImage endpoint
         [HttpPost("upload-image")]
-        public async Task<IActionResult> UploadProfileImage(IFormFile file) {
-            try {
+        public async Task<IActionResult> UploadProfileImage(IFormFile file)
+        {
+            try
+            {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userIdClaim))
                     return Unauthorized("User ID claim is missing.");
@@ -179,44 +199,51 @@ namespace DocManagementBackend.Controllers {
                 var fileName = $"{user.Username}{str}{fileExtension}";
                 var filePath = Path.Combine(uploadPath, fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create)) {await file.CopyToAsync(stream);}
+                using (var stream = new FileStream(filePath, FileMode.Create)) { await file.CopyToAsync(stream); }
 
                 user.ProfilePicture = $"/images/profile/{fileName}";
                 await _context.SaveChangesAsync();
 
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                return Ok(new {filePath = $"{baseUrl}{user.ProfilePicture}", message = "Image uploaded successfully"});
+                return Ok(new { filePath = $"{baseUrl}{user.ProfilePicture}", message = "Image uploaded successfully" });
             }
-            catch (Exception ex) {return StatusCode(500, $"Internal server error: {ex.Message}");}
+            catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
         }
 
         [HttpGet("profile-image/{userId}")]
-        public async Task<IActionResult> GetProfileImage(int userId) {
+        public async Task<IActionResult> GetProfileImage(int userId)
+        {
             var user = await _context.Users.FindAsync(userId);
             if (user == null || string.IsNullOrEmpty(user.ProfilePicture))
                 return NotFound("Profile image not found.");
             return Ok(new { ProfilePicture = user.ProfilePicture });
         }
-        private bool IsValidPassword(string password) {
+        private bool IsValidPassword(string password)
+        {
             return password.Length >= 8 && password.Any(char.IsLower) &&
                    password.Any(char.IsUpper) && password.Any(char.IsDigit) &&
-                   password.Any(ch => !char.IsLetterOrDigit(ch));}
-        private void SendEmail(string to, string subject, string body) {
-            try {
+                   password.Any(ch => !char.IsLetterOrDigit(ch));
+        }
+        private void SendEmail(string to, string subject, string body)
+        {
+            try
+            {
                 string? emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
                 string? emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
 
                 if (string.IsNullOrEmpty(emailAddress) || string.IsNullOrEmpty(emailPassword))
                     throw new InvalidOperationException("Email address or password is not set in environment variables.");
 
-                using (var smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587)) {
+                using (var smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587))
+                {
                     smtp.Credentials = new System.Net.NetworkCredential(emailAddress, emailPassword);
                     smtp.EnableSsl = true;
                     var message = new System.Net.Mail.MailMessage();
                     message.To.Add(to); message.Subject = subject;
                     message.Body = body; message.IsBodyHtml = true;
                     message.From = new System.Net.Mail.MailAddress(emailAddress);
-                    smtp.Send(message);}
+                    smtp.Send(message);
+                }
             }
             catch (Exception ex)
             {
@@ -224,7 +251,8 @@ namespace DocManagementBackend.Controllers {
                 Console.WriteLine($"Email send failed: {ex.Message}");
             }
         }
-        private string CreateEmailBody(string verificationLink, string verificationCode) {
+        private string CreateEmailBody(string verificationLink, string verificationCode)
+        {
             return $@"
                 <html><head><style>
                         body {{font-family: Arial, sans-serif; line-height: 1.6;
@@ -254,8 +282,9 @@ namespace DocManagementBackend.Controllers {
                         <div class='footer'><p>If you did not request this verification, please ignore this email.</p>
                         </div></div></body></html>";
         }
-        private string createPassEmailBody(string verificationLink) {
-                return $@"
+        private string createPassEmailBody(string verificationLink)
+        {
+            return $@"
                 <html><head><style>
                         body {{font-family: Arial, sans-serif; line-height: 1.6;
                             color: #fff; width: 100vw; height: 80vh; background-color: #333333; margin: 0; padding: 0;

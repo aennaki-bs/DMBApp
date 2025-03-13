@@ -19,6 +19,7 @@ namespace DocManagementBackend.Mappings
             Document = new DocumentDto
             {
                 Id = l.Document!.Id,
+                DocumentKey = l.Document.DocumentKey,
                 Title = l.Document.Title,
                 Content = l.Document.Content,
                 TypeId = l.Document.TypeId,
@@ -71,6 +72,7 @@ namespace DocManagementBackend.Mappings
                 UpdatedAt = s.Ligne.UpdatedAt,
                 Document = new DocumentDto {
                     Id = s.Ligne.Document!.Id,
+                    DocumentKey = s.Ligne.Document.DocumentKey,
                     Title = s.Ligne.Document.Title,
                     Content = s.Ligne.Document.Content,
                     TypeId = s.Ligne.Document.TypeId,
@@ -106,6 +108,7 @@ namespace DocManagementBackend.Mappings
         public static Expression<Func<Document, DocumentDto>> ToDocumentDto = d => new DocumentDto
         {
             Id = d.Id,
+            DocumentKey = d.DocumentKey,
             Title = d.Title,
             Content = d.Content,
             CreatedAt = d.CreatedAt,

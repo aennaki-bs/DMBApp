@@ -59,29 +59,38 @@ namespace DocManagementBackend.Controllers {
             var docDate = DateTime.UtcNow;
             if (request.DocDate != default(DateTime))
                 docDate = request.DocDate;
+            var docAlias = "DOC";
+            if (!string.IsNullOrEmpty(request.DocumentAlias))
+                docAlias = request.DocumentAlias;
 
-            var document = new Document {Title = request.Title,
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try {
+                docType.DocumentCounter++;
+                var documentKey = $"{docType.TypeKey}-{docAlias}{docType.DocumentCounter}";
+                var document = new Document {Title = request.Title, DocumentAlias = docAlias,
                 Content = request.Content, CreatedByUserId = userId,
                 CreatedBy = user, DocDate = docDate,
                 TypeId = request.TypeId, DocumentType = docType,
                 Status = 0, CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow};
-
-            _context.Documents.Add(document);
-            await _context.SaveChangesAsync();
-
-            var documentDto = new DocumentDto {
-                Id = document.Id, Title = document.Title,
-                Content = document.Content, Status = document.Status,
-                CreatedAt = document.CreatedAt, UpdatedAt = document.UpdatedAt,
-                TypeId = document.TypeId, DocDate = document.DocDate,
-                DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
-                CreatedByUserId = document.CreatedByUserId,
-                CreatedBy = new DocumentUserDto {
-                    Username = user.Username, FirstName = user.FirstName, LastName = user.LastName,
-                    Role = user.Role != null ? user.Role.RoleName : string.Empty
-                }};
-            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
+                UpdatedAt = DateTime.UtcNow, DocumentKey = documentKey};
+                _context.Documents.Add(document);
+                await _context.SaveChangesAsync();
+                var documentDto = new DocumentDto {
+                    Id = document.Id, Title = document.Title, DocumentKey = document.DocumentKey,
+                    Content = document.Content, Status = document.Status, DocumentAlias = document.DocumentAlias,
+                    CreatedAt = document.CreatedAt, UpdatedAt = document.UpdatedAt,
+                    TypeId = document.TypeId, DocDate = document.DocDate,
+                    DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
+                    CreatedByUserId = document.CreatedByUserId,
+                    CreatedBy = new DocumentUserDto {
+                        Username = user.Username, FirstName = user.FirstName, LastName = user.LastName,
+                        Role = user.Role != null ? user.Role.RoleName : string.Empty
+                    }};
+                return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
+            }
+            catch (Exception ex) {await transaction.RollbackAsync();
+                return StatusCode(500, $"Error creating document: {ex.Message}");
+            }
         }
 
         [HttpPut("{id}")]
@@ -95,27 +104,23 @@ namespace DocManagementBackend.Controllers {
             var IsActiveClaim =  User.FindFirst("IsActive")?.Value;
             if (IsActiveClaim == null || IsActiveClaim == "False")
                 return Unauthorized("User Account Desactivated!");
-        
-            var existingDocument = await _context.Documents.FindAsync(id);
-            if (existingDocument == null)
+            var document = await _context.Documents.FindAsync(id);
+            if (document == null)
                 return NotFound("Document not found.");
-            if (existingDocument.Status == 1)
-                return BadRequest("This Document can't be changed!");
-            if (!string.IsNullOrEmpty(request.Title))
-                existingDocument.Title = request.Title;
-            if (!string.IsNullOrEmpty(request.Content))
-                existingDocument.Content = request.Content;
-            if (!request.DocDate.HasValue)
-                existingDocument.DocDate = request.DocDate?? DateTime.UtcNow;
-            if (request.TypeId.HasValue)
-                existingDocument.TypeId = request.TypeId.Value;
-
-            var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
-            if (docType == null)
-                return BadRequest("check the type!!");
-            existingDocument.DocumentType = docType;
-            existingDocument.UpdatedAt = DateTime.UtcNow; 
-            _context.Entry(existingDocument).State = EntityState.Modified;
+            document.Content = request.Content?? document.Content;
+            document.Title = request.Title?? document.Title;
+            document.DocDate = request.DocDate?? DateTime.UtcNow;
+            document.TypeId = request.TypeId?? document.TypeId;
+            if (request.TypeId.HasValue) {
+                var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
+                if (docType == null)
+                    return BadRequest("check the type!!");
+                document.DocumentType = docType;
+                docType.DocumentCounter++;
+                document.DocumentKey = $"{docType.TypeKey}-{document.DocumentAlias}{docType.DocumentCounter}";
+            }
+            document.UpdatedAt = DateTime.UtcNow;
+            _context.Entry(document).State = EntityState.Modified;
         
             try {await _context.SaveChangesAsync();}
             catch (DbUpdateConcurrencyException) {
