@@ -14,6 +14,7 @@ namespace DocManagementBackend.Data
         public DbSet<SousLigne> SousLignes { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<DocumentType> DocumentTypes { get; set; }
+        public DbSet<TypeCounter> TypeCounter { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // modelBuilder.Entity<DocumentType>().HasData(

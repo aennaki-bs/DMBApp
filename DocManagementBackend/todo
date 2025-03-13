@@ -1,4 +1,4 @@
-password in register
+password in register 
 
 after register should show a message 
 
@@ -8,7 +8,7 @@ message significative
 
 exit
 
-resend 
+resend button : resend vereficaton code 
 
 add page to create a new type of document
 
@@ -42,6 +42,3 @@ table en tete serqui => code, descriptif, boolen(active, desactive)
 line serqui => code, numline, titre, descriptif
 
 add button status to change serqui
-
-
-Fa1

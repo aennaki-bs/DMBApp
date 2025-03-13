@@ -183,10 +183,13 @@ namespace DocManagementBackend.Controllers {
                 return BadRequest("Type Name is required!");
             var typename = await _context.DocumentTypes.AnyAsync(t => t.TypeName == request.TypeName);
             if (typename)
-                return BadRequest("Type Name already exist!");
-            var typekey = request.TypeName.Substring(0, 2);
-            var type = new DocumentType {TypeKey = typekey, TypeName = request.TypeName, TypeAttr = request.TypeAttr};
-            type.TypeKey += type.Id;
+                return BadRequest("Type Name already exists!");
+            var typeCounter = await _context.TypeCounter.FirstOrDefaultAsync();
+            if (typeCounter == null) {typeCounter = new TypeCounter { Counter = 1 }; _context.TypeCounter.Add(typeCounter);}
+            else {typeCounter.Counter++;}
+            var typeKey = request.TypeName.Substring(0, 3).ToUpper() + typeCounter.Counter;
+            var type = new DocumentType {TypeKey = typeKey,
+                TypeName = request.TypeName, TypeAttr = request.TypeAttr};
             _context.DocumentTypes.Add(type);
             await _context.SaveChangesAsync();
             return Ok("Type successfully added!");

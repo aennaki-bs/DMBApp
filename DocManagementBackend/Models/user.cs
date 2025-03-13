@@ -128,4 +128,9 @@ namespace DocManagementBackend.Models {
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
+
+    public class TypeCounter {
+        public int Id { get; set; }
+        public int Counter { get; set; }
+    }
 }
