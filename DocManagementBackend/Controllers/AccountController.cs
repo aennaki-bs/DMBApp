@@ -92,16 +92,16 @@ namespace DocManagementBackend.Controllers {
 
         [HttpPost("resend-code")]
         public async Task<IActionResult> ResendCode([FromBody] ForgotPasswordRequest request) {
+            if (string.IsNullOrEmpty(request.Email))
+                return BadRequest("Email is required!");
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
                 return NotFound("No user found with that email address.");
-
             var verifCode = new Random().Next(100000, 999999).ToString();
             if (string.IsNullOrEmpty(user.EmailVerificationCode))
                 user.EmailVerificationCode = verifCode;
             var verificationLink = $"http://192.168.1.93:5174/verify/{user.Email}";
             string emailBody = CreateEmailBody(verificationLink, user.EmailVerificationCode);
-
             SendEmail(user.Email, "Email Verification", emailBody);
             await _context.SaveChangesAsync();
             return Ok("A Verification Code Is Sent To Your Email.");
@@ -117,10 +117,11 @@ namespace DocManagementBackend.Controllers {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return NotFound("User not found.");
-            // if (!string.IsNullOrEmpty(request.Username) && user.RoleId == 1)
-            //     {var userName = await _context.Users.AnyAsync(u => u.Username == request.Username);
-            //     if (userName)
-            //         return BadRequest("Username is already in use.");}
+            if (!string.IsNullOrEmpty(request.Username) && user.Username != request.Username)
+                {var userName = await _context.Users.AnyAsync(u => u.Username == request.Username);
+                if (userName)
+                    return BadRequest("Username is already in use.");}
+            user.Username = request.Username;
             user.FirstName = request.FirstName ?? user.FirstName;
             user.Address = request.Address ?? user.Address;
             user.City = request.City ?? user.City;

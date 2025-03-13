@@ -94,6 +94,7 @@ namespace DocManagementBackend.Models {
         public string TypeKey { get; set; } = string.Empty;
         public string TypeName { get; set; } = string.Empty;
         public string TypeAttr { get; set; } = string.Empty;
+        public int DocumentCounter { get; set; } = 0;
         [JsonIgnore]
         public ICollection<Document> Documents { get; set; } = new List<Document>();
     }
