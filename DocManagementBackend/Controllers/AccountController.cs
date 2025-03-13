@@ -26,14 +26,16 @@ namespace DocManagementBackend.Controllers {
                 .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return NotFound("User not found.");
-
+            var picture = string.Empty;
+            if (!string.IsNullOrEmpty(user.ProfilePicture))
+                { picture = $"{Request.Scheme}://{Request.Host}{user.ProfilePicture}";}
             var userInfo = new {userid = user.Id,
                 username = user.Username, email = user.Email,
                 role = user.Role?.RoleName ?? "SimpleUser",
-                firstName = user.FirstName, profilePicture = user.ProfilePicture,
+                firstName = user.FirstName, profilePicture = picture,
                 lastName = user.LastName, isActive = user.IsActive,
-                address = user.Address, city = user.City, country = user.Country, phoneNumber = user.PhoneNumber
-            };
+                address = user.Address, city = user.City, country = user.Country,
+                phoneNumber = user.PhoneNumber, isOnline = user.IsOnline,};
 
             return Ok(userInfo);
         }
@@ -115,18 +117,16 @@ namespace DocManagementBackend.Controllers {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return NotFound("User not found.");
-            if (!string.IsNullOrEmpty(request.Username) && user.RoleId == 1)
-                {var userName = await _context.Users.AnyAsync(u => u.Username == request.Username);
-                if (userName)
-                    return BadRequest("Username is already in use.");}
+            // if (!string.IsNullOrEmpty(request.Username) && user.RoleId == 1)
+            //     {var userName = await _context.Users.AnyAsync(u => u.Username == request.Username);
+            //     if (userName)
+            //         return BadRequest("Username is already in use.");}
             user.FirstName = request.FirstName ?? user.FirstName;
             user.Address = request.Address ?? user.Address;
             user.City = request.City ?? user.City;
             user.Country = request.Country ?? user.Country;
             user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
             user.LastName = request.LastName ?? user.LastName;
-            user.ProfilePicture = request.ProfilePicture ?? user.ProfilePicture;
-            user.BackgroundPicture = request.BackgroundPicture ?? user.BackgroundPicture;
 
             if (!string.IsNullOrEmpty(request.NewPassword)) {
                 if (!string.IsNullOrEmpty(request.CurrentPassword)) {
@@ -170,6 +170,7 @@ namespace DocManagementBackend.Controllers {
 
                 var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "http:",
                     user.ProfilePicture!.TrimStart('/'));
+                Console.WriteLine($"oldPath========>    {oldPath}");
                 if (System.IO.File.Exists(oldPath))
                     System.IO.File.Delete(oldPath);
 
@@ -179,11 +180,11 @@ namespace DocManagementBackend.Controllers {
 
                 using (var stream = new FileStream(filePath, FileMode.Create)) {await file.CopyToAsync(stream);}
 
-                user.ProfilePicture = $"http://localhost:5204/images/profile/{fileName}";
+                user.ProfilePicture = $"/images/profile/{fileName}";
                 await _context.SaveChangesAsync();
 
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                return Ok(new {filePath = $"{user.ProfilePicture}", message = "Image uploaded successfully"});
+                return Ok(new {filePath = $"{baseUrl}{user.ProfilePicture}", message = "Image uploaded successfully"});
             }
             catch (Exception ex) {return StatusCode(500, $"Internal server error: {ex.Message}");}
         }
@@ -200,22 +201,27 @@ namespace DocManagementBackend.Controllers {
                    password.Any(char.IsUpper) && password.Any(char.IsDigit) &&
                    password.Any(ch => !char.IsLetterOrDigit(ch));}
         private void SendEmail(string to, string subject, string body) {
-            string? emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
-            string? emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+            try {
+                string? emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
+                string? emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
 
-            if (string.IsNullOrEmpty(emailAddress) || string.IsNullOrEmpty(emailPassword))
-                throw new InvalidOperationException("Email address or password is not set in environment variables.");
+                if (string.IsNullOrEmpty(emailAddress) || string.IsNullOrEmpty(emailPassword))
+                    throw new InvalidOperationException("Email address or password is not set in environment variables.");
 
-            using (var smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587)) {
-                smtp.Credentials = new System.Net.NetworkCredential(emailAddress, emailPassword);
-                smtp.EnableSsl = true;
-                var message = new System.Net.Mail.MailMessage();
-                message.To.Add(to);
-                message.Subject = subject;
-                message.Body = body;
-                message.IsBodyHtml = true;
-                message.From = new System.Net.Mail.MailAddress(emailAddress);
-                smtp.Send(message);}
+                using (var smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587)) {
+                    smtp.Credentials = new System.Net.NetworkCredential(emailAddress, emailPassword);
+                    smtp.EnableSsl = true;
+                    var message = new System.Net.Mail.MailMessage();
+                    message.To.Add(to); message.Subject = subject;
+                    message.Body = body; message.IsBodyHtml = true;
+                    message.From = new System.Net.Mail.MailAddress(emailAddress);
+                    smtp.Send(message);}
+            }
+            catch (Exception ex)
+            {
+                // Log the error
+                Console.WriteLine($"Email send failed: {ex.Message}");
+            }
         }
         private string CreateEmailBody(string verificationLink, string verificationCode) {
             return $@"

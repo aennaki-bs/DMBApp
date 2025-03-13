@@ -84,6 +84,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("Invalid verification code.");
             user.IsEmailConfirmed = true;
             user.IsActive = true;
+            user.IsOnline = false;
             user.EmailVerificationCode = null;
             await _context.SaveChangesAsync();
 
@@ -118,6 +119,7 @@ namespace DocManagementBackend.Controllers
             var refreshToken = GenerateRefreshToken();
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            user.IsOnline = true;
             var login = new LogHistory {UserId = user.Id, User = user, ActionType = 1, Timestamp = DateTime.UtcNow};
             _context.LogHistories.Add(login);
             await _context.SaveChangesAsync();
@@ -158,6 +160,7 @@ namespace DocManagementBackend.Controllers
             _context.LogHistories.Add(logEntry);
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
+            user.IsOnline = false;
             await _context.SaveChangesAsync();
             Response.Cookies.Delete("refresh_token");
 
@@ -169,25 +172,23 @@ namespace DocManagementBackend.Controllers
                    password.Any(ch => !char.IsLetterOrDigit(ch));
         }
         private void SendEmail(string to, string subject, string body) {
-            string? emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
-            string? emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
-            if (string.IsNullOrEmpty(emailAddress) || string.IsNullOrEmpty(emailPassword))
-                throw new InvalidOperationException("Email address or password is not set in environment variables.");
-            using (var smtp = new SmtpClient("smtp.gmail.com", 587)) {
-                smtp.Credentials = new System.Net.NetworkCredential(emailAddress, emailPassword);
-                smtp.EnableSsl = true;
-                var message = new MailMessage();
-                message.To.Add(to);
-                message.Subject = subject;
-                message.Body = body;
-                message.IsBodyHtml = true;
-                message.From = new MailAddress(emailAddress);
-                smtp.Send(message);}
+            try {
+                string? emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
+                string? emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+                if (string.IsNullOrEmpty(emailAddress) || string.IsNullOrEmpty(emailPassword))
+                    throw new InvalidOperationException("Email address or password is not set in environment variables.");
+                using (var smtp = new SmtpClient("smtp.gmail.com", 587)) {
+                    smtp.Credentials = new System.Net.NetworkCredential(emailAddress, emailPassword);
+                    smtp.EnableSsl = true;
+                    var message = new MailMessage();
+                    message.To.Add(to); message.Subject = subject;
+                    message.Body = body; message.IsBodyHtml = true;
+                    message.From = new MailAddress(emailAddress);
+                    smtp.Send(message);}
+            }
+            catch (Exception ex) {Console.WriteLine($"Email send failed: {ex.Message}");}
         }
-        public class VerifyEmailRequest {
-            public string? Email { get; set; }
-            public string? VerificationCode { get; set; }
-        }
+        
         private string GenerateAccessToken(User user) {
             var jwtSettings = _config.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"];

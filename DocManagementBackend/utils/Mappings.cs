@@ -24,8 +24,8 @@ namespace DocManagementBackend.Mappings
                 TypeId = l.Document.TypeId,
                 DocumentType = l.Document.DocumentType == null
                     ? null
-                    : new DocumentTypeDto
-                    {
+                    : new DocumentTypeDto {
+                        TypeKey = l.Document.DocumentType.TypeKey,
                         TypeName = l.Document.DocumentType.TypeName,
                         TypeAttr = l.Document.DocumentType.TypeAttr
                     },
@@ -77,6 +77,7 @@ namespace DocManagementBackend.Mappings
                     DocumentType = s.Ligne.Document.DocumentType == null
                         ? null
                         : new DocumentTypeDto {
+                            TypeKey = s.Ligne.Document.DocumentType.TypeKey,
                             TypeName = s.Ligne.Document.DocumentType.TypeName,
                             TypeAttr = s.Ligne.Document.DocumentType.TypeAttr
                         },
@@ -112,6 +113,7 @@ namespace DocManagementBackend.Mappings
             DocDate = d.DocDate,
             Status = d.Status,
             DocumentType = new DocumentTypeDto {
+                TypeKey = d.DocumentType!.TypeKey,
                 TypeName = d.DocumentType!.TypeName,
                 TypeAttr = d.DocumentType.TypeAttr
             },

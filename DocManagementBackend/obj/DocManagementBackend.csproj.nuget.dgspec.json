@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\DocManagementBackend.csproj": {}
+    "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\DocManagementBackend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\DocManagementBackend.csproj": {
+    "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\DocManagementBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\DocManagementBackend.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\DocManagementBackend.csproj",
         "projectName": "DocManagementBackend",
-        "projectPath": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\DocManagementBackend.csproj",
+        "projectPath": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\DocManagementBackend.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\ahmed\\DocManagementBackend\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

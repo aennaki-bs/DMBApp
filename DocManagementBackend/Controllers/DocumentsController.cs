@@ -19,9 +19,7 @@ namespace DocManagementBackend.Controllers {
             var isActiveClaim = User.FindFirst("IsActive")?.Value;
             if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized("User Account Desactivated!");
-
-            var documents = await _context.Documents.Where(d => !d.IsDeleted)
-                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+            var documents = await _context.Documents.Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.Lignes).Select(DocumentMappings.ToDocumentDto).ToListAsync();
 
             return Ok(documents);
@@ -32,14 +30,11 @@ namespace DocManagementBackend.Controllers {
             var isActiveClaim = User.FindFirst("IsActive")?.Value;
             if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized("User Account Deactivated!");
-
-            var documentDto = await _context.Documents.Where(d => !d.IsDeleted)
+            var documentDto = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Where(d => d.Id == id).Include(d => d.Lignes)
                 .Select(DocumentMappings.ToDocumentDto).FirstOrDefaultAsync();
-
-            if (documentDto == null)
-                return NotFound();
+            if (documentDto == null) {return NotFound("Document not found!");}
 
             return Ok(documentDto);
         }
@@ -48,26 +43,19 @@ namespace DocManagementBackend.Controllers {
         public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request) {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-
             if (userIdClaim == null || roleClaim == null)
                 return Unauthorized("User ID or Role claim is missing.");
-
             int userId = int.Parse(userIdClaim);
-
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return BadRequest("User not found.");
-
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
-
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To Create Documents.");
-
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
                 return BadRequest("check the type!!");
-
             var docDate = DateTime.UtcNow;
             if (request.DocDate != default(DateTime))
                 docDate = request.DocDate;
@@ -102,10 +90,8 @@ namespace DocManagementBackend.Controllers {
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             if (userIdClaim == null || roleClaim == null)
                 return Unauthorized("User ID or Role claim is missing.");
-
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To EditDocuments.");
-        
             var IsActiveClaim =  User.FindFirst("IsActive")?.Value;
             if (IsActiveClaim == null || IsActiveClaim == "False")
                 return Unauthorized("User Account Desactivated!");
@@ -115,7 +101,6 @@ namespace DocManagementBackend.Controllers {
                 return NotFound("Document not found.");
             if (existingDocument.Status == 1)
                 return BadRequest("This Document can't be changed!");
-
             if (!string.IsNullOrEmpty(request.Title))
                 existingDocument.Title = request.Title;
             if (!string.IsNullOrEmpty(request.Content))
@@ -132,14 +117,10 @@ namespace DocManagementBackend.Controllers {
             existingDocument.UpdatedAt = DateTime.UtcNow; 
             _context.Entry(existingDocument).State = EntityState.Modified;
         
-            try {
-                await _context.SaveChangesAsync();
-            }
+            try {await _context.SaveChangesAsync();}
             catch (DbUpdateConcurrencyException) {
-                if (!_context.Documents.Any(d => d.Id == id))
-                    return NotFound();
-                else
-                    throw;
+                if (!_context.Documents.Any(d => d.Id == id)) {return NotFound();}
+                else {throw;}
             }
             return NoContent();
         }
@@ -149,20 +130,18 @@ namespace DocManagementBackend.Controllers {
             var IsActiveClaim =  User.FindFirst("IsActive")?.Value;
             if (IsActiveClaim == null || IsActiveClaim == "False")
                 return Unauthorized("User Account Desactivated!");
-
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             if (roleClaim == null)
                 return Unauthorized("Role claim is missing.");
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To Delete Document.");
-
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound();
             if (document.Status == 1 && roleClaim != "Admin")
                 return Unauthorized("Ask an admin for deleting this document!");
 
-            document.IsDeleted = true;
+            _context.Documents.Remove(document);
             document.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
@@ -171,7 +150,46 @@ namespace DocManagementBackend.Controllers {
 
         [HttpGet("Types")]
         public async Task<ActionResult> GetTypes() {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (userIdClaim == null || roleClaim == null)
+                return Unauthorized("User ID or Role claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return BadRequest("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (roleClaim != "Admin" && roleClaim != "FullUser")
+                return Unauthorized("User Not Allowed To This action.");
             var types = await _context.DocumentTypes.ToListAsync();
             return Ok(types);}
+
+        [HttpPost("Types")]
+        public async Task<ActionResult> CreateTypes([FromBody] DocumentTypeDto request) {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (userIdClaim == null || roleClaim == null)
+                return Unauthorized("User ID or Role claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return BadRequest("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (roleClaim != "Admin" && roleClaim != "FullUser")
+                return Unauthorized("User Not Allowed To this action.");
+            if (string.IsNullOrEmpty(request.TypeName))
+                return BadRequest("Type Name is required!");
+            var typename = await _context.DocumentTypes.AnyAsync(t => t.TypeName == request.TypeName);
+            if (typename)
+                return BadRequest("Type Name already exist!");
+            var typekey = request.TypeName.Substring(0, 2);
+            var type = new DocumentType {TypeKey = typekey, TypeName = request.TypeName, TypeAttr = request.TypeAttr};
+            type.TypeKey += type.Id;
+            _context.DocumentTypes.Add(type);
+            await _context.SaveChangesAsync();
+            return Ok("Type successfully added!");
+        }
     }
 }

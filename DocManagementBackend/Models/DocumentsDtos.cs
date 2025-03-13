@@ -9,7 +9,6 @@ namespace DocManagementBackend.Models
         public DateTime DocDate { get; set; }
         public int CreatedByUserId { get; set; }
         public int TypeId { get; set; }
-
         public int Status { get; set; }
     }
 
@@ -62,6 +61,7 @@ namespace DocManagementBackend.Models
     }
 
     public class DocumentTypeDto {
+        public string TypeKey { get; set; } = string.Empty;
         public string TypeName { get; set; } = string.Empty;
         public string TypeAttr { get; set; } = string.Empty;
     }

@@ -1,23 +1,47 @@
+password in register
 
-// 3 en tete doc
-// type -> type + com
-// num
-// date
-// status 
-// com
+after register should show a message 
 
-// line
-// type
-// num-doc
-// nuline
-// comm
-// article
-// prix
+after verified a message welcome
 
-// sous
-// type
-// num-doc
-// nuline
-// num sous li
-// com1
-// com2
+message significative
+
+exit
+
+resend 
+
+add page to create a new type of document
+
+add foreing keydoc and add in the type
+
+active button add the activation status
+
+select list 
+
+modification of users
+
+log status for admin
+
+search list should be generale
+
+role update
+
+actions should be out the list (in the top)
+
+after creation of doc should be viewed
+
+modify and delete document from view
+
+creation step by step and improvement of the css
+
+
+choose a beter templete and colors
+
+table en tete serqui => code, descriptif, boolen(active, desactive)
+
+line serqui => code, numline, titre, descriptif
+
+add button status to change serqui
+
+
+Fa1

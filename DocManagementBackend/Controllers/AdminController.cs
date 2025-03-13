@@ -126,125 +126,125 @@ namespace DocManagementBackend.Controllers {
             return Ok("User deleted successfully.");
         }
 
-        [HttpGet("documents")] 
-        public async Task<IActionResult> GetAllDocuments() {
-            var documents = await _context.Documents.Where(d => !d.IsDeleted).Include(d => d.CreatedBy).ToListAsync();
-            return Ok(documents);
-        }
+        // [HttpGet("documents")] 
+        // public async Task<IActionResult> GetAllDocuments() {
+        //     var documents = await _context.Documents.Where(d => !d.IsDeleted).Include(d => d.CreatedBy).ToListAsync();
+        //     return Ok(documents);
+        // }
 
-        [HttpGet("documents/deleted")]
-        public async Task<IActionResult> GetDeletedDocuments() {
-            var documents = await _context.Documents.Where(d => d.IsDeleted).Include(d => d.CreatedBy).ToListAsync();
-            return Ok(documents);
-        }
+        // [HttpGet("documents/deleted")]
+        // public async Task<IActionResult> GetDeletedDocuments() {
+        //     var documents = await _context.Documents.Where(d => d.IsDeleted).Include(d => d.CreatedBy).ToListAsync();
+        //     return Ok(documents);
+        // }
 
-        [HttpGet("documents/{id}")]
-        public async Task<IActionResult> GetDocument(int id) {
-            var document = await _context.Documents.Include(d => d.CreatedBy).FirstOrDefaultAsync(d => d.Id == id);
-            if (document == null)
-                return NotFound("Document not found.");
-            return Ok(document);
-        }
+        // [HttpGet("documents/{id}")]
+        // public async Task<IActionResult> GetDocument(int id) {
+        //     var document = await _context.Documents.Include(d => d.CreatedBy).FirstOrDefaultAsync(d => d.Id == id);
+        //     if (document == null)
+        //         return NotFound("Document not found.");
+        //     return Ok(document);
+        // }
 
-        [HttpPost("documents")]
-        public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request) {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userIdClaim == null || roleClaim == null)
-                return Unauthorized("User ID or Role claim is missing.");
+        // [HttpPost("documents")]
+        // public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request) {
+        //     var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //     var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        //     if (userIdClaim == null || roleClaim == null)
+        //         return Unauthorized("User ID or Role claim is missing.");
 
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null)
-                return BadRequest("User not found.");
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
-            if (roleClaim != "Admin" && roleClaim != "FullUser")
-                return Unauthorized("User Not Allowed To Create Documents.");
+        //     int userId = int.Parse(userIdClaim);
+        //     var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+        //     if (user == null)
+        //         return BadRequest("User not found.");
+        //     if (!user.IsActive)
+        //         return Unauthorized("User account is deactivated.");
+        //     if (roleClaim != "Admin" && roleClaim != "FullUser")
+        //         return Unauthorized("User Not Allowed To Create Documents.");
 
-            var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
-            if (docType == null)
-                return BadRequest("check the type!!");
+        //     var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
+        //     if (docType == null)
+        //         return BadRequest("check the type!!");
 
-            var docDate = DateTime.UtcNow;
-            if (request.DocDate != default(DateTime))
-                docDate = request.DocDate;
+        //     var docDate = DateTime.UtcNow;
+        //     if (request.DocDate != default(DateTime))
+        //         docDate = request.DocDate;
 
-            var document = new Document {Title = request.Title,
-                Content = request.Content, CreatedByUserId = userId,
-                CreatedBy = user, TypeId = request.TypeId,
-                DocumentType = docType, Status = request.Status,
-                CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow,
-                DocDate = docDate};
+        //     var document = new Document {Title = request.Title,
+        //         Content = request.Content, CreatedByUserId = userId,
+        //         CreatedBy = user, TypeId = request.TypeId,
+        //         DocumentType = docType, Status = request.Status,
+        //         CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow,
+        //         DocDate = docDate};
 
-            _context.Documents.Add(document);
-            await _context.SaveChangesAsync();
+        //     _context.Documents.Add(document);
+        //     await _context.SaveChangesAsync();
 
-            var documentDto = new DocumentDto {
-                Id = document.Id, Title = document.Title, Content = document.Content, 
-                CreatedAt = document.CreatedAt, UpdatedAt = document.UpdatedAt, 
-                DocDate = document.DocDate, TypeId = document.TypeId,
-                DocumentType = new DocumentTypeDto {TypeName = docType.TypeName},
-                Status = document.Status, CreatedByUserId = document.CreatedByUserId,
-                CreatedBy = new DocumentUserDto {
-                    Username = user.Username, FirstName = user.FirstName, LastName = user.LastName,
-                    Role = user.Role != null ? user.Role.RoleName : string.Empty}
-            };
+        //     var documentDto = new DocumentDto {
+        //         Id = document.Id, Title = document.Title, Content = document.Content, 
+        //         CreatedAt = document.CreatedAt, UpdatedAt = document.UpdatedAt, 
+        //         DocDate = document.DocDate, TypeId = document.TypeId,
+        //         DocumentType = new DocumentTypeDto {TypeName = docType.TypeName},
+        //         Status = document.Status, CreatedByUserId = document.CreatedByUserId,
+        //         CreatedBy = new DocumentUserDto {
+        //             Username = user.Username, FirstName = user.FirstName, LastName = user.LastName,
+        //             Role = user.Role != null ? user.Role.RoleName : string.Empty}
+        //     };
 
-            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
-        }
+        //     return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
+        // }
 
-        [HttpPut("documents/{id}")]
-        public async Task<IActionResult> UpdateDocument(int id, [FromBody] AdminUpdateDocumentRequest request) {
-            var document = await _context.Documents.FindAsync(id);
-            if (document == null)
-                return NotFound("Document not found.");
-            if (document.IsDeleted)
-                return BadRequest("Document Is Deleted!");
-            if (document.Status == 1)
-                return BadRequest("This Document can't be changed!");
+        // [HttpPut("documents/{id}")]
+        // public async Task<IActionResult> UpdateDocument(int id, [FromBody] AdminUpdateDocumentRequest request) {
+        //     var document = await _context.Documents.FindAsync(id);
+        //     if (document == null)
+        //         return NotFound("Document not found.");
+        //     if (document.IsDeleted)
+        //         return BadRequest("Document Is Deleted!");
+        //     if (document.Status == 1)
+        //         return BadRequest("This Document can't be changed!");
 
-            if (!string.IsNullOrEmpty(request.Title))
-                document.Title = request.Title;
-            if (!string.IsNullOrEmpty(request.Content))
-                document.Content = request.Content;
-            if (request.Status.HasValue)
-                document.Status = request.Status.Value;
-            if (request.TypeId.HasValue)
-                document.TypeId = request.TypeId.Value;
+        //     if (!string.IsNullOrEmpty(request.Title))
+        //         document.Title = request.Title;
+        //     if (!string.IsNullOrEmpty(request.Content))
+        //         document.Content = request.Content;
+        //     if (request.Status.HasValue)
+        //         document.Status = request.Status.Value;
+        //     if (request.TypeId.HasValue)
+        //         document.TypeId = request.TypeId.Value;
 
-            var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
-            if (docType == null)
-                return BadRequest("check the type!!");
-            document.DocumentType = docType;
-            document.UpdatedAt = DateTime.UtcNow;
+        //     var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
+        //     if (docType == null)
+        //         return BadRequest("check the type!!");
+        //     document.DocumentType = docType;
+        //     document.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
-            return Ok("Document updated successfully.");
-        }
+        //     await _context.SaveChangesAsync();
+        //     return Ok("Document updated successfully.");
+        // }
 
-        [HttpPut("documents/recover/{id}")]
-        public async Task<IActionResult> RecoverDocument(int id)
-        {
-            var document = await _context.Documents.FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == true);
-            if (document == null)
-                return NotFound("Deleted document not found.");
+        // [HttpPut("documents/recover/{id}")]
+        // public async Task<IActionResult> RecoverDocument(int id)
+        // {
+        //     var document = await _context.Documents.FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == true);
+        //     if (document == null)
+        //         return NotFound("Deleted document not found.");
 
-            document.IsDeleted = false;
-            document.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+        //     document.IsDeleted = false;
+        //     document.UpdatedAt = DateTime.UtcNow;
+        //     await _context.SaveChangesAsync();
         
-            return Ok("Document recovered successfully.");
-        }
+        //     return Ok("Document recovered successfully.");
+        // }
 
-        [HttpDelete("documents/{id}")]
-        public async Task<IActionResult> DeleteDocument(int id) {
-            var document = await _context.Documents.FindAsync(id);
-            if (document == null)
-                return NotFound("Document not found.");
-            _context.Documents.Remove(document);
-            await _context.SaveChangesAsync();
-            return Ok("Document deleted successfully.");
-        }
+        // [HttpDelete("documents/{id}")]
+        // public async Task<IActionResult> DeleteDocument(int id) {
+        //     var document = await _context.Documents.FindAsync(id);
+        //     if (document == null)
+        //         return NotFound("Document not found.");
+        //     _context.Documents.Remove(document);
+        //     await _context.SaveChangesAsync();
+        //     return Ok("Document deleted successfully.");
+        // }
     }
 }

@@ -16,14 +16,14 @@ namespace DocManagementBackend.Data
         public DbSet<DocumentType> DocumentTypes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<DocumentType>().HasData(
-                new DocumentType { Id = 1, TypeName = "Facture" },
-                new DocumentType { Id = 2, TypeName = "Releve" },
-                new DocumentType { Id = 3, TypeName = "Bilan" },
-                new DocumentType { Id = 4, TypeName = "Register" },
-                new DocumentType { Id = 5, TypeName = "Planing" },
-                new DocumentType { Id = 6, TypeName = "Rapport" }
-            );
+            // modelBuilder.Entity<DocumentType>().HasData(
+            //     new DocumentType { Id = 1, TypeName = "Facture" },
+            //     new DocumentType { Id = 2, TypeName = "Releve" },
+            //     new DocumentType { Id = 3, TypeName = "Bilan" },
+            //     new DocumentType { Id = 4, TypeName = "Register" },
+            //     new DocumentType { Id = 5, TypeName = "Planing" },
+            //     new DocumentType { Id = 6, TypeName = "Rapport" }
+            // );
 
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, RoleName = "Admin", IsAdmin = true },

@@ -23,6 +23,7 @@ namespace DocManagementBackend.Models {
         public string? EmailVerificationCode { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = false;
+        public bool IsOnline { get; set; } = false;
         public DateTime? LastLogin { get; set; }
         public string? ProfilePicture { get; set; }
         public string? BackgroundPicture { get; set; }
@@ -74,6 +75,7 @@ namespace DocManagementBackend.Models {
         [ForeignKey("TypeId")]
         public DocumentType? DocumentType { get; set; }
         [Required]
+        public string DocumentKey { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
         [Required]
@@ -89,6 +91,7 @@ namespace DocManagementBackend.Models {
     public class DocumentType {
         [Key]
         public int Id { get; set; }
+        public string TypeKey { get; set; } = string.Empty;
         public string TypeName { get; set; } = string.Empty;
         public string TypeAttr { get; set; } = string.Empty;
         [JsonIgnore]
