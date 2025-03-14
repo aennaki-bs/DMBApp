@@ -6,16 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using DocManagementBackend.Mappings;
 
-namespace DocManagementBackend.Controllers {
+namespace DocManagementBackend.Controllers
+{
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class DocumentsController : ControllerBase {
+    public class DocumentsController : ControllerBase
+    {
         private readonly ApplicationDbContext _context;
-        public DocumentsController(ApplicationDbContext context) {_context = context;}
+        public DocumentsController(ApplicationDbContext context) { _context = context; }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDocuments() {
+        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDocuments()
+        {
             var isActiveClaim = User.FindFirst("IsActive")?.Value;
             if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized("User Account Desactivated!");
@@ -26,7 +29,8 @@ namespace DocManagementBackend.Controllers {
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<DocumentDto>> GetDocument(int id) {
+        public async Task<ActionResult<DocumentDto>> GetDocument(int id)
+        {
             var isActiveClaim = User.FindFirst("IsActive")?.Value;
             if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized("User Account Deactivated!");
@@ -34,13 +38,14 @@ namespace DocManagementBackend.Controllers {
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Where(d => d.Id == id).Include(d => d.Lignes)
                 .Select(DocumentMappings.ToDocumentDto).FirstOrDefaultAsync();
-            if (documentDto == null) {return NotFound("Document not found!");}
+            if (documentDto == null) { return NotFound("Document not found!"); }
 
             return Ok(documentDto);
         }
 
         [HttpPost]
-        public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request) {
+        public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             if (userIdClaim == null || roleClaim == null)
@@ -55,84 +60,116 @@ namespace DocManagementBackend.Controllers {
                 return Unauthorized("User Not Allowed To Create Documents.");
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
-                return BadRequest("check the type!!");
+                return BadRequest("Invalid Document type!");
             var docDate = DateTime.UtcNow;
             if (request.DocDate != default(DateTime))
                 docDate = request.DocDate;
             var docAlias = "DOC";
             if (!string.IsNullOrEmpty(request.DocumentAlias))
-                docAlias = request.DocumentAlias;
+                docAlias = request.DocumentAlias.ToUpper();
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try {
+            // using var transaction = await _context.Database.BeginTransactionAsync();
+            // try
+            // {
                 docType.DocumentCounter++;
                 var documentKey = $"{docType.TypeKey}-{docAlias}{docType.DocumentCounter}";
-                var document = new Document {Title = request.Title, DocumentAlias = docAlias,
-                Content = request.Content, CreatedByUserId = userId,
-                CreatedBy = user, DocDate = docDate,
-                TypeId = request.TypeId, DocumentType = docType,
-                Status = 0, CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow, DocumentKey = documentKey};
+                var document = new Document
+                {
+                    Title = request.Title,
+                    DocumentAlias = docAlias,
+                    Content = request.Content,
+                    CreatedByUserId = userId,
+                    CreatedBy = user,
+                    DocDate = docDate,
+                    TypeId = request.TypeId,
+                    DocumentType = docType,
+                    Status = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    DocumentKey = documentKey
+                };
                 _context.Documents.Add(document);
                 await _context.SaveChangesAsync();
-                var documentDto = new DocumentDto {
-                    Id = document.Id, Title = document.Title, DocumentKey = document.DocumentKey,
-                    Content = document.Content, Status = document.Status, DocumentAlias = document.DocumentAlias,
-                    CreatedAt = document.CreatedAt, UpdatedAt = document.UpdatedAt,
-                    TypeId = document.TypeId, DocDate = document.DocDate,
+                var documentDto = new DocumentDto
+                {
+                    Id = document.Id,
+                    Title = document.Title,
+                    DocumentKey = document.DocumentKey,
+                    Content = document.Content,
+                    Status = document.Status,
+                    DocumentAlias = document.DocumentAlias,
+                    CreatedAt = document.CreatedAt,
+                    UpdatedAt = document.UpdatedAt,
+                    TypeId = document.TypeId,
+                    DocDate = document.DocDate,
                     DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
                     CreatedByUserId = document.CreatedByUserId,
-                    CreatedBy = new DocumentUserDto {
-                        Username = user.Username, FirstName = user.FirstName, LastName = user.LastName,
+                    CreatedBy = new DocumentUserDto
+                    {
+                        Username = user.Username,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
                         Role = user.Role != null ? user.Role.RoleName : string.Empty
-                    }};
+                    }
+                };
                 return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
-            }
-            catch (Exception ex) {await transaction.RollbackAsync();
-                return StatusCode(500, $"Error creating document: {ex.Message}");
-            }
+            // }
+            // catch (Exception ex)
+            // {
+            //     await transaction.RollbackAsync();
+            //     return StatusCode(500, $"Error creating document: {ex.Message}");
+            // }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDocument(int id, [FromBody] UpdateDocumentRequest request) {
+        public async Task<IActionResult> UpdateDocument(int id, [FromBody] UpdateDocumentRequest request)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             if (userIdClaim == null || roleClaim == null)
                 return Unauthorized("User ID or Role claim is missing.");
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To EditDocuments.");
-            var IsActiveClaim =  User.FindFirst("IsActive")?.Value;
+            var IsActiveClaim = User.FindFirst("IsActive")?.Value;
             if (IsActiveClaim == null || IsActiveClaim == "False")
                 return Unauthorized("User Account Desactivated!");
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound("Document not found.");
-            document.Content = request.Content?? document.Content;
-            document.Title = request.Title?? document.Title;
-            document.DocDate = request.DocDate?? DateTime.UtcNow;
-            document.TypeId = request.TypeId?? document.TypeId;
-            if (request.TypeId.HasValue) {
+            document.Content = request.Content ?? document.Content;
+            document.Title = request.Title ?? document.Title;
+            document.DocDate = request.DocDate ?? DateTime.UtcNow;
+            document.TypeId = request.TypeId ?? document.TypeId;
+            if (request.TypeId.HasValue)
+            {
                 var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
                 if (docType == null)
                     return BadRequest("Invalide type!");
                 document.DocumentType = docType;
                 docType.DocumentCounter++;
-                document.DocumentKey = $"{docType.TypeKey}-{document.DocumentAlias}{docType.DocumentCounter}";
+                document.DocumentKey = $"{docType.TypeKey}-{document.DocumentAlias.ToUpper()}{docType.DocumentCounter}";
+            }
+            if (!string.IsNullOrEmpty(request.DocumentAlias))
+            {
+                document.DocumentAlias = request.DocumentAlias.ToUpper();
+                document.DocumentKey = $"{document.DocumentType!.TypeKey}-{request.DocumentAlias.ToUpper()}{document.DocumentType!.DocumentCounter}";
             }
             document.UpdatedAt = DateTime.UtcNow;
             _context.Entry(document).State = EntityState.Modified;
-        
-            try {await _context.SaveChangesAsync();}
-            catch (DbUpdateConcurrencyException) {
-                if (!_context.Documents.Any(d => d.Id == id)) {return NotFound();}
-                else {throw;}
+
+            try { await _context.SaveChangesAsync(); }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Documents.Any(d => d.Id == id)) { return NotFound(); }
+                else { throw; }
             }
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDocument(int id) {
-            var IsActiveClaim =  User.FindFirst("IsActive")?.Value;
+        public async Task<IActionResult> DeleteDocument(int id)
+        {
+            var IsActiveClaim = User.FindFirst("IsActive")?.Value;
             if (IsActiveClaim == null || IsActiveClaim == "False")
                 return Unauthorized("User Account Desactivated!");
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -154,7 +191,8 @@ namespace DocManagementBackend.Controllers {
         }
 
         [HttpGet("Types")]
-        public async Task<ActionResult> GetTypes() {
+        public async Task<ActionResult> GetTypes()
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             if (userIdClaim == null || roleClaim == null)
@@ -168,10 +206,12 @@ namespace DocManagementBackend.Controllers {
             if (roleClaim != "Admin" && roleClaim != "FullUser")
                 return Unauthorized("User Not Allowed To This action.");
             var types = await _context.DocumentTypes.ToListAsync();
-            return Ok(types);}
+            return Ok(types);
+        }
 
         [HttpPost("Types")]
-        public async Task<ActionResult> CreateTypes([FromBody] DocumentTypeDto request) {
+        public async Task<ActionResult> CreateTypes([FromBody] DocumentTypeDto request)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             if (userIdClaim == null || roleClaim == null)
@@ -190,11 +230,16 @@ namespace DocManagementBackend.Controllers {
             if (typename)
                 return BadRequest("Type Name already exists!");
             var typeCounter = await _context.TypeCounter.FirstOrDefaultAsync();
-            if (typeCounter == null) {typeCounter = new TypeCounter { Counter = 1 }; _context.TypeCounter.Add(typeCounter);}
-            else {typeCounter.Counter++;}
-            var typeKey = request.TypeName.Substring(0, 3).ToUpper() + typeCounter.Counter;
-            var type = new DocumentType {TypeKey = typeKey,
-                TypeName = request.TypeName, TypeAttr = request.TypeAttr};
+            if (typeCounter == null) { typeCounter = new TypeCounter { Counter = 1 }; _context.TypeCounter.Add(typeCounter); }
+            else { typeCounter.Counter++; }
+            var typeKey = (request.TypeName.Length > 3) ? request.TypeName.Substring(0, 3).ToUpper() : request.TypeName.ToUpper();
+            typeKey += typeCounter.Counter;
+            var type = new DocumentType
+            {
+                TypeKey = typeKey,
+                TypeName = request.TypeName,
+                TypeAttr = request.TypeAttr
+            };
             _context.DocumentTypes.Add(type);
             await _context.SaveChangesAsync();
             return Ok("Type successfully added!");

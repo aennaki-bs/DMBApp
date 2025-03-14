@@ -20,6 +20,7 @@ namespace DocManagementBackend.Mappings
             {
                 Id = l.Document!.Id,
                 DocumentKey = l.Document.DocumentKey,
+                DocumentAlias = l.Document.DocumentAlias,
                 Title = l.Document.Title,
                 Content = l.Document.Content,
                 TypeId = l.Document.TypeId,
@@ -73,6 +74,7 @@ namespace DocManagementBackend.Mappings
                 Document = new DocumentDto {
                     Id = s.Ligne.Document!.Id,
                     DocumentKey = s.Ligne.Document.DocumentKey,
+                    DocumentAlias = s.Ligne.Document.DocumentAlias,
                     Title = s.Ligne.Document.Title,
                     Content = s.Ligne.Document.Content,
                     TypeId = s.Ligne.Document.TypeId,
@@ -109,6 +111,7 @@ namespace DocManagementBackend.Mappings
         {
             Id = d.Id,
             DocumentKey = d.DocumentKey,
+            DocumentAlias = d.DocumentAlias,
             Title = d.Title,
             Content = d.Content,
             CreatedAt = d.CreatedAt,
