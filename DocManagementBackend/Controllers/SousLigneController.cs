@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using DocManagementBackend.Mappings;
+using System.Security.Claims;
 
 namespace DocManagementBackend.Controllers
 {
@@ -18,6 +19,15 @@ namespace DocManagementBackend.Controllers
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SousLigne>>> GetSousLignes() {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
             var sousLigne = await _context.SousLignes
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
@@ -28,6 +38,15 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<SousLigne>> GetSousLigne(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
             var sousLigne = await _context.SousLignes
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
@@ -42,6 +61,15 @@ namespace DocManagementBackend.Controllers
         [HttpGet("by_ligne/{id}")]
         public async Task<ActionResult<SousLigne>> GetSousLigneByLigneId(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
             var sousLigne = await _context.SousLignes
                 .Where(s => s.LigneId == id)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
@@ -57,6 +85,15 @@ namespace DocManagementBackend.Controllers
         [HttpGet("by_document/{id}")]
         public async Task<ActionResult<SousLigne>> GetSousLigneByDocId(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
             var sousLigne = await _context.SousLignes
                 .Where(s => s.Ligne!.DocumentId == id)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
@@ -72,12 +109,24 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<SousLigne>> CreateSousLigne([FromBody] SousLigne sousLigne)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action.");
             var ligne = await _context.Lignes.FindAsync(sousLigne.LigneId);
             if (ligne == null)
                 return BadRequest("Invalid LigneId. Ligne not found.");
 
             sousLigne.CreatedAt = DateTime.UtcNow;
             sousLigne.UpdatedAt = DateTime.UtcNow;
+            sousLigne.SousLigneKey = $"{ligne.LigneKey}-SL{ligne.SousLigneCounter++}";
 
             _context.SousLignes.Add(sousLigne);
             await _context.SaveChangesAsync();
@@ -94,6 +143,17 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSousLigne(int id, [FromBody] SousLigne updatedSousLigne)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action.");
             var sousLigne = await _context.SousLignes.FindAsync(id);
             if (sousLigne == null)
                 return NotFound("SousLigne not found.");
@@ -109,6 +169,17 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSousLigne(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action.");
             var sousLigne = await _context.SousLignes.FindAsync(id);
             if (sousLigne == null)
                 return NotFound("SousLigne not found.");

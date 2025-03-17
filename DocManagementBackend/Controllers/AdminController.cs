@@ -16,9 +16,16 @@ namespace DocManagementBackend.Controllers {
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers() {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim))
-                return Unauthorized("User is not authenticated.");
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
             int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User Not Allowed To do this action.");
             var users = await _context.Users
                 .Include(u => u.Role).Where(u => u.Id != userId).ToListAsync();
             return Ok(users);
@@ -26,6 +33,17 @@ namespace DocManagementBackend.Controllers {
 
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUser(int id) {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
                 return NotFound("User not found.");
@@ -34,6 +52,17 @@ namespace DocManagementBackend.Controllers {
 
         [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] AdminCreateUserRequest request) {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User Not Allowed To do this action.");
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest("Email is already in use.");
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
@@ -71,6 +100,17 @@ namespace DocManagementBackend.Controllers {
             // Console.ForegroundColor = ConsoleColor.Green;
             // Console.WriteLine($"=== request Users === {request.RoleName}");
             // Console.ResetColor();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound("User not found.");
@@ -118,6 +158,17 @@ namespace DocManagementBackend.Controllers {
 
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id) {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound("User not found.");
@@ -132,6 +183,14 @@ namespace DocManagementBackend.Controllers {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User Not Allowed To do this action.");
             if (userIds == null || !userIds.Any())
                 return BadRequest("No user IDs provided.");
             var usersToDelete = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
@@ -142,6 +201,42 @@ namespace DocManagementBackend.Controllers {
             _context.Users.RemoveRange(usersToDelete);
             await _context.SaveChangesAsync();
             return Ok($"{usersToDelete.Count} Users Deleted Successfully.");
+        }
+
+        [HttpGet("logs/{id}")]
+        public async Task<IActionResult> GetUserLogHistory(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User Not Allowed To do this action.");
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+                return NotFound("User not found!");
+            var logsDto = await _context.LogHistories.Where(l => l.UserId == id).Include(l => l.User)
+                .ThenInclude(u => u.Role)
+            .Select(l => new LogHistoryDto {
+                Id = l.Id,
+                ActionType = l.ActionType,
+                Timestamp = l.Timestamp,
+                User = new UserLogDto {
+                    Username = l.User.Username,
+                    Role = l.User.Role != null ? l.User.Role.RoleName : string.Empty
+                }
+            })
+            .OrderByDescending(l => l.Timestamp)
+            .ToListAsync();
+            if (logsDto == null)
+                return NotFound("User logs not found!");
+
+            return Ok(logsDto);
         }
     }
 }

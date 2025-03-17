@@ -22,8 +22,7 @@ namespace DocManagementBackend.Data
             //     new DocumentType { Id = 2, TypeName = "Releve" },
             //     new DocumentType { Id = 3, TypeName = "Bilan" },
             //     new DocumentType { Id = 4, TypeName = "Register" },
-            //     new DocumentType { Id = 5, TypeName = "Planing" },
-            //     new DocumentType { Id = 6, TypeName = "Rapport" }
+            //     new DocumentType { Id = 5, TypeName = "Rapport" }
             // );
 
             modelBuilder.Entity<Role>().HasData(

@@ -11,6 +11,7 @@ namespace DocManagementBackend.Mappings
         {
             Id = l.Id,
             DocumentId = l.DocumentId,
+            LingeKey = l.LigneKey,
             Title = l.Title,
             Article = l.Article,
             Prix = l.Prix,
@@ -66,6 +67,7 @@ namespace DocManagementBackend.Mappings
             Ligne = new LigneDto {
                 Id = s.Id,
                 DocumentId = s.Ligne!.DocumentId,
+                LingeKey = s.Ligne.LigneKey,
                 Title = s.Ligne.Title,
                 Article = s.Ligne.Article,
                 Prix = s.Ligne.Prix,

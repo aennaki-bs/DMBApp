@@ -84,6 +84,7 @@ namespace DocManagementBackend.Models {
         public DateTime DocDate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public int LigneCouter { get; set; } = 0;
         public bool IsDeleted { get; set; } = false;
         [JsonIgnore]
         public ICollection<Ligne> Lignes { get; set; } = new List<Ligne>();
@@ -108,9 +109,11 @@ namespace DocManagementBackend.Models {
         [ForeignKey("DocumentId")]
         [JsonIgnore]
         public Document? Document { get; set; }
+        public string LigneKey { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Article { get; set; } = string.Empty;
         public float Prix { get; set; }
+        public int SousLigneCounter { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         [JsonIgnore]
@@ -125,6 +128,7 @@ namespace DocManagementBackend.Models {
         [ForeignKey("LigneId")]
         [JsonIgnore]
         public Ligne? Ligne { get; set; }
+        public string SousLigneKey { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Attribute { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

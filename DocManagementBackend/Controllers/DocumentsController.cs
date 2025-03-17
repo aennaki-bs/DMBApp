@@ -19,9 +19,15 @@ namespace DocManagementBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDocuments()
         {
-            var isActiveClaim = User.FindFirst("IsActive")?.Value;
-            if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
-                return Unauthorized("User Account Desactivated!");
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
             var documents = await _context.Documents.Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.Lignes).Select(DocumentMappings.ToDocumentDto).ToListAsync();
 
@@ -31,9 +37,15 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<DocumentDto>> GetDocument(int id)
         {
-            var isActiveClaim = User.FindFirst("IsActive")?.Value;
-            if (isActiveClaim == null || isActiveClaim.Equals("False", StringComparison.OrdinalIgnoreCase))
-                return Unauthorized("User Account Deactivated!");
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
             var documentDto = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Where(d => d.Id == id).Include(d => d.Lignes)
@@ -47,16 +59,15 @@ namespace DocManagementBackend.Controllers
         public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userIdClaim == null || roleClaim == null)
-                return Unauthorized("User ID or Role claim is missing.");
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
             int userId = int.Parse(userIdClaim);
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return BadRequest("User not found.");
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
-            if (roleClaim != "Admin" && roleClaim != "FullUser")
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To Create Documents.");
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
@@ -68,71 +79,64 @@ namespace DocManagementBackend.Controllers
             if (!string.IsNullOrEmpty(request.DocumentAlias))
                 docAlias = request.DocumentAlias.ToUpper();
 
-            // using var transaction = await _context.Database.BeginTransactionAsync();
-            // try
-            // {
-                docType.DocumentCounter++;
-                var documentKey = $"{docType.TypeKey}-{docAlias}{docType.DocumentCounter}";
-                var document = new Document
+            docType.DocumentCounter++;
+            var documentKey = $"{docType.TypeKey}-{docAlias}{docType.DocumentCounter}";
+            var document = new Document
+            {
+                Title = request.Title,
+                DocumentAlias = docAlias,
+                Content = request.Content,
+                CreatedByUserId = userId,
+                CreatedBy = user,
+                DocDate = docDate,
+                TypeId = request.TypeId,
+                DocumentType = docType,
+                Status = 0,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DocumentKey = documentKey
+            };
+            _context.Documents.Add(document);
+            await _context.SaveChangesAsync();
+            var documentDto = new DocumentDto
+            {
+                Id = document.Id,
+                Title = document.Title,
+                DocumentKey = document.DocumentKey,
+                Content = document.Content,
+                Status = document.Status,
+                DocumentAlias = document.DocumentAlias,
+                CreatedAt = document.CreatedAt,
+                UpdatedAt = document.UpdatedAt,
+                TypeId = document.TypeId,
+                DocDate = document.DocDate,
+                DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
+                CreatedByUserId = document.CreatedByUserId,
+                CreatedBy = new DocumentUserDto
                 {
-                    Title = request.Title,
-                    DocumentAlias = docAlias,
-                    Content = request.Content,
-                    CreatedByUserId = userId,
-                    CreatedBy = user,
-                    DocDate = docDate,
-                    TypeId = request.TypeId,
-                    DocumentType = docType,
-                    Status = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    DocumentKey = documentKey
-                };
-                _context.Documents.Add(document);
-                await _context.SaveChangesAsync();
-                var documentDto = new DocumentDto
-                {
-                    Id = document.Id,
-                    Title = document.Title,
-                    DocumentKey = document.DocumentKey,
-                    Content = document.Content,
-                    Status = document.Status,
-                    DocumentAlias = document.DocumentAlias,
-                    CreatedAt = document.CreatedAt,
-                    UpdatedAt = document.UpdatedAt,
-                    TypeId = document.TypeId,
-                    DocDate = document.DocDate,
-                    DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
-                    CreatedByUserId = document.CreatedByUserId,
-                    CreatedBy = new DocumentUserDto
-                    {
-                        Username = user.Username,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                        Role = user.Role != null ? user.Role.RoleName : string.Empty
-                    }
-                };
-                return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
-            // }
-            // catch (Exception ex)
-            // {
-            //     await transaction.RollbackAsync();
-            //     return StatusCode(500, $"Error creating document: {ex.Message}");
-            // }
+                    Username = user.Username,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Role = user.Role != null ? user.Role.RoleName : string.Empty
+                }
+            };
+            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateDocument(int id, [FromBody] UpdateDocumentRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userIdClaim == null || roleClaim == null)
-                return Unauthorized("User ID or Role claim is missing.");
-            if (roleClaim != "Admin" && roleClaim != "FullUser")
-                return Unauthorized("User Not Allowed To EditDocuments.");
-            var IsActiveClaim = User.FindFirst("IsActive")?.Value;
-            if (IsActiveClaim == null || IsActiveClaim == "False")
-                return Unauthorized("User Account Desactivated!");
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return BadRequest("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To Update Documents.");
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound("Document not found.");
@@ -169,18 +173,21 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDocument(int id)
         {
-            var IsActiveClaim = User.FindFirst("IsActive")?.Value;
-            if (IsActiveClaim == null || IsActiveClaim == "False")
-                return Unauthorized("User Account Desactivated!");
-            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (roleClaim == null)
-                return Unauthorized("Role claim is missing.");
-            if (roleClaim != "Admin" && roleClaim != "FullUser")
-                return Unauthorized("User Not Allowed To Delete Document.");
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return BadRequest("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To Delete Documents.");
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound();
-            if (document.Status == 1 && roleClaim != "Admin")
+            if (document.Status == 1 && user.Role!.RoleName != "Admin")
                 return Unauthorized("Ask an admin for deleting this document!");
 
             _context.Documents.Remove(document);
@@ -194,8 +201,7 @@ namespace DocManagementBackend.Controllers
         public async Task<ActionResult> GetTypes()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userIdClaim == null || roleClaim == null)
+            if (userIdClaim == null)
                 return Unauthorized("User ID or Role claim is missing.");
             int userId = int.Parse(userIdClaim);
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
@@ -203,8 +209,8 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
-            if (roleClaim != "Admin" && roleClaim != "FullUser")
-                return Unauthorized("User Not Allowed To This action.");
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do This action.");
             var types = await _context.DocumentTypes.ToListAsync();
             return Ok(types);
         }
@@ -213,17 +219,16 @@ namespace DocManagementBackend.Controllers
         public async Task<ActionResult> CreateTypes([FromBody] DocumentTypeDto request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userIdClaim == null || roleClaim == null)
-                return Unauthorized("User ID or Role claim is missing.");
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
             int userId = int.Parse(userIdClaim);
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return BadRequest("User not found.");
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
-            if (roleClaim != "Admin" && roleClaim != "FullUser")
-                return Unauthorized("User Not Allowed To this action.");
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action.");
             if (string.IsNullOrEmpty(request.TypeName))
                 return BadRequest("Type Name is required!");
             var typename = await _context.DocumentTypes.AnyAsync(t => t.TypeName == request.TypeName);
