@@ -79,7 +79,8 @@ namespace DocManagementBackend.Controllers
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.IsActive = false;
             user.IsEmailConfirmed = false;
-            var verificationLink = $"http://192.168.1.54:5174/verify/{user.Email}";
+            string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
+            var verificationLink = $"{frontDomain}/verify/{user.Email}";
             string emailBody = createEmailBody(verificationLink, user.EmailVerificationCode);
             try
             {

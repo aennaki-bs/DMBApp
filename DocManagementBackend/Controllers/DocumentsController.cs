@@ -68,7 +68,7 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To Create Documents.");
+                return Unauthorized("User Not Allowed To do this action...!");
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
                 return BadRequest("Invalid Document type!");
@@ -136,7 +136,7 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To Update Documents.");
+                return Unauthorized("User Not Allowed To do this action...!");
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound("Document not found.");
@@ -183,12 +183,12 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To Delete Documents.");
+                return Unauthorized("User Not Allowed To do this action...!");
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound();
-            if (document.Status == 1 && user.Role!.RoleName != "Admin")
-                return Unauthorized("Ask an admin for deleting this document!");
+            // if (document.Status == 1 && user.Role!.RoleName != "Admin")
+            //     return Unauthorized("Ask an admin for deleting this document!");
 
             _context.Documents.Remove(document);
             document.UpdatedAt = DateTime.UtcNow;
@@ -210,7 +210,7 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To do This action.");
+                return Unauthorized("User Not Allowed To do this action...!");
             var types = await _context.DocumentTypes.ToListAsync();
             return Ok(types);
         }
@@ -228,7 +228,7 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To do this action.");
+                return Unauthorized("User Not Allowed To do this action...!");
             if (string.IsNullOrEmpty(request.TypeName))
                 return BadRequest("Type Name is required!");
             var typename = await _context.DocumentTypes.AnyAsync(t => t.TypeName == request.TypeName);

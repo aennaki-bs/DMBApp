@@ -139,7 +139,7 @@ namespace DocManagementBackend.Controllers
 
             return CreatedAtAction(nameof(GetSousLigne), new { id = sousLigne.Id }, sousLigneDto);
         }
-        
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSousLigne(int id, [FromBody] SousLigne updatedSousLigne)
         {

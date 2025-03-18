@@ -24,21 +24,21 @@ namespace DocManagementBackend.Controllers
             if (!int.TryParse(userIdClaim, out var userId))
                 return BadRequest("Invalid user ID.");
 
-            var user = await _context.Users
-                .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return NotFound("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("This account is desactivated!");
             var picture = string.Empty;
             if (!string.IsNullOrEmpty(user.ProfilePicture))
-            { picture = $"{Request.Scheme}://{Request.Host}{user.ProfilePicture}"; }
+                {picture = $"{Request.Scheme}://{Request.Host}{user.ProfilePicture}";}
             var userInfo = new {userid = user.Id,
                 username = user.Username, email = user.Email,
                 role = user.Role?.RoleName ?? "SimpleUser",
                 firstName = user.FirstName, lastName = user.LastName,
                 profilePicture = picture, isActive = user.IsActive,
                 address = user.Address, city = user.City, country = user.Country,
-                phoneNumber = user.PhoneNumber, isOnline = user.IsOnline,
+                phoneNumber = user.PhoneNumber, isOnline = user.IsOnline, //isBlocked = user.IsBlocked,
             };
 
             return Ok(userInfo);
@@ -53,10 +53,11 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User ID claim is missing.");
             if (!int.TryParse(userIdClaim, out var userId))
                 return BadRequest("Invalid user ID.");
-
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return NotFound("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("This account is desactivated!");
             var userRole = new { role = user.Role?.RoleName ?? "SimpleUser" };
 
             return Ok(userRole);
@@ -65,6 +66,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
+            string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
                 return NotFound("No user found with that email address.");
@@ -72,7 +74,7 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("Email Not Verified!");
             if (!user.IsActive)
                 return Unauthorized("User Account Desactivated!");
-            var verificationLink = $"http://192.168.1.54:5174/update-password/{user.Email}";
+            var verificationLink = $"{frontDomain}/update-password/{user.Email}";
             var emailBody = createPassEmailBody(verificationLink);
             SendEmail(user.Email, "Password Reset", emailBody);
             return Ok("A Link Is Sent To Your Email.");
@@ -97,6 +99,7 @@ namespace DocManagementBackend.Controllers
 
         [HttpPost("resend-code")]
         public async Task<IActionResult> ResendCode([FromBody] ForgotPasswordRequest request) {
+            string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
             if (string.IsNullOrEmpty(request.Email))
                 return BadRequest("Email is required!");
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
@@ -105,7 +108,7 @@ namespace DocManagementBackend.Controllers
             var verifCode = new Random().Next(100000, 999999).ToString();
             if (string.IsNullOrEmpty(user.EmailVerificationCode))
                 user.EmailVerificationCode = verifCode;
-            var verificationLink = $"http://192.168.1.54:5174/verify/{user.Email}";
+            var verificationLink = $"{frontDomain}/verify/{user.Email}";
             string emailBody = CreateEmailBody(verificationLink, user.EmailVerificationCode);
             SendEmail(user.Email, "Email Verification", emailBody);
             await _context.SaveChangesAsync();

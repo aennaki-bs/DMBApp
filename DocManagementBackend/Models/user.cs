@@ -24,6 +24,7 @@ namespace DocManagementBackend.Models {
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = false;
         public bool IsOnline { get; set; } = false;
+        // public bool IsBlocked { get; set; } = false;
         public DateTime? LastLogin { get; set; }
         public string? ProfilePicture { get; set; }
         public string? BackgroundPicture { get; set; }
