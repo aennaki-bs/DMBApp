@@ -241,7 +241,7 @@ namespace DocManagementBackend.Controllers
         private string GenerateAccessToken(User user)
         {
             var jwtSettings = _config.GetSection("JwtSettings");
-            var secretKey = jwtSettings["SecretKey"];
+            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET");;
             if (string.IsNullOrEmpty(secretKey))
                 throw new InvalidOperationException("JWT configuration is missing.");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -254,8 +254,8 @@ namespace DocManagementBackend.Controllers
             var expMinutes = jwtSettings["ExpiryMinutes"];
             if (string.IsNullOrEmpty(expMinutes))
                 throw new InvalidOperationException("ExpiryMinutes is missing.");
-            var token = new JwtSecurityToken(issuer: jwtSettings["Issuer"],
-                audience: jwtSettings["Audience"], claims: claims,
+            var token = new JwtSecurityToken(issuer: Environment.GetEnvironmentVariable("ISSUER"),
+                audience: Environment.GetEnvironmentVariable("AUDIENCE"), claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(int.Parse(expMinutes)),
                 signingCredentials: creds);
 

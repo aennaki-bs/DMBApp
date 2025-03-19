@@ -10,7 +10,6 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET");
 if (string.IsNullOrEmpty(secretKey)) {
     throw new InvalidOperationException("JWT configuration is missing.");
@@ -27,9 +26,9 @@ builder.Services.AddAuthentication(options => {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = jwtSettings["Issuer"],
+        ValidIssuer = Environment.GetEnvironmentVariable("ISSUER"),
         ValidateAudience = true,
-        ValidAudience = jwtSettings["Audience"],
+        ValidAudience = Environment.GetEnvironmentVariable("AUDIENCE"),
         ValidateLifetime = true
     };
 });
