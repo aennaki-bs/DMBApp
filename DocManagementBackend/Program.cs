@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using DocManagementBackend.Data;
+using DocManagementBackend.Models;
 using System.Text;
 using DotNetEnv;
 using Microsoft.Extensions.FileProviders;
@@ -10,11 +11,22 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? throw new InvalidOperationException("JWT_SECRET is missing.");
-var jwtIssuer = Environment.GetEnvironmentVariable("ISSUER") ?? throw new InvalidOperationException("ISSUER is missing.");
-var jwtAudience = Environment.GetEnvironmentVariable("AUDIENCE") ?? throw new InvalidOperationException("AUDIENCE is missing.");
+var jwtSettings = new JwtSettings
+{
+    SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? throw new InvalidOperationException("JWT_SECRET is missing."),
+    Issuer = Environment.GetEnvironmentVariable("ISSUER") ?? throw new InvalidOperationException("ISSUER is missing."),
+    Audience = Environment.GetEnvironmentVariable("AUDIENCE") ?? throw new InvalidOperationException("AUDIENCE is missing."),
+};
 
-var key = Encoding.UTF8.GetBytes(jwtSecret);
+var key = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
+
+builder.Services.Configure<JwtSettings>(options =>
+{
+    options.SecretKey = jwtSettings.SecretKey;
+    options.Issuer = jwtSettings.Issuer;
+    options.Audience = jwtSettings.Audience;
+    options.ExpiryMinutes = jwtSettings.ExpiryMinutes;
+});
 
 builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -26,9 +38,9 @@ builder.Services.AddAuthentication(options => {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = jwtIssuer,
+        ValidIssuer = jwtSettings.Issuer,
         ValidateAudience = true,
-        ValidAudience = jwtAudience,
+        ValidAudience = jwtSettings.Audience,
         ValidateLifetime = true
     };
 });

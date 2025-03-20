@@ -1,26 +1,28 @@
 ☐ password in register -Valide
-☐ 
+
 ☐ resend button : resend vereficaton code 
-☐ 
+
 ☐ after register should show a message 
-☐ 
+
 ☐ after verified a message welcome
-☐ 
+
 ☐ message significative
-☐ 
+
 ☐ exit button
+
+☐ select list 
+
+☐ active button add the activation status
+
+☐ log status for admin
+
 ☐ 
-add page to create a new type of document
 
 add foreing keydoc and add in the type
 
-active button add the activation status
-
-select list 
+add page to create a new type of document
 
 modification of users
-
-log status for admin
 
 search list should be generale
 
@@ -34,11 +36,10 @@ modify and delete document from view
 
 creation step by step and improvement of the css
 
-
 choose a beter templete and colors
 
-table en tete serqui => code, descriptif, boolen(active, desactive)
+table en tete circuit => code, descriptif, boolen(active, desactive)
 
-line serqui => code, numline, titre, descriptif
+line circuit => code, numline, titre, descriptif
 
-add button status to change serqui
+add button status to change circuit

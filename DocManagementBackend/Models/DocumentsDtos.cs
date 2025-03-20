@@ -7,6 +7,7 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
         public string? DocumentAlias { get; set; }
+        // public string? DocumentKey { get; set; }
         public DateTime DocDate { get; set; }
         public int CreatedByUserId { get; set; }
         public int TypeId { get; set; }
