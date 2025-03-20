@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "aiJDXEzhw3y/ZbOebLjy/NThEx1mfFlNASHWYoRhME0=",
+  "Hash": "5E3TtHuBDu3CYrWRLxLVI8JI6Oe8PparEXAZImDMiXo=",
   "Source": "DocManagementBackend",
   "BasePath": "_content/DocManagementBackend",
   "Mode": "Default",
@@ -10,7 +10,7 @@
     {
       "Name": "DocManagementBackend\\wwwroot",
       "Source": "DocManagementBackend",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\PC\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "Pattern": "**"
     }

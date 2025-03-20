@@ -138,4 +138,29 @@ namespace DocManagementBackend.Mappings
             SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count)
         };
     }
+
+    public static class UserMappings
+    {
+        public static Expression<Func<User, UserDto>> ToUserDto = d => new UserDto
+        {
+            Id = d.Id,
+            Email = d.Email,
+            Username = d.Username,
+            FirstName = d.FirstName,
+            LastName = d.LastName,
+            City = d.City,
+            Address = d.Address,
+            PhoneNumber = d.PhoneNumber,
+            Country = d.Country,
+            IsEmailConfirmed = d.IsEmailConfirmed,
+            EmailVerificationCode = d.EmailVerificationCode,
+            IsActive = d.IsActive,
+            IsOnline = d.IsOnline,
+            ProfilePicture = d.ProfilePicture,
+            Role = new RoleDto {
+                RoleId = d.Role!.Id,
+                RoleName = d.Role.RoleName
+            }
+        };
+    }
 }

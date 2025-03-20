@@ -24,11 +24,4 @@ namespace DocManagementBackend.Models
         public bool? IsActive { get; set; }
     }
 
-    public class AdminUpdateDocumentRequest
-    {
-        public string? Title { get; set; }
-        public string? Content { get; set; }
-        public int? TypeId { get; set; }
-        public int? Status { get; set; }
-    }
 }

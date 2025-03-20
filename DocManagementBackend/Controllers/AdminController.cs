@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using System.Security.Claims;
+using DocManagementBackend.Mappings;
+using DocManagementBackend.Utils;
 
 namespace DocManagementBackend.Controllers {
     [Authorize(Roles = "Admin")]
@@ -27,7 +29,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var users = await _context.Users
-                .Include(u => u.Role).Where(u => u.Id != userId).ToListAsync();
+                .Include(u => u.Role).Where(u => u.Id != userId).Select(UserMappings.ToUserDto).ToListAsync();
             return Ok(users);
         }
 
@@ -78,15 +80,22 @@ namespace DocManagementBackend.Controllers {
                 return BadRequest("Invalid RoleName.");
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash);
+            var emailVerificationCode = new Random().Next(100000, 999999).ToString();
 
             var newUser = new User {Email = request.Email,
                 Username = request.Username, PasswordHash = hashedPassword,
                 FirstName = request.FirstName, LastName = request.LastName,
-                IsEmailConfirmed = true, IsActive = true,
-                CreatedAt = DateTime.UtcNow, RoleId = roleId};
+                IsEmailConfirmed = false, IsActive = false,
+                CreatedAt = DateTime.UtcNow, RoleId = roleId,
+                EmailVerificationCode = emailVerificationCode
+            };
+            string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
+            var verificationLink = $"{frontDomain}/verify/{newUser.Email}";
 
+            string emailBody = AuthHelper.CreateEmailBody(verificationLink, newUser.EmailVerificationCode);
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
+            AuthHelper.SendEmail(newUser.Email, "Email Verification", emailBody);
 
             return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, new {
                 newUser.Id, newUser.Username,
