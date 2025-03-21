@@ -1,52 +1,12 @@
 {
   "Files": [
     {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin248.png",
-      "PackagePath": "staticwebassets\\images\\profile\\admin248.png"
+      "Id": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg",
+      "PackagePath": "staticwebassets\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg"
     },
     {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin675.png",
-      "PackagePath": "staticwebassets\\images\\profile\\admin675.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin698.png",
-      "PackagePath": "staticwebassets\\images\\profile\\admin698.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin80.png",
-      "PackagePath": "staticwebassets\\images\\profile\\admin80.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin924.png",
-      "PackagePath": "staticwebassets\\images\\profile\\admin924.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin965.png",
-      "PackagePath": "staticwebassets\\images\\profile\\admin965.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki256.png",
-      "PackagePath": "staticwebassets\\images\\profile\\ahennaki256.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki309.png",
-      "PackagePath": "staticwebassets\\images\\profile\\ahennaki309.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki533.png",
-      "PackagePath": "staticwebassets\\images\\profile\\ahennaki533.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki589.png",
-      "PackagePath": "staticwebassets\\images\\profile\\ahennaki589.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki679.png",
-      "PackagePath": "staticwebassets\\images\\profile\\ahennaki679.png"
-    },
-    {
-      "Id": "C:\\Users\\Admin\\ahmed\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki717.png",
-      "PackagePath": "staticwebassets\\images\\profile\\ahennaki717.png"
+      "Id": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\default.png",
+      "PackagePath": "staticwebassets\\images\\profile\\default.png"
     },
     {
       "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.DocManagementBackend.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",

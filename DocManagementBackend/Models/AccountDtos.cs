@@ -32,4 +32,8 @@ namespace DocManagementBackend.Models
         public string? CurrentPassword { get; set; }
         public string? NewPassword { get; set; }
     }
+
+    public class UpdateEmailRequest {
+        public string? Email { get; set; }
+    }
 }

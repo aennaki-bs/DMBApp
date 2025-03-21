@@ -144,12 +144,9 @@ namespace DocManagementBackend.Controllers
             if (!string.IsNullOrEmpty(request.NewPassword))
             {
                 if (!string.IsNullOrEmpty(request.CurrentPassword))
-                {
-                    if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
-                        return BadRequest("Current password is incorrect.");
-                }
+                    {if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+                        return BadRequest("Current password is incorrect.");}
                 else { return BadRequest("Current password is required."); }
-
                 if (!AuthHelper.IsValidPassword(request.NewPassword))
                     return BadRequest("New password does not meet complexity requirements.");
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
@@ -168,13 +165,20 @@ namespace DocManagementBackend.Controllers
                     return Unauthorized("User ID claim is missing.");
                 if (!int.TryParse(userIdClaim, out int userId))
                     return BadRequest("Invalid user ID format.");
+
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
                     return NotFound("User not found.");
 
                 if (file == null || file.Length == 0)
                     return BadRequest("No file uploaded.");
-                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/profile");
+
+                var uploadPath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "images",
+                    "profile"
+                );
                 if (!Directory.Exists(uploadPath))
                     Directory.CreateDirectory(uploadPath);
 
@@ -185,25 +189,38 @@ namespace DocManagementBackend.Controllers
                 if (file.Length > 5 * 1024 * 1024)
                     return BadRequest("File size exceeds 5MB limit");
 
-                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "http:",
-                    user.ProfilePicture!.TrimStart('/'));
-                Console.WriteLine($"oldPath========>    {oldPath}");
-                if (System.IO.File.Exists(oldPath))
-                    System.IO.File.Delete(oldPath);
+                if (!string.IsNullOrEmpty(user.ProfilePicture))
+                {
+                    var oldPath = Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "wwwroot",
+                        user.ProfilePicture.TrimStart('/')
+                    );
+                    if (System.IO.File.Exists(oldPath))
+                        System.IO.File.Delete(oldPath);
+                }
 
-                var str = new Random().Next(10, 999).ToString();
-                var fileName = $"{user.Username}{str}{fileExtension}";
+                var sanitizedUsername = string.Join("", user.Username.Split(Path.GetInvalidFileNameChars()));
+                var fileName = $"{sanitizedUsername}_{Guid.NewGuid()}{fileExtension}";
                 var filePath = Path.Combine(uploadPath, fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create)) { await file.CopyToAsync(stream); }
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                    await file.CopyToAsync(stream);
 
                 user.ProfilePicture = $"/images/profile/{fileName}";
                 await _context.SaveChangesAsync();
 
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                return Ok(new { filePath = $"{baseUrl}{user.ProfilePicture}", message = "Image uploaded successfully" });
+                return Ok(new
+                {
+                    filePath = $"{baseUrl}{user.ProfilePicture}",
+                    message = "Image uploaded successfully"
+                });
             }
-            catch (Exception ex) { return StatusCode(500, $"Internal server error: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpGet("profile-image/{userId}")]
@@ -215,5 +232,33 @@ namespace DocManagementBackend.Controllers
             return Ok(new { ProfilePicture = user.ProfilePicture });
         }
 
+        [Authorize]
+        [HttpPut("update-email")]
+        public async Task<IActionResult> UpdateEmail([FromBody] UpdateEmailRequest request) {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized("User ID claim is missing.");
+            if (!int.TryParse(userIdClaim, out int userId))
+                return BadRequest("Invalid user ID format.");
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("User account is desactivated!");
+            if (string.IsNullOrEmpty(request.Email))
+                return BadRequest("Email is required!");
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                return BadRequest("Email already in use!");
+            user.Email = request.Email;
+            user.EmailVerificationCode = new Random().Next(100000, 999999).ToString();
+            user.IsActive = false;
+            user.IsEmailConfirmed = false;
+            string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
+            var verificationLink = $"{frontDomain}/verify/{user.Email}";
+            string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);
+            await _context.SaveChangesAsync();
+            AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);
+            return Ok("Email is updated successfully. Please check your email for confirmation!");
+        }
     }
 }

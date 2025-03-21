@@ -1,13 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Mail;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using DocManagementBackend.Utils;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 
 namespace DocManagementBackend.Controllers
@@ -59,9 +54,7 @@ namespace DocManagementBackend.Controllers
                 {
                     var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
                     if (adminRole != null)
-                    {
-                        user.RoleId = adminRole.Id; user.Role = adminRole;
-                    }
+                        {user.RoleId = adminRole.Id; user.Role = adminRole;}
                 }
                 else
                     return Unauthorized("Invalid admin secret.");
@@ -70,9 +63,7 @@ namespace DocManagementBackend.Controllers
             {
                 var simpleUserRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "SimpleUser");
                 if (simpleUserRole != null)
-                {
-                    user.RoleId = simpleUserRole.Id; user.Role = simpleUserRole;
-                }
+                    {user.RoleId = simpleUserRole.Id; user.Role = simpleUserRole;}
                 else
                     return BadRequest("Default role not found.");
             }
@@ -80,6 +71,7 @@ namespace DocManagementBackend.Controllers
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             user.IsActive = false;
             user.IsEmailConfirmed = false;
+            user.ProfilePicture = "/images/profile/default.png";
             string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
             var verificationLink = $"{frontDomain}/verify/{user.Email}";
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);

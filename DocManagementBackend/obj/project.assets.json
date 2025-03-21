@@ -10149,19 +10149,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\PC\\.nuget\\packages\\": {}
+    "C:\\Users\\ENNAKI\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\PC\\Desktop\\DMBApp\\DocManagementBackend\\DocManagementBackend.csproj",
+      "projectUniqueName": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\DocManagementBackend.csproj",
       "projectName": "DocManagementBackend",
-      "projectPath": "C:\\Users\\PC\\Desktop\\DMBApp\\DocManagementBackend\\DocManagementBackend.csproj",
-      "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\PC\\Desktop\\DMBApp\\DocManagementBackend\\obj\\",
+      "projectPath": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\DocManagementBackend.csproj",
+      "packagesPath": "C:\\Users\\ENNAKI\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\ENNAKI\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -10253,7 +10253,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

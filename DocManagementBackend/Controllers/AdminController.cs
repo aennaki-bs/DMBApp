@@ -87,7 +87,8 @@ namespace DocManagementBackend.Controllers {
                 FirstName = request.FirstName, LastName = request.LastName,
                 IsEmailConfirmed = false, IsActive = false,
                 CreatedAt = DateTime.UtcNow, RoleId = roleId,
-                EmailVerificationCode = emailVerificationCode
+                EmailVerificationCode = emailVerificationCode,
+                ProfilePicture = "/images/profile/default.png"
             };
             string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
             var verificationLink = $"{frontDomain}/verify/{newUser.Email}";
@@ -124,12 +125,11 @@ namespace DocManagementBackend.Controllers {
             if (user == null)
                 return NotFound("User not found.");
 
-            if (!string.IsNullOrEmpty(request.Username) && await _context.Users.AnyAsync(u => u.Email == request.Email) && user.Username != request.Username)
-                return BadRequest("Email is already in use.");
-            if (!string.IsNullOrEmpty(request.Email) && await _context.Users.AnyAsync(u => u.Email == request.Email) && user.Email != request.Email)
+            if (!string.IsNullOrEmpty(request.Username) && await _context.Users.AnyAsync(u => u.Username == request.Username) && user.Username != request.Username)
                 return BadRequest("Username is already in use.");
-            if (!string.IsNullOrEmpty(request.Email))
-                user.Email = request.Email;
+            // else { user.Username = request.Username ?? user.Username; }
+            // if (!string.IsNullOrEmpty(request.Email) && await _context.Users.AnyAsync(u => u.Email == request.Email) && user.Email != request.Email)
+            //     return BadRequest("Email is already in use.");
             if (!string.IsNullOrEmpty(request.Username))
                 user.Username = request.Username;
             if (!string.IsNullOrEmpty(request.PasswordHash)) {
@@ -158,6 +158,37 @@ namespace DocManagementBackend.Controllers {
 
             await _context.SaveChangesAsync();
             return Ok("User updated successfully.");
+        }
+
+        [HttpPut("users/email/{id}")]
+        public async Task<IActionResult> UpdateEmailUser(int id, [FromBody] AdminUpdateUserRequest request) {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User Not Allowed To do this action.");
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("User not found.");
+            if (!string.IsNullOrEmpty(request.Email) && await _context.Users.AnyAsync(u => u.Email == request.Email) && user.Email != request.Email)
+                return BadRequest("Email is already in use.");
+            if (!string.IsNullOrEmpty(request.Email))
+                user.Email = request.Email;
+            user.EmailVerificationCode = new Random().Next(100000, 999999).ToString();
+            user.IsActive = false;
+            user.IsEmailConfirmed = false;
+            string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
+            var verificationLink = $"{frontDomain}/verify/{user.Email}";
+            string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);
+            await _context.SaveChangesAsync();
+            AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);
+            return Ok($"{user.Username}'s email is updated successfully. He need to check his email for confirmation!");
         }
 
         private bool IsValidPassword(string password) {
