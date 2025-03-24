@@ -24,7 +24,6 @@ namespace DocManagementBackend.Models {
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = false;
         public bool IsOnline { get; set; } = false;
-        // public bool IsBlocked { get; set; } = false;
         public DateTime? LastLogin { get; set; }
         public string? ProfilePicture { get; set; }
         public string? BackgroundPicture { get; set; }
@@ -48,8 +47,6 @@ namespace DocManagementBackend.Models {
         public bool IsAdmin { get; set; } = false;
         public bool IsSimpleUser { get; set; } = false;
         public bool IsFullUser { get; set; } = false;
-        // [JsonIgnore]
-        // public ICollection<User> Users { get; set; } = new List<User>();
     }
 
     public class LogHistory {
@@ -63,81 +60,5 @@ namespace DocManagementBackend.Models {
         public DateTime Timestamp { get; set; }
         [Required]
         public int ActionType { get; set; } // 1 for Login, 0 for Logout
-    }
-
-    public class Document {
-        [Key]
-        public int Id { get; set; }
-        [Required]
-        public int CreatedByUserId { get; set; }
-        [ForeignKey("CreatedByUserId")]
-        public required User CreatedBy { get; set; }
-        public int TypeId { get; set; }
-        [ForeignKey("TypeId")]
-        public DocumentType? DocumentType { get; set; }
-        [Required]
-        public string DocumentKey { get; set; } = string.Empty;
-        public string DocumentAlias { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string? Content { get; set; }
-        [Required]
-        public int Status { get; set; } // 0 = Open, 1 = Validated
-        public DateTime DocDate { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        public int LigneCouter { get; set; } = 0;
-        public bool IsDeleted { get; set; } = false;
-        [JsonIgnore]
-        public ICollection<Ligne> Lignes { get; set; } = new List<Ligne>();
-    }
-
-    public class DocumentType {
-        [Key]
-        public int Id { get; set; }
-        public string TypeKey { get; set; } = string.Empty;
-        public string TypeName { get; set; } = string.Empty;
-        public string TypeAttr { get; set; } = string.Empty;
-        public int DocumentCounter { get; set; } = 0;
-        [JsonIgnore]
-        public ICollection<Document> Documents { get; set; } = new List<Document>();
-    }
-
-    public class Ligne {
-        [Key]
-        public int Id { get; set; }
-        [Required]
-        public int DocumentId { get; set; }
-        [ForeignKey("DocumentId")]
-        [JsonIgnore]
-        public Document? Document { get; set; }
-        public string LigneKey { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Article { get; set; } = string.Empty;
-        public float Prix { get; set; }
-        public int SousLigneCounter { get; set; } = 0;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        [JsonIgnore]
-        public ICollection<SousLigne> SousLignes { get; set; } = new List<SousLigne>();
-    }
-
-    public class SousLigne {
-        [Key]
-        public int Id { get; set; }
-        [Required]
-        public int LigneId { get; set; }
-        [ForeignKey("LigneId")]
-        [JsonIgnore]
-        public Ligne? Ligne { get; set; }
-        public string SousLigneKey { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Attribute { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    }
-
-    public class TypeCounter {
-        public int Id { get; set; }
-        public int Counter { get; set; }
     }
 }

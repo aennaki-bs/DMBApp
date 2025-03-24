@@ -8,7 +8,7 @@ namespace DocManagementBackend.Models
         public string? Content { get; set; }
         public string? DocumentAlias { get; set; }
         // public string? DocumentKey { get; set; }
-        public DateTime DocDate { get; set; }
+        public DateTime? DocDate { get; set; }
         public int CreatedByUserId { get; set; }
         public int TypeId { get; set; }
         public int Status { get; set; }
@@ -43,6 +43,7 @@ namespace DocManagementBackend.Models
     }
 
     public class DocumentTypeDto {
+        public string TypeAlias { get; set; } = string.Empty;
         public string TypeKey { get; set; } = string.Empty;
         public string TypeName { get; set; } = string.Empty;
         public string TypeAttr { get; set; } = string.Empty;

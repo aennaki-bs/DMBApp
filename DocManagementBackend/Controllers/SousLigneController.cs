@@ -187,7 +187,7 @@ namespace DocManagementBackend.Controllers
             _context.SousLignes.Remove(sousLigne);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok("SousLigne deleted!");
         }
     }
 }

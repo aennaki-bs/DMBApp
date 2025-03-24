@@ -135,7 +135,7 @@ namespace DocManagementBackend.Controllers
             _context.Lignes.Remove(ligne);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok("Ligne deleted!");
         }
     }
 }

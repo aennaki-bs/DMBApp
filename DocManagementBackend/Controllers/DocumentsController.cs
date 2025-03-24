@@ -72,9 +72,7 @@ namespace DocManagementBackend.Controllers
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
                 return BadRequest("Invalid Document type!");
-            var docDate = DateTime.UtcNow;
-            if (request.DocDate != default(DateTime))
-                docDate = request.DocDate;
+            var docDate = request.DocDate ?? DateTime.UtcNow;
             var docAlias = "DOC";
             if (!string.IsNullOrEmpty(request.DocumentAlias))
                 docAlias = request.DocumentAlias.ToUpper();
@@ -186,15 +184,13 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User Not Allowed To do this action...!");
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
-                return NotFound();
-            // if (document.Status == 1 && user.Role!.RoleName != "Admin")
-            //     return Unauthorized("Ask an admin for deleting this document!");
+                return NotFound("Document not found!");
 
             _context.Documents.Remove(document);
             document.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok("Document deleted!");
         }
 
         [HttpGet("Types")]
@@ -237,7 +233,11 @@ namespace DocManagementBackend.Controllers
             var typeCounter = await _context.TypeCounter.FirstOrDefaultAsync();
             if (typeCounter == null) { typeCounter = new TypeCounter { Counter = 1 }; _context.TypeCounter.Add(typeCounter); }
             else { typeCounter.Counter++; }
-            var typeKey = (request.TypeName.Length > 3) ? request.TypeName.Substring(0, 3).ToUpper() : request.TypeName.ToUpper();
+            var typeKey = "";
+            if (!string.IsNullOrEmpty(request.TypeAlias))
+                typeKey = request.TypeAlias;
+            else
+                typeKey = (request.TypeName.Length > 3) ? request.TypeName.Substring(0, 3).ToUpper() : request.TypeName.ToUpper();
             typeKey += typeCounter.Counter;
             var type = new DocumentType
             {
@@ -248,6 +248,39 @@ namespace DocManagementBackend.Controllers
             _context.DocumentTypes.Add(type);
             await _context.SaveChangesAsync();
             return Ok("Type successfully added!");
+        }
+
+        [HttpPost("valide-type")]
+        public async Task<IActionResult> ValideType([FromBody] DocumentTypeDto request)
+        {
+            var typeName = request.TypeName.ToLower();
+            var type = await _context.DocumentTypes.AnyAsync(t => t.TypeName.ToLower() == typeName);
+            if (type)
+                return Ok("True");
+            return Ok("False");
+        }
+
+        [HttpDelete("Types/{id}")]
+        public async Task<IActionResult> DeleteType(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return BadRequest("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action...!");
+            var type = await _context.DocumentTypes.FindAsync(id);
+            if (type == null)
+                return NotFound("No type with this id!");
+            _context.DocumentTypes.Remove(type);
+            await _context.SaveChangesAsync();
+
+            return Ok("Type deleted!");
         }
     }
 }
