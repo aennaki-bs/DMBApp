@@ -14,6 +14,9 @@ namespace DocManagementBackend.Models {
         public int TypeId { get; set; }
         [ForeignKey("TypeId")]
         public DocumentType? DocumentType { get; set; }
+        public int? CircuitId { get; set; }
+        [ForeignKey("CircuitId")]
+        public Circuit? Circuit { get; set; }
         [Required]
         public string DocumentKey { get; set; } = string.Empty;
         public string DocumentAlias { get; set; } = string.Empty;

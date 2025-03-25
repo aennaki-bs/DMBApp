@@ -169,33 +169,20 @@ namespace DocManagementBackend.Controllers
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
                     return NotFound("User not found.");
-
                 if (file == null || file.Length == 0)
                     return BadRequest("No file uploaded.");
-
-                var uploadPath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "images",
-                    "profile"
-                );
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "profile");
                 if (!Directory.Exists(uploadPath))
                     Directory.CreateDirectory(uploadPath);
-
                 var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
                 var fileExtension = Path.GetExtension(file.FileName).ToLower();
                 if (!allowedExtensions.Contains(fileExtension))
                     return BadRequest("Invalid file type. Allowed: JPG, JPEG, PNG, GIF");
                 if (file.Length > 5 * 1024 * 1024)
                     return BadRequest("File size exceeds 5MB limit");
-
                 if (!string.IsNullOrEmpty(user.ProfilePicture))
                 {
-                    var oldPath = Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        "wwwroot",
-                        user.ProfilePicture.TrimStart('/')
-                    );
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePicture.TrimStart('/'));
                     if (System.IO.File.Exists(oldPath))
                         System.IO.File.Delete(oldPath);
                 }
@@ -203,19 +190,14 @@ namespace DocManagementBackend.Controllers
                 var sanitizedUsername = string.Join("", user.Username.Split(Path.GetInvalidFileNameChars()));
                 var fileName = $"{sanitizedUsername}_{Guid.NewGuid()}{fileExtension}";
                 var filePath = Path.Combine(uploadPath, fileName);
-
                 using (var stream = new FileStream(filePath, FileMode.Create))
                     await file.CopyToAsync(stream);
-
                 user.ProfilePicture = $"/images/profile/{fileName}";
                 await _context.SaveChangesAsync();
 
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
-                return Ok(new
-                {
-                    filePath = $"{baseUrl}{user.ProfilePicture}",
-                    message = "Image uploaded successfully"
-                });
+                return Ok(new {filePath = $"{baseUrl}{user.ProfilePicture}",
+                    message = "Image uploaded successfully"});
             }
             catch (Exception ex)
             {

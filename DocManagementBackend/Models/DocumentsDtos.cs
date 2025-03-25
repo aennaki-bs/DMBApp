@@ -1,5 +1,3 @@
-using System.ComponentModel;
-
 namespace DocManagementBackend.Models
 {
     public class CreateDocumentRequest
@@ -7,9 +5,9 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
         public string? DocumentAlias { get; set; }
-        // public string? DocumentKey { get; set; }
         public DateTime? DocDate { get; set; }
         public int CreatedByUserId { get; set; }
+        public int? CircuitId { get; set; }
         public int TypeId { get; set; }
         public int Status { get; set; }
     }
@@ -21,6 +19,7 @@ namespace DocManagementBackend.Models
         public string? DocumentAlias { get; set; }
         public DateTime? DocDate { get; set; }
         public int? TypeId { get; set; }
+        public int? CircuitId { get; set; }
         public int? Status { get; set; }
     }
     public class DocumentDto
@@ -33,6 +32,8 @@ namespace DocManagementBackend.Models
         public int TypeId { get; set; }
         public DateTime DocDate { get; set; }
         public DocumentTypeDto? DocumentType { get; set; } = new DocumentTypeDto();
+        public int? CircuitId { get; set; }
+        public CircuitDto? Circuit { get; set; } = new CircuitDto();
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int Status { get; set; }

@@ -163,7 +163,7 @@ namespace DocManagementBackend.Controllers
                 sousLigne.Attribute = updatedSousLigne.Attribute;
             sousLigne.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok("SousLigne updated!");
         }
 
         [HttpDelete("{id}")]

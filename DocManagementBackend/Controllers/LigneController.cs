@@ -71,7 +71,7 @@ namespace DocManagementBackend.Controllers
             ligne.CreatedAt = DateTime.UtcNow;
             ligne.UpdatedAt = DateTime.UtcNow;
 
-            ligne.LigneKey = $"{document.DocumentKey}-LN{document.LigneCouter++}";
+            ligne.LigneKey = $"{document.DocumentKey}-L{document.LigneCouter++}";
             _context.Lignes.Add(ligne);
             await _context.SaveChangesAsync();
 
@@ -112,7 +112,7 @@ namespace DocManagementBackend.Controllers
 
             ligne.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok("Ligne updated!");
         }
 
         [HttpDelete("{id}")]

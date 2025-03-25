@@ -73,12 +73,16 @@ namespace DocManagementBackend.Controllers
             if (docType == null)
                 return BadRequest("Invalid Document type!");
             var docDate = request.DocDate ?? DateTime.UtcNow;
-            var docAlias = "DOC";
+            var docAlias = "D";
             if (!string.IsNullOrEmpty(request.DocumentAlias))
                 docAlias = request.DocumentAlias.ToUpper();
-
             docType.DocumentCounter++;
-            var documentKey = $"{docType.TypeKey}-{docAlias}{docType.DocumentCounter}";
+            var documentKey = $"{docType.TypeKey}{docAlias}-{docType.DocumentCounter}";
+            // if (request.CircuitId.HasValue) {
+                // var circuit = await _context.Circuits.FirstOrDefaultAsync(c => c.Id == request.CircuitId);
+                // if (circuit == null)
+                //     return BadRequest("Invalid Circuit!");
+            // }
             var document = new Document
             {
                 Title = request.Title,
@@ -89,6 +93,8 @@ namespace DocManagementBackend.Controllers
                 DocDate = docDate,
                 TypeId = request.TypeId,
                 DocumentType = docType,
+                CircuitId = request.CircuitId,
+                // Circuit = circuit,
                 Status = 0,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
@@ -109,6 +115,8 @@ namespace DocManagementBackend.Controllers
                 TypeId = document.TypeId,
                 DocDate = document.DocDate,
                 DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
+                CircuitId = document.CircuitId,
+                // Circuit = new CircuitDto {Title = document.Circuit!.Title},
                 CreatedByUserId = document.CreatedByUserId,
                 CreatedBy = new DocumentUserDto
                 {
@@ -141,20 +149,28 @@ namespace DocManagementBackend.Controllers
             document.Content = request.Content ?? document.Content;
             document.Title = request.Title ?? document.Title;
             document.DocDate = request.DocDate ?? DateTime.UtcNow;
-            document.TypeId = request.TypeId ?? document.TypeId;
+            // document.TypeId = request.TypeId ?? document.TypeId;
             if (request.TypeId.HasValue)
             {
                 var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
                 if (docType == null)
                     return BadRequest("Invalide type!");
+                document.TypeId = request.TypeId ?? document.TypeId;
                 document.DocumentType = docType;
                 docType.DocumentCounter++;
-                document.DocumentKey = $"{docType.TypeKey}-{document.DocumentAlias.ToUpper()}{docType.DocumentCounter}";
+                document.DocumentKey = $"{docType.TypeKey}{document.DocumentAlias.ToUpper()}-{docType.DocumentCounter}";
             }
             if (!string.IsNullOrEmpty(request.DocumentAlias))
             {
                 document.DocumentAlias = request.DocumentAlias.ToUpper();
-                document.DocumentKey = $"{document.DocumentType!.TypeKey}-{request.DocumentAlias.ToUpper()}{document.DocumentType!.DocumentCounter}";
+                document.DocumentKey = $"{document.DocumentType!.TypeKey}{request.DocumentAlias.ToUpper()}-{document.DocumentType!.DocumentCounter}";
+            }
+            if (request.CircuitId.HasValue) {
+                var circuit = await _context.Circuits.FirstOrDefaultAsync(c => c.Id == request.CircuitId);
+                if (circuit == null)
+                    return BadRequest("Invalid Circuit!");
+                document.CircuitId = request.CircuitId;
+                document.Circuit = circuit;
             }
             document.UpdatedAt = DateTime.UtcNow;
             _context.Entry(document).State = EntityState.Modified;
@@ -165,7 +181,7 @@ namespace DocManagementBackend.Controllers
                 if (!_context.Documents.Any(d => d.Id == id)) { return NotFound(); }
                 else { throw; }
             }
-            return NoContent();
+            return Ok("Document updated!");
         }
 
         [HttpDelete("{id}")]
@@ -237,8 +253,8 @@ namespace DocManagementBackend.Controllers
             if (!string.IsNullOrEmpty(request.TypeAlias))
                 typeKey = request.TypeAlias;
             else
-                typeKey = (request.TypeName.Length > 3) ? request.TypeName.Substring(0, 3).ToUpper() : request.TypeName.ToUpper();
-            typeKey += typeCounter.Counter;
+                typeKey = (request.TypeName.Length > 2) ? request.TypeName.Substring(0, 2).ToUpper() : request.TypeName.ToUpper();
+            // typeKey += typeCounter.Counter;
             var type = new DocumentType
             {
                 TypeKey = typeKey,

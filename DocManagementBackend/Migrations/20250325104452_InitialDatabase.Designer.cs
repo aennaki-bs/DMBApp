@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocManagementBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250311140104_UserChanges")]
-    partial class UserChanges
+    [Migration("20250325104452_InitialDatabase")]
+    partial class InitialDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,64 @@ namespace DocManagementBackend.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("DocManagementBackend.Models.Circuit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CircuitKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Descriptif")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Circuits");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.CircuitDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CircuitId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CircuitLigneKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Descriptif")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CircuitId");
+
+                    b.ToTable("CircuitDetails");
+                });
+
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
                 {
                     b.Property<int>("Id")
@@ -32,6 +90,9 @@ namespace DocManagementBackend.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CircuitId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
@@ -45,8 +106,19 @@ namespace DocManagementBackend.Migrations
                     b.Property<DateTime>("DocDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DocumentAlias")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DocumentKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int>("LigneCouter")
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -63,6 +135,8 @@ namespace DocManagementBackend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CircuitId");
+
                     b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("TypeId");
@@ -78,7 +152,14 @@ namespace DocManagementBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("DocumentCounter")
+                        .HasColumnType("int");
+
                     b.Property<string>("TypeAttr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TypeKey")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -89,44 +170,6 @@ namespace DocManagementBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DocumentTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            TypeAttr = "",
-                            TypeName = "Facture"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            TypeAttr = "",
-                            TypeName = "Releve"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            TypeAttr = "",
-                            TypeName = "Bilan"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            TypeAttr = "",
-                            TypeName = "Register"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            TypeAttr = "",
-                            TypeName = "Planing"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            TypeAttr = "",
-                            TypeName = "Rapport"
-                        });
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
@@ -147,8 +190,15 @@ namespace DocManagementBackend.Migrations
                     b.Property<int>("DocumentId")
                         .HasColumnType("int");
 
+                    b.Property<string>("LigneKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<float>("Prix")
                         .HasColumnType("real");
+
+                    b.Property<int>("SousLigneCounter")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -258,6 +308,10 @@ namespace DocManagementBackend.Migrations
                     b.Property<int>("LigneId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SousLigneKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -270,6 +324,22 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("LigneId");
 
                     b.ToTable("SousLignes");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.TypeCounter", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Counter")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TypeCounter");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>
@@ -315,6 +385,9 @@ namespace DocManagementBackend.Migrations
                     b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsOnline")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastLogin")
                         .HasColumnType("datetime2");
 
@@ -353,8 +426,23 @@ namespace DocManagementBackend.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("DocManagementBackend.Models.CircuitDetail", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Circuit", "Circuit")
+                        .WithMany("CircuitDetails")
+                        .HasForeignKey("CircuitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Circuit");
+                });
+
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
                 {
+                    b.HasOne("DocManagementBackend.Models.Circuit", "Circuit")
+                        .WithMany()
+                        .HasForeignKey("CircuitId");
+
                     b.HasOne("DocManagementBackend.Models.User", "CreatedBy")
                         .WithMany("Documents")
                         .HasForeignKey("CreatedByUserId")
@@ -366,6 +454,8 @@ namespace DocManagementBackend.Migrations
                         .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Circuit");
 
                     b.Navigation("CreatedBy");
 
@@ -414,6 +504,11 @@ namespace DocManagementBackend.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Circuit", b =>
+                {
+                    b.Navigation("CircuitDetails");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
