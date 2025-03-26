@@ -140,7 +140,6 @@ namespace DocManagementBackend.Controllers
             user.Country = request.Country ?? user.Country;
             user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
             user.LastName = request.LastName ?? user.LastName;
-
             if (!string.IsNullOrEmpty(request.NewPassword))
             {
                 if (!string.IsNullOrEmpty(request.CurrentPassword))
@@ -158,14 +157,12 @@ namespace DocManagementBackend.Controllers
         [HttpPost("upload-image")]
         public async Task<IActionResult> UploadProfileImage(IFormFile file)
         {
-            try
-            {
+            try {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userIdClaim))
                     return Unauthorized("User ID claim is missing.");
                 if (!int.TryParse(userIdClaim, out int userId))
                     return BadRequest("Invalid user ID format.");
-
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
                     return NotFound("User not found.");
@@ -180,13 +177,10 @@ namespace DocManagementBackend.Controllers
                     return BadRequest("Invalid file type. Allowed: JPG, JPEG, PNG, GIF");
                 if (file.Length > 5 * 1024 * 1024)
                     return BadRequest("File size exceeds 5MB limit");
-                if (!string.IsNullOrEmpty(user.ProfilePicture))
-                {
+                if (!string.IsNullOrEmpty(user.ProfilePicture)) {
                     var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePicture.TrimStart('/'));
                     if (System.IO.File.Exists(oldPath))
-                        System.IO.File.Delete(oldPath);
-                }
-
+                        System.IO.File.Delete(oldPath);}
                 var sanitizedUsername = string.Join("", user.Username.Split(Path.GetInvalidFileNameChars()));
                 var fileName = $"{sanitizedUsername}_{Guid.NewGuid()}{fileExtension}";
                 var filePath = Path.Combine(uploadPath, fileName);
@@ -194,15 +188,11 @@ namespace DocManagementBackend.Controllers
                     await file.CopyToAsync(stream);
                 user.ProfilePicture = $"/images/profile/{fileName}";
                 await _context.SaveChangesAsync();
-
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
                 return Ok(new {filePath = $"{baseUrl}{user.ProfilePicture}",
                     message = "Image uploaded successfully"});
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            catch (Exception ex) {return StatusCode(500, $"Internal server error: {ex.Message}");}
         }
 
         [HttpGet("profile-image/{userId}")]

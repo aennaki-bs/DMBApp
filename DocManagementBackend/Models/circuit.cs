@@ -8,7 +8,6 @@ namespace DocManagementBackend.Models {
         [Key]
         public int Id { get; set; }
 
-        [Required]
         public string CircuitKey { get; set; } = string.Empty;
 
         [Required]
@@ -26,14 +25,13 @@ namespace DocManagementBackend.Models {
         [Key]
         public int Id { get; set; }
 
+        public string CircuitDetailKey { get; set; } = string.Empty;
+
         [Required]
         public int CircuitId { get; set; }
 
         [ForeignKey("CircuitId")]
         public Circuit? Circuit { get; set; }
-
-        [Required]
-        public string CircuitLigneKey { get; set; } = string.Empty;
 
         [Required]
         public string Title { get; set; } = string.Empty;

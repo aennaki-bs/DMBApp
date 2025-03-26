@@ -250,9 +250,9 @@ namespace DocManagementBackend.Controllers
             if (typeCounter == null) { typeCounter = new TypeCounter { Counter = 1 }; _context.TypeCounter.Add(typeCounter); }
             else { typeCounter.Counter++; }
             var typeKey = "";
-            if (!string.IsNullOrEmpty(request.TypeAlias))
-                typeKey = request.TypeAlias;
-            else
+            // if (!string.IsNullOrEmpty(request.TypeAlias))
+            //     typeKey = request.TypeAlias;
+            // else
                 typeKey = (request.TypeName.Length > 2) ? request.TypeName.Substring(0, 2).ToUpper() : request.TypeName.ToUpper();
             // typeKey += typeCounter.Counter;
             var type = new DocumentType
