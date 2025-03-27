@@ -71,7 +71,7 @@ namespace DocManagementBackend.Controllers
             ligne.CreatedAt = DateTime.UtcNow;
             ligne.UpdatedAt = DateTime.UtcNow;
 
-            ligne.LigneKey = $"{document.DocumentKey}-L{document.LigneCouter++}";
+            ligne.LigneKey = $"L{document.LigneCouter++}";
             _context.Lignes.Add(ligne);
             await _context.SaveChangesAsync();
 

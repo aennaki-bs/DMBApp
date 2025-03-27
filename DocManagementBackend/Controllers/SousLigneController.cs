@@ -126,7 +126,7 @@ namespace DocManagementBackend.Controllers
 
             sousLigne.CreatedAt = DateTime.UtcNow;
             sousLigne.UpdatedAt = DateTime.UtcNow;
-            sousLigne.SousLigneKey = $"{ligne.LigneKey}-SL{ligne.SousLigneCounter++}";
+            sousLigne.SousLigneKey = $"{ligne.LigneKey}SL{ligne.SousLigneCounter++}";
 
             _context.SousLignes.Add(sousLigne);
             await _context.SaveChangesAsync();

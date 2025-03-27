@@ -49,5 +49,6 @@ namespace DocManagementBackend.Models {
     {
         public int Id { get; set; }
         public int Counter { get; set; }
+        public int circuitCounter { get; set; }
     }
 }

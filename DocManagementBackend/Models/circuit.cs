@@ -17,6 +17,8 @@ namespace DocManagementBackend.Models {
 
         public bool IsActive { get; set; } = true;
 
+        public int CrdCounter { get; set; } = 0;
+
         public ICollection<CircuitDetail> CircuitDetails { get; set; } = new List<CircuitDetail>();
     }
 

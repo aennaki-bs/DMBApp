@@ -77,7 +77,9 @@ namespace DocManagementBackend.Controllers
             if (!string.IsNullOrEmpty(request.DocumentAlias))
                 docAlias = request.DocumentAlias.ToUpper();
             docType.DocumentCounter++;
-            var documentKey = $"{docType.TypeKey}{docAlias}-{docType.DocumentCounter}";
+            int counterValue = docType.DocumentCounter;
+            string paddedCounter = counterValue.ToString("D4");
+            var documentKey = $"{docType.TypeKey}{docAlias}-{paddedCounter}";
             // if (request.CircuitId.HasValue) {
                 // var circuit = await _context.Circuits.FirstOrDefaultAsync(c => c.Id == request.CircuitId);
                 // if (circuit == null)
@@ -158,7 +160,9 @@ namespace DocManagementBackend.Controllers
                 document.TypeId = request.TypeId ?? document.TypeId;
                 document.DocumentType = docType;
                 docType.DocumentCounter++;
-                document.DocumentKey = $"{docType.TypeKey}{document.DocumentAlias.ToUpper()}-{docType.DocumentCounter}";
+                int counterValue = docType.DocumentCounter;
+                string paddedCounter = counterValue.ToString("D4");
+                document.DocumentKey = $"{docType.TypeKey}{document.DocumentAlias.ToUpper()}-{paddedCounter}";
             }
             if (!string.IsNullOrEmpty(request.DocumentAlias))
             {
@@ -240,31 +244,33 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated.");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To do this action...!");
+                return Unauthorized("User not allowed to do this action.");
             if (string.IsNullOrEmpty(request.TypeName))
                 return BadRequest("Type Name is required!");
-            var typename = await _context.DocumentTypes.AnyAsync(t => t.TypeName == request.TypeName);
-            if (typename)
+            var typeNameExists = await _context.DocumentTypes.AnyAsync(t => t.TypeName == request.TypeName);
+            if (typeNameExists)
                 return BadRequest("Type Name already exists!");
             var typeCounter = await _context.TypeCounter.FirstOrDefaultAsync();
-            if (typeCounter == null) { typeCounter = new TypeCounter { Counter = 1 }; _context.TypeCounter.Add(typeCounter); }
-            else { typeCounter.Counter++; }
-            var typeKey = "";
-            // if (!string.IsNullOrEmpty(request.TypeAlias))
-            //     typeKey = request.TypeAlias;
-            // else
-                typeKey = (request.TypeName.Length > 2) ? request.TypeName.Substring(0, 2).ToUpper() : request.TypeName.ToUpper();
-            // typeKey += typeCounter.Counter;
+            if (typeCounter == null)
+            {
+                typeCounter = new TypeCounter { Counter = 1 };
+                _context.TypeCounter.Add(typeCounter);
+            }
+            string baseKey = (request.TypeName.Length >= 2) ? request.TypeName.Substring(0, 2).ToUpper() : request.TypeName.ToUpper();
+            bool exists = await _context.DocumentTypes.AnyAsync(t => t.TypeKey == baseKey);
+            string finalTypeKey = exists ? $"{baseKey}{typeCounter.Counter++}" : baseKey;
             var type = new DocumentType
             {
-                TypeKey = typeKey,
+                TypeKey = finalTypeKey,
                 TypeName = request.TypeName,
-                TypeAttr = request.TypeAttr
+                TypeAttr = request.TypeAttr,
+                DocumentCounter = 0
             };
             _context.DocumentTypes.Add(type);
             await _context.SaveChangesAsync();
             return Ok("Type successfully added!");
         }
+
 
         [HttpPost("valide-type")]
         public async Task<IActionResult> ValideType([FromBody] DocumentTypeDto request)

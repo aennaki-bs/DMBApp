@@ -51,7 +51,10 @@ namespace DocManagementBackend.Controllers
             var circuit = await _context.Circuits.FindAsync(detail.CircuitId);
             if (circuit == null)
                 return BadRequest("Invalid CircuitId. Circuit not found.");
-
+            circuit.CrdCounter++;
+            int counterValue = circuit.CrdCounter;
+            string paddedCounter = counterValue.ToString("D2");
+            detail.CircuitDetailKey = $"{circuit.CircuitKey}-Crd{paddedCounter}";
             _context.CircuitDetails.Add(detail);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetCircuitDetail), new { id = detail.Id }, detail);

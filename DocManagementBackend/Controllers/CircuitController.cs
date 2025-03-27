@@ -34,6 +34,12 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<Circuit>> CreateCircuit([FromBody] Circuit circuit)
         {
+            var ctCounter = await _context.TypeCounter.FirstOrDefaultAsync();
+            if (ctCounter == null) { ctCounter = new TypeCounter { circuitCounter = 1 }; _context.TypeCounter.Add(ctCounter); }
+            else {ctCounter.circuitCounter++;}
+            int counterValue = ctCounter.circuitCounter;
+            string paddedCounter = counterValue.ToString("D2");
+            circuit.CircuitKey = $"Cr{paddedCounter}";
             _context.Circuits.Add(circuit);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetCircuit), new { id = circuit.Id }, circuit);
