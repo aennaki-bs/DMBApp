@@ -69,19 +69,15 @@ namespace DocManagementBackend.Controllers {
                 return BadRequest("Email is already in use.");
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
                 return BadRequest("Username is already in use.");
-
             int roleId = 0;
             if (request.RoleName == "Admin") {roleId = 1;}
             if (request.RoleName == "SimpleUser") {roleId = 2;}
             if (request.RoleName == "FullUser") {roleId = 3;}
-
             var role = await _context.Roles.FindAsync(roleId);
             if (role == null)
                 return BadRequest("Invalid RoleName.");
-
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash);
             var emailVerificationCode = new Random().Next(100000, 999999).ToString();
-
             var newUser = new User {Email = request.Email,
                 Username = request.Username, PasswordHash = hashedPassword,
                 FirstName = request.FirstName, LastName = request.LastName,
@@ -92,12 +88,10 @@ namespace DocManagementBackend.Controllers {
             };
             string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
             var verificationLink = $"{frontDomain}/verify/{newUser.Email}";
-
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, newUser.EmailVerificationCode);
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
             AuthHelper.SendEmail(newUser.Email, "Email Verification", emailBody);
-
             return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, new {
                 newUser.Id, newUser.Username,
                 newUser.Email, newUser.FirstName,
@@ -107,9 +101,6 @@ namespace DocManagementBackend.Controllers {
 
         [HttpPut("users/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] AdminUpdateUserRequest request) {
-            // Console.ForegroundColor = ConsoleColor.Green;
-            // Console.WriteLine($"=== request Users === {request.RoleName}");
-            // Console.ResetColor();
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -124,16 +115,12 @@ namespace DocManagementBackend.Controllers {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound("User not found.");
-
             if (!string.IsNullOrEmpty(request.Username) && await _context.Users.AnyAsync(u => u.Username == request.Username) && user.Username != request.Username)
                 return BadRequest("Username is already in use.");
-            // else { user.Username = request.Username ?? user.Username; }
-            // if (!string.IsNullOrEmpty(request.Email) && await _context.Users.AnyAsync(u => u.Email == request.Email) && user.Email != request.Email)
-            //     return BadRequest("Email is already in use.");
             if (!string.IsNullOrEmpty(request.Username))
                 user.Username = request.Username;
             if (!string.IsNullOrEmpty(request.PasswordHash)) {
-                if (!IsValidPassword(request.PasswordHash))
+                if (!AuthHelper.IsValidPassword(request.PasswordHash))
                     return BadRequest("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.");
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash);
             }
@@ -155,7 +142,6 @@ namespace DocManagementBackend.Controllers {
                     return BadRequest("Invalid RoleName.");
                 user.RoleId = role.Id; user.Role = role;
             }
-
             await _context.SaveChangesAsync();
             return Ok("User updated successfully.");
         }
@@ -190,11 +176,6 @@ namespace DocManagementBackend.Controllers {
             AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);
             return Ok($"{user.Username}'s email is updated successfully. He need to check his email for confirmation!");
         }
-
-        private bool IsValidPassword(string password) {
-            return password.Length >= 8 && password.Any(char.IsLower) &&
-                   password.Any(char.IsUpper) && password.Any(char.IsDigit) &&
-                   password.Any(ch => !char.IsLetterOrDigit(ch));}
 
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id) {
@@ -263,20 +244,17 @@ namespace DocManagementBackend.Controllers {
             var logsDto = await _context.LogHistories.Where(l => l.UserId == id).Include(l => l.User)
                 .ThenInclude(u => u.Role)
             .Select(l => new LogHistoryDto {
-                Id = l.Id,
-                ActionType = l.ActionType,
+                Id = l.Id, ActionType = l.ActionType,
                 Timestamp = l.Timestamp,
                 User = new UserLogDto {
-                    Username = l.User.Username,
-                    Role = l.User.Role != null ? l.User.Role.RoleName : string.Empty
-                }
-            })
-            .OrderByDescending(l => l.Timestamp)
-            .ToListAsync();
+                    Username = l.User.Username, Role = l.User.Role != null ? l.User.Role.RoleName : string.Empty
+                }}).OrderByDescending(l => l.Timestamp).ToListAsync();
             if (logsDto == null)
                 return NotFound("User logs not found!");
-
             return Ok(logsDto);
         }
     }
 }
+// Console.ForegroundColor = ConsoleColor.Green;
+// Console.WriteLine($"=== request Users === {request.RoleName}");
+// Console.ResetColor();

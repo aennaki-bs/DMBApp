@@ -128,6 +128,10 @@ namespace DocManagementBackend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
+            if (string.IsNullOrEmpty(model.EmailOrUsername))
+                return BadRequest("Email or Username is required.");
+            if (string.IsNullOrEmpty(model.Password))
+                return BadRequest("Password is required.");
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == model.EmailOrUsername || u.Username == model.EmailOrUsername);
@@ -155,7 +159,6 @@ namespace DocManagementBackend.Controllers
             };
             Response.Cookies.Append("accessToken", accessToken, cookieOptions);
             Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
-
             return Ok(new { accessToken, refreshToken });
         }
 

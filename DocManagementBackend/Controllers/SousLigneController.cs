@@ -75,10 +75,8 @@ namespace DocManagementBackend.Controllers
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Select(SousLigneMappings.ToSousLigneDto).ToListAsync();
-
             if (sousLigne == null)
                 return NotFound("No SousLigne found with that ligne.");
-
             return Ok(sousLigne);
         }
 
@@ -99,10 +97,8 @@ namespace DocManagementBackend.Controllers
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Select(SousLigneMappings.ToSousLigneDto).ToListAsync();
-
             if (sousLigne == null)
                 return NotFound("No SousLigne found linked to document.");
-
             return Ok(sousLigne);
         }
 
@@ -123,20 +119,16 @@ namespace DocManagementBackend.Controllers
             var ligne = await _context.Lignes.FindAsync(sousLigne.LigneId);
             if (ligne == null)
                 return BadRequest("Invalid LigneId. Ligne not found.");
-
             sousLigne.CreatedAt = DateTime.UtcNow;
             sousLigne.UpdatedAt = DateTime.UtcNow;
             sousLigne.SousLigneKey = $"{ligne.LigneKey}SL{ligne.SousLigneCounter++}";
-
             _context.SousLignes.Add(sousLigne);
             await _context.SaveChangesAsync();
-
             var sousLigneDto = await _context.SousLignes
                 .Where(s => s.Id == sousLigne.Id)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Select(SousLigneMappings.ToSousLigneDto).ToListAsync();
-
             return CreatedAtAction(nameof(GetSousLigne), new { id = sousLigne.Id }, sousLigneDto);
         }
 
@@ -183,10 +175,8 @@ namespace DocManagementBackend.Controllers
             var sousLigne = await _context.SousLignes.FindAsync(id);
             if (sousLigne == null)
                 return NotFound("SousLigne not found.");
-
             _context.SousLignes.Remove(sousLigne);
             await _context.SaveChangesAsync();
-
             return Ok("SousLigne deleted!");
         }
     }

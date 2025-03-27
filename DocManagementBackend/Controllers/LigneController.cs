@@ -23,7 +23,6 @@ namespace DocManagementBackend.Controllers
                 .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Select(LigneMappings.ToLigneDto).ToListAsync();
-
             return Ok(lignes);
         }
 
@@ -33,10 +32,8 @@ namespace DocManagementBackend.Controllers
                 .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Where(l => l.Id == id).Select(LigneMappings.ToLigneDto).FirstOrDefaultAsync();
-
             if (ligneDto == null)
                 return NotFound("Ligne not found.");
-
             return Ok(ligneDto);
         }
 
@@ -47,7 +44,6 @@ namespace DocManagementBackend.Controllers
                 .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Select(LigneMappings.ToLigneDto).ToListAsync();
-
             return Ok(lignes);
         }
 
@@ -67,19 +63,15 @@ namespace DocManagementBackend.Controllers
             var document = await _context.Documents.FindAsync(ligne.DocumentId);
             if (document == null)
                 return BadRequest("Invalid DocumentId. Document not found.");
-
             ligne.CreatedAt = DateTime.UtcNow;
             ligne.UpdatedAt = DateTime.UtcNow;
-
             ligne.LigneKey = $"L{document.LigneCouter++}";
             _context.Lignes.Add(ligne);
             await _context.SaveChangesAsync();
-
             var ligneDto = await _context.Lignes
                 .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Where(l => l.Id == ligne.Id).Select(LigneMappings.ToLigneDto).FirstOrDefaultAsync();
-
             return CreatedAtAction(nameof(GetLigne), new { id = ligne.Id }, ligneDto);
         }
 
@@ -100,16 +92,12 @@ namespace DocManagementBackend.Controllers
             var ligne = await _context.Lignes.FindAsync(id);
             if (ligne == null)
                 return NotFound("Ligne not found.");
-
             if (!string.IsNullOrEmpty(updatedLigne.Title))
                 ligne.Title = updatedLigne.Title;
-
             if (!string.IsNullOrEmpty(updatedLigne.Article))
                 ligne.Article = updatedLigne.Article;
-
             if (updatedLigne.Prix >= 0)
                 ligne.Prix = updatedLigne.Prix;
-
             ligne.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return Ok("Ligne updated!");
@@ -131,10 +119,8 @@ namespace DocManagementBackend.Controllers
             var ligne = await _context.Lignes.FindAsync(id);
             if (ligne == null)
                 return NotFound("Ligne not found.");
-
             _context.Lignes.Remove(ligne);
             await _context.SaveChangesAsync();
-
             return Ok("Ligne deleted!");
         }
     }
