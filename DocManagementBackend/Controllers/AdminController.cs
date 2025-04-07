@@ -283,12 +283,18 @@ namespace DocManagementBackend.Controllers {
                 return NotFound("User not found!");
             var logsDto = await _context.LogHistories.Where(l => l.UserId == id).Include(l => l.User)
                 .ThenInclude(u => u.Role)
-            .Select(l => new LogHistoryDto {
-                Id = l.Id, ActionType = l.ActionType,
+            .Select(l => new LogHistoryDto
+            {
+                Id = l.Id,
+                ActionType = l.ActionType,
                 Timestamp = l.Timestamp,
-                User = new UserLogDto {
-                    Username = l.User.Username, Role = l.User.Role != null ? l.User.Role.RoleName : string.Empty
-                }}).OrderByDescending(l => l.Timestamp).ToListAsync();
+                Description = l.Description,
+                User = new UserLogDto
+                {
+                    Username = l.User.Username,
+                    Role = l.User.Role != null ? l.User.Role.RoleName : string.Empty
+                }
+            }).OrderByDescending(l => l.Timestamp).ToListAsync();
             if (logsDto == null)
                 return NotFound("User logs not found!");
             return Ok(logsDto);
