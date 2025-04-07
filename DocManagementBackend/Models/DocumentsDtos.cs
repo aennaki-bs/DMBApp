@@ -41,6 +41,9 @@ namespace DocManagementBackend.Models
         public int SousLignesCount { get; set; }
         public int CreatedByUserId { get; set; }
         public DocumentUserDto? CreatedBy { get; set; } = new DocumentUserDto();
+        public int? CurrentCircuitDetailId { get; set; }
+        public string CurrentCircuitDetailTitle { get; set; } = string.Empty;
+        public bool IsCircuitCompleted { get; set; }
     }
 
     public class DocumentTypeDto {

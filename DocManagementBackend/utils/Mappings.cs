@@ -136,7 +136,10 @@ namespace DocManagementBackend.Mappings
                 Role = d.CreatedBy.Role != null ? d.CreatedBy.Role.RoleName : string.Empty
             },
             LignesCount = d.Lignes.Count,
-            SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count)
+            SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count),
+            CurrentCircuitDetailId = d.CurrentCircuitDetailId,
+            CurrentCircuitDetailTitle = d.CurrentCircuitDetail != null ? d.CurrentCircuitDetail.Title : string.Empty,
+            IsCircuitCompleted = d.IsCircuitCompleted
         };
     }
 

@@ -17,8 +17,27 @@ namespace DocManagementBackend.Data
         public DbSet<TypeCounter> TypeCounter { get; set; }
         public DbSet<Circuit> Circuits { get; set; }
         public DbSet<CircuitDetail> CircuitDetails { get; set; }
+        public DbSet<DocumentCircuitHistory> DocumentCircuitHistory { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<DocumentCircuitHistory>()
+        .HasOne(d => d.Document)
+        .WithMany()
+        .HasForeignKey(d => d.DocumentId)
+        .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<DocumentCircuitHistory>()
+                .HasOne(d => d.CircuitDetail)
+                .WithMany()
+                .HasForeignKey(d => d.CircuitDetailId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<DocumentCircuitHistory>()
+                .HasOne(d => d.ProcessedBy)
+                .WithMany()
+                .HasForeignKey(d => d.ProcessedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+                
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, RoleName = "Admin", IsAdmin = true },
                 new Role { Id = 2, RoleName = "SimpleUser", IsSimpleUser = true },

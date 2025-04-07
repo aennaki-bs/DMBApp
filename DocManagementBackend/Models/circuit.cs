@@ -19,6 +19,8 @@ namespace DocManagementBackend.Models {
 
         public int CrdCounter { get; set; } = 0;
 
+        public bool HasOrderedFlow { get; set; } = true;
+
         public ICollection<CircuitDetail> CircuitDetails { get; set; } = new List<CircuitDetail>();
     }
 
@@ -39,5 +41,11 @@ namespace DocManagementBackend.Models {
         public string Title { get; set; } = string.Empty;
 
         public string Descriptif { get; set; } = string.Empty;
+
+        public int OrderIndex { get; set; } = 0;
+
+        public int? ResponsibleRoleId { get; set; }
+        [ForeignKey("ResponsibleRoleId")]
+        public Role? ResponsibleRole { get; set; }
     }
 }

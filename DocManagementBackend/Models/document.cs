@@ -17,6 +17,10 @@ namespace DocManagementBackend.Models {
         public int? CircuitId { get; set; }
         [ForeignKey("CircuitId")]
         public Circuit? Circuit { get; set; }
+        public int? CurrentCircuitDetailId { get; set; }
+        [ForeignKey("CurrentCircuitDetailId")]
+        public CircuitDetail? CurrentCircuitDetail { get; set; }
+        public bool IsCircuitCompleted { get; set; } = false;
         [Required]
         public string DocumentKey { get; set; } = string.Empty;
         public string DocumentAlias { get; set; } = string.Empty;
@@ -50,5 +54,29 @@ namespace DocManagementBackend.Models {
         public int Id { get; set; }
         public int Counter { get; set; }
         public int circuitCounter { get; set; }
+    }
+    public class DocumentCircuitHistory
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int DocumentId { get; set; }
+        [ForeignKey("DocumentId")]
+        // [DeleteBehavior(DeleteBehavior.NoAction)] // Change this from Cascade
+        public required Document Document { get; set; }
+
+        public int CircuitDetailId { get; set; }
+        [ForeignKey("CircuitDetailId")]
+        // [DeleteBehavior(DeleteBehavior.NoAction)] // Change this from Cascade
+        public required CircuitDetail CircuitDetail { get; set; }
+
+        public int ProcessedByUserId { get; set; }
+        [ForeignKey("ProcessedByUserId")]
+        // [DeleteBehavior(DeleteBehavior.NoAction)] // Change this from Cascade
+        public required User ProcessedBy { get; set; }
+
+        public string Comments { get; set; } = string.Empty;
+        public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
+        public bool IsApproved { get; set; }
     }
 }
