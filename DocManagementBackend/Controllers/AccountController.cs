@@ -33,7 +33,7 @@ namespace DocManagementBackend.Controllers
             var picture = string.Empty;
             if (!string.IsNullOrEmpty(user.ProfilePicture))
                 {picture = $"{Request.Scheme}://{Request.Host}{user.ProfilePicture}";}
-            var userInfo = new {userid = user.Id,
+            var userInfo = new {userId = user.Id,
                 username = user.Username, email = user.Email,
                 role = user.Role?.RoleName ?? "SimpleUser",
                 firstName = user.FirstName, lastName = user.LastName,
@@ -151,6 +151,16 @@ namespace DocManagementBackend.Controllers
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             }
             await _context.SaveChangesAsync();
+            var logEntry = new LogHistory
+            {
+                UserId = userId,
+                User = user,
+                Timestamp = DateTime.UtcNow,
+                ActionType = 3,
+                Description = $"{user.Username} has updated their profile"
+            };
+            _context.LogHistories.Add(logEntry);
+            await _context.SaveChangesAsync();
             return Ok("Profile updated successfully.");
         }
 
@@ -230,6 +240,16 @@ namespace DocManagementBackend.Controllers
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);
             await _context.SaveChangesAsync();
             AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);
+            var logEntry = new LogHistory
+            {
+                UserId = userId,
+                User = user,
+                Timestamp = DateTime.UtcNow,
+                ActionType = 3,
+                Description = $"{user.Username} has updated their profile"
+            };
+            _context.LogHistories.Add(logEntry);
+            await _context.SaveChangesAsync();
             return Ok("Email is updated successfully. Please check your email for confirmation!");
         }
     }

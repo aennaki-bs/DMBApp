@@ -128,6 +128,16 @@ namespace DocManagementBackend.Controllers
                     Role = user.Role != null ? user.Role.RoleName : string.Empty
                 }
             };
+            var logEntry = new LogHistory
+            {
+                UserId = userId,
+                User = user,
+                Timestamp = DateTime.UtcNow,
+                ActionType = 4,
+                Description = $"{user.Username} has created the document {document.DocumentKey}"
+            };
+            _context.LogHistories.Add(logEntry);
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
         }
 
@@ -154,15 +164,20 @@ namespace DocManagementBackend.Controllers
             // document.TypeId = request.TypeId ?? document.TypeId;
             if (request.TypeId.HasValue)
             {
-                var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
-                if (docType == null)
-                    return BadRequest("Invalide type!");
-                document.TypeId = request.TypeId ?? document.TypeId;
-                document.DocumentType = docType;
-                docType.DocumentCounter++;
-                int counterValue = docType.DocumentCounter;
-                string paddedCounter = counterValue.ToString("D4");
-                document.DocumentKey = $"{docType.TypeKey}{document.DocumentAlias.ToUpper()}-{paddedCounter}";
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"=== request TYpe === {request.TypeId}");
+                Console.ResetColor();
+                if (request.TypeId != document.TypeId) {
+                    var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
+                    if (docType == null)
+                        return BadRequest("Invalide type!");
+                    document.TypeId = request.TypeId ?? document.TypeId;
+                    document.DocumentType = docType;
+                    docType.DocumentCounter++;
+                    int counterValue = docType.DocumentCounter;
+                    string paddedCounter = counterValue.ToString("D4");
+                    document.DocumentKey = $"{docType.TypeKey}{document.DocumentAlias.ToUpper()}-{paddedCounter}";
+                }
             }
             if (!string.IsNullOrEmpty(request.DocumentAlias))
             {
@@ -179,7 +194,19 @@ namespace DocManagementBackend.Controllers
             document.UpdatedAt = DateTime.UtcNow;
             _context.Entry(document).State = EntityState.Modified;
 
-            try { await _context.SaveChangesAsync(); }
+            try {
+                await _context.SaveChangesAsync();
+                var logEntry = new LogHistory
+                {
+                    UserId = userId,
+                    User = user,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 5,
+                    Description = $"{user.Username} has updated the document {document.DocumentKey}"
+                };
+                _context.LogHistories.Add(logEntry);
+                await _context.SaveChangesAsync();
+            }
             catch (DbUpdateConcurrencyException)
             {
                 if (!_context.Documents.Any(d => d.Id == id)) { return NotFound(); }
@@ -205,9 +232,18 @@ namespace DocManagementBackend.Controllers
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound("Document not found!");
+            var logEntry = new LogHistory
+            {
+                UserId = userId,
+                User = user,
+                Timestamp = DateTime.UtcNow,
+                ActionType = 6,
+                Description = $"{user.Username} has deleted the document {document.DocumentKey}"
+            };
+            _context.LogHistories.Add(logEntry);
+            await _context.SaveChangesAsync();
 
             _context.Documents.Remove(document);
-            document.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             return Ok("Document deleted!");

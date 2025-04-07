@@ -5,8 +5,16 @@
       "PackagePath": "staticwebassets\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg"
     },
     {
-      "Id": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\default.png",
-      "PackagePath": "staticwebassets\\images\\profile\\default.png"
+      "Id": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png",
+      "PackagePath": "staticwebassets\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png"
+    },
+    {
+      "Id": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png",
+      "PackagePath": "staticwebassets\\images\\profile\\aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png"
+    },
+    {
+      "Id": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png",
+      "PackagePath": "staticwebassets\\images\\profile\\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png"
     },
     {
       "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.DocManagementBackend.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",

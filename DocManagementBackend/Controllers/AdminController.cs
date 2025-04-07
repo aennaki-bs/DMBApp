@@ -92,6 +92,16 @@ namespace DocManagementBackend.Controllers {
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
             AuthHelper.SendEmail(newUser.Email, "Email Verification", emailBody);
+            var logEntry = new LogHistory
+            {
+                UserId = userId,
+                User = ThisUser,
+                Timestamp = DateTime.UtcNow,
+                ActionType = 7,
+                Description = $"{ThisUser.Username} has created a profile for {newUser.Username}"
+            };
+            _context.LogHistories.Add(logEntry);
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, new {
                 newUser.Id, newUser.Username,
                 newUser.Email, newUser.FirstName,
@@ -143,6 +153,16 @@ namespace DocManagementBackend.Controllers {
                 user.RoleId = role.Id; user.Role = role;
             }
             await _context.SaveChangesAsync();
+            var logEntry = new LogHistory
+            {
+                UserId = userId,
+                User = ThisUser,
+                Timestamp = DateTime.UtcNow,
+                ActionType = 8,
+                Description = $"{ThisUser.Username} has updated {user.Username}'s profile"
+            };
+            _context.LogHistories.Add(logEntry);
+            await _context.SaveChangesAsync();
             return Ok("User updated successfully.");
         }
 
@@ -174,6 +194,16 @@ namespace DocManagementBackend.Controllers {
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);
             await _context.SaveChangesAsync();
             AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);
+            var logEntry = new LogHistory
+            {
+                UserId = userId,
+                User = ThisUser,
+                Timestamp = DateTime.UtcNow,
+                ActionType = 8,
+                Description = $"{ThisUser.Username} has updated {user.Username}'s profile"
+            };
+            _context.LogHistories.Add(logEntry);
+            await _context.SaveChangesAsync();
             return Ok($"{user.Username}'s email is updated successfully. He need to check his email for confirmation!");
         }
 
@@ -194,6 +224,16 @@ namespace DocManagementBackend.Controllers {
             if (user == null)
                 return NotFound("User not found.");
             _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            var logEntry = new LogHistory
+            {
+                UserId = userId,
+                User = ThisUser,
+                Timestamp = DateTime.UtcNow,
+                ActionType = 9,
+                Description = $"{ThisUser.Username} has deleted {user.Username}'s profile"
+            };
+            _context.LogHistories.Add(logEntry);
             await _context.SaveChangesAsync();
             return Ok("User deleted successfully.");
         }

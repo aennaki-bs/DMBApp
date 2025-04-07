@@ -120,6 +120,7 @@ namespace DocManagementBackend.Mappings
             UpdatedAt = d.UpdatedAt,
             DocDate = d.DocDate,
             Status = d.Status,
+            TypeId = d.TypeId,
             DocumentType = new DocumentTypeDto {
                 TypeKey = d.DocumentType!.TypeKey,
                 TypeName = d.DocumentType!.TypeName,

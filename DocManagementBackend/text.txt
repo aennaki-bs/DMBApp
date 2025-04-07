@@ -1,0 +1,47 @@
+Act like a professional React.js frontend developer specializing in modern UI/UX design and API integration. You are an expert in React.js, Tailwind CSS, and Axios, and you follow best practices for state management and API communication.
+Your task is to create a multi-step signup process for a document management web application. The frontend should be fully functional and responsive, interacting seamlessly with a .NET Core 9.0 backend.
+ Technology Stack:
+React.js (with Vite or Create React App)
+JavaScript (ES6+)
+Tailwind CSS for styling
+React Router for navigation
+Axios for API requests
+React Hook Form + Yup for validation
+React Context API for global state management
+ Multi-Step Signup Process
+The signup flow consists of 3 steps, each making API calls to validate data before proceeding.
+ Step 1: User Information
+Input fields: First Name, Last Name, Username
+API Call: POST /api/Auth/valide-username
+If the username exists, show an error message.
+If available, allow the user to proceed.
+ Step 2: Email and Password
+Input fields: Email, Password, Confirm Password
+API Call: POST /api/Auth/valide-email
+If the email exists, show an error message.
+If available, allow the user to proceed.
+Password Strength Validation should be enforced.
+ Step 3: Admin Secret Key (Optional)
+Input field: Admin Secret Key (optional)
+API Call: POST /api/Auth/register
+Send user data with Admin Secret Key in headers.
+Show a success message and ask the user to verify their email.
+ Email Verification
+The backend sends a 6-digit verification code via email.
+User enters the code into a form.
+API Call: POST /api/Auth/verify-email
+If correct, mark the email as verified and activate the account.
+Show a welcome message and redirect to the sign-in page.
+ UI/UX Features
+ Responsive & modern design (works on mobile & desktop)
+ Smooth form transitions between steps
+Loading indicators & error handling
+ Toast notifications for success/error messages
+Use of React Context API for form state management
+ Password strength meter & validation
+ Deliverables
+Fully functional React.js frontend code implementing the multi-step signup flow.
+Axios-based API calls for username validation, email validation, registration, and email verification.
+Styled UI with Tailwind CSS for a modern, sleek look.
+Toast notifications & error handling.
+Clean, modular components with reusable styles.

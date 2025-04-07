@@ -78,6 +78,15 @@ namespace DocManagementBackend.Controllers
             try
             {
                 _context.Users.Add(user);
+                var logEntry = new LogHistory
+                {
+                    UserId = user.Id,
+                    User = user,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 2,
+                    Description = $"{user.Username} has created their profile"
+                };
+                _context.LogHistories.Add(logEntry);
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
                 AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);
@@ -147,7 +156,7 @@ namespace DocManagementBackend.Controllers
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             user.IsOnline = true;
-            var login = new LogHistory { UserId = user.Id, User = user, ActionType = 1, Timestamp = DateTime.UtcNow };
+            var login = new LogHistory { UserId = user.Id, User = user, ActionType = 1, Description = "login", Timestamp = DateTime.UtcNow };
             _context.LogHistories.Add(login);
             await _context.SaveChangesAsync();
             var cookieOptions = new CookieOptions
@@ -196,7 +205,7 @@ namespace DocManagementBackend.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
             if (user == null)
                 return Unauthorized("User Not Found!");
-            var logEntry = new LogHistory { UserId = user.Id, User = user, Timestamp = DateTime.UtcNow, ActionType = 0 };
+            var logEntry = new LogHistory { UserId = user.Id, User = user, Timestamp = DateTime.UtcNow, ActionType = 0, Description = "logout"};
             _context.LogHistories.Add(logEntry);
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;

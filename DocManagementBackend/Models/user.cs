@@ -59,6 +59,7 @@ namespace DocManagementBackend.Models {
         [Required]
         public DateTime Timestamp { get; set; }
         [Required]
-        public int ActionType { get; set; } // 1 for Login, 0 for Logout
+        public int ActionType { get; set; } //  0 for Logout, 1 for Login, 2 create his profile, 3 update his profile, 4 create doc, 5 update doc, 6 delete doc, 7 create profile, 8 update profile, 9 delete profile
+        public string Description { get; set; } = string.Empty;
     }
 }
