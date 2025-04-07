@@ -106,6 +106,8 @@ namespace DocManagementBackend.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
                 return NotFound("No user found with that email address.");
+            if (user.IsEmailConfirmed)
+                return BadRequest("Email already verified!");
             var verifCode = new Random().Next(100000, 999999).ToString();
             if (string.IsNullOrEmpty(user.EmailVerificationCode))
                 user.EmailVerificationCode = verifCode;
