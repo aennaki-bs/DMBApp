@@ -29,8 +29,14 @@ namespace DocManagementBackend.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
-
             int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action...!");
 
             var success = await _circuitService.AssignDocumentToCircuit(
                 request.DocumentId, request.CircuitId, userId);
@@ -47,8 +53,14 @@ namespace DocManagementBackend.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
-
             int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action...!");
 
             // Check if the user has the right to process this step
             var document = await _context.Documents
@@ -73,6 +85,15 @@ namespace DocManagementBackend.Controllers
         [HttpGet("history/{documentId}")]
         public async Task<ActionResult<IEnumerable<DocumentCircuitHistoryDto>>> GetDocumentCircuitHistory(int documentId)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
             var history = await _circuitService.GetDocumentCircuitHistory(documentId);
             var historyDtos = history.Select(h => new DocumentCircuitHistoryDto
             {
@@ -93,12 +114,13 @@ namespace DocManagementBackend.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
-
             int userId = int.Parse(userIdClaim);
+            // var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
             if (user == null)
                 return BadRequest("User not found.");
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
 
             // Get documents pending for this user's role
             var pendingDocuments = await _context.Documents

@@ -55,6 +55,39 @@ namespace DocManagementBackend.Controllers
             return Ok(documentDto);
         }
 
+        [HttpGet("recent")]
+        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecentDocuments([FromQuery] int limit = 5)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (thisUser == null)
+                return BadRequest("User not found.");
+            if (!thisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+
+            // Ensure the limit is reasonable
+            if (limit <= 0)
+                limit = 5;
+            if (limit > 50)
+                limit = 50; // Set a maximum limit to prevent excessive queries
+
+            var recentDocuments = await _context.Documents
+                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.DocumentType)
+                .Include(d => d.Lignes)
+                .OrderByDescending(d => d.CreatedAt) // Sort by creation date, newest first
+                .Take(limit) // Take only the specified number of documents
+                .Select(DocumentMappings.ToDocumentDto)
+                .ToListAsync();
+
+            return Ok(recentDocuments);
+        }
+
         [HttpPost]
         public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request)
         {

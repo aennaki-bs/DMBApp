@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
+using System.Security.Claims;
 
 namespace DocManagementBackend.Controllers
 {
@@ -17,14 +18,59 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Circuit>>> GetCircuits()
+        public async Task<ActionResult<IEnumerable<CircuitDto>>> GetCircuits()
         {
-            return await _context.Circuits.ToListAsync();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            var circuits = await _context.Circuits
+                .Include(c => c.CircuitDetails)
+                    .ThenInclude(cd => cd.ResponsibleRole)
+                .ToListAsync();
+
+            var circuitDtos = circuits.Select(c => new CircuitDto
+            {
+                Id = c.Id,
+                CircuitKey = c.CircuitKey,
+                Title = c.Title,
+                Descriptif = c.Descriptif,
+                IsActive = c.IsActive,
+                CrdCounter = c.CrdCounter,
+                HasOrderedFlow = c.HasOrderedFlow,
+                CircuitDetails = c.CircuitDetails.Select(cd => new CircuitDetailDto
+                {
+                    Id = cd.Id,
+                    CircuitDetailKey = cd.CircuitDetailKey,
+                    CircuitId = cd.CircuitId,
+                    Title = cd.Title,
+                    Descriptif = cd.Descriptif,
+                    OrderIndex = cd.OrderIndex,
+                    ResponsibleRoleId = cd.ResponsibleRoleId,
+                    // ResponsibleRoleName = cd.ResponsibleRole?.RoleName
+                }).ToList()
+            }).ToList();
+
+            return Ok(circuitDtos);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Circuit>> GetCircuit(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
             var circuit = await _context.Circuits.FindAsync(id);
             if (circuit == null)
                 return NotFound("Circuit not found.");
@@ -34,6 +80,17 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<Circuit>> CreateCircuit([FromBody] Circuit circuit)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action...!");
             var ctCounter = await _context.TypeCounter.FirstOrDefaultAsync();
             if (ctCounter == null) { ctCounter = new TypeCounter { circuitCounter = 1 }; _context.TypeCounter.Add(ctCounter); }
             else {ctCounter.circuitCounter++;}
@@ -48,6 +105,17 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCircuit(int id, [FromBody] Circuit circuit)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action...!");
             if (id != circuit.Id)
                 return BadRequest("Circuit ID mismatch.");
 
@@ -69,6 +137,17 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCircuit(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+            int userId = int.Parse(userIdClaim);
+            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            if (ThisUser == null)
+                return BadRequest("User not found.");
+            if (!ThisUser.IsActive)
+                return Unauthorized("User account is deactivated.");
+            if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
+                return Unauthorized("User Not Allowed To do this action...!");
             var circuit = await _context.Circuits.FindAsync(id);
             if (circuit == null)
                 return NotFound("Circuit not found.");
