@@ -36,23 +36,23 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png'))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>DocManagementBackend</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
       <BasePath>_content/DocManagementBackend</BasePath>
-      <RelativePath>images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png</RelativePath>
+      <RelativePath>images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg</RelativePath>
       <AssetKind>All</AssetKind>
       <AssetMode>All</AssetMode>
       <AssetRole>Primary</AssetRole>
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>xvs0lv2wuh</Fingerprint>
-      <Integrity>PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE=</Integrity>
+      <Fingerprint>v305d398xh</Fingerprint>
+      <Integrity>yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png'))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png'))">
       <SourceType>Package</SourceType>

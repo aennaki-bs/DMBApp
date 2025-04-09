@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "q+J0mZHJJIXA2Z0Ej67I7ojlJrckgYi1kbUwt/9O5sE=",
+  "Hash": "IR7NCh0luVM316grf7NlbqJyWAOpVm4GXBw6FZXoQEo=",
   "Source": "DocManagementBackend",
   "BasePath": "_content/DocManagementBackend",
   "Mode": "Default",
@@ -59,12 +59,12 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
       "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
-      "RelativePath": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796#[.{fingerprint}]?.png",
+      "RelativePath": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -73,11 +73,11 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "xvs0lv2wuh",
-      "Integrity": "PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE=",
+      "Fingerprint": "v305d398xh",
+      "Integrity": "yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\profile\\aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png"
+      "OriginalItemSpec": "wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg"
     },
     {
       "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
@@ -309,8 +309,8 @@
       ]
     },
     {
-      "Route": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png",
+      "Route": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -319,19 +319,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1018246"
+          "Value": "546878"
         },
         {
           "Name": "Content-Type",
-          "Value": "image/png"
+          "Value": "image/jpeg"
         },
         {
           "Name": "ETag",
-          "Value": "\"PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE=\""
+          "Value": "\"yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 04 Apr 2025 11:14:11 GMT"
+          "Value": "Wed, 09 Apr 2025 08:48:04 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -341,13 +341,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE="
+          "Value": "sha256-yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78="
         }
       ]
     },
     {
-      "Route": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.xvs0lv2wuh.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png",
+      "Route": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.v305d398xh.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -356,19 +356,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1018246"
+          "Value": "546878"
         },
         {
           "Name": "Content-Type",
-          "Value": "image/png"
+          "Value": "image/jpeg"
         },
         {
           "Name": "ETag",
-          "Value": "\"PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE=\""
+          "Value": "\"yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 04 Apr 2025 11:14:11 GMT"
+          "Value": "Wed, 09 Apr 2025 08:48:04 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -378,15 +378,15 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "xvs0lv2wuh"
+          "Value": "v305d398xh"
         },
         {
           "Name": "label",
-          "Value": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png"
+          "Value": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg"
         },
         {
           "Name": "integrity",
-          "Value": "sha256-PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE="
+          "Value": "sha256-yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78="
         }
       ]
     },

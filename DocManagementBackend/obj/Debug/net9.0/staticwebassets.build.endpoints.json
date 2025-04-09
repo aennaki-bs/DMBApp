@@ -167,8 +167,8 @@
       ]
     },
     {
-      "Route": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png",
-      "AssetFile": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png",
+      "Route": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
+      "AssetFile": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -181,31 +181,31 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1018246"
+          "Value": "546878"
         },
         {
           "Name": "Content-Type",
-          "Value": "image/png"
+          "Value": "image/jpeg"
         },
         {
           "Name": "ETag",
-          "Value": "\"PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE=\""
+          "Value": "\"yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 04 Apr 2025 11:14:11 GMT"
+          "Value": "Wed, 09 Apr 2025 08:48:04 GMT"
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE="
+          "Value": "sha256-yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78="
         }
       ]
     },
     {
-      "Route": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.xvs0lv2wuh.png",
-      "AssetFile": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png",
+      "Route": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.v305d398xh.jpg",
+      "AssetFile": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -218,33 +218,33 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1018246"
+          "Value": "546878"
         },
         {
           "Name": "Content-Type",
-          "Value": "image/png"
+          "Value": "image/jpeg"
         },
         {
           "Name": "ETag",
-          "Value": "\"PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE=\""
+          "Value": "\"yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 04 Apr 2025 11:14:11 GMT"
+          "Value": "Wed, 09 Apr 2025 08:48:04 GMT"
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "xvs0lv2wuh"
+          "Value": "v305d398xh"
         },
         {
           "Name": "integrity",
-          "Value": "sha256-PcMs7yFYS0J7cTopWlDMN++onQ49QUJQ6hshklur8uE="
+          "Value": "sha256-yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78="
         },
         {
           "Name": "label",
-          "Value": "images/profile/aennaki_9d940a82-9f47-4bc1-87b7-5dc5f8b80796.png"
+          "Value": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg"
         }
       ]
     },

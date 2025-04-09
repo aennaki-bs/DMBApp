@@ -351,6 +351,26 @@ namespace DocManagementBackend.Controllers
             return Ok("False");
         }
 
+        [HttpPut("Types/{id}")]
+        public async Task<IActionResult> UpdateType([FromBody] DocumentTypeDto request, int id)
+        {
+            var ThisType = await _context.DocumentTypes.FindAsync(id);
+            if (ThisType == null)
+                return NotFound("No type with this id!");
+            if (string.IsNullOrEmpty(request.TypeName))
+            {
+                var typeName = request.TypeName.ToLower();
+                var type = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.TypeName.ToLower() == typeName);
+                if (type != null)
+                    if (type.Id != ThisType.Id)
+                        return BadRequest("TypeName already exist");
+                ThisType.TypeName = request.TypeName;
+            }
+            if (string.IsNullOrEmpty(request.TypeAttr))
+                ThisType.TypeAttr = request.TypeAttr;
+            return Ok("Type edited successfully");
+        }
+
         [HttpDelete("Types/{id}")]
         public async Task<IActionResult> DeleteType(int id)
         {
