@@ -62,16 +62,12 @@ namespace DocManagementBackend.Controllers
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
 
-            // Check if the user has the right to process this step
             var document = await _context.Documents
                 .Include(d => d.CurrentCircuitDetail)
                 .FirstOrDefaultAsync(d => d.Id == request.DocumentId);
 
             if (document == null || document.CurrentCircuitDetailId == null)
                 return NotFound("Document or circuit detail not found.");
-
-            // Here you could add logic to check if the user is authorized for this step
-            // For example, check if their role matches the ResponsibleRoleId
 
             var success = await _circuitService.ProcessCircuitStep(
                 request.DocumentId, userId, request.IsApproved, request.Comments);
@@ -126,8 +122,9 @@ namespace DocManagementBackend.Controllers
             var pendingDocuments = await _context.Documents
                 .Where(d =>
                     !d.IsCircuitCompleted &&
-                    d.CurrentCircuitDetail != null &&
-                    d.CurrentCircuitDetail.ResponsibleRoleId == user.RoleId)
+                    d.CurrentCircuitDetail != null
+                    // && d.CurrentCircuitDetail.ResponsibleRoleId == user.RoleId
+                    )
                 .Include(d => d.CreatedBy)
                 .Include(d => d.DocumentType)
                 .Include(d => d.Circuit)

@@ -20,7 +20,7 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string Descriptif { get; set; } = string.Empty;
         public int OrderIndex { get; set; }
-        public int? ResponsibleRoleId { get; set; }
+        // public int? ResponsibleRoleId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
@@ -42,7 +42,7 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string Descriptif { get; set; } = string.Empty;
         public int OrderIndex { get; set; }
-        public int? ResponsibleRoleId { get; set; }
+        // public int? ResponsibleRoleId { get; set; }
     }
     public class AssignCircuitRequest
     {

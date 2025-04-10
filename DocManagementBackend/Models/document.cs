@@ -59,22 +59,15 @@ namespace DocManagementBackend.Models {
     {
         [Key]
         public int Id { get; set; }
-
         public int DocumentId { get; set; }
         [ForeignKey("DocumentId")]
-        // [DeleteBehavior(DeleteBehavior.NoAction)] // Change this from Cascade
         public required Document Document { get; set; }
-
         public int CircuitDetailId { get; set; }
         [ForeignKey("CircuitDetailId")]
-        // [DeleteBehavior(DeleteBehavior.NoAction)] // Change this from Cascade
         public required CircuitDetail CircuitDetail { get; set; }
-
         public int ProcessedByUserId { get; set; }
         [ForeignKey("ProcessedByUserId")]
-        // [DeleteBehavior(DeleteBehavior.NoAction)] // Change this from Cascade
         public required User ProcessedBy { get; set; }
-
         public string Comments { get; set; } = string.Empty;
         public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
         public bool IsApproved { get; set; }

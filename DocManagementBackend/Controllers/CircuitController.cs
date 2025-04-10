@@ -31,7 +31,7 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User account is deactivated.");
             var circuits = await _context.Circuits
                 .Include(c => c.CircuitDetails)
-                    .ThenInclude(cd => cd.ResponsibleRole)
+                    // .ThenInclude(cd => cd.ResponsibleRole)
                 .ToListAsync();
 
             var circuitDtos = circuits.Select(c => new CircuitDto
@@ -51,7 +51,7 @@ namespace DocManagementBackend.Controllers
                     Title = cd.Title,
                     Descriptif = cd.Descriptif,
                     OrderIndex = cd.OrderIndex,
-                    ResponsibleRoleId = cd.ResponsibleRoleId,
+                    // ResponsibleRoleId = cd.ResponsibleRoleId,
                     // ResponsibleRoleName = cd.ResponsibleRole?.RoleName
                 }).ToList()
             }).ToList();

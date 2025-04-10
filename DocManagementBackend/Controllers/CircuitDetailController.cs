@@ -31,7 +31,7 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User account is deactivated.");
             var details = await _context.CircuitDetails
                 .Include(cd => cd.Circuit)
-                .Include(cd => cd.ResponsibleRole)
+                // .Include(cd => cd.ResponsibleRole)
                 .ToListAsync();
 
             var detailDtos = details.Select(MapToDto).ToList();
@@ -53,7 +53,7 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User account is deactivated.");
             var detail = await _context.CircuitDetails
                 .Include(cd => cd.Circuit)
-                .Include(cd => cd.ResponsibleRole)
+                // .Include(cd => cd.ResponsibleRole)
                 .FirstOrDefaultAsync(cd => cd.Id == id);
 
             if (detail == null)
@@ -77,7 +77,7 @@ namespace DocManagementBackend.Controllers
             var details = await _context.CircuitDetails
                 .Where(cd => cd.CircuitId == circuitId)
                 .Include(cd => cd.Circuit)
-                .Include(cd => cd.ResponsibleRole)
+                // .Include(cd => cd.ResponsibleRole)
                 .ToListAsync();
 
             var detailDtos = details.Select(MapToDto).ToList();
@@ -113,7 +113,7 @@ namespace DocManagementBackend.Controllers
                 Title = dto.Title,
                 Descriptif = dto.Descriptif ?? string.Empty,
                 OrderIndex = dto.OrderIndex,
-                ResponsibleRoleId = dto.ResponsibleRoleId,
+                // ResponsibleRoleId = dto.ResponsibleRoleId,
                 CircuitDetailKey = $"{circuit.CircuitKey}-Crd{paddedCounter}"
             };
 
@@ -123,7 +123,7 @@ namespace DocManagementBackend.Controllers
             // Reload detail with its relationships
             detail = await _context.CircuitDetails
                 .Include(cd => cd.Circuit)
-                .Include(cd => cd.ResponsibleRole)
+                // .Include(cd => cd.ResponsibleRole)
                 .FirstOrDefaultAsync(cd => cd.Id == detail.Id);
 
             return CreatedAtAction(nameof(GetCircuitDetail), new { id = detail!.Id }, MapToDto(detail));
@@ -151,7 +151,7 @@ namespace DocManagementBackend.Controllers
             detail.Title = dto.Title;
             detail.Descriptif = dto.Descriptif ?? detail.Descriptif;
             detail.OrderIndex = dto.OrderIndex;
-            detail.ResponsibleRoleId = dto.ResponsibleRoleId;
+            // detail.ResponsibleRoleId = dto.ResponsibleRoleId;
 
             try
             {
@@ -203,7 +203,7 @@ namespace DocManagementBackend.Controllers
                 Title = detail.Title,
                 Descriptif = detail.Descriptif,
                 OrderIndex = detail.OrderIndex,
-                ResponsibleRoleId = detail.ResponsibleRoleId,
+                // ResponsibleRoleId = detail.ResponsibleRoleId,
                 CreatedAt = DateTime.UtcNow, // Adjust if your entity has CreatedAt properties
                 UpdatedAt = DateTime.UtcNow,
                 Circuit = detail.Circuit == null ? null : new CircuitSummaryDto

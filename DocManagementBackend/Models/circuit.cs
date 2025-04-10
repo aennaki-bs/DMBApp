@@ -44,8 +44,8 @@ namespace DocManagementBackend.Models {
 
         public int OrderIndex { get; set; } = 0;
 
-        public int? ResponsibleRoleId { get; set; }
-        [ForeignKey("ResponsibleRoleId")]
-        public Role? ResponsibleRole { get; set; }
+        // public int? ResponsibleRoleId { get; set; }
+        // [ForeignKey("ResponsibleRoleId")]
+        // public Role? ResponsibleRole { get; set; }
     }
 }

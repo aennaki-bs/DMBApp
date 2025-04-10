@@ -25,12 +25,9 @@ public class CircuitProcessingService
 
         if (circuit == null || !circuit.CircuitDetails.Any())
             return false;
-
-        // Assign the document to the circuit
         document.CircuitId = circuitId;
         document.Circuit = circuit;
 
-        // Set the first circuit detail as current
         var firstDetail = circuit.CircuitDetails.OrderBy(cd => cd.OrderIndex).First();
         document.CurrentCircuitDetailId = firstDetail.Id;
         document.CurrentCircuitDetail = firstDetail;
@@ -46,7 +43,7 @@ public class CircuitProcessingService
             CircuitDetailId = firstDetail.Id,
             CircuitDetail = firstDetail,
             ProcessedByUserId = userId,
-            ProcessedBy = user, // Set the actual user object
+            ProcessedBy = user,
             ProcessedAt = DateTime.UtcNow,
             Comments = "Document assigned to circuit",
             IsApproved = true
@@ -101,17 +98,14 @@ public class CircuitProcessingService
 
         _context.DocumentCircuitHistory.Add(historyEntry);
 
-        // If approved, move to next step
         if (isApproved)
         {
             var currentDetail = document.CurrentCircuitDetail;
             var allDetails = circuit.CircuitDetails.OrderBy(cd => cd.OrderIndex).ToList();
             var currentIndex = currentDetail != null ? allDetails.FindIndex(cd => cd.Id == currentDetail.Id) : -1;
 
-            // Check if there are more steps
             if (currentIndex < allDetails.Count - 1)
             {
-                // Move to next step
                 var nextDetail = allDetails[currentIndex + 1];
                 document.CurrentCircuitDetailId = nextDetail.Id;
                 document.CurrentCircuitDetail = nextDetail;

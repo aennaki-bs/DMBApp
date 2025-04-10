@@ -137,6 +137,7 @@ namespace DocManagementBackend.Mappings
             },
             LignesCount = d.Lignes.Count,
             SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count),
+            CircuitId = d.CircuitId,
             CurrentCircuitDetailId = d.CurrentCircuitDetailId,
             CurrentCircuitDetailTitle = d.CurrentCircuitDetail != null ? d.CurrentCircuitDetail.Title : string.Empty,
             IsCircuitCompleted = d.IsCircuitCompleted
