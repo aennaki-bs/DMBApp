@@ -2,7 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace DocManagementBackend.Models {
+namespace DocManagementBackend.Models
+{
     public class Document
     {
         [Key]
@@ -14,12 +15,13 @@ namespace DocManagementBackend.Models {
         public int TypeId { get; set; }
         [ForeignKey("TypeId")]
         public DocumentType? DocumentType { get; set; }
+        public int? CurrentStepId { get; set; }
+        [ForeignKey("CurrentStepId")]
+        [JsonIgnore]
+        public Step? CurrentStep { get; set; }
         public int? CircuitId { get; set; }
         [ForeignKey("CircuitId")]
         public Circuit? Circuit { get; set; }
-        public int? CurrentCircuitDetailId { get; set; }
-        [ForeignKey("CurrentCircuitDetailId")]
-        public CircuitDetail? CurrentCircuitDetail { get; set; }
         public bool IsCircuitCompleted { get; set; } = false;
         [Required]
         public string DocumentKey { get; set; } = string.Empty;
@@ -59,17 +61,31 @@ namespace DocManagementBackend.Models {
     {
         [Key]
         public int Id { get; set; }
+        [Required]
         public int DocumentId { get; set; }
         [ForeignKey("DocumentId")]
-        public required Document Document { get; set; }
-        public int CircuitDetailId { get; set; }
-        [ForeignKey("CircuitDetailId")]
-        public required CircuitDetail CircuitDetail { get; set; }
+        [JsonIgnore]
+        public Document? Document { get; set; }
+        [Required]
+        public int StepId { get; set; }
+        [ForeignKey("StepId")]
+        [JsonIgnore]
+        public Step? Step { get; set; }
+        public int? ActionId { get; set; }
+        [ForeignKey("ActionId")]
+        [JsonIgnore]
+        public Action? Action { get; set; }
+        public int? StatusId { get; set; }
+        [ForeignKey("StatusId")]
+        [JsonIgnore]
+        public Status? Status { get; set; }
+        [Required]
         public int ProcessedByUserId { get; set; }
         [ForeignKey("ProcessedByUserId")]
-        public required User ProcessedBy { get; set; }
-        public string Comments { get; set; } = string.Empty;
+        [JsonIgnore]
+        public User? ProcessedBy { get; set; }
         public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
-        public bool IsApproved { get; set; }
+        public string Comments { get; set; } = string.Empty;
+        public bool IsApproved { get; set; } = true;
     }
 }

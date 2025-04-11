@@ -109,8 +109,8 @@ namespace DocManagementBackend.Controllers
             if (user.IsEmailConfirmed)
                 return BadRequest("Email already verified!");
             var verifCode = new Random().Next(100000, 999999).ToString();
-            if (string.IsNullOrEmpty(user.EmailVerificationCode))
-                user.EmailVerificationCode = verifCode;
+            // if (string.IsNullOrEmpty(user.EmailVerificationCode))
+            user.EmailVerificationCode = verifCode;
             var verificationLink = $"{frontDomain}/verify/{user.Email}";
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);
             AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);

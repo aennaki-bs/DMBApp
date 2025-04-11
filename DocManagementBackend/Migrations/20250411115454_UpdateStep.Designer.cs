@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocManagementBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250327112010_InitialData")]
-    partial class InitialData
+    [Migration("20250411115454_UpdateStep")]
+    partial class UpdateStep
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,61 @@ namespace DocManagementBackend.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("DocManagementBackend.Models.Action", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Actions");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.ActionStatusEffect", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActionId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("SetsComplete")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StepId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionId");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("StepId");
+
+                    b.ToTable("ActionStatusEffects");
+                });
+
             modelBuilder.Entity("DocManagementBackend.Models.Circuit", b =>
                 {
                     b.Property<int>("Id")
@@ -32,6 +87,9 @@ namespace DocManagementBackend.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AllowBacktrack")
+                        .HasColumnType("bit");
 
                     b.Property<string>("CircuitKey")
                         .IsRequired()
@@ -44,6 +102,9 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("HasOrderedFlow")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -54,36 +115,6 @@ namespace DocManagementBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Circuits");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.CircuitDetail", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CircuitDetailKey")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("CircuitId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Descriptif")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CircuitId");
-
-                    b.ToTable("CircuitDetails");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
@@ -106,6 +137,9 @@ namespace DocManagementBackend.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CurrentStepId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("DocDate")
                         .HasColumnType("datetime2");
 
@@ -116,6 +150,9 @@ namespace DocManagementBackend.Migrations
                     b.Property<string>("DocumentKey")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCircuitCompleted")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -142,9 +179,93 @@ namespace DocManagementBackend.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
+                    b.HasIndex("CurrentStepId");
+
                     b.HasIndex("TypeId");
 
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.DocumentCircuitHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ActionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProcessedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StatusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StepId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionId");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("ProcessedByUserId");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("StepId");
+
+                    b.ToTable("DocumentCircuitHistory");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.DocumentStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CompletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompletedByUserId");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("StatusId");
+
+                    b.ToTable("DocumentStatus");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.DocumentType", b =>
@@ -227,6 +348,10 @@ namespace DocManagementBackend.Migrations
 
                     b.Property<int>("ActionType")
                         .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2");
@@ -327,6 +452,112 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("LigneId");
 
                     b.ToTable("SousLignes");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Status", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("StatusKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StepId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StepId");
+
+                    b.ToTable("Status");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Step", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CircuitId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Descriptif")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsFinalStep")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("NextStepId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PrevStepId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ResponsibleRoleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StepKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CircuitId");
+
+                    b.HasIndex("NextStepId");
+
+                    b.HasIndex("PrevStepId");
+
+                    b.HasIndex("ResponsibleRoleId");
+
+                    b.ToTable("Steps");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.StepAction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StepId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionId");
+
+                    b.HasIndex("StepId");
+
+                    b.ToTable("StepActions");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.TypeCounter", b =>
@@ -432,15 +663,31 @@ namespace DocManagementBackend.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.CircuitDetail", b =>
+            modelBuilder.Entity("DocManagementBackend.Models.ActionStatusEffect", b =>
                 {
-                    b.HasOne("DocManagementBackend.Models.Circuit", "Circuit")
-                        .WithMany("CircuitDetails")
-                        .HasForeignKey("CircuitId")
+                    b.HasOne("DocManagementBackend.Models.Action", "Action")
+                        .WithMany()
+                        .HasForeignKey("ActionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Circuit");
+                    b.HasOne("DocManagementBackend.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.Step", "Step")
+                        .WithMany()
+                        .HasForeignKey("StepId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Action");
+
+                    b.Navigation("Status");
+
+                    b.Navigation("Step");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
@@ -455,6 +702,10 @@ namespace DocManagementBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DocManagementBackend.Models.Step", "CurrentStep")
+                        .WithMany()
+                        .HasForeignKey("CurrentStepId");
+
                     b.HasOne("DocManagementBackend.Models.DocumentType", "DocumentType")
                         .WithMany("Documents")
                         .HasForeignKey("TypeId")
@@ -465,7 +716,73 @@ namespace DocManagementBackend.Migrations
 
                     b.Navigation("CreatedBy");
 
+                    b.Navigation("CurrentStep");
+
                     b.Navigation("DocumentType");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.DocumentCircuitHistory", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Action", "Action")
+                        .WithMany()
+                        .HasForeignKey("ActionId");
+
+                    b.HasOne("DocManagementBackend.Models.Document", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.User", "ProcessedBy")
+                        .WithMany()
+                        .HasForeignKey("ProcessedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId");
+
+                    b.HasOne("DocManagementBackend.Models.Step", "Step")
+                        .WithMany()
+                        .HasForeignKey("StepId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Action");
+
+                    b.Navigation("Document");
+
+                    b.Navigation("ProcessedBy");
+
+                    b.Navigation("Status");
+
+                    b.Navigation("Step");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.DocumentStatus", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.User", "CompletedBy")
+                        .WithMany()
+                        .HasForeignKey("CompletedByUserId");
+
+                    b.HasOne("DocManagementBackend.Models.Document", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CompletedBy");
+
+                    b.Navigation("Document");
+
+                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
@@ -501,6 +818,65 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Ligne");
                 });
 
+            modelBuilder.Entity("DocManagementBackend.Models.Status", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Step", "Step")
+                        .WithMany("Statuses")
+                        .HasForeignKey("StepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Step");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Step", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Circuit", "Circuit")
+                        .WithMany("Steps")
+                        .HasForeignKey("CircuitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.Step", "NextStep")
+                        .WithMany()
+                        .HasForeignKey("NextStepId");
+
+                    b.HasOne("DocManagementBackend.Models.Step", "PrevStep")
+                        .WithMany()
+                        .HasForeignKey("PrevStepId");
+
+                    b.HasOne("DocManagementBackend.Models.Role", "ResponsibleRole")
+                        .WithMany()
+                        .HasForeignKey("ResponsibleRoleId");
+
+                    b.Navigation("Circuit");
+
+                    b.Navigation("NextStep");
+
+                    b.Navigation("PrevStep");
+
+                    b.Navigation("ResponsibleRole");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.StepAction", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Action", "Action")
+                        .WithMany("StepActions")
+                        .HasForeignKey("ActionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.Step", "Step")
+                        .WithMany("StepActions")
+                        .HasForeignKey("StepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Action");
+
+                    b.Navigation("Step");
+                });
+
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>
                 {
                     b.HasOne("DocManagementBackend.Models.Role", "Role")
@@ -512,9 +888,14 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("DocManagementBackend.Models.Action", b =>
+                {
+                    b.Navigation("StepActions");
+                });
+
             modelBuilder.Entity("DocManagementBackend.Models.Circuit", b =>
                 {
-                    b.Navigation("CircuitDetails");
+                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
@@ -530,6 +911,13 @@ namespace DocManagementBackend.Migrations
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
                 {
                     b.Navigation("SousLignes");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.Step", b =>
+                {
+                    b.Navigation("Statuses");
+
+                    b.Navigation("StepActions");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>

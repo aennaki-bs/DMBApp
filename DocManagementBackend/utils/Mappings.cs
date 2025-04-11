@@ -27,7 +27,8 @@ namespace DocManagementBackend.Mappings
                 TypeId = l.Document.TypeId,
                 DocumentType = l.Document.DocumentType == null
                     ? null
-                    : new DocumentTypeDto {
+                    : new DocumentTypeDto
+                    {
                         TypeKey = l.Document.DocumentType.TypeKey,
                         TypeName = l.Document.DocumentType.TypeName,
                         TypeAttr = l.Document.DocumentType.TypeAttr
@@ -64,7 +65,8 @@ namespace DocManagementBackend.Mappings
             LigneId = s.LigneId,
             Title = s.Title,
             Attribute = s.Attribute,
-            Ligne = new LigneDto {
+            Ligne = new LigneDto
+            {
                 Id = s.Id,
                 DocumentId = s.Ligne!.DocumentId,
                 LingeKey = s.Ligne.LigneKey,
@@ -73,7 +75,8 @@ namespace DocManagementBackend.Mappings
                 Prix = s.Ligne.Prix,
                 CreatedAt = s.Ligne.CreatedAt,
                 UpdatedAt = s.Ligne.UpdatedAt,
-                Document = new DocumentDto {
+                Document = new DocumentDto
+                {
                     Id = s.Ligne.Document!.Id,
                     DocumentKey = s.Ligne.Document.DocumentKey,
                     DocumentAlias = s.Ligne.Document.DocumentAlias,
@@ -82,7 +85,8 @@ namespace DocManagementBackend.Mappings
                     TypeId = s.Ligne.Document.TypeId,
                     DocumentType = s.Ligne.Document.DocumentType == null
                         ? null
-                        : new DocumentTypeDto {
+                        : new DocumentTypeDto
+                        {
                             TypeKey = s.Ligne.Document.DocumentType.TypeKey,
                             TypeName = s.Ligne.Document.DocumentType.TypeName,
                             TypeAttr = s.Ligne.Document.DocumentType.TypeAttr
@@ -93,7 +97,8 @@ namespace DocManagementBackend.Mappings
                     CreatedByUserId = s.Ligne.Document.CreatedByUserId,
                     CreatedBy = s.Ligne.Document.CreatedBy == null
                         ? null
-                        : new DocumentUserDto {
+                        : new DocumentUserDto
+                        {
                             Email = s.Ligne.Document.CreatedBy.Email,
                             Username = s.Ligne.Document.CreatedBy.Username,
                             FirstName = s.Ligne.Document.CreatedBy.FirstName,
@@ -121,7 +126,8 @@ namespace DocManagementBackend.Mappings
             DocDate = d.DocDate,
             Status = d.Status,
             TypeId = d.TypeId,
-            DocumentType = new DocumentTypeDto {
+            DocumentType = new DocumentTypeDto
+            {
                 TypeKey = d.DocumentType!.TypeKey,
                 TypeName = d.DocumentType!.TypeName,
                 TypeAttr = d.DocumentType.TypeAttr
@@ -138,8 +144,8 @@ namespace DocManagementBackend.Mappings
             LignesCount = d.Lignes.Count,
             SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count),
             CircuitId = d.CircuitId,
-            CurrentCircuitDetailId = d.CurrentCircuitDetailId,
-            CurrentCircuitDetailTitle = d.CurrentCircuitDetail != null ? d.CurrentCircuitDetail.Title : string.Empty,
+            // CurrentStepId = d.CurrentStepId,
+            CurrentStepTitle = d.CurrentStep != null ? d.CurrentStep.Title : string.Empty,
             IsCircuitCompleted = d.IsCircuitCompleted
         };
     }
@@ -162,7 +168,8 @@ namespace DocManagementBackend.Mappings
             IsActive = d.IsActive,
             IsOnline = d.IsOnline,
             ProfilePicture = d.ProfilePicture,
-            Role = new RoleDto {
+            Role = new RoleDto
+            {
                 RoleId = d.Role!.Id,
                 RoleName = d.Role.RoleName
             }

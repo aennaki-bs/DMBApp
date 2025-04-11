@@ -65,7 +65,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("Invalid DocumentId. Document not found.");
             ligne.CreatedAt = DateTime.UtcNow;
             ligne.UpdatedAt = DateTime.UtcNow;
-            ligne.LigneKey = $"L{document.LigneCouter++}";
+            ligne.LigneKey = $"{document.DocumentKey}L{document.LigneCouter++}";
             _context.Lignes.Add(ligne);
             await _context.SaveChangesAsync();
             var ligneDto = await _context.Lignes

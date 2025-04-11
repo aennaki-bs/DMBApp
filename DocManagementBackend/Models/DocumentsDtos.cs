@@ -41,12 +41,13 @@ namespace DocManagementBackend.Models
         public int SousLignesCount { get; set; }
         public int CreatedByUserId { get; set; }
         public DocumentUserDto? CreatedBy { get; set; } = new DocumentUserDto();
-        public int? CurrentCircuitDetailId { get; set; }
-        public string CurrentCircuitDetailTitle { get; set; } = string.Empty;
+        public int? CurrentStepId { get; set; }
+        public string CurrentStepTitle { get; set; } = string.Empty;
         public bool IsCircuitCompleted { get; set; }
     }
 
-    public class DocumentTypeDto {
+    public class DocumentTypeDto
+    {
         public string TypeAlias { get; set; } = string.Empty;
         public string TypeKey { get; set; } = string.Empty;
         public string TypeName { get; set; } = string.Empty;

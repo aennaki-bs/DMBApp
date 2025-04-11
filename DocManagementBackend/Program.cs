@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
+using DocManagementBackend.Services;
 using System.Text;
 using DotNetEnv;
 using Microsoft.Extensions.FileProviders;
@@ -59,9 +60,11 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+builder.Services.AddScoped<CircuitManagementService>();
+builder.Services.AddScoped<DocumentWorkflowService>();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
-builder.Services.AddScoped<CircuitProcessingService>();
+// builder.Services.AddScoped<CircuitProcessingService>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 

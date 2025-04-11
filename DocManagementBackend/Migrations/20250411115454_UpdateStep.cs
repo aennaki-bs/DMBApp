@@ -5,7 +5,7 @@
 namespace DocManagementBackend.Migrations
 {
     /// <inheritdoc />
-    public partial class ChangeCircuitKey : Migration
+    public partial class UpdateStep : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
