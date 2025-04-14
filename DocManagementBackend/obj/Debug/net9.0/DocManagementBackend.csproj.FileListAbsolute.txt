@@ -717,3 +717,8 @@ C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\obj\Debug\net9.0\refint\DocM
 C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\obj\Debug\net9.0\DocManagementBackend.pdb
 C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\obj\Debug\net9.0\DocManagementBackend.genruntimeconfig.cache
 C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\obj\Debug\net9.0\ref\DocManagementBackend.dll
+C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\firebase-credentials.json
+C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\FirebaseAdmin.dll
+C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\Google.Api.Gax.dll
+C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\Google.Api.Gax.Rest.dll
+C:\Users\ENNAKI\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\RestSharp.dll

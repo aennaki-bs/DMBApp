@@ -112,6 +112,57 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpPost("move-next")]
+        public async Task<IActionResult> MoveToNextStep([FromBody] MoveNextDto moveNextDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User not allowed to perform this action.");
+
+            try
+            {
+                var success = await _workflowService.MoveToNextStepAsync(
+                    moveNextDto.DocumentId,
+                    moveNextDto.CurrentStepId,
+                    moveNextDto.NextStepId,
+                    userId,
+                    moveNextDto.Comments);
+
+                if (success)
+                    return Ok("Document moved to next step successfully.");
+                else
+                    return BadRequest("Failed to move document to next step.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         [HttpPost("return-to-previous")]
         public async Task<IActionResult> ReturnToPreviousStep([FromBody] ReturnToPreviousDto returnDto)
         {
@@ -148,6 +199,54 @@ namespace DocManagementBackend.Controllers
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpPost("complete-status")]
+        public async Task<IActionResult> CompleteDocumentStatus([FromBody] CompleteStatusDto completeStatusDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+
+            try
+            {
+                var success = await _workflowService.CompleteDocumentStatusAsync(
+                    completeStatusDto.DocumentId,
+                    completeStatusDto.StatusId,
+                    userId,
+                    completeStatusDto.IsComplete,
+                    completeStatusDto.Comments);
+
+                if (success)
+                    return Ok("Document status updated successfully.");
+                else
+                    return BadRequest("Failed to update document status.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
             }
             catch (Exception ex)
             {

@@ -21,6 +21,7 @@ namespace DocManagementBackend.Models {
         public string Country { get; set; } = string.Empty;
         public bool IsEmailConfirmed { get; set; } = false;
         public string? EmailVerificationCode { get; set; }
+        public bool IsPhoneVerified { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = false;
         public bool IsOnline { get; set; } = false;

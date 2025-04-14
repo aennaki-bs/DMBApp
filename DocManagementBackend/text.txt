@@ -1,282 +1,56 @@
-1. Schema Analysis & Optimization
-Looking at your current implementation, I can see you've built a good foundation for document management with circuits, but there are several opportunities for optimization. Here's a refined schema:
-sqlCREATE TABLE Circuit (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    CircuitKey NVARCHAR(50) NOT NULL UNIQUE,
-    Title NVARCHAR(100) NOT NULL,
-    Descriptif NVARCHAR(500) NOT NULL,
-    IsActive BIT NOT NULL DEFAULT 1,
-    HasOrderedFlow BIT NOT NULL DEFAULT 1,
-    AllowBacktrack BIT NOT NULL DEFAULT 0,
-    CrdCounter INT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE Step (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    StepKey NVARCHAR(50) NOT NULL UNIQUE,
-    CircuitId INT NOT NULL,
-    Title NVARCHAR(100) NOT NULL,
-    Descriptif NVARCHAR(500) NOT NULL,
-    OrderIndex INT NOT NULL DEFAULT 0,
-    ResponsibleRoleId INT,
-    NextStepId INT,
-    PrevStepId INT,
-    IsFinalStep BIT NOT NULL DEFAULT 0,
-    FOREIGN KEY (CircuitId) REFERENCES Circuit(Id) ON DELETE CASCADE,
-    FOREIGN KEY (ResponsibleRoleId) REFERENCES Role(Id),
-    FOREIGN KEY (NextStepId) REFERENCES Step(Id),
-    FOREIGN KEY (PrevStepId) REFERENCES Step(Id)
-);
-
-CREATE TABLE Status (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    StatusKey NVARCHAR(50) NOT NULL UNIQUE,
-    StepId INT NOT NULL,
-    Title NVARCHAR(100) NOT NULL,
-    IsRequired BIT NOT NULL DEFAULT 1,
-    IsComplete BIT NOT NULL DEFAULT 0,
-    FOREIGN KEY (StepId) REFERENCES Step(Id) ON DELETE CASCADE
-);
-
-CREATE TABLE Action (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    ActionKey NVARCHAR(50) NOT NULL UNIQUE,
-    Title NVARCHAR(100) NOT NULL,
-    Description NVARCHAR(500)
-);
-
-CREATE TABLE StepAction (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    StepId INT NOT NULL,
-    ActionId INT NOT NULL,
-    FOREIGN KEY (StepId) REFERENCES Step(Id) ON DELETE CASCADE,
-    FOREIGN KEY (ActionId) REFERENCES Action(Id) ON DELETE CASCADE,
-    UNIQUE (StepId, ActionId)
-);
-
-CREATE TABLE Document (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    DocumentKey NVARCHAR(50) NOT NULL UNIQUE,
-    Title NVARCHAR(100) NOT NULL,
-    Content NVARCHAR(MAX),
-    CircuitId INT,
-    CurrentStepId INT,
-    Status INT NOT NULL DEFAULT 0, -- 0=Draft, 1=In Progress, 2=Completed, 3=Rejected
-    IsCircuitCompleted BIT NOT NULL DEFAULT 0,
-    CreatedByUserId INT NOT NULL,
-    CreatedAt DATETIME NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedAt DATETIME NOT NULL DEFAULT GETUTCDATE(),
-    FOREIGN KEY (CircuitId) REFERENCES Circuit(Id),
-    FOREIGN KEY (CurrentStepId) REFERENCES Step(Id),
-    FOREIGN KEY (CreatedByUserId) REFERENCES User(Id)
-);
-
-CREATE TABLE DocumentHistory (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    DocumentId INT NOT NULL,
-    StepId INT NOT NULL,
-    ActionId INT NOT NULL,
-    StatusId INT,
-    ProcessedByUserId INT NOT NULL,
-    ProcessedAt DATETIME NOT NULL DEFAULT GETUTCDATE(),
-    Comments NVARCHAR(500),
-    IsApproved BIT NOT NULL DEFAULT 0,
-    FOREIGN KEY (DocumentId) REFERENCES Document(Id) ON DELETE CASCADE,
-    FOREIGN KEY (StepId) REFERENCES Step(Id),
-    FOREIGN KEY (ActionId) REFERENCES Action(Id),
-    FOREIGN KEY (StatusId) REFERENCES Status(Id),
-    FOREIGN KEY (ProcessedByUserId) REFERENCES User(Id)
-);
-
-CREATE TABLE DocumentStatus (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    DocumentId INT NOT NULL,
-    StatusId INT NOT NULL,
-    IsComplete BIT NOT NULL DEFAULT 0,
-    CompletedByUserId INT,
-    CompletedAt DATETIME,
-    FOREIGN KEY (DocumentId) REFERENCES Document(Id) ON DELETE CASCADE,
-    FOREIGN KEY (StatusId) REFERENCES Status(Id) ON DELETE CASCADE,
-    FOREIGN KEY (CompletedByUserId) REFERENCES User(Id),
-    UNIQUE (DocumentId, StatusId)
-);
-2. Key Improvements Over Current Implementation
-
-Explicit Step Management: Your original schema did not fully articulate the step management I see in the code. Added NextStepId and PrevStepId to make the step flow explicit.
-StepAction Junction Table: Added to properly model the many-to-many relationship between steps and actions.
-DocumentStatus Tracking: Implemented a table that specifically tracks the status of each document against each required status in the circuit.
-Refined Relationships: Ensured that all foreign key relationships are explicitly defined with appropriate cascade behaviors.
-Additional Fields: Added Description to actions and expanded tracking fields in history.
-
-3. Document Lifecycle Flow Design
-Here's how the document would flow through the system:
-
-Document Creation:
-
-Document is created with status "Draft" (0)
-No circuit is assigned initially
-
-
-Circuit Assignment:
-
-User assigns document to a circuit
-System sets CircuitId and identifies the first step based on OrderIndex
-CurrentStepId is set to this first step
-Status changes to "In Progress" (1)
-Entry is logged in DocumentHistory
-
-
-Step Processing:
-
-System determines all required statuses for the current step
-Creates entries in DocumentStatus for each status
-Users with appropriate roles can perform actions on the document
-Each action updates corresponding statuses via DocumentStatus
-All actions are logged in DocumentHistory
-
-
-Step Transition:
-
-When all required statuses for the current step are complete, document is eligible to move to next step
-If HasOrderedFlow is true, progression must follow NextStepId
-If AllowBacktrack is true, document can be sent back to PrevStepId
-Entry is logged in DocumentHistory for the transition
-
-
-Circuit Completion:
-
-When document reaches a step where IsFinalStep is true and all required statuses are complete
-System sets IsCircuitCompleted to true
-Status changes to "Completed" (2)
-Entry is logged in DocumentHistory
-
-
-Rejection:
-
-At any step, if action with negative outcome (rejection) is taken
-Status changes to "Rejected" (3)
-Entry is logged in DocumentHistory
-
-
-
-4. Backend Logic & API Design
-Core Services
-
-CircuitManagementService:
-
-Manages circuit definitions (CRUD)
-Handles step ordering and relationship logic
-
-
-DocumentWorkflowService:
-
-Core service that handles document progression
-Implements the business logic for status requirements
-Manages step transitions based on circuit rules
-
-
-ActionProcessingService:
-
-Processes actions performed on documents
-Updates statuses based on actions
-Validates user permissions for actions
-
-
-
-Key API Endpoints
-
-Circuit Management:
-GET /api/circuits - List all circuits
-GET /api/circuits/{id} - Get circuit details with steps
-POST /api/circuits - Create new circuit
-PUT /api/circuits/{id} - Update circuit
-DELETE /api/circuits/{id} - Delete circuit
-
-GET /api/circuits/{id}/steps - Get steps for circuit
-POST /api/circuits/{id}/steps - Add step to circuit
-PUT /api/circuits/{id}/steps/{stepId} - Update step
-DELETE /api/circuits/{id}/steps/{stepId} - Remove step
-
-Document Workflow:
-POST /api/documents/{id}/assign-circuit - Assign document to circuit
-GET /api/documents/{id}/current-step - Get current step info
-GET /api/documents/{id}/required-statuses - Get statuses required for current step
-POST /api/documents/{id}/perform-action - Perform action on document
-POST /api/documents/{id}/advance-step - Move to next step (if eligible)
-POST /api/documents/{id}/return-step - Return to previous step (if allowed)
-GET /api/documents/{id}/history - Get document history
-
-Status Management:
-GET /api/documents/{id}/statuses - Get all statuses for document
-PUT /api/documents/{id}/statuses/{statusId} - Update status
-
-
-5. Implementation Recommendations
-Based on your existing codebase, here are specific implementation recommendations:
-
-Refactor Step to Step:
-
-Your current Step concept should be renamed to Step for better semantic clarity
-Add fields for explicit step sequencing
-
-
-Enhance CircuitProcessingService:
-
-Implement logic to check all required statuses before allowing step progression
-Add support for branching logic based on specific actions/statuses
-Implement backtracking with proper permission checks
-
-
-Improve Role-Based Permissions:
-
-Enhance step definition to include role requirements
-Implement permission checks in action processing
-Add delegation capabilities for temporary role assignments
-
-
-Optimize Database Queries:
-
-Create indexes on frequently queried fields
-Consider using stored procedures for complex workflow transitions
-Implement caching for circuit and step definitions
-
-
-Enhance History Tracking:
-
-Log more detailed information about status changes
-Add support for comments/notes at each step
-Implement visual timeline representation of document history
-
-
-
-6. Advanced Features to Consider
-
-Conditional Routing:
-
-Allow dynamic next steps based on document data or action outcomes
-Implement decision points in the circuit
-
-
-Parallel Processing:
-
-Support for parallel steps where multiple approvals can happen simultaneously
-Join points where all parallel paths must complete before proceeding
-
-
-Due Date Management:
-
-Add SLA tracking for each step
-Implement escalation paths for overdue items
-
-
-Template Management:
-
-Create circuit templates for common workflows
-Allow for cloning and customization of circuits
-
-
-Analytics & Reporting:
-
-Track processing times for each step
-Identify bottlenecks in workflows
-Provide insights on approval patterns
+Move Document to Next Step API
+This API endpoint allows authorized users to move a document from its current step to the next step in a workflow circuit.
+Endpoint
+POST /api/workflow/move-next
+Authorization
+Requires an authenticated user with either the "Admin" or "FullUser" role.
+Request Body
+json{
+  "documentId": 123,
+  "currentStepId": 5,
+  "nextStepId": 6,
+  "comments": "Moving to the approval stage"
+}
+FieldTypeDescriptiondocumentIdintegerThe ID of the document to movecurrentStepIdintegerThe ID of the current step (for validation)nextStepIdintegerThe ID of the target step to move tocommentsstringComments about the step transition (will be stored in history)
+Response
+Success Response (200 OK)
+json"Document moved to next step successfully."
+Error Responses
+
+400 Bad Request: Returned when validation fails
+
+Document not found
+Current step ID doesn't match
+Required statuses not complete
+Next step not in same circuit
+Circuit already completed
+
+
+401 Unauthorized: Returned when the user lacks permissions
+404 Not Found: Returned when the document, current step, or next step can't be found
+500 Internal Server Error: Returned on server exceptions
+
+Workflow Logic
+
+Validates the document exists and that it's assigned to a circuit
+Checks that the specified current step matches the document's actual current step
+Verifies the next step exists and belongs to the same circuit
+Checks that the user has the appropriate role permissions
+Ensures all required statuses are completed for the current step
+Updates the document's current step
+Sets the document as completed if the next step is a final step
+Creates a history record of the transition
+Creates document status records for the new step
+
+Example Usage
+httpPOST /api/workflow/move-next HTTP/1.1
+Host: example.com
+Authorization: Bearer your-token-here
+Content-Type: application/json
+
+{
+  "documentId": 123,
+  "currentStepId": 5,
+  "nextStepId": 6,
+  "comments": "Document is ready for final review"
+}

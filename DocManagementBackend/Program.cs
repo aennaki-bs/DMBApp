@@ -7,8 +7,15 @@ using DocManagementBackend.Services;
 using System.Text;
 using DotNetEnv;
 using Microsoft.Extensions.FileProviders;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 
 Env.Load();
+
+var firebaseApp = FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile("./firebase-credentials.json"),
+});
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +67,7 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+// builder.Services.AddScoped<SmsVerificationService>();
 builder.Services.AddScoped<CircuitManagementService>();
 builder.Services.AddScoped<DocumentWorkflowService>();
 builder.Services.AddSwaggerGen();

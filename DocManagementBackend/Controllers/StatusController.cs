@@ -53,7 +53,6 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPost("step/{stepId}")]
-        [Authorize(Roles = "Admin,FullUser")]
         public async Task<ActionResult<StatusDto>> AddStatusToStep(int stepId, [FromBody] CreateStatusDto createStatusDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -82,7 +81,7 @@ namespace DocManagementBackend.Controllers
                 Title = createStatusDto.Title,
                 IsRequired = createStatusDto.IsRequired,
                 IsComplete = false,
-                StatusKey = $"ST-{Guid.NewGuid().ToString().Substring(0, 8)}"
+                StatusKey = $"ST-{Guid.NewGuid().ToString().Substring(0, 3)}"
             };
 
             _context.Status.Add(status);
@@ -100,7 +99,6 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPut("{statusId}")]
-        [Authorize(Roles = "Admin,FullUser")]
         public async Task<IActionResult> UpdateStatus(int statusId, [FromBody] CreateStatusDto updateStatusDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -123,15 +121,16 @@ namespace DocManagementBackend.Controllers
             if (status == null)
                 return NotFound("Status not found.");
 
-            status.Title = updateStatusDto.Title;
+            if (!string.IsNullOrEmpty(updateStatusDto.Title))
+                status.Title = updateStatusDto.Title;
             status.IsRequired = updateStatusDto.IsRequired;
+            // status.IsComplete = updateStatusDto.IsComplete;
 
             await _context.SaveChangesAsync();
             return Ok("Status updated successfully.");
         }
 
         [HttpDelete("{statusId}")]
-        [Authorize(Roles = "Admin,FullUser")]
         public async Task<IActionResult> DeleteStatus(int statusId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

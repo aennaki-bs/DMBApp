@@ -118,7 +118,6 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPost("assign-to-step")]
-        [Authorize(Roles = "Admin,FullUser")]
         public async Task<IActionResult> AssignActionToStep([FromBody] AssignActionToStepDto assignDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

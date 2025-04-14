@@ -57,7 +57,7 @@ namespace DocManagementBackend.Services
                 var previousStep = previousSteps.FirstOrDefault();
 
                 // Set new step's order index
-                step.OrderIndex = (previousStep?.OrderIndex ?? 0) + 10;
+                step.OrderIndex = (previousStep?.OrderIndex ?? 0) + 1;
 
                 // Update relationships for ordered flow
                 if (previousStep != null)

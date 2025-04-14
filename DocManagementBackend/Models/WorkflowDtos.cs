@@ -62,4 +62,12 @@ namespace DocManagementBackend.Models
         public string CurrentStepTitle { get; set; } = string.Empty;
         public int DaysInCurrentStep { get; set; }
     }
+    public class MoveNextDto
+    {
+        public int DocumentId { get; set; }
+        public int CurrentStepId { get; set; }
+        public int NextStepId { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
+
 }
