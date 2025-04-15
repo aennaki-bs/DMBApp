@@ -29,7 +29,7 @@ namespace DocManagementBackend.Services
 
             string paddedCounter = counter.circuitCounter.ToString("D2");
             circuit.CircuitKey = $"CR{paddedCounter}";
-            circuit.IsActive = true;
+            // circuit.IsActive = true;
 
             _context.Circuits.Add(circuit);
             await _context.SaveChangesAsync();
@@ -46,8 +46,8 @@ namespace DocManagementBackend.Services
                 throw new KeyNotFoundException($"Circuit ID {step.CircuitId} not found");
 
             // Generate step key
-            circuit.CrdCounter++;
-            string paddedCounter = circuit.CrdCounter.ToString("D2");
+            int stepCount = circuit.Steps.Count + 1;
+            string paddedCounter = stepCount.ToString("D2");
             step.StepKey = $"{circuit.CircuitKey}-STEP{paddedCounter}";
 
             // If HasOrderedFlow, link to previous step
