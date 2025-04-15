@@ -4,8 +4,9 @@ namespace DocManagementBackend.Models
     {
         public string Title { get; set; } = string.Empty;
         public string Descriptif { get; set; } = string.Empty;
-        public bool HasOrderedFlow { get; set; } = true;
+        public bool HasOrderedFlow { get; set; } = false;
         public bool AllowBacktrack { get; set; } = false;
+        public bool IsActive { get; set; } = false;
     }
 
     public class CircuitDto

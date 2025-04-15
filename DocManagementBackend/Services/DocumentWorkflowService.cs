@@ -136,27 +136,27 @@ namespace DocManagementBackend.Services
                     .ToListAsync();
 
                 // Update document statuses
-                foreach (var effect in affectedStatuses)
-                {
-                    var documentStatus = await _context.DocumentStatus
-                        .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == effect.StatusId);
+                // foreach (var effect in affectedStatuses)
+                // {
+                //     var documentStatus = await _context.DocumentStatus
+                //         .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == effect.StatusId);
 
-                    if (documentStatus == null)
-                    {
-                        documentStatus = new DocumentStatus
-                        {
-                            DocumentId = documentId,
-                            StatusId = effect.StatusId,
-                            IsComplete = false
-                        };
-                        _context.DocumentStatus.Add(documentStatus);
-                    }
+                //     if (documentStatus == null)
+                //     {
+                //         documentStatus = new DocumentStatus
+                //         {
+                //             DocumentId = documentId,
+                //             StatusId = effect.StatusId,
+                //             IsComplete = false
+                //         };
+                //         _context.DocumentStatus.Add(documentStatus);
+                //     }
 
-                    // Set status as complete based on action effect
-                    documentStatus.IsComplete = effect.SetsComplete;
-                    documentStatus.CompletedByUserId = userId;
-                    documentStatus.CompletedAt = DateTime.UtcNow;
-                }
+                //     // Set status as complete based on action effect
+                //     documentStatus.IsComplete = effect.SetsComplete;
+                //     documentStatus.CompletedByUserId = userId;
+                //     documentStatus.CompletedAt = DateTime.UtcNow;
+                // }
 
                 // Create history entry
                 var historyEntry = new DocumentCircuitHistory

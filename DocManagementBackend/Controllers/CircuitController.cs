@@ -134,17 +134,22 @@ namespace DocManagementBackend.Controllers
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to create circuits.");
 
+            Console.WriteLine($"is active value ========> {createCircuitDto.IsActive}");
+
             var circuit = new Circuit
             {
                 Title = createCircuitDto.Title,
                 Descriptif = createCircuitDto.Descriptif,
                 HasOrderedFlow = createCircuitDto.HasOrderedFlow,
-                AllowBacktrack = createCircuitDto.AllowBacktrack
+                AllowBacktrack = createCircuitDto.AllowBacktrack,
+                IsActive = createCircuitDto.IsActive
             };
 
             try
             {
+                Console.WriteLine($"is active value circuit ========> {circuit.IsActive}");
                 var createdCircuit = await _circuitService.CreateCircuitAsync(circuit);
+                Console.WriteLine($"is active value circuit ========> {createdCircuit.IsActive}");
 
                 return CreatedAtAction(nameof(GetCircuit), new { id = createdCircuit.Id }, new CircuitDto
                 {
@@ -245,6 +250,7 @@ namespace DocManagementBackend.Controllers
             circuit.Descriptif = updateCircuitDto.Descriptif;
             circuit.HasOrderedFlow = updateCircuitDto.HasOrderedFlow;
             circuit.AllowBacktrack = updateCircuitDto.AllowBacktrack;
+            circuit.IsActive = updateCircuitDto.IsActive;
 
             try
             {

@@ -12,10 +12,10 @@ using Google.Apis.Auth.OAuth2;
 
 Env.Load();
 
-var firebaseApp = FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile("./firebase-credentials.json"),
-});
+// var firebaseApp = FirebaseApp.Create(new AppOptions()
+// {
+//     Credential = GoogleCredential.FromFile("./firebase-credentials.json"),
+// });
 
 var builder = WebApplication.CreateBuilder(args);
 

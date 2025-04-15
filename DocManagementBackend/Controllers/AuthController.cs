@@ -105,11 +105,13 @@ namespace DocManagementBackend.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null)
                 return NotFound("User not found.");
+            if (user.IsEmailConfirmed && user.EmailVerificationCode == null)
+                return BadRequest("Email is already verified !");
             if (user.EmailVerificationCode != request.VerificationCode)
                 return BadRequest("Invalid verification code.");
             user.IsEmailConfirmed = true;
             user.IsActive = true;
-            user.IsOnline = false;
+            // user.IsOnline = false;
             user.EmailVerificationCode = null;
             await _context.SaveChangesAsync();
 
@@ -148,7 +150,7 @@ namespace DocManagementBackend.Controllers
             if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
                 return Unauthorized("Invalid password.");
             if (!user.IsEmailConfirmed)
-                return Unauthorized("Please verify your email before logging in.");
+                return Unauthorized("Your account is not activated yet !! Please check your email for verification before logging in.");
             if (!user.IsActive)
                 return Unauthorized("User Account Is Desactivated!");
             var accessToken = AuthHelper.GenerateAccessToken(user);
