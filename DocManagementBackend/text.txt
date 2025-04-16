@@ -54,3 +54,33 @@ Content-Type: application/json
   "nextStepId": 6,
   "comments": "Document is ready for final review"
 }
+
+I want to make same changes in the logic of moving a document from step to step:
+
+for example we have:
+
+ciruitA =>
+
+status1-Sales Doc creation  ->  step1
+
+status2-Create Customer     ->  step2
+
+status3-Create Items        ->  step2
+
+status4-Create Quantities   ->  step3
+
+status5-CReate Prices       ->  step3
+
+status6-CReates Discounts   ->  step3
+
+status7-Post Shipment       ->  step4
+
+status8-Post Invoice        ->  step4
+
+status9-POst Ship & Inv     ->  step4
+
+10-Print Doc 1		action1
+
+11-Print Doc 2       	action2
+
+the document is in the circuitA, he should be moved from status to another, in this example he should begin with step1 and in the step1 we have just the status1, when he complete the status1 the step1 is completed and he should have the possibility to move to the next and he choose one between the two statuses of the step2 either he  choose status2 or status3, when the two statuses of the step2 are complete 

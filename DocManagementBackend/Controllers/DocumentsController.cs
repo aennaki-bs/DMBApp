@@ -102,22 +102,51 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User account is deactivated.");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
+
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
                 return BadRequest("Invalid Document type!");
+
+            // Check SubType if provided
+            SubType? subType = null;
+            if (request.SubTypeId.HasValue)
+            {
+                subType = await _context.SubTypes.FirstOrDefaultAsync(s => s.Id == request.SubTypeId.Value);
+                if (subType == null)
+                    return BadRequest("Invalid SubType!");
+
+                // Verify SubType belongs to selected DocumentType
+                if (subType.DocumentTypeId != request.TypeId)
+                    return BadRequest("Selected SubType does not belong to the selected Document Type!");
+
+                // Verify DocDate falls within SubType date range
+                var documentDate = request.DocDate ?? DateTime.UtcNow;
+                if (documentDate < subType.StartDate || documentDate > subType.EndDate)
+                    return BadRequest($"Document date ({documentDate:d}) must be within the selected SubType date range ({subType.StartDate:d} to {subType.EndDate:d})");
+            }
+
             var docDate = request.DocDate ?? DateTime.UtcNow;
             var docAlias = "D";
             if (!string.IsNullOrEmpty(request.DocumentAlias))
                 docAlias = request.DocumentAlias.ToUpper();
+
             docType.DocumentCounter++;
             int counterValue = docType.DocumentCounter;
             string paddedCounter = counterValue.ToString("D4");
-            var documentKey = $"{docType.TypeKey}{docAlias}-{paddedCounter}";
-            // if (request.CircuitId.HasValue) {
-                // var circuit = await _context.Circuits.FirstOrDefaultAsync(c => c.Id == request.CircuitId);
-                // if (circuit == null)
-                //     return BadRequest("Invalid Circuit!");
-            // }
+
+            // Generate DocumentKey based on presence of SubType
+            string documentKey;
+            if (subType != null)
+            {
+                // Use SubType key in document key
+                documentKey = $"{subType.SubTypeKey}-{paddedCounter}";
+            }
+            else
+            {
+                // Fall back to old format
+                documentKey = $"{docType.TypeKey}{docAlias}-{paddedCounter}";
+            }
+
             var document = new Document
             {
                 Title = request.Title,
@@ -128,15 +157,18 @@ namespace DocManagementBackend.Controllers
                 DocDate = docDate,
                 TypeId = request.TypeId,
                 DocumentType = docType,
+                SubTypeId = request.SubTypeId,
+                SubType = subType,
                 CircuitId = request.CircuitId,
-                // Circuit = circuit,
                 Status = 0,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 DocumentKey = documentKey
             };
+
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
+
             var documentDto = new DocumentDto
             {
                 Id = document.Id,
@@ -150,8 +182,15 @@ namespace DocManagementBackend.Controllers
                 TypeId = document.TypeId,
                 DocDate = document.DocDate,
                 DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
+                SubTypeId = document.SubTypeId,
+                SubType = subType != null ? new SubTypeDto
+                {
+                    Id = subType.Id,
+                    SubTypeKey = subType.SubTypeKey,
+                    Name = subType.Name,
+                    DocumentTypeId = subType.DocumentTypeId
+                } : null,
                 CircuitId = document.CircuitId,
-                // Circuit = new CircuitDto {Title = document.Circuit!.Title},
                 CreatedByUserId = document.CreatedByUserId,
                 CreatedBy = new DocumentUserDto
                 {
@@ -191,43 +230,128 @@ namespace DocManagementBackend.Controllers
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound("Document not found.");
+
+            // Update basic document fields
             document.Content = request.Content ?? document.Content;
             document.Title = request.Title ?? document.Title;
-            document.DocDate = request.DocDate ?? DateTime.UtcNow;
-            // document.TypeId = request.TypeId ?? document.TypeId;
+            document.DocDate = request.DocDate ?? document.DocDate;
+
+            // Handle SubType changes
+            if (request.SubTypeId.HasValue && request.SubTypeId != document.SubTypeId)
+            {
+                var subType = await _context.SubTypes.FindAsync(request.SubTypeId.Value);
+                if (subType == null)
+                    return BadRequest("Invalid SubType!");
+
+                // If type is also changing, verify SubType belongs to that type
+                if (request.TypeId.HasValue && request.TypeId != document.TypeId)
+                {
+                    if (subType.DocumentTypeId != request.TypeId.Value)
+                        return BadRequest("Selected SubType does not belong to the selected Document Type!");
+                }
+                else
+                {
+                    // Otherwise check against current document type
+                    if (subType.DocumentTypeId != document.TypeId)
+                        return BadRequest("Selected SubType does not belong to the document's current type!");
+                }
+
+                // Verify DocDate falls within SubType date range
+                if (document.DocDate < subType.StartDate || document.DocDate > subType.EndDate)
+                    return BadRequest($"Document date ({document.DocDate:d}) must be within the selected SubType date range ({subType.StartDate:d} to {subType.EndDate:d})");
+
+                document.SubTypeId = request.SubTypeId;
+                document.SubType = subType;
+
+                // Need to update document key
+                var docType = await _context.DocumentTypes.FindAsync(document.TypeId);
+
+                // Extract counter from the existing key (assuming format ends with -XXXX)
+                string counterStr = document.DocumentKey.Split('-').Last();
+                string documentKey = $"{subType.SubTypeKey}-{counterStr}";
+                document.DocumentKey = documentKey;
+            }
+            // Handle removing a subtype
+            else if (request.SubTypeId.HasValue && request.SubTypeId.Value == 0 && document.SubTypeId.HasValue)
+            {
+                document.SubTypeId = null;
+                document.SubType = null;
+
+                // Regenerate document key using the document type
+                var docType = await _context.DocumentTypes.FindAsync(document.TypeId);
+                string counterStr = document.DocumentKey.Split('-').Last();
+                string documentKey = $"{docType!.TypeKey}{document.DocumentAlias}-{counterStr}";
+                document.DocumentKey = documentKey;
+            }
+
+            // Handle type changes as in original method
             if (request.TypeId.HasValue)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"=== request TYpe === {request.TypeId}");
                 Console.ResetColor();
-                if (request.TypeId != document.TypeId) {
+                if (request.TypeId != document.TypeId)
+                {
                     var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
                     if (docType == null)
-                        return BadRequest("Invalide type!");
+                        return BadRequest("Invalid type!");
+
+                    // If changing document type, clear the subtype if it doesn't match
+                    if (document.SubTypeId.HasValue)
+                    {
+                        var subType = await _context.SubTypes.FindAsync(document.SubTypeId.Value);
+                        if (subType!.DocumentTypeId != request.TypeId)
+                        {
+                            document.SubTypeId = null;
+                            document.SubType = null;
+                        }
+                    }
+
                     document.TypeId = request.TypeId ?? document.TypeId;
                     document.DocumentType = docType;
                     docType.DocumentCounter++;
                     int counterValue = docType.DocumentCounter;
                     string paddedCounter = counterValue.ToString("D4");
-                    document.DocumentKey = $"{docType.TypeKey}{document.DocumentAlias.ToUpper()}-{paddedCounter}";
+
+                    // Generate key based on whether we have a subtype
+                    if (document.SubTypeId.HasValue && document.SubType != null)
+                    {
+                        document.DocumentKey = $"{document.SubType.SubTypeKey}-{paddedCounter}";
+                    }
+                    else
+                    {
+                        document.DocumentKey = $"{docType.TypeKey}{document.DocumentAlias.ToUpper()}-{paddedCounter}";
+                    }
                 }
             }
+
             if (!string.IsNullOrEmpty(request.DocumentAlias))
             {
                 document.DocumentAlias = request.DocumentAlias.ToUpper();
-                document.DocumentKey = $"{document.DocumentType!.TypeKey}{request.DocumentAlias.ToUpper()}-{document.DocumentType!.DocumentCounter}";
+
+                // Only update the document key if we're not using a subtype
+                if (!document.SubTypeId.HasValue)
+                {
+                    var docType = await _context.DocumentTypes.FindAsync(document.TypeId);
+                    string counterStr = document.DocumentKey.Split('-').Last();
+                    document.DocumentKey = $"{docType!.TypeKey}{request.DocumentAlias.ToUpper()}-{counterStr}";
+                }
             }
-            if (request.CircuitId.HasValue) {
+
+            if (request.CircuitId.HasValue)
+            {
                 var circuit = await _context.Circuits.FirstOrDefaultAsync(c => c.Id == request.CircuitId);
                 if (circuit == null)
                     return BadRequest("Invalid Circuit!");
                 document.CircuitId = request.CircuitId;
                 document.Circuit = circuit;
             }
+
             document.UpdatedAt = DateTime.UtcNow;
             _context.Entry(document).State = EntityState.Modified;
 
-            try {
+            try
+            {
                 await _context.SaveChangesAsync();
                 var logEntry = new LogHistory
                 {

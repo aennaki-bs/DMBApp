@@ -15,6 +15,12 @@ namespace DocManagementBackend.Models
         public int TypeId { get; set; }
         [ForeignKey("TypeId")]
         public DocumentType? DocumentType { get; set; }
+
+        // New SubType relationship
+        public int? SubTypeId { get; set; }
+        [ForeignKey("SubTypeId")]
+        public SubType? SubType { get; set; }
+
         public int? CurrentStepId { get; set; }
         [ForeignKey("CurrentStepId")]
         [JsonIgnore]
@@ -50,7 +56,36 @@ namespace DocManagementBackend.Models
         [JsonIgnore]
         public ICollection<Document> Documents { get; set; } = new List<Document>();
     }
+    public class SubType
+    {
+        [Key]
+        public int Id { get; set; }
 
+        public string SubTypeKey { get; set; } = string.Empty;
+
+        [Required]
+        public string Name { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+
+        [Required]
+        public DateTime StartDate { get; set; }
+
+        [Required]
+        public DateTime EndDate { get; set; }
+
+        [Required]
+        public int DocumentTypeId { get; set; }
+
+        [ForeignKey("DocumentTypeId")]
+        [JsonIgnore]
+        public DocumentType? DocumentType { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        [JsonIgnore]
+        public ICollection<Document> Documents { get; set; } = new List<Document>();
+    }
     public class TypeCounter
     {
         public int Id { get; set; }

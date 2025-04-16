@@ -16,12 +16,13 @@ namespace DocManagementBackend.Data
         public DbSet<SousLigne> SousLignes { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<DocumentType> DocumentTypes { get; set; }
+        // New SubType entity
+        public DbSet<SubType> SubTypes { get; set; }
         public DbSet<TypeCounter> TypeCounter { get; set; }
         public DbSet<Circuit> Circuits { get; set; }
-        // public DbSet<Step> Steps { get; set; } // Renamed from Step for compatibility
         public DbSet<DocumentCircuitHistory> DocumentCircuitHistory { get; set; }
 
-        // New workflow entities
+        // Workflow entities
         public DbSet<Status> Status { get; set; }
         public DbSet<Step> Steps { get; set; }
         public DbSet<Models.Action> Actions { get; set; }
@@ -31,6 +32,20 @@ namespace DocManagementBackend.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // SubType relationship with Document
+            modelBuilder.Entity<Document>()
+                .HasOne(d => d.SubType)
+                .WithMany(st => st.Documents)
+                .HasForeignKey(d => d.SubTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // SubType relationship with DocumentType
+            modelBuilder.Entity<SubType>()
+                .HasOne(st => st.DocumentType)
+                .WithMany()
+                .HasForeignKey(st => st.DocumentTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // DocumentCircuitHistory relationships
             modelBuilder.Entity<DocumentCircuitHistory>()
                 .HasOne(d => d.Document)
@@ -41,7 +56,7 @@ namespace DocManagementBackend.Data
             modelBuilder.Entity<DocumentCircuitHistory>()
                 .HasOne(d => d.Step)
                 .WithMany()
-                .HasForeignKey(d => d.StepId) // Changed from StepId to StepId
+                .HasForeignKey(d => d.StepId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<DocumentCircuitHistory>()

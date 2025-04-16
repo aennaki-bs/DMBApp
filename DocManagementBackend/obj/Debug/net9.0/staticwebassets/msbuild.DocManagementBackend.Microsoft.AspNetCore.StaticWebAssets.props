@@ -72,23 +72,41 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\default.png'))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>DocManagementBackend</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
       <BasePath>_content/DocManagementBackend</BasePath>
-      <RelativePath>images/profile/default.png</RelativePath>
+      <RelativePath>images/profile/ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg</RelativePath>
       <AssetKind>All</AssetKind>
       <AssetMode>All</AssetMode>
       <AssetRole>Primary</AssetRole>
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>tji27s6415</Fingerprint>
-      <Integrity>aYFX2JT7mm8EPNdBsUEHVtNtPPqDZz47oi/DG/Qn6P4=</Integrity>
+      <Fingerprint>v305d398xh</Fingerprint>
+      <Integrity>yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\default.png'))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg'))">
+      <SourceType>Package</SourceType>
+      <SourceId>DocManagementBackend</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DocManagementBackend</BasePath>
+      <RelativePath>images/profile/mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>v305d398xh</Fingerprint>
+      <Integrity>yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png'))">
       <SourceType>Package</SourceType>
