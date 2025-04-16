@@ -254,6 +254,64 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpGet("document/{documentId}/step-statuses")]
+        public async Task<ActionResult<IEnumerable<DocumentStatusDto>>> GetDocumentStepStatuses(int documentId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+
+            // Get the document and check if it has a current step
+            var document = await _context.Documents
+                .Include(d => d.CurrentStep)
+                .FirstOrDefaultAsync(d => d.Id == documentId);
+
+            if (document == null)
+                return NotFound("Document not found.");
+
+            if (document.CurrentStepId == null)
+                return NotFound("Document is not currently in any workflow step.");
+
+            // Get statuses for the current step with completion info for this document
+            var statuses = await _context.Status
+                .Where(s => s.StepId == document.CurrentStepId)
+                .OrderBy(s => s.Id)
+                .Select(s => new
+                {
+                    Status = s,
+                    DocumentStatus = _context.DocumentStatus
+                        .FirstOrDefault(ds => ds.DocumentId == documentId && ds.StatusId == s.Id)
+                })
+                .ToListAsync();
+
+            var statusDtos = statuses.Select(item => new DocumentStatusDto
+            {
+                StatusId = item.Status.Id,
+                Title = item.Status.Title,
+                IsRequired = item.Status.IsRequired,
+                IsComplete = item.DocumentStatus?.IsComplete ?? false,
+                CompletedBy = item.DocumentStatus != null && item.DocumentStatus.CompletedByUserId.HasValue
+                    ? _context.Users
+                        .Where(u => u.Id == item.DocumentStatus.CompletedByUserId.Value)
+                        .Select(u => u.Username)
+                        .FirstOrDefault()
+                    : null,
+                CompletedAt = item.DocumentStatus?.CompletedAt
+            }).ToList();
+
+            return Ok(statusDtos);
+        }
+
         [HttpGet("document/{documentId}/history")]
         public async Task<ActionResult<IEnumerable<DocumentHistoryDto>>> GetDocumentHistory(int documentId)
         {

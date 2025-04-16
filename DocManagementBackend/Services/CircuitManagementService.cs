@@ -46,9 +46,17 @@ namespace DocManagementBackend.Services
                 throw new KeyNotFoundException($"Circuit ID {step.CircuitId} not found");
 
             // Generate step key
+            // Log the current state
+            Console.WriteLine($"Circuit key: {circuit.CircuitKey}");
+            Console.WriteLine($"Current step count: {circuit.Steps.Count}");
+
+            // Count existing steps to determine next step number
             int stepCount = circuit.Steps.Count + 1;
-            string paddedCounter = stepCount.ToString("D2");
-            step.StepKey = $"{circuit.CircuitKey}-STEP{paddedCounter}";
+            Console.WriteLine($"New step will be number: {stepCount}");
+
+            // Generate the step key with proper incrementing number
+            step.StepKey = $"{circuit.CircuitKey}-STEP{stepCount:D2}";
+            Console.WriteLine($"Generated step key: {step.StepKey}");
 
             // If HasOrderedFlow, link to previous step
             if (circuit.HasOrderedFlow && circuit.Steps.Any())
@@ -84,6 +92,10 @@ namespace DocManagementBackend.Services
 
             _context.Steps.Add(step);
             await _context.SaveChangesAsync();
+
+            // Verify the step was saved correctly
+            var savedStep = await _context.Steps.FindAsync(step.Id);
+            Console.WriteLine($"Saved step key: {savedStep!.StepKey}");
             return step;
         }
 

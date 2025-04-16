@@ -1,45 +1,20 @@
-☐ password in register -Valide
-
-☐ resend button : resend vereficaton code 
-
-☐ after register should show a message 
-
-☐ after verified a message welcome
-
-☐ message significative
-
-☐ exit button
-
-☐ select list 
-
-☐ active button add the activation status
-
-☐ log status for admin
-
-☐ 
-
-add foreing keydoc and add in the type
-
-add page to create a new type of document
-
-modification of users
-
-search list should be generale
-
-role update
-
-actions should be out the list (in the top)
-
-after creation of doc should be viewed
-
-modify and delete document from view
-
-creation step by step and improvement of the css
-
-choose a beter templete and colors
-
-table en tete circuit => code, descriptif, boolen(active, desactive)
-
-line circuit => code, numline, titre, descriptif
-
-add button status to change circuit
+☐ hendl select 
+☐ handle spaces ui 
+☐ change key by number 
+☐ view by select all line 
+☐ add filter select
+☐ simple user can see parametring case
+☐ add all colum to add for user in register
+☐ add profile in sidbare
+☐ rederection
+☐ change view with one click - card or list 
+☐ spacing
+☐ attribute by comment
+☐ intevale de usage - by date
+☐ add table for line for the types and sublines in case
+☐ ---->stock the last namber
+☐ --dynamic count 
+☐ dont change the an active circuit
+document have status
+etap une operation deplace de status a autre status
+add typeLine where we can choose an intrerval of this type
