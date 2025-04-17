@@ -45,6 +45,7 @@ namespace DocManagementBackend.Mappings
                         Username = l.Document.CreatedBy.Username,
                         FirstName = l.Document.CreatedBy.FirstName,
                         LastName = l.Document.CreatedBy.LastName,
+                        UserType = l.Document.CreatedBy.UserType,
                         Role = l.Document.CreatedBy.Role != null
                             ? l.Document.CreatedBy.Role.RoleName
                             : "SimpleUser"
@@ -103,6 +104,7 @@ namespace DocManagementBackend.Mappings
                             Username = s.Ligne.Document.CreatedBy.Username,
                             FirstName = s.Ligne.Document.CreatedBy.FirstName,
                             LastName = s.Ligne.Document.CreatedBy.LastName,
+                            UserType = s.Ligne.Document.CreatedBy.UserType,
                             Role = s.Ligne.Document.CreatedBy.Role != null
                                 ? s.Ligne.Document.CreatedBy.Role.RoleName
                                 : "SimpleUser"
@@ -139,6 +141,7 @@ namespace DocManagementBackend.Mappings
                 Username = d.CreatedBy.Username,
                 FirstName = d.CreatedBy.FirstName,
                 LastName = d.CreatedBy.LastName,
+                UserType = d.CreatedBy.UserType,
                 Role = d.CreatedBy.Role != null ? d.CreatedBy.Role.RoleName : string.Empty
             },
             LignesCount = d.Lignes.Count,
@@ -160,9 +163,12 @@ namespace DocManagementBackend.Mappings
             FirstName = d.FirstName,
             LastName = d.LastName,
             City = d.City,
+            WebSite = d.WebSite,
             Address = d.Address,
             PhoneNumber = d.PhoneNumber,
             Country = d.Country,
+            UserType = d.UserType,
+            Identity = d.Identity,
             IsEmailConfirmed = d.IsEmailConfirmed,
             EmailVerificationCode = d.EmailVerificationCode,
             IsActive = d.IsActive,

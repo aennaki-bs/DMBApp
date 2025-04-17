@@ -107,7 +107,6 @@ namespace DocManagementBackend.Controllers
             if (docType == null)
                 return BadRequest("Invalid Document type!");
 
-            // Check SubType if provided
             SubType? subType = null;
             if (request.SubTypeId.HasValue)
             {
@@ -115,11 +114,9 @@ namespace DocManagementBackend.Controllers
                 if (subType == null)
                     return BadRequest("Invalid SubType!");
 
-                // Verify SubType belongs to selected DocumentType
                 if (subType.DocumentTypeId != request.TypeId)
                     return BadRequest("Selected SubType does not belong to the selected Document Type!");
 
-                // Verify DocDate falls within SubType date range
                 var documentDate = request.DocDate ?? DateTime.UtcNow;
                 if (documentDate < subType.StartDate || documentDate > subType.EndDate)
                     return BadRequest($"Document date ({documentDate:d}) must be within the selected SubType date range ({subType.StartDate:d} to {subType.EndDate:d})");
@@ -131,21 +128,15 @@ namespace DocManagementBackend.Controllers
                 docAlias = request.DocumentAlias.ToUpper();
 
             docType.DocumentCounter++;
-            int counterValue = docType.DocumentCounter;
+            docType.DocCounter++;
+            int counterValue = docType.DocCounter;
             string paddedCounter = counterValue.ToString("D4");
 
-            // Generate DocumentKey based on presence of SubType
             string documentKey;
             if (subType != null)
-            {
-                // Use SubType key in document key
                 documentKey = $"{subType.SubTypeKey}-{paddedCounter}";
-            }
             else
-            {
-                // Fall back to old format
                 documentKey = $"{docType.TypeKey}{docAlias}-{paddedCounter}";
-            }
 
             var document = new Document
             {
@@ -197,6 +188,7 @@ namespace DocManagementBackend.Controllers
                     Username = user.Username,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
+                    UserType = user.UserType,
                     Role = user.Role != null ? user.Role.RoleName : string.Empty
                 }
             };
@@ -287,14 +279,18 @@ namespace DocManagementBackend.Controllers
             // Handle type changes as in original method
             if (request.TypeId.HasValue)
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"=== request TYpe === {request.TypeId}");
-                Console.ResetColor();
+                // Console.ForegroundColor = ConsoleColor.Green;
+                // Console.WriteLine($"=== request TYpe === {request.TypeId}");
+                // Console.ResetColor();
                 if (request.TypeId != document.TypeId)
                 {
                     var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
                     if (docType == null)
                         return BadRequest("Invalid type!");
+                    var type = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == document.TypeId);
+                    if (type == null)
+                        return BadRequest("Missing DocumentType");
+                    type.DocumentCounter--;
 
                     // If changing document type, clear the subtype if it doesn't match
                     if (document.SubTypeId.HasValue)
@@ -313,15 +309,10 @@ namespace DocManagementBackend.Controllers
                     int counterValue = docType.DocumentCounter;
                     string paddedCounter = counterValue.ToString("D4");
 
-                    // Generate key based on whether we have a subtype
                     if (document.SubTypeId.HasValue && document.SubType != null)
-                    {
                         document.DocumentKey = $"{document.SubType.SubTypeKey}-{paddedCounter}";
-                    }
                     else
-                    {
                         document.DocumentKey = $"{docType.TypeKey}{document.DocumentAlias.ToUpper()}-{paddedCounter}";
-                    }
                 }
             }
 
@@ -389,6 +380,10 @@ namespace DocManagementBackend.Controllers
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound("Document not found!");
+            var type = await _context.DocumentTypes.FindAsync(document.TypeId);
+            if (type == null)
+                return BadRequest("Missing DocumentType");
+            type.DocumentCounter--;
             var logEntry = new LogHistory
             {
                 UserId = userId,
@@ -457,7 +452,8 @@ namespace DocManagementBackend.Controllers
                 TypeKey = finalTypeKey,
                 TypeName = request.TypeName,
                 TypeAttr = request.TypeAttr,
-                DocumentCounter = 0
+                DocumentCounter = 0,
+                DocCounter = 0
             };
             _context.DocumentTypes.Add(type);
             await _context.SaveChangesAsync();
@@ -512,6 +508,8 @@ namespace DocManagementBackend.Controllers
             var type = await _context.DocumentTypes.FindAsync(id);
             if (type == null)
                 return NotFound("No type with this id!");
+            if (type.DocumentCounter > 0)
+                return BadRequest("This type can't be deleted. There are documents registered with!");
             _context.DocumentTypes.Remove(type);
             await _context.SaveChangesAsync();
 

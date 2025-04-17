@@ -67,5 +67,6 @@ namespace DocManagementBackend.Models
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string? Role { get; set; } = string.Empty;
+        public string UserType { get; set; } = string.Empty;
     
 }
