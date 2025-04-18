@@ -120,8 +120,8 @@ namespace DocManagementBackend.Services
                 if (step == null)
                     throw new InvalidOperationException("Current step not found");
 
-                if (step.ResponsibleRoleId.HasValue && step.ResponsibleRoleId != user.RoleId)
-                    throw new UnauthorizedAccessException("User does not have permission for this step");
+                // if (step.ResponsibleRoleId.HasValue && step.ResponsibleRoleId != user.RoleId)
+                //     throw new UnauthorizedAccessException("User does not have permission for this step");
 
                 // Verify action is valid for this step
                 var stepAction = await _context.StepActions
@@ -246,15 +246,15 @@ namespace DocManagementBackend.Services
                     throw new InvalidOperationException("Next step doesn't belong to the document's circuit.");
 
                 // Verify the user is authorized for this action (if the step has role requirements)
-                var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-                if (user == null)
-                    throw new KeyNotFoundException("User not found.");
+                // var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+                // if (user == null)
+                //     throw new KeyNotFoundException("User not found.");
 
-                if (nextStep.ResponsibleRoleId.HasValue && nextStep.ResponsibleRoleId != user.RoleId)
-                {
-                    var requiredRole = await _context.Roles.FindAsync(nextStep.ResponsibleRoleId.Value);
-                    throw new UnauthorizedAccessException($"Only users with role '{requiredRole?.RoleName}' can move documents to this step.");
-                }
+                // if (nextStep.ResponsibleRoleId.HasValue && nextStep.ResponsibleRoleId != user.RoleId)
+                // {
+                //     var requiredRole = await _context.Roles.FindAsync(nextStep.ResponsibleRoleId.Value);
+                //     throw new UnauthorizedAccessException($"Only users with role '{requiredRole?.RoleName}' can move documents to this step.");
+                // }
 
                 // Check if all required statuses are complete for the current step
                 var requiredStatuses = await _context.Status
@@ -355,17 +355,17 @@ namespace DocManagementBackend.Services
                     throw new InvalidOperationException("The status must belong to the document's current step.");
 
                 // Verify the user has the appropriate role for the current step if required
-                var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-                if (user == null)
-                    throw new KeyNotFoundException("User not found.");
+                // var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+                // if (user == null)
+                //     throw new KeyNotFoundException("User not found.");
 
-                if (document.CurrentStep!.ResponsibleRoleId.HasValue &&
-                    document.CurrentStep.ResponsibleRoleId != user.RoleId)
-                {
-                    var requiredRole = await _context.Roles.FindAsync(document.CurrentStep.ResponsibleRoleId.Value);
-                    throw new UnauthorizedAccessException(
-                        $"Only users with role '{requiredRole?.RoleName}' can update statuses in this step.");
-                }
+                // if (document.CurrentStep!.ResponsibleRoleId.HasValue &&
+                //     document.CurrentStep.ResponsibleRoleId != user.RoleId)
+                // {
+                //     var requiredRole = await _context.Roles.FindAsync(document.CurrentStep.ResponsibleRoleId.Value);
+                //     throw new UnauthorizedAccessException(
+                //         $"Only users with role '{requiredRole?.RoleName}' can update statuses in this step.");
+                // }
 
                 // Get or create the document status
                 var documentStatus = await _context.DocumentStatus
@@ -404,7 +404,7 @@ namespace DocManagementBackend.Services
 
                 _context.DocumentCircuitHistory.Add(history);
 
-                // If all required statuses are complete, check if we should automatically
+                // If all required statuses are complete, need to check if we should automatically
                 // update the document status
                 if (isComplete)
                 {
@@ -493,7 +493,7 @@ namespace DocManagementBackend.Services
             else
             {
                 // For unordered flow, find the next appropriate step
-                // This implementation would depend on your business rules
+                // This implementation would depend on the business rules
                 // Here's a simple example that just takes the next by order index
                 nextStep = await _context.Steps
                     .Where(s => s.CircuitId == circuit.Id && s.OrderIndex > currentStep.OrderIndex)
@@ -588,7 +588,7 @@ namespace DocManagementBackend.Services
                 _context.DocumentCircuitHistory.Add(backtrackHistory);
 
                 // Restore previous step's statuses
-                // This might vary based on your requirements - you could either:
+                // This might vary based on the requirements - could either:
                 // 1. Restore them to their previous state
                 // 2. Reset them all to incomplete
                 // Here we'll reset them to their previous state

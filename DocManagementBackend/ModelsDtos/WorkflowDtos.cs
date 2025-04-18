@@ -69,5 +69,10 @@ namespace DocManagementBackend.Models
         public int NextStepId { get; set; }
         public string Comments { get; set; } = string.Empty;
     }
+    public class MoveToDocumentDto
+    {
+        public int DocumentId { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
 
 }

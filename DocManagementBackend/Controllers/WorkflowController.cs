@@ -112,7 +112,7 @@ namespace DocManagementBackend.Controllers
             }
         }
 
-        [HttpPost("move-next")]
+        [HttpPost("change-step")]
         public async Task<IActionResult> MoveToNextStep([FromBody] MoveNextDto moveNextDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -139,6 +139,104 @@ namespace DocManagementBackend.Controllers
                     moveNextDto.NextStepId,
                     userId,
                     moveNextDto.Comments);
+
+                if (success)
+                    return Ok("Document moved to next step successfully.");
+                else
+                    return BadRequest("Failed to move document to next step.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpPost("move-next")]
+        public async Task<IActionResult> MoveToNextStep([FromBody] MoveToDocumentDto moveDocumentDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User not allowed to perform this action.");
+
+            try
+            {
+                // Get the document and its current step
+                var document = await _context.Documents
+                    .Include(d => d.Circuit)
+                    .Include(d => d.CurrentStep)
+                    .FirstOrDefaultAsync(d => d.Id == moveDocumentDto.DocumentId);
+
+                if (document == null)
+                    return NotFound("Document not found.");
+
+                if (document.CurrentStepId == null)
+                    return BadRequest("Document is not currently in any workflow step.");
+
+                if (document.CircuitId == null)
+                    return BadRequest("Document is not assigned to any circuit.");
+
+                // Find the next step based on order index
+                var currentStep = await _context.Steps.FindAsync(document.CurrentStepId);
+                if (currentStep == null)
+                    return BadRequest("Current step not found.");
+
+                // Get all steps in the circuit ordered by OrderIndex
+                var circuitSteps = await _context.Steps
+                    .Where(s => s.CircuitId == document.CircuitId)
+                    .OrderBy(s => s.OrderIndex)
+                    .ToListAsync();
+
+                // Find the next step
+                Step? nextStep = null;
+                for (int i = 0; i < circuitSteps.Count; i++)
+                {
+                    if (circuitSteps[i].Id == currentStep.Id && i < circuitSteps.Count - 1)
+                    {
+                        nextStep = circuitSteps[i + 1];
+                        break;
+                    }
+                }
+
+                if (nextStep == null)
+                {
+                    // Check if current step is final
+                    if (currentStep.IsFinalStep)
+                        return BadRequest("Current step is the final step in the workflow.");
+                    else
+                        return BadRequest("No next step found in the workflow.");
+                }
+
+                // Pass to the service method
+                var success = await _workflowService.MoveToNextStepAsync(
+                    moveDocumentDto.DocumentId,
+                    currentStep.Id,
+                    nextStep.Id,
+                    userId,
+                    moveDocumentDto.Comments);
 
                 if (success)
                     return Ok("Document moved to next step successfully.");
