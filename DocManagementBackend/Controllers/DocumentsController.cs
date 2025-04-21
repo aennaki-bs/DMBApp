@@ -377,28 +377,65 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User account is deactivated.");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
-            var document = await _context.Documents.FindAsync(id);
-            if (document == null)
-                return NotFound("Document not found!");
-            var type = await _context.DocumentTypes.FindAsync(document.TypeId);
-            if (type == null)
-                return BadRequest("Missing DocumentType");
-            type.DocumentCounter--;
-            var logEntry = new LogHistory
+
+            // Begin a transaction to ensure all operations either succeed or fail together
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                UserId = userId,
-                User = user,
-                Timestamp = DateTime.UtcNow,
-                ActionType = 6,
-                Description = $"{user.Username} has deleted the document {document.DocumentKey}"
-            };
-            _context.LogHistories.Add(logEntry);
-            await _context.SaveChangesAsync();
+                var document = await _context.Documents.FindAsync(id);
+                if (document == null)
+                    return NotFound("Document not found!");
 
-            _context.Documents.Remove(document);
-            await _context.SaveChangesAsync();
+                // Delete related records in DocumentCircuitHistory
+                var historyRecords = await _context.DocumentCircuitHistory
+                    .Where(dch => dch.DocumentId == id)
+                    .ToListAsync();
 
-            return Ok("Document deleted!");
+                if (historyRecords.Any())
+                    _context.DocumentCircuitHistory.RemoveRange(historyRecords);
+
+                // Delete related records in DocumentStatus
+                var statusRecords = await _context.DocumentStatus
+                    .Where(ds => ds.DocumentId == id)
+                    .ToListAsync();
+
+                if (statusRecords.Any())
+                    _context.DocumentStatus.RemoveRange(statusRecords);
+
+                // Update the document type counter
+                var type = await _context.DocumentTypes.FindAsync(document.TypeId);
+                if (type == null)
+                    return BadRequest("Missing DocumentType");
+                if (type.DocumentCounter > 0)
+                    type.DocumentCounter--;
+
+                // Log the deletion
+                var logEntry = new LogHistory
+                {
+                    UserId = userId,
+                    User = user,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 6,
+                    Description = $"{user.Username} has deleted the document {document.DocumentKey}"
+                };
+                _context.LogHistories.Add(logEntry);
+
+                // Delete the document
+                _context.Documents.Remove(document);
+                await _context.SaveChangesAsync();
+
+                // Commit the transaction
+                await transaction.CommitAsync();
+
+                return Ok("Document deleted!");
+            }
+            catch (Exception ex)
+            {
+                // Roll back the transaction on error
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         [HttpGet("Types")]
@@ -417,6 +454,14 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User Not Allowed To do this action...!");
             var types = await _context.DocumentTypes.ToListAsync();
             return Ok(types);
+        }
+
+        [HttpPost("valide-typeKey")]
+        public async Task<IActionResult> ValideTypeKey([FromBody] DocumentTypeDto request)
+        {
+            if (await _context.DocumentTypes.AnyAsync(t => t.TypeKey == request.TypeKey))
+                return Ok("False");
+            return Ok("True");
         }
 
         [HttpPost("Types")]
@@ -445,6 +490,8 @@ namespace DocManagementBackend.Controllers
                 _context.TypeCounter.Add(typeCounter);
             }
             string baseKey = (request.TypeName.Length >= 2) ? request.TypeName.Substring(0, 2).ToUpper() : request.TypeName.ToUpper();
+            if (!string.IsNullOrEmpty(request.TypeKey))
+                baseKey = request.TypeKey;
             bool exists = await _context.DocumentTypes.AnyAsync(t => t.TypeKey == baseKey);
             string finalTypeKey = exists ? $"{baseKey}{typeCounter.Counter++}" : baseKey;
             var type = new DocumentType
@@ -459,7 +506,6 @@ namespace DocManagementBackend.Controllers
             await _context.SaveChangesAsync();
             return Ok("Type successfully added!");
         }
-
 
         [HttpPost("valide-type")]
         public async Task<IActionResult> ValideType([FromBody] DocumentTypeDto request)

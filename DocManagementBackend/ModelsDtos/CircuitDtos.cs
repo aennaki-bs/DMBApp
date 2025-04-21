@@ -28,6 +28,13 @@ namespace DocManagementBackend.Models
         public int OrderIndex { get; set; } = 0;
         public int? ResponsibleRoleId { get; set; }
     }
+    public class UpdateStepDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Descriptif { get; set; } = string.Empty;
+        public int OrderIndex { get; set; } = 0;
+        public int? ResponsibleRoleId { get; set; }
+    }
 
     public class StepDto
     {
