@@ -169,6 +169,70 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpPut("steps/{stepId}")]
+        public async Task<IActionResult> UpdateStep(int stepId, [FromBody] UpdateStepDto updateStepDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User not allowed to modify steps.");
+
+            // Find the step to update
+            var step = await _context.Steps.Include(s => s.Circuit).FirstOrDefaultAsync(s => s.Id == stepId);
+            if (step == null)
+                return NotFound("Step not found.");
+
+            // Check if the step belongs to an active circuit
+            if (step.Circuit != null && step.Circuit.IsActive)
+                return BadRequest("Cannot update a step that belongs to an active circuit.");
+
+            // Update step properties
+            if (!string.IsNullOrEmpty(updateStepDto.Title))
+                step.Title = updateStepDto.Title;
+
+            if (!string.IsNullOrEmpty(updateStepDto.Descriptif))
+                step.Descriptif = updateStepDto.Descriptif;
+
+            // if (updateStepDto.OrderIndex > 0)
+            //     step.OrderIndex = updateStepDto.OrderIndex;
+
+            // if (updateStepDto.ResponsibleRoleId.HasValue)
+            // {
+            //     // Validate role ID if provided
+            //     var role = await _context.Roles.FindAsync(updateStepDto.ResponsibleRoleId.Value);
+            //     if (role == null)
+            //         return BadRequest("Invalid role ID.");
+
+            //     step.ResponsibleRoleId = updateStepDto.ResponsibleRoleId;
+            // }
+
+            if (updateStepDto.IsFinalStep.HasValue)
+                step.IsFinalStep = updateStepDto.IsFinalStep.Value;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok("Step updated successfully.");
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await _context.Steps.AnyAsync(s => s.Id == stepId))
+                    return NotFound("Step no longer exists.");
+                throw;
+            }
+        }
+
         [HttpPost("{circuitId}/steps")]
         public async Task<ActionResult<StepDto>> AddStepToCircuit(int circuitId, [FromBody] CreateStepDto createStepDto)
         {

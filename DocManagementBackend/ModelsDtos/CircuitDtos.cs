@@ -30,10 +30,11 @@ namespace DocManagementBackend.Models
     }
     public class UpdateStepDto
     {
-        public string Title { get; set; } = string.Empty;
-        public string Descriptif { get; set; } = string.Empty;
-        public int OrderIndex { get; set; } = 0;
+        public string? Title { get; set; }
+        public string? Descriptif { get; set; }
+        public int? OrderIndex { get; set; }
         public int? ResponsibleRoleId { get; set; }
+        public bool? IsFinalStep { get; set; }
     }
 
     public class StepDto

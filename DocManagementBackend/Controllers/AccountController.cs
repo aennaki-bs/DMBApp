@@ -189,7 +189,7 @@ namespace DocManagementBackend.Controllers
                     return BadRequest("Invalid file type. Allowed: JPG, JPEG, PNG, GIF");
                 if (file.Length > 5 * 1024 * 1024)
                     return BadRequest("File size exceeds 5MB limit");
-                if (!string.IsNullOrEmpty(user.ProfilePicture)) {
+                if (!string.IsNullOrEmpty(user.ProfilePicture) && user.ProfilePicture != "/images/profile/default.png") {
                     var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePicture.TrimStart('/'));
                     if (System.IO.File.Exists(oldPath))
                         System.IO.File.Delete(oldPath);}
