@@ -134,6 +134,18 @@ namespace DocManagementBackend.Mappings
                 TypeName = d.DocumentType!.TypeName,
                 TypeAttr = d.DocumentType.TypeAttr
             },
+            SubTypeId = d.SubTypeId,
+            SubType = d.SubType == null ? null : new SubTypeDto
+            {
+                Id = d.SubType.Id,
+                SubTypeKey = d.SubType.SubTypeKey,
+                Name = d.SubType.Name,
+                Description = d.SubType.Description,
+                StartDate = d.SubType.StartDate,
+                EndDate = d.SubType.EndDate,
+                DocumentTypeId = d.SubType.DocumentTypeId,
+                IsActive = d.SubType.IsActive
+            },
             CreatedByUserId = d.CreatedByUserId,
             CreatedBy = new DocumentUserDto
             {
@@ -147,7 +159,7 @@ namespace DocManagementBackend.Mappings
             LignesCount = d.Lignes.Count,
             SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count),
             CircuitId = d.CircuitId,
-            // CurrentStepId = d.CurrentStepId,
+            CurrentStepId = d.CurrentStepId,
             CurrentStepTitle = d.CurrentStep != null ? d.CurrentStep.Title : string.Empty,
             IsCircuitCompleted = d.IsCircuitCompleted
         };

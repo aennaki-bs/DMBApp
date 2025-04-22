@@ -1,56 +1,52 @@
 namespace DocManagementBackend.Models
 {
 
-        public class CreateDocumentRequest
-        {
-            public string Title { get; set; } = string.Empty;
-            public string? Content { get; set; }
-            public string? DocumentAlias { get; set; }
-            public DateTime? DocDate { get; set; }
-            public int CreatedByUserId { get; set; }
-            public int? CircuitId { get; set; }
-            public int TypeId { get; set; }
-            public int? SubTypeId { get; set; }
-            public int Status { get; set; }
-        }
-
-        public class UpdateDocumentRequest
-        {
-            public string? Title { get; set; }
-            public string? Content { get; set; }
-            public string? DocumentAlias { get; set; }
-            public DateTime? DocDate { get; set; }
-            public int? TypeId { get; set; }
-            public int? SubTypeId { get; set; }
-            public int? CircuitId { get; set; }
-            public int? Status { get; set; }
-        }
-        public class DocumentDto
-        {
-            public int Id { get; set; }
-            public string Title { get; set; } = string.Empty;
-            public string? Content { get; set; }
-            public string? DocumentKey { get; set; }
-            public string? DocumentAlias { get; set; }
-            public int TypeId { get; set; }
-            public DateTime DocDate { get; set; }
-            public DocumentTypeDto? DocumentType { get; set; } = new DocumentTypeDto();
-            public int? SubTypeId { get; set; }
-            public SubTypeDto? SubType { get; set; }
-            public int? CircuitId { get; set; }
-            public CircuitDto? Circuit { get; set; } = new CircuitDto();
-            public DateTime CreatedAt { get; set; }
-            public DateTime UpdatedAt { get; set; }
-            public int Status { get; set; }
-            public int LignesCount { get; set; }
-            public int SousLignesCount { get; set; }
-            public int CreatedByUserId { get; set; }
-            public DocumentUserDto? CreatedBy { get; set; } = new DocumentUserDto();
-            public int? CurrentStepId { get; set; }
-            public string CurrentStepTitle { get; set; } = string.Empty;
-            public bool IsCircuitCompleted { get; set; }
-        }
+    public class CreateDocumentRequest
+    {
+        public string Title { get; set; } = string.Empty;
+        public string? Content { get; set; }
+        public int TypeId { get; set; }
+        public int? SubTypeId { get; set; }
+        public string? DocumentAlias { get; set; }
+        public DateTime? DocDate { get; set; }
+        public int? CircuitId { get; set; }
     }
+
+    public class UpdateDocumentRequest
+    {
+        public string? Title { get; set; }
+        public string? Content { get; set; }
+        public int? TypeId { get; set; }
+        public int? SubTypeId { get; set; }
+        public string? DocumentAlias { get; set; }
+        public DateTime? DocDate { get; set; }
+        public int? CircuitId { get; set; }
+    }
+    public class DocumentDto
+    {
+        public int Id { get; set; }
+        public string DocumentKey { get; set; } = string.Empty;
+        public string DocumentAlias { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string? Content { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public DateTime DocDate { get; set; }
+        public int Status { get; set; }
+        public int TypeId { get; set; }
+        public DocumentTypeDto? DocumentType { get; set; }
+        public int? SubTypeId { get; set; }
+        public SubTypeDto? SubType { get; set; }
+        public int CreatedByUserId { get; set; }
+        public DocumentUserDto? CreatedBy { get; set; }
+        public int LignesCount { get; set; }
+        public int SousLignesCount { get; set; }
+        public int? CircuitId { get; set; }
+        public int? CurrentStepId { get; set; }
+        public string CurrentStepTitle { get; set; } = string.Empty;
+        public bool IsCircuitCompleted { get; set; }
+    }
+}
 
     public class DocumentTypeDto
     {

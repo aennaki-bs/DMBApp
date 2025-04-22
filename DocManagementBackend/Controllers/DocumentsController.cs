@@ -28,8 +28,14 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
                 return Unauthorized("User account is deactivated.");
-            var documents = await _context.Documents.Include(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Include(d => d.Lignes).Select(DocumentMappings.ToDocumentDto).ToListAsync();
+            var documents = await _context.Documents
+                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.DocumentType)
+                .Include(d => d.SubType)
+                .Include(d => d.CurrentStep)
+                .Include(d => d.Lignes)
+                .Select(DocumentMappings.ToDocumentDto)
+                .ToListAsync();
 
             return Ok(documents);
         }
@@ -48,8 +54,13 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User account is deactivated.");
             var documentDto = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Where(d => d.Id == id).Include(d => d.Lignes)
-                .Select(DocumentMappings.ToDocumentDto).FirstOrDefaultAsync();
+                .Include(d => d.DocumentType)
+                .Include(d => d.SubType)
+                .Include(d => d.CurrentStep)
+                .Include(d => d.Lignes)
+                .Where(d => d.Id == id)
+                .Select(DocumentMappings.ToDocumentDto)
+                .FirstOrDefaultAsync();
             if (documentDto == null) { return NotFound("Document not found!"); }
 
             return Ok(documentDto);
@@ -79,6 +90,8 @@ namespace DocManagementBackend.Controllers
             var recentDocuments = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
+                .Include(d => d.SubType)
+                .Include(d => d.CurrentStep)
                 .Include(d => d.Lignes)
                 .OrderByDescending(d => d.CreatedAt) // Sort by creation date, newest first
                 .Take(limit) // Take only the specified number of documents
@@ -160,38 +173,16 @@ namespace DocManagementBackend.Controllers
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
 
-            var documentDto = new DocumentDto
-            {
-                Id = document.Id,
-                Title = document.Title,
-                DocumentKey = document.DocumentKey,
-                Content = document.Content,
-                Status = document.Status,
-                DocumentAlias = document.DocumentAlias,
-                CreatedAt = document.CreatedAt,
-                UpdatedAt = document.UpdatedAt,
-                TypeId = document.TypeId,
-                DocDate = document.DocDate,
-                DocumentType = new DocumentTypeDto { TypeName = docType.TypeName },
-                SubTypeId = document.SubTypeId,
-                SubType = subType != null ? new SubTypeDto
-                {
-                    Id = subType.Id,
-                    SubTypeKey = subType.SubTypeKey,
-                    Name = subType.Name,
-                    DocumentTypeId = subType.DocumentTypeId
-                } : null,
-                CircuitId = document.CircuitId,
-                CreatedByUserId = document.CreatedByUserId,
-                CreatedBy = new DocumentUserDto
-                {
-                    Username = user.Username,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    UserType = user.UserType,
-                    Role = user.Role != null ? user.Role.RoleName : string.Empty
-                }
-            };
+            // Now fetch the complete document with all related entities
+            var createdDocument = await _context.Documents
+                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.DocumentType)
+                .Include(d => d.SubType)
+                .Include(d => d.CurrentStep)
+                .Where(d => d.Id == document.Id)
+                .Select(DocumentMappings.ToDocumentDto)
+                .FirstOrDefaultAsync();
+
             var logEntry = new LogHistory
             {
                 UserId = userId,
@@ -202,7 +193,8 @@ namespace DocManagementBackend.Controllers
             };
             _context.LogHistories.Add(logEntry);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, documentDto);
+
+            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, createdDocument);
         }
 
         [HttpPut("{id}")]

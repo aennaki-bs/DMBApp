@@ -28,7 +28,7 @@ namespace DocManagementBackend.Models
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int DocumentTypeId { get; set; }
-        public DocumentTypeDto? DocumentType { get; set; }
         public bool IsActive { get; set; }
+        public DocumentTypeDto? DocumentType { get; set; }
     }
 }
