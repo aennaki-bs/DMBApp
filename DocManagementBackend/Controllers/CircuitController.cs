@@ -327,6 +327,115 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpDelete("steps/{stepId}")]
+        public async Task<IActionResult> DeleteStep(int stepId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated.");
+
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User not allowed to delete steps.");
+
+            // Find the step to delete
+            var step = await _context.Steps
+                .Include(s => s.Circuit)
+                .Include(s => s.Statuses)
+                .Include(s => s.StepActions)
+                .FirstOrDefaultAsync(s => s.Id == stepId);
+
+            if (step == null)
+                return NotFound("Step not found.");
+
+            // Check if the step belongs to an active circuit
+            if (step.Circuit != null && step.Circuit.IsActive)
+                return BadRequest("Cannot delete a step that belongs to an active circuit.");
+
+            // Check if the step is referenced by any document
+            var isReferenced = await _context.Documents.AnyAsync(d => d.CurrentStepId == stepId);
+            if (isReferenced)
+                return BadRequest("Cannot delete a step that is currently in use by documents.");
+
+            // Check if the step has previous/next references from other steps
+            var hasReferences = await _context.Steps.AnyAsync(s => s.NextStepId == stepId || s.PrevStepId == stepId);
+            if (hasReferences)
+            {
+                // Remove references from other steps
+                var referencingSteps = await _context.Steps
+                    .Where(s => s.NextStepId == stepId || s.PrevStepId == stepId)
+                    .ToListAsync();
+
+                foreach (var refStep in referencingSteps)
+                {
+                    if (refStep.NextStepId == stepId)
+                        refStep.NextStepId = null;
+                    if (refStep.PrevStepId == stepId)
+                        refStep.PrevStepId = null;
+                }
+            }
+
+            // Delete related entities first
+            if (step.Statuses.Any())
+            {
+                // Check if statuses are used in DocumentStatus
+                var statusIds = step.Statuses.Select(s => s.Id).ToList();
+                var statusesInUse = await _context.DocumentStatus.AnyAsync(ds => statusIds.Contains(ds.StatusId));
+
+                if (statusesInUse)
+                    return BadRequest("Cannot delete step with statuses that are in use by documents.");
+
+                _context.Status.RemoveRange(step.Statuses);
+            }
+
+            if (step.StepActions.Any())
+            {
+                _context.StepActions.RemoveRange(step.StepActions);
+            }
+
+            // Delete any ActionStatusEffects related to this step
+            var actionEffects = await _context.ActionStatusEffects.Where(ase => ase.StepId == stepId).ToListAsync();
+            if (actionEffects.Any())
+            {
+                _context.ActionStatusEffects.RemoveRange(actionEffects);
+            }
+
+            // Delete the step
+            _context.Steps.Remove(step);
+
+            // Update OrderIndex values for remaining steps in the circuit
+            if (step.CircuitId > 0)
+            {
+                var remainingSteps = await _context.Steps
+                    .Where(s => s.CircuitId == step.CircuitId && s.Id != stepId)
+                    .OrderBy(s => s.OrderIndex)
+                    .ToListAsync();
+
+                for (int i = 0; i < remainingSteps.Count; i++)
+                {
+                    remainingSteps[i].OrderIndex = i + 1;
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok("Step deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error deleting step: {ex.Message}");
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCircuit(int id)
         {

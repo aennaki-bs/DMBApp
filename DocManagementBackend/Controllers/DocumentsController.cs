@@ -515,17 +515,19 @@ namespace DocManagementBackend.Controllers
             var ThisType = await _context.DocumentTypes.FindAsync(id);
             if (ThisType == null)
                 return NotFound("No type with this id!");
-            if (string.IsNullOrEmpty(request.TypeName))
+            if (!string.IsNullOrEmpty(request.TypeName))
             {
                 var typeName = request.TypeName.ToLower();
                 var type = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.TypeName.ToLower() == typeName);
-                if (type != null)
-                    if (type.Id != ThisType.Id)
-                        return BadRequest("TypeName already exist");
+                if (type != null && type.Id != ThisType.Id)
+                    return BadRequest("TypeName already exist");
+                    // if ()
                 ThisType.TypeName = request.TypeName;
             }
-            if (string.IsNullOrEmpty(request.TypeAttr))
+            if (!string.IsNullOrEmpty(request.TypeAttr))
                 ThisType.TypeAttr = request.TypeAttr;
+            // _context.DocumentTypes.Add(ThisType);
+            await _context.SaveChangesAsync();
             return Ok("Type edited successfully");
         }
 
