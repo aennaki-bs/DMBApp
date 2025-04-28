@@ -150,9 +150,9 @@ namespace DocManagementBackend.Controllers
             if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
                 return Unauthorized("Invalid password.");
             if (!user.IsEmailConfirmed)
-                return Unauthorized("Your account is not activated yet !! Please check your email for verification before logging in.");
+                return Unauthorized("Your account is not activated yet. Please check your email for verification before logging in.");
             if (!user.IsActive)
-                return Unauthorized("User Account Is Desactivated!");
+                return Unauthorized("User Account Is Desactivated. Please contact an admin!");
             var accessToken = AuthHelper.GenerateAccessToken(user);
             var refreshToken = AuthHelper.GenerateRefreshToken();
             user.RefreshToken = refreshToken;

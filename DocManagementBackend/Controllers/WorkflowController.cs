@@ -36,7 +36,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to assign documents to circuits.");
@@ -79,7 +79,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to do this action.");
@@ -126,7 +126,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to perform this action.");
@@ -177,7 +177,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to perform this action.");
@@ -275,7 +275,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to do action.");
@@ -318,7 +318,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             try
             {
@@ -367,7 +367,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             // Get the document and check if it has a current step
             var document = await _context.Documents
@@ -424,7 +424,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             try
             {
@@ -471,7 +471,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             try
             {
@@ -568,7 +568,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             try
             {

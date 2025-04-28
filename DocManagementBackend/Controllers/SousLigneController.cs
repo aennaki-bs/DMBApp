@@ -18,7 +18,8 @@ namespace DocManagementBackend.Controllers
         public SousLignesController(ApplicationDbContext context) { _context = context; }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SousLigne>>> GetSousLignes() {
+        public async Task<ActionResult<IEnumerable<SousLigne>>> GetSousLignes()
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -27,7 +28,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var sousLigne = await _context.SousLignes
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
@@ -46,7 +47,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var sousLigne = await _context.SousLignes
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
@@ -69,7 +70,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var sousLigne = await _context.SousLignes
                 .Where(s => s.LigneId == id)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
@@ -91,7 +92,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var sousLigne = await _context.SousLignes
                 .Where(s => s.Ligne!.DocumentId == id)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
@@ -113,7 +114,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var ligne = await _context.Lignes.FindAsync(sousLigne.LigneId);
@@ -143,7 +144,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var sousLigne = await _context.SousLignes.FindAsync(id);
@@ -169,7 +170,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var sousLigne = await _context.SousLignes.FindAsync(id);

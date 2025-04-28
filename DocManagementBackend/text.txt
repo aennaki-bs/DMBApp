@@ -291,7 +291,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var actions = await _context.Actions
                 .OrderBy(a => a.Title)
@@ -322,7 +322,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to create actions.");
@@ -360,7 +360,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var action = await _context.Actions.FindAsync(id);
             if (action == null)
@@ -389,7 +389,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to assign actions to steps.");
@@ -469,7 +469,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var users = await _context.Users
@@ -487,7 +487,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
@@ -506,7 +506,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
@@ -563,7 +563,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.FindAsync(id);
@@ -620,7 +620,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.FindAsync(id);
@@ -661,7 +661,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.FindAsync(id);
@@ -693,7 +693,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             if (userIds == null || !userIds.Any())
@@ -719,7 +719,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
@@ -1007,7 +1007,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var circuits = await _context.Circuits
                 .Include(c => c.Steps.OrderBy(cd => cd.OrderIndex))
@@ -1052,7 +1052,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var circuit = await _context.Circuits
                 .Include(c => c.Steps.OrderBy(cd => cd.OrderIndex))
@@ -1100,7 +1100,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to create circuits.");
@@ -1154,7 +1154,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to modify steps.");
@@ -1218,7 +1218,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to modify circuits.");
@@ -1272,7 +1272,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to modify circuits.");
@@ -1312,7 +1312,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to delete circuits.");
@@ -1361,7 +1361,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var documents = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
@@ -1385,7 +1385,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var documentDto = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
@@ -1413,7 +1413,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             // Ensure the limit is reasonable
             if (limit <= 0)
@@ -1446,7 +1446,7 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return BadRequest("User not found.");
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
 
@@ -1542,7 +1542,7 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return BadRequest("User not found.");
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
             var document = await _context.Documents.FindAsync(id);
@@ -1700,7 +1700,7 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return BadRequest("User not found.");
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
 
@@ -1775,7 +1775,7 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return BadRequest("User not found.");
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
             var types = await _context.DocumentTypes.ToListAsync();
@@ -1801,7 +1801,7 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return BadRequest("User not found.");
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to do this action.");
             if (string.IsNullOrEmpty(request.TypeName))
@@ -1874,7 +1874,7 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return BadRequest("User not found.");
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
             var type = await _context.DocumentTypes.FindAsync(id);
@@ -1948,7 +1948,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var document = await _context.Documents.FindAsync(ligne.DocumentId);
@@ -1977,7 +1977,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var ligne = await _context.Lignes.FindAsync(id);
@@ -2004,7 +2004,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var ligne = await _context.Lignes.FindAsync(id);
@@ -2193,7 +2193,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var sousLigne = await _context.SousLignes
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
@@ -2212,7 +2212,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var sousLigne = await _context.SousLignes
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
@@ -2235,7 +2235,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var sousLigne = await _context.SousLignes
                 .Where(s => s.LigneId == id)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
@@ -2257,7 +2257,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             var sousLigne = await _context.SousLignes
                 .Where(s => s.Ligne!.DocumentId == id)
                 .Include(s => s.Ligne!).ThenInclude(l => l.Document!).ThenInclude(d => d.DocumentType)
@@ -2279,7 +2279,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var ligne = await _context.Lignes.FindAsync(sousLigne.LigneId);
@@ -2309,7 +2309,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var sousLigne = await _context.SousLignes.FindAsync(id);
@@ -2335,7 +2335,7 @@ namespace DocManagementBackend.Controllers
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin" && ThisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action.");
             var sousLigne = await _context.SousLignes.FindAsync(id);
@@ -2382,7 +2382,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var statuses = await _context.Status
                 .Where(s => s.StepId == stepId)
@@ -2415,7 +2415,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to add statuses.");
@@ -2461,7 +2461,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to update statuses.");
@@ -2493,7 +2493,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to delete statuses.");
@@ -2546,7 +2546,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -2584,7 +2584,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var subType = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -2626,7 +2626,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -2665,7 +2665,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -2707,7 +2707,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to create subtypes.");
 
@@ -2802,7 +2802,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to update subtypes.");
 
@@ -2912,7 +2912,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to delete subtypes.");
 
@@ -2969,7 +2969,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to assign documents to circuits.");
@@ -3012,7 +3012,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to do this action.");
@@ -3059,7 +3059,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to perform this action.");
@@ -3110,7 +3110,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to perform this action.");
@@ -3208,7 +3208,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to do action.");
@@ -3251,7 +3251,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             try
             {
@@ -3300,7 +3300,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             // Get the document and check if it has a current step
             var document = await _context.Documents
@@ -3357,7 +3357,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             try
             {
@@ -3404,7 +3404,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             try
             {
@@ -3501,7 +3501,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             try
             {

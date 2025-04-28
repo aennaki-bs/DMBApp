@@ -7,16 +7,19 @@ using System.Security.Claims;
 using DocManagementBackend.Mappings;
 using DocManagementBackend.Utils;
 
-namespace DocManagementBackend.Controllers {
+namespace DocManagementBackend.Controllers
+{
     [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
-    public class AdminController : ControllerBase {
+    public class AdminController : ControllerBase
+    {
         private readonly ApplicationDbContext _context;
-        public AdminController(ApplicationDbContext context) {_context = context;}
+        public AdminController(ApplicationDbContext context) { _context = context; }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsers() {
+        public async Task<IActionResult> GetAllUsers()
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -25,7 +28,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var users = await _context.Users
@@ -34,7 +37,8 @@ namespace DocManagementBackend.Controllers {
         }
 
         [HttpGet("users/{id}")]
-        public async Task<IActionResult> GetUser(int id) {
+        public async Task<IActionResult> GetUser(int id)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -43,7 +47,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
@@ -53,7 +57,8 @@ namespace DocManagementBackend.Controllers {
         }
 
         [HttpPost("users")]
-        public async Task<IActionResult> CreateUser([FromBody] AdminCreateUserRequest request) {
+        public async Task<IActionResult> CreateUser([FromBody] AdminCreateUserRequest request)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -62,7 +67,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
@@ -70,19 +75,25 @@ namespace DocManagementBackend.Controllers {
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
                 return BadRequest("Username is already in use.");
             int roleId = 0;
-            if (request.RoleName == "Admin") {roleId = 1;}
-            if (request.RoleName == "SimpleUser") {roleId = 2;}
-            if (request.RoleName == "FullUser") {roleId = 3;}
+            if (request.RoleName == "Admin") { roleId = 1; }
+            if (request.RoleName == "SimpleUser") { roleId = 2; }
+            if (request.RoleName == "FullUser") { roleId = 3; }
             var role = await _context.Roles.FindAsync(roleId);
             if (role == null)
                 return BadRequest("Invalid RoleName.");
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash);
             var emailVerificationCode = new Random().Next(100000, 999999).ToString();
-            var newUser = new User {Email = request.Email,
-                Username = request.Username, PasswordHash = hashedPassword,
-                FirstName = request.FirstName, LastName = request.LastName,
-                IsEmailConfirmed = false, IsActive = false,
-                CreatedAt = DateTime.UtcNow, RoleId = roleId,
+            var newUser = new User
+            {
+                Email = request.Email,
+                Username = request.Username,
+                PasswordHash = hashedPassword,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                IsEmailConfirmed = false,
+                IsActive = false,
+                CreatedAt = DateTime.UtcNow,
+                RoleId = roleId,
                 EmailVerificationCode = emailVerificationCode,
                 ProfilePicture = "/images/profile/default.png"
             };
@@ -102,15 +113,22 @@ namespace DocManagementBackend.Controllers {
             };
             _context.LogHistories.Add(logEntry);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, new {
-                newUser.Id, newUser.Username,
-                newUser.Email, newUser.FirstName,
-                newUser.LastName, Role = role.RoleName,
-                newUser.IsActive, newUser.CreatedAt});
+            return CreatedAtAction(nameof(GetUser), new { id = newUser.Id }, new
+            {
+                newUser.Id,
+                newUser.Username,
+                newUser.Email,
+                newUser.FirstName,
+                newUser.LastName,
+                Role = role.RoleName,
+                newUser.IsActive,
+                newUser.CreatedAt
+            });
         }
 
         [HttpPut("users/{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] AdminUpdateUserRequest request) {
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] AdminUpdateUserRequest request)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -119,7 +137,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.FindAsync(id);
@@ -129,7 +147,8 @@ namespace DocManagementBackend.Controllers {
                 return BadRequest("Username is already in use.");
             if (!string.IsNullOrEmpty(request.Username))
                 user.Username = request.Username;
-            if (!string.IsNullOrEmpty(request.PasswordHash)) {
+            if (!string.IsNullOrEmpty(request.PasswordHash))
+            {
                 if (!AuthHelper.IsValidPassword(request.PasswordHash))
                     return BadRequest("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.");
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash);
@@ -142,11 +161,12 @@ namespace DocManagementBackend.Controllers {
                 user.IsEmailConfirmed = request.IsEmailConfirmed.Value;
             if (request.IsActive.HasValue)
                 user.IsActive = request.IsActive.Value;
-            if (!string.IsNullOrEmpty(request.RoleName)) {
+            if (!string.IsNullOrEmpty(request.RoleName))
+            {
                 int roleId = 0;
-                if (request.RoleName == "Admin") {roleId = 1;}
-                if (request.RoleName == "SimpleUser") {roleId = 2;}
-                if (request.RoleName == "FullUser") {roleId = 3;}
+                if (request.RoleName == "Admin") { roleId = 1; }
+                if (request.RoleName == "SimpleUser") { roleId = 2; }
+                if (request.RoleName == "FullUser") { roleId = 3; }
                 var role = await _context.Roles.FindAsync(roleId);
                 if (role == null)
                     return BadRequest("Invalid RoleName.");
@@ -167,7 +187,8 @@ namespace DocManagementBackend.Controllers {
         }
 
         [HttpPut("users/email/{id}")]
-        public async Task<IActionResult> UpdateEmailUser(int id, [FromBody] AdminUpdateUserRequest request) {
+        public async Task<IActionResult> UpdateEmailUser(int id, [FromBody] AdminUpdateUserRequest request)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -176,7 +197,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.FindAsync(id);
@@ -208,7 +229,8 @@ namespace DocManagementBackend.Controllers {
         }
 
         [HttpDelete("users/{id}")]
-        public async Task<IActionResult> DeleteUser(int id) {
+        public async Task<IActionResult> DeleteUser(int id)
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -217,7 +239,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.FindAsync(id);
@@ -249,7 +271,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             if (userIds == null || !userIds.Any())
@@ -275,7 +297,7 @@ namespace DocManagementBackend.Controllers {
             if (ThisUser == null)
                 return BadRequest("User not found.");
             if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (ThisUser.Role!.RoleName != "Admin")
                 return Unauthorized("User Not Allowed To do this action.");
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);

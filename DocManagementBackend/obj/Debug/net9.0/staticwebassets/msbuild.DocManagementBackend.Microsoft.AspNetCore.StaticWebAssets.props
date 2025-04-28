@@ -126,6 +126,24 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\default.png'))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg'))">
+      <SourceType>Package</SourceType>
+      <SourceId>DocManagementBackend</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DocManagementBackend</BasePath>
+      <RelativePath>images/profile/ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>v305d398xh</Fingerprint>
+      <Integrity>yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg'))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\images\profile\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>DocManagementBackend</SourceId>

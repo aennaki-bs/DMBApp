@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "y0Tj9PXfbz4rfpLhWEHzfVX+P4HGpRj4sjGM/zBMjT0=",
+  "Hash": "7o2Zoyq1mmphOVd/OKYKoCqy41IaLvR0C+Rtflt5LNY=",
   "Source": "DocManagementBackend",
   "BasePath": "_content/DocManagementBackend",
   "Mode": "Default",
@@ -162,6 +162,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\profile\\default.png"
+    },
+    {
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
+      "SourceId": "DocManagementBackend",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "BasePath": "_content/DocManagementBackend",
+      "RelativePath": "images/profile/ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "v305d398xh",
+      "Integrity": "yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg"
     },
     {
       "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg",
@@ -778,6 +799,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-aYFX2JT7mm8EPNdBsUEHVtNtPPqDZz47oi/DG/Qn6P4="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "546878"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 25 Apr 2025 13:45:01 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.v305d398xh.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "546878"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 25 Apr 2025 13:45:01 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "v305d398xh"
+        },
+        {
+          "Name": "label",
+          "Value": "images/profile/ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78="
         }
       ]
     },

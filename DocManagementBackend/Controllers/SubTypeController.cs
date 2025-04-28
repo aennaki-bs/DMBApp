@@ -31,7 +31,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -69,7 +69,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var subType = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -111,11 +111,11 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
-                .Where(st => st.DocumentTypeId == docTypeId && st.IsActive)
+                .Where(st => st.DocumentTypeId == docTypeId)
                 .Select(st => new SubTypeDto
                 {
                     Id = st.Id,
@@ -150,7 +150,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -192,7 +192,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to create subtypes.");
 
@@ -287,7 +287,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to update subtypes.");
 
@@ -397,7 +397,7 @@ namespace DocManagementBackend.Controllers
             if (thisUser == null)
                 return BadRequest("User not found.");
             if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
             if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to delete subtypes.");
 

@@ -228,7 +228,7 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return NotFound("User not found.");
             if (!user.IsActive)
-                return Unauthorized("User account is desactivated!");
+                return Unauthorized("User account is desactivated. Please contact an admin!");
             if (string.IsNullOrEmpty(request.Email))
                 return BadRequest("Email is required!");
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))

@@ -33,7 +33,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var statuses = await _context.Status
                 .Where(s => s.StepId == stepId)
@@ -66,7 +66,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to add statuses.");
@@ -112,7 +112,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to update statuses.");
@@ -144,7 +144,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to delete statuses.");

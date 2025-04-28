@@ -36,7 +36,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var circuits = await _context.Circuits
                 .Include(c => c.Steps.OrderBy(cd => cd.OrderIndex))
@@ -81,7 +81,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var circuit = await _context.Circuits
                 .Include(c => c.Steps.OrderBy(cd => cd.OrderIndex))
@@ -129,7 +129,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to create circuits.");
@@ -183,7 +183,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to modify steps.");
@@ -247,7 +247,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to modify circuits.");
@@ -301,7 +301,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to modify circuits.");
@@ -341,7 +341,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to delete steps.");
@@ -450,7 +450,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to delete circuits.");

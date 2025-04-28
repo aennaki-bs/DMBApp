@@ -33,7 +33,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var actions = await _context.Actions
                 .OrderBy(a => a.Title)
@@ -64,7 +64,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to create actions.");
@@ -102,7 +102,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             var action = await _context.Actions.FindAsync(id);
             if (action == null)
@@ -131,7 +131,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated.");
+                return Unauthorized("User account is deactivated. Please contact un admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to assign actions to steps.");
