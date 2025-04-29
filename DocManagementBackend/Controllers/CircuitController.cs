@@ -115,6 +115,70 @@ namespace DocManagementBackend.Controllers
             return Ok(circuitDto);
         }
 
+        [HttpGet("{circuitId}/validation")]
+        public async Task<ActionResult<CircuitValidationDto>> ValidateCircuitStructure(int circuitId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            // Get the circuit with its steps
+            var circuit = await _context.Circuits
+                .Include(c => c.Steps)
+                .FirstOrDefaultAsync(c => c.Id == circuitId);
+
+            if (circuit == null)
+                return NotFound("Circuit not found.");
+
+            // Prepare validation response
+            var validation = new CircuitValidationDto
+            {
+                CircuitId = circuit.Id,
+                CircuitTitle = circuit.Title,
+                HasSteps = circuit.Steps.Any(),
+                TotalSteps = circuit.Steps.Count,
+                StepsWithoutStatuses = new List<StepValidationDto>()
+            };
+
+            if (validation.HasSteps)
+            {
+                // For each step, check if it has statuses
+                foreach (var step in circuit.Steps)
+                {
+                    var statusCount = await _context.Status.CountAsync(s => s.StepId == step.Id);
+
+                    if (statusCount == 0)
+                    {
+                        validation.StepsWithoutStatuses.Add(new StepValidationDto
+                        {
+                            StepId = step.Id,
+                            StepTitle = step.Title,
+                            Order = step.OrderIndex
+                        });
+                    }
+                }
+
+                validation.AllStepsHaveStatuses = validation.StepsWithoutStatuses.Count == 0;
+                validation.IsValid = validation.HasSteps && validation.AllStepsHaveStatuses;
+            }
+            else
+            {
+                validation.AllStepsHaveStatuses = false;
+                validation.IsValid = false;
+            }
+
+            return Ok(validation);
+        }
+
         [HttpPost]
         public async Task<ActionResult<CircuitDto>> CreateCircuit([FromBody] CreateCircuitDto createCircuitDto)
         {

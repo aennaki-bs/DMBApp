@@ -54,4 +54,22 @@ namespace DocManagementBackend.Models
         public int StepId { get; set; }
         public int OrderIndex { get; set; }
     }
+
+    public class CircuitValidationDto
+    {
+        public int CircuitId { get; set; }
+        public string CircuitTitle { get; set; } = string.Empty;
+        public bool HasSteps { get; set; }
+        public int TotalSteps { get; set; }
+        public bool AllStepsHaveStatuses { get; set; }
+        public bool IsValid { get; set; }
+        public List<StepValidationDto> StepsWithoutStatuses { get; set; } = new List<StepValidationDto>();
+    }
+
+    public class StepValidationDto
+    {
+        public int StepId { get; set; }
+        public string StepTitle { get; set; } = string.Empty;
+        public int Order { get; set; }
+    }
 }
