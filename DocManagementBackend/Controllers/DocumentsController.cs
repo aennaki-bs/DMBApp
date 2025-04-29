@@ -448,6 +448,30 @@ namespace DocManagementBackend.Controllers
             return Ok(types);
         }
 
+        [HttpGet("Types/{id}")]
+        public async Task<ActionResult<DocumentType>> GetDocumentType(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            var documentType = await _context.DocumentTypes.FindAsync(id);
+
+            if (documentType == null)
+                return NotFound("Document type not found.");
+
+            return Ok(documentType);
+        }
+
         [HttpPost("valide-typeKey")]
         public async Task<IActionResult> ValideTypeKey([FromBody] DocumentTypeDto request)
         {

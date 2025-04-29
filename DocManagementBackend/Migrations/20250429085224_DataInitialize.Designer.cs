@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocManagementBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250417132555_ModifyDocConter")]
-    partial class ModifyDocConter
+    [Migration("20250429085224_DataInitialize")]
+    partial class DataInitialize
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DocManagementBackend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialDataCreate : Migration
+    public partial class DataInitialize : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -56,7 +56,8 @@ namespace DocManagementBackend.Migrations
                     TypeKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TypeAttr = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DocumentCounter = table.Column<int>(type: "int", nullable: false)
+                    DocumentCounter = table.Column<int>(type: "int", nullable: false),
+                    DocCounter = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -91,6 +92,31 @@ namespace DocManagementBackend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TypeCounter", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubTypes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SubTypeKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DocumentTypeId = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubTypes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubTypes_DocumentTypes_DocumentTypeId",
+                        column: x => x.DocumentTypeId,
+                        principalTable: "DocumentTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -146,12 +172,16 @@ namespace DocManagementBackend.Migrations
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     City = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WebSite = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Identity = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsEmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     EmailVerificationCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsPhoneVerified = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsOnline = table.Column<bool>(type: "bit", nullable: false),
@@ -230,6 +260,7 @@ namespace DocManagementBackend.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CreatedByUserId = table.Column<int>(type: "int", nullable: false),
                     TypeId = table.Column<int>(type: "int", nullable: false),
+                    SubTypeId = table.Column<int>(type: "int", nullable: true),
                     CurrentStepId = table.Column<int>(type: "int", nullable: true),
                     CircuitId = table.Column<int>(type: "int", nullable: true),
                     IsCircuitCompleted = table.Column<bool>(type: "bit", nullable: false),
@@ -263,6 +294,12 @@ namespace DocManagementBackend.Migrations
                         column: x => x.CurrentStepId,
                         principalTable: "Steps",
                         principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Documents_SubTypes_SubTypeId",
+                        column: x => x.SubTypeId,
+                        principalTable: "SubTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Documents_Users_CreatedByUserId",
                         column: x => x.CreatedByUserId,
@@ -521,6 +558,11 @@ namespace DocManagementBackend.Migrations
                 column: "CurrentStepId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Documents_SubTypeId",
+                table: "Documents",
+                column: "SubTypeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Documents_TypeId",
                 table: "Documents",
                 column: "TypeId");
@@ -591,6 +633,11 @@ namespace DocManagementBackend.Migrations
                 column: "ResponsibleRoleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SubTypes_DocumentTypeId",
+                table: "SubTypes",
+                column: "DocumentTypeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_RoleId",
                 table: "Users",
                 column: "RoleId");
@@ -633,16 +680,19 @@ namespace DocManagementBackend.Migrations
                 name: "Documents");
 
             migrationBuilder.DropTable(
-                name: "DocumentTypes");
+                name: "Steps");
 
             migrationBuilder.DropTable(
-                name: "Steps");
+                name: "SubTypes");
 
             migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Circuits");
+
+            migrationBuilder.DropTable(
+                name: "DocumentTypes");
 
             migrationBuilder.DropTable(
                 name: "Roles");
