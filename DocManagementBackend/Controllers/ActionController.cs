@@ -50,7 +50,6 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,FullUser")]
         public async Task<ActionResult<ActionDto>> CreateAction([FromBody] CreateActionDto createActionDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
