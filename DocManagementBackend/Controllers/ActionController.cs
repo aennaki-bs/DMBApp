@@ -273,5 +273,42 @@ namespace DocManagementBackend.Controllers
 
             return Ok("Action assigned to step successfully.");
         }
+
+        [HttpGet("by-step/{stepId}")]
+        public async Task<ActionResult<IEnumerable<ActionDto>>> GetActionsByStep(int stepId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            // First verify if the step exists
+            var stepExists = await _context.Steps.AnyAsync(s => s.Id == stepId);
+            if (!stepExists)
+                return NotFound("Step not found.");
+
+            // Get actions assigned to this step
+            var actions = await _context.StepActions
+                .Where(sa => sa.StepId == stepId)
+                .Include(sa => sa.Action)
+                .Select(sa => new ActionDto
+                {
+                    ActionId = sa.Action.Id,
+                    ActionKey = sa.Action.ActionKey,
+                    Title = sa.Action.Title,
+                    Description = sa.Action.Description ?? string.Empty
+                })
+                .ToListAsync();
+
+            return Ok(actions);
+        }
     }
 }

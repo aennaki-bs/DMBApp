@@ -58,15 +58,14 @@ namespace DocManagementBackend.Services
             step.StepKey = $"{circuit.CircuitKey}-STEP{stepCount:D2}";
             Console.WriteLine($"Generated step key: {step.StepKey}");
 
+            // Set new step's order index
+            step.OrderIndex = stepCount;
+            
             // If HasOrderedFlow, link to previous step
             if (circuit.HasOrderedFlow && circuit.Steps.Any())
             {
                 var previousSteps = circuit.Steps.OrderByDescending(s => s.OrderIndex).ToList();
                 var previousStep = previousSteps.FirstOrDefault();
-
-                // Set new step's order index
-                step.OrderIndex = (previousStep?.OrderIndex ?? 0) + 1;
-
                 // Update relationships for ordered flow
                 if (previousStep != null)
                 {

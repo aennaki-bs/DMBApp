@@ -322,7 +322,7 @@ namespace DocManagementBackend.Controllers
                 Title = createStepDto.Title,
                 Descriptif = createStepDto.Descriptif,
                 ResponsibleRoleId = createStepDto.ResponsibleRoleId,
-                OrderIndex = createStepDto.OrderIndex
+                OrderIndex = 0
             };
 
             try
