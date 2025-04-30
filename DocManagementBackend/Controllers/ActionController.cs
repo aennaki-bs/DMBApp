@@ -87,6 +87,97 @@ namespace DocManagementBackend.Controllers
             });
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateAction(int id, [FromBody] CreateActionDto updateActionDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User not allowed to update actions.");
+
+            var action = await _context.Actions.FindAsync(id);
+            if (action == null)
+                return NotFound("Action not found.");
+
+            // Update the properties
+            action.Title = updateActionDto.Title;
+            action.Description = updateActionDto.Description;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok("Action updated successfully.");
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await _context.Actions.AnyAsync(a => a.Id == id))
+                    return NotFound("Action no longer exists.");
+                throw;
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAction(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User not allowed to delete actions.");
+
+            var action = await _context.Actions
+                .Include(a => a.StepActions)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (action == null)
+                return NotFound("Action not found.");
+
+            // Check if action is being used in any StepAction relationships
+            if (action.StepActions.Any())
+                return BadRequest("Cannot delete an action that is assigned to steps. Remove the action from all steps first.");
+
+            // Check if action is referenced in any ActionStatusEffects
+            var isReferenced = await _context.ActionStatusEffects.AnyAsync(ase => ase.ActionId == id);
+            if (isReferenced)
+            {
+                // Delete the related ActionStatusEffects
+                var relatedEffects = await _context.ActionStatusEffects.Where(ase => ase.ActionId == id).ToListAsync();
+                _context.ActionStatusEffects.RemoveRange(relatedEffects);
+            }
+
+            // Check if action is referenced in DocumentCircuitHistory
+            var isInHistory = await _context.DocumentCircuitHistory.AnyAsync(dch => dch.ActionId == id);
+            if (isInHistory)
+                return BadRequest("Cannot delete an action that has been used in document history.");
+
+            // Remove the action
+            _context.Actions.Remove(action);
+            await _context.SaveChangesAsync();
+
+            return Ok("Action deleted successfully.");
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<ActionDto>> GetAction(int id)
         {
@@ -135,7 +226,7 @@ namespace DocManagementBackend.Controllers
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to assign actions to steps.");
 
-            var step = await _context.StepActions.FindAsync(assignDto.StepId);
+            var step = await _context.Steps.FindAsync(assignDto.StepId);
             if (step == null)
                 return NotFound("Step not found.");
 
