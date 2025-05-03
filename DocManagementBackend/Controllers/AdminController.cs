@@ -56,6 +56,27 @@ namespace DocManagementBackend.Controllers
             return Ok(user);
         }
 
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetAllRoles()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (thisUser == null)
+                return BadRequest("User not found.");
+            if (!thisUser.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+            if (thisUser.Role!.RoleName != "Admin")
+                return Unauthorized("User not allowed to view roles.");
+
+            var roles = await _context.Roles.ToListAsync();
+            return Ok(roles);
+        }
+
         [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] AdminCreateUserRequest request)
         {
