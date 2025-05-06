@@ -21,6 +21,7 @@ namespace DocManagementBackend.Data
         public DbSet<TypeCounter> TypeCounter { get; set; }
         public DbSet<Circuit> Circuits { get; set; }
         public DbSet<DocumentCircuitHistory> DocumentCircuitHistory { get; set; }
+        public DbSet<DocumentStepHistory> DocumentStepHistory { get; set; }
 
         // Workflow entities
         public DbSet<Status> Status { get; set; }

@@ -95,6 +95,13 @@ namespace DocManagementBackend.Services
             // Verify the step was saved correctly
             var savedStep = await _context.Steps.FindAsync(step.Id);
             Console.WriteLine($"Saved step key: {savedStep!.StepKey}");
+            
+            // Update step links to maintain the proper workflow
+            if (circuit.HasOrderedFlow)
+            {
+                await UpdateStepLinksAsync(step.CircuitId);
+            }
+            
             return step;
         }
 
@@ -124,29 +131,7 @@ namespace DocManagementBackend.Services
                 // If circuit has ordered flow, update Next/Prev relationships
                 if (circuit.HasOrderedFlow)
                 {
-                    var orderedSteps = await _context.Steps
-                        .Where(s => s.CircuitId == circuitId)
-                        .OrderBy(s => s.OrderIndex)
-                        .ToListAsync();
-
-                    // Clear existing relationships
-                    foreach (var step in orderedSteps)
-                    {
-                        step.NextStepId = null;
-                        step.PrevStepId = null;
-                    }
-
-                    // Set new relationships
-                    for (int i = 0; i < orderedSteps.Count; i++)
-                    {
-                        if (i > 0)
-                            orderedSteps[i].PrevStepId = orderedSteps[i - 1].Id;
-
-                        if (i < orderedSteps.Count - 1)
-                            orderedSteps[i].NextStepId = orderedSteps[i + 1].Id;
-                        else
-                            orderedSteps[i].IsFinalStep = true; // Last step is final
-                    }
+                    await UpdateStepLinksAsync(circuitId);
                 }
 
                 await _context.SaveChangesAsync();
@@ -157,6 +142,60 @@ namespace DocManagementBackend.Services
             {
                 await transaction.RollbackAsync();
                 throw;
+            }
+        }
+        
+        // Call this method after any operation that modifies steps in a circuit
+        public async Task UpdateStepLinksAsync(int circuitId)
+        {
+            var steps = await _context.Steps
+                .Where(s => s.CircuitId == circuitId)
+                .OrderBy(s => s.OrderIndex)
+                .ToListAsync();
+            
+            // Clear existing links first
+            foreach (var step in steps)
+            {
+                step.NextStepId = null;
+                step.PrevStepId = null;
+                step.IsFinalStep = false;
+            }
+            
+            // Set the links based on OrderIndex
+            for (int i = 0; i < steps.Count; i++)
+            {
+                // Set previous step link (if not first)
+                if (i > 0)
+                {
+                    steps[i].PrevStepId = steps[i-1].Id;
+                }
+                
+                // Set next step link (if not last)
+                if (i < steps.Count - 1)
+                {
+                    steps[i].NextStepId = steps[i+1].Id;
+                }
+                else
+                {
+                    // Mark the last step as final
+                    steps[i].IsFinalStep = true;
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+        }
+        
+        // Use this method to update all step links in all circuits that have ordered flow
+        public async Task UpdateAllCircuitStepLinksAsync()
+        {
+            var orderedFlowCircuits = await _context.Circuits
+                .Where(c => c.HasOrderedFlow)
+                .Select(c => c.Id)
+                .ToListAsync();
+                
+            foreach (var circuitId in orderedFlowCircuits)
+            {
+                await UpdateStepLinksAsync(circuitId);
             }
         }
     }

@@ -15,7 +15,7 @@ namespace DocManagementBackend.Models
         public bool IsActive { get; set; } = false;
         public int CrdCounter { get; set; } = 0;
         public bool HasOrderedFlow { get; set; } = false;
-        public bool AllowBacktrack { get; set; } = false;
+        public bool AllowBacktrack { get; set; } = true;
         [JsonIgnore]
         public ICollection<Step> Steps { get; set; } = new List<Step>();
     }

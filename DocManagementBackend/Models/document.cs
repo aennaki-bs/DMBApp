@@ -124,4 +124,27 @@ namespace DocManagementBackend.Models
         public string Comments { get; set; } = string.Empty;
         public bool IsApproved { get; set; } = true;
     }
+    
+    public class DocumentStepHistory
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        public int DocumentId { get; set; }
+        [ForeignKey("DocumentId")]
+        [JsonIgnore]
+        public Document? Document { get; set; }
+        [Required]
+        public int StepId { get; set; }
+        [ForeignKey("StepId")]
+        [JsonIgnore]
+        public Step? Step { get; set; }
+        [Required]
+        public int UserId { get; set; }
+        [ForeignKey("UserId")]
+        [JsonIgnore]
+        public User? User { get; set; }
+        public DateTime TransitionDate { get; set; } = DateTime.UtcNow;
+        public string Comments { get; set; } = string.Empty;
+    }
 }

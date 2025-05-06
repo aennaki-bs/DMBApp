@@ -487,6 +487,12 @@ namespace DocManagementBackend.Controllers
                 {
                     remainingSteps[i].OrderIndex = i + 1;
                 }
+                
+                // Update step links to maintain proper navigation
+                if (step.Circuit != null && step.Circuit.HasOrderedFlow)
+                {
+                    await _circuitService.UpdateStepLinksAsync(step.CircuitId);
+                }
             }
 
             try
@@ -532,6 +538,69 @@ namespace DocManagementBackend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("Circuit deleted successfully.");
+        }
+
+        [HttpPost("update-all-step-links")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateAllStepLinks()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            try
+            {
+                await _circuitService.UpdateAllCircuitStepLinksAsync();
+                return Ok("All circuit step links have been updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error updating step links: {ex.Message}");
+            }
+        }
+        
+        [HttpPost("{circuitId}/update-step-links")]
+        public async Task<IActionResult> UpdateCircuitStepLinks(int circuitId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            // Check if circuit exists
+            var circuit = await _context.Circuits.FindAsync(circuitId);
+            if (circuit == null)
+                return NotFound("Circuit not found.");
+                
+            if (!circuit.HasOrderedFlow)
+                return BadRequest("This circuit does not have ordered flow, so step links are not used.");
+
+            try
+            {
+                await _circuitService.UpdateStepLinksAsync(circuitId);
+                return Ok($"Step links for circuit {circuitId} have been updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error updating step links: {ex.Message}");
+            }
         }
     }
 }

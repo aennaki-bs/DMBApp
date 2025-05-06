@@ -136,7 +136,6 @@ namespace DocManagementBackend.Controllers
                 var success = await _workflowService.MoveToNextStepAsync(
                     moveNextDto.DocumentId,
                     moveNextDto.CurrentStepId,
-                    moveNextDto.NextStepId,
                     userId,
                     moveNextDto.Comments);
 
@@ -234,7 +233,6 @@ namespace DocManagementBackend.Controllers
                 var success = await _workflowService.MoveToNextStepAsync(
                     moveDocumentDto.DocumentId,
                     currentStep.Id,
-                    nextStep.Id,
                     userId,
                     moveDocumentDto.Comments);
 
