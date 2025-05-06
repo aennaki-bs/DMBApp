@@ -12,6 +12,8 @@ namespace DocManagementBackend.Models
         [Required]
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
+        // Whether this action should automatically advance to the next step if all required statuses are complete
+        public bool AutoAdvance { get; set; } = false;
         [JsonIgnore]
         public ICollection<StepAction> StepActions { get; set; } = new List<StepAction>();
     }

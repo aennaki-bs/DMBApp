@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DocManagementBackend.Services
 {
@@ -16,6 +17,9 @@ namespace DocManagementBackend.Services
             _context = context;
         }
 
+        /// <summary>
+        /// Assigns a document to a circuit workflow and sets it to the first step
+        /// </summary>
         public async Task<bool> AssignDocumentToCircuitAsync(int documentId, int circuitId, int userId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -30,7 +34,7 @@ namespace DocManagementBackend.Services
                     throw new KeyNotFoundException($"Document ID {documentId} not found");
 
                 var circuit = await _context.Circuits
-                    .Include(c => c.Steps.OrderBy(cd => cd.OrderIndex))
+                    .Include(c => c.Steps.OrderBy(s => s.OrderIndex))
                     .FirstOrDefaultAsync(c => c.Id == circuitId && c.IsActive);
 
                 if (circuit == null || !circuit.Steps.Any())
@@ -45,8 +49,8 @@ namespace DocManagementBackend.Services
                 document.Circuit = circuit;
                 document.Status = 1; // In Progress
 
-                // Find first step
-                var firstStep = circuit.Steps.OrderBy(cd => cd.OrderIndex).First();
+                // Find first step (lowest OrderIndex)
+                var firstStep = circuit.Steps.OrderBy(s => s.OrderIndex).First();
                 document.CurrentStepId = firstStep.Id;
                 document.CurrentStep = firstStep;
                 document.IsCircuitCompleted = false;
@@ -55,18 +59,15 @@ namespace DocManagementBackend.Services
                 var historyEntry = new DocumentCircuitHistory
                 {
                     DocumentId = documentId,
-                    Document = document,
                     StepId = firstStep.Id,
-                    Step = firstStep,
                     ProcessedByUserId = userId,
-                    ProcessedBy = user,
                     ProcessedAt = DateTime.UtcNow,
                     Comments = "Document assigned to circuit",
                     IsApproved = true
                 };
                 _context.DocumentCircuitHistory.Add(historyEntry);
 
-                // Initialize document statuses
+                // Initialize document statuses for the first step
                 var stepStatuses = await _context.Status
                     .Where(s => s.StepId == firstStep.Id)
                     .ToListAsync();
@@ -93,10 +94,13 @@ namespace DocManagementBackend.Services
             }
         }
 
-        public async Task<bool> ProcessActionAsync(int documentId, int actionId, int userId, string comments = "", bool isApproved = true)
+        /// <summary>
+        /// Moves a document to the next step if all required statuses are complete
+        /// </summary>
+        public async Task<bool> MoveToNextStepAsync(int documentId, int currentStepId, int userId, string comments = "")
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
-
+            
             try
             {
                 var document = await _context.Documents
@@ -104,106 +108,99 @@ namespace DocManagementBackend.Services
                     .Include(d => d.CurrentStep)
                     .FirstOrDefaultAsync(d => d.Id == documentId);
 
-                if (document == null || document.CircuitId == null || document.CurrentStepId == null)
-                    throw new InvalidOperationException("Document not assigned to circuit or step");
+                if (document == null || document.CurrentStepId == null)
+                    throw new KeyNotFoundException("Document not found or not in a workflow");
 
-                var user = await _context.Users
-                    .Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.Id == userId);
+                if (document.CurrentStepId != currentStepId)
+                    throw new InvalidOperationException("Document is not at the specified step");
+                
+                if (document.IsCircuitCompleted)
+                    throw new InvalidOperationException("Document workflow is already completed");
 
-                if (user == null)
-                    throw new KeyNotFoundException($"User ID {userId} not found");
+                var circuit = document.Circuit;
+                if (circuit == null)
+                    throw new InvalidOperationException("Document is not assigned to a circuit");
 
-                var action = await _context.Actions.FindAsync(actionId);
-                if (action == null)
-                    throw new KeyNotFoundException($"Action ID {actionId} not found");
-
-                // Verify user has permission to perform this action on this step
-                var step = document.CurrentStep;
-                if (step == null)
+                var currentStep = document.CurrentStep;
+                if (currentStep == null)
                     throw new InvalidOperationException("Current step not found");
 
-                // if (step.ResponsibleRoleId.HasValue && step.ResponsibleRoleId != user.RoleId)
-                //     throw new UnauthorizedAccessException("User does not have permission for this step");
+                // Check if current step is the final step
+                if (currentStep.IsFinalStep)
+                    throw new InvalidOperationException("Document is already at the final step");
 
-                // Verify action is valid for this step
-                var stepAction = await _context.StepActions
-                    .FirstOrDefaultAsync(sa => sa.StepId == step.Id && sa.ActionId == actionId);
-
-                if (stepAction == null)
-                    throw new InvalidOperationException($"Action ID {actionId} not valid for step ID {step.Id}");
-
-                // Find which statuses this action affects
-                var affectedStatuses = await _context.ActionStatusEffects
-                    .Where(ase => ase.ActionId == actionId && ase.StepId == step.Id)
+                // Check if all required statuses for current step are complete
+                var requiredStatuses = await _context.Status
+                    .Where(s => s.StepId == currentStepId && s.IsRequired)
                     .ToListAsync();
+                
+                foreach (var status in requiredStatuses)
+                {
+                    var documentStatus = await _context.DocumentStatus
+                        .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == status.Id);
+                    
+                    if (documentStatus == null || !documentStatus.IsComplete)
+                        throw new InvalidOperationException($"Required status '{status.Title}' is not complete");
+                }
 
-                // Update document statuses
-                // foreach (var effect in affectedStatuses)
-                // {
-                //     var documentStatus = await _context.DocumentStatus
-                //         .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == effect.StatusId);
+                // Determine the next step based on OrderIndex
+                Step? nextStep;
+                
+                if (currentStep.NextStepId.HasValue)
+                {
+                    // Use the explicit next step reference
+                    nextStep = await _context.Steps.FindAsync(currentStep.NextStepId.Value);
+                    if (nextStep == null)
+                        throw new InvalidOperationException("Next step not found");
+                }
+                else
+                {
+                    // Find the next step by OrderIndex
+                    nextStep = await _context.Steps
+                        .Where(s => s.CircuitId == circuit.Id && s.OrderIndex > currentStep.OrderIndex)
+                        .OrderBy(s => s.OrderIndex)
+                        .FirstOrDefaultAsync();
+                    
+                    if (nextStep == null)
+                        throw new InvalidOperationException("No next step found in the workflow");
+                }
 
-                //     if (documentStatus == null)
-                //     {
-                //         documentStatus = new DocumentStatus
-                //         {
-                //             DocumentId = documentId,
-                //             StatusId = effect.StatusId,
-                //             IsComplete = false
-                //         };
-                //         _context.DocumentStatus.Add(documentStatus);
-                //     }
+                // Move to the next step
+                document.CurrentStepId = nextStep.Id;
+                document.CurrentStep = nextStep;
+                document.UpdatedAt = DateTime.UtcNow;
 
-                //     // Set status as complete based on action effect
-                //     documentStatus.IsComplete = effect.SetsComplete;
-                //     documentStatus.CompletedByUserId = userId;
-                //     documentStatus.CompletedAt = DateTime.UtcNow;
-                // }
+                // If next step is final, mark document as completed
+                if (nextStep.IsFinalStep)
+                {
+                    document.IsCircuitCompleted = true;
+                    document.Status = 2; // Completed
+                }
 
                 // Create history entry
-                var historyEntry = new DocumentCircuitHistory
+                _context.DocumentStepHistory.Add(new DocumentStepHistory
                 {
                     DocumentId = documentId,
-                    StepId = step.Id,
-                    ActionId = actionId,
-                    ProcessedByUserId = userId,
-                    ProcessedAt = DateTime.UtcNow,
-                    Comments = comments,
-                    IsApproved = isApproved
-                };
-                _context.DocumentCircuitHistory.Add(historyEntry);
+                    StepId = nextStep.Id,
+                    UserId = userId,
+                    TransitionDate = DateTime.UtcNow,
+                    Comments = comments
+                });
 
-                // Check if action is rejection
-                if (!isApproved)
+                // Initialize statuses for the new step
+                var nextStepStatuses = await _context.Status
+                    .Where(s => s.StepId == nextStep.Id)
+                    .ToListAsync();
+
+                foreach (var status in nextStepStatuses)
                 {
-                    document.Status = 3; // Rejected
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                    return true;
-                }
-
-                // Check if all required statuses are complete to advance
-                await _context.Entry(step).Collection(s => s.Statuses).LoadAsync();
-                var requiredStatuses = step.Statuses.Where(s => s.IsRequired).ToList();
-
-                var allComplete = true;
-                foreach (var requiredStatus in requiredStatuses)
-                {
-                    var docStatus = await _context.DocumentStatus
-                        .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == requiredStatus.Id);
-
-                    if (docStatus == null || !docStatus.IsComplete)
+                    var documentStatus = new DocumentStatus
                     {
-                        allComplete = false;
-                        break;
-                    }
-                }
-
-                // If all required statuses complete, advance to next step
-                if (allComplete)
-                {
-                    await AdvanceToNextStepAsync(document, userId, $"All required actions completed by {user.Username}");
+                        DocumentId = documentId,
+                        StatusId = status.Id,
+                        IsComplete = false
+                    };
+                    _context.DocumentStatus.Add(documentStatus);
                 }
 
                 await _context.SaveChangesAsync();
@@ -217,49 +214,13 @@ namespace DocManagementBackend.Services
             }
         }
 
-        public async Task<bool> MoveToNextStepAsync(int documentId, int currentStepId, int userId, string comments = "")
-        {
-            var document = await _context.Documents
-                .Include(d => d.CurrentStep)
-                .FirstOrDefaultAsync(d => d.Id == documentId);
-
-            if (document == null || document.CurrentStepId == null)
-                throw new KeyNotFoundException("Document not found or not in a workflow");
-
-            // Verify current step matches expected
-            if (document.CurrentStepId != currentStepId)
-                throw new InvalidOperationException("Document is not at the expected step");
-
-            // Get current step with its next step link
-            var currentStep = await _context.Steps
-                .FirstOrDefaultAsync(s => s.Id == currentStepId);
-
-            if (currentStep == null)
-                throw new KeyNotFoundException("Current step not found");
-
-            if (currentStep.NextStepId == null)
-                throw new InvalidOperationException("Current step does not have a next step defined");
-
-            // Move to next step using the linked NextStepId
-            document.CurrentStepId = currentStep.NextStepId;
-
-            // Add step history entry
-            _context.DocumentStepHistory.Add(new DocumentStepHistory
-            {
-                DocumentId = documentId,
-                StepId = document.CurrentStepId.Value,
-                UserId = userId,
-                TransitionDate = DateTime.UtcNow,
-                Comments = comments
-            });
-
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> CompleteDocumentStatusAsync(int documentId, int statusId, int userId, bool isComplete, string comments)
+        /// <summary>
+        /// Returns a document to the previous step unconditionally
+        /// </summary>
+        public async Task<bool> ReturnToPreviousStepAsync(int documentId, int userId, string comments = "")
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
+            
             try
             {
                 var document = await _context.Documents
@@ -267,39 +228,138 @@ namespace DocManagementBackend.Services
                     .Include(d => d.CurrentStep)
                     .FirstOrDefaultAsync(d => d.Id == documentId);
 
-                if (document == null)
-                    throw new KeyNotFoundException("Document not found.");
+                if (document == null || document.CurrentStepId == null)
+                    throw new KeyNotFoundException("Document not found or not in a workflow");
 
-                if (!document.CircuitId.HasValue)
-                    throw new InvalidOperationException("Document is not assigned to a circuit.");
+                var circuit = document.Circuit;
+                if (circuit == null)
+                    throw new InvalidOperationException("Document is not assigned to a circuit");
+
+                if (!circuit.AllowBacktrack)
+                    throw new InvalidOperationException("Backtracking is not allowed for this circuit");
+
+                var currentStep = document.CurrentStep;
+                if (currentStep == null)
+                    throw new InvalidOperationException("Current step not found");
+
+                // Determine the previous step
+                Step? previousStep;
+                
+                if (currentStep.PrevStepId.HasValue)
+                {
+                    // Use the explicit previous step reference
+                    previousStep = await _context.Steps.FindAsync(currentStep.PrevStepId.Value);
+                    if (previousStep == null)
+                        throw new InvalidOperationException("Previous step not found");
+                }
+                else
+                {
+                    // Find the previous step by OrderIndex
+                    previousStep = await _context.Steps
+                        .Where(s => s.CircuitId == circuit.Id && s.OrderIndex < currentStep.OrderIndex)
+                        .OrderByDescending(s => s.OrderIndex)
+                        .FirstOrDefaultAsync();
+                    
+                    if (previousStep == null)
+                        throw new InvalidOperationException("This is the first step; cannot go back further");
+                }
+
+                // Remove statuses from current step
+                var currentStatuses = await _context.DocumentStatus
+                    .Where(ds => ds.DocumentId == documentId && _context.Status.Any(s => s.Id == ds.StatusId && s.StepId == currentStep.Id))
+                    .ToListAsync();
+                
+                _context.DocumentStatus.RemoveRange(currentStatuses);
+
+                // Move back to previous step
+                document.CurrentStepId = previousStep.Id;
+                document.CurrentStep = previousStep;
+                document.UpdatedAt = DateTime.UtcNow;
+                
+                // If the document was completed and we're going back, it's no longer complete
+                if (document.IsCircuitCompleted)
+                {
+                    document.IsCircuitCompleted = false;
+                    document.Status = 1; // In Progress
+                }
+
+                // Create history entry
+                _context.DocumentStepHistory.Add(new DocumentStepHistory
+                {
+                    DocumentId = documentId,
+                    StepId = previousStep.Id,
+                    UserId = userId,
+                    TransitionDate = DateTime.UtcNow,
+                    Comments = comments
+                });
+
+                // Restore the document's previous statuses for this step
+                var previousStatuses = await _context.Status
+                    .Where(s => s.StepId == previousStep.Id)
+                    .ToListAsync();
+
+                // Try to find previous status completion data
+                var previousStatusHistory = await _context.DocumentCircuitHistory
+                    .Where(h => h.DocumentId == documentId && h.StepId == previousStep.Id && h.StatusId.HasValue)
+                    .OrderByDescending(h => h.ProcessedAt)
+                    .ToListAsync();
+
+                foreach (var status in previousStatuses)
+                {
+                    // Try to find if this status was previously completed
+                    var lastStatusUpdate = previousStatusHistory
+                        .FirstOrDefault(h => h.StatusId == status.Id);
+                    
+                    var documentStatus = new DocumentStatus
+                    {
+                        DocumentId = documentId,
+                        StatusId = status.Id,
+                        // Preserve previous completion state if available
+                        IsComplete = lastStatusUpdate?.IsApproved ?? false,
+                        CompletedByUserId = lastStatusUpdate?.ProcessedByUserId,
+                        CompletedAt = lastStatusUpdate?.ProcessedAt
+                    };
+                    
+                    _context.DocumentStatus.Add(documentStatus);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Updates the completion state of a document's status
+        /// </summary>
+        public async Task<bool> CompleteDocumentStatusAsync(int documentId, int statusId, int userId, bool isComplete, string comments = "")
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
+            {
+                var document = await _context.Documents
+                    .Include(d => d.CurrentStep)
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null || document.CurrentStepId == null)
+                    throw new KeyNotFoundException("Document not found or not in a workflow");
 
                 if (document.IsCircuitCompleted)
-                    throw new InvalidOperationException("Document workflow is already completed.");
+                    throw new InvalidOperationException("Document workflow is already completed");
 
-                if (document.CurrentStepId == null)
-                    throw new InvalidOperationException("Document does not have a current step in the workflow.");
-
-                // Get the status
+                // Get the status and verify it belongs to the current step
                 var status = await _context.Status.FindAsync(statusId);
                 if (status == null)
-                    throw new KeyNotFoundException("Status not found.");
+                    throw new KeyNotFoundException("Status not found");
 
-                // Verify the status belongs to the current step
                 if (status.StepId != document.CurrentStepId)
-                    throw new InvalidOperationException("The status must belong to the document's current step.");
-
-                // Verify the user has the appropriate role for the current step if required
-                // var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-                // if (user == null)
-                //     throw new KeyNotFoundException("User not found.");
-
-                // if (document.CurrentStep!.ResponsibleRoleId.HasValue &&
-                //     document.CurrentStep.ResponsibleRoleId != user.RoleId)
-                // {
-                //     var requiredRole = await _context.Roles.FindAsync(document.CurrentStep.ResponsibleRoleId.Value);
-                //     throw new UnauthorizedAccessException(
-                //         $"Only users with role '{requiredRole?.RoleName}' can update statuses in this step.");
-                // }
+                    throw new InvalidOperationException("Status does not belong to the document's current step");
 
                 // Get or create the document status
                 var documentStatus = await _context.DocumentStatus
@@ -324,59 +384,21 @@ namespace DocManagementBackend.Services
                     documentStatus.CompletedAt = isComplete ? DateTime.UtcNow : null;
                 }
 
-                // Create document history record
-                var history = new DocumentCircuitHistory
+                // Create history entry
+                var historyEntry = new DocumentCircuitHistory
                 {
                     DocumentId = documentId,
                     StepId = document.CurrentStepId.Value,
                     StatusId = statusId,
                     ProcessedByUserId = userId,
                     ProcessedAt = DateTime.UtcNow,
-                    // Comments = comments,
-                    IsApproved = true
+                    Comments = comments,
+                    IsApproved = isComplete
                 };
-
-                _context.DocumentCircuitHistory.Add(history);
-
-                // If all required statuses are complete, need to check if we should automatically
-                // update the document status
-                if (isComplete)
-                {
-                    // Check if all required statuses are now complete
-                    var requiredStatuses = await _context.Status
-                        .Where(s => s.StepId == document.CurrentStepId && s.IsRequired)
-                        .ToListAsync();
-
-                    bool allComplete = true;
-
-                    foreach (var reqStatus in requiredStatuses)
-                    {
-                        if (reqStatus.Id == statusId)
-                            continue; // We're setting this one complete
-
-                        var docStatus = await _context.DocumentStatus
-                            .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == reqStatus.Id);
-
-                        if (docStatus == null || !docStatus.IsComplete)
-                        {
-                            allComplete = false;
-                            break;
-                        }
-                    }
-
-                    // If all required statuses are complete, we can update the document status
-                    if (allComplete && requiredStatuses.Count > 0)
-                    {
-                        // This is just setting a flag that all requirements are met
-                        // It does not automatically advance the document to the next step
-                        document.Status = 1; // In progress and ready to move
-                        document.UpdatedAt = DateTime.UtcNow;
-                    }
-                }
+                _context.DocumentCircuitHistory.Add(historyEntry);
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-
                 return true;
             }
             catch
@@ -386,127 +408,71 @@ namespace DocManagementBackend.Services
             }
         }
 
-        private async Task AdvanceToNextStepAsync(Document document, int userId, string comments)
-        {
-            var currentStep = document.CurrentStep;
-            if (currentStep == null)
-                throw new InvalidOperationException("Current step not found");
-
-            // If final step, complete the circuit
-            if (currentStep.IsFinalStep)
-            {
-                document.IsCircuitCompleted = true;
-                document.Status = 2; // Completed
-
-                // Create history entry for completion
-                var completionHistory = new DocumentCircuitHistory
-                {
-                    DocumentId = document.Id,
-                    StepId = currentStep.Id,
-                    ProcessedByUserId = userId,
-                    ProcessedAt = DateTime.UtcNow,
-                    Comments = "Circuit completed",
-                    IsApproved = true
-                };
-                _context.DocumentCircuitHistory.Add(completionHistory);
-
-                return;
-            }
-
-            // Find next step based on circuit flow
-            var circuit = document.Circuit;
-            Step? nextStep;
-
-            if (circuit!.HasOrderedFlow && currentStep.NextStepId.HasValue)
-            {
-                // For ordered flow, use the explicitly defined next step
-                nextStep = await _context.Steps.FindAsync(currentStep.NextStepId.Value);
-                if (nextStep == null)
-                    throw new InvalidOperationException("Next step not found");
-            }
-            else
-            {
-                // For unordered flow, find the next appropriate step
-                // This implementation would depend on the business rules
-                // Here's a simple example that just takes the next by order index
-                nextStep = await _context.Steps
-                    .Where(s => s.CircuitId == circuit.Id && s.OrderIndex > currentStep.OrderIndex)
-                    .OrderBy(s => s.OrderIndex)
-                    .FirstOrDefaultAsync();
-
-                if (nextStep == null)
-                    throw new InvalidOperationException("No next step found for unordered flow");
-            }
-
-            // Update document's current step
-            document.CurrentStepId = nextStep.Id;
-            document.CurrentStep = nextStep;
-
-            // Create history entry for step transition
-            var transitionHistory = new DocumentCircuitHistory
-            {
-                DocumentId = document.Id,
-                StepId = nextStep.Id,
-                ProcessedByUserId = userId,
-                ProcessedAt = DateTime.UtcNow,
-                Comments = comments,
-                IsApproved = true
-            };
-            _context.DocumentCircuitHistory.Add(transitionHistory);
-
-            // Initialize new step's statuses
-            var stepStatuses = await _context.Status
-                .Where(s => s.StepId == nextStep.Id)
-                .ToListAsync();
-
-            foreach (var status in stepStatuses)
-            {
-                var documentStatus = new DocumentStatus
-                {
-                    DocumentId = document.Id,
-                    StatusId = status.Id,
-                    IsComplete = false
-                };
-                _context.DocumentStatus.Add(documentStatus);
-            }
-        }
-
-        public async Task<bool> ReturnToPreviousStepAsync(int documentId, int userId, string comments = "")
+        /// <summary>
+        /// Checks if a document can be moved to the next step (all required statuses complete)
+        /// </summary>
+        public async Task<bool> CanMoveToNextStepAsync(int documentId)
         {
             var document = await _context.Documents
-                .Include(d => d.CurrentStep)
                 .FirstOrDefaultAsync(d => d.Id == documentId);
 
-            if (document == null || document.CurrentStepId == null)
-                throw new KeyNotFoundException("Document not found or not in a workflow");
+            if (document == null || document.CurrentStepId == null || document.IsCircuitCompleted)
+                return false;
 
-            // Get current step with its previous step link
-            var currentStep = await _context.Steps
-                .FirstOrDefaultAsync(s => s.Id == document.CurrentStepId.Value);
+            // Get all required statuses for the current step
+            var requiredStatuses = await _context.Status
+                .Where(s => s.StepId == document.CurrentStepId && s.IsRequired)
+                .ToListAsync();
 
-            if (currentStep == null)
-                throw new KeyNotFoundException("Current step not found");
+            if (!requiredStatuses.Any())
+                return true;
 
-            if (currentStep.PrevStepId == null)
-                throw new InvalidOperationException("Current step does not have a previous step defined");
-
-            // Move to previous step using the linked PrevStepId
-            document.CurrentStepId = currentStep.PrevStepId;
-
-            // Add step history entry
-            _context.DocumentStepHistory.Add(new DocumentStepHistory
+            // Check if all required statuses are complete
+            foreach (var status in requiredStatuses)
             {
-                DocumentId = documentId,
-                StepId = document.CurrentStepId.Value,
-                UserId = userId,
-                TransitionDate = DateTime.UtcNow,
-                Comments = comments
-            });
+                var documentStatus = await _context.DocumentStatus
+                    .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == status.Id);
 
-            await _context.SaveChangesAsync();
+                if (documentStatus == null || !documentStatus.IsComplete)
+                    return false;
+            }
+
             return true;
         }
 
+        /// <summary>
+        /// Checks if a document can be returned to the previous step
+        /// </summary>
+        public async Task<bool> CanReturnToPreviousStepAsync(int documentId)
+        {
+            var document = await _context.Documents
+                .Include(d => d.Circuit)
+                .Include(d => d.CurrentStep)
+                .FirstOrDefaultAsync(d => d.Id == documentId);
+
+            if (document == null || document.CurrentStepId == null || document.Circuit == null)
+                return false;
+
+            // Circuit must allow backtracking
+            if (!document.Circuit.AllowBacktrack)
+                return false;
+
+            var currentStep = document.CurrentStep;
+            if (currentStep == null)
+                return false;
+
+            // There must be a previous step (either via PrevStepId or by OrderIndex)
+            if (currentStep.PrevStepId.HasValue)
+                return true;
+
+            // Check if there's any step with a lower OrderIndex
+            return await _context.Steps
+                .AnyAsync(s => s.CircuitId == document.Circuit.Id && s.OrderIndex < currentStep.OrderIndex);
+        }
+
+        /// <summary>
+        /// Gets the document's workflow history
+        /// </summary>
         public async Task<IEnumerable<DocumentCircuitHistory>> GetDocumentCircuitHistory(int documentId)
         {
             return await _context.DocumentCircuitHistory
@@ -517,6 +483,179 @@ namespace DocManagementBackend.Services
                 .Include(h => h.Status)
                 .OrderByDescending(h => h.ProcessedAt)
                 .ToListAsync();
+        }
+
+        /// <summary>
+        /// Processes an action for a document in its current step
+        /// </summary>
+        public async Task<bool> ProcessActionAsync(int documentId, int actionId, int userId, string comments = "", bool isApproved = true)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var document = await _context.Documents
+                    .Include(d => d.Circuit)
+                    .Include(d => d.CurrentStep)
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null || document.CircuitId == null || document.CurrentStepId == null)
+                    throw new InvalidOperationException("Document not assigned to circuit or step");
+
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user == null)
+                    throw new KeyNotFoundException($"User ID {userId} not found");
+
+                var action = await _context.Actions.FindAsync(actionId);
+                if (action == null)
+                    throw new KeyNotFoundException($"Action ID {actionId} not found");
+
+                // Verify the action is valid for the current step
+                var currentStep = document.CurrentStep;
+                if (currentStep == null)
+                    throw new InvalidOperationException("Current step not found");
+
+                var stepAction = await _context.StepActions
+                    .FirstOrDefaultAsync(sa => sa.StepId == currentStep.Id && sa.ActionId == actionId);
+
+                if (stepAction == null)
+                    throw new InvalidOperationException($"Action ID {actionId} not valid for step ID {currentStep.Id}");
+
+                // Create history entry
+                var historyEntry = new DocumentCircuitHistory
+                {
+                    DocumentId = documentId,
+                    StepId = currentStep.Id,
+                    ActionId = actionId,
+                    ProcessedByUserId = userId,
+                    ProcessedAt = DateTime.UtcNow,
+                    Comments = comments,
+                    IsApproved = isApproved
+                };
+                _context.DocumentCircuitHistory.Add(historyEntry);
+
+                // Handle rejection if the action is not approved
+                if (!isApproved)
+                {
+                    document.Status = 3; // Rejected
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return true;
+                }
+
+                // Find which statuses this action affects
+                var affectedStatuses = await _context.ActionStatusEffects
+                    .Where(ase => ase.ActionId == actionId && ase.StepId == currentStep.Id)
+                    .ToListAsync();
+
+                // Update the affected statuses
+                foreach (var effect in affectedStatuses)
+                {
+                    var documentStatus = await _context.DocumentStatus
+                        .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == effect.StatusId);
+
+                    if (documentStatus == null)
+                    {
+                        documentStatus = new DocumentStatus
+                        {
+                            DocumentId = documentId,
+                            StatusId = effect.StatusId,
+                            IsComplete = effect.SetsComplete,
+                            CompletedByUserId = effect.SetsComplete ? userId : null,
+                            CompletedAt = effect.SetsComplete ? DateTime.UtcNow : null
+                        };
+                        _context.DocumentStatus.Add(documentStatus);
+                    }
+                    else
+                    {
+                        documentStatus.IsComplete = effect.SetsComplete;
+                        documentStatus.CompletedByUserId = effect.SetsComplete ? userId : null;
+                        documentStatus.CompletedAt = effect.SetsComplete ? DateTime.UtcNow : null;
+                    }
+                }
+
+                // Check if we should auto-advance to the next step
+                bool canMoveNext = await CanMoveToNextStepAsync(documentId);
+                if (canMoveNext && action.AutoAdvance)
+                {
+                    await MoveToNextStepAsync(documentId, currentStep.Id, userId, $"Auto-advanced by action: {action.Title}");
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Deletes a document and all its related data including workflow history
+        /// </summary>
+        public async Task<bool> DeleteDocumentAsync(int documentId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
+            {
+                // Delete related records in DocumentStepHistory first
+                var stepHistoryRecords = await _context.DocumentStepHistory
+                    .Where(dsh => dsh.DocumentId == documentId)
+                    .ToListAsync();
+                    
+                if (stepHistoryRecords.Any())
+                {
+                    _context.DocumentStepHistory.RemoveRange(stepHistoryRecords);
+                    await _context.SaveChangesAsync();
+                }
+                
+                // Delete related records in DocumentCircuitHistory
+                var circuitHistoryRecords = await _context.DocumentCircuitHistory
+                    .Where(dch => dch.DocumentId == documentId)
+                    .ToListAsync();
+                    
+                if (circuitHistoryRecords.Any())
+                {
+                    _context.DocumentCircuitHistory.RemoveRange(circuitHistoryRecords);
+                    await _context.SaveChangesAsync();
+                }
+                
+                // Delete related document statuses
+                var documentStatuses = await _context.DocumentStatus
+                    .Where(ds => ds.DocumentId == documentId)
+                    .ToListAsync();
+                    
+                if (documentStatuses.Any())
+                {
+                    _context.DocumentStatus.RemoveRange(documentStatuses);
+                    await _context.SaveChangesAsync();
+                }
+                
+                // Get the document itself
+                var document = await _context.Documents.FindAsync(documentId);
+                if (document == null)
+                {
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+                
+                // Finally delete the document
+                _context.Documents.Remove(document);
+                await _context.SaveChangesAsync();
+                
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 }

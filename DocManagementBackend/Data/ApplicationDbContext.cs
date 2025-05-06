@@ -66,6 +66,25 @@ namespace DocManagementBackend.Data
                 .HasForeignKey(d => d.ProcessedByUserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // DocumentStepHistory relationships
+            modelBuilder.Entity<DocumentStepHistory>()
+                .HasOne(d => d.Document)
+                .WithMany()
+                .HasForeignKey(d => d.DocumentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<DocumentStepHistory>()
+                .HasOne(d => d.Step)
+                .WithMany()
+                .HasForeignKey(d => d.StepId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<DocumentStepHistory>()
+                .HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Status relationships
             modelBuilder.Entity<Status>()
                 .HasOne(s => s.Step)

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using DocManagementBackend.Mappings;
+using DocManagementBackend.Services;
 
 namespace DocManagementBackend.Controllers
 {
@@ -14,7 +15,13 @@ namespace DocManagementBackend.Controllers
     public class DocumentsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        public DocumentsController(ApplicationDbContext context) { _context = context; }
+        private readonly DocumentWorkflowService _workflowService;
+        
+        public DocumentsController(ApplicationDbContext context, DocumentWorkflowService workflowService) 
+        { 
+            _context = context;
+            _workflowService = workflowService;
+        }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDocuments()
@@ -370,30 +377,11 @@ namespace DocManagementBackend.Controllers
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User Not Allowed To do this action...!");
 
-            // Begin a transaction to ensure all operations either succeed or fail together
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
                 var document = await _context.Documents.FindAsync(id);
                 if (document == null)
                     return NotFound("Document not found!");
-
-                // Delete related records in DocumentCircuitHistory
-                var historyRecords = await _context.DocumentCircuitHistory
-                    .Where(dch => dch.DocumentId == id)
-                    .ToListAsync();
-
-                if (historyRecords.Any())
-                    _context.DocumentCircuitHistory.RemoveRange(historyRecords);
-
-                // Delete related records in DocumentStatus
-                var statusRecords = await _context.DocumentStatus
-                    .Where(ds => ds.DocumentId == id)
-                    .ToListAsync();
-
-                if (statusRecords.Any())
-                    _context.DocumentStatus.RemoveRange(statusRecords);
 
                 // Update the document type counter
                 var type = await _context.DocumentTypes.FindAsync(document.TypeId);
@@ -412,20 +400,17 @@ namespace DocManagementBackend.Controllers
                     Description = $"{user.Username} has deleted the document {document.DocumentKey}"
                 };
                 _context.LogHistories.Add(logEntry);
-
-                // Delete the document
-                _context.Documents.Remove(document);
                 await _context.SaveChangesAsync();
 
-                // Commit the transaction
-                await transaction.CommitAsync();
+                // Use the workflow service to delete the document and all related records
+                bool success = await _workflowService.DeleteDocumentAsync(id);
+                if (!success)
+                    return NotFound("Document not found or could not be deleted");
 
                 return Ok("Document deleted!");
             }
             catch (Exception ex)
             {
-                // Roll back the transaction on error
-                await transaction.RollbackAsync();
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }

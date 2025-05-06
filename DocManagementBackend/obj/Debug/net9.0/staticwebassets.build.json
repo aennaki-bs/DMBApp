@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "NEUagst6ypMIahZr7FdrXlIVKSJnR/LmdFXAF6BjaBE=",
+  "Hash": "kywXsTgzUNvN2/z+R39oFuD2rJ893X4HmYVJyUAAys4=",
   "Source": "DocManagementBackend",
   "BasePath": "_content/DocManagementBackend",
   "Mode": "Default",
@@ -99,6 +99,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\profile\\aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg"
+    },
+    {
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
+      "SourceId": "DocManagementBackend",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "BasePath": "_content/DocManagementBackend",
+      "RelativePath": "images/profile/ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "k21hmn3itc",
+      "Integrity": "rGHPwM3/oT5SDK3JhjMXt82BeI9hDHJy8UEauKvtqA0=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg"
     },
     {
       "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
@@ -574,6 +595,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-yzgfBYzMYYkKmqYTUAmxhvoa66lApX+DDw+AnlKMM78="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4442"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"rGHPwM3/oT5SDK3JhjMXt82BeI9hDHJy8UEauKvtqA0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 06 May 2025 12:15:40 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-rGHPwM3/oT5SDK3JhjMXt82BeI9hDHJy8UEauKvtqA0="
+        }
+      ]
+    },
+    {
+      "Route": "images/profile/ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.k21hmn3itc.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4442"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"rGHPwM3/oT5SDK3JhjMXt82BeI9hDHJy8UEauKvtqA0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 06 May 2025 12:15:40 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "k21hmn3itc"
+        },
+        {
+          "Name": "label",
+          "Value": "images/profile/ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-rGHPwM3/oT5SDK3JhjMXt82BeI9hDHJy8UEauKvtqA0="
         }
       ]
     },

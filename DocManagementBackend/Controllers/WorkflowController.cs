@@ -618,6 +618,89 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpGet("document/{documentId}/workflow-navigation")]
+        public async Task<ActionResult<DocumentNavigationDto>> GetDocumentWorkflowNavigation(int documentId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            try
+            {
+                var document = await _context.Documents
+                    .Include(d => d.CurrentStep)
+                    .Include(d => d.Circuit)
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null)
+                    return NotFound("Document not found.");
+
+                if (document.CurrentStepId == null || document.CircuitId == null)
+                    return BadRequest("Document is not in a workflow.");
+
+                var canMoveNext = await _workflowService.CanMoveToNextStepAsync(documentId);
+                var canGoBack = await _workflowService.CanReturnToPreviousStepAsync(documentId);
+                
+                // Get the sequence of steps in this circuit for visualization
+                var circuitSteps = await _context.Steps
+                    .Where(s => s.CircuitId == document.CircuitId)
+                    .OrderBy(s => s.OrderIndex)
+                    .Select(s => new StepInfoDto 
+                    { 
+                        StepId = s.Id,
+                        Title = s.Title,
+                        OrderIndex = s.OrderIndex,
+                        IsCurrent = s.Id == document.CurrentStepId,
+                        IsFinalStep = s.IsFinalStep
+                    })
+                    .ToListAsync();
+
+                // Find the previous and next steps based on the OrderIndex
+                var currentStepIndex = circuitSteps.FindIndex(s => s.StepId == document.CurrentStepId);
+                
+                StepInfoDto? previousStep = null;
+                StepInfoDto? nextStep = null;
+                
+                if (currentStepIndex > 0)
+                    previousStep = circuitSteps[currentStepIndex - 1];
+                
+                if (currentStepIndex < circuitSteps.Count - 1)
+                    nextStep = circuitSteps[currentStepIndex + 1];
+
+                var result = new DocumentNavigationDto
+                {
+                    DocumentId = documentId,
+                    CircuitId = document.CircuitId.Value,
+                    CircuitTitle = document.Circuit?.Title ?? "Unknown",
+                    CurrentStepId = document.CurrentStepId.Value,
+                    CurrentStepTitle = document.CurrentStep?.Title ?? "Unknown",
+                    Steps = circuitSteps,
+                    CanMoveToNextStep = canMoveNext,
+                    CanReturnToPreviousStep = canGoBack,
+                    PreviousStepId = previousStep?.StepId,
+                    PreviousStepTitle = previousStep?.Title,
+                    NextStepId = nextStep?.StepId,
+                    NextStepTitle = nextStep?.Title,
+                    IsComplete = document.IsCircuitCompleted
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         private string GetStatusText(int status)
         {
             return status switch
@@ -629,5 +712,32 @@ namespace DocManagementBackend.Controllers
                 _ => "Unknown"
             };
         }
+    }
+
+    // Data Transfer Objects
+    public class DocumentNavigationDto
+    {
+        public int DocumentId { get; set; }
+        public int CircuitId { get; set; }
+        public string CircuitTitle { get; set; } = string.Empty;
+        public int CurrentStepId { get; set; }
+        public string CurrentStepTitle { get; set; } = string.Empty;
+        public List<StepInfoDto> Steps { get; set; } = new List<StepInfoDto>();
+        public bool CanMoveToNextStep { get; set; }
+        public bool CanReturnToPreviousStep { get; set; }
+        public int? PreviousStepId { get; set; }
+        public string? PreviousStepTitle { get; set; }
+        public int? NextStepId { get; set; }
+        public string? NextStepTitle { get; set; }
+        public bool IsComplete { get; set; }
+    }
+
+    public class StepInfoDto
+    {
+        public int StepId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public int OrderIndex { get; set; }
+        public bool IsCurrent { get; set; }
+        public bool IsFinalStep { get; set; }
     }
 }

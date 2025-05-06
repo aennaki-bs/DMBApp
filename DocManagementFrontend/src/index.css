@@ -1,0 +1,265 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme variables */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5% 64.9%;
+    --radius: 0.4rem;
+
+    /* Sidebar variables for light mode */
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-primary: 222.2 47.4% 11.2%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-secondary: 210 40% 98%;
+    --sidebar-secondary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-muted: 215.4 16.3% 46.9%;
+    --sidebar-muted-foreground: 215.4 16.3% 56.9%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-destructive: 0 84.2% 60.2%;
+    --sidebar-destructive-foreground: 210 40% 98%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-input: 214.3 31.8% 91.4%;
+    --sidebar-ring: 215.4 16.3% 46.9%;
+    --sidebar-radius: 0.4rem;
+
+    /* Document UI specific variables */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+  }
+
+  .dark {
+    /* Dark theme variables */
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.6% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 72.2% 50.6%;
+
+    /* Sidebar variables for dark mode */
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-secondary: 222.2 47.4% 11.2%;
+    --sidebar-secondary-foreground: 210 40% 98%;
+    --sidebar-muted: 210 40% 98%;
+    --sidebar-muted-foreground: 215.4 16.3% 56.9%;
+    --sidebar-accent: 222.2 47.4% 11.2%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-destructive: 0 62.8% 30.6%;
+    --sidebar-destructive-foreground: 210 40% 98%;
+    --sidebar-border: 214.3 31.8% 9.1%;
+    --sidebar-input: 214.3 31.8% 9.1%;
+    --sidebar-ring: 222.2 84% 4.9%;
+    --sidebar-radius: 0.4rem;
+  }
+
+  /* Improved custom scrollbar for the registration form */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #1e2430;
+    border-radius: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3b82f6;
+    border-radius: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #2563eb;
+  }
+
+  /* HTML and Body */
+  html {
+    overflow-x: hidden;
+    height: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    -ms-overflow-style: none;
+    height: 100%;
+    min-height: 100vh;
+  }
+
+  /* Hide scrollbar for body on the registration page */
+  body::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+    font-size: 14px;
+  }
+}
+
+/* Global custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.2);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) rgba(30, 41, 59, 0.2);
+}
+
+/* Layout utility classes */
+@layer components {
+  .glass-card {
+    @apply bg-gradient-to-b from-[#0a1033] to-[#0d1541] border border-blue-900/30 backdrop-blur-md shadow-md rounded-lg;
+  }
+
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  .flex-col-center {
+    @apply flex flex-col items-center justify-center;
+  }
+
+  .input-dark {
+    @apply bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md text-sm h-9;
+  }
+
+  .btn-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-md text-sm py-1.5 px-3;
+  }
+
+  /* Responsive padding utility */
+  .responsive-padding {
+    @apply px-2 sm:px-3 md:px-4 py-2 sm:py-3;
+  }
+
+  /* Container utility with max-width constraints */
+  .container-fluid {
+    @apply w-full max-w-7xl mx-auto px-2 sm:px-3 lg:px-4;
+  }
+
+  /* Compact card styling */
+  .compact-card {
+    @apply p-2 rounded-lg border border-blue-900/30 bg-[#0a1033]/90;
+  }
+
+  /* Compact form elements */
+  .form-label {
+    @apply text-xs font-medium text-gray-300 mb-1;
+  }
+
+  .form-input {
+    @apply h-8 text-sm px-2 bg-[#0d1541]/70 border-blue-900/50;
+  }
+
+  /* Scrollbar classes */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-thumb-blue-600\/20 {
+    scrollbar-color: rgba(37, 99, 235, 0.2) transparent;
+  }
+
+  .scrollbar-track-blue-900\/10 {
+    scrollbar-track-color: rgba(30, 58, 138, 0.1);
+  }
+
+  /* New utility classes for app-specific use cases */
+  .overflow-x-auto-no-scrollbar {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .overflow-x-auto-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Step form animations */
+.animation-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.5;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

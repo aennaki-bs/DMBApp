@@ -34,6 +34,9 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("AutoAdvance")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -268,6 +271,41 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("DocumentStatus");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.DocumentStepHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StepId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TransitionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("StepId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DocumentStepHistory");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.DocumentType", b =>
@@ -849,6 +887,33 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Document");
 
                     b.Navigation("Status");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.DocumentStepHistory", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Document", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.Step", "Step")
+                        .WithMany()
+                        .HasForeignKey("StepId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("Step");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
