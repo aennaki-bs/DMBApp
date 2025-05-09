@@ -37,6 +37,8 @@ export function DeleteStatusDialog({
       // Update to use new Status API endpoint
       await api.delete(`/Status/${status.statusId}`);
       toast.success("Status deleted successfully");
+      
+      // Call onSuccess and close the dialog
       onSuccess();
       onOpenChange(false);
     } catch (error) {

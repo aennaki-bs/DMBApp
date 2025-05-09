@@ -1,10 +1,14 @@
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import circuitService from '@/services/circuitService';
 import { useAuth } from '@/context/AuthContext';
 import { DocumentStatus } from '@/models/documentCircuit';
 import { useStepStatuses } from '@/hooks/useStepStatuses';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { Plus, AlertCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { StepStatusesHeader } from './step-statuses/StepStatusesHeader';
 import { StepStatusesTableContent } from './step-statuses/StepStatusesTableContent';
@@ -15,6 +19,7 @@ export default function StepStatusesPage() {
   const { circuitId, stepId } = useParams<{ circuitId: string; stepId: string }>();
   const { user } = useAuth();
   const isSimpleUser = user?.role === 'SimpleUser';
+  const queryClient = useQueryClient();
   
   const [apiError, setApiError] = useState('');
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -25,7 +30,8 @@ export default function StepStatusesPage() {
   const { 
     data: circuit,
     isLoading: isCircuitLoading,
-    isError: isCircuitError
+    isError: isCircuitError,
+    refetch: refetchCircuit
   } = useQuery({
     queryKey: ['circuit', circuitId],
     queryFn: () => circuitService.getCircuitById(Number(circuitId)),
@@ -36,7 +42,8 @@ export default function StepStatusesPage() {
   const {
     data: steps = [],
     isLoading: isStepsLoading,
-    isError: isStepsError
+    isError: isStepsError,
+    refetch: refetchSteps
   } = useQuery({
     queryKey: ['circuit-steps', circuitId],
     queryFn: () => circuitService.getCircuitDetailsByCircuitId(Number(circuitId)),
@@ -53,6 +60,31 @@ export default function StepStatusesPage() {
     isError: isStatusesError,
     refetch: refetchStatuses
   } = useStepStatuses(Number(stepId));
+
+  // Handler to refresh all data after changes
+  const handleRefreshData = async () => {
+    try {
+      // Invalidate all related queries to force a refresh
+      await queryClient.invalidateQueries({ queryKey: ['circuit', circuitId] });
+      await queryClient.invalidateQueries({ queryKey: ['circuit-steps', circuitId] });
+      await queryClient.invalidateQueries({ queryKey: ['step-statuses', stepId] });
+      
+      // Refetch the data
+      await refetchCircuit();
+      await refetchSteps();
+      await refetchStatuses();
+      
+      toast.success('Data refreshed successfully');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast.error('Failed to refresh data');
+    }
+  };
+
+  // Handle successful operations
+  const handleOperationSuccess = () => {
+    handleRefreshData();
+  };
 
   // Handler logic for add/edit/delete
   const handleAddStatus = () => {
@@ -102,15 +134,50 @@ export default function StepStatusesPage() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4 overflow-x-hidden">
-      <StepStatusesHeader
-        circuitId={circuitId!}
-        circuitTitle={circuit.title}
-        stepTitle={currentStep.title}
-        circuitDetailKey={currentStep.circuitDetailKey}
-        isSimpleUser={isSimpleUser}
-        onAddStatus={handleAddStatus}
-        isCircuitActive={circuit.isActive}
-      />
+      <div className="flex justify-between items-start">
+        <StepStatusesHeader
+          circuitId={circuitId!}
+          circuitTitle={circuit.title}
+          stepTitle={currentStep.title}
+          circuitDetailKey={currentStep.circuitDetailKey}
+          isCircuitActive={circuit.isActive}
+        />
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshData}
+            className="border-blue-700/50 hover:bg-blue-900/20"
+          >
+            Refresh
+          </Button>
+          
+          {!isSimpleUser && (
+            circuit.isActive ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      className="bg-blue-500/50 text-blue-200 cursor-not-allowed"
+                      disabled>
+                      <Plus className="mr-2 h-4 w-4" /> Add Status
+                      <AlertCircle className="ml-2 h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Cannot add statuses to active circuit</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                      onClick={handleAddStatus}>
+                <Plus className="mr-2 h-4 w-4" /> Add Status
+              </Button>
+            )
+          )}
+        </div>
+      </div>
       <StepStatusesTableContent
         statuses={statuses}
         onEdit={handleEditStatus}
@@ -126,7 +193,7 @@ export default function StepStatusesPage() {
         deleteDialogOpen={deleteDialogOpen}
         setDeleteDialogOpen={setDeleteDialogOpen}
         selectedStatus={selectedStatus}
-        onSuccess={refetchStatuses}
+        onSuccess={handleOperationSuccess}
         stepId={Number(stepId)}
       />
     </div>

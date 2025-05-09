@@ -39,9 +39,7 @@ namespace DocManagementBackend.Migrations
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Descriptif = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CrdCounter = table.Column<int>(type: "int", nullable: false),
-                    HasOrderedFlow = table.Column<bool>(type: "bit", nullable: false),
-                    AllowBacktrack = table.Column<bool>(type: "bit", nullable: false)
+                    CrdCounter = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -96,6 +94,32 @@ namespace DocManagementBackend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Status",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StatusKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CircuitId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsRequired = table.Column<bool>(type: "bit", nullable: false),
+                    IsInitial = table.Column<bool>(type: "bit", nullable: false),
+                    IsFinal = table.Column<bool>(type: "bit", nullable: false),
+                    IsFlexible = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Status", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Status_Circuits_CircuitId",
+                        column: x => x.CircuitId,
+                        principalTable: "Circuits",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SubTypes",
                 columns: table => new
                 {
@@ -118,48 +142,6 @@ namespace DocManagementBackend.Migrations
                         principalTable: "DocumentTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Steps",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StepKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CircuitId = table.Column<int>(type: "int", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Descriptif = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrderIndex = table.Column<int>(type: "int", nullable: false),
-                    ResponsibleRoleId = table.Column<int>(type: "int", nullable: true),
-                    NextStepId = table.Column<int>(type: "int", nullable: true),
-                    PrevStepId = table.Column<int>(type: "int", nullable: true),
-                    IsFinalStep = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Steps", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Steps_Circuits_CircuitId",
-                        column: x => x.CircuitId,
-                        principalTable: "Circuits",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Steps_Roles_ResponsibleRoleId",
-                        column: x => x.ResponsibleRoleId,
-                        principalTable: "Roles",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Steps_Steps_NextStepId",
-                        column: x => x.NextStepId,
-                        principalTable: "Steps",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Steps_Steps_PrevStepId",
-                        column: x => x.PrevStepId,
-                        principalTable: "Steps",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -205,108 +187,37 @@ namespace DocManagementBackend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Status",
+                name: "Steps",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    StatusKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StepId = table.Column<int>(type: "int", nullable: false),
+                    StepKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CircuitId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsRequired = table.Column<bool>(type: "bit", nullable: false),
-                    IsComplete = table.Column<bool>(type: "bit", nullable: false)
+                    Descriptif = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CurrentStatusId = table.Column<int>(type: "int", nullable: false),
+                    NextStatusId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Status", x => x.Id);
+                    table.PrimaryKey("PK_Steps", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Status_Steps_StepId",
-                        column: x => x.StepId,
-                        principalTable: "Steps",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "StepActions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StepId = table.Column<int>(type: "int", nullable: false),
-                    ActionId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_StepActions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_StepActions_Actions_ActionId",
-                        column: x => x.ActionId,
-                        principalTable: "Actions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_StepActions_Steps_StepId",
-                        column: x => x.StepId,
-                        principalTable: "Steps",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Documents",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedByUserId = table.Column<int>(type: "int", nullable: false),
-                    TypeId = table.Column<int>(type: "int", nullable: false),
-                    SubTypeId = table.Column<int>(type: "int", nullable: true),
-                    CurrentStepId = table.Column<int>(type: "int", nullable: true),
-                    CircuitId = table.Column<int>(type: "int", nullable: true),
-                    IsCircuitCompleted = table.Column<bool>(type: "bit", nullable: false),
-                    DocumentKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DocumentAlias = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    DocDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LigneCouter = table.Column<int>(type: "int", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Documents", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Documents_Circuits_CircuitId",
+                        name: "FK_Steps_Circuits_CircuitId",
                         column: x => x.CircuitId,
                         principalTable: "Circuits",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Documents_DocumentTypes_TypeId",
-                        column: x => x.TypeId,
-                        principalTable: "DocumentTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Documents_Steps_CurrentStepId",
-                        column: x => x.CurrentStepId,
-                        principalTable: "Steps",
+                        name: "FK_Steps_Status_CurrentStatusId",
+                        column: x => x.CurrentStatusId,
+                        principalTable: "Status",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Documents_SubTypes_SubTypeId",
-                        column: x => x.SubTypeId,
-                        principalTable: "SubTypes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Documents_Users_CreatedByUserId",
-                        column: x => x.CreatedByUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        name: "FK_Steps_Status_NextStatusId",
+                        column: x => x.NextStatusId,
+                        principalTable: "Status",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -355,13 +266,100 @@ namespace DocManagementBackend.Migrations
                         name: "FK_ActionStatusEffects_Status_StatusId",
                         column: x => x.StatusId,
                         principalTable: "Status",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ActionStatusEffects_Steps_StepId",
                         column: x => x.StepId,
                         principalTable: "Steps",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Documents",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: false),
+                    TypeId = table.Column<int>(type: "int", nullable: false),
+                    SubTypeId = table.Column<int>(type: "int", nullable: true),
+                    CurrentStatusId = table.Column<int>(type: "int", nullable: true),
+                    CurrentStepId = table.Column<int>(type: "int", nullable: true),
+                    CircuitId = table.Column<int>(type: "int", nullable: true),
+                    IsCircuitCompleted = table.Column<bool>(type: "bit", nullable: false),
+                    DocumentKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DocumentAlias = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    DocDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LigneCouter = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Documents", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Documents_Circuits_CircuitId",
+                        column: x => x.CircuitId,
+                        principalTable: "Circuits",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Documents_DocumentTypes_TypeId",
+                        column: x => x.TypeId,
+                        principalTable: "DocumentTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Documents_Status_CurrentStatusId",
+                        column: x => x.CurrentStatusId,
+                        principalTable: "Status",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Documents_Steps_CurrentStepId",
+                        column: x => x.CurrentStepId,
+                        principalTable: "Steps",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Documents_SubTypes_SubTypeId",
+                        column: x => x.SubTypeId,
+                        principalTable: "SubTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Documents_Users_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StepActions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StepId = table.Column<int>(type: "int", nullable: false),
+                    ActionId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StepActions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StepActions_Actions_ActionId",
+                        column: x => x.ActionId,
+                        principalTable: "Actions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_StepActions_Steps_StepId",
+                        column: x => x.StepId,
+                        principalTable: "Steps",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -434,8 +432,7 @@ namespace DocManagementBackend.Migrations
                         name: "FK_DocumentStatus_Status_StatusId",
                         column: x => x.StatusId,
                         principalTable: "Status",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_DocumentStatus_Users_CompletedByUserId",
                         column: x => x.CompletedByUserId,
@@ -586,6 +583,11 @@ namespace DocManagementBackend.Migrations
                 column: "CreatedByUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Documents_CurrentStatusId",
+                table: "Documents",
+                column: "CurrentStatusId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Documents_CurrentStepId",
                 table: "Documents",
                 column: "CurrentStepId");
@@ -646,9 +648,9 @@ namespace DocManagementBackend.Migrations
                 column: "LigneId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Status_StepId",
+                name: "IX_Status_CircuitId",
                 table: "Status",
-                column: "StepId");
+                column: "CircuitId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StepActions_ActionId",
@@ -666,19 +668,14 @@ namespace DocManagementBackend.Migrations
                 column: "CircuitId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Steps_NextStepId",
+                name: "IX_Steps_CurrentStatusId",
                 table: "Steps",
-                column: "NextStepId");
+                column: "CurrentStatusId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Steps_PrevStepId",
+                name: "IX_Steps_NextStatusId",
                 table: "Steps",
-                column: "PrevStepId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Steps_ResponsibleRoleId",
-                table: "Steps",
-                column: "ResponsibleRoleId");
+                column: "NextStatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SubTypes_DocumentTypeId",
@@ -719,9 +716,6 @@ namespace DocManagementBackend.Migrations
                 name: "TypeCounter");
 
             migrationBuilder.DropTable(
-                name: "Status");
-
-            migrationBuilder.DropTable(
                 name: "Lignes");
 
             migrationBuilder.DropTable(
@@ -740,13 +734,16 @@ namespace DocManagementBackend.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Circuits");
+                name: "Status");
 
             migrationBuilder.DropTable(
                 name: "DocumentTypes");
 
             migrationBuilder.DropTable(
                 name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "Circuits");
         }
     }
 }

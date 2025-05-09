@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Network, AlertCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 
@@ -44,33 +44,49 @@ export const CircuitStepsHeader = ({
         </p>
       </div>
       
-      {!isSimpleUser && (
-        isCircuitActive ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                {/* <Button 
-                  className="bg-blue-500/50 text-blue-200 cursor-not-allowed"
-                  disabled
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Step
-                  <AlertCircle className="ml-2 h-3 w-3" />
-                </Button> */}
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Cannot add steps to an active circuit</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
+      <div className="flex gap-2">
+        {/* Steps Button */}
+        {!isSimpleUser && (
           <Button 
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700" 
-            onClick={onAddStep}
+            variant="outline" 
+            className="border-blue-500/30 text-blue-300 hover:text-blue-200"
+            asChild
           >
-            <Plus className="mr-2 h-4 w-4" /> Add Step
+            <Link to={`/circuit/${circuit.id}/steps`}>
+              <Network className="mr-2 h-4 w-4" /> Status Steps
+            </Link>
           </Button>
-        )
-      )}
+        )}
+        
+        {/* Add Step Button */}
+        {!isSimpleUser && (
+          isCircuitActive ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    className="bg-blue-500/50 text-blue-200 cursor-not-allowed"
+                    disabled
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Add Step
+                    <AlertCircle className="ml-2 h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Cannot add steps to an active circuit</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Button 
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700" 
+              onClick={onAddStep}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Step
+            </Button>
+          )
+        )}
+      </div>
     </div>
   );
 };

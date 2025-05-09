@@ -89,15 +89,21 @@ export default function AssignCircuitDialog({
     !isCircuitsLoading &&
     (!circuitsWithSteps || circuitsWithSteps.length === 0);
 
-  // Get circuit validation data
+  // Get circuit validation data - DISABLED since endpoint doesn't exist
   const { data: circuitValidation, isLoading: isValidationLoading } =
     useQuery<CircuitValidation>({
       queryKey: ["circuit-validation", selectedCircuitId],
       queryFn: async () => {
-        if (!selectedCircuitId) return null;
-        return await circuitService.validateCircuit(
-          parseInt(selectedCircuitId)
-        );
+        // Return a default "valid" validation to bypass the 404 error
+        return {
+          circuitId: parseInt(selectedCircuitId || "0"),
+          circuitTitle: "",
+          hasSteps: true,
+          totalSteps: 0,
+          allStepsHaveStatuses: true,
+          isValid: true,
+          stepsWithoutStatuses: []
+        };
       },
       enabled: !!selectedCircuitId && open,
     });
@@ -117,15 +123,26 @@ export default function AssignCircuitDialog({
       setSelectedCircuitId(circuitId.toString());
       setSelectedCircuit(circuit);
 
-      // If the circuit is not valid or steps don't have statuses, show an error
-      if (circuitValidation && !circuitValidation.allStepsHaveStatuses) {
-        toast.error(
-          "Selected circuit has steps without statuses. Please add statuses to the steps first."
-        );
+      // Basic validation
+      if (!circuit.steps || circuit.steps.length === 0) {
+        toast.error("Selected circuit has no steps. Please add steps to the circuit first.");
         return;
       }
 
-      // Show confirmation dialog
+      if (!circuit.statuses || circuit.statuses.length === 0) {
+        toast.error("Selected circuit has no statuses. Please add statuses to the circuit first.");
+        return;
+      }
+
+      // Check if there's an initial status
+      const hasInitialStatus = circuit.statuses.some(status => status.isInitial);
+      if (!hasInitialStatus) {
+        toast.error("Selected circuit has no initial status. At least one status must be marked as initial.");
+        return;
+      }
+
+      // Skip validation check since the endpoint doesn't exist
+      // Just proceed to confirmation
       setShowConfirmation(true);
     }
   };
@@ -136,19 +153,28 @@ export default function AssignCircuitDialog({
     setIsSubmitting(true);
     try {
       const circuitId = parseInt(selectedCircuitId);
+      
+      console.log(`Assigning document ${documentId} to circuit ${circuitId}`);
 
       // Always activate the circuit when assigning a document
       if (selectedCircuit && !selectedCircuit.isActive) {
+        console.log(`Activating circuit ${circuitId} before assignment`);
         await circuitService.updateCircuit(circuitId, {
           ...selectedCircuit,
           isActive: true,
         });
       }
 
+      // Check if the circuit has steps before assigning
+      if (!selectedCircuit?.steps || selectedCircuit.steps.length === 0) {
+        toast.error("The selected circuit must have at least one step");
+        return;
+      }
+
       // Assign document to circuit
       await circuitService.assignDocumentToCircuit({
         documentId,
-        circuitId: circuitId,
+        circuitId: circuitId
       });
 
       toast.success("Document assigned to circuit successfully");
@@ -156,9 +182,35 @@ export default function AssignCircuitDialog({
       setShowConfirmation(false);
       onOpenChange(false);
       onSuccess();
-    } catch (error) {
-      toast.error("Failed to assign document to circuit");
-      console.error(error);
+    } catch (error: any) {
+      console.error("Error assigning document to circuit:", error);
+      
+      // Show detailed error information for debugging
+      if (error.response) {
+        console.error("Error response details:", {
+          data: error.response.data,
+          status: error.response.status,
+          headers: error.response.headers
+        });
+      }
+      
+      // Display more specific error message based on error type
+      let errorMessage = "Failed to assign document to circuit";
+      
+      if (error.response?.data && typeof error.response.data === 'string') {
+        // Check for specific error conditions
+        if (error.response.data.includes("FK_DocumentCircuitHistory_Steps_StepId")) {
+          errorMessage = "Database constraint error: Step not found. Please add valid steps to this circuit first.";
+        } else if (error.response.data.includes("no initial status defined")) {
+          errorMessage = "Circuit validation failed: No initial status defined. Please set an initial status for this circuit.";
+        } else if (error.response.data.includes("while saving the entity changes")) {
+          errorMessage = "Database error while saving. The circuit may not be properly configured with steps and statuses.";
+        } else {
+          errorMessage = error.response.data;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -330,50 +382,6 @@ export default function AssignCircuitDialog({
                 </FormItem>
               )}
             />
-
-            {selectedCircuitId &&
-              circuitValidation &&
-              !circuitValidation.allStepsHaveStatuses &&
-              !isValidationLoading && (
-                <div className="rounded-md bg-yellow-900/20 p-3 border border-yellow-800/50">
-                  <div className="flex items-start">
-                    <AlertTriangle className="h-5 w-5 text-yellow-400 flex-shrink-0" />
-                    <div className="ml-3">
-                      <p className="text-sm text-yellow-300">
-                        This circuit has steps without statuses. You need to add
-                        statuses to the steps before assigning documents.
-                      </p>
-                      {circuitValidation.stepsWithoutStatuses?.length > 0 && (
-                        <div className="mt-2 text-xs text-yellow-300/70">
-                          <p>Missing statuses for:</p>
-                          <ul className="list-disc pl-5 mt-1">
-                            {circuitValidation.stepsWithoutStatuses.map(
-                              (step) => (
-                                <li key={step.stepId}>
-                                  {step.stepTitle} (Step {step.order})
-                                </li>
-                              )
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                      <div className="mt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20"
-                          asChild
-                        >
-                          <Link to={`/circuits/${selectedCircuitId}/steps`}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Manage Steps
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
             <DialogFooter>
               <Button

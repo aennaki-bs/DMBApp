@@ -1,6 +1,5 @@
-
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -26,6 +25,12 @@ export function CircuitsTable({
   onDelete, 
   onViewDetails 
 }: CircuitsTableProps) {
+  const navigate = useNavigate();
+
+  const handleCircuitClick = (circuitId: number) => {
+    navigate(`/circuits/${circuitId}/statuses`);
+  };
+
   return (
     <div className="rounded-md">
       <Table>
@@ -35,7 +40,6 @@ export function CircuitsTable({
             <TableHead className="text-blue-300">Title</TableHead>
             <TableHead className="text-blue-300">Description</TableHead>
             <TableHead className="text-blue-300">Status</TableHead>
-            <TableHead className="text-blue-300">Flow Type</TableHead>
             <TableHead className="text-right text-blue-300">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -44,16 +48,13 @@ export function CircuitsTable({
             <TableRow 
               key={circuit.id} 
               className="border-blue-900/30 hover:bg-blue-900/20 transition-colors cursor-pointer"
+              onClick={() => handleCircuitClick(circuit.id)}
             >
               <TableCell className="font-medium text-blue-100">
-                <Link to={`/circuits/${circuit.id}/steps`} className="hover:underline">
-                  {circuit.circuitKey}
-                </Link>
+                {circuit.circuitKey}
               </TableCell>
               <TableCell className="text-blue-100">
-                <Link to={`/circuits/${circuit.id}/steps`} className="hover:underline">
-                  {circuit.title}
-                </Link>
+                {circuit.title}
               </TableCell>
               <TableCell className="max-w-xs truncate text-blue-200/70">
                 {circuit.descriptif || 'No description'}
@@ -69,18 +70,7 @@ export function CircuitsTable({
                   {circuit.isActive ? 'Active' : 'Inactive'}
                 </Badge>
               </TableCell>
-              <TableCell>
-                <Badge 
-                  variant="outline"
-                  className={circuit.hasOrderedFlow 
-                    ? "border-blue-700/50 bg-blue-900/20 text-blue-300"
-                    : "border-purple-700/50 bg-purple-900/20 text-purple-300"
-                  }
-                >
-                  {circuit.hasOrderedFlow ? 'Sequential' : 'Parallel'}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right space-x-1">
+              <TableCell className="text-right space-x-1" onClick={(e) => e.stopPropagation()}>
                 <CircuitListActions
                   circuit={circuit}
                   isSimpleUser={isSimpleUser}

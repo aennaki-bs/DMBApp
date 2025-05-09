@@ -256,7 +256,7 @@ namespace DocManagementBackend.Controllers
                 foreach (var effect in assignDto.StatusEffects)
                 {
                     var status = await _context.Status.FindAsync(effect.StatusId);
-                    if (status != null && status.StepId == assignDto.StepId)
+                    if (status != null && status.CircuitId == (await _context.Steps.FindAsync(assignDto.StepId))?.CircuitId)
                     {
                         var actionStatusEffect = new ActionStatusEffect
                         {

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "kywXsTgzUNvN2/z+R39oFuD2rJ893X4HmYVJyUAAys4=",
+  "Hash": "GvplrDM2uu6fx+fk32gnPurbGlgRjEmyJjiMWHalqUo=",
   "Source": "DocManagementBackend",
   "BasePath": "_content/DocManagementBackend",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "DocManagementBackend\\wwwroot",
       "Source": "DocManagementBackend",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/admin_b4e899d2-1d81-4fce-80ec-fd8491c09283#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
@@ -38,10 +38,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde#[.{fingerprint}]?.png",
       "AssetKind": "All",
@@ -59,10 +59,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
@@ -80,10 +80,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
@@ -101,10 +101,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
@@ -122,10 +122,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b#[.{fingerprint}]?.png",
       "AssetKind": "All",
@@ -143,10 +143,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/ash01_89b55438-2664-4d1b-937b-29a203ccd75c#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
@@ -164,10 +164,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\default.png",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\default.png",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/default#[.{fingerprint}]?.png",
       "AssetKind": "All",
@@ -185,10 +185,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\default.png"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
@@ -206,10 +206,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/mamounib_043f186c-f6cd-4898-afe2-d012078b52bf#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
@@ -227,10 +227,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.jpg",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.jpg",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
@@ -248,10 +248,10 @@
       "OriginalItemSpec": "wwwroot\\images\\profile\\mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.jpg"
     },
     {
-      "Identity": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png",
+      "Identity": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png",
       "SourceId": "DocManagementBackend",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\",
       "BasePath": "_content/DocManagementBackend",
       "RelativePath": "images/profile/yassine_000fe99c-348d-4fa2-831b-8e243f543c74#[.{fingerprint}]?.png",
       "AssetKind": "All",
@@ -272,7 +272,7 @@
   "Endpoints": [
     {
       "Route": "images/profile/admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -293,7 +293,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -309,7 +309,7 @@
     },
     {
       "Route": "images/profile/admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.v305d398xh.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admin_b4e899d2-1d81-4fce-80ec-fd8491c09283.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -330,7 +330,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -354,7 +354,7 @@
     },
     {
       "Route": "images/profile/admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.20b75nvjtz.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -375,7 +375,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -399,7 +399,7 @@
     },
     {
       "Route": "images/profile/admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\admino_4b0f0011-684b-4896-90f5-bf6b4ac73dde.png",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -420,7 +420,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -436,7 +436,7 @@
     },
     {
       "Route": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -457,7 +457,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -473,7 +473,7 @@
     },
     {
       "Route": "images/profile/aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.v305d398xh.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_8ae3a9e0-bad9-49a5-b424-dd6d9bd59a3e.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -494,7 +494,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -518,7 +518,7 @@
     },
     {
       "Route": "images/profile/aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -539,7 +539,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 22 Apr 2025 10:30:46 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -555,7 +555,7 @@
     },
     {
       "Route": "images/profile/aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.v305d398xh.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\aennaki_c6160ff9-9945-45a6-b23d-991a3173b5a2.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -576,7 +576,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 22 Apr 2025 10:30:46 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -600,7 +600,7 @@
     },
     {
       "Route": "images/profile/ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -621,7 +621,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 06 May 2025 12:15:40 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -637,7 +637,7 @@
     },
     {
       "Route": "images/profile/ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.k21hmn3itc.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_bcd84c0c-0f19-4899-9ceb-830edd3349cc.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -658,7 +658,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 06 May 2025 12:15:40 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -682,7 +682,7 @@
     },
     {
       "Route": "images/profile/ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -703,7 +703,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -719,7 +719,7 @@
     },
     {
       "Route": "images/profile/ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.xvs0lv2wuh.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ahennaki_f5c94160-07cb-4ec6-b59d-092884aac50b.png",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -740,7 +740,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -764,7 +764,7 @@
     },
     {
       "Route": "images/profile/ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -785,7 +785,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -801,7 +801,7 @@
     },
     {
       "Route": "images/profile/ash01_89b55438-2664-4d1b-937b-29a203ccd75c.v305d398xh.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ash01_89b55438-2664-4d1b-937b-29a203ccd75c.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -822,7 +822,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -846,7 +846,7 @@
     },
     {
       "Route": "images/profile/default.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\default.png",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\default.png",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -867,7 +867,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 21 Mar 2025 11:30:09 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -883,7 +883,7 @@
     },
     {
       "Route": "images/profile/default.tji27s6415.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\default.png",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\default.png",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -904,7 +904,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 21 Mar 2025 11:30:09 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -928,7 +928,7 @@
     },
     {
       "Route": "images/profile/ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -949,7 +949,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 25 Apr 2025 13:45:01 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -965,7 +965,7 @@
     },
     {
       "Route": "images/profile/ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.v305d398xh.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\ennaki1_32352688-e030-4708-9b5e-1b1e35839e9c.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -986,7 +986,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 25 Apr 2025 13:45:01 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1010,7 +1010,7 @@
     },
     {
       "Route": "images/profile/mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -1031,7 +1031,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1047,7 +1047,7 @@
     },
     {
       "Route": "images/profile/mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.v305d398xh.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_043f186c-f6cd-4898-afe2-d012078b52bf.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -1068,7 +1068,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1092,7 +1092,7 @@
     },
     {
       "Route": "images/profile/mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -1113,7 +1113,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 29 Apr 2025 09:00:52 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1129,7 +1129,7 @@
     },
     {
       "Route": "images/profile/mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.v305d398xh.jpg",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.jpg",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\mamounib_401561e2-2b41-4b63-ba0c-b151b14d13d2.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -1150,7 +1150,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 29 Apr 2025 09:00:52 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1174,7 +1174,7 @@
     },
     {
       "Route": "images/profile/yassine_000fe99c-348d-4fa2-831b-8e243f543c74.8l4zgd0t1b.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -1195,7 +1195,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1219,7 +1219,7 @@
     },
     {
       "Route": "images/profile/yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png",
-      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png",
+      "AssetFile": "C:\\Users\\ENNAKI\\Desktop\\claudeProject\\DMBApp\\DocManagementBackend\\wwwroot\\images\\profile\\yassine_000fe99c-348d-4fa2-831b-8e243f543c74.png",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -1240,7 +1240,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Fri, 18 Apr 2025 09:24:55 GMT"
+          "Value": "Thu, 08 May 2025 09:58:43 GMT"
         },
         {
           "Name": "Cache-Control",

@@ -3,9 +3,14 @@ export interface DocumentStatus {
   statusId: number;
   statusKey: string;
   title: string;
+  description?: string;
   isRequired: boolean;
-  isComplete: boolean;
-  stepId: number;
+  isInitial?: boolean;  
+  isFinal?: boolean;
+  isFlexible?: boolean;
+  isComplete?: boolean;
+  circuitId?: number;
+  stepId?: number;
   completedBy?: string;
   completedAt?: string;
 }
@@ -24,6 +29,8 @@ export interface DocumentWorkflowStatus {
   documentTitle: string;
   circuitId?: number;
   circuitTitle?: string;
+  currentStatusId?: number;
+  currentStatusTitle?: string;
   currentStepId?: number;
   currentStepTitle?: string;
   status: number;
@@ -31,6 +38,7 @@ export interface DocumentWorkflowStatus {
   isCircuitCompleted: boolean;
   statuses: DocumentStatus[];
   availableActions: ActionDto[];
+  availableStatusTransitions: DocumentStatus[];
   canAdvanceToNextStep: boolean;
   canReturnToPreviousStep: boolean;
 }
@@ -109,4 +117,11 @@ export interface AssignActionToStepDto {
 export interface CircuitValidation {
   isValid: boolean;
   errors: string[];
+}
+
+// Request to move a document to a specific status
+export interface MoveToStatusRequest {
+  documentId: number;
+  targetStatusId: number;
+  comments?: string;
 }

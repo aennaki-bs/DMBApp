@@ -88,9 +88,6 @@ namespace DocManagementBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("AllowBacktrack")
-                        .HasColumnType("bit");
-
                     b.Property<string>("CircuitKey")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -101,9 +98,6 @@ namespace DocManagementBackend.Migrations
                     b.Property<string>("Descriptif")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("HasOrderedFlow")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -135,6 +129,9 @@ namespace DocManagementBackend.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CurrentStatusId")
                         .HasColumnType("int");
 
                     b.Property<int?>("CurrentStepId")
@@ -182,6 +179,8 @@ namespace DocManagementBackend.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
+                    b.HasIndex("CurrentStatusId");
+
                     b.HasIndex("CurrentStepId");
 
                     b.HasIndex("SubTypeId");
@@ -221,7 +220,7 @@ namespace DocManagementBackend.Migrations
                     b.Property<int?>("StatusId")
                         .HasColumnType("int");
 
-                    b.Property<int>("StepId")
+                    b.Property<int?>("StepId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -505,7 +504,20 @@ namespace DocManagementBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("IsComplete")
+                    b.Property<int>("CircuitId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsFinal")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFlexible")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsInitial")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsRequired")
@@ -515,16 +527,13 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("StepId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StepId");
+                    b.HasIndex("CircuitId");
 
                     b.ToTable("Status");
                 });
@@ -540,23 +549,14 @@ namespace DocManagementBackend.Migrations
                     b.Property<int>("CircuitId")
                         .HasColumnType("int");
 
+                    b.Property<int>("CurrentStatusId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Descriptif")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsFinalStep")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("NextStepId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PrevStepId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ResponsibleRoleId")
+                    b.Property<int>("NextStatusId")
                         .HasColumnType("int");
 
                     b.Property<string>("StepKey")
@@ -571,11 +571,9 @@ namespace DocManagementBackend.Migrations
 
                     b.HasIndex("CircuitId");
 
-                    b.HasIndex("NextStepId");
+                    b.HasIndex("CurrentStatusId");
 
-                    b.HasIndex("PrevStepId");
-
-                    b.HasIndex("ResponsibleRoleId");
+                    b.HasIndex("NextStatusId");
 
                     b.ToTable("Steps");
                 });
@@ -771,7 +769,7 @@ namespace DocManagementBackend.Migrations
                     b.HasOne("DocManagementBackend.Models.Status", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("DocManagementBackend.Models.Step", "Step")
@@ -799,6 +797,11 @@ namespace DocManagementBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DocManagementBackend.Models.Status", "CurrentStatus")
+                        .WithMany()
+                        .HasForeignKey("CurrentStatusId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("DocManagementBackend.Models.Step", "CurrentStep")
                         .WithMany()
                         .HasForeignKey("CurrentStepId");
@@ -817,6 +820,8 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Circuit");
 
                     b.Navigation("CreatedBy");
+
+                    b.Navigation("CurrentStatus");
 
                     b.Navigation("CurrentStep");
 
@@ -850,8 +855,7 @@ namespace DocManagementBackend.Migrations
                     b.HasOne("DocManagementBackend.Models.Step", "Step")
                         .WithMany()
                         .HasForeignKey("StepId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Action");
 
@@ -879,7 +883,7 @@ namespace DocManagementBackend.Migrations
                     b.HasOne("DocManagementBackend.Models.Status", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("CompletedBy");
@@ -951,13 +955,13 @@ namespace DocManagementBackend.Migrations
 
             modelBuilder.Entity("DocManagementBackend.Models.Status", b =>
                 {
-                    b.HasOne("DocManagementBackend.Models.Step", "Step")
+                    b.HasOne("DocManagementBackend.Models.Circuit", "Circuit")
                         .WithMany("Statuses")
-                        .HasForeignKey("StepId")
+                        .HasForeignKey("CircuitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Step");
+                    b.Navigation("Circuit");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Step", b =>
@@ -968,25 +972,23 @@ namespace DocManagementBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DocManagementBackend.Models.Step", "NextStep")
+                    b.HasOne("DocManagementBackend.Models.Status", "CurrentStatus")
                         .WithMany()
-                        .HasForeignKey("NextStepId");
+                        .HasForeignKey("CurrentStatusId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
-                    b.HasOne("DocManagementBackend.Models.Step", "PrevStep")
+                    b.HasOne("DocManagementBackend.Models.Status", "NextStatus")
                         .WithMany()
-                        .HasForeignKey("PrevStepId");
-
-                    b.HasOne("DocManagementBackend.Models.Role", "ResponsibleRole")
-                        .WithMany()
-                        .HasForeignKey("ResponsibleRoleId");
+                        .HasForeignKey("NextStatusId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Circuit");
 
-                    b.Navigation("NextStep");
+                    b.Navigation("CurrentStatus");
 
-                    b.Navigation("PrevStep");
-
-                    b.Navigation("ResponsibleRole");
+                    b.Navigation("NextStatus");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.StepAction", b =>
@@ -1037,6 +1039,8 @@ namespace DocManagementBackend.Migrations
 
             modelBuilder.Entity("DocManagementBackend.Models.Circuit", b =>
                 {
+                    b.Navigation("Statuses");
+
                     b.Navigation("Steps");
                 });
 
@@ -1057,8 +1061,6 @@ namespace DocManagementBackend.Migrations
 
             modelBuilder.Entity("DocManagementBackend.Models.Step", b =>
                 {
-                    b.Navigation("Statuses");
-
                     b.Navigation("StepActions");
                 });
 

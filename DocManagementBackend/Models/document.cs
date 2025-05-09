@@ -20,7 +20,10 @@ namespace DocManagementBackend.Models
         public int? SubTypeId { get; set; }
         [ForeignKey("SubTypeId")]
         public SubType? SubType { get; set; }
-
+        public int? CurrentStatusId { get; set; }
+        [ForeignKey("CurrentStatusId")]
+        [JsonIgnore]
+        public Status? CurrentStatus { get; set; }
         public int? CurrentStepId { get; set; }
         [ForeignKey("CurrentStepId")]
         [JsonIgnore]
@@ -102,8 +105,7 @@ namespace DocManagementBackend.Models
         [ForeignKey("DocumentId")]
         [JsonIgnore]
         public Document? Document { get; set; }
-        [Required]
-        public int StepId { get; set; }
+        public int? StepId { get; set; }
         [ForeignKey("StepId")]
         [JsonIgnore]
         public Step? Step { get; set; }

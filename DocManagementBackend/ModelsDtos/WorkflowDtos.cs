@@ -38,13 +38,13 @@ namespace DocManagementBackend.Models
         public string DocumentTitle { get; set; } = string.Empty;
         public int? CircuitId { get; set; }
         public string CircuitTitle { get; set; } = string.Empty;
-        public int? CurrentStepId { get; set; }
-        public string CurrentStepTitle { get; set; } = string.Empty;
+        public int? CurrentStatusId { get; set; }
+        public string CurrentStatusTitle { get; set; } = string.Empty;
         public int Status { get; set; }
         public string StatusText { get; set; } = string.Empty;
         public bool IsCircuitCompleted { get; set; }
         public List<DocumentStatusDto> Statuses { get; set; } = new();
-        public List<ActionDto> AvailableActions { get; set; } = new();
+        public List<StatusDto> AvailableStatusTransitions { get; set; } = new();
         public bool CanAdvanceToNextStep { get; set; }
         public bool CanReturnToPreviousStep { get; set; }
     }
@@ -58,9 +58,9 @@ namespace DocManagementBackend.Models
         public DateTime CreatedAt { get; set; }
         public int CircuitId { get; set; }
         public string CircuitTitle { get; set; } = string.Empty;
-        public int CurrentStepId { get; set; }
-        public string CurrentStepTitle { get; set; } = string.Empty;
-        public int DaysInCurrentStep { get; set; }
+        public int CurrentStatusId { get; set; }
+        public string CurrentStatusTitle { get; set; } = string.Empty;
+        public int DaysInCurrentStatus { get; set; }
     }
     public class MoveNextDto
     {
@@ -74,5 +74,4 @@ namespace DocManagementBackend.Models
         public int DocumentId { get; set; }
         public string Comments { get; set; } = string.Empty;
     }
-
 }

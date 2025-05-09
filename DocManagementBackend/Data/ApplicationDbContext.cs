@@ -16,7 +16,6 @@ namespace DocManagementBackend.Data
         public DbSet<SousLigne> SousLignes { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<DocumentType> DocumentTypes { get; set; }
-        // New SubType entity
         public DbSet<SubType> SubTypes { get; set; }
         public DbSet<TypeCounter> TypeCounter { get; set; }
         public DbSet<Circuit> Circuits { get; set; }
@@ -46,6 +45,40 @@ namespace DocManagementBackend.Data
                 .WithMany()
                 .HasForeignKey(st => st.DocumentTypeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Status relationships with Circuit
+            modelBuilder.Entity<Status>()
+                .HasOne(s => s.Circuit)
+                .WithMany(c => c.Statuses)
+                .HasForeignKey(s => s.CircuitId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Step relationships with Circuit and Status
+            modelBuilder.Entity<Step>()
+                .HasOne(s => s.Circuit)
+                .WithMany(c => c.Steps)
+                .HasForeignKey(s => s.CircuitId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // FIX: Use NoAction for Status-related FKs to avoid multiple cascade paths
+            modelBuilder.Entity<Step>()
+                .HasOne(s => s.CurrentStatus)
+                .WithMany()
+                .HasForeignKey(s => s.CurrentStatusId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Step>()
+                .HasOne(s => s.NextStatus)
+                .WithMany()
+                .HasForeignKey(s => s.NextStatusId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Document CurrentStatus relationship
+            modelBuilder.Entity<Document>()
+                .HasOne(d => d.CurrentStatus)
+                .WithMany()
+                .HasForeignKey(d => d.CurrentStatusId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // DocumentCircuitHistory relationships
             modelBuilder.Entity<DocumentCircuitHistory>()
@@ -85,12 +118,6 @@ namespace DocManagementBackend.Data
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Status relationships
-            modelBuilder.Entity<Status>()
-                .HasOne(s => s.Step)
-                .WithMany(s => s.Statuses)
-                .HasForeignKey(s => s.StepId);
-
             // StepAction relationships
             modelBuilder.Entity<StepAction>()
                 .HasOne(sa => sa.Step)
@@ -111,7 +138,8 @@ namespace DocManagementBackend.Data
             modelBuilder.Entity<ActionStatusEffect>()
                 .HasOne(ase => ase.Status)
                 .WithMany()
-                .HasForeignKey(ase => ase.StatusId);
+                .HasForeignKey(ase => ase.StatusId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<ActionStatusEffect>()
                 .HasOne(ase => ase.Step)
@@ -128,13 +156,14 @@ namespace DocManagementBackend.Data
             modelBuilder.Entity<DocumentStatus>()
                 .HasOne(ds => ds.Status)
                 .WithMany()
-                .HasForeignKey(ds => ds.StatusId);
+                .HasForeignKey(ds => ds.StatusId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Seed data
             modelBuilder.Entity<Role>().HasData(
-                new Role { Id = 1, RoleName = "Admin", IsAdmin = true },
-                new Role { Id = 2, RoleName = "SimpleUser", IsSimpleUser = true },
-                new Role { Id = 3, RoleName = "FullUser", IsFullUser = true }
+                new Role { Id = 1, RoleName = "Admin", IsAdmin = true, IsSimpleUser = false, IsFullUser = false },
+                new Role { Id = 2, RoleName = "SimpleUser", IsAdmin = false, IsSimpleUser = true, IsFullUser = false },
+                new Role { Id = 3, RoleName = "FullUser", IsAdmin = false, IsSimpleUser = false, IsFullUser = true }
             );
         }
     }

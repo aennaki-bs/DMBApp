@@ -49,8 +49,8 @@ export function StatusTable({
         <TableRow>
           <TableHead>Status ID</TableHead>
           <TableHead>Title</TableHead>
+          <TableHead>Type</TableHead>
           <TableHead>Required</TableHead>
-          <TableHead>Complete</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -58,16 +58,47 @@ export function StatusTable({
         {statuses.length === 0 ? (
           <TableRow>
             <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-              No statuses found for this step
+              No statuses found
             </TableCell>
           </TableRow>
-        ) : (
+        ) :
           statuses.map((status) => (
             <TableRow key={status.statusId}>
               <TableCell className="font-mono text-xs text-gray-400">
                 {status.statusKey}
               </TableCell>
-              <TableCell>{status.title}</TableCell>
+              <TableCell>
+                <div className="flex flex-col">
+                  <span>{status.title}</span>
+                  {status.description && (
+                    <span className="text-xs text-muted-foreground">{status.description}</span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1">
+                  {status.isInitial && (
+                    <Badge variant="outline" className="bg-blue-900/30 text-blue-400 border-blue-700/30">
+                      Initial
+                    </Badge>
+                  )}
+                  {status.isFinal && (
+                    <Badge variant="outline" className="bg-purple-900/30 text-purple-400 border-purple-700/30">
+                      Final
+                    </Badge>
+                  )}
+                  {status.isFlexible && (
+                    <Badge variant="outline" className="bg-amber-900/30 text-amber-400 border-amber-700/30">
+                      Flexible
+                    </Badge>
+                  )}
+                  {!status.isInitial && !status.isFinal && !status.isFlexible && (
+                    <Badge variant="outline" className="text-gray-400 border-gray-700">
+                      Normal
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
               <TableCell>
                 {status.isRequired ? (
                   <Badge variant="outline" className="bg-amber-900/30 text-amber-400 border-amber-700/30">
@@ -76,17 +107,6 @@ export function StatusTable({
                 ) : (
                   <Badge variant="outline" className="text-gray-400 border-gray-700">
                     Optional
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                {status.isComplete ? (
-                  <Badge variant="outline" className="bg-green-900/30 text-green-400 border-green-700/30">
-                    Complete
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-blue-900/30 text-blue-400 border-blue-700/30">
-                    Incomplete
                   </Badge>
                 )}
               </TableCell>
@@ -120,6 +140,7 @@ export function StatusTable({
                         <span>Edit</span>
                       </DropdownMenuItem>
                     )}
+                    
                     {isCircuitActive ? (
                       <TooltipProvider>
                         <Tooltip>
@@ -149,7 +170,7 @@ export function StatusTable({
               </TableCell>
             </TableRow>
           ))
-        )}
+        }
       </TableBody>
     </Table>
   );
