@@ -571,6 +571,74 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpGet("document/{documentId}/next-statuses")]
+        public async Task<ActionResult<IEnumerable<StatusDto>>> GetNextPossibleStatuses(int documentId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            try
+            {
+                // Step 1: Get the document and verify it has a current status and is assigned to a circuit
+                var document = await _context.Documents
+                    .Include(d => d.CurrentStatus)
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null)
+                    return NotFound("Document not found.");
+
+                if (document.CircuitId == null)
+                    return BadRequest("Document is not assigned to any circuit.");
+
+                if (document.CurrentStatusId == null)
+                    return BadRequest("Document does not have a current status.");
+
+                // Step 2: Find all steps in the circuit where the currentStatus matches the document's status
+                var matchingSteps = await _context.Steps
+                    .Include(s => s.NextStatus)
+                    .Where(s => s.CircuitId == document.CircuitId && s.CurrentStatusId == document.CurrentStatusId)
+                    .ToListAsync();
+
+                if (!matchingSteps.Any())
+                    return Ok(new List<StatusDto>()); // No next statuses available
+
+                // Step 3: Extract the next statuses from the matching steps
+                var nextStatusIds = matchingSteps.Select(s => s.NextStatusId).Distinct().ToList();
+
+                var nextStatuses = await _context.Status
+                    .Where(s => nextStatusIds.Contains(s.Id))
+                    .Select(s => new StatusDto
+                    {
+                        StatusId = s.Id,
+                        StatusKey = s.StatusKey,
+                        Title = s.Title,
+                        Description = s.Description,
+                        IsRequired = s.IsRequired,
+                        IsInitial = s.IsInitial,
+                        IsFinal = s.IsFinal,
+                        IsFlexible = s.IsFlexible,
+                        CircuitId = s.CircuitId
+                    })
+                    .ToListAsync();
+
+                return Ok(nextStatuses);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         [HttpGet("document/{documentId}/workflow-status")]
         public async Task<ActionResult<DocumentWorkflowStatusDto>> GetDocumentWorkflowStatus(int documentId)
         {
