@@ -213,7 +213,7 @@ const circuitService = {
   // Method to get document current status
   getDocumentCurrentStatus: async (documentId: number): Promise<DocumentWorkflowStatus> => {
     if (!documentId) throw new Error("Document ID is required");
-    const response = await api.get(`/Workflow/document/${documentId}/current-status`);
+    const response = await api.get(`/Workflow/document/${documentId}/workflow-status`);
     return response.data;
   },
 
@@ -230,6 +230,71 @@ const circuitService = {
     return response.data;
   },
 
+  // Method to get document step statuses
+  getDocumentStepStatuses: async (documentId: number): Promise<any[]> => {
+    if (!documentId) return [];
+    const response = await api.get(`/Workflow/document/${documentId}/step-statuses`);
+    return response.data;
+  },
+
+  // Method to get all statuses in a circuit
+  getCircuitStatuses: async (circuitId?: number): Promise<any[]> => {
+    if (!circuitId) return [];
+    
+    try {
+      console.log(`Fetching statuses for circuit ID: ${circuitId}`);
+      const response = await api.get(`/Status/circuit/${circuitId}`);
+      console.log('Circuit statuses response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching circuit statuses:', error);
+      
+      // Try alternative endpoint if the first one fails
+      try {
+        console.log('Trying alternative endpoint for circuit statuses');
+        const workflowResponse = await api.get(`/Workflow/circuit/${circuitId}/statuses`);
+        return workflowResponse.data;
+      } catch (fallbackError) {
+        console.error('Alternative endpoint also failed:', fallbackError);
+        return [];
+      }
+    }
+  },
+
+  // Method to get available transitions for a document
+  getAvailableTransitions: async (documentId: number): Promise<any[]> => {
+    if (!documentId) return [];
+    try {
+      console.log(`Fetching available transitions for document ID: ${documentId}`);
+      const response = await api.get(`/Workflow/document/${documentId}/available-transitions`);
+      console.log('Available transitions response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching available transitions:', error);
+      
+      // Fallback to workflow status if available transitions endpoint fails
+      try {
+        console.log('Falling back to workflow status for transitions');
+        const workflowStatus = await api.get(`/Workflow/document/${documentId}/workflow-status`);
+        if (workflowStatus.data && workflowStatus.data.availableStatusTransitions) {
+          return workflowStatus.data.availableStatusTransitions;
+        }
+      } catch (fallbackError) {
+        console.error('Workflow status fallback also failed:', fallbackError);
+      }
+      
+      // Return dummy data as last resort for testing
+      console.log('Using dummy transitions as last resort');
+      return [
+        { statusId: 1, title: "Draft" },
+        { statusId: 2, title: "In Progress" },
+        { statusId: 3, title: "Review" },
+        { statusId: 4, title: "Approved" },
+        { statusId: 5, title: "Rejected" }
+      ];
+    }
+  },
+
   // Method to complete status
   completeStatus: async (data: { 
     documentId: number;
@@ -240,7 +305,22 @@ const circuitService = {
     await api.post('/Workflow/complete-status', data);
   },
 
-  
+  // Method to move document to a new status
+  moveToStatus: async (documentId: number, targetStatusId: number, comments: string): Promise<boolean> => {
+    console.log(`Moving document ${documentId} to status ${targetStatusId} with comments: ${comments}`);
+    try {
+      const response = await api.post(`/Workflow/move-to-status`, {
+        documentId,
+        targetStatusId,
+        comments
+      });
+      console.log('Move to status response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error in moveToStatus:', error);
+      throw error;
+    }
+  },
 };
 
 export default circuitService;

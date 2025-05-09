@@ -60,4 +60,19 @@ namespace DocManagementBackend.Models
         public bool IsValid { get; set; }
         public List<string> ValidationMessages { get; set; } = new List<string>();
     }
+    public class DocumentStepStatusDto
+    {
+        public int StepId { get; set; }
+        public string StepKey { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int CurrentStatusId { get; set; }
+        public string CurrentStatusTitle { get; set; } = string.Empty;
+        public int NextStatusId { get; set; }
+        public string NextStatusTitle { get; set; } = string.Empty;
+        public bool IsCurrentStep { get; set; }
+        public bool IsCompleted { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public string? CompletedBy { get; set; }
+    }
 }

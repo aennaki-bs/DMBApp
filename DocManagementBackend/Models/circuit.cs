@@ -14,6 +14,8 @@ namespace DocManagementBackend.Models
         public string Descriptif { get; set; } = string.Empty;
         public bool IsActive { get; set; } = false;
         public int CrdCounter { get; set; } = 0;
+        public bool HasOrderedFlow { get; set; } = false;
+        public bool AllowBacktrack { get; set; } = false;
 
         [JsonIgnore]
         public ICollection<Status> Statuses { get; set; } = new List<Status>();

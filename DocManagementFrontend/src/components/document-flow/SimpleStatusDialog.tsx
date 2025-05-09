@@ -32,6 +32,7 @@ export function SimpleStatusDialog({
 }: SimpleStatusDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [comments, setComments] = useState('');
+  const [error, setError] = useState<string | null>(null);
   
   if (!targetStatus) return null;
 
@@ -42,18 +43,30 @@ export function SimpleStatusDialog({
     }
 
     setIsSubmitting(true);
+    setError(null);
+    
     try {
-      await api.post('/Workflow/move-to-status', {
+      console.log('Sending status change request:', {
+        documentId,
+        targetStatusId: targetStatus.statusId,
+        comments: comments || `Changed status from ${currentStatusTitle} to ${targetStatus.title}`
+      });
+      
+      const response = await api.post('/Workflow/move-to-status', {
         documentId,
         targetStatusId: targetStatus.statusId,
         comments: comments || `Changed status from ${currentStatusTitle} to ${targetStatus.title}`
       });
 
+      console.log('Status change response:', response);
       toast.success(`Document status changed to ${targetStatus.title}`);
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error.response?.data || 'Failed to change document status');
+      const errorMessage = error.response?.data || 'Failed to change document status';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error('Status change error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -71,6 +84,11 @@ export function SimpleStatusDialog({
             <p className="text-gray-400 mb-2">
               This will change the document status from "{currentStatusTitle}" to "{targetStatus.title}".
             </p>
+            {targetStatus.isFlexible && (
+              <p className="text-purple-400 text-xs">
+                This is a flexible status that can be used at any point in the workflow.
+              </p>
+            )}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="comments" className="text-blue-300">Comments</Label>
@@ -82,6 +100,12 @@ export function SimpleStatusDialog({
               className="bg-[#152057] border-blue-900/50 focus:ring-blue-600"
             />
           </div>
+          
+          {error && (
+            <div className="bg-red-900/30 border border-red-800 p-2 rounded text-xs text-red-300">
+              {error}
+            </div>
+          )}
         </div>
 
         <DialogFooter>

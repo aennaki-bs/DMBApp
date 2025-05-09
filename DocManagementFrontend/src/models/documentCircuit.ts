@@ -1,18 +1,18 @@
 // Add the DocumentStatus type if it doesn't exist yet
 export interface DocumentStatus {
   statusId: number;
-  statusKey: string;
+  statusKey?: string;
   title: string;
   description?: string;
   isRequired: boolean;
-  isInitial?: boolean;  
+  isInitial?: boolean;
   isFinal?: boolean;
   isFlexible?: boolean;
   isComplete?: boolean;
-  circuitId?: number;
-  stepId?: number;
   completedBy?: string;
-  completedAt?: string;
+  completedAt?: Date;
+  circuitId?: number;
+  transitionInfo?: string;
 }
 
 // Status completion/update request
@@ -46,9 +46,8 @@ export interface DocumentWorkflowStatus {
 // Action DTO interface
 export interface ActionDto {
   actionId: number;
-  actionKey?: string;
   title: string;
-  description?: string;
+  description: string;
 }
 
 // Document Circuit History interface

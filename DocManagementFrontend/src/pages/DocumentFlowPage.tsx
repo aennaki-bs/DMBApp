@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
@@ -8,18 +7,23 @@ import circuitService from '@/services/circuitService';
 import { DocumentFlowHeader } from '@/components/circuits/document-flow/DocumentFlowHeader';
 import { NoCircuitAssignedCard } from '@/components/circuits/document-flow/NoCircuitAssignedCard';
 import { LoadingState } from '@/components/circuits/document-flow/LoadingState';
-import { CircuitStepsSection } from '@/components/circuits/document-flow/CircuitStepsSection';
 import { ErrorMessage } from '@/components/document-flow/ErrorMessage';
 import { WorkflowStatusSection } from '@/components/document-flow/WorkflowStatusSection';
-import { DocumentDialogs } from '@/components/document-flow/DocumentDialogs';
 import { useDocumentWorkflow } from '@/hooks/useDocumentWorkflow';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { CheckCircle, AlertCircle, Bug } from 'lucide-react';
+import { WorkflowHistorySection } from '@/components/document-flow/WorkflowHistorySection';
+import { DocumentStatusCard } from '@/components/document-flow/DocumentStatusCard';
+import { MoveDocumentButton } from '@/components/document-flow/MoveDocumentButton';
+import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftCircle } from 'lucide-react';
 
 const DocumentFlowPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isSimpleUser = user?.role === 'SimpleUser';
   
   // Use the document flow hook to manage all workflow-related state and operations
   const {
@@ -42,17 +46,6 @@ const DocumentFlowPage = () => {
     enabled: !! id
   });
 
-  // Fetch circuit details for visualization
-  const { 
-    data: circuitDetails, 
-    isLoading: isLoadingCircuitDetails,
-    error: circuitDetailsError,
-  } = useQuery({
-    queryKey: ['circuit-details', document?.circuitId],
-    queryFn: () => circuitService.getCircuitDetailsByCircuitId(document?.circuitId || 0),
-    enabled: !!document?.circuitId
-  });
-
   // Fetch document circuit history
   const {
     data: circuitHistory,
@@ -64,44 +57,14 @@ const DocumentFlowPage = () => {
     enabled: !!id
   });
 
-  // Dialog state management
-  const [dialogState, setDialogState] = useState({
-    moveOpen: false,
-    processOpen: false,
-    nextStepOpen: false,
-    previousStepOpen: false
-  });
-
   // Collect all errors
   const errorMessage = 
     (documentError instanceof Error ? documentError.message : documentError ? String(documentError) : '') || 
     (workflowError instanceof Error ? workflowError.message : workflowError ? String(workflowError) : '') || 
-    (circuitDetailsError instanceof Error ? circuitDetailsError.message : circuitDetailsError ? String(circuitDetailsError) : '') || 
     (historyError instanceof Error ? historyError.message : historyError ? String(historyError) : '');
   
   // Overall loading state
-  const isLoading = isLoadingDocument || isLoadingWorkflow || 
-                    isLoadingCircuitDetails || isLoadingHistory;
-
-  const openDialog = (type: 'move' | 'process' | 'nextStep' | 'previousStep') => {
-    setDialogState(prev => ({
-      ...prev,
-      [`${type}Open`]: true
-    }));
-  };
-
-  const closeDialog = (type: 'move' | 'process' | 'nextStep' | 'previousStep') => {
-    setDialogState(prev => ({
-      ...prev,
-      [`${type}Open`]: false
-    }));
-  };
-
-  const handleSuccess = () => {
-    // Use our refreshAllData function to update all relevant data
-    refreshAllData();
-    toast.success("Operation completed successfully");
-  };
+  const isLoading = isLoadingDocument || isLoadingWorkflow || isLoadingHistory;
 
   if (!id) {
     navigate('/documents');
@@ -129,12 +92,6 @@ const DocumentFlowPage = () => {
     );
   }
 
-  const isSimpleUser = user?.role === 'SimpleUser';
-
-  // Find current step details for processing
-  const currentStepId = workflowStatus?.currentStepId;
-  const currentStepDetail = circuitDetails?.find(d => d.id === currentStepId);
-
   return (
     <div className="p-2 sm:p-3 md:p-4 space-y-3 w-full">
       <DocumentFlowHeader 
@@ -149,65 +106,61 @@ const DocumentFlowPage = () => {
       {isLoading ? (
         <LoadingState />
       ) : (
-         <div className="flex flex-col gap-3 w-full h-full">
-          {/* Document workflow status section */}
-          <WorkflowStatusSection workflowStatus={workflowStatus} />
-
-          {/* Return to Previous Step Button - direct access */}
-          {!isSimpleUser && workflowStatus?.canReturnToPreviousStep && (
-            <div className="bg-[#0a1033]/50 rounded-lg p-4 border border-amber-700/30 flex justify-between items-center">
-              <div>
-                <h3 className="text-white font-medium">Return Document to Previous Step</h3>
-                <p className="text-gray-400 text-sm">Click the button to return this document to its previous workflow step.</p>
-              </div>
-              <Button 
-                onClick={() => openDialog('previousStep')}
-                variant="outline"
-                className="border-amber-700/30 text-white hover:bg-amber-700/20"
-              >
-                <ArrowLeftCircle className="mr-1.5 h-4 w-4" /> Return to Previous Step
-              </Button>
+        <div className="flex flex-col gap-4 w-full">
+          {/* Current Status Information */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <DocumentStatusCard workflowStatus={workflowStatus} />
             </div>
-          )}
-
-          {/* Circuit Steps */}
-          {circuitDetails && circuitDetails.length > 0 && document && workflowStatus && (
-            <CircuitStepsSection
-              document={document}
-              circuitDetails={circuitDetails}
-              circuitHistory={circuitHistory || []}
-              workflowStatus={workflowStatus}
-              isSimpleUser={isSimpleUser}
-              onMoveClick={() => openDialog('move')}
-              onProcessClick={() => openDialog('process')}
-              onNextStepClick={() => openDialog('nextStep')}
-              onPreviousStepClick={() => openDialog('previousStep')}
-              onDocumentMoved={handleSuccess}
-            />
-          )}
+            <div className="space-y-4">
+              {/* Status Requirements */}
+              <Card className="overflow-hidden bg-gradient-to-b from-black/70 to-black/40 border-b border-t border-l border-r border-white/10">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-medium text-white">Status Requirements</CardTitle>
+                </CardHeader>
+                
+                <CardContent className="px-6 pb-4">
+                  <ScrollArea className="h-[100px] pr-4">
+                    {(workflowStatus?.statuses || []).length > 0 ? (
+                      <div className="space-y-2">
+                        {(workflowStatus?.statuses || []).map((status) => (
+                          <div key={status.statusId} className="flex items-center text-sm">
+                            {status.isComplete ? (
+                              <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-amber-500 mr-2 flex-shrink-0" />
+                            )}
+                            <span className={status.isComplete ? "text-green-400" : "text-gray-200"}>
+                              {status.title}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 text-sm italic">No requirements for current status</p>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+              
+              {/* Move Document Button */}
+              <MoveDocumentButton 
+                documentId={Number(id)}
+                onStatusChange={refreshAllData}
+                disabled={isSimpleUser || !workflowStatus?.isCircuitCompleted}
+                transitions={workflowStatus?.availableStatusTransitions || []}
+              />
+            </div>
+          </div>
+          
+          <Separator className="bg-gray-800" />
+          
+          {/* Document History Section - Collapsible */}
+          <WorkflowHistorySection 
+            history={circuitHistory || []} 
+            isLoading={isLoadingHistory}
+          />
         </div>
-       )}
-      
-      {/* Dialogs for document actions */}
-      {document && workflowStatus && (
-        <DocumentDialogs
-          document={document}
-          workflowStatus={workflowStatus}
-          moveDialogOpen={dialogState.moveOpen}
-          processDialogOpen={dialogState.processOpen}
-          nextStepDialogOpen={dialogState.nextStepOpen}
-          previousStepDialogOpen={dialogState.previousStepOpen}
-          setMoveDialogOpen={(open) => open ? openDialog('move') : closeDialog('move')}
-          setProcessDialogOpen={(open) => open ? openDialog('process') : closeDialog('process')}
-          setNextStepDialogOpen={(open) => open ? openDialog('nextStep') : closeDialog('nextStep')}
-          setPreviousStepDialogOpen={(open) => open ? openDialog('previousStep') : closeDialog('previousStep')}
-          handleMoveSuccess={handleSuccess}
-          handleProcessSuccess={handleSuccess}
-          handleNextStepSuccess={handleSuccess}
-          handlePreviousStepSuccess={handleSuccess}
-          currentStepDetail={currentStepDetail}
-          availableActions={workflowStatus?.availableActions}
-        />
       )}
     </div>
   );

@@ -1,17 +1,18 @@
-import { DocumentWorkflowStatus } from '@/models/documentCircuit';
+import { DocumentWorkflowStatus, DocumentStatus, StatusDto } from '@/models/documentCircuit';
 import { DocumentStatusCard } from './DocumentStatusCard';
-import { StepRequirementsCard } from './StepRequirementsCard';
-import { StatusTransitionCard } from './StatusTransitionCard';
 import { useState } from 'react';
+import { MoveDocumentButton } from './MoveDocumentButton';
 
 interface WorkflowStatusSectionProps {
   workflowStatus: DocumentWorkflowStatus | null | undefined;
   onWorkflowUpdate?: () => void;
+  onMoveToStatus?: (statusId: number) => void;
 }
 
 export function WorkflowStatusSection({ 
   workflowStatus, 
-  onWorkflowUpdate 
+  onWorkflowUpdate,
+  onMoveToStatus
 }: WorkflowStatusSectionProps) {
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -24,18 +25,32 @@ export function WorkflowStatusSection({
     }
   };
 
+  const handleMoveToStatus = (statusId: number) => {
+    if (onMoveToStatus) {
+      onMoveToStatus(statusId);
+    }
+  };
+
+  // Determine if document status is complete
+  const isStatusComplete = workflowStatus.isCircuitCompleted;
+
   return (
     <div className="space-y-4 w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 w-full">
-        <DocumentStatusCard workflowStatus={workflowStatus} />
-        <StepRequirementsCard workflowStatus={workflowStatus} />
+      <div className="grid grid-cols-1 gap-4">
+        <DocumentStatusCard 
+          workflowStatus={workflowStatus} 
+          onStatusChange={handleStatusChange}
+        />
+
+        <div className="mt-4">
+          <MoveDocumentButton
+            documentId={workflowStatus.documentId}
+            onStatusChange={handleStatusChange}
+            disabled={!isStatusComplete}
+            transitions={workflowStatus.availableStatusTransitions || []}
+          />
+        </div>
       </div>
-      
-      <StatusTransitionCard 
-        key={`transitions-${refreshKey}`}
-        workflowStatus={workflowStatus} 
-        onSuccess={handleStatusChange} 
-      />
     </div>
   );
 }

@@ -16,11 +16,15 @@ export function useCircuitWorkflow() {
     setLoading(true);
     setError(null);
     try {
+      console.log(`Fetching workflow status for document ${documentId}`);
       const response = await api.get(`/Workflow/document/${documentId}/workflow-status`);
+      console.log('Workflow status response:', response.data);
       return response.data;
     } catch (err: any) {
-      setError(err.response?.data || 'Failed to get workflow status');
-      throw new Error(err.response?.data || 'Failed to get workflow status');
+      const errorMessage = err.response?.data || 'Failed to get workflow status';
+      console.error('Error fetching workflow status:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -33,11 +37,15 @@ export function useCircuitWorkflow() {
     setLoading(true);
     setError(null);
     try {
+      console.log(`Fetching available transitions for document ${documentId}`);
       const response = await api.get(`/Workflow/document/${documentId}/available-transitions`);
+      console.log('Available transitions response:', response.data);
       return response.data;
     } catch (err: any) {
-      setError(err.response?.data || 'Failed to get available transitions');
-      throw new Error(err.response?.data || 'Failed to get available transitions');
+      const errorMessage = err.response?.data || 'Failed to get available transitions';
+      console.error('Error fetching available transitions:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -50,15 +58,18 @@ export function useCircuitWorkflow() {
     setLoading(true);
     setError(null);
     try {
+      console.log('Moving document to status with request:', request);
       const response = await api.post('/Workflow/move-to-status', {
         documentId: request.documentId,
         targetStatusId: request.targetStatusId,
         comments: request.comments
       });
       
+      console.log('Move to status response:', response.data);
       return response.data;
     } catch (err: any) {
       const errorMessage = err.response?.data || 'Failed to change document status';
+      console.error('Error moving to status:', err);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

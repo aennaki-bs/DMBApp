@@ -21,7 +21,11 @@ export function StatusTransitionCard({ workflowStatus, onSuccess }: StatusTransi
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  if (!workflowStatus || !workflowStatus.availableStatusTransitions || workflowStatus.availableStatusTransitions.length === 0) {
+  const hasTransitions = workflowStatus && 
+                        workflowStatus.availableStatusTransitions && 
+                        workflowStatus.availableStatusTransitions.length > 0;
+  
+  if (!hasTransitions) {
     return (
       <Card className="bg-[#0a1033] border border-blue-900/30 shadow-md hover:shadow-lg transition-shadow w-full">
         <CardHeader className="bg-blue-950/40 border-b border-blue-900/30 pb-2 px-3 py-2">
@@ -31,6 +35,11 @@ export function StatusTransitionCard({ workflowStatus, onSuccess }: StatusTransi
         </CardHeader>
         <CardContent className="p-3 text-sm">
           <p className="text-gray-400">No available transitions for this document in its current status.</p>
+          <p className="text-xs text-gray-600 mt-2">
+            {workflowStatus ? 
+              `Current status: ${workflowStatus.currentStatusTitle || 'Unknown'}` : 
+              'Workflow status data unavailable'}
+          </p>
         </CardContent>
       </Card>
     );
@@ -48,7 +57,7 @@ export function StatusTransitionCard({ workflowStatus, onSuccess }: StatusTransi
 
   const getSelectedStatusDetails = (): DocumentStatus | undefined => {
     const statusId = parseInt(selectedStatus);
-    return workflowStatus.availableStatusTransitions.find(s => s.statusId === statusId);
+    return workflowStatus?.availableStatusTransitions?.find(s => s.statusId === statusId);
   };
 
   const renderStatusBadge = (status: DocumentStatus) => {
@@ -76,7 +85,7 @@ export function StatusTransitionCard({ workflowStatus, onSuccess }: StatusTransi
                 <SelectValue placeholder="Choose a status" />
               </SelectTrigger>
               <SelectContent className="bg-[#152057] border-blue-900/50">
-                {workflowStatus.availableStatusTransitions.map((status) => (
+                {workflowStatus?.availableStatusTransitions?.map((status) => (
                   <SelectItem 
                     key={status.statusId} 
                     value={status.statusId.toString()}
@@ -120,9 +129,9 @@ export function StatusTransitionCard({ workflowStatus, onSuccess }: StatusTransi
         <SimpleStatusDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
-          documentId={workflowStatus.documentId}
+          documentId={workflowStatus?.documentId || 0}
           targetStatus={getSelectedStatusDetails()}
-          currentStatusTitle={workflowStatus.currentStatusTitle || ''}
+          currentStatusTitle={workflowStatus?.currentStatusTitle || ''}
           onSuccess={onSuccess}
         />
       )}

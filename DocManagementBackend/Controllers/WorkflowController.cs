@@ -115,6 +115,8 @@ namespace DocManagementBackend.Controllers
         [HttpPost("move-to-status")]
         public async Task<IActionResult> MoveToStatus([FromBody] MoveToStatusDto moveToStatusDto)
         {
+            Console.WriteLine($"MoveToStatus called with documentId={moveToStatusDto.DocumentId}, targetStatusId={moveToStatusDto.TargetStatusId}");
+            
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
@@ -126,28 +128,30 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("User not found.");
 
             if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
+                return Unauthorized("User account is deactivated. Please contact an admin!");
 
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to update document status.");
+                return Unauthorized("User not allowed to change document status.");
 
             try
             {
-                // First check if this is a valid transition
+                // Get document and status information for logging
                 var document = await _context.Documents
                     .Include(d => d.CurrentStatus)
                     .FirstOrDefaultAsync(d => d.Id == moveToStatusDto.DocumentId);
                 
-                if (document == null)
-                    return NotFound("Document not found.");
+                var targetStatus = await _context.Status
+                    .FirstOrDefaultAsync(s => s.Id == moveToStatusDto.TargetStatusId);
 
-                if (document.CircuitId == null || document.CurrentStatusId == null)
-                    return BadRequest("Document is not in a workflow.");
+                Console.WriteLine($"Attempting to move document from status '{document?.CurrentStatus?.Title}' to '{targetStatus?.Title}'");
+                Console.WriteLine($"Target status IsFlexible: {targetStatus?.IsFlexible}");
 
                 // Check if we can make this transition
                 bool canMove = await _workflowService.CanMoveToStatusAsync(
                     moveToStatusDto.DocumentId, 
                     moveToStatusDto.TargetStatusId);
+                
+                Console.WriteLine($"CanMoveToStatusAsync result: {canMove}");
                 
                 if (!canMove)
                     return BadRequest("This status transition is not allowed in the current workflow.");
@@ -160,20 +164,30 @@ namespace DocManagementBackend.Controllers
                     moveToStatusDto.Comments);
 
                 if (success)
+                {
+                    Console.WriteLine("Document status updated successfully");
                     return Ok(new { message = "Document status updated successfully." });
+                }
                 else
+                {
+                    Console.WriteLine("Failed to update document status");
                     return BadRequest("Failed to update document status.");
+                }
             }
             catch (KeyNotFoundException ex)
             {
+                Console.WriteLine($"KeyNotFoundException: {ex.Message}");
                 return NotFound(ex.Message);
             }
             catch (InvalidOperationException ex)
             {
+                Console.WriteLine($"InvalidOperationException: {ex.Message}");
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Exception in MoveToStatus: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
@@ -272,6 +286,60 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpGet("document/{documentId}/current-status")]
+        public async Task<ActionResult<DocumentCurrentStatusDto>> GetDocumentCurrentStatus(int documentId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            try
+            {
+                // Get the document and its current status
+                var document = await _context.Documents
+                    .Include(d => d.CurrentStatus)
+                    .Include(d => d.CurrentStep)
+                    .Include(d => d.Circuit)
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null)
+                    return NotFound("Document not found.");
+
+                // Create the response object
+                var response = new DocumentCurrentStatusDto
+                {
+                    DocumentId = document.Id,
+                    DocumentKey = document.DocumentKey,
+                    Title = document.Title,
+                    Status = document.Status,
+                    StatusText = GetStatusText(document.Status),
+                    CircuitId = document.CircuitId,
+                    CircuitTitle = document.Circuit?.Title,
+                    CurrentStatusId = document.CurrentStatusId,
+                    CurrentStatusTitle = document.CurrentStatus?.Title,
+                    CurrentStepId = document.CurrentStepId,
+                    CurrentStepTitle = document.CurrentStep?.Title,
+                    IsCircuitCompleted = document.IsCircuitCompleted,
+                    LastUpdated = document.UpdatedAt
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         [HttpGet("document/{documentId}/available-transitions")]
         public async Task<ActionResult<IEnumerable<StatusDto>>> GetAvailableTransitions(int documentId)
         {
@@ -360,6 +428,100 @@ namespace DocManagementBackend.Controllers
             }).ToList();
 
             return Ok(statusDtos);
+        }
+
+        [HttpGet("document/{documentId}/step-statuses")]
+        public async Task<ActionResult<IEnumerable<DocumentStepStatusDto>>> GetDocumentStepStatuses(int documentId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            try
+            {
+                // Get the document and verify it has a circuit
+                var document = await _context.Documents
+                    .Include(d => d.Circuit)
+                    .Include(d => d.CurrentStatus)
+                    .Include(d => d.CurrentStep)
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null)
+                    return NotFound("Document not found.");
+
+                if (document.CircuitId == null)
+                    return BadRequest("Document is not assigned to any circuit.");
+
+                // Get all steps in the circuit
+                var steps = await _context.Steps
+                    .Include(s => s.CurrentStatus)
+                    .Include(s => s.NextStatus)
+                    .Where(s => s.CircuitId == document.CircuitId)
+                    .OrderBy(s => s.Id)
+                    .ToListAsync();
+
+                if (!steps.Any())
+                    return Ok(new List<DocumentStepStatusDto>()); // Return empty list if no steps
+
+                // Get document step history to determine completed steps
+                var stepHistory = await _context.DocumentStepHistory
+                    .Include(h => h.User)
+                    .Where(h => h.DocumentId == documentId)
+                    .OrderByDescending(h => h.TransitionDate)
+                    .ToListAsync();
+
+                var result = new List<DocumentStepStatusDto>();
+
+                foreach (var step in steps)
+                {
+                    // Determine if this step is completed
+                    var stepCompletion = stepHistory.FirstOrDefault(h => h.StepId == step.Id);
+
+                    // Check if this is the current step
+                    bool isCurrentStep = document.CurrentStepId == step.Id;
+
+                    // Check if step is completed
+                    // A step is considered completed if:
+                    // 1. It has a record in history AND
+                    // 2. Either it's not the current step OR the document has moved beyond this step's status
+                    bool isCompleted = stepCompletion != null && 
+                        (!isCurrentStep || 
+                         (document.CurrentStatusId != null && document.CurrentStatusId != step.CurrentStatusId));
+
+                    var stepStatus = new DocumentStepStatusDto
+                    {
+                        StepId = step.Id,
+                        StepKey = step.StepKey,
+                        Title = step.Title,
+                        Description = step.Descriptif,
+                        CurrentStatusId = step.CurrentStatusId,
+                        CurrentStatusTitle = step.CurrentStatus?.Title ?? "Unknown",
+                        NextStatusId = step.NextStatusId,
+                        NextStatusTitle = step.NextStatus?.Title ?? "Unknown",
+                        IsCurrentStep = isCurrentStep,
+                        IsCompleted = isCompleted,
+                        CompletedAt = stepCompletion?.TransitionDate,
+                        CompletedBy = stepCompletion?.User?.Username
+                    };
+
+                    result.Add(stepStatus);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         [HttpGet("document/{documentId}/history")]
