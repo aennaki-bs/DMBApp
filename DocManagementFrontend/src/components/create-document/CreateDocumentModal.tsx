@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import documentService from "@/services/documentService";
 import subTypeService from "@/services/subTypeService";
 import { DocumentType } from "@/models/document";
@@ -31,6 +32,7 @@ export const CreateDocumentModal = ({
   onClose,
   onDocumentCreated,
 }: CreateDocumentModalProps) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [subTypes, setSubTypes] = useState<SubType[]>([]);
@@ -111,24 +113,28 @@ export const CreateDocumentModal = ({
   // Update date validation when subtype changes
   useEffect(() => {
     if (selectedSubTypeId && docDate) {
-      const selectedSubType = subTypes.find(st => st.id === selectedSubTypeId);
+      const selectedSubType = subTypes.find(
+        (st) => st.id === selectedSubTypeId
+      );
       if (selectedSubType) {
         const subTypeStartDate = new Date(selectedSubType.startDate);
         const subTypeEndDate = new Date(selectedSubType.endDate);
         const selectedDate = new Date(docDate);
-        
+
         // Reset time components for accurate date comparison
         subTypeStartDate.setHours(0, 0, 0, 0);
         subTypeEndDate.setHours(0, 0, 0, 0);
         selectedDate.setHours(0, 0, 0, 0);
-        
+
         if (selectedDate < subTypeStartDate || selectedDate > subTypeEndDate) {
-          setDateError(`Date must be within the subtype date range (${subTypeStartDate.toLocaleDateString()} - ${subTypeEndDate.toLocaleDateString()})`);
-          
+          setDateError(
+            `Date must be within the subtype date range (${subTypeStartDate.toLocaleDateString()} - ${subTypeEndDate.toLocaleDateString()})`
+          );
+
           // Try to set a default date within the range
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          
+
           if (today >= subTypeStartDate && today <= subTypeEndDate) {
             // If today is in range, use it
             setDocDate(today.toISOString().split("T")[0]);
@@ -164,19 +170,26 @@ export const CreateDocumentModal = ({
 
       // Validate against selected subtype date range
       if (selectedSubTypeId) {
-        const selectedSubType = subTypes.find(st => st.id === selectedSubTypeId);
+        const selectedSubType = subTypes.find(
+          (st) => st.id === selectedSubTypeId
+        );
         if (selectedSubType) {
           const subTypeStartDate = new Date(selectedSubType.startDate);
           const subTypeEndDate = new Date(selectedSubType.endDate);
           const selectedDate = new Date(date);
-          
+
           // Reset time components for accurate date comparison
           subTypeStartDate.setHours(0, 0, 0, 0);
           subTypeEndDate.setHours(0, 0, 0, 0);
           selectedDate.setHours(0, 0, 0, 0);
-          
-          if (selectedDate < subTypeStartDate || selectedDate > subTypeEndDate) {
-            setDateError(`Date must be within the subtype date range (${subTypeStartDate.toLocaleDateString()} - ${subTypeEndDate.toLocaleDateString()})`);
+
+          if (
+            selectedDate < subTypeStartDate ||
+            selectedDate > subTypeEndDate
+          ) {
+            setDateError(
+              `Date must be within the subtype date range (${subTypeStartDate.toLocaleDateString()} - ${subTypeEndDate.toLocaleDateString()})`
+            );
           } else {
             setDateError(null);
           }
@@ -225,7 +238,9 @@ export const CreateDocumentModal = ({
         }
         // Add extra validation to check against subtype date range
         if (selectedSubTypeId) {
-          const selectedSubType = subTypes.find(st => st.id === selectedSubTypeId);
+          const selectedSubType = subTypes.find(
+            (st) => st.id === selectedSubTypeId
+          );
           if (selectedSubType) {
             const subTypeStartDate = new Date(selectedSubType.startDate);
             const subTypeEndDate = new Date(selectedSubType.endDate);
@@ -236,8 +251,13 @@ export const CreateDocumentModal = ({
             subTypeEndDate.setHours(0, 0, 0, 0);
             selectedDate.setHours(0, 0, 0, 0);
 
-            if (selectedDate < subTypeStartDate || selectedDate > subTypeEndDate) {
-              toast.error(`Date must be within the subtype date range (${subTypeStartDate.toLocaleDateString()} - ${subTypeEndDate.toLocaleDateString()})`);
+            if (
+              selectedDate < subTypeStartDate ||
+              selectedDate > subTypeEndDate
+            ) {
+              toast.error(
+                `Date must be within the subtype date range (${subTypeStartDate.toLocaleDateString()} - ${subTypeEndDate.toLocaleDateString()})`
+              );
               return false;
             }
           }
@@ -274,10 +294,14 @@ export const CreateDocumentModal = ({
         subTypeId: selectedSubTypeId,
       };
 
-      await documentService.createDocument(documentData);
+      const createdDocument = await documentService.createDocument(
+        documentData
+      );
       toast.success("Document created successfully");
       onDocumentCreated();
       onClose();
+      // Redirect to the document view page
+      navigate(`/documents/${createdDocument.id}`);
     } catch (error) {
       console.error("Failed to create document:", error);
       toast.error("Failed to create document");
@@ -311,7 +335,11 @@ export const CreateDocumentModal = ({
             docDate={docDate}
             dateError={dateError}
             onDateChange={handleDocDateChange}
-            selectedSubType={selectedSubTypeId ? subTypes.find(st => st.id === selectedSubTypeId) : null}
+            selectedSubType={
+              selectedSubTypeId
+                ? subTypes.find((st) => st.id === selectedSubTypeId)
+                : null
+            }
           />
         );
       case 4:

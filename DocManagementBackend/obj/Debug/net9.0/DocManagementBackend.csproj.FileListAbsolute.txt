@@ -1109,3 +1109,7 @@ C:\Users\ENNAKI\Desktop\claudeProject\DMBApp\DocManagementBackend\obj\Debug\net9
 C:\Users\ENNAKI\Desktop\claudeProject\DMBApp\DocManagementBackend\obj\Debug\net9.0\DocManag.0376FB33.Up2Date
 C:\Users\ENNAKI\Desktop\claudeProject\DMBApp\DocManagementBackend\obj\Debug\net9.0\DocManagementBackend.genruntimeconfig.cache
 C:\Users\ENNAKI\Desktop\claudeProject\DMBApp\DocManagementBackend\obj\Debug\net9.0\ref\DocManagementBackend.dll
+C:\Users\PC\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\FirebaseAdmin.dll
+C:\Users\PC\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\Google.Api.Gax.dll
+C:\Users\PC\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\Google.Api.Gax.Rest.dll
+C:\Users\PC\Desktop\DMBApp\DocManagementBackend\bin\Debug\net9.0\RestSharp.dll

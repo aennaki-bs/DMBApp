@@ -55,3 +55,17 @@ add typeLine where we can choose an intrerval of this type
  - in Document change document created by document date and document key by document code
  - in type managment in the filter i want to see the date piker filter just when i select somting related by date in the filter in filter by it 
  - fix the ui and ux in user managment and type management specelly the tables and the scroll and pagination
+
+ WEEKEND:
+    ✔ after creation of document, user should be redirected to view document @done(25-05-09 16:07)
+    ✔ add assignement of document to circuit butoon to the view @started(25-05-09 16:08) @done(25-05-09 16:11) @lasted(3m20s)
+    ✔ in the documents table add redirection to the flow of document @done(25-05-09 16:27)
+    in document flow:
+        ☐ improve the ui
+        ☐ handle the move document button
+        ☐ before actions display message confirmation
+        ☐ handle auto refresh after action
+    in circuit, statuses and steps tables:
+        ☐ improve the ui
+        ☐ add filters
+        

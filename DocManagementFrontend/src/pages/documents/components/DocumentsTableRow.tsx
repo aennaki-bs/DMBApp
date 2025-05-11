@@ -1,11 +1,26 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Document } from "@/models/document";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Edit, Trash, GitBranch, CheckCircle } from "lucide-react";
+import {
+  Edit,
+  Trash,
+  GitBranch,
+  CheckCircle,
+  MoreVertical,
+  ExternalLink,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -22,6 +37,98 @@ interface DocumentsTableRowProps {
   onDelete: () => void;
   onAssignCircuit: () => void;
 }
+
+// Document Actions Dropdown component
+const DocumentActionsDropdown = ({
+  document,
+  canManageDocuments,
+  onDelete,
+  onAssignCircuit,
+}: {
+  document: Document;
+  canManageDocuments: boolean;
+  onDelete: () => void;
+  onAssignCircuit: () => void;
+}) => {
+  const navigate = useNavigate();
+  const isAssignedToCircuit = !!document.circuitId;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        align="end"
+        className="bg-[#0d1117] border-gray-800 text-white"
+      >
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-gray-700" />
+
+        <DropdownMenuItem
+          className="hover:bg-blue-900/20"
+          onClick={() => navigate(`/documents/${document.id}`)}
+        >
+          <ExternalLink className="mr-2 h-4 w-4 text-blue-400" />
+          View Document
+        </DropdownMenuItem>
+
+        {canManageDocuments && (
+          <>
+            {/* Show Document Flow if assigned to circuit */}
+            {isAssignedToCircuit && (
+              <DropdownMenuItem
+                className="hover:bg-blue-900/20"
+                onClick={() => navigate(`/documents/${document.id}/flow`)}
+              >
+                <GitBranch className="mr-2 h-4 w-4 text-blue-400" />
+                Document Flow
+              </DropdownMenuItem>
+            )}
+
+            {/* Show Assign to Circuit if not assigned */}
+            {!isAssignedToCircuit && (
+              <DropdownMenuItem
+                className="hover:bg-blue-900/20"
+                onClick={onAssignCircuit}
+              >
+                <GitBranch className="mr-2 h-4 w-4 text-blue-400" />
+                Assign to Circuit
+              </DropdownMenuItem>
+            )}
+
+            <DropdownMenuItem className="hover:bg-blue-900/20" asChild>
+              <Link to={`/documents/${document.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4 text-blue-400" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-gray-700" />
+
+            <DropdownMenuItem
+              className="text-red-400 hover:bg-red-900/20 hover:text-red-300"
+              onClick={onDelete}
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
+
+        {!canManageDocuments && (
+          <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
+            <Edit className="mr-2 h-4 w-4" />
+            Requires permissions
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 export default function DocumentsTableRow({
   document,
@@ -92,93 +199,12 @@ export default function DocumentsTableRow({
         </div>
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end space-x-1">
-          {canManageDocuments ? (
-            <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {isAssignedToCircuit ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 p-0 text-green-400 cursor-not-allowed opacity-80"
-                      disabled
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                      onClick={onAssignCircuit}
-                    >
-                      <GitBranch className="h-4 w-4" />
-                    </Button>
-                  )}
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>
-                    {isAssignedToCircuit
-                      ? "Document is already assigned to a circuit"
-                      : "Assign to circuit"}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                    asChild
-                  >
-                    <Link to={`/documents/${document.id}/edit`}>
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Edit document</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                    onClick={onDelete}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Delete document</p>
-                </TooltipContent>
-              </Tooltip>
-            </>
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="cursor-not-allowed opacity-50"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Only Admin or FullUser can edit documents</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
+        <DocumentActionsDropdown
+          document={document}
+          canManageDocuments={canManageDocuments}
+          onDelete={onDelete}
+          onAssignCircuit={onAssignCircuit}
+        />
       </TableCell>
     </TableRow>
   );
