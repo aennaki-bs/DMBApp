@@ -44,6 +44,10 @@ namespace DocManagementBackend.Services
             // Generate a unique key for the status
             status.StatusKey = $"ST-{circuit.CircuitKey}-{Guid.NewGuid().ToString().Substring(0, 8)}";
 
+            // Validate that a status can't be both initial and final
+            if (status.IsInitial && status.IsFinal)
+                throw new InvalidOperationException("A status cannot be both initial and final. Please choose one type only.");
+
             // Validate status types
             if (status.IsInitial)
             {
@@ -53,6 +57,10 @@ namespace DocManagementBackend.Services
 
                 if (existingInitial)
                     throw new InvalidOperationException("This circuit already has an initial status. Only one initial status is allowed.");
+
+                // If status is initial, it shouldn't be flexible
+                // if (status.IsFlexible)
+                //     throw new InvalidOperationException("An initial status cannot be flexible. Please set IsFlexible to false.");
             }
 
             if (status.IsFinal)
@@ -63,6 +71,10 @@ namespace DocManagementBackend.Services
 
                 if (existingFinal)
                     throw new InvalidOperationException("This circuit already has a final status. Only one final status is allowed.");
+
+                // If status is final, it shouldn't be flexible
+                // if (status.IsFlexible)
+                //     throw new InvalidOperationException("A final status cannot be flexible. Please set IsFlexible to false.");
             }
 
             _context.Status.Add(status);
@@ -120,6 +132,22 @@ namespace DocManagementBackend.Services
 
                 if (updateDto.IsRequired.HasValue)
                     status.IsRequired = updateDto.IsRequired.Value;
+
+                // Calculate what the status properties will be after the update
+                bool willBeInitial = updateDto.IsInitial.HasValue ? updateDto.IsInitial.Value : status.IsInitial;
+                bool willBeFinal = updateDto.IsFinal.HasValue ? updateDto.IsFinal.Value : status.IsFinal;
+                bool willBeFlexible = updateDto.IsFlexible.HasValue ? updateDto.IsFlexible.Value : status.IsFlexible;
+
+                // A status cannot be both initial and final
+                if (willBeInitial && willBeFinal)
+                    throw new InvalidOperationException("A status cannot be both initial and final. Please choose one type only.");
+
+                // Initial and final statuses cannot be flexible
+                // if (willBeInitial && willBeFlexible)
+                //     throw new InvalidOperationException("An initial status cannot be flexible.");
+
+                // if (willBeFinal && willBeFlexible)
+                //     throw new InvalidOperationException("A final status cannot be flexible.");
 
                 // Handle IsInitial flag change
                 if (updateDto.IsInitial.HasValue && updateDto.IsInitial.Value != status.IsInitial)
@@ -289,14 +317,26 @@ namespace DocManagementBackend.Services
                 return validation;
             }
 
-            if (!validation.HasInitialStatus)
+            // Check for exactly one initial status
+            var initialStatuses = circuit.Statuses.Where(s => s.IsInitial).ToList();
+            if (initialStatuses.Count == 0)
             {
                 validation.ValidationMessages.Add("Circuit has no initial status defined");
             }
+            else if (initialStatuses.Count > 1)
+            {
+                validation.ValidationMessages.Add($"Circuit has {initialStatuses.Count} initial statuses, but exactly one is required");
+            }
 
-            if (!validation.HasFinalStatus)
+            // Check for exactly one final status
+            var finalStatuses = circuit.Statuses.Where(s => s.IsFinal).ToList();
+            if (finalStatuses.Count == 0)
             {
                 validation.ValidationMessages.Add("Circuit has no final status defined");
+            }
+            else if (finalStatuses.Count > 1)
+            {
+                validation.ValidationMessages.Add($"Circuit has {finalStatuses.Count} final statuses, but exactly one is required");
             }
 
             if (!validation.HasSteps)

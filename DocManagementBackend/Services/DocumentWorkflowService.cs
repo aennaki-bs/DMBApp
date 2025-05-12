@@ -107,9 +107,6 @@ namespace DocManagementBackend.Services
                 if (document == null || document.CurrentStatusId == null)
                     throw new KeyNotFoundException("Document not found or not in a workflow");
 
-                if (document.IsCircuitCompleted)
-                    throw new InvalidOperationException("Document workflow is already completed");
-
                 var circuit = document.Circuit;
                 if (circuit == null)
                     throw new InvalidOperationException("Document is not assigned to a circuit");
@@ -158,6 +155,14 @@ namespace DocManagementBackend.Services
                 }
                 
                 document.UpdatedAt = DateTime.UtcNow;
+
+                // If document was previously completed and we're moving to a non-final status,
+                // set it back to in-progress
+                if (document.IsCircuitCompleted && !targetStatus.IsFinal)
+                {
+                    document.IsCircuitCompleted = false;
+                    document.Status = 1; // In Progress
+                }
 
                 // Create history entry for the transition
                 var historyEntry = new DocumentCircuitHistory
@@ -348,7 +353,7 @@ namespace DocManagementBackend.Services
                 }
 
                 // Update the document's IsCircuitCompleted status based on the completion state
-                document.IsCircuitCompleted = isComplete;
+                // document.IsCircuitCompleted = isComplete;
                 if (isComplete) 
                 {
                     document.Status = 2; // Set document status to "Completed"
@@ -398,12 +403,6 @@ namespace DocManagementBackend.Services
                 throw new InvalidOperationException("Document not found or not in a workflow");
 
             Console.WriteLine($"Document current status: {document.CurrentStatus?.Title}, CircuitId: {document.CircuitId}");
-
-            if (document.IsCircuitCompleted)
-            {
-                Console.WriteLine("Document workflow is already completed, no transitions available");
-                return new List<StatusDto>(); // No transitions available if completed
-            }
 
             // Find all possible next statuses based on steps defined for the current status
             var steps = await _context.Steps
@@ -673,9 +672,9 @@ namespace DocManagementBackend.Services
                 .Include(d => d.CurrentStatus)
                 .FirstOrDefaultAsync(d => d.Id == documentId);
 
-            if (document == null || document.CurrentStatusId == null || document.CircuitId == null || document.IsCircuitCompleted)
+            if (document == null || document.CurrentStatusId == null || document.CircuitId == null)
             {
-                Console.WriteLine("Document not found, not in workflow, or already completed");
+                Console.WriteLine("Document not found, not in workflow");
                 return false;
             }
 
@@ -705,6 +704,8 @@ namespace DocManagementBackend.Services
                 s.NextStatusId == targetStatusId);
 
             Console.WriteLine($"Has direct step from current to target status: {hasStep}");
+            
+            // Allow transition if a valid step exists, even if document is marked as completed
             return hasStep;
         }
 
