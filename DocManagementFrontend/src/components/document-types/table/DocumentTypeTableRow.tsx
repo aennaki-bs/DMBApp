@@ -1,9 +1,9 @@
-import { TableRow, TableCell } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Edit2, Trash2, ChevronRight } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { DocumentType } from '@/models/document';
-import { useNavigate } from 'react-router-dom';
+import { TableRow, TableCell } from "@/components/ui/table";
+import { DocumentType } from "@/models/document";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2, Eye } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 
 interface DocumentTypeTableRowProps {
   type: DocumentType;
@@ -13,98 +13,72 @@ interface DocumentTypeTableRowProps {
   onEditType: (type: DocumentType) => void;
 }
 
-export function DocumentTypeTableRow({
+export const DocumentTypeTableRow = ({
   type,
   isSelected,
   onSelectType,
   onDeleteType,
   onEditType,
-}: DocumentTypeTableRowProps) {
-  const navigate = useNavigate();
-  
-  const handleRowClick = () => {
-    navigate(`/document-types/${type.id}/subtypes`);
-  };
-
-  const documentCount = type.documentCounter || 0;
+}: DocumentTypeTableRowProps) => {
+  const isEligibleForSelection = type.documentCounter === 0;
 
   return (
-    <TableRow 
-      className={`transition-all hover:bg-blue-900/20 cursor-pointer`}
-      onClick={handleRowClick}
+    <TableRow
+      className={`border-blue-900/30 hover:bg-blue-900/20 transition-colors ${
+        isSelected ? "bg-blue-900/30 border-l-4 border-l-blue-500" : ""
+      }`}
     >
-      <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>
+      <TableCell className="w-12">
         <Checkbox
           checked={isSelected}
-          onCheckedChange={(checked) => onSelectType(type.id!, checked as boolean)}
-          disabled={documentCount > 0}
+          onCheckedChange={(checked) => onSelectType(type.id!, !!checked)}
+          disabled={!isEligibleForSelection}
+          className="border-blue-500/50"
         />
       </TableCell>
-      <TableCell className="text-blue-100">{type.typeKey}</TableCell>
-      <TableCell>{type.typeName}</TableCell>
-      <TableCell>{type.typeAttr}</TableCell>
-      <TableCell>
-        <div className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors font-mono ${
-          documentCount === 0 
-            ? 'border-transparent bg-primary text-primary-foreground shadow' 
-            : 'border-transparent bg-[#1a2765] text-white shadow'
-        }`}>
-          {documentCount}
-        </div>
+      <TableCell className="font-medium text-blue-100">
+        {type.typeKey || "No code"}
       </TableCell>
-      <TableCell className="text-right w-[120px]" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-end items-center gap-2">
+      <TableCell className="text-blue-100">
+        {type.typeName || "Unnamed Type"}
+      </TableCell>
+      <TableCell className="text-blue-200/70 max-w-xs truncate">
+        {type.typeAttr || "No description"}
+      </TableCell>
+      <TableCell className="text-blue-200">
+        {type.documentCounter || 0}
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end space-x-1">
           <Button
             variant="ghost"
-            size="icon"
-            className={`h-8 w-8 p-0 ${
-              documentCount > 0
-                ? 'text-gray-500 cursor-not-allowed'
-                : 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/40'
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (documentCount === 0) onEditType(type);
-            }}
-            disabled={documentCount > 0}
-            title={documentCount > 0 ? 
-              "Cannot edit type with associated documents" : 
-              "Edit document type"}
+            size="sm"
+            className="text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+            asChild
           >
-            <Edit2 className="h-4 w-4" />
+            <Link to={`/document-types/${type.id}`}>
+              <Eye className="h-4 w-4" />
+            </Link>
           </Button>
           <Button
             variant="ghost"
-            size="icon"
-            className={`h-8 w-8 p-0 ${
-              documentCount > 0
-                ? 'text-gray-500 cursor-not-allowed'
-                : 'text-red-400 hover:text-red-300 hover:bg-red-900/30'
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (documentCount === 0 && type.id) onDeleteType(type.id);
-            }}
-            disabled={documentCount > 0}
-            title={documentCount > 0 ? 
-              "Cannot delete type with associated documents" : 
-              "Delete document type"}
+            size="sm"
+            className="text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+            onClick={() => onEditType(type)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+            onClick={() => onDeleteType(type.id!)}
+            disabled={type.documentCounter !== 0}
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/document-types/${type.id}/subtypes`);
-            }}
-          >
-            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </TableCell>
     </TableRow>
   );
-}
+};

@@ -78,6 +78,7 @@ import { FilterContent } from "@/components/shared/FilterContent";
 import { FilterBadges, FilterBadge } from "@/components/shared/FilterBadges";
 import { BulkActionsBar, BulkAction } from "@/components/shared/BulkActionsBar";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { AnimatePresence } from "framer-motion";
 
 const mockDocuments: Document[] = [
   {
@@ -620,7 +621,7 @@ const Documents = () => {
     bulkActions.push({
       id: "assign-circuit",
       label: "Assign Circuit",
-      icon: <GitBranch className="h-3.5 w-3.5" />,
+      icon: <GitBranch className="h-4 w-4" />,
       onClick: () => {
         const selectedDoc = documents.find(
           (doc) => doc.id === selectedDocuments[0]
@@ -629,15 +630,19 @@ const Documents = () => {
           openAssignCircuitDialog(selectedDoc);
         }
       },
+      className:
+        "bg-blue-900/30 border-blue-500/30 text-blue-200 hover:text-blue-100 hover:bg-blue-800/50 hover:border-blue-400/50 transition-all duration-200 shadow-md",
     });
   }
 
   bulkActions.push({
     id: "delete",
     label: "Delete",
-    icon: <Trash className="h-3.5 w-3.5" />,
-    variant: "destructive",
+    icon: <Trash className="h-4 w-4" />,
     onClick: () => openDeleteDialog(),
+    variant: "destructive",
+    className:
+      "bg-red-900/30 border-red-500/30 text-red-300 hover:text-red-200 hover:bg-red-900/50 hover:border-red-400/50 transition-all duration-200 shadow-md",
   });
 
   // Search fields
@@ -805,14 +810,6 @@ const Documents = () => {
 
         <FilterBadges badges={filterBadges} />
 
-        {canManageDocuments && (
-          <BulkActionsBar
-            selectedCount={selectedDocuments.length}
-            entityName="document"
-            actions={bulkActions}
-          />
-        )}
-
         {/* Table */}
         {isLoading ? (
           <div className="p-8 space-y-4">
@@ -825,207 +822,212 @@ const Documents = () => {
             ))}
           </div>
         ) : getPageDocuments().length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-blue-900/20">
-                <TableRow className="border-blue-900/50 hover:bg-blue-900/30">
-                  <TableHead className="w-12 text-blue-300">
-                    {canManageDocuments ? (
-                      <Checkbox
-                        checked={
-                          selectedDocuments.length ===
-                            getPageDocuments().length &&
-                          getPageDocuments().length > 0
-                        }
-                        onCheckedChange={handleSelectAll}
-                        className="border-blue-500/50"
-                      />
-                    ) : (
-                      <span>#</span>
-                    )}
-                  </TableHead>
-                  <TableHead className="text-blue-300 w-52">
-                    {renderSortableHeader(
-                      "Document Code",
-                      "documentKey",
-                      <Tag className="h-4 w-4" />
-                    )}
-                  </TableHead>
-                  <TableHead className="text-blue-300">
-                    {renderSortableHeader(
-                      "Title",
-                      "title",
-                      <FileText className="h-4 w-4" />
-                    )}
-                  </TableHead>
-                  <TableHead className="text-blue-300">
-                    {renderSortableHeader(
-                      "Type",
-                      "documentType",
-                      <Filter className="h-4 w-4" />
-                    )}
-                  </TableHead>
-                  <TableHead className="text-blue-300">
-                    {renderSortableHeader(
-                      "Document Date",
-                      "docDate",
-                      <CalendarDays className="h-4 w-4" />
-                    )}
-                  </TableHead>
-                  <TableHead className="text-blue-300">
-                    {renderSortableHeader(
-                      "Created By",
-                      "createdBy",
-                      <Avatar className="h-4 w-4" />
-                    )}
-                  </TableHead>
-                  <TableHead className="text-blue-300">Status</TableHead>
-                  <TableHead className="text-blue-300 text-right">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getPageDocuments().map((document, index) => (
-                  <TableRow
-                    key={document.id}
-                    className={`border-blue-900/30 hover:bg-blue-900/20 transition-all ${
-                      selectedDocuments.includes(document.id)
-                        ? "bg-blue-900/30 border-l-4 border-l-blue-500"
-                        : ""
-                    }`}
-                  >
-                    <TableCell>
+          <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-blue-900/20">
+                  <TableRow className="border-blue-900/50 hover:bg-blue-900/30">
+                    <TableHead className="w-12 text-blue-300">
                       {canManageDocuments ? (
                         <Checkbox
-                          checked={selectedDocuments.includes(document.id)}
-                          onCheckedChange={() =>
-                            handleSelectDocument(document.id)
+                          checked={
+                            selectedDocuments.length ===
+                              getPageDocuments().length &&
+                            getPageDocuments().length > 0
                           }
+                          onCheckedChange={handleSelectAll}
                           className="border-blue-500/50"
                         />
                       ) : (
-                        <span className="text-sm text-gray-500">
-                          {index + 1 + (page - 1) * pageSize}
-                        </span>
+                        <span>#</span>
                       )}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-blue-300">
-                      {document.documentKey}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          to={`/documents/${document.id}`}
-                          className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
-                        >
-                          {document.title}
-                        </Link>
-                        {getStatusBadge(document.status)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-blue-100">
-                      {document.documentType.typeName}
-                    </TableCell>
-                    <TableCell className="text-blue-100/70 text-sm">
-                      {new Date(document.docDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="bg-blue-800 text-xs">
-                            {document.createdBy.firstName[0]}
-                            {document.createdBy.lastName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-blue-100/80">
-                          {document.createdBy.username}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-blue-100">
-                      {getStatusBadge(document.status)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-1">
-                        {canManageDocuments ? (
-                          <>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                                  onClick={() =>
-                                    openAssignCircuitDialog(document)
-                                  }
-                                >
-                                  <GitBranch className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                <p>Assign to circuit</p>
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                                  asChild
-                                >
-                                  <Link to={`/documents/${document.id}/edit`}>
-                                    <Edit className="h-4 w-4" />
-                                  </Link>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                <p>Edit document</p>
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                                  onClick={() => openDeleteDialog(document.id)}
-                                >
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                <p>Delete document</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </>
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="cursor-not-allowed opacity-50"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                <p>Only Admin or FullUser can edit documents</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </div>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead className="text-blue-300 w-52">
+                      {renderSortableHeader(
+                        "Document Code",
+                        "documentKey",
+                        <Tag className="h-4 w-4" />
+                      )}
+                    </TableHead>
+                    <TableHead className="text-blue-300">
+                      {renderSortableHeader(
+                        "Title",
+                        "title",
+                        <FileText className="h-4 w-4" />
+                      )}
+                    </TableHead>
+                    <TableHead className="text-blue-300">
+                      {renderSortableHeader(
+                        "Type",
+                        "documentType",
+                        <Filter className="h-4 w-4" />
+                      )}
+                    </TableHead>
+                    <TableHead className="text-blue-300">
+                      {renderSortableHeader(
+                        "Document Date",
+                        "docDate",
+                        <CalendarDays className="h-4 w-4" />
+                      )}
+                    </TableHead>
+                    <TableHead className="text-blue-300">
+                      {renderSortableHeader(
+                        "Created By",
+                        "createdBy",
+                        <Users className="h-4 w-4" />
+                      )}
+                    </TableHead>
+                    <TableHead className="text-blue-300">Status</TableHead>
+                    <TableHead className="text-blue-300 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {getPageDocuments().map((document, index) => (
+                    <TableRow
+                      key={document.id}
+                      className={`border-blue-900/30 hover:bg-blue-900/20 transition-all ${
+                        selectedDocuments.includes(document.id)
+                          ? "bg-blue-900/30 border-l-4 border-l-blue-500"
+                          : ""
+                      }`}
+                    >
+                      <TableCell>
+                        {canManageDocuments ? (
+                          <Checkbox
+                            checked={selectedDocuments.includes(document.id)}
+                            onCheckedChange={() =>
+                              handleSelectDocument(document.id)
+                            }
+                            className="border-blue-500/50"
+                          />
+                        ) : (
+                          <span className="text-sm text-gray-500">
+                            {index + 1 + (page - 1) * pageSize}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-blue-300">
+                        {document.documentKey}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/documents/${document.id}`}
+                            className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
+                          >
+                            {document.title}
+                          </Link>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-blue-100">
+                        {document.documentType.typeName}
+                      </TableCell>
+                      <TableCell className="text-blue-100/70 text-sm">
+                        {new Date(document.docDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="bg-blue-800 text-xs">
+                              {document.createdBy.firstName[0]}
+                              {document.createdBy.lastName[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm text-blue-100/80">
+                            {document.createdBy.username}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-blue-100">
+                        {getStatusBadge(document.status)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-1">
+                          {canManageDocuments ? (
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
+                                    onClick={() =>
+                                      openAssignCircuitDialog(document)
+                                    }
+                                  >
+                                    <GitBranch className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
+                                  <p>Assign to circuit</p>
+                                </TooltipContent>
+                              </Tooltip>
+
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
+                                    asChild
+                                  >
+                                    <Link to={`/documents/${document.id}/edit`}>
+                                      <Edit className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
+                                  <p>Edit document</p>
+                                </TooltipContent>
+                              </Tooltip>
+
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                                    onClick={() =>
+                                      openDeleteDialog(document.id)
+                                    }
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
+                                  <p>Delete document</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </>
+                          ) : (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="cursor-not-allowed opacity-50"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
+                                  <p>
+                                    Only Admin or FullUser can edit documents
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         ) : (
           <EmptyState
@@ -1148,6 +1150,18 @@ const Documents = () => {
           onSuccess={handleAssignCircuitSuccess}
         />
       )}
+
+      {/* Bulk Actions Bar */}
+      <AnimatePresence>
+        {canManageDocuments && selectedDocuments.length > 0 && (
+          <BulkActionsBar
+            selectedCount={selectedDocuments.length}
+            entityName="document"
+            actions={bulkActions}
+            icon={<FileText className="w-5 h-5 text-blue-400" />}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -104,7 +104,12 @@ const App = () => (
                   />
 
                   {/* Document Types Management routes */}
-                  <Route path="/document-types" element={<DocumentTypes />} />
+                  <Route
+                    path="/document-types"
+                    element={
+                      <Navigate to="/document-types-management" replace />
+                    }
+                  />
                   <Route
                     path="/document-types-management"
                     element={
@@ -121,19 +126,6 @@ const App = () => (
                   <Route path="/documents" element={<DocumentsPageWrapper />} />
                   <Route path="/documents/:id" element={<ViewDocument />} />
 
-                  {/* Document Types Management routes */}
-                  <Route path="/document-types" element={<DocumentTypes />} />
-                  <Route
-                    path="/document-types-management"
-                    element={
-                      <ProtectedRoute
-                        requiresManagement
-                        requiredRole={["Admin", "FullUser"]}
-                      >
-                        <DocumentTypesManagement />
-                      </ProtectedRoute>
-                    }
-                  />
                   <Route
                     path="/document-types/:id/subtypes"
                     element={

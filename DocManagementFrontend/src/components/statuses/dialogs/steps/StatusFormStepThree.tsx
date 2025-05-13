@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, InfoIcon } from "lucide-react";
 import { FormValues } from "../StatusFormDialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
 
 interface StatusFormStepThreeProps {
   values: FormValues;

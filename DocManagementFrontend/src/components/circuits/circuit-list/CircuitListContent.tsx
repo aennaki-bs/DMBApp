@@ -5,7 +5,7 @@ import CircuitDetailsDialog from "../CircuitDetailsDialog";
 import { CircuitLoadingState } from "./CircuitLoadingState";
 import { CircuitEmptyState } from "./CircuitEmptyState";
 import { CircuitsTable } from "./CircuitsTable";
-import { Trash } from "lucide-react";
+import { Trash, AlertTriangle } from "lucide-react";
 
 interface CircuitListContentProps {
   circuits: Circuit[] | undefined;
@@ -67,36 +67,48 @@ export function CircuitListContent({
   }
 
   if (isError) {
-    return <div className="text-red-500 p-8">Error loading circuits</div>;
+    return (
+      <div className="flex flex-col items-center justify-center py-10 px-4 text-center rounded-xl border border-red-900/30 bg-red-950/20">
+        <AlertTriangle className="h-10 w-10 text-red-500 mb-2" />
+        <h3 className="text-lg font-medium text-red-400 mb-1">
+          Failed to load circuits
+        </h3>
+        <p className="text-red-300/80">
+          There was an error retrieving the circuits. Please try again later.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
-      <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
-        <div className="min-w-[800px]">
-          {circuits && circuits.length > 0 ? (
-            <CircuitsTable
-              circuits={circuits}
-              isSimpleUser={isSimpleUser}
-              selectedCircuits={selectedCircuits}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onViewDetails={onViewDetails}
-              onSelectCircuit={onSelectCircuit}
-              onSelectAll={onSelectAll}
-              sortConfig={sortConfig}
-              onSort={onSort}
-              onBulkDelete={onBulkDelete}
-            />
-          ) : (
-            <CircuitEmptyState
-              searchQuery={searchQuery}
-              statusFilter={statusFilter}
-              isSimpleUser={isSimpleUser}
-            />
-          )}
+    <>
+      {circuits && circuits.length > 0 ? (
+        <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+          <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
+            <div className="min-w-[800px]">
+              <CircuitsTable
+                circuits={circuits}
+                isSimpleUser={isSimpleUser}
+                selectedCircuits={selectedCircuits}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onViewDetails={onViewDetails}
+                onSelectCircuit={onSelectCircuit}
+                onSelectAll={onSelectAll}
+                sortConfig={sortConfig}
+                onSort={onSort}
+                onBulkDelete={onBulkDelete}
+              />
+            </div>
+          </ScrollArea>
         </div>
-      </ScrollArea>
+      ) : (
+        <CircuitEmptyState
+          searchQuery={searchQuery}
+          statusFilter={statusFilter}
+          isSimpleUser={isSimpleUser}
+        />
+      )}
 
       {selectedCircuit && (
         <>
@@ -128,6 +140,6 @@ export function CircuitListContent({
           />
         </>
       )}
-    </div>
+    </>
   );
 }

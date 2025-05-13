@@ -16,6 +16,7 @@ import CreateCircuitDialog from "@/components/circuits/CreateCircuitDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SearchAndFilterBar } from "@/components/shared/SearchAndFilterBar";
 import { FilterContent } from "@/components/shared/FilterContent";
+import { FilterBadges, FilterBadge } from "@/components/shared/FilterBadges";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AnimatePresence } from "framer-motion";
 
 export default function CircuitsPage() {
   const { user } = useAuth();
@@ -57,6 +59,18 @@ export default function CircuitsPage() {
     setStatusFilter("any");
     setFilterOpen(false);
   };
+
+  // Create filter badges
+  const filterBadges: FilterBadge[] = [];
+
+  if (statusFilter !== "any") {
+    filterBadges.push({
+      id: "status",
+      label: "Status",
+      value: statusFilter === "active" ? "Active" : "Inactive",
+      onRemove: () => setStatusFilter("any"),
+    });
+  }
 
   // Search fields
   const searchFields = [
@@ -106,7 +120,7 @@ export default function CircuitsPage() {
         </Alert>
       )}
 
-      <div className="bg-transparent">
+      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 transition-all">
         <SearchAndFilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -150,6 +164,8 @@ export default function CircuitsPage() {
             </FilterContent>
           }
         />
+
+        <FilterBadges badges={filterBadges} />
 
         <CircuitsList
           onApiError={handleApiError}

@@ -2,7 +2,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useCircuitList } from "./hooks/useCircuitList";
 import { CircuitListContent } from "./CircuitListContent";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
-import { CircuitBulkActionsBar } from "./CircuitBulkActionsBar";
+import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
+import { Trash, GitBranch } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 
 interface CircuitsListProps {
@@ -79,18 +80,6 @@ export default function CircuitsList({
         refetch={refetch}
       />
 
-      {/* Bulk actions bar */}
-      {!isSimpleUser && (
-        <AnimatePresence>
-          {selectedCircuits.length > 0 && (
-            <CircuitBulkActionsBar
-              selectedCount={selectedCircuits.length}
-              onDelete={openBulkDeleteDialog}
-            />
-          )}
-        </AnimatePresence>
-      )}
-
       {/* Bulk delete confirmation dialog */}
       <DeleteConfirmDialog
         title="Delete Circuits"
@@ -101,6 +90,28 @@ export default function CircuitsList({
         confirmText="Delete"
         destructive={true}
       />
+
+      {/* Bulk actions bar */}
+      <AnimatePresence>
+        {!isSimpleUser && selectedCircuits.length > 0 && (
+          <BulkActionsBar
+            selectedCount={selectedCircuits.length}
+            entityName="circuit"
+            actions={[
+              {
+                id: "delete",
+                label: "Delete",
+                icon: <Trash className="h-4 w-4" />,
+                onClick: openBulkDeleteDialog,
+                variant: "destructive",
+                className:
+                  "bg-red-900/30 border-red-500/30 text-red-300 hover:text-red-200 hover:bg-red-900/50 hover:border-red-400/50 transition-all duration-200 shadow-md",
+              },
+            ]}
+            icon={<GitBranch className="w-5 h-5 text-blue-400" />}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

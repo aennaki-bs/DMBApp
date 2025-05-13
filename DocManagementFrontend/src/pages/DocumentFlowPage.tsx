@@ -14,9 +14,12 @@ import { DocumentFlowMindMap } from "@/components/document-flow/DocumentFlowMind
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, FileText, CircuitBoard } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDocumentWorkflow } from "@/hooks/useDocumentWorkflow";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const DocumentFlowPage = () => {
   const { id } = useParams();
@@ -119,8 +122,10 @@ const DocumentFlowPage = () => {
     );
   }
 
+  const isCircuitCompleted = workflowStatus?.isCircuitCompleted;
+
   return (
-    <div className="p-2 sm:p-3 md:p-4 space-y-3 w-full">
+    <div className="p-2 sm:p-3 md:p-4 space-y-4 w-full">
       <DocumentFlowHeader
         documentId={id}
         document={document}
@@ -133,7 +138,81 @@ const DocumentFlowPage = () => {
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="flex flex-col gap-4 w-full">
+        <div className="flex flex-col gap-6 w-full">
+          {/* Circuit Status Summary */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full"
+          >
+            <Card
+              className={cn(
+                "border overflow-hidden",
+                isCircuitCompleted
+                  ? "border-green-500/30 bg-gradient-to-r from-green-900/20 to-blue-900/10"
+                  : "border-blue-500/30 bg-gradient-to-r from-blue-900/20 to-indigo-900/10"
+              )}
+            >
+              <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between">
+                <div className="flex items-center mb-4 md:mb-0">
+                  <div
+                    className={cn(
+                      "w-12 h-12 rounded-full flex items-center justify-center mr-4",
+                      isCircuitCompleted
+                        ? "bg-green-900/30 border border-green-500/30"
+                        : "bg-blue-900/30 border border-blue-500/30"
+                    )}
+                  >
+                    <CircuitBoard
+                      className={cn(
+                        "h-6 w-6",
+                        isCircuitCompleted ? "text-green-400" : "text-blue-400"
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-white">
+                      {document?.circuitName || "Document Circuit"}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={isCircuitCompleted ? "default" : "outline"}
+                        className={
+                          isCircuitCompleted
+                            ? "bg-green-700 hover:bg-green-700"
+                            : ""
+                        }
+                      >
+                        {isCircuitCompleted ? "Completed" : "In Progress"}
+                      </Badge>
+                      {workflowStatus && (
+                        <span className="text-sm text-blue-300">
+                          {
+                            workflowStatus.statuses.filter((s) => s.isComplete)
+                              .length
+                          }{" "}
+                          of {workflowStatus.statuses.length} steps completed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Move Document Button - Only show if workflow completed and user has permission */}
+                {workflowStatus?.isCircuitCompleted && !isSimpleUser && (
+                  <MoveDocumentButton
+                    documentId={Number(id)}
+                    onStatusChange={refreshAllData}
+                    disabled={false}
+                    transitions={
+                      workflowStatus?.availableStatusTransitions || []
+                    }
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
           {/* New Mind Map Visualization */}
           <div className="mind-map-container">
             <DocumentFlowMindMap
@@ -144,70 +223,9 @@ const DocumentFlowPage = () => {
             />
           </div>
 
-          {/* Status Requirements - Show as a side panel */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-3">
-              {/* Empty space for potential document previews or additional info */}
-            </div>
-            <div className="space-y-4">
-              {/* Status Requirements Card */}
-              <Card className="overflow-hidden bg-gradient-to-b from-black/70 to-black/40 border-b border-t border-l border-r border-white/10">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-medium text-white">
-                    Status Requirements
-                  </CardTitle>
-                </CardHeader>
+          <Separator className="bg-blue-900/30" />
 
-                <CardContent className="px-6 pb-4">
-                  <ScrollArea className="h-[100px] pr-4">
-                    {(workflowStatus?.statuses || []).length > 0 ? (
-                      <div className="space-y-2">
-                        {(workflowStatus?.statuses || []).map((status) => (
-                          <div
-                            key={status.statusId}
-                            className="flex items-center text-sm"
-                          >
-                            {status.isComplete ? (
-                              <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                            ) : (
-                              <AlertCircle className="h-4 w-4 text-amber-500 mr-2 flex-shrink-0" />
-                            )}
-                            <span
-                              className={
-                                status.isComplete
-                                  ? "text-green-400"
-                                  : "text-gray-200"
-                              }
-                            >
-                              {status.title}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-400 text-sm italic">
-                        No requirements for current status
-                      </p>
-                    )}
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-
-              {/* Move Document Button - Only show if workflow completed and user has permission */}
-              {workflowStatus?.isCircuitCompleted && !isSimpleUser && (
-                <MoveDocumentButton
-                  documentId={Number(id)}
-                  onStatusChange={refreshAllData}
-                  disabled={false}
-                  transitions={workflowStatus?.availableStatusTransitions || []}
-                />
-              )}
-            </div>
-          </div>
-
-          <Separator className="bg-gray-800" />
-
-          {/* Document History Section - Collapsible */}
+          {/* Document History Section */}
           <WorkflowHistorySection
             history={circuitHistory || []}
             isLoading={isLoadingHistory}

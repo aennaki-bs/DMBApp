@@ -19,6 +19,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { FileText, Plus, GitBranch, Trash2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AnimatePresence } from "framer-motion";
+import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
+import { CreateDocumentModal } from "@/components/create-document/CreateDocumentModal";
 
 const DocumentsPage = () => {
   const { user } = useAuth();
@@ -48,6 +54,7 @@ const DocumentsPage = () => {
   const [documentToAssign, setDocumentToAssign] = useState<Document | null>(
     null
   );
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   useEffect(() => {
     setTotalPages(Math.ceil(filteredItems.length / pageSize));
@@ -147,22 +154,56 @@ const DocumentsPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <DocumentsHeader
-        useFakeData={useFakeData}
-        fetchDocuments={fetchDocuments}
-        canManageDocuments={canManageDocuments}
-        selectedDocuments={selectedDocuments}
-        openDeleteDialog={openDeleteDialog}
-        openAssignCircuitDialog={(documentId) => {
-          const selectedDoc = documents.find((doc) => doc.id === documentId);
-          if (selectedDoc) {
-            openAssignCircuitDialog(selectedDoc);
-          }
-        }}
+      <PageHeader
+        title="Documents"
+        description="Manage your documents and files"
+        icon={<FileText className="h-6 w-6 text-blue-400" />}
+        actions={
+          <>
+            {useFakeData && (
+              <Button
+                variant="outline"
+                onClick={fetchDocuments}
+                className="border-amber-500/50 text-amber-500 hover:bg-amber-500/20"
+              >
+                <AlertCircle className="mr-2 h-4 w-4" />
+                Using Test Data
+              </Button>
+            )}
+            {canManageDocuments ? (
+              <>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                  onClick={() => setCreateModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4" /> New Document
+                </Button>
+
+                {selectedDocuments.length === 1 && (
+                  <Button
+                    variant="outline"
+                    className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20"
+                    onClick={() =>
+                      openAssignCircuitDialog(
+                        documents.find((d) => d.id === selectedDocuments[0])!
+                      )
+                    }
+                  >
+                    <GitBranch className="mr-2 h-4 w-4" /> Assign to Circuit
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Button className="bg-blue-600 hover:bg-blue-700" disabled>
+                <Plus className="mr-2 h-4 w-4" /> New Document
+              </Button>
+            )}
+          </>
+        }
       />
 
-      <Card className="border-blue-900/30 bg-[#0a1033]/80 backdrop-blur-sm shadow-lg overflow-hidden">
-        <CardHeader className="p-4 border-b border-blue-900/30">
+      <Card className="border-blue-900/30 bg-[#0a1033] backdrop-blur-sm shadow-lg overflow-hidden">
+        <CardHeader className="p-4 border-b border-blue-900/30 bg-gradient-to-r from-[#1a2c6b]/50 to-[#0a1033]/50">
           <DocumentsFilterBar />
         </CardHeader>
         <CardContent className="p-0">
@@ -263,41 +304,63 @@ const DocumentsPage = () => {
         </CardContent>
       </Card>
 
-      {selectedDocuments.length > 0 && (
-        <SelectedDocumentsBar
-          selectedCount={selectedDocuments.length}
-          openDeleteDialog={openDeleteDialog}
-          openAssignCircuitDialog={() => {
-            if (selectedDocuments.length === 1) {
-              const selectedDoc = documents.find(
-                (doc) => doc.id === selectedDocuments[0]
-              );
-              if (selectedDoc) {
-                openAssignCircuitDialog(selectedDoc);
-              }
-            }
-          }}
-          showAssignCircuit={selectedDocuments.length === 1}
-        />
-      )}
+      {/* Dialogs */}
+      <CreateDocumentModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onDocumentCreated={fetchDocuments}
+      />
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDelete}
-        isSingleDocument={documentToDelete !== null}
-        count={selectedDocuments.length}
+        isBulk={documentToDelete === null}
+        count={documentToDelete === null ? selectedDocuments.length : 1}
       />
 
-      {documentToAssign && (
-        <AssignCircuitDialog
-          documentId={documentToAssign.id}
-          documentTitle={documentToAssign.title}
-          open={assignCircuitDialogOpen}
-          onOpenChange={setAssignCircuitDialogOpen}
-          onSuccess={handleAssignCircuitSuccess}
-        />
-      )}
+      <AssignCircuitDialog
+        open={assignCircuitDialogOpen}
+        onOpenChange={setAssignCircuitDialogOpen}
+        documentId={documentToAssign?.id || 0}
+        documentTitle={documentToAssign?.title || ""}
+        onSuccess={handleAssignCircuitSuccess}
+      />
+
+      {/* Bulk Actions Bar */}
+      <AnimatePresence>
+        {selectedDocuments.length > 0 && (
+          <BulkActionsBar
+            selectedCount={selectedDocuments.length}
+            entityName="document"
+            icon={<FileText className="w-5 h-5 text-blue-400" />}
+            actions={[
+              {
+                id: "delete",
+                label: "Delete",
+                icon: <Trash2 className="h-4 w-4" />,
+                onClick: () => openDeleteDialog(),
+                variant: "destructive",
+                className:
+                  "bg-red-900/30 border-red-500/30 text-red-200 hover:text-red-100 hover:bg-red-800/50 hover:border-red-400/50",
+              },
+              ...(selectedDocuments.length === 1
+                ? [
+                    {
+                      id: "assign",
+                      label: "Assign to Circuit",
+                      icon: <GitBranch className="h-4 w-4" />,
+                      onClick: () =>
+                        openAssignCircuitDialog(
+                          documents.find((d) => d.id === selectedDocuments[0])!
+                        ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
