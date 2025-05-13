@@ -6,7 +6,8 @@ import {
   AssignCircuitRequest, 
   DocumentWorkflowStatus,
   MoveToNextStepRequest,
-  DocumentStatus
+  DocumentStatus,
+  CircuitValidation
 } from '@/models/documentCircuit';
 
 /**
@@ -42,13 +43,8 @@ const circuitService = {
     // Return a default "valid" validation to avoid the 404 error
     console.log(`Validation for circuit ${circuitId} skipped - endpoint not available`);
     return {
-      circuitId: circuitId,
-      circuitTitle: "",
-      hasSteps: true,
-      totalSteps: 0,
-      allStepsHaveStatuses: true,
       isValid: true,
-      stepsWithoutStatuses: []
+      errors: []
     };
   },
 
@@ -320,6 +316,13 @@ const circuitService = {
       console.error('Error in moveToStatus:', error);
       throw error;
     }
+  },
+
+  // Method to get next possible statuses for a document
+  getNextStatuses: async (documentId: number): Promise<any[]> => {
+    if (!documentId) return [];
+    const response = await api.get(`/Workflow/document/${documentId}/next-statuses`);
+    return response.data;
   },
 };
 

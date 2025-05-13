@@ -11,6 +11,7 @@ import {
 import CreateCircuitStepOne from "./steps/CreateCircuitStepOne";
 import CreateCircuitStepTwo from "./steps/CreateCircuitStepTwo";
 import CreateCircuitStepThree from "./steps/CreateCircuitStepThree";
+import { GitBranch } from "lucide-react";
 
 export type Step = 1 | 2 | 3;
 
@@ -96,56 +97,120 @@ export default function CreateCircuitDialogContainer({
     }
   };
 
-  const dialogPanelClass =
-    "bg-[#101942] border border-blue-900 shadow-2xl rounded-xl";
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className={`sm:max-w-[480px] ${dialogPanelClass}`}>
-        <DialogHeader>
-          <DialogTitle className="text-xl text-white">
-            Create Circuit
-          </DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[550px] p-0 bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border border-blue-500/30 shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-[#1e3a8a]/50 to-[#0f172a]/50 border-b border-blue-500/20 py-5 px-6">
+          <div className="flex items-center gap-3 mb-1.5">
+            <div className="bg-blue-500/20 p-1.5 rounded-lg">
+              <GitBranch className="h-5 w-5 text-blue-400" />
+            </div>
+            <DialogTitle className="text-xl font-semibold text-white m-0 p-0">
+              Create Circuit
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-blue-200 m-0 pl-10">
             Create a new circuit for document workflow
           </DialogDescription>
-        </DialogHeader>
-        <form
-          className="space-y-4"
-          autoComplete="off"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          {step === 1 && (
-            <CreateCircuitStepOne
-              value={formValues.title}
-              onChange={(val) => handleFieldChange("title", val)}
-              error={errors.title}
-              disabled={isSubmitting}
-              onNext={handleNext}
-              onCancel={handleClose}
-            />
-          )}
-          {step === 2 && (
-            <CreateCircuitStepTwo
-              value={formValues.descriptif || ""}
-              onChange={(val) => handleFieldChange("descriptif", val)}
-              disabled={isSubmitting}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
-          {step === 3 && (
-            <CreateCircuitStepThree
-              title={formValues.title}
-              descriptif={formValues.descriptif || ""}
-              disabled={isSubmitting}
-              onEdit={handleEdit}
-              onBack={handleBack}
-              onSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-            />
-          )}
-        </form>
+        </div>
+
+        <div className="p-6">
+          <div className="flex justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 1
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                }`}
+              >
+                1
+              </div>
+              <span className={step >= 1 ? "text-blue-100" : "text-blue-400"}>
+                Title
+              </span>
+            </div>
+            <div className="flex-1 mx-2 mt-4">
+              <div
+                className={`h-0.5 ${
+                  step >= 2 ? "bg-blue-600" : "bg-blue-900/50"
+                }`}
+              ></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 2
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                }`}
+              >
+                2
+              </div>
+              <span className={step >= 2 ? "text-blue-100" : "text-blue-400"}>
+                Details
+              </span>
+            </div>
+            <div className="flex-1 mx-2 mt-4">
+              <div
+                className={`h-0.5 ${
+                  step >= 3 ? "bg-blue-600" : "bg-blue-900/50"
+                }`}
+              ></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 3
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                }`}
+              >
+                3
+              </div>
+              <span className={step >= 3 ? "text-blue-100" : "text-blue-400"}>
+                Review
+              </span>
+            </div>
+          </div>
+
+          <form
+            className="space-y-6"
+            autoComplete="off"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            {step === 1 && (
+              <CreateCircuitStepOne
+                value={formValues.title}
+                onChange={(val) => handleFieldChange("title", val)}
+                error={errors.title}
+                disabled={isSubmitting}
+                onNext={handleNext}
+                onCancel={handleClose}
+              />
+            )}
+            {step === 2 && (
+              <CreateCircuitStepTwo
+                value={formValues.descriptif || ""}
+                onChange={(val) => handleFieldChange("descriptif", val)}
+                disabled={isSubmitting}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
+            {step === 3 && (
+              <CreateCircuitStepThree
+                title={formValues.title}
+                descriptif={formValues.descriptif || ""}
+                disabled={isSubmitting}
+                onEdit={handleEdit}
+                onBack={handleBack}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+              />
+            )}
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

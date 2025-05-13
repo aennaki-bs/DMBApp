@@ -1,18 +1,37 @@
-
-import CircuitsList from '@/components/circuits/CircuitsList';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { InfoIcon, Lock, AlertCircle, Plus, Search } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import CreateCircuitDialog from '@/components/circuits/CreateCircuitDialog';
+import CircuitsList from "@/components/circuits/CircuitsList";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  InfoIcon,
+  Lock,
+  AlertCircle,
+  Plus,
+  Search,
+  GitBranch,
+  Filter,
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import CreateCircuitDialog from "@/components/circuits/CreateCircuitDialog";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { SearchAndFilterBar } from "@/components/shared/SearchAndFilterBar";
+import { FilterContent } from "@/components/shared/FilterContent";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function CircuitsPage() {
   const { user } = useAuth();
-  const [apiError, setApiError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const isSimpleUser = user?.role === 'SimpleUser';
+  const [apiError, setApiError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("any");
+  const [searchField, setSearchField] = useState("all");
+  const isSimpleUser = user?.role === "SimpleUser";
 
   // For dialog open/close state and refetch trigger
   const [createOpen, setCreateOpen] = useState(false);
@@ -20,7 +39,7 @@ export default function CircuitsPage() {
 
   // Clear any API errors when component mounts or when user changes
   useEffect(() => {
-    setApiError('');
+    setApiError("");
   }, [user]);
 
   // Function to handle API errors from child components
@@ -33,57 +52,112 @@ export default function CircuitsPage() {
     setRefreshCircuits((c) => c + 1);
   };
 
+  // Clear all filters
+  const clearAllFilters = () => {
+    setStatusFilter("any");
+    setFilterOpen(false);
+  };
+
+  // Search fields
+  const searchFields = [
+    { id: "all", label: "All fields" },
+    { id: "code", label: "Circuit Code" },
+    { id: "title", label: "Title" },
+    { id: "description", label: "Description" },
+  ];
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <CreateCircuitDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
         onSuccess={handleCircuitCreated}
       />
 
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-semibold mb-2 bg-gradient-to-r from-blue-200 to-purple-200 text-transparent bg-clip-text">Circuit Management</h1>
-          <p className="text-gray-400">
-            {isSimpleUser ? 'View document workflow circuits' : 'Create and manage document workflow circuits'}
-          </p>
-        </div>
-        
-        {!isSimpleUser && (
-          <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" /> New Circuit
-          </Button>
-        )}
-      </div>
-      
+      <PageHeader
+        title="Circuit Management"
+        description={
+          isSimpleUser
+            ? "View document workflow circuits"
+            : "Create and manage document workflow circuits"
+        }
+        icon={<GitBranch className="h-6 w-6 text-blue-400" />}
+        actions={
+          !isSimpleUser && (
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              New Circuit
+            </Button>
+          )
+        }
+      />
+
       {apiError && (
-        <Alert variant="destructive" className="mb-4 border-red-800 bg-red-950/50 text-red-300">
+        <Alert
+          variant="destructive"
+          className="mb-4 border-red-800 bg-red-950/50 text-red-300"
+        >
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            {apiError}
-          </AlertDescription>
+          <AlertDescription>{apiError}</AlertDescription>
         </Alert>
       )}
-      
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-blue-900/20 p-4 rounded-lg border border-blue-800/30">
-        <div className="flex items-center space-x-2 w-full md:w-auto">
-          <Search className="h-4 w-4 text-blue-400" />
-          <h2 className="text-blue-300 font-medium">Search Circuits</h2>
-        </div>
-        <div className="relative flex-1 max-w-xl w-full">
-          <Input
-            placeholder="Search by Code, title or description..."
-            className="bg-[#0a1033]/80 border-blue-800/50 text-blue-100 pl-4 pr-10 focus:border-blue-500 focus:ring-blue-500/30"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+
+      <div className="bg-transparent">
+        <SearchAndFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchFields={searchFields}
+          selectedSearchField={searchField}
+          onSearchFieldChange={setSearchField}
+          placeholder="Search circuits..."
+          filterOpen={filterOpen}
+          onFilterOpenChange={setFilterOpen}
+          filterContent={
+            <FilterContent
+              title="Filter Circuits"
+              onClearAll={clearAllFilters}
+              onApply={() => setFilterOpen(false)}
+            >
+              {/* Status filter */}
+              <div>
+                <label className="block text-sm text-blue-300 mb-1">
+                  Status
+                </label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                    <SelectItem value="any" className="hover:bg-blue-800/40">
+                      Any Status
+                    </SelectItem>
+                    <SelectItem value="active" className="hover:bg-blue-800/40">
+                      Active
+                    </SelectItem>
+                    <SelectItem
+                      value="inactive"
+                      className="hover:bg-blue-800/40"
+                    >
+                      Inactive
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </FilterContent>
+          }
+        />
+
+        <CircuitsList
+          onApiError={handleApiError}
+          searchQuery={searchQuery}
+          statusFilter={statusFilter}
+          key={refreshCircuits}
+        />
       </div>
-      
-      <CircuitsList onApiError={handleApiError} searchQuery={searchQuery} key={refreshCircuits} />
     </div>
   );
 }

@@ -1,40 +1,37 @@
-import { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   title: string;
   description?: string;
+  icon?: ReactNode;
   actions?: ReactNode;
   className?: string;
 }
 
-export function PageHeader({ 
-  title, 
-  description, 
+export function PageHeader({
+  title,
+  description,
+  icon,
   actions,
-  className 
+  className = "",
 }: PageHeaderProps) {
   return (
-    <div className={cn(
-      "flex flex-col md:flex-row md:items-center justify-between gap-4",
-      className
-    )}>
-      <div>
-        <h1 className="text-2xl md:text-3xl font-semibold bg-gradient-to-r from-blue-200 to-purple-200 text-transparent bg-clip-text">
-          {title}
-        </h1>
-        {description && (
-          <p className="text-gray-400 mt-1">
-            {description}
-          </p>
-        )}
-      </div>
-      
-      {actions && (
-        <div className="flex items-center gap-2">
-          {actions}
+    <div
+      className={`bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 mb-6 transition-all ${className}`}
+    >
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-white flex items-center">
+            {icon && <span className="mr-3">{icon}</span>}
+            {title}
+          </h1>
+          {description && (
+            <p className="text-sm md:text-base text-gray-400">{description}</p>
+          )}
         </div>
-      )}
+        {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
+      </div>
     </div>
   );
-} 
+}

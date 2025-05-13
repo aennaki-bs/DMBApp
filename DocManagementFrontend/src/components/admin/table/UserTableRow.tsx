@@ -8,6 +8,13 @@ import { UserDto } from "@/services/adminService";
 import { UserActionsDropdown } from "./row/UserActionsDropdown";
 import { UserRoleSelect } from "./row/UserRoleSelect";
 import { BlockUserDialog } from "./row/BlockUserDialog";
+import { CheckCircle2, XCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface UserTableRowProps {
   user: UserDto;
@@ -61,31 +68,38 @@ export function UserTableRow({
   return (
     <>
       <TableRow
-        className={`border-gray-700 hover:bg-[#0d1424] transition-all ${
-          isSelected ? "bg-blue-900/20 border-l-4 border-l-blue-500" : ""
+        className={`border-blue-900/30 transition-all duration-150 ${
+          isSelected
+            ? "bg-blue-900/30 border-l-4 border-l-blue-500"
+            : "hover:bg-blue-900/20"
         }`}
       >
         <TableCell>
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onSelect(user.id)}
-            aria-label={`Select user ${user.username}`}
-          />
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onSelect(user.id)}
+              aria-label={`Select user ${user.username}`}
+              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+            />
+          </div>
         </TableCell>
         <TableCell>
-          <Avatar>
+          <Avatar className="border-2 border-blue-900/50 h-9 w-9">
             <AvatarImage src={user.profilePicture} alt={user.username} />
-            <AvatarFallback className="bg-blue-600">
+            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
               {user.firstName.charAt(0)}
               {user.lastName.charAt(0)}
             </AvatarFallback>
           </Avatar>
         </TableCell>
-        <TableCell className="font-medium text-white">
-          {user.firstName} {user.lastName}
-          <div className="text-xs text-gray-400">@{user.username}</div>
+        <TableCell>
+          <div className="font-medium text-blue-100">
+            {user.firstName} {user.lastName}
+          </div>
+          <div className="text-xs text-blue-400">@{user.username}</div>
         </TableCell>
-        <TableCell className="text-gray-300 max-w-[180px] truncate">
+        <TableCell className="text-blue-200 max-w-[180px]">
           <span className="block truncate">{user.email}</span>
         </TableCell>
 
@@ -100,31 +114,49 @@ export function UserTableRow({
           {user.isActive ? (
             <Badge
               variant="secondary"
-              className="bg-green-900/20 text-green-400 hover:bg-green-900/30"
+              className="bg-emerald-900/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/30"
             >
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
               Active
             </Badge>
           ) : (
             <Badge
               variant="destructive"
-              className="bg-red-900/20 text-red-400 hover:bg-red-900/30"
+              className="bg-red-900/20 text-red-300 border border-red-500/30 hover:bg-red-900/30"
             >
+              <XCircle className="w-3.5 h-3.5 mr-1" />
               Inactive
             </Badge>
           )}
         </TableCell>
 
         <TableCell>
-          <div className="flex items-center">
-            <Switch
-              checked={user.isActive}
-              onCheckedChange={handleStatusToggle}
-              className={user.isActive ? "bg-green-600" : "bg-red-600"}
-            />
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center">
+                  <Switch
+                    checked={user.isActive}
+                    onCheckedChange={handleStatusToggle}
+                    className={
+                      user.isActive
+                        ? "bg-emerald-600 data-[state=checked]:bg-emerald-600"
+                        : "bg-red-600 data-[state=unchecked]:bg-red-600"
+                    }
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="bg-blue-900/90 text-blue-100 border-blue-500/30"
+              >
+                {user.isActive ? "Block User" : "Unblock User"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </TableCell>
 
-        <TableCell>
+        <TableCell className="text-right">
           <UserActionsDropdown
             user={user}
             onEdit={onEdit}

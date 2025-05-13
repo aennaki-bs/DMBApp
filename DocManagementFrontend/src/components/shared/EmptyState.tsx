@@ -1,57 +1,51 @@
-import { ReactNode } from 'react';
-import { FileX, FileQuestion, Database, List, BarChart, AlertCircle, Layers, GitBranch } from 'lucide-react';
+import { ReactNode } from "react";
+import {
+  FileX,
+  FileQuestion,
+  Database,
+  List,
+  BarChart,
+  AlertCircle,
+  Layers,
+  GitBranch,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface EmptyStateProps {
+  icon: ReactNode;
   title: string;
-  description: string;
-  icon?: 'file' | 'database' | 'list' | 'chart' | 'warning' | 'layers' | 'diagram' | 'custom';
-  customIcon?: ReactNode;
-  action?: ReactNode;
+  description: ReactNode;
+  actionLabel?: string;
+  actionIcon?: ReactNode;
+  onAction?: () => void;
+  className?: string;
 }
 
-export function EmptyState({ 
-  title, 
-  description, 
-  icon = 'file', 
-  customIcon,
-  action 
+export function EmptyState({
+  icon,
+  title,
+  description,
+  actionLabel,
+  actionIcon,
+  onAction,
+  className = "",
 }: EmptyStateProps) {
-  
-  const renderIcon = () => {
-    if (customIcon) return customIcon;
-    
-    switch (icon) {
-      case 'file':
-        return <FileQuestion className="h-12 w-12 text-muted-foreground/50" />;
-      case 'database':
-        return <Database className="h-12 w-12 text-muted-foreground/50" />;
-      case 'list':
-        return <List className="h-12 w-12 text-muted-foreground/50" />;
-      case 'chart':
-        return <BarChart className="h-12 w-12 text-muted-foreground/50" />;
-      case 'warning':
-        return <AlertCircle className="h-12 w-12 text-amber-500" />;
-      case 'layers':
-        return <Layers className="h-12 w-12 text-muted-foreground/50" />;
-      case 'diagram':
-        return <GitBranch className="h-12 w-12 text-muted-foreground/50" />;
-      default:
-        return <FileX className="h-12 w-12 text-muted-foreground/50" />;
-    }
-  };
-  
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center">
-      <div className="mb-4">
-        {renderIcon()}
+    <div className={`text-center py-10 ${className}`}>
+      <div className="mb-4 bg-blue-900/30 p-4 rounded-full inline-block">
+        {icon}
       </div>
-      <h3 className="text-lg font-semibold mb-1">{title}</h3>
-      <p className="text-muted-foreground mb-4 max-w-md">{description}</p>
-      {action && (
-        <div className="mt-2">
-          {action}
-        </div>
+      <h3 className="text-xl font-medium text-blue-300">{title}</h3>
+      <div className="text-blue-400/70 mt-1">{description}</div>
+      {actionLabel && onAction && (
+        <Button
+          className="mt-4 bg-blue-600 hover:bg-blue-700"
+          onClick={onAction}
+        >
+          {actionIcon && <span className="mr-2">{actionIcon}</span>}
+          {actionLabel}
+        </Button>
       )}
     </div>
   );
-} 
+}

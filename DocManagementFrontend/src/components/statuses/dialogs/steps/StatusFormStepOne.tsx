@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 
-interface CreateCircuitStepOneProps {
+interface StatusFormStepOneProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
@@ -12,14 +12,14 @@ interface CreateCircuitStepOneProps {
   onCancel: () => void;
 }
 
-export default function CreateCircuitStepOne({
+export default function StatusFormStepOne({
   value,
   onChange,
   error,
   disabled,
   onNext,
   onCancel,
-}: CreateCircuitStepOneProps) {
+}: StatusFormStepOneProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-3">
@@ -27,7 +27,7 @@ export default function CreateCircuitStepOne({
           htmlFor="title-step"
           className="text-blue-100 font-medium text-sm"
         >
-          Circuit Title <span className="text-red-400">*</span>
+          Status Title <span className="text-red-400">*</span>
         </Label>
         <div>
           <Input
@@ -36,7 +36,7 @@ export default function CreateCircuitStepOne({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            placeholder="Enter circuit title"
+            placeholder="Enter status title"
             autoFocus
             className="bg-[#0a1033]/80 border-blue-800/80 text-blue-100 placeholder:text-blue-400/70 focus:border-blue-500 focus:ring-blue-500/50 h-11 w-full rounded-md shadow-inner"
           />
@@ -48,7 +48,7 @@ export default function CreateCircuitStepOne({
           )}
         </div>
         <p className="text-blue-300/70 text-xs">
-          Choose a descriptive title for your circuit to easily identify it
+          Choose a descriptive title for your status to easily identify it
           later.
         </p>
       </div>

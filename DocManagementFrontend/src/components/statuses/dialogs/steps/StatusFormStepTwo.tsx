@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
-interface CreateCircuitStepTwoProps {
+interface StatusFormStepTwoProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -11,34 +11,34 @@ interface CreateCircuitStepTwoProps {
   onBack: () => void;
 }
 
-export default function CreateCircuitStepTwo({
+export default function StatusFormStepTwo({
   value,
   onChange,
   disabled,
   onNext,
   onBack,
-}: CreateCircuitStepTwoProps) {
+}: StatusFormStepTwoProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-3">
         <Label
-          htmlFor="descriptif-step"
+          htmlFor="description-step"
           className="text-blue-100 font-medium text-sm"
         >
           Description
         </Label>
         <Textarea
-          id="descriptif-step"
+          id="description-step"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Enter circuit description (optional)"
+          placeholder="Enter status description (optional)"
           disabled={disabled}
           className="bg-[#0a1033]/80 border-blue-800/80 text-blue-100 placeholder:text-blue-400/70 focus:border-blue-500 focus:ring-blue-500/50 min-h-[120px] w-full rounded-md resize-none shadow-inner"
           style={{ borderColor: "rgb(30 58 138 / 0.8)" }}
         />
         <p className="text-blue-300/70 text-xs">
-          Add details about the purpose and usage of this circuit. This will
-          help users understand when to use it.
+          Add details about the purpose and usage of this status. This will help
+          users understand when to use it.
         </p>
       </div>
 

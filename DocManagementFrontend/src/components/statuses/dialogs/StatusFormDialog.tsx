@@ -1,20 +1,23 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import api from '@/services/api';
-import { DocumentStatus } from '@/models/documentCircuit';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import api from "@/services/api";
+import { DocumentStatus } from "@/models/documentCircuit";
+import { Textarea } from "@/components/ui/textarea";
+import { FileText, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import StatusFormStepOne from "./steps/StatusFormStepOne";
+import StatusFormStepTwo from "./steps/StatusFormStepTwo";
+import StatusFormStepThree from "./steps/StatusFormStepThree";
 
 interface StatusFormDialogProps {
   open: boolean;
@@ -25,6 +28,17 @@ interface StatusFormDialogProps {
   stepId?: number;
 }
 
+export type Step = 1 | 2 | 3;
+
+export interface FormValues {
+  title: string;
+  description: string;
+  isRequired: boolean;
+  isInitial: boolean;
+  isFinal: boolean;
+  isFlexible: boolean;
+}
+
 export function StatusFormDialog({
   open,
   onOpenChange,
@@ -33,207 +47,294 @@ export function StatusFormDialog({
   circuitId,
   stepId,
 }: StatusFormDialogProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [isRequired, setIsRequired] = useState(false);
-  const [isInitial, setIsInitial] = useState(false);
-  const [isFinal, setIsFinal] = useState(false);
-  const [isFlexible, setIsFlexible] = useState(false);
+  const [step, setStep] = useState<Step>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formValues, setFormValues] = useState<FormValues>({
+    title: "",
+    description: "",
+    isRequired: false,
+    isInitial: false,
+    isFinal: false,
+    isFlexible: false,
+  });
+  const [errors, setErrors] = useState<{ title?: string }>({});
+  const [existingInitialStatus, setExistingInitialStatus] =
+    useState<boolean>(false);
+  const [existingFinalStatus, setExistingFinalStatus] =
+    useState<boolean>(false);
+
+  // Check if there's already an initial or final status
+  useEffect(() => {
+    if (open && circuitId && !status) {
+      const checkStatuses = async () => {
+        try {
+          const response = await api.get(`/Status/circuit/${circuitId}`);
+          const statuses = response.data;
+          const hasInitialStatus = statuses.some(
+            (s: DocumentStatus) => s.isInitial
+          );
+          const hasFinalStatus = statuses.some(
+            (s: DocumentStatus) => s.isFinal
+          );
+          setExistingInitialStatus(hasInitialStatus);
+          setExistingFinalStatus(hasFinalStatus);
+        } catch (error) {
+          console.error("Error checking statuses:", error);
+        }
+      };
+      checkStatuses();
+    }
+  }, [open, circuitId, status]);
 
   // Reset form state when dialog opens or status changes
   useEffect(() => {
     if (open) {
       if (status) {
         // Editing existing status - populate form with status data
-        setTitle(status.title || '');
-        setDescription(status.description || '');
-        setIsRequired(status.isRequired || false);
-        setIsInitial(status.isInitial || false);
-        setIsFinal(status.isFinal || false);
-        setIsFlexible(status.isFlexible || false);
+        setFormValues({
+          title: status.title || "",
+          description: status.description || "",
+          isRequired: status.isRequired || false,
+          isInitial: status.isInitial || false,
+          isFinal: status.isFinal || false,
+          isFlexible: false,
+        });
       } else {
         // Creating new status - reset form
-        setTitle('');
-        setDescription('');
-        setIsRequired(false);
-        setIsInitial(false);
-        setIsFinal(false);
-        setIsFlexible(false);
+        setFormValues({
+          title: "",
+          description: "",
+          isRequired: false,
+          isInitial: false,
+          isFinal: false,
+          isFlexible: false,
+        });
       }
+      setStep(1);
+      setErrors({});
     }
   }, [open, status]);
 
-  // Reset form when dialog closes
-  const handleDialogChange = (newOpen: boolean) => {
-    onOpenChange(newOpen);
-    if (!newOpen) {
-      // Reset form state when dialog closes
-      setTitle('');
-      setDescription('');
-      setIsRequired(false);
-      setIsInitial(false);
-      setIsFinal(false);
-      setIsFlexible(false);
+  const handleNext = () => {
+    if (step === 1) {
+      if (!formValues.title || formValues.title.trim().length < 3) {
+        setErrors({ title: "Title must be at least 3 characters" });
+        return;
+      }
+      setErrors({});
+      setStep(2);
+    } else if (step === 2) {
+      setStep(3);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleBack = () => setStep((prev) => (prev - 1) as Step);
+  const handleEdit = (targetStep: Step) => setStep(targetStep);
+
+  const handleClose = () => {
+    setStep(1);
+    setFormValues({
+      title: "",
+      description: "",
+      isRequired: false,
+      isInitial: false,
+      isFinal: false,
+      isFlexible: false,
+    });
+    setErrors({});
+    onOpenChange(false);
+  };
+
+  const handleFieldChange = (key: keyof FormValues, value: any) => {
+    setFormValues((prev) => {
+      const newValues = { ...prev, [key]: value };
+
+      // If setting isInitial to true, set isFinal to false
+      if (key === "isInitial" && value === true) {
+        newValues.isFinal = false;
+      }
+
+      // If setting isFinal to true, set isInitial to false
+      if (key === "isFinal" && value === true) {
+        newValues.isInitial = false;
+      }
+
+      return newValues;
+    });
+
+    if (key === "title") {
+      setErrors((prev) => ({ ...prev, title: undefined }));
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!formValues.title || formValues.title.trim().length < 3) {
+      setErrors({ title: "Title must be at least 3 characters" });
+      setStep(1);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const statusData = {
-        title,
-        description,
-        isRequired,
-        isInitial,
-        isFinal,
-        isFlexible
+        title: formValues.title,
+        description: formValues.description,
+        isRequired: formValues.isRequired,
+        isInitial: formValues.isInitial,
+        isFinal: formValues.isFinal,
+        isFlexible: false,
       };
 
       if (status) {
-        // Update existing status using new endpoint
+        // Update existing status
         await api.put(`/Status/${status.statusId}`, statusData);
-        toast.success('Status updated successfully');
+        toast.success("Status updated successfully");
       } else if (circuitId) {
         // Create new circuit status
         await api.post(`/Status/circuit/${circuitId}`, statusData);
-        toast.success('Status created successfully');
+        toast.success("Status created successfully");
       } else if (stepId) {
         // Create new step status
         await api.post(`/Status/step/${stepId}`, statusData);
-        toast.success('Status created successfully');
+        toast.success("Status created successfully");
       } else {
-        toast.error('Missing circuit or step ID');
+        toast.error("Missing circuit or step ID");
         return;
       }
-      
+
       // Call onSuccess and close the dialog
       onSuccess();
-      handleDialogChange(false);
-      
+      handleClose();
     } catch (error) {
-      console.error('Error submitting status:', error);
-      toast.error('An error occurred. Please try again.');
+      console.error("Error submitting status:", error);
+      toast.error("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className="sm:max-w-[500px] bg-background">
-        <DialogHeader>
-          <DialogTitle className="text-xl">
-            {status ? 'Edit Status' : 'Create New Status'}
-          </DialogTitle>
-          <DialogDescription>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[550px] p-0 bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border border-blue-500/30 shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-[#1e3a8a]/50 to-[#0f172a]/50 border-b border-blue-500/20 py-5 px-6">
+          <div className="flex items-center gap-3 mb-1.5">
+            <div className="bg-blue-500/20 p-1.5 rounded-lg">
+              <FileText className="h-5 w-5 text-blue-400" />
+            </div>
+            <DialogTitle className="text-xl font-semibold text-white m-0 p-0">
+              {status ? "Edit Status" : "Create New Status"}
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-blue-200 m-0 pl-10">
             {status
               ? "Update the status details"
               : circuitId
-              ? 'Add a new status to this circuit'
-              : 'Add a new status to this step'}
+              ? "Add a new status to this circuit"
+              : "Add a new status to this step"}
           </DialogDescription>
-        </DialogHeader>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter status title"
-                required
-              />
+        <div className="p-6">
+          <div className="flex justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 1
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                }`}
+              >
+                1
+              </div>
+              <span className={step >= 1 ? "text-blue-100" : "text-blue-400"}>
+                Title
+              </span>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter status description"
-                rows={3}
-              />
+            <div className="flex-1 mx-2 mt-4">
+              <div
+                className={`h-0.5 ${
+                  step >= 2 ? "bg-blue-600" : "bg-blue-900/50"
+                }`}
+              ></div>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isRequired"
-                checked={isRequired}
-                onCheckedChange={(checked) => setIsRequired(!!checked)}
-              />
-              <Label htmlFor="isRequired" className="cursor-pointer">
-                This status is required
-              </Label>
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 2
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                }`}
+              >
+                2
+              </div>
+              <span className={step >= 2 ? "text-blue-100" : "text-blue-400"}>
+                Description
+              </span>
             </div>
-
-            {circuitId && (
-              <>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isInitial"
-                    checked={isInitial}
-                    onCheckedChange={(checked) => {
-                      setIsInitial(!!checked);
-                      if (checked) {
-                        setIsFinal(false);
-                      }
-                    }}
-                  />
-                  <Label htmlFor="isInitial" className="cursor-pointer">
-                    Initial status
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isFinal"
-                    checked={isFinal}
-                    onCheckedChange={(checked) => {
-                      setIsFinal(!!checked);
-                      if (checked) {
-                        setIsInitial(false);
-                      }
-                    }}
-                  />
-                  <Label htmlFor="isFinal" className="cursor-pointer">
-                    Final status
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isFlexible"
-                    checked={isFlexible}
-                    onCheckedChange={(checked) => setIsFlexible(!!checked)}
-                  />
-                  <Label htmlFor="isFlexible" className="cursor-pointer">
-                    Flexible status (can be used in any step)
-                  </Label>
-                </div>
-              </>
-            )}
+            <div className="flex-1 mx-2 mt-4">
+              <div
+                className={`h-0.5 ${
+                  step >= 3 ? "bg-blue-600" : "bg-blue-900/50"
+                }`}
+              ></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 3
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                }`}
+              >
+                3
+              </div>
+              <span className={step >= 3 ? "text-blue-100" : "text-blue-400"}>
+                Options
+              </span>
+            </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleDialogChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : status ? 'Update Status' : 'Create Status'}
-            </Button>
-          </DialogFooter>
-        </form>
+          <form
+            className="space-y-6"
+            autoComplete="off"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            {step === 1 && (
+              <StatusFormStepOne
+                value={formValues.title}
+                onChange={(val) => handleFieldChange("title", val)}
+                error={errors.title}
+                disabled={isSubmitting}
+                onNext={handleNext}
+                onCancel={handleClose}
+              />
+            )}
+            {step === 2 && (
+              <StatusFormStepTwo
+                value={formValues.description}
+                onChange={(val) => handleFieldChange("description", val)}
+                disabled={isSubmitting}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
+            {step === 3 && (
+              <StatusFormStepThree
+                values={formValues}
+                onChange={handleFieldChange}
+                disabled={isSubmitting}
+                onEdit={handleEdit}
+                onBack={handleBack}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                existingInitialStatus={existingInitialStatus}
+                existingFinalStatus={existingFinalStatus}
+                isCircuitStatus={!!circuitId}
+              />
+            )}
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
