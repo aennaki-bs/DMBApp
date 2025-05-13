@@ -154,9 +154,9 @@ namespace DocManagementBackend.Controllers
 
             string documentKey;
             if (subType != null)
-                documentKey = $"{subType.SubTypeKey}-{paddedCounter}";
+                documentKey = $"{subType.SubTypeKey}-{docAlias}-{paddedCounter}";
             else
-                documentKey = $"{docType.TypeKey}{docAlias}-{paddedCounter}";
+                documentKey = $"{docType.TypeKey}-{docAlias}-{paddedCounter}";
 
             var document = new Document
             {

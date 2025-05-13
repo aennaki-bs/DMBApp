@@ -75,4 +75,16 @@ namespace DocManagementBackend.Models
         public bool IsComplete { get; set; } = true;
         public string Comments { get; set; } = string.Empty;
     }
+    public class MoveToStatusDto
+    {
+        public int DocumentId { get; set; }
+        public int TargetStatusId { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
+
+    public class ReturnToPreviousStatusDto
+    {
+        public int DocumentId { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
 }

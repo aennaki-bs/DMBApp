@@ -219,9 +219,13 @@ namespace DocManagementBackend.Controllers
 
             // Generate the SubTypeKey
             // Format example: {TypeKey}{FirstLettersOfName}{YearEnd} = "FAAB25"
-            string namePrefix = string.Join("", createSubTypeDto.Name.Take(2)).ToUpper();
-            string yearSuffix = createSubTypeDto.EndDate.ToString("yy"); // 2-digit year
-            string subTypeKey = $"{documentType.TypeKey}{namePrefix}{yearSuffix}";
+            if (createSubTypeDto.SubTypeKey != null) {
+                subTypeKey = createSubTypeDto.SubTypeKey;
+            } else {
+                string namePrefix = ""; //string.Join("", createSubTypeDto.Name.Take(2)).ToUpper();
+                string yearSuffix = createSubTypeDto.EndDate.ToString("yy"); // 2-digit year
+                subTypeKey = $"{documentType.TypeKey}{namePrefix}{yearSuffix}";
+            }
 
             // Check if this key already exists, if so, make it unique
             bool keyExists = await _context.SubTypes.AnyAsync(st => st.SubTypeKey == subTypeKey);

@@ -78,10 +78,10 @@ namespace DocManagementBackend.Models
         public string Comments { get; set; } = string.Empty;
     }
 
-    public class MoveToStatusDto
-    {
-        public int DocumentId { get; set; }
-        public int TargetStatusId { get; set; }
-        public string Comments { get; set; } = string.Empty;
-    }
+    // public class MoveToStatusDto
+    // {
+    //     public int DocumentId { get; set; }
+    //     public int TargetStatusId { get; set; }
+    //     public string Comments { get; set; } = string.Empty;
+    // }
 }

@@ -238,6 +238,51 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpPost("return-to-previous")]
+        public async Task<IActionResult> ReturnToPreviousStatus([FromBody] ReturnToPreviousStatusDto returnDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User not allowed to perform this action.");
+
+            try
+            {
+                var success = await _workflowService.ReturnToPreviousStatusAsync(
+                    returnDto.DocumentId,
+                    userId,
+                    returnDto.Comments);
+
+                if (success)
+                    return Ok("Document returned to previous status successfully.");
+                else
+                    return BadRequest("Failed to return document to previous status.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         [HttpPost("complete-status")]
         public async Task<IActionResult> CompleteDocumentStatus([FromBody] CompleteStatusDto completeStatusDto)
         {
@@ -730,6 +775,52 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        [HttpPost("reinitialize-workflow")]
+        public async Task<IActionResult> ReinitializeWorkflow([FromBody] ReinitializeWorkflowDto reinitializeDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            // Only allow Admin users to reinitialize workflows
+            if (user.Role!.RoleName != "Admin")
+                return Unauthorized("Only administrators are allowed to reinitialize document workflows.");
+
+            try
+            {
+                var success = await _workflowService.ReinitializeWorkflowAsync(
+                    reinitializeDto.DocumentId,
+                    userId,
+                    reinitializeDto.Comments);
+
+                if (success)
+                    return Ok("Document workflow reinitialized successfully.");
+                else
+                    return BadRequest("Failed to reinitialize document workflow.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         private string GetStatusText(int status)
         {
             return status switch
@@ -748,6 +839,18 @@ namespace DocManagementBackend.Controllers
     {
         public int DocumentId { get; set; }
         public int TargetStatusId { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
+
+    public class ReturnToPreviousStatusDto
+    {
+        public int DocumentId { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
+
+    public class ReinitializeWorkflowDto
+    {
+        public int DocumentId { get; set; }
         public string Comments { get; set; } = string.Empty;
     }
 }
