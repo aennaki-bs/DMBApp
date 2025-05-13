@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { Document } from '@/models/document';
 import documentService from '@/services/documentService';
@@ -99,6 +98,10 @@ export function useDocumentsData() {
             aValue = a.createdBy.username;
             bValue = b.createdBy.username;
             break;
+          case 'docDate':
+            aValue = new Date(a.docDate).getTime();
+            bValue = new Date(b.docDate).getTime();
+            break;
           default:
             return 0;
         }
@@ -126,19 +129,30 @@ export function useDocumentsData() {
         
         if (searchField === 'all') {
           matchesSearch = 
-            doc.title.toLowerCase().includes(query) || 
-            doc.documentKey.toLowerCase().includes(query) ||
-            doc.documentType.typeName.toLowerCase().includes(query) ||
-            doc.createdBy.username.toLowerCase().includes(query);
+            (doc.title && doc.title.toLowerCase().includes(query)) || 
+            (doc.documentKey && doc.documentKey.toLowerCase().includes(query)) ||
+            (doc.documentType && doc.documentType.typeName && doc.documentType.typeName.toLowerCase().includes(query)) ||
+            (doc.createdBy && doc.createdBy.username && doc.createdBy.username.toLowerCase().includes(query));
         } else if (searchField === 'documentType.typeName') {
-          matchesSearch = doc.documentType.typeName.toLowerCase().includes(query);
+          matchesSearch = doc.documentType && doc.documentType.typeName && 
+            doc.documentType.typeName.toLowerCase().includes(query);
         } else if (searchField === 'createdBy.username') {
-          matchesSearch = doc.createdBy.username.toLowerCase().includes(query);
-        } else if (Object.prototype.hasOwnProperty.call(doc, searchField)) {
-          const fieldValue = (doc as any)[searchField];
-          matchesSearch = fieldValue && String(fieldValue).toLowerCase().includes(query);
+          matchesSearch = doc.createdBy && doc.createdBy.username && 
+            doc.createdBy.username.toLowerCase().includes(query);
         } else {
-          matchesSearch = false;
+          // Handle nested properties with dot notation
+          const fieldParts = searchField.split('.');
+          let fieldValue: any = doc;
+          
+          for (const part of fieldParts) {
+            if (!fieldValue || typeof fieldValue !== 'object') {
+              fieldValue = undefined;
+              break;
+            }
+            fieldValue = fieldValue[part];
+          }
+          
+          matchesSearch = fieldValue && String(fieldValue).toLowerCase().includes(query);
         }
       }
       
@@ -250,23 +264,23 @@ const mockDocuments: Document[] = [
     createdBy: { id: 3, username: "alex.tech", firstName: "Alex", lastName: "Tech", email: "alex@example.com", role: "FullUser" },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    lignesCount: 8,
+    lignesCount: 0,
     typeId: 4,
     createdByUserId: 3
   },
   {
     id: 5,
     documentKey: "DOC-2023-005",
-    title: "Marketing Strategy",
-    content: "Marketing strategy for Q3 and Q4 2023.",
+    title: "Legal Contract",
+    content: "Legal contract for the new partnership.",
     docDate: new Date().toISOString(),
-    status: 1,
-    documentAlias: "Marketing-Strategy-Q3Q4",
-    documentType: { id: 5, typeName: "Strategy" },
-    createdBy: { id: 4, username: "sarah.marketing", firstName: "Sarah", lastName: "Marketing", email: "sarah@example.com", role: "SimpleUser" },
+    status: 0,
+    documentAlias: "Legal-Contract-2023",
+    documentType: { id: 5, typeName: "Contract" },
+    createdBy: { id: 4, username: "legal.team", firstName: "Legal", lastName: "Team", email: "legal@example.com", role: "FullUser" },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    lignesCount: 4,
+    lignesCount: 8,
     typeId: 5,
     createdByUserId: 4
   }

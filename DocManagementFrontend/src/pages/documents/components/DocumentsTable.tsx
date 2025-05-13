@@ -19,6 +19,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -60,91 +61,106 @@ export default function DocumentsTable({
     icon: React.ReactNode
   ) => (
     <div
-      className="flex items-center gap-1 cursor-pointer select-none"
+      className="flex items-center gap-1.5 cursor-pointer select-none group"
       onClick={() => requestSort(key)}
     >
-      {icon}
-      {label}
+      <span className="text-blue-400 group-hover:text-blue-300 transition-colors">
+        {icon}
+      </span>
+      <span className="group-hover:text-blue-200 transition-colors">
+        {label}
+      </span>
       <div className="ml-1 w-4 text-center">
-        {getSortIndicator(key) || (
-          <ArrowUpDown className="h-3 w-3 opacity-50" />
+        {getSortIndicator(key) ? (
+          <span className="text-blue-300">{getSortIndicator(key)}</span>
+        ) : (
+          <ArrowUpDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
         )}
       </div>
     </div>
   );
 
   return (
-    <Table>
-      <TableHeader className="bg-blue-900/20">
-        <TableRow className="border-blue-900/50 hover:bg-blue-900/30">
-          <TableHead className="w-12 text-blue-300">
-            {canManageDocuments ? (
-              <Checkbox
-                checked={
-                  selectedDocuments.length === documents.length &&
-                  documents.length > 0
-                }
-                onCheckedChange={handleSelectAll}
-                className="border-blue-500/50"
+    <div className="relative overflow-auto">
+      <Table className="min-w-full">
+        <TableHeader className="bg-gradient-to-r from-[#1a2c6b]/80 to-[#0a1033]/80 sticky top-0 z-10">
+          <TableRow className="border-blue-900/50 hover:bg-transparent">
+            <TableHead className="w-12 text-blue-300 py-4">
+              {canManageDocuments ? (
+                <Checkbox
+                  checked={
+                    selectedDocuments.length === documents.length &&
+                    documents.length > 0
+                  }
+                  onCheckedChange={handleSelectAll}
+                  className="border-blue-500/50"
+                />
+              ) : (
+                <span>#</span>
+              )}
+            </TableHead>
+            <TableHead className="text-blue-300 w-52 py-4">
+              {renderSortableHeader(
+                "Document Code",
+                "documentKey",
+                <Tag className="h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead className="text-blue-300 py-4">
+              {renderSortableHeader(
+                "Title",
+                "title",
+                <FileText className="h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead className="text-blue-300 py-4">
+              {renderSortableHeader(
+                "Type",
+                "documentType",
+                <Filter className="h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead className="text-blue-300 py-4">
+              {renderSortableHeader(
+                "Document Date",
+                "docDate",
+                <CalendarDays className="h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead className="text-blue-300 py-4">
+              {renderSortableHeader(
+                "Created By",
+                "createdBy",
+                <User className="h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead className="w-24 text-right text-blue-300 py-4">
+              Actions
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {documents.map((document, index) => (
+            <motion.tr
+              key={document.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
+              className="contents"
+            >
+              <DocumentsTableRow
+                document={document}
+                index={index + (page - 1) * pageSize}
+                isSelected={selectedDocuments.includes(document.id)}
+                canManageDocuments={canManageDocuments}
+                onSelect={() => handleSelectDocument(document.id)}
+                onDelete={() => openDeleteDialog(document.id)}
+                onAssignCircuit={() => openAssignCircuitDialog(document)}
               />
-            ) : (
-              <span>#</span>
-            )}
-          </TableHead>
-          <TableHead className="text-blue-300 w-52">
-            {renderSortableHeader(
-              "Document Code",
-              "documentKey",
-              <Tag className="h-4 w-4" />
-            )}
-          </TableHead>
-          <TableHead className="text-blue-300">
-            {renderSortableHeader(
-              "Title",
-              "title",
-              <FileText className="h-4 w-4" />
-            )}
-          </TableHead>
-          <TableHead className="text-blue-300">
-            {renderSortableHeader(
-              "Type",
-              "documentType",
-              <Filter className="h-4 w-4" />
-            )}
-          </TableHead>
-          <TableHead className="text-blue-300">
-            {renderSortableHeader(
-              "Document Date",
-              "docDate",
-              <CalendarDays className="h-4 w-4" />
-            )}
-          </TableHead>
-          <TableHead className="text-blue-300">
-            {renderSortableHeader(
-              "Created By",
-              "createdBy",
-              <User className="h-4 w-4" />
-            )}
-          </TableHead>
-          <TableHead className="w-24 text-right text-blue-300">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {documents.map((document, index) => (
-          <DocumentsTableRow
-            key={document.id}
-            document={document}
-            index={index + (page - 1) * pageSize}
-            isSelected={selectedDocuments.includes(document.id)}
-            canManageDocuments={canManageDocuments}
-            onSelect={() => handleSelectDocument(document.id)}
-            onDelete={() => openDeleteDialog(document.id)}
-            onAssignCircuit={() => openAssignCircuitDialog(document)}
-          />
-        ))}
-      </TableBody>
-    </Table>
+            </motion.tr>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

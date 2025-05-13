@@ -20,11 +20,20 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { FileText, Plus, GitBranch, Trash2, AlertCircle } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  GitBranch,
+  Trash2,
+  AlertCircle,
+  FilterX,
+  SlidersHorizontal,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
 import { CreateDocumentModal } from "@/components/create-document/CreateDocumentModal";
+import { useDocumentsFilter } from "./hooks/useDocumentsFilter";
 
 const DocumentsPage = () => {
   const { user } = useAuth();
@@ -44,6 +53,9 @@ const DocumentsPage = () => {
     requestSort,
   } = useDocumentsData();
 
+  // Get filter state to check if filters are applied
+  const { activeFilters, resetFilters } = useDocumentsFilter();
+
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
@@ -60,6 +72,13 @@ const DocumentsPage = () => {
     setTotalPages(Math.ceil(filteredItems.length / pageSize));
     setPage(1); // Reset to first page when filters change
   }, [filteredItems, pageSize]);
+
+  // Check if any filters are applied
+  const hasActiveFilters =
+    activeFilters.searchQuery !== "" ||
+    activeFilters.statusFilter !== "any" ||
+    activeFilters.typeFilter !== "any" ||
+    activeFilters.dateRange !== undefined;
 
   const getPageDocuments = () => {
     const start = (page - 1) * pageSize;
@@ -152,6 +171,11 @@ const DocumentsPage = () => {
     }
   };
 
+  const clearFiltersAndRefresh = () => {
+    resetFilters();
+    fetchDocuments();
+  };
+
   return (
     <div className="p-6 space-y-6">
       <PageHeader
@@ -202,107 +226,142 @@ const DocumentsPage = () => {
         }
       />
 
-      <Card className="border-blue-900/30 bg-[#0a1033] backdrop-blur-sm shadow-lg overflow-hidden">
-        <CardHeader className="p-4 border-b border-blue-900/30 bg-gradient-to-r from-[#1a2c6b]/50 to-[#0a1033]/50">
-          <DocumentsFilterBar />
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-8 space-y-4">
-              <div className="h-10 bg-blue-900/20 rounded animate-pulse"></div>
-              {[...Array(5)].map((_, index) => (
-                <div
-                  key={index}
-                  className="h-16 bg-blue-900/10 rounded animate-pulse"
-                ></div>
-              ))}
-            </div>
-          ) : getPageDocuments().length > 0 ? (
-            <div className="overflow-x-auto">
-              <DocumentsTable
-                documents={getPageDocuments()}
-                selectedDocuments={selectedDocuments}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className="border-blue-900/30 bg-gradient-to-b from-[#0a1033]/95 to-[#0a1033]/100 backdrop-blur-sm shadow-xl overflow-hidden rounded-xl">
+          <CardHeader className="p-4 border-b border-blue-900/30 bg-gradient-to-r from-[#1a2c6b]/50 to-[#0a1033]/50">
+            <DocumentsFilterBar />
+          </CardHeader>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-8 space-y-4">
+                <div className="h-10 bg-blue-900/20 rounded animate-pulse"></div>
+                {[...Array(5)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-16 bg-blue-900/10 rounded animate-pulse"
+                  ></div>
+                ))}
+              </div>
+            ) : getPageDocuments().length > 0 ? (
+              <div className="overflow-x-auto">
+                <DocumentsTable
+                  documents={getPageDocuments()}
+                  selectedDocuments={selectedDocuments}
+                  canManageDocuments={canManageDocuments}
+                  handleSelectDocument={handleSelectDocument}
+                  handleSelectAll={handleSelectAll}
+                  openDeleteDialog={openDeleteDialog}
+                  openAssignCircuitDialog={openAssignCircuitDialog}
+                  page={page}
+                  pageSize={pageSize}
+                  sortConfig={sortConfig}
+                  requestSort={requestSort}
+                />
+              </div>
+            ) : (
+              <DocumentsEmptyState
                 canManageDocuments={canManageDocuments}
-                handleSelectDocument={handleSelectDocument}
-                handleSelectAll={handleSelectAll}
-                openDeleteDialog={openDeleteDialog}
-                openAssignCircuitDialog={openAssignCircuitDialog}
-                page={page}
-                pageSize={pageSize}
-                sortConfig={sortConfig}
-                requestSort={requestSort}
+                onDocumentCreated={fetchDocuments}
+                hasFilters={hasActiveFilters}
+                onClearFilters={clearFiltersAndRefresh}
               />
-            </div>
-          ) : (
-            <DocumentsEmptyState
-              canManageDocuments={canManageDocuments}
-              onDocumentCreated={fetchDocuments}
-            />
-          )}
+            )}
 
-          {totalPages > 1 && filteredItems.length > 0 && (
-            <div className="p-4 border-t border-blue-900/30">
-              <Pagination className="justify-center">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className={
-                        page === 1
-                          ? "pointer-events-none opacity-50"
-                          : "hover:bg-blue-800/30"
+            {totalPages > 1 && filteredItems.length > 0 && (
+              <div className="p-4 border-t border-blue-900/30 bg-gradient-to-b from-[#0a1033]/0 to-[#1a2c6b]/20">
+                <Pagination className="justify-center">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        className={
+                          page === 1
+                            ? "pointer-events-none opacity-50"
+                            : "hover:bg-blue-800/30"
+                        }
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum = page;
+                      if (page <= 3) {
+                        pageNum = i + 1;
+                      } else if (page >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = page - 2 + i;
                       }
-                    />
-                  </PaginationItem>
 
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum = page;
-                    if (page <= 3) {
-                      pageNum = i + 1;
-                    } else if (page >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = page - 2 + i;
-                    }
-
-                    if (pageNum > 0 && pageNum <= totalPages) {
-                      return (
-                        <PaginationItem key={i}>
-                          <PaginationLink
-                            onClick={() => setPage(pageNum)}
-                            isActive={page === pageNum}
-                            className={
-                              page === pageNum
-                                ? "bg-blue-600"
-                                : "hover:bg-blue-800/30"
-                            }
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    }
-                    return null;
-                  })}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
+                      if (pageNum > 0 && pageNum <= totalPages) {
+                        return (
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              onClick={() => setPage(pageNum)}
+                              isActive={page === pageNum}
+                              className={
+                                page === pageNum
+                                  ? "bg-blue-600"
+                                  : "hover:bg-blue-800/30"
+                              }
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
                       }
-                      className={
-                        page === totalPages
-                          ? "pointer-events-none opacity-50"
-                          : "hover:bg-blue-800/30"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      return null;
+                    })}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setPage((p) => Math.min(totalPages, p + 1))
+                        }
+                        className={
+                          page === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : "hover:bg-blue-800/30"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+
+                <div className="text-center text-xs text-blue-400 mt-2">
+                  Showing {(page - 1) * pageSize + 1} to{" "}
+                  {Math.min(page * pageSize, filteredItems.length)} of{" "}
+                  {filteredItems.length} documents
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Floating action button for clearing filters */}
+      <AnimatePresence>
+        {hasActiveFilters && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="fixed bottom-24 right-6 z-10"
+          >
+            <Button
+              onClick={clearFiltersAndRefresh}
+              className="rounded-full h-12 px-4 bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center gap-2 border border-blue-500/50"
+            >
+              <FilterX className="h-5 w-5" />
+              <span>Clear Filters</span>
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Dialogs */}
       <CreateDocumentModal

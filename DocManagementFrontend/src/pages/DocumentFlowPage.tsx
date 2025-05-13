@@ -107,7 +107,7 @@ const DocumentFlowPage = () => {
   // If document is not in a circuit
   if (isNoCircuit) {
     return (
-      <div className="p-3 sm:p-4 md:p-6 space-y-3 md:space-y-4 h-full">
+      <div className="p-2 sm:p-3 space-y-2 h-full">
         <DocumentFlowHeader
           documentId={id}
           document={document}
@@ -125,7 +125,7 @@ const DocumentFlowPage = () => {
   const isCircuitCompleted = workflowStatus?.isCircuitCompleted;
 
   return (
-    <div className="p-2 sm:p-3 md:p-4 space-y-4 w-full">
+    <div className="p-2 space-y-3 w-full">
       <DocumentFlowHeader
         documentId={id}
         document={document}
@@ -138,7 +138,7 @@ const DocumentFlowPage = () => {
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="flex flex-col gap-6 w-full">
+        <div className="flex flex-col gap-3 w-full">
           {/* Circuit Status Summary */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -153,11 +153,11 @@ const DocumentFlowPage = () => {
                   : "border-blue-500/30 bg-gradient-to-r from-blue-900/20 to-indigo-900/10"
               )}
             >
-              <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between">
-                <div className="flex items-center mb-4 md:mb-0">
+              <CardContent className="p-3 flex flex-col md:flex-row items-center justify-between">
+                <div className="flex items-center mb-2 md:mb-0">
                   <div
                     className={cn(
-                      "w-12 h-12 rounded-full flex items-center justify-center mr-4",
+                      "w-10 h-10 rounded-full flex items-center justify-center mr-3",
                       isCircuitCompleted
                         ? "bg-green-900/30 border border-green-500/30"
                         : "bg-blue-900/30 border border-blue-500/30"
@@ -165,28 +165,28 @@ const DocumentFlowPage = () => {
                   >
                     <CircuitBoard
                       className={cn(
-                        "h-6 w-6",
+                        "h-5 w-5",
                         isCircuitCompleted ? "text-green-400" : "text-blue-400"
                       )}
                     />
                   </div>
                   <div>
-                    <h3 className="text-lg font-medium text-white">
-                      {document?.circuitName || "Document Circuit"}
+                    <h3 className="text-base font-medium text-white">
+                      {document?.circuit?.title || "Document Circuit"}
                     </h3>
                     <div className="flex items-center gap-2">
                       <Badge
                         variant={isCircuitCompleted ? "default" : "outline"}
                         className={
                           isCircuitCompleted
-                            ? "bg-green-700 hover:bg-green-700"
-                            : ""
+                            ? "bg-green-700 hover:bg-green-700 text-xs"
+                            : "text-xs"
                         }
                       >
                         {isCircuitCompleted ? "Completed" : "In Progress"}
                       </Badge>
                       {workflowStatus && (
-                        <span className="text-sm text-blue-300">
+                        <span className="text-xs text-blue-300">
                           {
                             workflowStatus.statuses.filter((s) => s.isComplete)
                               .length
@@ -213,19 +213,20 @@ const DocumentFlowPage = () => {
             </Card>
           </motion.div>
 
-          {/* New Mind Map Visualization */}
-          <div className="mind-map-container">
-            <DocumentFlowMindMap
-              workflowStatus={workflowStatus}
-              documentId={Number(id)}
-              onStatusComplete={refreshAllData}
-              onMoveToStatus={handleMoveToStatus}
-            />
+          {/* Main content area - Mind Map and History side by side */}
+          <div className="flex flex-col lg:flex-row gap-3">
+            {/* Mind Map Visualization - Now full width */}
+            <div className="w-full">
+              <DocumentFlowMindMap
+                workflowStatus={workflowStatus}
+                documentId={Number(id)}
+                onStatusComplete={refreshAllData}
+                onMoveToStatus={handleMoveToStatus}
+              />
+            </div>
           </div>
 
-          <Separator className="bg-blue-900/30" />
-
-          {/* Document History Section */}
+          {/* History section is now a floating button */}
           <WorkflowHistorySection
             history={circuitHistory || []}
             isLoading={isLoadingHistory}

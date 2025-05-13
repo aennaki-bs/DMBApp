@@ -126,7 +126,7 @@ export function SidebarNav() {
                 </Link>
               </li>
               {/* Actions Management */}
-              <li>
+              {/* <li>
                 <Link
                   to="/actions"
                   className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -138,7 +138,7 @@ export function SidebarNav() {
                   <PlayCircle className="h-5 w-5" />
                   <span>Actions</span>
                 </Link>
-              </li>
+              </li> */}
             </>
           )}
         </ul>

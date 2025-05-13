@@ -1,80 +1,77 @@
-import { CheckCircle } from 'lucide-react';
+import { motion } from "framer-motion";
 
 interface StepIndicatorProps {
   currentStep: number;
   totalSteps?: number;
 }
 
-export const StepIndicator = ({ currentStep, totalSteps = 4 }: StepIndicatorProps) => {
+export const StepIndicator = ({
+  currentStep,
+  totalSteps = 4,
+}: StepIndicatorProps) => {
+  const steps = [
+    { number: 1, label: "Name" },
+    { number: 2, label: "Code" },
+    { number: 3, label: "Details" },
+    { number: 4, label: "Review" },
+  ];
+
   return (
-    <div className="flex justify-center items-center mb-3">
-      <div className="flex items-center">
-        {/* Step 1 */}
-        <div
-          className={`flex items-center justify-center h-5 w-5 rounded-full transition-all duration-300
-            ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'}`}
-        >
-          {currentStep > 1 ? (
-            <CheckCircle className="h-3 w-3 text-white" />
-          ) : (
-            <span className="text-xs font-medium">1</span>
-          )}
-        </div>
-        
-        {/* Connector 1-2 */}
-        <div
-          className={`h-[2px] w-8 transition-all duration-300
-            ${currentStep > 1 ? 'bg-blue-600' : 'bg-gray-700'}`}
-        />
-        
-        {/* Step 2 */}
-        <div
-          className={`flex items-center justify-center h-5 w-5 rounded-full transition-all duration-300
-            ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'}`}
-        >
-          {currentStep > 2 ? (
-            <CheckCircle className="h-3 w-3 text-white" />
-          ) : (
-            <span className="text-xs font-medium">2</span>
-          )}
-        </div>
-        
-        {/* Connector 2-3 */}
-        <div
-          className={`h-[2px] w-8 transition-all duration-300
-            ${currentStep > 2 ? 'bg-blue-600' : 'bg-gray-700'}`}
-        />
-        
-        {/* Step 3 */}
-        <div
-          className={`flex items-center justify-center h-5 w-5 rounded-full transition-all duration-300
-            ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'}`}
-        >
-          {currentStep > 3 ? (
-            <CheckCircle className="h-3 w-3 text-white" />
-          ) : (
-            <span className="text-xs font-medium">3</span>
-          )}
-        </div>
-        
-        {/* Connector 3-4 */}
-        {totalSteps >= 4 && (
-          <>
-            <div
-              className={`h-[2px] w-8 transition-all duration-300
-                ${currentStep > 3 ? 'bg-blue-600' : 'bg-gray-700'}`}
-            />
-            
-            {/* Step 4 */}
-            <div
-              className={`flex items-center justify-center h-5 w-5 rounded-full transition-all duration-300
-                ${currentStep >= 4 ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'}`}
+    <div className="flex items-center justify-between relative mb-8 mt-2">
+      {/* Background line */}
+      <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-blue-900/40 -translate-y-1/2" />
+
+      {/* Active line */}
+      <motion.div
+        className="absolute top-1/2 left-0 h-[2px] bg-blue-500 -translate-y-1/2"
+        initial={{ width: "0%" }}
+        animate={{
+          width: `${Math.max(
+            0,
+            ((currentStep - 1) / (totalSteps - 1)) * 100
+          )}%`,
+        }}
+        transition={{ duration: 0.5 }}
+      />
+
+      {steps.slice(0, totalSteps).map((step, index) => {
+        const isActive = currentStep === step.number;
+        const isCompleted = currentStep > step.number;
+        const isPending = currentStep < step.number;
+
+        return (
+          <div
+            key={step.number}
+            className="flex flex-col items-center relative z-10"
+          >
+            <motion.div
+              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                isActive
+                  ? "bg-blue-500 text-white"
+                  : isCompleted
+                  ? "bg-blue-500 text-white"
+                  : "bg-blue-900/20 text-blue-300"
+              }`}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: index * 0.1 }}
             >
-              <span className="text-xs font-medium">4</span>
-            </div>
-          </>
-        )}
-      </div>
+              {step.number}
+            </motion.div>
+
+            <motion.span
+              className={`mt-2 text-sm ${
+                isActive || isCompleted ? "text-blue-300" : "text-blue-900/50"
+              }`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.1 + 0.1 }}
+            >
+              {step.label}
+            </motion.span>
+          </div>
+        );
+      })}
     </div>
   );
 };

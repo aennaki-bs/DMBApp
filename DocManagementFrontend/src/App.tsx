@@ -39,6 +39,7 @@ import Settings from "./pages/Settings";
 import { SettingsProvider } from "./context/SettingsContext";
 import SubTypeManagementPage from "./pages/SubTypeManagementPage";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
+import DocumentTypeDetail from "./pages/DocumentTypeDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,6 +119,19 @@ const App = () => (
                         requiredRole={["Admin", "FullUser"]}
                       >
                         <DocumentTypesManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Document Type Detail route */}
+                  <Route
+                    path="/document-types/:id"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <DocumentTypeDetail />
                       </ProtectedRoute>
                     }
                   />

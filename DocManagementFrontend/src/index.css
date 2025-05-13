@@ -1,3 +1,4 @@
+@import './styles/form-overrides.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -263,6 +264,3 @@
     transform: translateY(0);
   }
 }
-
-/* Import form overrides */
-@import './styles/form-overrides.css';

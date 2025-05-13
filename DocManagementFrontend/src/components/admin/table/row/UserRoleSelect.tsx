@@ -72,7 +72,7 @@ export function UserRoleSelect({
             currentRole
           )} border-l-2 rounded-md mb-1`}
         >
-          {getRoleIcon(currentRole)}
+          {/* {getRoleIcon(currentRole)} */}
           {currentRole}
         </SelectItem>
         <SelectSeparator className="bg-blue-900/30 my-1" />
@@ -82,7 +82,7 @@ export function UserRoleSelect({
             value={role}
             className="flex items-center text-blue-200 hover:bg-blue-900/30 rounded-md"
           >
-            {getRoleIcon(role)}
+            {/* {getRoleIcon(role)} */}
             {role}
           </SelectItem>
         ))}

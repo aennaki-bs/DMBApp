@@ -23,14 +23,23 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  ChevronDown,
+  AlertCircle,
+  PlusCircle,
+  AlertTriangle,
+  Check,
+} from "lucide-react";
 import { Link } from "react-router-dom";
-import { AlertCircle, PlusCircle, AlertTriangle, Check } from "lucide-react";
+
+// Extended Circuit type that includes statuses
+interface ExtendedCircuit extends Circuit {
+  statuses?: {
+    id: number;
+    isInitial: boolean;
+    isFinal: boolean;
+    title: string;
+  }[];
+}
 
 const formSchema = z.object({
   circuitId: z.string().min(1, "Please select a circuit"),
@@ -72,9 +81,13 @@ export default function AssignCircuitDialog({
   const [selectedCircuitId, setSelectedCircuitId] = useState<string | null>(
     null
   );
-  const [selectedCircuit, setSelectedCircuit] = useState<any | null>(null);
+  const [selectedCircuit, setSelectedCircuit] =
+    useState<ExtendedCircuit | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const { data: circuits, isLoading: isCircuitsLoading } = useQuery({
+  const { data: circuits, isLoading: isCircuitsLoading } = useQuery<
+    ExtendedCircuit[]
+  >({
     queryKey: ["circuits"],
     queryFn: circuitService.getAllCircuits,
     enabled: open,
@@ -102,7 +115,7 @@ export default function AssignCircuitDialog({
           totalSteps: 0,
           allStepsHaveStatuses: true,
           isValid: true,
-          stepsWithoutStatuses: []
+          stepsWithoutStatuses: [],
         };
       },
       enabled: !!selectedCircuitId && open,
@@ -115,9 +128,18 @@ export default function AssignCircuitDialog({
     },
   });
 
+  // Update the form value when selectedCircuitId changes
+  useEffect(() => {
+    if (selectedCircuitId) {
+      form.setValue("circuitId", selectedCircuitId);
+    }
+  }, [selectedCircuitId, form]);
+
   const handleFormSubmit = async (values: FormValues) => {
     const circuitId = parseInt(values.circuitId);
-    const circuit = circuits?.find((c) => c.id === circuitId);
+    const circuit = circuits?.find((c) => c.id === circuitId) as
+      | ExtendedCircuit
+      | undefined;
 
     if (circuit) {
       setSelectedCircuitId(circuitId.toString());
@@ -125,19 +147,27 @@ export default function AssignCircuitDialog({
 
       // Basic validation
       if (!circuit.steps || circuit.steps.length === 0) {
-        toast.error("Selected circuit has no steps. Please add steps to the circuit first.");
+        toast.error(
+          "Selected circuit has no steps. Please add steps to the circuit first."
+        );
         return;
       }
 
       if (!circuit.statuses || circuit.statuses.length === 0) {
-        toast.error("Selected circuit has no statuses. Please add statuses to the circuit first.");
+        toast.error(
+          "Selected circuit has no statuses. Please add statuses to the circuit first."
+        );
         return;
       }
 
       // Check if there's an initial status
-      const hasInitialStatus = circuit.statuses.some(status => status.isInitial);
+      const hasInitialStatus = circuit.statuses.some(
+        (status) => status.isInitial
+      );
       if (!hasInitialStatus) {
-        toast.error("Selected circuit has no initial status. At least one status must be marked as initial.");
+        toast.error(
+          "Selected circuit has no initial status. At least one status must be marked as initial."
+        );
         return;
       }
 
@@ -153,7 +183,7 @@ export default function AssignCircuitDialog({
     setIsSubmitting(true);
     try {
       const circuitId = parseInt(selectedCircuitId);
-      
+
       console.log(`Assigning document ${documentId} to circuit ${circuitId}`);
 
       // Always activate the circuit when assigning a document
@@ -174,7 +204,7 @@ export default function AssignCircuitDialog({
       // Assign document to circuit
       await circuitService.assignDocumentToCircuit({
         documentId,
-        circuitId: circuitId
+        circuitId: circuitId,
       });
 
       toast.success("Document assigned to circuit successfully");
@@ -184,36 +214,51 @@ export default function AssignCircuitDialog({
       onSuccess();
     } catch (error: any) {
       console.error("Error assigning document to circuit:", error);
-      
+
       // Show detailed error information for debugging
       if (error.response) {
         console.error("Error response details:", {
           data: error.response.data,
           status: error.response.status,
-          headers: error.response.headers
+          headers: error.response.headers,
         });
       }
-      
+
       // Display more specific error message based on error type
       let errorMessage = "Failed to assign document to circuit";
-      
-      if (error.response?.data && typeof error.response.data === 'string') {
+
+      if (error.response?.data && typeof error.response.data === "string") {
         // Check for specific error conditions
-        if (error.response.data.includes("FK_DocumentCircuitHistory_Steps_StepId")) {
-          errorMessage = "Database constraint error: Step not found. Please add valid steps to this circuit first.";
+        if (
+          error.response.data.includes("FK_DocumentCircuitHistory_Steps_StepId")
+        ) {
+          errorMessage =
+            "Database constraint error: Step not found. Please add valid steps to this circuit first.";
         } else if (error.response.data.includes("no initial status defined")) {
-          errorMessage = "Circuit validation failed: No initial status defined. Please set an initial status for this circuit.";
-        } else if (error.response.data.includes("while saving the entity changes")) {
-          errorMessage = "Database error while saving. The circuit may not be properly configured with steps and statuses.";
+          errorMessage =
+            "Circuit validation failed: No initial status defined. Please set an initial status for this circuit.";
+        } else if (
+          error.response.data.includes("while saving the entity changes")
+        ) {
+          errorMessage =
+            "Database error while saving. The circuit may not be properly configured with steps and statuses.";
         } else {
           errorMessage = error.response.data;
         }
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Handle circuit selection
+  const handleCircuitSelect = (circuitId: string) => {
+    setSelectedCircuitId(circuitId);
+    const circuit = circuits?.find((c) => c.id === parseInt(circuitId));
+    setSelectedCircuit((circuit as ExtendedCircuit) || null);
+    setDropdownOpen(false);
   };
 
   // Different content based on state
@@ -352,33 +397,61 @@ export default function AssignCircuitDialog({
               name="circuitId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Circuit</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setSelectedCircuitId(value);
-                    }}
-                    value={field.value}
-                    disabled={isCircuitsLoading || isValidationLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a circuit" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {circuitsWithSteps?.map((circuit) => (
-                        <SelectItem
-                          key={circuit.id}
-                          value={circuit.id.toString()}
-                        >
-                          {circuit.circuitKey} - {circuit.title}
-                          {!circuit.isActive && " (Inactive)"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
+                  <FormLabel className="text-white">Circuit</FormLabel>
+                  <div className="relative">
+                    {/* Custom dropdown trigger */}
+                    <div
+                      onClick={() =>
+                        !isCircuitsLoading && setDropdownOpen(!dropdownOpen)
+                      }
+                      className={`flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm bg-[#111633] border-blue-900/50 text-white focus:border-blue-500/50 cursor-pointer ${
+                        isCircuitsLoading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <span className="truncate">
+                        {selectedCircuitId
+                          ? circuits?.find(
+                              (c) => c.id === parseInt(selectedCircuitId)
+                            )
+                            ? `${
+                                circuits.find(
+                                  (c) => c.id === parseInt(selectedCircuitId)
+                                )?.circuitKey
+                              } - ${
+                                circuits.find(
+                                  (c) => c.id === parseInt(selectedCircuitId)
+                                )?.title
+                              }`
+                            : "Select a circuit"
+                          : "Select a circuit"}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </div>
+
+                    {/* Custom dropdown menu */}
+                    {dropdownOpen && (
+                      <div className="absolute z-[9999] w-full mt-1 rounded-md border border-blue-900/50 bg-[#0d1117] shadow-lg">
+                        <div className="max-h-60 overflow-auto py-1">
+                          {circuitsWithSteps?.map((circuit) => (
+                            <div
+                              key={circuit.id}
+                              className="px-2 py-1.5 text-sm text-white hover:bg-blue-900/30 cursor-pointer"
+                              onClick={() =>
+                                handleCircuitSelect(circuit.id.toString())
+                              }
+                            >
+                              {circuit.circuitKey} - {circuit.title}
+                              {!circuit.isActive && " (Inactive)"}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Hidden input for form handling */}
+                    <input type="hidden" {...field} />
+                  </div>
+                  <FormMessage className="text-red-400" />
                 </FormItem>
               )}
             />
@@ -420,11 +493,12 @@ export default function AssignCircuitDialog({
           setSelectedCircuitId(null);
           setSelectedCircuit(null);
           setIsSubmitting(false);
+          setDropdownOpen(false);
         }
         onOpenChange(newOpen);
       }}
     >
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl sm:max-w-[500px] overflow-visible">
         {renderDialogContent()}
       </DialogContent>
     </Dialog>
