@@ -8,7 +8,7 @@ import {
   Users,
   CalendarRange,
   Settings,
-  PlayCircle
+  PlayCircle,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -95,7 +95,7 @@ export function SidebarNav() {
                   }`}
                 >
                   <Layers className="h-5 w-5" />
-                  <span>Types Management</span>
+                  <span>Document Types</span>
                 </Link>
               </li>
               {/* <li>
@@ -126,7 +126,7 @@ export function SidebarNav() {
                 </Link>
               </li>
               {/* Actions Management */}
-              <li>
+              {/* <li>
                 <Link
                   to="/actions"
                   className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -138,7 +138,7 @@ export function SidebarNav() {
                   <PlayCircle className="h-5 w-5" />
                   <span>Actions</span>
                 </Link>
-              </li>
+              </li> */}
             </>
           )}
         </ul>

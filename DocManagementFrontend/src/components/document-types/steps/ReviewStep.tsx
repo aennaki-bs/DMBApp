@@ -1,4 +1,6 @@
-import React from 'react';
+import React from "react";
+import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 
 interface ReviewStepProps {
   data: {
@@ -10,31 +12,40 @@ interface ReviewStepProps {
 
 export const ReviewStep = ({ data }: ReviewStepProps) => {
   return (
-    <div className="bg-[#111633] rounded-md p-4 border border-blue-900/30">
-      <h3 className="font-medium text-blue-200 text-sm mb-3">Review Document Type Details</h3>
-      
-      <div className="space-y-3">
-        <div>
-          <p className="text-xs text-blue-300">Type Name</p>
-          <p className="text-sm text-white">{data.typeName}</p>
-        </div>
-        
-        <div>
-          <p className="text-xs text-blue-300">Type Code</p>
-          <p className="text-sm text-white">{data.typeKey}</p>
-        </div>
-        
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
+      <div className="mb-4">
+        <h3 className="text-lg font-medium text-white">Review</h3>
+        <p className="text-sm text-blue-300 mt-1">
+          Review your document type details before creation
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <ReviewItem label="Type Name" value={data.typeName} />
+        <ReviewItem label="Type Code" value={data.typeKey} />
         {data.typeAttr && (
-          <div>
-            <p className="text-xs text-blue-300">Description</p>
-            <p className="text-sm text-white">{data.typeAttr}</p>
-          </div>
+          <ReviewItem label="Description" value={data.typeAttr} />
         )}
       </div>
-      
-      <div className="mt-4 border-t border-blue-900/20 pt-3">
-        <p className="text-xs text-blue-300">Please review the information above before submitting.</p>
+
+      <div className="mt-6 pt-4 border-t border-blue-900/30 flex items-center">
+        <Check className="h-4 w-4 text-blue-400 mr-2" />
+        <p className="text-sm text-blue-300">
+          Please review the information above before submitting
+        </p>
       </div>
-    </div>
+    </motion.div>
   );
-}; 
+};
+
+const ReviewItem = ({ label, value }: { label: string; value: string }) => (
+  <div className="bg-[#111633] rounded-md p-4 border border-blue-900/30">
+    <p className="text-sm text-blue-300 mb-1">{label}</p>
+    <p className="text-base font-medium text-white">{value}</p>
+  </div>
+);

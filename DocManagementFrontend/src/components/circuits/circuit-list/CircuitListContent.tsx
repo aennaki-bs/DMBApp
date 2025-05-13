@@ -1,12 +1,11 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import EditCircuitDialog from '../EditCircuitDialog';
-import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog';
-import CircuitDetailsDialog from '../CircuitDetailsDialog';
-import { CircuitLoadingState } from './CircuitLoadingState';
-import { CircuitEmptyState } from './CircuitEmptyState';
-import { CircuitsTable } from './CircuitsTable';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import EditCircuitDialog from "../EditCircuitDialog";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import CircuitDetailsDialog from "../CircuitDetailsDialog";
+import { CircuitLoadingState } from "./CircuitLoadingState";
+import { CircuitEmptyState } from "./CircuitEmptyState";
+import { CircuitsTable } from "./CircuitsTable";
+import { Trash, AlertTriangle } from "lucide-react";
 
 interface CircuitListContentProps {
   circuits: Circuit[] | undefined;
@@ -14,13 +13,20 @@ interface CircuitListContentProps {
   isError: boolean;
   isSimpleUser: boolean;
   searchQuery: string;
+  statusFilter?: string;
   selectedCircuit: Circuit | null;
+  selectedCircuits: number[];
+  sortConfig: { key: string; direction: "asc" | "desc" } | null;
   editDialogOpen: boolean;
   deleteDialogOpen: boolean;
   detailsDialogOpen: boolean;
   onEdit: (circuit: Circuit) => void;
   onDelete: (circuit: Circuit) => void;
   onViewDetails: (circuit: Circuit) => void;
+  onSelectCircuit: (id: number) => void;
+  onSelectAll: () => void;
+  onSort: (key: string) => void;
+  onBulkDelete: () => void;
   setEditDialogOpen: (open: boolean) => void;
   setDeleteDialogOpen: (open: boolean) => void;
   setDetailsDialogOpen: (open: boolean) => void;
@@ -35,54 +41,74 @@ export function CircuitListContent({
   isError,
   isSimpleUser,
   searchQuery,
+  statusFilter = "any",
   selectedCircuit,
+  selectedCircuits,
+  sortConfig,
   editDialogOpen,
   deleteDialogOpen,
   detailsDialogOpen,
   onEdit,
   onDelete,
   onViewDetails,
+  onSelectCircuit,
+  onSelectAll,
+  onSort,
+  onBulkDelete,
   setEditDialogOpen,
   setDeleteDialogOpen,
   setDetailsDialogOpen,
   confirmDelete,
   refetch,
-  hasNoSearchResults
+  hasNoSearchResults,
 }: CircuitListContentProps) {
   if (isLoading) {
     return <CircuitLoadingState />;
   }
 
   if (isError) {
-    return <div className="text-red-500 p-8">Error loading circuits</div>;
+    return (
+      <div className="flex flex-col items-center justify-center py-10 px-4 text-center rounded-xl border border-red-900/30 bg-red-950/20">
+        <AlertTriangle className="h-10 w-10 text-red-500 mb-2" />
+        <h3 className="text-lg font-medium text-red-400 mb-1">
+          Failed to load circuits
+        </h3>
+        <p className="text-red-300/80">
+          There was an error retrieving the circuits. Please try again later.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <Card className="w-full shadow-md bg-[#111633]/70 border-blue-900/30">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-blue-900/30 bg-blue-900/20">
-        <CardTitle className="text-xl text-blue-100">Circuits</CardTitle>
-        {circuits && circuits.length > 0 && (
-          <Badge variant="outline" className="bg-blue-900/50 text-blue-300 border-blue-700/50">
-            {circuits.length} {circuits.length === 1 ? 'Circuit' : 'Circuits'}
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent className="p-0">
-        {circuits && circuits.length > 0 ? (
-          <CircuitsTable 
-            circuits={circuits}
-            isSimpleUser={isSimpleUser}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onViewDetails={onViewDetails}
-          />
-        ) : (
-          <CircuitEmptyState 
-            searchQuery={searchQuery} 
-            isSimpleUser={isSimpleUser} 
-          />
-        )}
-      </CardContent>
+    <>
+      {circuits && circuits.length > 0 ? (
+        <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+          <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
+            <div className="min-w-[800px]">
+              <CircuitsTable
+                circuits={circuits}
+                isSimpleUser={isSimpleUser}
+                selectedCircuits={selectedCircuits}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onViewDetails={onViewDetails}
+                onSelectCircuit={onSelectCircuit}
+                onSelectAll={onSelectAll}
+                sortConfig={sortConfig}
+                onSort={onSort}
+                onBulkDelete={onBulkDelete}
+              />
+            </div>
+          </ScrollArea>
+        </div>
+      ) : (
+        <CircuitEmptyState
+          searchQuery={searchQuery}
+          statusFilter={statusFilter}
+          isSimpleUser={isSimpleUser}
+        />
+      )}
 
       {selectedCircuit && (
         <>
@@ -94,7 +120,7 @@ export function CircuitListContent({
                 onOpenChange={setEditDialogOpen}
                 onSuccess={refetch}
               />
-              
+
               <DeleteConfirmDialog
                 title="Delete Circuit"
                 description={`Are you sure you want to delete the circuit "${selectedCircuit.title}"? This action cannot be undone.`}
@@ -106,7 +132,7 @@ export function CircuitListContent({
               />
             </>
           )}
-          
+
           <CircuitDetailsDialog
             circuit={selectedCircuit}
             open={detailsDialogOpen}
@@ -114,6 +140,6 @@ export function CircuitListContent({
           />
         </>
       )}
-    </Card>
+    </>
   );
 }

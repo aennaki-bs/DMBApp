@@ -1,42 +1,41 @@
-
-import { CircleDashed, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { GitBranch, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 interface CircuitEmptyStateProps {
-  searchQuery: string;
+  searchQuery?: string;
+  statusFilter?: string;
   isSimpleUser: boolean;
 }
 
-export function CircuitEmptyState({ searchQuery, isSimpleUser }: CircuitEmptyStateProps) {
-  const isSearching = searchQuery.trim() !== '';
-  
+export function CircuitEmptyState({
+  searchQuery,
+  statusFilter,
+  isSimpleUser,
+}: CircuitEmptyStateProps) {
+  const navigate = useNavigate();
+
+  const hasFilters = searchQuery || (statusFilter && statusFilter !== "any");
+
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center">
-      <div className="mb-4 bg-blue-900/30 p-4 rounded-full">
-        {isSearching ? (
-          <Search className="h-10 w-10 text-blue-400" />
-        ) : (
-          <CircleDashed className="h-10 w-10 text-blue-400" />
-        )}
-      </div>
-      
-      <h3 className="text-xl font-medium text-white mb-2">
-        {isSearching 
-          ? "No matches found" 
-          : "No circuits available"}
-      </h3>
-      
-      <p className="text-blue-300 max-w-md">
-        {isSearching ? (
-          <>
-            No circuits match your search criteria: <span className="font-medium text-blue-200">"{searchQuery}"</span>. 
-            Try different keywords or clear your search.
-          </>
-        ) : (
-          isSimpleUser 
-            ? "There are no circuits configured yet. Please contact an administrator."
-            : "Get started by creating your first circuit."
-        )}
-      </p>
-    </div>
+    <EmptyState
+      icon={<GitBranch className="h-10 w-10 text-blue-400" />}
+      title="No circuits found"
+      description={
+        hasFilters
+          ? "Try adjusting your search or filters"
+          : "Create your first circuit to get started"
+      }
+      actionLabel={!isSimpleUser && !hasFilters ? "Create Circuit" : undefined}
+      actionIcon={
+        !isSimpleUser && !hasFilters ? <Plus className="h-4 w-4" /> : undefined
+      }
+      onAction={
+        !isSimpleUser && !hasFilters
+          ? () => navigate("/circuits/create")
+          : undefined
+      }
+    />
   );
 }

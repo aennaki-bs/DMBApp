@@ -1,3 +1,4 @@
+import React, { useEffect, useState, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -6,12 +7,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { DocumentType } from "@/models/document";
 import { SubType } from "@/models/subtype";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, PlusCircle } from "lucide-react";
+import {
+  AlertCircle,
+  PlusCircle,
+  Info,
+  Layers,
+  Tag,
+  ChevronDown,
+  Clock,
+} from "lucide-react";
 import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import subTypeService from "@/services/subTypeService";
+import { toast } from "sonner";
 
 interface TypeSelectionStepProps {
   documentTypes: DocumentType[];
@@ -22,9 +33,8 @@ interface TypeSelectionStepProps {
   onTypeChange: (value: string) => void;
   onSubTypeChange: (value: string) => void;
   onAliasChange: (value: string) => void;
-  aliasError?: string;
-  typeError?: string;
-  subTypeError?: string;
+  typeError?: string | null;
+  subTypeError?: string | null;
 }
 
 export const TypeSelectionStep = ({
@@ -32,171 +42,329 @@ export const TypeSelectionStep = ({
   subTypes,
   selectedTypeId,
   selectedSubTypeId,
-  documentAlias,
   onTypeChange,
   onSubTypeChange,
-  onAliasChange,
-  aliasError,
   typeError,
   subTypeError,
 }: TypeSelectionStepProps) => {
+  const [isLoadingSubTypes, setIsLoadingSubTypes] = useState(false);
+  const [filteredSubTypes, setFilteredSubTypes] = useState<SubType[]>([]);
+  const [noSubTypesAvailable, setNoSubTypesAvailable] = useState(false);
+
+  // Custom select state
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [subtypeDropdownOpen, setSubtypeDropdownOpen] = useState(false);
+  const typeDropdownRef = useRef<HTMLDivElement>(null);
+  const subtypeDropdownRef = useRef<HTMLDivElement>(null);
+
   const selectedType = selectedTypeId
     ? documentTypes.find((type) => type.id === selectedTypeId)
     : null;
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        typeDropdownRef.current &&
+        !typeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setTypeDropdownOpen(false);
+      }
+      if (
+        subtypeDropdownRef.current &&
+        !subtypeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setSubtypeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Update filtered subtypes when document type changes or when subTypes prop changes
+  useEffect(() => {
+    if (selectedTypeId) {
+      setIsLoadingSubTypes(true);
+      setNoSubTypesAvailable(false);
+
+      // Use the subTypes prop if it's already filtered for the selected type
+      if (subTypes && subTypes.length > 0) {
+        setFilteredSubTypes(subTypes);
+        setNoSubTypesAvailable(subTypes.length === 0);
+        setIsLoadingSubTypes(false);
+      } else {
+        // Fetch subtypes for the selected document type if not provided
+        subTypeService
+          .getSubTypesByDocType(selectedTypeId)
+          .then((data) => {
+            setFilteredSubTypes(data);
+            if (data.length === 0) {
+              setNoSubTypesAvailable(true);
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to load subtypes:", error);
+            toast.error(
+              "Failed to load subtypes for the selected document type"
+            );
+            setFilteredSubTypes([]);
+            setNoSubTypesAvailable(true);
+          })
+          .finally(() => {
+            setIsLoadingSubTypes(false);
+          });
+      }
+    } else {
+      setFilteredSubTypes([]);
+      setNoSubTypesAvailable(false);
+    }
+  }, [selectedTypeId, subTypes]);
+
+  const handleTypeSelect = (typeId: string) => {
+    onTypeChange(typeId);
+    setTypeDropdownOpen(false);
+  };
+
+  const handleSubtypeSelect = (subtypeId: string) => {
+    onSubTypeChange(subtypeId);
+    setSubtypeDropdownOpen(false);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Document Type Selection */}
       <div className="space-y-3">
         <Label
           htmlFor="documentType"
-          className="text-sm font-medium text-gray-200"
+          className="text-sm font-medium text-gray-200 flex items-center gap-2"
         >
+          <Tag className="h-4 w-4 text-blue-400" />
           Document Type*
         </Label>
-        <Select
-          value={selectedTypeId?.toString() || ""}
-          onValueChange={onTypeChange}
-        >
-          <SelectTrigger
-            className={`h-12 text-base bg-gray-900 border-gray-800 text-white ${
-              typeError ? "border-red-500" : ""
-            }`}
-          >
-            <SelectValue placeholder="Select document type" />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-900 border-gray-800">
-            {documentTypes.map((type) => (
-              <SelectItem
-                key={type.id}
-                value={type.id!.toString()}
-                className="text-gray-200"
+        {documentTypes.length === 0 ? (
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-3 text-amber-400">
+                <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    No document types available. Please create a document type
+                    first.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                    asChild
+                  >
+                    <Link to="/document-types-management">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Create Document Type
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Custom Document Type Select */}
+            <div className="relative" ref={typeDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+                className={`flex items-center justify-between w-full h-10 px-3 py-2 text-base bg-gray-900 border ${
+                  typeError
+                    ? "border-red-500"
+                    : typeDropdownOpen
+                    ? "border-blue-500 ring-1 ring-blue-500/30"
+                    : "border-gray-800 hover:border-gray-700"
+                } rounded-md text-white transition-all duration-200`}
+                data-testid="document-type-select"
               >
-                {type.typeName} ({type.typeKey})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {typeError && <p className="text-sm text-red-500">{typeError}</p>}
-      </div>
-
-      {selectedTypeId && subTypes.length === 0 && (
-        <div className="rounded-md bg-blue-900/20 p-4 border border-blue-800/50">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <AlertCircle className="h-5 w-5 text-blue-400" />
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-300">
-                No subtypes available
-              </h3>
-              <div className="mt-2 text-sm text-blue-200">
-                <p>
-                  The selected document type doesn't have any subtypes yet. You
-                  need to add at least one subtype before you can create a
-                  document.
-                </p>
-              </div>
-              <div className="mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20"
-                  asChild
+                <span
+                  className={selectedTypeId ? "text-white" : "text-gray-500"}
                 >
-                  <Link to={`/document-types/${selectedTypeId}/subtypes`}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add New Subtype
-                  </Link>
-                </Button>
-              </div>
+                  {selectedType
+                    ? `${selectedType.typeName} ${
+                        selectedType.typeKey ? `(${selectedType.typeKey})` : ""
+                      }`
+                    : "Select document type"}
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
+                    typeDropdownOpen ? "transform rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {typeDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-800 rounded-md shadow-xl max-h-60 overflow-auto animate-in fade-in-0 zoom-in-95 duration-100">
+                  {documentTypes.map((type) => (
+                    <div
+                      key={type.id}
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-800 transition-colors ${
+                        selectedTypeId === type.id
+                          ? "bg-blue-900/40 text-blue-300 font-medium"
+                          : "text-gray-200"
+                      }`}
+                      onClick={() =>
+                        handleTypeSelect(type.id?.toString() || "")
+                      }
+                    >
+                      {type.typeName} {type.typeKey ? `(${type.typeKey})` : ""}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      )}
-
-      {selectedTypeId && subTypes.length > 0 && (
-        <div className="space-y-3">
-          <Label
-            htmlFor="subType"
-            className="text-sm font-medium text-gray-200"
-          >
-            Subtype*
-          </Label>
-          <Select
-            value={selectedSubTypeId?.toString() || ""}
-            onValueChange={onSubTypeChange}
-          >
-            <SelectTrigger
-              className={`h-12 text-base bg-gray-900 border-gray-800 text-white ${
-                subTypeError ? "border-red-500" : ""
-              }`}
-            >
-              <SelectValue placeholder="Select subtype" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-gray-800">
-              {subTypes.map((subType) => (
-                <SelectItem
-                  key={subType.id}
-                  value={subType.id.toString()}
-                  className="text-gray-200"
-                >
-                  {subType.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {subTypeError && (
-            <p className="text-sm text-red-500">{subTypeError}</p>
-          )}
-          {selectedSubTypeId && (
-            <p className="text-sm text-blue-400">
-              Valid from{" "}
-              {new Date(
-                subTypes.find((st) => st.id === selectedSubTypeId)?.startDate!
-              ).toLocaleDateString()}
-              to{" "}
-              {new Date(
-                subTypes.find((st) => st.id === selectedSubTypeId)?.endDate!
-              ).toLocaleDateString()}
-            </p>
-          )}
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20"
-              asChild
-            >
-              <Link to={`/document-types/${selectedTypeId}/subtypes`}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Manage Subtypes
-              </Link>
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-3">
-        <Label
-          htmlFor="documentAlias"
-          className="text-sm font-medium text-gray-200"
-        >
-          Document Alias
-        </Label>
-        <Input
-          id="documentAlias"
-          value={documentAlias}
-          onChange={(e) => onAliasChange(e.target.value)}
-          placeholder="Enter document alias (optional)"
-          className={`h-12 text-base bg-gray-900 border-gray-800 text-white placeholder:text-gray-500 ${
-            aliasError ? "border-red-500" : ""
-          }`}
-        />
-        {aliasError && <p className="text-sm text-red-500">{aliasError}</p>}
+          </>
+        )}
+        {typeError && (
+          <p className="text-sm text-red-500 flex items-center gap-1.5">
+            <AlertCircle className="h-3.5 w-3.5" />
+            {typeError}
+          </p>
+        )}
         <p className="text-sm text-gray-400">
-          An optional short name or reference for this document
+          Select the type of document you want to create
         </p>
       </div>
+
+      {/* Subtype Selection */}
+      {selectedTypeId && (
+        <div className="space-y-3 mt-4 pt-4 border-t border-gray-800/50">
+          <Label
+            htmlFor="subType"
+            className="text-sm font-medium text-gray-200 flex items-center gap-2"
+          >
+            <Layers className="h-4 w-4 text-blue-400" />
+            Subtype*
+          </Label>
+          {isLoadingSubTypes ? (
+            <div className="flex items-center space-x-3 text-blue-400 text-sm py-2 px-3">
+              <div className="animate-spin h-4 w-4 border-2 border-blue-400 rounded-full border-t-transparent"></div>
+              <span>Loading subtypes...</span>
+            </div>
+          ) : noSubTypesAvailable ? (
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-start space-x-3 text-amber-400">
+                  <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2">
+                    <p className="text-sm">
+                      No subtypes available for this document type.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                      asChild
+                    >
+                      <Link to={`/document-types/${selectedTypeId}/subtypes`}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create Subtypes
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Custom Subtype Select */}
+              <div className="relative" ref={subtypeDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setSubtypeDropdownOpen(!subtypeDropdownOpen)}
+                  className={`flex items-center justify-between w-full h-10 px-3 py-2 text-base bg-gray-900 border ${
+                    subTypeError
+                      ? "border-red-500"
+                      : subtypeDropdownOpen
+                      ? "border-blue-500 ring-1 ring-blue-500/30"
+                      : "border-gray-800 hover:border-gray-700"
+                  } rounded-md text-white transition-all duration-200`}
+                  data-testid="document-subtype-select"
+                >
+                  <span
+                    className={
+                      selectedSubTypeId ? "text-white" : "text-gray-500"
+                    }
+                  >
+                    {selectedSubTypeId
+                      ? filteredSubTypes.find(
+                          (st) => st.id === selectedSubTypeId
+                        )?.name || "Select subtype"
+                      : "Select subtype"}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
+                      subtypeDropdownOpen ? "transform rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {subtypeDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-800 rounded-md shadow-xl max-h-60 overflow-auto animate-in fade-in-0 zoom-in-95 duration-100">
+                    {filteredSubTypes.map((subType) => (
+                      <div
+                        key={subType.id}
+                        className={`px-3 py-2 cursor-pointer hover:bg-gray-800 transition-colors ${
+                          selectedSubTypeId === subType.id
+                            ? "bg-blue-900/40 text-blue-300 font-medium"
+                            : "text-gray-200"
+                        }`}
+                        onClick={() =>
+                          handleSubtypeSelect(subType.id.toString())
+                        }
+                      >
+                        {subType.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {subTypeError && (
+                <p className="text-sm text-red-500 flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  {subTypeError}
+                </p>
+              )}
+
+              {selectedSubTypeId && (
+                <div className="bg-gray-800/40 border border-gray-700 rounded-md p-3 mt-3">
+                  <div className="flex items-center gap-2 text-sm text-blue-400 mb-2">
+                    <Clock className="h-4 w-4" />
+                    <span className="font-medium">Subtype Valid Period</span>
+                  </div>
+                  <p className="text-sm text-gray-300">
+                    Valid from{" "}
+                    <span className="text-white font-medium">
+                      {new Date(
+                        filteredSubTypes.find(
+                          (st) => st.id === selectedSubTypeId
+                        )?.startDate!
+                      ).toLocaleDateString()}
+                    </span>
+                    {" to "}
+                    <span className="text-white font-medium">
+                      {new Date(
+                        filteredSubTypes.find(
+                          (st) => st.id === selectedSubTypeId
+                        )?.endDate!
+                      ).toLocaleDateString()}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { FilterOption } from '../TableAdvancedFilters';
 
 export const DEFAULT_STATUS_FILTERS: FilterOption[] = [
@@ -11,6 +10,7 @@ export const DEFAULT_STATUS_FILTERS: FilterOption[] = [
 
 export const DEFAULT_TYPE_FILTERS: FilterOption[] = [
   { id: 0, label: "Any Type", value: "any" }
+  // Document types will be fetched from API
 ];
 
 export const DEFAULT_DOCUMENT_SEARCH_FIELDS = [

@@ -1,9 +1,9 @@
-
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, X, Loader2 } from "lucide-react";
 
 interface StepNavigationProps {
   step: number;
+  totalSteps: number;
   isSubmitting: boolean;
   onPrevStep: () => void;
   onNextStep: () => void;
@@ -13,35 +13,68 @@ interface StepNavigationProps {
 
 export const StepNavigation = ({
   step,
+  totalSteps = 4,
   isSubmitting,
   onPrevStep,
   onNextStep,
   onSubmit,
-  onCancel
+  onCancel,
 }: StepNavigationProps) => {
+  const isLastStep = step === totalSteps;
+
   return (
-    <div className="flex justify-between pt-6">
-      <Button 
-        variant="outline" 
-        className="border-gray-700 hover:bg-gray-800" 
-        onClick={step === 1 ? onCancel : onPrevStep}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {step === 1 ? 'Cancel' : 'Back'}
-      </Button>
-      {step === 5 ? (
-        <Button 
-          onClick={onSubmit} 
+    <div className="flex justify-between items-center">
+      <div>
+        {step === 1 ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-gray-700 hover:bg-gray-800 text-gray-400 hover:text-gray-300"
+            onClick={onCancel}
+          >
+            <X className="mr-1 h-3.5 w-3.5" />
+            Cancel
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-gray-700 hover:bg-gray-800 text-gray-300"
+            onClick={onPrevStep}
+          >
+            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+            Back
+          </Button>
+        )}
+      </div>
+
+      {isLastStep ? (
+        <Button
+          size="sm"
+          onClick={onSubmit}
           disabled={isSubmitting}
           className="bg-green-600 hover:bg-green-700"
         >
-          <Save className="mr-2 h-5 w-5" />
-          {isSubmitting ? 'Creating...' : 'Create Document'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <Save className="mr-1 h-3.5 w-3.5" />
+              Create
+            </>
+          )}
         </Button>
       ) : (
-        <Button className="bg-blue-600 hover:bg-blue-700" onClick={onNextStep}>
-          Next Step
-          <ArrowRight className="ml-2 h-4 w-4" />
+        <Button
+          size="sm"
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={onNextStep}
+        >
+          Next
+          <ArrowRight className="ml-1 h-3.5 w-3.5" />
         </Button>
       )}
     </div>

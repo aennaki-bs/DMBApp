@@ -1,30 +1,39 @@
-
-import { Button } from '@/components/ui/button';
-import { Trash } from 'lucide-react';
+import { Trash, Layers } from "lucide-react";
+import { BulkActionsBar, BulkAction } from "@/components/shared/BulkActionsBar";
+import { AnimatePresence } from "framer-motion";
 
 interface BottomActionBarProps {
   selectedCount: number;
   onBulkDelete: () => void;
 }
 
-const BottomActionBar: React.FC<BottomActionBarProps> = ({ selectedCount, onBulkDelete }) => {
+const BottomActionBar: React.FC<BottomActionBarProps> = ({
+  selectedCount,
+  onBulkDelete,
+}) => {
   if (selectedCount === 0) return null;
 
+  const bulkActions: BulkAction[] = [
+    {
+      id: "delete",
+      label: "Delete",
+      icon: <Trash className="h-4 w-4" />,
+      onClick: onBulkDelete,
+      variant: "destructive",
+      className:
+        "bg-red-900/30 border-red-500/30 text-red-300 hover:text-red-200 hover:bg-red-900/50 hover:border-red-400/50 transition-all duration-200 shadow-md",
+    },
+  ];
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4 flex justify-between items-center z-10">
-      <div>
-        <span className="font-medium">{selectedCount}</span> document type{selectedCount !== 1 ? 's' : ''} selected
-      </div>
-      <div className="flex gap-2">
-        <Button 
-          variant="destructive" 
-          onClick={onBulkDelete}
-          className="bg-red-600 hover:bg-red-700"
-        >
-          <Trash className="h-4 w-4 mr-2" /> Delete Selected
-        </Button>
-      </div>
-    </div>
+    <AnimatePresence>
+      <BulkActionsBar
+        selectedCount={selectedCount}
+        entityName="document type"
+        actions={bulkActions}
+        icon={<Layers className="w-5 h-5 text-blue-400" />}
+      />
+    </AnimatePresence>
   );
 };
 

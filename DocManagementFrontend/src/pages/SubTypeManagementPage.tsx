@@ -8,6 +8,8 @@ import SubTypeManagementLoading from "@/components/sub-types/components/SubTypeM
 import SubTypeManagementError from "@/components/sub-types/components/SubTypeManagementError";
 import { toast } from "sonner";
 import { DocumentType } from "@/models/document";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Layers } from "lucide-react";
 
 export default function SubTypeManagementPage() {
   const { id } = useParams<{ id: string }>();
@@ -69,7 +71,25 @@ export default function SubTypeManagementPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* <SubTypeManagementHeader documentType={documentType} /> */}
+      {/* Header with navigation */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/document-types/${id}`)}
+            className="border-blue-500/30 text-blue-400 hover:bg-blue-900/30"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Document Type
+          </Button>
+          <h1 className="text-2xl font-semibold text-white flex items-center">
+            <Layers className="mr-3 h-6 w-6 text-blue-400" />
+            Manage Subtypes: {documentType.typeName}
+          </h1>
+        </div>
+      </div>
+
       <SubTypesList documentType={documentType} />
     </div>
   );

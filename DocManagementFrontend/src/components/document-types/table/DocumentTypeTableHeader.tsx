@@ -1,6 +1,6 @@
-import { ArrowUpDown } from 'lucide-react';
-import { TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowUpDown, Tag, FileText, Info, Hash } from "lucide-react";
+import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DocumentTypeTableHeaderProps {
   onSelectAll: (checked: boolean) => void;
@@ -8,7 +8,7 @@ interface DocumentTypeTableHeaderProps {
   hasEligibleTypes: boolean;
   onSort: (field: string) => void;
   sortField: string | null;
-  sortDirection: 'asc' | 'desc';
+  sortDirection: "asc" | "desc";
 }
 
 export const DocumentTypeTableHeader = ({
@@ -17,65 +17,77 @@ export const DocumentTypeTableHeader = ({
   hasEligibleTypes,
   onSort,
   sortField,
-  sortDirection
+  sortDirection,
 }: DocumentTypeTableHeaderProps) => {
-  const renderSortIcon = (field: string) => {
-    if (sortField === field) {
-      return sortDirection === 'asc' 
-        ? <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-blue-400" /> 
-        : <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-blue-400 rotate-180" />;
-    }
-    return <ArrowUpDown className="ml-1 h-3.5 w-3.5 opacity-30" />;
-  };
+  const renderSortableHeader = (
+    label: string,
+    field: string,
+    icon: React.ReactNode
+  ) => (
+    <div
+      className="flex items-center gap-1 cursor-pointer select-none"
+      onClick={() => onSort(field)}
+    >
+      {icon}
+      {label}
+      <div className="ml-1 w-4 text-center">
+        {sortField === field ? (
+          <ArrowUpDown
+            className="h-3 w-3"
+            style={{
+              transform:
+                sortDirection === "asc" ? "rotate(0deg)" : "rotate(180deg)",
+              opacity: 1,
+            }}
+          />
+        ) : (
+          <ArrowUpDown className="h-3 w-3 opacity-50" />
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <TableHeader className="bg-[#0a1033]/80 sticky top-0 z-10">
-      <TableRow className="hover:bg-transparent border-b border-blue-900/30 select-none">
-        <TableHead className="w-[50px] text-blue-300 py-2 h-9">
-          <Checkbox 
+    <TableHeader className="bg-blue-900/20 sticky top-0 z-10">
+      <TableRow className="border-blue-900/50 hover:bg-blue-900/30">
+        <TableHead className="w-12 text-blue-300">
+          <Checkbox
             checked={areAllEligibleSelected && hasEligibleTypes}
             onCheckedChange={onSelectAll}
             disabled={!hasEligibleTypes}
             aria-label="Select all types"
+            className="border-blue-500/50"
           />
         </TableHead>
-        <TableHead 
-          className="w-1/6 cursor-pointer text-blue-300 hover:text-blue-200 py-2 h-9"
-          onClick={() => onSort('typeKey')}
-        >
-          <div className="flex items-center">
-            Type Code
-            {renderSortIcon('typeKey')}
-          </div>
+        <TableHead className="text-blue-300">
+          {renderSortableHeader(
+            "Type Code",
+            "typeKey",
+            <Tag className="h-4 w-4" />
+          )}
         </TableHead>
-        <TableHead 
-          className="w-1/3 cursor-pointer text-blue-300 hover:text-blue-200 py-2 h-9"
-          onClick={() => onSort('typeName')}
-        >
-          <div className="flex items-center">
-            Type Name
-            {renderSortIcon('typeName')}
-          </div>
+        <TableHead className="text-blue-300">
+          {renderSortableHeader(
+            "Type Name",
+            "typeName",
+            <FileText className="h-4 w-4" />
+          )}
         </TableHead>
-        <TableHead 
-          className="w-1/4 cursor-pointer text-blue-300 hover:text-blue-200 py-2 h-9"
-          onClick={() => onSort('typeAttr')}
-        >
-          <div className="flex items-center">
-            Description
-            {renderSortIcon('typeAttr')}
-          </div>
+        <TableHead className="text-blue-300">
+          {renderSortableHeader(
+            "Description",
+            "typeAttr",
+            <Info className="h-4 w-4" />
+          )}
         </TableHead>
-        <TableHead 
-          className="w-[120px] cursor-pointer text-blue-300 hover:text-blue-200 py-2 h-9"
-          onClick={() => onSort('documentCounter')}
-        >
-          <div className="flex items-center">
-            Document Count
-            {renderSortIcon('documentCounter')}
-          </div>
+        <TableHead className="text-blue-300">
+          {renderSortableHeader(
+            "Document Count",
+            "documentCounter",
+            <Hash className="h-4 w-4" />
+          )}
         </TableHead>
-        <TableHead className="w-[120px] text-blue-300 py-2 h-9 text-right pr-4">Actions</TableHead>
+        <TableHead className="text-blue-300 text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

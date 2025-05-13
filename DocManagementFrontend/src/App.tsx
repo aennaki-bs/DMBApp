@@ -34,12 +34,12 @@ import StepStatusesPage from "./pages/StepStatusesPage";
 import PendingApprovalsPage from "./pages/PendingApprovals";
 import UserManagement from "./pages/UserManagement";
 import DocumentFlowPage from "./pages/DocumentFlowPage";
-import { Layout } from './components/layout/Layout';
+import { Layout } from "./components/layout/Layout";
 import Settings from "./pages/Settings";
 import { SettingsProvider } from "./context/SettingsContext";
 import SubTypeManagementPage from "./pages/SubTypeManagementPage";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
-import ActionsManagementPage from "./pages/ActionsManagementPage";
+import DocumentTypeDetail from "./pages/DocumentTypeDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,60 +64,186 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/registration-success" element={<RegistrationSuccess />} />
+                <Route
+                  path="/registration-success"
+                  element={<RegistrationSuccess />}
+                />
                 <Route path="/verify-email" element={<EmailVerification />} />
                 <Route path="/verify/:email" element={<EmailVerification />} />
                 <Route path="/welcome" element={<Welcome />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/update-password/:email" element={<UpdatePassword />} />
-                
+                <Route
+                  path="/update-password/:email"
+                  element={<UpdatePassword />}
+                />
+
                 {/* Protected routes with layout */}
-                <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <Layout />
+                    </ProtectedRoute>
+                  }
+                >
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/profile" element={<Profile />} />
-                  <Route path="/admin" element={<ProtectedRoute requiredRole="Admin"><AdminPage /></ProtectedRoute>} />
-                  <Route path="/user-management" element={<ProtectedRoute requiredRole="Admin"><UserManagement /></ProtectedRoute>} />
-                  
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute requiredRole="Admin">
+                        <AdminPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/user-management"
+                    element={
+                      <ProtectedRoute requiredRole="Admin">
+                        <UserManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
                   {/* Document Types Management routes */}
-                  <Route path="/document-types" element={<DocumentTypes />} />
-                  <Route path="/document-types-management" element={<ProtectedRoute requiresManagement requiredRole={["Admin", "FullUser"]}><DocumentTypesManagement /></ProtectedRoute>} />
-                  
+                  <Route
+                    path="/document-types"
+                    element={
+                      <Navigate to="/document-types-management" replace />
+                    }
+                  />
+                  <Route
+                    path="/document-types-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <DocumentTypesManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Document Type Detail route */}
+                  <Route
+                    path="/document-types/:id"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <DocumentTypeDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+
                   {/* Document routes */}
                   <Route path="/documents" element={<DocumentsPageWrapper />} />
                   <Route path="/documents/:id" element={<ViewDocument />} />
-                  
-                  {/* Document Types Management routes */}
-                  <Route path="/document-types" element={<DocumentTypes />} />
-                  <Route path="/document-types-management" element={<ProtectedRoute requiresManagement requiredRole={["Admin", "FullUser"]}><DocumentTypesManagement /></ProtectedRoute>} />
-                  <Route path="/document-types/:id/subtypes" element={<ProtectedRoute requiresManagement requiredRole={["Admin", "FullUser"]}><SubTypeManagementPage /></ProtectedRoute>} />
-                  
+
+                  <Route
+                    path="/document-types/:id/subtypes"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <SubTypeManagementPage />
+                      </ProtectedRoute>
+                    }
+                  />
+
                   {/* Add the missing subtype-management route */}
-                  <Route path="/subtype-management" element={<ProtectedRoute requiresManagement requiredRole={["Admin", "FullUser"]}><SubTypeManagement /></ProtectedRoute>} />
-                  
-                  <Route path="/documents/create" element={<ProtectedRoute requiresManagement requiredRole={["Admin", "FullUser"]}><CreateDocument /></ProtectedRoute>} />
-                  
-                  <Route path="/documents/:id/edit" element={<ProtectedRoute requiresManagement requiredRole={["Admin", "FullUser"]}><EditDocument /></ProtectedRoute>} />
-                  <Route path="/documents/:id/flow" element={<DocumentFlowPage />} />
-                  
+                  <Route
+                    path="/subtype-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <SubTypeManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/documents/create"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <CreateDocument />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/documents/:id/edit"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <EditDocument />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/documents/:id/flow"
+                    element={<DocumentFlowPage />}
+                  />
+
                   {/* Document Lignes routes */}
-                  <Route path="/documents/:id/lignes" element={<ProtectedRoute requiresManagement><DocumentLignesPage /></ProtectedRoute>} />
-                  <Route path="/documents/:id/lignes/:ligneId" element={<ViewDocument />} />
-                  
+                  <Route
+                    path="/documents/:id/lignes"
+                    element={
+                      <ProtectedRoute requiresManagement>
+                        <DocumentLignesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/documents/:id/lignes/:ligneId"
+                    element={<ViewDocument />}
+                  />
+
                   {/* Document SousLignes routes */}
-                  <Route path="/documents/:id/lignes/:ligneId/souslignes" element={<ProtectedRoute requiresManagement><ViewDocument /></ProtectedRoute>} />
-                  <Route path="/documents/:id/lignes/:ligneId/souslignes/:sousLigneId" element={<ViewDocument />} />
-                  
+                  <Route
+                    path="/documents/:id/lignes/:ligneId/souslignes"
+                    element={
+                      <ProtectedRoute requiresManagement>
+                        <ViewDocument />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/documents/:id/lignes/:ligneId/souslignes/:sousLigneId"
+                    element={<ViewDocument />}
+                  />
+
                   {/* Circuit Management routes */}
                   <Route path="/circuits" element={<CircuitsPage />} />
-                  <Route path="/circuits/:circuitId/steps" element={<CircuitStepsPage />} />
-                  <Route path="/circuits/:circuitId/statuses" element={<CircuitStatusesPage />} />
-                  <Route path="/circuit/:circuitId/steps" element={<CircuitStatusStepsPage />} />
-                  <Route path="/circuits/:circuitId/steps/:stepId/statuses" element={<StepStatusesPage />} />
-                  <Route path="/pending-approvals" element={<PendingApprovalsPage />} />
-                  
-                  {/* Actions Management route */}
-                  <Route path="/actions" element={<ProtectedRoute requiresManagement requiredRole={["Admin", "FullUser"]}><ActionsManagementPage /></ProtectedRoute>} />
-                  
+                  <Route
+                    path="/circuits/:circuitId/steps"
+                    element={<CircuitStepsPage />}
+                  />
+                  <Route
+                    path="/circuits/:circuitId/statuses"
+                    element={<CircuitStatusesPage />}
+                  />
+                  <Route
+                    path="/circuit/:circuitId/steps"
+                    element={<CircuitStatusStepsPage />}
+                  />
+                  <Route
+                    path="/circuits/:circuitId/steps/:stepId/statuses"
+                    element={<StepStatusesPage />}
+                  />
+                  <Route
+                    path="/pending-approvals"
+                    element={<PendingApprovalsPage />}
+                  />
+
                   {/* Settings route */}
                   <Route path="/settings" element={<Settings />} />
                 </Route>

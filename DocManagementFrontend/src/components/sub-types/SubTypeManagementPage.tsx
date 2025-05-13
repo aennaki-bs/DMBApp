@@ -1,32 +1,33 @@
-
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Calendar, FileText, Filter, Layers, Plus, Search } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
-import { SubType } from '@/models/subtype';
-import subTypeService from '@/services/subTypeService';
-import documentService from '@/services/documents/documentTypeService';
-import { DocumentType } from '@/models/document';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import SubTypeList from './SubTypeList';
-import SubTypeCreateDialog from './SubTypeCreateDialog';
-import SubTypeEditDialog from './SubTypeEditDialog';
-import SubTypeDeleteDialog from './SubTypeDeleteDialog';
-import SubTypeFilterBar from './SubTypeFilterBar';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Calendar, FileText, Filter, Layers, Plus, Search } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { SubType } from "@/models/subtype";
+import subTypeService from "@/services/subTypeService";
+import documentTypeService from "@/services/documentTypeService";
+import { DocumentType } from "@/models/document";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import SubTypeList from "./SubTypeList";
+import SubTypeCreateDialog from "./SubTypeCreateDialog";
+import SubTypeEditDialog from "./SubTypeEditDialog";
+import SubTypeDeleteDialog from "./SubTypeDeleteDialog";
+import SubTypeFilterBar from "./SubTypeFilterBar";
 
 const SubTypeManagementPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isSimpleUser = user?.role === 'SimpleUser';
-  
+  const isSimpleUser = user?.role === "SimpleUser";
+
   const [subTypes, setSubTypes] = useState<SubType[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDocTypeId, setSelectedDocTypeId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDocTypeId, setSelectedDocTypeId] = useState<number | null>(
+    null
+  );
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -41,21 +42,23 @@ const SubTypeManagementPage = () => {
         setIsLoading(true);
         const [subTypesData, docTypesData] = await Promise.all([
           subTypeService.getAllSubTypes(),
-          documentService.getAllDocumentTypes()
+          documentTypeService.getAllDocumentTypes(),
         ]);
         setSubTypes(subTypesData);
         setDocumentTypes(docTypesData);
-        setFilteredSubTypes(activeOnly ? subTypesData.filter(st => st.isActive) : subTypesData);
+        setFilteredSubTypes(
+          activeOnly ? subTypesData.filter((st) => st.isActive) : subTypesData
+        );
       } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Failed to load data', { 
-          description: 'There was an error fetching the subtypes data.' 
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data", {
+          description: "There was an error fetching the subtypes data.",
         });
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
   }, [activeOnly]);
 
@@ -65,33 +68,36 @@ const SubTypeManagementPage = () => {
 
     // Filter by active status if activeOnly is true
     if (activeOnly) {
-      filtered = filtered.filter(st => st.isActive);
+      filtered = filtered.filter((st) => st.isActive);
     }
-    
+
     // Filter by document type if selected
     if (selectedDocTypeId !== null) {
-      filtered = filtered.filter(st => st.documentTypeId === selectedDocTypeId);
+      filtered = filtered.filter(
+        (st) => st.documentTypeId === selectedDocTypeId
+      );
     }
-    
+
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(st => 
-        st.name.toLowerCase().includes(query) ||
-        st.description.toLowerCase().includes(query) ||
-        st.subTypeKey.toLowerCase().includes(query) ||
-        (st.documentType?.typeName?.toLowerCase().includes(query))
+      filtered = filtered.filter(
+        (st) =>
+          st.name.toLowerCase().includes(query) ||
+          st.description.toLowerCase().includes(query) ||
+          st.subTypeKey.toLowerCase().includes(query) ||
+          st.documentType?.typeName?.toLowerCase().includes(query)
       );
     }
-    
+
     setFilteredSubTypes(filtered);
   }, [subTypes, searchQuery, selectedDocTypeId, activeOnly]);
 
   // Handle opening the create dialog
   const handleCreateClick = () => {
     if (isSimpleUser) {
-      toast.error('Permission denied', { 
-        description: 'Simple users cannot create subtypes.' 
+      toast.error("Permission denied", {
+        description: "Simple users cannot create subtypes.",
       });
       return;
     }
@@ -101,8 +107,8 @@ const SubTypeManagementPage = () => {
   // Handle opening the edit dialog
   const handleEditClick = (subType: SubType) => {
     if (isSimpleUser) {
-      toast.error('Permission denied', { 
-        description: 'Simple users cannot edit subtypes.' 
+      toast.error("Permission denied", {
+        description: "Simple users cannot edit subtypes.",
       });
       return;
     }
@@ -113,8 +119,8 @@ const SubTypeManagementPage = () => {
   // Handle opening the delete dialog
   const handleDeleteClick = (subType: SubType) => {
     if (isSimpleUser) {
-      toast.error('Permission denied', { 
-        description: 'Simple users cannot delete subtypes.' 
+      toast.error("Permission denied", {
+        description: "Simple users cannot delete subtypes.",
       });
       return;
     }
@@ -126,18 +132,18 @@ const SubTypeManagementPage = () => {
   const handleCreate = async (newSubType: any) => {
     try {
       await subTypeService.createSubType(newSubType);
-      toast.success('Subtype created', { 
-        description: 'The subtype was created successfully.' 
+      toast.success("Subtype created", {
+        description: "The subtype was created successfully.",
       });
-      
+
       // Refresh the subtypes list
       const updatedSubTypes = await subTypeService.getAllSubTypes();
       setSubTypes(updatedSubTypes);
       setCreateDialogOpen(false);
     } catch (error) {
-      console.error('Error creating subtype:', error);
-      toast.error('Failed to create subtype', { 
-        description: 'There was an error creating the subtype.' 
+      console.error("Error creating subtype:", error);
+      toast.error("Failed to create subtype", {
+        description: "There was an error creating the subtype.",
       });
     }
   };
@@ -146,18 +152,18 @@ const SubTypeManagementPage = () => {
   const handleUpdate = async (id: number, updatedSubType: any) => {
     try {
       await subTypeService.updateSubType(id, updatedSubType);
-      toast.success('Subtype updated', { 
-        description: 'The subtype was updated successfully.' 
+      toast.success("Subtype updated", {
+        description: "The subtype was updated successfully.",
       });
-      
+
       // Refresh the subtypes list
       const updatedSubTypes = await subTypeService.getAllSubTypes();
       setSubTypes(updatedSubTypes);
       setEditDialogOpen(false);
     } catch (error) {
-      console.error('Error updating subtype:', error);
-      toast.error('Failed to update subtype', { 
-        description: 'There was an error updating the subtype.' 
+      console.error("Error updating subtype:", error);
+      toast.error("Failed to update subtype", {
+        description: "There was an error updating the subtype.",
       });
     }
   };
@@ -166,25 +172,25 @@ const SubTypeManagementPage = () => {
   const handleDelete = async (id: number) => {
     try {
       await subTypeService.deleteSubType(id);
-      toast.success('Subtype deleted', { 
-        description: 'The subtype was deleted successfully.' 
+      toast.success("Subtype deleted", {
+        description: "The subtype was deleted successfully.",
       });
-      
+
       // Refresh the subtypes list
       const updatedSubTypes = await subTypeService.getAllSubTypes();
       setSubTypes(updatedSubTypes);
       setDeleteDialogOpen(false);
     } catch (error: any) {
-      console.error('Error deleting subtype:', error);
-      
+      console.error("Error deleting subtype:", error);
+
       // Specific error message for when the subtype is in use
       if (error.response?.data?.includes("used by one or more documents")) {
-        toast.error('Cannot delete subtype', { 
-          description: 'This subtype is being used by one or more documents.' 
+        toast.error("Cannot delete subtype", {
+          description: "This subtype is being used by one or more documents.",
         });
       } else {
-        toast.error('Failed to delete subtype', { 
-          description: 'There was an error deleting the subtype.' 
+        toast.error("Failed to delete subtype", {
+          description: "There was an error deleting the subtype.",
         });
       }
     }
@@ -197,15 +203,16 @@ const SubTypeManagementPage = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-white flex items-center">
-              <Layers className="mr-3 h-6 w-6 text-blue-400" /> Subtype Management
+              <Layers className="mr-3 h-6 w-6 text-blue-400" /> Subtype
+              Management
             </h1>
             <p className="text-sm md:text-base text-gray-400">
               Manage document subtypes and their date ranges
             </p>
           </div>
-          
+
           {!isSimpleUser && (
-            <Button 
+            <Button
               onClick={handleCreateClick}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
@@ -214,9 +221,9 @@ const SubTypeManagementPage = () => {
           )}
         </div>
       </div>
-      
+
       {/* Filter bar */}
-      <SubTypeFilterBar 
+      <SubTypeFilterBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         documentTypes={documentTypes}
@@ -225,35 +232,35 @@ const SubTypeManagementPage = () => {
         activeOnly={activeOnly}
         setActiveOnly={setActiveOnly}
       />
-      
+
       {/* Content */}
-      <SubTypeList 
+      <SubTypeList
         subTypes={filteredSubTypes}
         isLoading={isLoading}
         onEdit={handleEditClick}
         onDelete={handleDeleteClick}
         isSimpleUser={isSimpleUser}
       />
-      
+
       {/* Dialogs */}
-      <SubTypeCreateDialog 
+      <SubTypeCreateDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreate}
         documentTypes={documentTypes}
       />
-      
+
       {selectedSubType && (
         <>
-          <SubTypeEditDialog 
+          <SubTypeEditDialog
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}
             subType={selectedSubType}
             onSubmit={(updated) => handleUpdate(selectedSubType.id, updated)}
             documentTypes={documentTypes}
           />
-          
-          <SubTypeDeleteDialog 
+
+          <SubTypeDeleteDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
             subType={selectedSubType}

@@ -1,17 +1,34 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Document } from "@/models/document";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Edit, Trash, GitBranch, CheckCircle } from "lucide-react";
+import {
+  Edit,
+  Trash,
+  GitBranch,
+  CheckCircle,
+  MoreVertical,
+  ExternalLink,
+  FileText,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { motion } from "framer-motion";
 
 interface DocumentsTableRowProps {
   document: Document;
@@ -22,6 +39,105 @@ interface DocumentsTableRowProps {
   onDelete: () => void;
   onAssignCircuit: () => void;
 }
+
+// Document Actions Dropdown component
+const DocumentActionsDropdown = ({
+  document,
+  canManageDocuments,
+  onDelete,
+  onAssignCircuit,
+}: {
+  document: Document;
+  canManageDocuments: boolean;
+  onDelete: () => void;
+  onAssignCircuit: () => void;
+}) => {
+  const navigate = useNavigate();
+  const isAssignedToCircuit = !!document.circuitId;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 p-0 rounded-full hover:bg-blue-800/30 transition-colors"
+        >
+          <MoreVertical className="h-4 w-4 text-blue-400" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        align="end"
+        className="bg-[#1a2c6b] border-blue-900/60 text-blue-100 rounded-lg shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200"
+      >
+        <DropdownMenuLabel className="text-blue-300">Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-blue-900/60" />
+
+        <DropdownMenuItem
+          className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
+          onClick={() => navigate(`/documents/${document.id}`)}
+        >
+          <ExternalLink className="mr-2 h-4 w-4 text-blue-400" />
+          View Document
+        </DropdownMenuItem>
+
+        {canManageDocuments && (
+          <>
+            {/* Show Document Flow if assigned to circuit */}
+            {isAssignedToCircuit && (
+              <DropdownMenuItem
+                className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
+                onClick={() => navigate(`/documents/${document.id}/flow`)}
+              >
+                <GitBranch className="mr-2 h-4 w-4 text-blue-400" />
+                Document Flow
+              </DropdownMenuItem>
+            )}
+
+            {/* Show Assign to Circuit if not assigned */}
+            {!isAssignedToCircuit && (
+              <DropdownMenuItem
+                className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
+                onClick={onAssignCircuit}
+              >
+                <GitBranch className="mr-2 h-4 w-4 text-blue-400" />
+                Assign to Circuit
+              </DropdownMenuItem>
+            )}
+
+            <DropdownMenuItem
+              className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
+              asChild
+            >
+              <Link to={`/documents/${document.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4 text-blue-400" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-blue-900/60" />
+
+            <DropdownMenuItem
+              className="text-red-400 hover:bg-red-900/30 hover:text-red-300 focus:bg-red-900/30 focus:text-red-300 cursor-pointer"
+              onClick={onDelete}
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
+
+        {!canManageDocuments && (
+          <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
+            <Edit className="mr-2 h-4 w-4" />
+            Requires permissions
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 export default function DocumentsTableRow({
   document,
@@ -37,51 +153,51 @@ export default function DocumentsTableRow({
 
   return (
     <TableRow
-      key={document.id}
-      className={`border-blue-900/30 hover:bg-blue-900/20 transition-all ${
+      className={`border-blue-900/30 hover:bg-blue-900/20 transition-all duration-200 ${
         isSelected ? "bg-blue-900/30 border-l-4 border-l-blue-500" : ""
       }`}
     >
-      <TableCell>
+      <TableCell className="py-3">
         {canManageDocuments ? (
           <Checkbox
             checked={isSelected}
             onCheckedChange={onSelect}
-            className="border-blue-500/50"
+            className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
           />
         ) : (
           <span className="text-sm text-gray-500">{index + 1}</span>
         )}
       </TableCell>
-      <TableCell className="font-mono text-sm">
+      <TableCell className="font-mono text-sm py-3">
         <Link
           to={`/documents/${document.id}`}
-          className="text-blue-300 hover:text-blue-200 hover:underline"
+          className="text-blue-300 hover:text-blue-200 hover:underline transition-colors flex items-center gap-1"
         >
+          <FileText className="h-3.5 w-3.5 opacity-70" />
           {document.documentKey}
         </Link>
       </TableCell>
-      <TableCell>
+      <TableCell className="py-3">
         <div className="flex items-center gap-2">
           <Link
             to={`/documents/${document.id}`}
-            className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
+            className="text-blue-400 hover:text-blue-300 font-medium hover:underline transition-colors"
           >
             {document.title}
           </Link>
           {getStatusBadge(document.status)}
         </div>
       </TableCell>
-      <TableCell className="text-blue-100">
+      <TableCell className="text-blue-100 py-3">
         {document.documentType.typeName}
       </TableCell>
-      <TableCell className="text-blue-100/70 text-sm">
+      <TableCell className="text-blue-100/70 text-sm py-3">
         {new Date(document.docDate).toLocaleDateString()}
       </TableCell>
-      <TableCell>
+      <TableCell className="py-3">
         <div className="flex items-center gap-2">
-          <Avatar className="h-6 w-6">
-            <AvatarFallback className="bg-blue-800 text-xs">
+          <Avatar className="h-6 w-6 border border-blue-700/50">
+            <AvatarFallback className="bg-gradient-to-br from-blue-800 to-blue-900 text-xs text-blue-100">
               {document.createdBy.firstName[0]}
               {document.createdBy.lastName[0]}
             </AvatarFallback>
@@ -91,94 +207,24 @@ export default function DocumentsTableRow({
           </span>
         </div>
       </TableCell>
-      <TableCell className="text-right">
-        <div className="flex justify-end space-x-1">
-          {canManageDocuments ? (
-            <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {isAssignedToCircuit ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 p-0 text-green-400 cursor-not-allowed opacity-80"
-                      disabled
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                      onClick={onAssignCircuit}
-                    >
-                      <GitBranch className="h-4 w-4" />
-                    </Button>
-                  )}
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>
-                    {isAssignedToCircuit
-                      ? "Document is already assigned to a circuit"
-                      : "Assign to circuit"}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                    asChild
-                  >
-                    <Link to={`/documents/${document.id}/edit`}>
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Edit document</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                    onClick={onDelete}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Delete document</p>
-                </TooltipContent>
-              </Tooltip>
-            </>
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="cursor-not-allowed opacity-50"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Only Admin or FullUser can edit documents</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
+      <TableCell className="text-right py-3">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <DocumentActionsDropdown
+                  document={document}
+                  canManageDocuments={canManageDocuments}
+                  onDelete={onDelete}
+                  onAssignCircuit={onAssignCircuit}
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="bg-[#1a2c6b] border-blue-900/60 text-blue-100">
+              Document Actions
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </TableCell>
     </TableRow>
   );
@@ -188,25 +234,25 @@ function getStatusBadge(status: number) {
   switch (status) {
     case 0:
       return (
-        <Badge className="bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 border-amber-500/30">
+        <Badge className="bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 border-amber-500/30 px-2 py-0.5 text-xs font-medium">
           Draft
         </Badge>
       );
     case 1:
       return (
-        <Badge className="bg-green-600/20 text-green-500 hover:bg-green-600/30 border-green-500/30">
+        <Badge className="bg-green-600/20 text-green-500 hover:bg-green-600/30 border-green-500/30 px-2 py-0.5 text-xs font-medium">
           In progress
         </Badge>
       );
     case 2:
       return (
-        <Badge className="bg-red-600/20 text-red-500 hover:bg-red-600/30 border-red-500/30">
+        <Badge className="bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 border-blue-500/30 px-2 py-0.5 text-xs font-medium">
           Completed
         </Badge>
       );
     case 3:
       return (
-        <Badge className="bg-red-600/20 text-red-500 hover:bg-red-600/30 border-red-500/30">
+        <Badge className="bg-red-600/20 text-red-500 hover:bg-red-600/30 border-red-500/30 px-2 py-0.5 text-xs font-medium">
           Rejected
         </Badge>
       );

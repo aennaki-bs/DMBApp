@@ -34,6 +34,7 @@ import {
   Calendar,
   Filter,
   GitBranch,
+  Users,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import documentService from "@/services/documentService";
@@ -64,6 +65,20 @@ import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { SearchAndFilterBar } from "@/components/shared/SearchAndFilterBar";
+import { FilterContent } from "@/components/shared/FilterContent";
+import { FilterBadges, FilterBadge } from "@/components/shared/FilterBadges";
+import { BulkActionsBar, BulkAction } from "@/components/shared/BulkActionsBar";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { AnimatePresence } from "framer-motion";
 
 const mockDocuments: Document[] = [
   {
@@ -194,20 +209,27 @@ const Documents = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchField, setSearchField] = useState("all");
   const pageSize = 10;
   const [useFakeData, setUseFakeData] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
-    direction: "ascending" | "descending";
-  } | null>(null);
+    direction: "asc" | "desc";
+  }>({
+    key: "documentKey",
+    direction: "desc",
+  });
   const [assignCircuitDialogOpen, setAssignCircuitDialogOpen] = useState(false);
-  const [documentToAssign, setDocumentToAssign] = useState<Document | null>(
-    null
-  );
+  const [selectedDocumentForCircuit, setSelectedDocumentForCircuit] =
+    useState<Document | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState("any");
+  const [statusFilter, setStatusFilter] = useState("any");
+  const [createdByFilter, setCreatedByFilter] = useState("any");
 
   const canManageDocuments =
-    user?.role === "Admin" || user?.role === "FullUser";
+    user && (user.role === "Admin" || user.role === "FullUser");
 
   useEffect(() => {
     fetchDocuments();
@@ -332,12 +354,12 @@ const Documents = () => {
   };
 
   const openAssignCircuitDialog = (document: Document) => {
-    if (!canManageDocuments) {
-      toast.error("You do not have permission to assign documents to circuits");
+    if (!document) {
+      toast.error("No document selected");
       return;
     }
 
-    setDocumentToAssign(document);
+    setSelectedDocumentForCircuit(document);
     setAssignCircuitDialogOpen(true);
   };
 
@@ -349,14 +371,14 @@ const Documents = () => {
   };
 
   const requestSort = (key: string) => {
-    let direction: "ascending" | "descending" = "ascending";
+    let direction: "asc" | "desc" = "asc";
 
     if (
       sortConfig &&
       sortConfig.key === key &&
-      sortConfig.direction === "ascending"
+      sortConfig.direction === "asc"
     ) {
-      direction = "descending";
+      direction = "desc";
     }
 
     setSortConfig({ key, direction });
@@ -396,10 +418,10 @@ const Documents = () => {
         }
 
         if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
+          return sortConfig.direction === "asc" ? -1 : 1;
         }
         if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
+          return sortConfig.direction === "asc" ? 1 : -1;
         }
         return 0;
       });
@@ -435,9 +457,40 @@ const Documents = () => {
         }
       }
 
-      return matchesSearch && matchesDateRange;
+      // Status filter
+      let matchesStatus = true;
+      if (statusFilter !== "any") {
+        matchesStatus = doc.status === parseInt(statusFilter);
+      }
+
+      // Document type filter
+      let matchesType = true;
+      if (typeFilter !== "any") {
+        matchesType = doc.documentType.id === parseInt(typeFilter);
+      }
+
+      // Created by filter
+      let matchesCreatedBy = true;
+      if (createdByFilter !== "any") {
+        matchesCreatedBy = doc.createdBy.id === parseInt(createdByFilter);
+      }
+
+      return (
+        matchesSearch &&
+        matchesDateRange &&
+        matchesStatus &&
+        matchesType &&
+        matchesCreatedBy
+      );
     });
-  }, [sortedItems, searchQuery, dateRange]);
+  }, [
+    sortedItems,
+    searchQuery,
+    dateRange,
+    statusFilter,
+    typeFilter,
+    createdByFilter,
+  ]);
 
   const getPageDocuments = () => {
     const start = (page - 1) * pageSize;
@@ -477,7 +530,7 @@ const Documents = () => {
 
   const getSortIndicator = (columnKey: string) => {
     if (sortConfig && sortConfig.key === columnKey) {
-      return sortConfig.direction === "ascending" ? "↑" : "↓";
+      return sortConfig.direction === "asc" ? "↑" : "↓";
     }
     return null;
   };
@@ -501,148 +554,275 @@ const Documents = () => {
     </div>
   );
 
+  // Clear all filters
+  const clearAllFilters = () => {
+    setTypeFilter("any");
+    setStatusFilter("any");
+    setCreatedByFilter("any");
+    setDateRange(undefined);
+    setFilterOpen(false);
+  };
+
+  // Create filter badges
+  const filterBadges: FilterBadge[] = [];
+
+  if (dateRange?.from) {
+    filterBadges.push({
+      id: "date",
+      label: "Date Range",
+      value: dateRange.to
+        ? `${format(dateRange.from, "MMM d, yyyy")} - ${format(
+            dateRange.to,
+            "MMM d, yyyy"
+          )}`
+        : format(dateRange.from, "MMM d, yyyy"),
+      icon: <CalendarDays className="h-3.5 w-3.5" />,
+      onRemove: () => setDateRange(undefined),
+    });
+  }
+
+  if (statusFilter !== "any") {
+    filterBadges.push({
+      id: "status",
+      label: "Status",
+      value:
+        statusFilter === "0"
+          ? "Draft"
+          : statusFilter === "1"
+          ? "In Progress"
+          : "Completed",
+      onRemove: () => setStatusFilter("any"),
+    });
+  }
+
+  if (typeFilter !== "any") {
+    filterBadges.push({
+      id: "type",
+      label: "Type",
+      value:
+        typeFilter === "1"
+          ? "Proposal"
+          : typeFilter === "2"
+          ? "Report"
+          : typeFilter === "3"
+          ? "Minutes"
+          : typeFilter === "4"
+          ? "Specifications"
+          : "Strategy",
+      icon: <Tag className="h-3.5 w-3.5" />,
+      onRemove: () => setTypeFilter("any"),
+    });
+  }
+
+  // Create bulk actions
+  const bulkActions: BulkAction[] = [];
+
+  if (selectedDocuments.length === 1) {
+    bulkActions.push({
+      id: "assign-circuit",
+      label: "Assign Circuit",
+      icon: <GitBranch className="h-4 w-4" />,
+      onClick: () => {
+        const selectedDoc = documents.find(
+          (doc) => doc.id === selectedDocuments[0]
+        );
+        if (selectedDoc) {
+          openAssignCircuitDialog(selectedDoc);
+        }
+      },
+      className:
+        "bg-blue-900/30 border-blue-500/30 text-blue-200 hover:text-blue-100 hover:bg-blue-800/50 hover:border-blue-400/50 transition-all duration-200 shadow-md",
+    });
+  }
+
+  bulkActions.push({
+    id: "delete",
+    label: "Delete",
+    icon: <Trash className="h-4 w-4" />,
+    onClick: () => openDeleteDialog(),
+    variant: "destructive",
+    className:
+      "bg-red-900/30 border-red-500/30 text-red-300 hover:text-red-200 hover:bg-red-900/50 hover:border-red-400/50 transition-all duration-200 shadow-md",
+  });
+
+  // Search fields
+  const searchFields = [
+    { id: "all", label: "All fields" },
+    { id: "title", label: "Title" },
+    { id: "documentKey", label: "Document Code" },
+    { id: "content", label: "Content" },
+  ];
+
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Documents</h1>
-          <p className="text-blue-300/80">Manage your documents and files</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {useFakeData && (
-            <Button
-              variant="outline"
-              onClick={fetchDocuments}
-              className="border-amber-500/50 text-amber-500 hover:bg-amber-500/20"
-            >
-              <AlertCircle className="mr-2 h-4 w-4" />
-              Using Test Data
-            </Button>
-          )}
-          {canManageDocuments ? (
-            <>
-              <Button className="bg-blue-600 hover:bg-blue-700" asChild>
+    <div className="space-y-6 p-6">
+      <PageHeader
+        title="Documents"
+        description="Manage your documents and files"
+        icon={<FileText className="h-6 w-6 text-blue-400" />}
+        actions={
+          <>
+            {useFakeData && (
+              <Button
+                variant="outline"
+                onClick={fetchDocuments}
+                className="border-amber-500/50 text-amber-500 hover:bg-amber-500/20"
+              >
+                <AlertCircle className="mr-2 h-4 w-4" />
+                Using Test Data
+              </Button>
+            )}
+            {canManageDocuments ? (
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                asChild
+              >
                 <Link to="/documents/create">
-                  <Plus className="mr-2 h-4 w-4" /> New Document
+                  <Plus className="h-4 w-4" />
+                  New Document
                 </Link>
               </Button>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700" disabled>
+                      <Plus className="mr-2 h-4 w-4" /> New Document
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
+                    <p>Only Admin or FullUser can create documents</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </>
+        }
+      />
 
-              {selectedDocuments.length === 1 && (
-                <Button
-                  variant="outline"
-                  className="border-blue-500/50 text-blue-500 hover:bg-blue-500/20"
-                  onClick={() => {
-                    const selectedDoc = documents.find(
-                      (doc) => doc.id === selectedDocuments[0]
-                    );
-                    if (selectedDoc) {
-                      openAssignCircuitDialog(selectedDoc);
-                    }
-                  }}
-                >
-                  <GitBranch className="mr-2 h-4 w-4" /> Assign to Circuit
-                </Button>
-              )}
-            </>
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700" disabled>
-                    <Plus className="mr-2 h-4 w-4" /> New Document
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Only Admin or FullUser can create documents</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          {canManageDocuments && selectedDocuments.length > 0 && (
-            <Button variant="destructive" onClick={() => openDeleteDialog()}>
-              <Trash className="mr-2 h-4 w-4" /> Delete Selected (
-              {selectedDocuments.length})
-            </Button>
-          )}
-        </div>
-      </div>
+      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 transition-all">
+        <SearchAndFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchFields={searchFields}
+          selectedSearchField={searchField}
+          onSearchFieldChange={setSearchField}
+          placeholder="Search documents..."
+          filterOpen={filterOpen}
+          onFilterOpenChange={setFilterOpen}
+          filterContent={
+            <FilterContent
+              title="Filter Documents"
+              onClearAll={clearAllFilters}
+              onApply={() => setFilterOpen(false)}
+            >
+              {/* Status filter */}
+              <div>
+                <label className="block text-sm text-blue-300 mb-1">
+                  Status
+                </label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                    <SelectItem value="any" className="hover:bg-blue-800/40">
+                      Any Status
+                    </SelectItem>
+                    <SelectItem value="0" className="hover:bg-blue-800/40">
+                      Draft
+                    </SelectItem>
+                    <SelectItem value="1" className="hover:bg-blue-800/40">
+                      In Progress
+                    </SelectItem>
+                    <SelectItem value="2" className="hover:bg-blue-800/40">
+                      Completed
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      <Card className="border-blue-900/30 bg-[#0a1033]/80 backdrop-blur-sm shadow-lg overflow-hidden">
-        <CardHeader className="p-4 border-b border-blue-900/30">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle className="text-lg text-white">Document List</CardTitle>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-300/70" />
-                <Input
-                  placeholder="Search documents..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-blue-900/20 border-blue-800/30 text-white placeholder:text-blue-300/50 w-full focus:border-blue-500"
+              {/* Document Type filter */}
+              <div>
+                <label className="block text-sm text-blue-300 mb-1">
+                  Document Type
+                </label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                    <SelectItem value="any" className="hover:bg-blue-800/40">
+                      Any Type
+                    </SelectItem>
+                    <SelectItem value="1" className="hover:bg-blue-800/40">
+                      Proposal
+                    </SelectItem>
+                    <SelectItem value="2" className="hover:bg-blue-800/40">
+                      Report
+                    </SelectItem>
+                    <SelectItem value="3" className="hover:bg-blue-800/40">
+                      Minutes
+                    </SelectItem>
+                    <SelectItem value="4" className="hover:bg-blue-800/40">
+                      Specifications
+                    </SelectItem>
+                    <SelectItem value="5" className="hover:bg-blue-800/40">
+                      Strategy
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <label className="block text-sm text-blue-300 mb-1">
+                  Date Range
+                </label>
+                <DateRangePicker
+                  date={dateRange}
+                  onDateChange={setDateRange}
+                  className="w-full"
                 />
               </div>
-              <DateRangePicker
-                date={dateRange}
-                onDateChange={setDateRange}
-                className="w-auto"
-                align="end"
-              >
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={`${
-                    dateRange
-                      ? "text-blue-400 border-blue-500"
-                      : "text-gray-400 border-blue-900/30"
-                  } hover:text-blue-300`}
-                >
-                  <Calendar className="h-4 w-4" />
-                </Button>
-              </DateRangePicker>
-            </div>
-          </div>
-
-          {dateRange && (
-            <div className="mt-2 flex items-center gap-2">
-              <Badge
+            </FilterContent>
+          }
+          additionalControls={
+            <DateRangePicker
+              date={dateRange}
+              onDateChange={setDateRange}
+              className="w-auto"
+              align="end"
+            >
+              <Button
                 variant="outline"
-                className="bg-blue-900/20 text-blue-300 border-blue-500/30 flex gap-1"
+                size="icon"
+                className={`${
+                  dateRange
+                    ? "bg-[#22306e] text-blue-400 border-blue-500"
+                    : "bg-[#22306e] text-gray-400 border-blue-900/30"
+                } hover:text-blue-300 ml-2`}
               >
-                <CalendarDays className="h-3.5 w-3.5" />
-                {dateRange.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "MMM d, yyyy")} -{" "}
-                      {format(dateRange.to, "MMM d, yyyy")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "MMM d, yyyy")
-                  )
-                ) : (
-                  <span>Date Range</span>
-                )}
-                <button
-                  onClick={() => setDateRange(undefined)}
-                  className="ml-1 hover:text-blue-200"
-                >
-                  ×
-                </button>
-              </Badge>
-            </div>
-          )}
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-8 space-y-4">
-              <div className="h-10 bg-blue-900/20 rounded animate-pulse"></div>
-              {[...Array(5)].map((_, index) => (
-                <div
-                  key={index}
-                  className="h-16 bg-blue-900/10 rounded animate-pulse"
-                ></div>
-              ))}
-            </div>
-          ) : getPageDocuments().length > 0 ? (
+                <Calendar className="h-4 w-4" />
+              </Button>
+            </DateRangePicker>
+          }
+        />
+
+        <FilterBadges badges={filterBadges} />
+
+        {/* Table */}
+        {isLoading ? (
+          <div className="p-8 space-y-4">
+            <div className="h-10 bg-blue-900/20 rounded animate-pulse"></div>
+            {[...Array(5)].map((_, index) => (
+              <div
+                key={index}
+                className="h-16 bg-blue-900/10 rounded animate-pulse"
+              ></div>
+            ))}
+          </div>
+        ) : getPageDocuments().length > 0 ? (
+          <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-blue-900/20">
@@ -694,10 +874,11 @@ const Documents = () => {
                       {renderSortableHeader(
                         "Created By",
                         "createdBy",
-                        <Avatar className="h-4 w-4" />
+                        <Users className="h-4 w-4" />
                       )}
                     </TableHead>
-                    <TableHead className="w-24 text-right text-blue-300">
+                    <TableHead className="text-blue-300">Status</TableHead>
+                    <TableHead className="text-blue-300 text-right">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -738,7 +919,6 @@ const Documents = () => {
                           >
                             {document.title}
                           </Link>
-                          {getStatusBadge(document.status)}
                         </div>
                       </TableCell>
                       <TableCell className="text-blue-100">
@@ -759,6 +939,9 @@ const Documents = () => {
                             {document.createdBy.username}
                           </span>
                         </div>
+                      </TableCell>
+                      <TableCell className="text-blue-100">
+                        {getStatusBadge(document.status)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-1">
@@ -845,153 +1028,93 @@ const Documents = () => {
                 </TableBody>
               </Table>
             </div>
-          ) : (
-            <div className="text-center py-16">
-              <File className="mx-auto h-12 w-12 text-blue-500/50" />
-              <h3 className="mt-2 text-lg font-semibold text-white">
-                No documents found
-              </h3>
-              <p className="mt-1 text-sm text-blue-300/80">
-                {searchQuery || dateRange
-                  ? "No documents match your search criteria"
-                  : canManageDocuments
-                  ? "Get started by creating your first document"
-                  : "No documents are available for viewing"}
-              </p>
-              <div className="mt-6">
-                {canManageDocuments ? (
-                  <Button className="bg-blue-600 hover:bg-blue-700" asChild>
-                    <Link to="/documents/create">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Document
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button disabled className="cursor-not-allowed opacity-60">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Document
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {totalPages > 1 && filteredItems.length > 0 && (
-            <div className="p-4 border-t border-blue-900/30">
-              <Pagination className="justify-center">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className={
-                        page === 1
-                          ? "pointer-events-none opacity-50"
-                          : "hover:bg-blue-800/30"
-                      }
-                    />
-                  </PaginationItem>
-
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    // Show pagination numbers around current page
-                    let pageNum = page;
-                    if (page <= 3) {
-                      pageNum = i + 1;
-                    } else if (page >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = page - 2 + i;
-                    }
-
-                    // Make sure we're showing valid page numbers
-                    if (pageNum > 0 && pageNum <= totalPages) {
-                      return (
-                        <PaginationItem key={i}>
-                          <PaginationLink
-                            onClick={() => setPage(pageNum)}
-                            isActive={page === pageNum}
-                            className={
-                              page === pageNum
-                                ? "bg-blue-600"
-                                : "hover:bg-blue-800/30"
-                            }
-                          >
-                            {pageNum}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    }
-                    return null;
-                  })}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      className={
-                        page === totalPages
-                          ? "pointer-events-none opacity-50"
-                          : "hover:bg-blue-800/30"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {selectedDocuments.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-[#0a1033]/90 border-t border-blue-900/30 p-4 flex justify-between items-center transition-all duration-300 z-10 backdrop-blur-sm">
-          <div className="text-blue-100">
-            <span className="font-medium">{selectedDocuments.length}</span>{" "}
-            documents selected
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="border-blue-800/50 text-blue-300 hover:bg-blue-900/30"
-            >
-              Archive Selected
-            </Button>
-            <Button
-              variant="outline"
-              className="border-blue-800/50 text-blue-300 hover:bg-blue-900/30"
-            >
-              Export Selected
-            </Button>
-            {selectedDocuments.length === 1 && (
-              <Button
-                variant="outline"
-                className="border-blue-500/50 text-blue-500 hover:bg-blue-900/30"
-                onClick={() => {
-                  const selectedDoc = documents.find(
-                    (doc) => doc.id === selectedDocuments[0]
-                  );
-                  if (selectedDoc) {
-                    openAssignCircuitDialog(selectedDoc);
-                  }
-                }}
-              >
-                <GitBranch className="h-4 w-4 mr-2" /> Assign to Circuit
-              </Button>
-            )}
-            <Button
-              variant="destructive"
-              onClick={() => openDeleteDialog()}
-              className="bg-red-900/20 text-red-400 hover:bg-red-900/30 hover:text-red-300 border border-red-900/30"
-            >
-              <Trash className="h-4 w-4 mr-2" /> Delete Selected
-            </Button>
-          </div>
-        </div>
-      )}
+        ) : (
+          <EmptyState
+            icon={<FileText className="h-10 w-10 text-blue-400" />}
+            title="No documents found"
+            description={
+              searchQuery ||
+              dateRange ||
+              statusFilter !== "any" ||
+              typeFilter !== "any"
+                ? "Try adjusting your search or filters"
+                : "Create your first document to get started"
+            }
+            actionLabel={
+              canManageDocuments && !searchQuery ? "Create Document" : undefined
+            }
+            actionIcon={
+              canManageDocuments && !searchQuery ? (
+                <Plus className="h-4 w-4" />
+              ) : undefined
+            }
+            onAction={
+              canManageDocuments && !searchQuery
+                ? () => navigate("/documents/create")
+                : undefined
+            }
+          />
+        )}
 
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (page > 1) setPage(page - 1);
+                    }}
+                    className={
+                      page === 1 ? "pointer-events-none opacity-50" : ""
+                    }
+                  />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPage(i + 1);
+                      }}
+                      isActive={page === i + 1}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (page < totalPages) setPage(page + 1);
+                    }}
+                    className={
+                      page === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-[#0a1033] border-blue-900/30 text-white">
+        <DialogContent className="bg-[#1e2a4a] border-blue-900/40 text-white">
           <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogTitle className="text-xl text-blue-100">
+              Confirm Deletion
+            </DialogTitle>
             <DialogDescription className="text-blue-300">
               {documentToDelete
                 ? "Are you sure you want to delete this document? This action cannot be undone."
@@ -1002,26 +1125,43 @@ const Documents = () => {
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
-              className="border-blue-800 hover:bg-blue-900/30"
+              className="border-blue-800 text-blue-300 hover:bg-blue-900/50"
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {documentToAssign && (
+      {/* Assign Circuit Dialog */}
+      {selectedDocumentForCircuit && (
         <AssignCircuitDialog
-          documentId={documentToAssign.id}
-          documentTitle={documentToAssign.title}
           open={assignCircuitDialogOpen}
           onOpenChange={setAssignCircuitDialogOpen}
+          documentId={selectedDocumentForCircuit.id}
+          documentTitle={selectedDocumentForCircuit.title || ""}
           onSuccess={handleAssignCircuitSuccess}
         />
       )}
+
+      {/* Bulk Actions Bar */}
+      <AnimatePresence>
+        {canManageDocuments && selectedDocuments.length > 0 && (
+          <BulkActionsBar
+            selectedCount={selectedDocuments.length}
+            entityName="document"
+            actions={bulkActions}
+            icon={<FileText className="w-5 h-5 text-blue-400" />}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

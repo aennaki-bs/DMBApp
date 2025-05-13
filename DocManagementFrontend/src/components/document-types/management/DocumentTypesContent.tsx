@@ -1,17 +1,22 @@
-
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { DocumentType } from '@/models/document';
-import DocumentTypeTable from '@/components/document-types/DocumentTypeTable';
-import DocumentTypeGrid from '@/components/document-types/DocumentTypeGrid';
-import EmptyState from '@/components/document-types/EmptyState';
-import LoadingState from '@/components/document-types/LoadingState';
-import DocumentTypesPagination from '@/components/document-types/DocumentTypesPagination';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { DocumentType } from "@/models/document";
+import DocumentTypeTable from "@/components/document-types/DocumentTypeTable";
+import DocumentTypeGrid from "@/components/document-types/DocumentTypeGrid";
+import EmptyState from "@/components/document-types/EmptyState";
+import LoadingState from "@/components/document-types/LoadingState";
+import DocumentTypesPagination from "@/components/document-types/DocumentTypesPagination";
 
 interface DocumentTypesContentProps {
   isLoading: boolean;
   types: DocumentType[];
-  viewMode: 'table' | 'grid';
+  viewMode: "table" | "grid";
   selectedTypes: number[];
   onDeleteType: (id: number) => void;
   onEditType: (type: DocumentType) => void;
@@ -20,7 +25,7 @@ interface DocumentTypesContentProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   sortField: string | null;
-  sortDirection: 'asc' | 'desc';
+  sortDirection: "asc" | "desc";
   handleSort: (field: string) => void;
   currentPage: number;
   setCurrentPage: (page: number) => void;
@@ -45,7 +50,7 @@ const DocumentTypesContent = ({
   currentPage,
   setCurrentPage,
   totalPages,
-  filteredAndSortedTypes
+  filteredAndSortedTypes,
 }: DocumentTypesContentProps) => {
   if (isLoading) {
     return <LoadingState />;
@@ -56,23 +61,28 @@ const DocumentTypesContent = ({
   }
 
   return (
-    <div className="flex-1 overflow-hidden px-3 md:px-6 py-3">
-      <Card className="bg-[#0f1642] border-blue-900/30 shadow-xl h-full flex flex-col">
-        <CardHeader className="py-3 px-4">
+    <div className="flex-1 overflow-hidden px-6 py-3">
+      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg shadow-lg">
+        <div className="py-3 px-4 border-b border-blue-900/30">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <CardTitle className="text-lg text-white">Document Types</CardTitle>
-              <CardDescription className="text-sm text-blue-300">
-                {filteredAndSortedTypes.length} {filteredAndSortedTypes.length === 1 ? 'type' : 'types'} {searchQuery ? 'found' : 'available'}
-              </CardDescription>
+              <h3 className="text-lg font-medium text-blue-100">
+                Document Types
+              </h3>
+              <p className="text-sm text-blue-300/80">
+                {filteredAndSortedTypes.length}{" "}
+                {filteredAndSortedTypes.length === 1 ? "type" : "types"}{" "}
+                {searchQuery ? "found" : "available"}
+              </p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
-          <ScrollArea className="h-[calc(100vh-230px)] w-full flex-1 overflow-auto">
+        </div>
+
+        <div className="flex-1 flex flex-col">
+          <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
             <div className="min-w-full">
-              {viewMode === 'table' ? (
-                <DocumentTypeTable 
+              {viewMode === "table" ? (
+                <DocumentTypeTable
                   types={types}
                   selectedTypes={selectedTypes}
                   onSelectType={onSelectType}
@@ -96,16 +106,18 @@ const DocumentTypesContent = ({
               )}
             </div>
           </ScrollArea>
-          
-          <div className="mt-auto border-t border-blue-900/30">
-            <DocumentTypesPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        </CardContent>
-      </Card>
+
+          {totalPages > 1 && (
+            <div className="border-t border-blue-900/30 bg-[#0f1642]/50 p-2">
+              <DocumentTypesPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
