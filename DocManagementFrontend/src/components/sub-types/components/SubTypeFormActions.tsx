@@ -61,7 +61,7 @@ export const SubTypeFormActions = ({ onCancel }: SubTypeFormActionsProps) => {
           {isLastStep ? (
             <>
               <Save className="mr-1.5 h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
-              {isSubmitting ? "Creating..." : "Create Subtype"}
+              {isSubmitting ? "Creating..." : "Create Strain"}
             </>
           ) : (
             <>

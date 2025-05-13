@@ -118,78 +118,6 @@ export const SubTypeReview = () => {
               <motion.div variants={item} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-blue-300 flex items-center">
-                    <FileText className="h-4 w-4 mr-2 text-blue-400" />
-                    Basic Information
-                  </h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => goToStep(1)}
-                    className="h-7 px-2 py-0 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 border-blue-900/40"
-                  >
-                    <FileEdit className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
-                </div>
-
-                <div className="bg-blue-900/20 rounded-md p-3 space-y-3 border border-blue-900/40">
-                  <div>
-                    <div className="flex items-center mb-1">
-                      <span className="text-xs text-blue-300/70 font-medium mr-1">
-                        Name
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] px-1 py-0 h-4 font-normal text-blue-300/70 border-blue-900/50"
-                      >
-                        Required
-                      </Badge>
-                    </div>
-                    <div className="flex items-center">
-                      {formData.name ? (
-                        <p className="text-sm text-white font-medium">
-                          {formData.name}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-red-400 font-medium flex items-center">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          Not set
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center mb-1">
-                      <span className="text-xs text-blue-300/70 font-medium mr-1">
-                        Description
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] px-1 py-0 h-4 font-normal text-blue-300/70 border-blue-900/50"
-                      >
-                        Optional
-                      </Badge>
-                    </div>
-                    <div className="bg-blue-900/30 rounded-md p-2 border border-blue-900/40">
-                      {formData.description ? (
-                        <p className="text-sm text-white">
-                          {formData.description}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-blue-400/50 italic">
-                          No description provided
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div variants={item} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-blue-300 flex items-center">
                     <Calendar className="h-4 w-4 mr-2 text-blue-400" />
                     Dates & Status
                   </h3>
@@ -197,7 +125,7 @@ export const SubTypeReview = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => goToStep(2)}
+                    onClick={() => goToStep(1)}
                     className="h-7 px-2 py-0 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 border-blue-900/40"
                   >
                     <FileEdit className="h-3 w-3 mr-1" />
@@ -290,6 +218,53 @@ export const SubTypeReview = () => {
                           {formData.isActive ? "Active" : "Inactive"}
                         </p>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div variants={item} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-blue-300 flex items-center">
+                    <FileText className="h-4 w-4 mr-2 text-blue-400" />
+                    Enter Code
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToStep(2)}
+                    className="h-7 px-2 py-0 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 border-blue-900/40"
+                  >
+                    <FileEdit className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+
+                <div className="bg-blue-900/20 rounded-md p-3 space-y-3 border border-blue-900/40">
+                  <div>
+                    <div className="flex items-center mb-1">
+                      <span className="text-xs text-blue-300/70 font-medium mr-1">
+                        Code
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="text-[9px] px-1 py-0 h-4 font-normal text-blue-300/70 border-blue-900/50"
+                      >
+                        Required
+                      </Badge>
+                    </div>
+                    <div className="flex items-center">
+                      {formData.name ? (
+                        <p className="text-sm text-white font-medium">
+                          {formData.name}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-red-400 font-medium flex items-center">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          Not set
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

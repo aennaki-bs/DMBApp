@@ -31,10 +31,10 @@ const SubTypeCreateDialog = ({
       <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[550px] p-5 overflow-hidden">
         <DialogHeader className="mb-2 pb-2 border-b border-blue-900/30">
           <DialogTitle className="text-xl text-white">
-            Create New Subtype
+            Create New Strain
           </DialogTitle>
           <DialogDescription className="text-blue-300 text-sm">
-            Complete each step to create a new document subtype
+            Complete each step to create a new document strain
           </DialogDescription>
         </DialogHeader>
 

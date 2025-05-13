@@ -7,13 +7,12 @@ interface StepIndicatorProps {
 
 export const StepIndicator = ({
   currentStep,
-  totalSteps = 4,
+  totalSteps = 3,
 }: StepIndicatorProps) => {
   const steps = [
     { number: 1, label: "Name" },
-    { number: 2, label: "Code" },
-    { number: 3, label: "Details" },
-    { number: 4, label: "Review" },
+    { number: 2, label: "Details" },
+    { number: 3, label: "Review" },
   ];
 
   return (

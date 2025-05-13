@@ -8,10 +8,10 @@ export const SubTypeFormProgress = () => {
   const steps = [
     {
       number: 1,
-      title: "Basic Info",
-      description: "Enter name and description",
+      title: "Dates",
+      description: "Set date range and status",
     },
-    { number: 2, title: "Dates", description: "Set date range and status" },
+    { number: 2, title: "Enter Code", description: "Enter strain code" },
     { number: 3, title: "Review", description: "Review and submit" },
   ];
 
@@ -22,7 +22,7 @@ export const SubTypeFormProgress = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-lg font-semibold text-white mb-1"
       >
-        Create New Subtype
+        Create New Strain
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }}

@@ -18,13 +18,13 @@ export const MultiStepSubTypeForm = ({
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <SubTypeBasicInfo />;
-      case 2:
         return <SubTypeDates />;
+      case 2:
+        return <SubTypeBasicInfo />;
       case 3:
         return <SubTypeReview />;
       default:
-        return <SubTypeBasicInfo />;
+        return <SubTypeDates />;
     }
   };
 

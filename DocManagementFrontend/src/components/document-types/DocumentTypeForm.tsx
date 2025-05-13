@@ -3,11 +3,19 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowLeft, ChevronRight, X, FileType } from "lucide-react";
-import { Form } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 import documentService from "@/services/documentService";
 import { DocumentType } from "@/models/document";
 import { TypeNameStep } from "./steps/TypeNameStep";
-import { TypeCodeStep } from "./steps/TypeCodeStep";
 import { TypeDetailsStep } from "./steps/TypeDetailsStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { StepIndicator } from "./steps/StepIndicator";
@@ -18,11 +26,6 @@ import { Loader2 } from "lucide-react";
 
 const typeSchema = z.object({
   typeName: z.string().min(2, "Type name must be at least 2 characters."),
-  typeKey: z
-    .string()
-    .min(2, "Type code must be at least 2 characters.")
-    .max(3, "Type code must be at most 3 characters.")
-    .optional(),
   typeAttr: z.string().optional(),
 });
 
@@ -41,16 +44,13 @@ export const DocumentTypeForm = ({
 }: DocumentTypeFormProps) => {
   const [step, setStep] = useState(1);
   const [isTypeNameValid, setIsTypeNameValid] = useState<boolean | null>(null);
-  const [isTypeCodeValid, setIsTypeCodeValid] = useState<boolean | null>(null);
   const [isValidating, setIsValidating] = useState(false);
-  const [skipTypeCode, setSkipTypeCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof typeSchema>>({
     resolver: zodResolver(typeSchema),
     defaultValues: {
       typeName: documentType?.typeName || "",
-      typeKey: documentType?.typeKey || "",
       typeAttr: documentType?.typeAttr || "",
     },
   });
@@ -59,13 +59,12 @@ export const DocumentTypeForm = ({
     if (documentType && isEditMode) {
       form.reset({
         typeName: documentType.typeName || "",
-        typeKey: documentType.typeKey || "",
         typeAttr: documentType.typeAttr || "",
       });
 
       if (isEditMode) {
         // In edit mode, go to the details step directly
-        setStep(3);
+        setStep(2);
       }
     }
   }, [documentType, isEditMode, form]);
@@ -90,52 +89,12 @@ export const DocumentTypeForm = ({
     }
   };
 
-  const validateTypeCode = async (typeKey: string) => {
-    if (isEditMode && typeKey === documentType?.typeKey) {
-      return true;
-    }
-
-    if (!typeKey || typeKey.length < 2 || typeKey.length > 3) return false;
-
-    setIsValidating(true);
-    try {
-      const isValid = await documentService.validateTypeCode(typeKey);
-      setIsTypeCodeValid(isValid);
-      return isValid;
-    } catch (error) {
-      console.error("Error validating type code:", error);
-      return false;
-    } finally {
-      setIsValidating(false);
-    }
-  };
-
-  const generateTypeCode = async () => {
-    const typeName = form.getValues("typeName");
-    if (typeName) {
-      setIsValidating(true);
-      try {
-        const code = await documentService.generateTypeCode(typeName);
-        form.setValue("typeKey", code);
-        setIsTypeCodeValid(true);
-      } catch (error) {
-        console.error("Error generating type code:", error);
-      } finally {
-        setIsValidating(false);
-      }
-    }
-  };
-
   const nextStep = async () => {
     if (step === 1) {
       const typeName = form.getValues("typeName");
       const isValid = await validateTypeName(typeName);
 
       if (isValid) {
-        // Generate type code if not provided
-        if (!skipTypeCode && !form.getValues("typeKey")) {
-          await generateTypeCode();
-        }
         setStep(2);
       } else {
         form.setError("typeName", {
@@ -144,31 +103,8 @@ export const DocumentTypeForm = ({
         });
       }
     } else if (step === 2) {
-      if (skipTypeCode) {
-        // Skip type code validation if user opted to skip
-        form.setValue("typeKey", "");
-        setStep(3);
-      } else {
-        const typeKey = form.getValues("typeKey");
-        if (!typeKey || typeKey.trim() === "") {
-          // If empty, move to next step and let backend generate
-          setStep(3);
-        } else {
-          const isValid = await validateTypeCode(typeKey);
-
-          if (isValid) {
-            setStep(3);
-          } else {
-            form.setError("typeKey", {
-              type: "manual",
-              message: "This type code is invalid or already exists.",
-            });
-          }
-        }
-      }
-    } else if (step === 3) {
       // Move to review
-      setStep(4);
+      setStep(3);
     }
   };
 
@@ -190,20 +126,6 @@ export const DocumentTypeForm = ({
     form.clearErrors("typeName");
   };
 
-  const onTypeCodeChange = () => {
-    setIsTypeCodeValid(null);
-    // Clear the error when user changes the code
-    form.clearErrors("typeKey");
-  };
-
-  const onSkipTypeCodeChange = (skip: boolean) => {
-    setSkipTypeCode(skip);
-    if (skip) {
-      // If skipping, clear any type code errors
-      form.clearErrors("typeKey");
-    }
-  };
-
   const onSubmit = async (data: z.infer<typeof typeSchema>) => {
     if (isSubmitting) return; // Prevent double submission
 
@@ -212,7 +134,6 @@ export const DocumentTypeForm = ({
       if (isEditMode && documentType?.id) {
         await documentService.updateDocumentType(documentType.id, {
           typeName: data.typeName,
-          typeKey: skipTypeCode ? undefined : data.typeKey,
           typeAttr: data.typeAttr || undefined,
           documentCounter: documentType.documentCounter,
         });
@@ -220,7 +141,6 @@ export const DocumentTypeForm = ({
       } else {
         await documentService.createDocumentType({
           typeName: data.typeName,
-          typeKey: skipTypeCode ? undefined : data.typeKey,
           typeAttr: data.typeAttr || undefined,
         });
         toast.success("Document type created successfully");
@@ -279,10 +199,8 @@ export const DocumentTypeForm = ({
       case 1:
         return "Type Name";
       case 2:
-        return "Type Code";
-      case 3:
         return "Type Details";
-      case 4:
+      case 3:
         return "Review";
       default:
         return "Document Type";
@@ -296,10 +214,8 @@ export const DocumentTypeForm = ({
       case 1:
         return "Create a unique name for this document type";
       case 2:
-        return "Provide a unique 2-3 character code (optional)";
-      case 3:
         return "Add additional description for this document type";
-      case 4:
+      case 3:
         return "Review your document type details before creation";
       default:
         return "";
@@ -348,7 +264,7 @@ export const DocumentTypeForm = ({
 
         {/* Content */}
         <div className="p-6">
-          {!isEditMode && <StepIndicator currentStep={step} totalSteps={4} />}
+          {!isEditMode && <StepIndicator currentStep={step} totalSteps={3} />}
 
           <div className="mb-6">
             <h3 className="text-lg font-medium text-white">{getStepTitle()}</h3>
@@ -363,7 +279,7 @@ export const DocumentTypeForm = ({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
             >
-              {step < 4 ? (
+              {step < 3 ? (
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit(onSubmit)}
@@ -379,18 +295,31 @@ export const DocumentTypeForm = ({
                     )}
 
                     {step === 2 && (
-                      <TypeCodeStep
-                        control={form.control}
-                        isTypeCodeValid={isTypeCodeValid}
-                        isValidating={isValidating}
-                        onTypeCodeChange={onTypeCodeChange}
-                        onGenerateCode={generateTypeCode}
-                        skipTypeCode={skipTypeCode}
-                        onSkipChange={onSkipTypeCodeChange}
-                      />
+                      <div className="space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="typeAttr"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-blue-100">
+                                Type Description (Optional)
+                              </FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  {...field}
+                                  placeholder="Enter description (optional)"
+                                  className="min-h-[120px] text-sm bg-[#111633] border-blue-900/40 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none rounded-md"
+                                />
+                              </FormControl>
+                              <FormDescription className="text-sm text-blue-300/70 mt-2">
+                                Additional description for this document type
+                              </FormDescription>
+                              <FormMessage className="text-sm mt-1 text-red-400" />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     )}
-
-                    {step === 3 && <TypeDetailsStep control={form.control} />}
                   </form>
                 </Form>
               ) : (
@@ -398,10 +327,7 @@ export const DocumentTypeForm = ({
                   <ReviewStep
                     data={{
                       typeName: form.getValues("typeName"),
-                      typeKey: skipTypeCode
-                        ? "(Will be generated automatically)"
-                        : form.getValues("typeKey") ||
-                          "(Will be generated automatically)",
+                      typeKey: "Auto-generated",
                       typeAttr: form.getValues("typeAttr"),
                     }}
                   />
@@ -436,17 +362,12 @@ export const DocumentTypeForm = ({
 
           <Button
             type="button"
-            onClick={step === 4 ? handleReviewSubmit : nextStep}
+            onClick={step === 3 ? handleReviewSubmit : nextStep}
             disabled={
               isValidating ||
               (step === 1 &&
                 (!form.getValues("typeName") ||
-                  form.getValues("typeName").length < 2)) ||
-              (step === 2 &&
-                !skipTypeCode &&
-                form.getValues("typeKey") &&
-                (form.getValues("typeKey").length < 2 ||
-                  form.getValues("typeKey").length > 3))
+                  form.getValues("typeName").length < 2))
             }
             className={`px-5 py-2 ${
               isValidating
@@ -459,7 +380,7 @@ export const DocumentTypeForm = ({
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Validating...
               </>
-            ) : step === 4 ? (
+            ) : step === 3 ? (
               isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -470,7 +391,7 @@ export const DocumentTypeForm = ({
               )
             ) : (
               <>
-                {step === 3 ? "Review" : "Next"}
+                {step === 2 ? "Review" : "Next"}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </>
             )}
