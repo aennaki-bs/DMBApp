@@ -219,6 +219,7 @@ namespace DocManagementBackend.Controllers
 
             // Generate the SubTypeKey
             // Format example: {TypeKey}{FirstLettersOfName}{YearEnd} = "FAAB25"
+            string subTypeKey;
             if (createSubTypeDto.SubTypeKey != null) {
                 subTypeKey = createSubTypeDto.SubTypeKey;
             } else {

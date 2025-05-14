@@ -32,6 +32,8 @@ namespace DocManagementBackend.Models
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DateTime DocDate { get; set; }
+        public DateTime ComptableDate { get; set; }
+        public bool DocumentExterne { get; set; } = false;
         public int Status { get; set; }
         public int TypeId { get; set; }
         public DocumentTypeDto? DocumentType { get; set; }

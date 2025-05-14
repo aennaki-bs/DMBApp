@@ -40,6 +40,8 @@ namespace DocManagementBackend.Models
         [Required]
         public int Status { get; set; } // 0 = Open, 1 = Validated
         public DateTime DocDate { get; set; }
+        public DateTime ComptableDate { get; set; }
+        public bool DocumentExterne { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public int LigneCouter { get; set; } = 0;
