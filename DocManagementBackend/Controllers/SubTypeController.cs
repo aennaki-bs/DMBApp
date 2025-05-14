@@ -206,7 +206,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("Start date must be before end date.");
 
             // Check for overlapping periods with the same name for this document type
-            var overlappingSubType = await _context.SubTypes
+            var overlappingSubTypeWithSameName = await _context.SubTypes
                 .Where(st => st.DocumentTypeId == createSubTypeDto.DocumentTypeId &&
                              st.Name.ToLower() == createSubTypeDto.Name.ToLower() &&
                              ((st.StartDate <= createSubTypeDto.StartDate && st.EndDate >= createSubTypeDto.StartDate) ||
@@ -214,8 +214,20 @@ namespace DocManagementBackend.Controllers
                               (st.StartDate >= createSubTypeDto.StartDate && st.EndDate <= createSubTypeDto.EndDate)))
                 .FirstOrDefaultAsync();
 
-            if (overlappingSubType != null)
+            if (overlappingSubTypeWithSameName != null)
                 return BadRequest($"A subtype with name '{createSubTypeDto.Name}' already exists for this document type within the specified date range.");
+
+            // Check for any overlapping periods for this document type, regardless of name
+            var overlappingSubType = await _context.SubTypes
+                .Where(st => st.DocumentTypeId == createSubTypeDto.DocumentTypeId &&
+                             ((st.StartDate <= createSubTypeDto.StartDate && st.EndDate >= createSubTypeDto.StartDate) ||
+                              (st.StartDate <= createSubTypeDto.EndDate && st.EndDate >= createSubTypeDto.EndDate) ||
+                              (st.StartDate >= createSubTypeDto.StartDate && st.EndDate <= createSubTypeDto.EndDate)))
+                .FirstOrDefaultAsync();
+
+            if (overlappingSubType != null)
+                return BadRequest($"A subtype already exists for this document type within the date range {createSubTypeDto.StartDate:yyyy-MM-dd} to {createSubTypeDto.EndDate:yyyy-MM-dd}. " +
+                                  $"It overlaps with '{overlappingSubType.Name}' ({overlappingSubType.StartDate:yyyy-MM-dd} to {overlappingSubType.EndDate:yyyy-MM-dd}).");
 
             // Generate the SubTypeKey
             // Format example: {TypeKey}{FirstLettersOfName}{YearEnd} = "FAAB25"
@@ -313,7 +325,7 @@ namespace DocManagementBackend.Controllers
             if (updateSubTypeDto.Name != null || updateSubTypeDto.StartDate.HasValue || updateSubTypeDto.EndDate.HasValue)
             {
                 // Check for overlapping periods with the same name for this document type
-                var overlappingSubType = await _context.SubTypes
+                var overlappingSubTypeWithSameName = await _context.SubTypes
                     .Where(st => st.Id != id &&
                                  st.DocumentTypeId == subType.DocumentTypeId &&
                                  st.Name.ToLower() == name.ToLower() &&
@@ -322,8 +334,21 @@ namespace DocManagementBackend.Controllers
                                   (st.StartDate >= startDate && st.EndDate <= endDate)))
                     .FirstOrDefaultAsync();
 
-                if (overlappingSubType != null)
+                if (overlappingSubTypeWithSameName != null)
                     return BadRequest($"A subtype with name '{name}' already exists for this document type within the specified date range.");
+                
+                // Check for any overlapping periods for this document type, regardless of name
+                var overlappingSubType = await _context.SubTypes
+                    .Where(st => st.Id != id &&
+                                 st.DocumentTypeId == subType.DocumentTypeId &&
+                                 ((st.StartDate <= startDate && st.EndDate >= startDate) ||
+                                  (st.StartDate <= endDate && st.EndDate >= endDate) ||
+                                  (st.StartDate >= startDate && st.EndDate <= endDate)))
+                    .FirstOrDefaultAsync();
+
+                if (overlappingSubType != null)
+                    return BadRequest($"A subtype already exists for this document type within the date range {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}. " +
+                                     $"It overlaps with '{overlappingSubType.Name}' ({overlappingSubType.StartDate:yyyy-MM-dd} to {overlappingSubType.EndDate:yyyy-MM-dd}).");
             }
 
             // Update the SubType
