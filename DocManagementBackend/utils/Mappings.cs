@@ -23,6 +23,7 @@ namespace DocManagementBackend.Mappings
                 DocumentKey = l.Document.DocumentKey,
                 DocumentAlias = l.Document.DocumentAlias,
                 Title = l.Document.Title,
+                DocumentExterne = l.Document.DocumentExterne,
                 Content = l.Document.Content,
                 TypeId = l.Document.TypeId,
                 DocumentType = l.Document.DocumentType == null
@@ -82,6 +83,7 @@ namespace DocManagementBackend.Mappings
                     DocumentKey = s.Ligne.Document.DocumentKey,
                     DocumentAlias = s.Ligne.Document.DocumentAlias,
                     Title = s.Ligne.Document.Title,
+                    DocumentExterne = s.Ligne.Document.DocumentExterne,
                     Content = s.Ligne.Document.Content,
                     TypeId = s.Ligne.Document.TypeId,
                     DocumentType = s.Ligne.Document.DocumentType == null
@@ -122,10 +124,12 @@ namespace DocManagementBackend.Mappings
             DocumentKey = d.DocumentKey,
             DocumentAlias = d.DocumentAlias,
             Title = d.Title,
+            DocumentExterne = d.DocumentExterne,
             Content = d.Content,
             CreatedAt = d.CreatedAt,
             UpdatedAt = d.UpdatedAt,
             DocDate = d.DocDate,
+            ComptableDate = d.ComptableDate,
             Status = d.Status,
             TypeId = d.TypeId,
             DocumentType = new DocumentTypeDto
