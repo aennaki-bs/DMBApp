@@ -51,6 +51,7 @@ namespace DocManagementBackend.Models
         [ForeignKey("NextStatusId")]
         [JsonIgnore]
         public Status? NextStatus { get; set; }
+        public bool RequiresApproval { get; set; } = false;
 
         [JsonIgnore]
         public ICollection<StepAction> StepActions { get; set; } = new List<StepAction>();

@@ -24,6 +24,7 @@ namespace DocManagementBackend.Models
         public string Descriptif { get; set; } = string.Empty;
         public int CurrentStatusId { get; set; }
         public int NextStatusId { get; set; }
+        public bool RequiresApproval { get; set; } = false;
     }
 
     public class UpdateStepDto
@@ -32,6 +33,7 @@ namespace DocManagementBackend.Models
         public string? Descriptif { get; set; }
         public int? CurrentStatusId { get; set; }
         public int? NextStatusId { get; set; }
+        public bool? RequiresApproval { get; set; }
     }
 
     public class StepDto
@@ -45,6 +47,7 @@ namespace DocManagementBackend.Models
         public string CurrentStatusTitle { get; set; } = string.Empty;
         public int NextStatusId { get; set; }
         public string NextStatusTitle { get; set; } = string.Empty;
+        public bool RequiresApproval { get; set; } = false;
     }
 
     public class CircuitValidationDto
@@ -59,7 +62,10 @@ namespace DocManagementBackend.Models
         public int TotalSteps { get; set; }
         public bool IsValid { get; set; }
         public List<string> ValidationMessages { get; set; } = new List<string>();
+        public List<string> Errors { get; set; } = new List<string>();
+        public List<string> Warnings { get; set; } = new List<string>();
     }
+
     public class DocumentStepStatusDto
     {
         public int StepId { get; set; }
@@ -74,5 +80,6 @@ namespace DocManagementBackend.Models
         public bool IsCompleted { get; set; }
         public DateTime? CompletedAt { get; set; }
         public string? CompletedBy { get; set; }
+        public bool RequiresApproval { get; set; } = false;
     }
 }

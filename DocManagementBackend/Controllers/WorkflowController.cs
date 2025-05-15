@@ -120,19 +120,19 @@ namespace DocManagementBackend.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
                 return Unauthorized("User ID claim is missing.");
-
+        
             int userId = int.Parse(userIdClaim);
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
+        
             if (user == null)
                 return BadRequest("User not found.");
-
+        
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated. Please contact an admin!");
-
+        
             if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("User not allowed to change document status.");
-
+        
             try
             {
                 // Get document and status information for logging
@@ -142,10 +142,10 @@ namespace DocManagementBackend.Controllers
                 
                 var targetStatus = await _context.Status
                     .FirstOrDefaultAsync(s => s.Id == moveToStatusDto.TargetStatusId);
-
+        
                 Console.WriteLine($"Attempting to move document from status '{document?.CurrentStatus?.Title}' to '{targetStatus?.Title}'");
                 Console.WriteLine($"Target status IsFlexible: {targetStatus?.IsFlexible}");
-
+        
                 // Check if we can make this transition
                 bool canMove = await _workflowService.CanMoveToStatusAsync(
                     moveToStatusDto.DocumentId, 
@@ -156,13 +156,45 @@ namespace DocManagementBackend.Controllers
                 if (!canMove)
                     return BadRequest("This status transition is not allowed in the current workflow.");
                 
-                // Perform the transition
+                // Find the step needed for this transition
+                var step = await _context.Steps
+                    .FirstOrDefaultAsync(s => 
+                        s.CircuitId == document.CircuitId &&
+                        s.CurrentStatusId == document.CurrentStatusId &&
+                        s.NextStatusId == moveToStatusDto.TargetStatusId);
+                        
+                if (step == null)
+                    return BadRequest("No valid step found for this transition.");
+                    
+                // Check if step requires approval
+                if (step.RequiresApproval)
+                {
+                    // Initiate approval process
+                    var (requiresApproval, approvalWritingId) = await _workflowService.InitiateApprovalIfRequiredAsync(
+                        moveToStatusDto.DocumentId, step.Id, userId, moveToStatusDto.Comments);
+                        
+                    if (requiresApproval)
+                    {
+                        var approvalWriting = await _context.ApprovalWritings.FindAsync(approvalWritingId);
+                        if (approvalWriting == null || approvalWriting.Status != ApprovalStatus.Accepted)
+                        {
+                            // Approval needed but not yet granted
+                            return Ok(new { 
+                                message = "This step requires approval. An approval request has been initiated.",
+                                requiresApproval = true,
+                                approvalId = approvalWritingId
+                            });
+                        }
+                    }
+                }
+                
+                // Approval is not required or has been granted, so proceed with the status transition
                 var success = await _workflowService.MoveToNextStatusAsync(
                     moveToStatusDto.DocumentId,
                     moveToStatusDto.TargetStatusId,
                     userId,
                     moveToStatusDto.Comments);
-
+        
                 if (success)
                 {
                     Console.WriteLine("Document status updated successfully");
@@ -832,25 +864,5 @@ namespace DocManagementBackend.Controllers
                 _ => "Unknown"
             };
         }
-    }
-
-    // Data Transfer Objects
-    public class MoveToStatusDto
-    {
-        public int DocumentId { get; set; }
-        public int TargetStatusId { get; set; }
-        public string Comments { get; set; } = string.Empty;
-    }
-
-    public class ReturnToPreviousStatusDto
-    {
-        public int DocumentId { get; set; }
-        public string Comments { get; set; } = string.Empty;
-    }
-
-    public class ReinitializeWorkflowDto
-    {
-        public int DocumentId { get; set; }
-        public string Comments { get; set; } = string.Empty;
     }
 }

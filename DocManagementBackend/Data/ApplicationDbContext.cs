@@ -30,6 +30,14 @@ namespace DocManagementBackend.Data
         public DbSet<ActionStatusEffect> ActionStatusEffects { get; set; }
         public DbSet<DocumentStatus> DocumentStatus { get; set; }
 
+        // Approval entities
+        public DbSet<Approvator> Approvators { get; set; }
+        public DbSet<ApprovatorsGroup> ApprovatorsGroups { get; set; }
+        public DbSet<ApprovatorsGroupUser> ApprovatorsGroupUsers { get; set; }
+        public DbSet<ApprovatorsGroupRule> ApprovatorsGroupRules { get; set; }
+        public DbSet<ApprovalWriting> ApprovalWritings { get; set; }
+        public DbSet<ApprovalResponse> ApprovalResponses { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // SubType relationship with Document
@@ -157,6 +165,73 @@ namespace DocManagementBackend.Data
                 .HasOne(ds => ds.Status)
                 .WithMany()
                 .HasForeignKey(ds => ds.StatusId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Approval relationships
+            modelBuilder.Entity<Approvator>()
+            .HasOne(a => a.Step)
+            .WithMany()
+            .HasForeignKey(a => a.StepId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Approvator>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+    
+            modelBuilder.Entity<ApprovatorsGroup>()
+                .HasOne(g => g.Step)
+                .WithMany()
+                .HasForeignKey(g => g.StepId)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            modelBuilder.Entity<ApprovatorsGroupUser>()
+                .HasOne(gu => gu.Group)
+                .WithMany(g => g.ApprovatorsGroupUsers)
+                .HasForeignKey(gu => gu.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            modelBuilder.Entity<ApprovatorsGroupUser>()
+                .HasOne(gu => gu.User)
+                .WithMany()
+                .HasForeignKey(gu => gu.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+    
+            modelBuilder.Entity<ApprovatorsGroupRule>()
+                .HasOne(r => r.Group)
+                .WithMany()
+                .HasForeignKey(r => r.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            modelBuilder.Entity<ApprovalWriting>()
+                .HasOne(aw => aw.Document)
+                .WithMany()
+                .HasForeignKey(aw => aw.DocumentId)
+                .OnDelete(DeleteBehavior.NoAction);
+    
+            modelBuilder.Entity<ApprovalWriting>()
+                .HasOne(aw => aw.Step)
+                .WithMany()
+                .HasForeignKey(aw => aw.StepId)
+                .OnDelete(DeleteBehavior.NoAction);
+    
+            modelBuilder.Entity<ApprovalWriting>()
+                .HasOne(aw => aw.ProcessedBy)
+                .WithMany()
+                .HasForeignKey(aw => aw.ProcessedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+    
+            modelBuilder.Entity<ApprovalResponse>()
+                .HasOne(ar => ar.ApprovalWriting)
+                .WithMany()
+                .HasForeignKey(ar => ar.ApprovalWritingId)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            modelBuilder.Entity<ApprovalResponse>()
+                .HasOne(ar => ar.User)
+                .WithMany()
+                .HasForeignKey(ar => ar.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Seed data

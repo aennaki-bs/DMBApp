@@ -4,6 +4,7 @@ using DocManagementBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocManagementBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250515093725_FixIsCircuitCompletedDataType")]
+    partial class FixIsCircuitCompletedDataType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,183 +81,6 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("StepId");
 
                     b.ToTable("ActionStatusEffects");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovalResponse", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ApprovalWritingId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Comments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsApproved")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("ResponseDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApprovalWritingId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ApprovalResponses");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovalWriting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ApprovatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ApprovatorsGroupId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Comments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DocumentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProcessedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StepId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DocumentId");
-
-                    b.HasIndex("ProcessedByUserId");
-
-                    b.HasIndex("StepId");
-
-                    b.ToTable("ApprovalWritings");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.Approvator", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("StepId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StepId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Approvators");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovatorsGroup", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("StepId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StepId");
-
-                    b.ToTable("ApprovatorsGroups");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovatorsGroupRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RuleType")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GroupId");
-
-                    b.ToTable("ApprovatorsGroupRules");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovatorsGroupUser", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("OrderIndex")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ApprovatorsGroupUsers");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Circuit", b =>
@@ -330,9 +156,8 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DocumentExterne")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("DocumentExterne")
+                        .HasColumnType("bit");
 
                     b.Property<string>("DocumentKey")
                         .IsRequired()
@@ -749,9 +574,6 @@ namespace DocManagementBackend.Migrations
                     b.Property<int>("NextStatusId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("RequiresApproval")
-                        .HasColumnType("bit");
-
                     b.Property<string>("StepKey")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -976,112 +798,6 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Status");
 
                     b.Navigation("Step");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovalResponse", b =>
-                {
-                    b.HasOne("DocManagementBackend.Models.ApprovalWriting", "ApprovalWriting")
-                        .WithMany()
-                        .HasForeignKey("ApprovalWritingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DocManagementBackend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("ApprovalWriting");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovalWriting", b =>
-                {
-                    b.HasOne("DocManagementBackend.Models.Document", "Document")
-                        .WithMany()
-                        .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("DocManagementBackend.Models.User", "ProcessedBy")
-                        .WithMany()
-                        .HasForeignKey("ProcessedByUserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("DocManagementBackend.Models.Step", "Step")
-                        .WithMany()
-                        .HasForeignKey("StepId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Document");
-
-                    b.Navigation("ProcessedBy");
-
-                    b.Navigation("Step");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.Approvator", b =>
-                {
-                    b.HasOne("DocManagementBackend.Models.Step", "Step")
-                        .WithMany()
-                        .HasForeignKey("StepId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DocManagementBackend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Step");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovatorsGroup", b =>
-                {
-                    b.HasOne("DocManagementBackend.Models.Step", "Step")
-                        .WithMany()
-                        .HasForeignKey("StepId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Step");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovatorsGroupRule", b =>
-                {
-                    b.HasOne("DocManagementBackend.Models.ApprovatorsGroup", "Group")
-                        .WithMany()
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Group");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovatorsGroupUser", b =>
-                {
-                    b.HasOne("DocManagementBackend.Models.ApprovatorsGroup", "Group")
-                        .WithMany("ApprovatorsGroupUsers")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DocManagementBackend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Group");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
@@ -1334,11 +1050,6 @@ namespace DocManagementBackend.Migrations
             modelBuilder.Entity("DocManagementBackend.Models.Action", b =>
                 {
                     b.Navigation("StepActions");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.ApprovatorsGroup", b =>
-                {
-                    b.Navigation("ApprovatorsGroupUsers");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Circuit", b =>

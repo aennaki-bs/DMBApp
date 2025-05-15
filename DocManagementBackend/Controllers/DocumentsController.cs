@@ -127,6 +127,17 @@ namespace DocManagementBackend.Controllers
             if (docType == null)
                 return BadRequest("Invalid Document type!");
 
+            // Validate circuit if specified
+            if (request.CircuitId.HasValue && request.CircuitId.Value > 0)
+            {
+                var circuit = await _context.Circuits.FirstOrDefaultAsync(c => c.Id == request.CircuitId.Value);
+                if (circuit == null)
+                    return BadRequest($"The specified circuit (ID: {request.CircuitId}) does not exist.");
+                
+                // if (!circuit.IsActive)
+                //     return BadRequest($"The specified circuit (ID: {request.CircuitId}) is not active.");
+            }
+
             SubType? subType = null;
             if (request.SubTypeId.HasValue)
             {
@@ -170,38 +181,82 @@ namespace DocManagementBackend.Controllers
                 DocumentType = docType,
                 SubTypeId = request.SubTypeId,
                 SubType = subType,
-                CircuitId = request.CircuitId,
-                Status = 0,
+                // Don't set CircuitId here, will be set by workflow service if needed
+                CircuitId = null,
+                ComptableDate = request.ComptableDate ?? DateTime.UtcNow,
+                DocumentExterne = request.DocumentExterne ?? string.Empty,
+                Status = 0, // Initially set to 0 (Open/Draft)
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                DocumentKey = documentKey
+                DocumentKey = documentKey,
+                IsCircuitCompleted = false // Explicitly set to false for new documents
             };
 
             _context.Documents.Add(document);
-            await _context.SaveChangesAsync();
-
-            // Now fetch the complete document with all related entities
-            var createdDocument = await _context.Documents
-                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Include(d => d.DocumentType)
-                .Include(d => d.SubType)
-                .Include(d => d.CurrentStep)
-                .Where(d => d.Id == document.Id)
-                .Select(DocumentMappings.ToDocumentDto)
-                .FirstOrDefaultAsync();
-
-            var logEntry = new LogHistory
+            
+            try
             {
-                UserId = userId,
-                User = user,
-                Timestamp = DateTime.UtcNow,
-                ActionType = 4,
-                Description = $"{user.Username} has created the document {document.DocumentKey}"
-            };
-            _context.LogHistories.Add(logEntry);
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, createdDocument);
+                // Assign to circuit if specified, using the workflow service
+                if (request.CircuitId.HasValue && request.CircuitId.Value > 0)
+                {
+                    try
+                    {
+                        await _workflowService.AssignDocumentToCircuitAsync(document.Id, request.CircuitId.Value, userId);
+                    }
+                    catch (Exception circuitEx)
+                    {
+                        return BadRequest($"Error assigning document to circuit: {circuitEx.Message}");
+                    }
+                }
+                
+                // Now fetch the complete document with all related entities
+                var createdDocument = await _context.Documents
+                    .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                    .Include(d => d.DocumentType)
+                    .Include(d => d.SubType)
+                    .Include(d => d.CurrentStep)
+                    .Include(d => d.CurrentStatus)
+                    .Where(d => d.Id == document.Id)
+                    .Select(DocumentMappings.ToDocumentDto)
+                    .FirstOrDefaultAsync();
+
+                var logEntry = new LogHistory
+                {
+                    UserId = userId,
+                    User = user,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 4,
+                    Description = $"{user.Username} has created the document {document.DocumentKey}"
+                };
+                _context.LogHistories.Add(logEntry);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, createdDocument);
+            }
+            catch (DbUpdateException ex)
+            {
+                // Roll back counter increment
+                docType.DocumentCounter--;
+                docType.DocCounter--;
+                
+                // Check for foreign key constraint violations
+                if (ex.InnerException != null && ex.InnerException.Message.Contains("FK_Documents_Circuits_CircuitId"))
+                {
+                    return BadRequest("The specified circuit does not exist. Please select a valid circuit or leave it empty.");
+                }
+                
+                return StatusCode(500, $"An error occurred while creating the document: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Roll back counter increment
+                docType.DocumentCounter--;
+                docType.DocCounter--;
+                
+                return StatusCode(500, $"An unexpected error occurred: {ex.Message}");
+            }
         }
 
         [HttpPut("{id}")]
@@ -226,6 +281,12 @@ namespace DocManagementBackend.Controllers
             document.Content = request.Content ?? document.Content;
             document.Title = request.Title ?? document.Title;
             document.DocDate = request.DocDate ?? document.DocDate;
+            
+            // Update DocumentExterne if provided
+            if (request.DocumentExterne != null)
+            {
+                document.DocumentExterne = request.DocumentExterne;
+            }
 
             // Handle SubType changes
             if (request.SubTypeId.HasValue && request.SubTypeId != document.SubTypeId)
@@ -278,9 +339,6 @@ namespace DocManagementBackend.Controllers
             // Handle type changes as in original method
             if (request.TypeId.HasValue)
             {
-                // Console.ForegroundColor = ConsoleColor.Green;
-                // Console.WriteLine($"=== request TYpe === {request.TypeId}");
-                // Console.ResetColor();
                 if (request.TypeId != document.TypeId)
                 {
                     var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
@@ -328,13 +386,25 @@ namespace DocManagementBackend.Controllers
                 }
             }
 
+            // Handle circuit changes
             if (request.CircuitId.HasValue)
             {
-                var circuit = await _context.Circuits.FirstOrDefaultAsync(c => c.Id == request.CircuitId);
-                if (circuit == null)
-                    return BadRequest("Invalid Circuit!");
-                document.CircuitId = request.CircuitId;
-                document.Circuit = circuit;
+                if (request.CircuitId.Value > 0)
+                {
+                    // Verify the circuit exists
+                    var circuit = await _context.Circuits.FirstOrDefaultAsync(c => c.Id == request.CircuitId.Value);
+                    if (circuit == null)
+                        return BadRequest($"The specified circuit (ID: {request.CircuitId}) does not exist.");
+                    
+                    document.CircuitId = request.CircuitId;
+                    document.Circuit = circuit;
+                }
+                else
+                {
+                    // If CircuitId is 0, remove the circuit association
+                    document.CircuitId = null;
+                    document.Circuit = null;
+                }
             }
 
             document.UpdatedAt = DateTime.UtcNow;
@@ -358,6 +428,16 @@ namespace DocManagementBackend.Controllers
             {
                 if (!_context.Documents.Any(d => d.Id == id)) { return NotFound(); }
                 else { throw; }
+            }
+            catch (DbUpdateException ex)
+            {
+                // Check for foreign key constraint violations
+                if (ex.InnerException != null && ex.InnerException.Message.Contains("FK_Documents_Circuits_CircuitId"))
+                {
+                    return BadRequest("The specified circuit does not exist. Please select a valid circuit or leave it empty.");
+                }
+                
+                return StatusCode(500, $"An error occurred while updating the document: {ex.Message}");
             }
             return Ok("Document updated!");
         }

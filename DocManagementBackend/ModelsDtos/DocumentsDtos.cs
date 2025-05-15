@@ -8,7 +8,9 @@ namespace DocManagementBackend.Models
         public int TypeId { get; set; }
         public int? SubTypeId { get; set; }
         public string? DocumentAlias { get; set; }
+        public string? DocumentExterne { get; set; }
         public DateTime? DocDate { get; set; }
+        public DateTime? ComptableDate { get; set; }
         public int? CircuitId { get; set; }
     }
 
@@ -19,6 +21,7 @@ namespace DocManagementBackend.Models
         public int? TypeId { get; set; }
         public int? SubTypeId { get; set; }
         public string? DocumentAlias { get; set; }
+        public string? DocumentExterne { get; set; }
         public DateTime? DocDate { get; set; }
         public int? CircuitId { get; set; }
     }
@@ -33,7 +36,7 @@ namespace DocManagementBackend.Models
         public DateTime UpdatedAt { get; set; }
         public DateTime DocDate { get; set; }
         public DateTime ComptableDate { get; set; }
-        public bool DocumentExterne { get; set; } = false;
+        public string DocumentExterne { get; set; } = string.Empty;
         public int Status { get; set; }
         public int TypeId { get; set; }
         public DocumentTypeDto? DocumentType { get; set; }

@@ -35,6 +35,7 @@ namespace DocManagementBackend.Models
     public class DocumentWorkflowStatusDto
     {
         public int DocumentId { get; set; }
+        public string DocumentKey { get; set; } = string.Empty;
         public string DocumentTitle { get; set; } = string.Empty;
         public int? CircuitId { get; set; }
         public string CircuitTitle { get; set; } = string.Empty;
@@ -45,7 +46,9 @@ namespace DocManagementBackend.Models
         public int Status { get; set; }
         public string StatusText { get; set; } = string.Empty;
         public bool IsCircuitCompleted { get; set; }
-        public List<DocumentStatusDto> Statuses { get; set; } = new();
+        public int ProgressPercentage { get; set; }
+        public List<DocumentStatusItemDto> Statuses { get; set; } = new();
+        public List<DocumentStepHistoryItemDto> StepHistory { get; set; } = new();
         public List<StatusDto> AvailableStatusTransitions { get; set; } = new();
         public List<ActionDto> AvailableActions { get; set; } = new();
         public bool CanAdvanceToNextStep { get; set; }
@@ -78,10 +81,10 @@ namespace DocManagementBackend.Models
         public string Comments { get; set; } = string.Empty;
     }
 
-    // public class MoveToStatusDto
-    // {
-    //     public int DocumentId { get; set; }
-    //     public int TargetStatusId { get; set; }
-    //     public string Comments { get; set; } = string.Empty;
-    // }
+    public class ReinitializeWorkflowDto
+    {
+        public int DocumentId { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
+
 }

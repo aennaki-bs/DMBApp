@@ -87,4 +87,32 @@ namespace DocManagementBackend.Models
         public int DocumentId { get; set; }
         public string Comments { get; set; } = string.Empty;
     }
+
+    public class DocumentStatusItemDto
+    {
+        public int StatusId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public bool IsRequired { get; set; }
+        public bool IsComplete { get; set; }
+        public string? CompletedBy { get; set; }
+        public DateTime? CompletedAt { get; set; }
+    }
+
+    public class DocumentStepHistoryItemDto
+    {
+        public int StepId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public DateTime TransitionDate { get; set; }
+        public int UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Comments { get; set; } = string.Empty;
+    }
+
+    // public class CircuitValidationDto
+    // {
+    //     public int CircuitId { get; set; }
+    //     public bool IsValid { get; set; }
+    //     public List<string> Errors { get; set; } = new List<string>();
+    //     public List<string> Warnings { get; set; } = new List<string>();
+    // }
 }
