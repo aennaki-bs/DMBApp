@@ -15,32 +15,32 @@ namespace DocManagementBackend.Controllers
     {
         private readonly CircuitManagementService _circuitService;
         private readonly ApplicationDbContext _context;
+        private readonly UserAuthorizationService _authService;
 
-        public CircuitController(CircuitManagementService circuitService, ApplicationDbContext context)
+        public CircuitController(
+            CircuitManagementService circuitService, 
+            ApplicationDbContext context,
+            UserAuthorizationService authService)
         {
             _circuitService = circuitService;
             _context = context;
+            _authService = authService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CircuitDto>>> GetCircuits()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var circuits = await _context.Circuits
                 .Include(c => c.Statuses)
                 .Include(c => c.Steps)
+                .ThenInclude(s => s.Approvator)
+                .ThenInclude(a => a != null ? a.User : null)
+                .Include(c => c.Steps)
+                .ThenInclude(s => s.ApprovatorsGroup)
                 .ToListAsync();
 
             var circuitDtos = circuits.Select(c => new CircuitDto
@@ -72,7 +72,12 @@ namespace DocManagementBackend.Controllers
                     CurrentStatusId = s.CurrentStatusId,
                     CurrentStatusTitle = c.Statuses.FirstOrDefault(st => st.Id == s.CurrentStatusId)?.Title ?? "",
                     NextStatusId = s.NextStatusId,
-                    NextStatusTitle = c.Statuses.FirstOrDefault(st => st.Id == s.NextStatusId)?.Title ?? ""
+                    NextStatusTitle = c.Statuses.FirstOrDefault(st => st.Id == s.NextStatusId)?.Title ?? "",
+                    RequiresApproval = s.RequiresApproval,
+                    ApprovatorId = s.ApprovatorId,
+                    ApprovatorUsername = s.Approvator?.User?.Username,
+                    ApprovatorsGroupId = s.ApprovatorsGroupId,
+                    ApprovatorsGroupName = s.ApprovatorsGroup?.Name
                 }).ToList()
             }).ToList();
 
@@ -82,22 +87,17 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CircuitDto>> GetCircuit(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var circuit = await _context.Circuits
                 .Include(c => c.Statuses)
                 .Include(c => c.Steps)
+                .ThenInclude(s => s.Approvator)
+                .ThenInclude(a => a != null ? a.User : null)
+                .Include(c => c.Steps)
+                .ThenInclude(s => s.ApprovatorsGroup)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (circuit == null)
@@ -132,7 +132,12 @@ namespace DocManagementBackend.Controllers
                     CurrentStatusId = s.CurrentStatusId,
                     CurrentStatusTitle = circuit.Statuses.FirstOrDefault(st => st.Id == s.CurrentStatusId)?.Title ?? "",
                     NextStatusId = s.NextStatusId,
-                    NextStatusTitle = circuit.Statuses.FirstOrDefault(st => st.Id == s.NextStatusId)?.Title ?? ""
+                    NextStatusTitle = circuit.Statuses.FirstOrDefault(st => st.Id == s.NextStatusId)?.Title ?? "",
+                    RequiresApproval = s.RequiresApproval,
+                    ApprovatorId = s.ApprovatorId,
+                    ApprovatorUsername = s.Approvator?.User?.Username,
+                    ApprovatorsGroupId = s.ApprovatorsGroupId,
+                    ApprovatorsGroupName = s.ApprovatorsGroup?.Name
                 }).ToList()
             };
 
@@ -142,18 +147,9 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{circuitId}/validate")]
         public async Task<ActionResult<CircuitValidationDto>> ValidateCircuit(int circuitId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             try
             {
@@ -173,21 +169,11 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<CircuitDto>> CreateCircuit([FromBody] CreateCircuitDto createCircuitDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
-
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to create circuits.");
+            var userId = authResult.UserId;
 
             var circuit = new Circuit
             {
@@ -199,7 +185,7 @@ namespace DocManagementBackend.Controllers
             try
             {
                 var createdCircuit = await _circuitService.CreateCircuitAsync(circuit);
-
+                
                 return CreatedAtAction(nameof(GetCircuit), new { id = createdCircuit.Id }, new CircuitDto
                 {
                     Id = createdCircuit.Id,
@@ -213,36 +199,29 @@ namespace DocManagementBackend.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error creating circuit: {ex.Message}");
+                return StatusCode(500, $"Error creating circuit: {ex.Message}");
             }
         }
 
         [HttpPost("{circuitId}/steps")]
         public async Task<ActionResult<StepDto>> AddStep(int circuitId, [FromBody] CreateStepDto createStepDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
-
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to modify circuits.");
-
+            var userId = authResult.UserId;
+            
             var step = new Step
             {
                 CircuitId = circuitId,
                 Title = createStepDto.Title,
                 Descriptif = createStepDto.Descriptif,
                 CurrentStatusId = createStepDto.CurrentStatusId,
-                NextStatusId = createStepDto.NextStatusId
+                NextStatusId = createStepDto.NextStatusId,
+                RequiresApproval = createStepDto.RequiresApproval,
+                ApprovatorId = createStepDto.RequiresApproval ? createStepDto.ApprovatorId : null,
+                ApprovatorsGroupId = createStepDto.RequiresApproval ? createStepDto.ApprovatorsGroupId : null
             };
 
             try
@@ -252,6 +231,27 @@ namespace DocManagementBackend.Controllers
                 // Get status titles for response
                 var currentStatus = await _context.Status.FindAsync(step.CurrentStatusId);
                 var nextStatus = await _context.Status.FindAsync(step.NextStatusId);
+
+                // Get approver information if applicable
+                string? approvatorUsername = null;
+                string? approversGroupName = null;
+
+                if (step.RequiresApproval)
+                {
+                    if (step.ApprovatorId.HasValue)
+                    {
+                        var approvator = await _context.Approvators
+                            .Include(a => a.User)
+                            .FirstOrDefaultAsync(a => a.Id == step.ApprovatorId.Value);
+                        approvatorUsername = approvator?.User?.Username;
+                    }
+                    else if (step.ApprovatorsGroupId.HasValue)
+                    {
+                        var approversGroup = await _context.ApprovatorsGroups
+                            .FirstOrDefaultAsync(g => g.Id == step.ApprovatorsGroupId.Value);
+                        approversGroupName = approversGroup?.Name;
+                    }
+                }
 
                 return CreatedAtAction(nameof(GetCircuit), new { id = circuitId }, new StepDto
                 {
@@ -263,7 +263,12 @@ namespace DocManagementBackend.Controllers
                     CurrentStatusId = createdStep.CurrentStatusId,
                     CurrentStatusTitle = currentStatus?.Title ?? "",
                     NextStatusId = createdStep.NextStatusId,
-                    NextStatusTitle = nextStatus?.Title ?? ""
+                    NextStatusTitle = nextStatus?.Title ?? "",
+                    RequiresApproval = createdStep.RequiresApproval,
+                    ApprovatorId = createdStep.ApprovatorId,
+                    ApprovatorUsername = approvatorUsername,
+                    ApprovatorsGroupId = createdStep.ApprovatorsGroupId,
+                    ApprovatorsGroupName = approversGroupName
                 });
             }
             catch (KeyNotFoundException ex)

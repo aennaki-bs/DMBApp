@@ -84,11 +84,12 @@ namespace DocManagementBackend.Services
 
         public async Task<Step> AddStepToCircuitAsync(Step step)
         {
+            // Check if circuit exists
             var circuit = await _context.Circuits.FindAsync(step.CircuitId);
             if (circuit == null)
                 throw new KeyNotFoundException("Circuit not found");
 
-            // Validate statuses exist and belong to the same circuit
+            // Check if both current and next status exist
             var currentStatus = await _context.Status.FindAsync(step.CurrentStatusId);
             if (currentStatus == null || currentStatus.CircuitId != step.CircuitId)
                 throw new InvalidOperationException("Current status not found or doesn't belong to this circuit");
@@ -105,6 +106,40 @@ namespace DocManagementBackend.Services
 
             if (existingStep)
                 throw new InvalidOperationException("A step with this current and next status combination already exists");
+
+            // If approval is required, validate approver assignments
+            if (step.RequiresApproval)
+            {
+                if (step.ApprovatorId.HasValue && step.ApprovatorsGroupId.HasValue)
+                {
+                    throw new InvalidOperationException("A step can have either an individual approver or a group, but not both");
+                }
+                
+                if (step.ApprovatorId.HasValue)
+                {
+                    // Verify the approver exists
+                    var approver = await _context.Approvators.FindAsync(step.ApprovatorId.Value);
+                    if (approver == null)
+                        throw new InvalidOperationException("Specified approver not found");
+                }
+                else if (step.ApprovatorsGroupId.HasValue)
+                {
+                    // Verify the group exists
+                    var group = await _context.ApprovatorsGroups.FindAsync(step.ApprovatorsGroupId.Value);
+                    if (group == null)
+                        throw new InvalidOperationException("Specified approvers group not found");
+                }
+                else
+                {
+                    throw new InvalidOperationException("When RequiresApproval is true, either an approver or an approvers group must be specified");
+                }
+            }
+            else
+            {
+                // If approval is not required, clear any approver assignments
+                step.ApprovatorId = null;
+                step.ApprovatorsGroupId = null;
+            }
 
             // Generate a unique key for the step
             step.StepKey = $"STP-{circuit.CircuitKey}-{Guid.NewGuid().ToString().Substring(0, 8)}";
@@ -240,6 +275,48 @@ namespace DocManagementBackend.Services
                         s.NextStatusId == (updateDto.NextStatusId ?? step.NextStatusId)))
                 {
                     throw new InvalidOperationException("A step with this current and next status combination already exists");
+                }
+
+                // Update RequiresApproval flag
+                if (updateDto.RequiresApproval.HasValue)
+                {
+                    step.RequiresApproval = updateDto.RequiresApproval.Value;
+                    
+                    // If setting RequiresApproval to false, clear approver assignments
+                    if (!updateDto.RequiresApproval.Value)
+                    {
+                        step.ApprovatorId = null;
+                        step.ApprovatorsGroupId = null;
+                    }
+                }
+
+                // Handle approver relationship - only one of ApprovatorId or ApprovatorsGroupId should be set
+                if (updateDto.ApprovatorId.HasValue || updateDto.ApprovatorsGroupId.HasValue)
+                {
+                    // Ensure we have approval required
+                    step.RequiresApproval = true;
+                    
+                    // Set the appropriate approver
+                    if (updateDto.ApprovatorId.HasValue)
+                    {
+                        // Verify the approvator exists
+                        var approvator = await _context.Approvators.FindAsync(updateDto.ApprovatorId.Value);
+                        if (approvator == null)
+                            throw new InvalidOperationException("Specified approvator not found");
+                        
+                        step.ApprovatorId = updateDto.ApprovatorId.Value;
+                        step.ApprovatorsGroupId = null; // Clear group if setting individual approver
+                    }
+                    else if (updateDto.ApprovatorsGroupId.HasValue)
+                    {
+                        // Verify the group exists
+                        var group = await _context.ApprovatorsGroups.FindAsync(updateDto.ApprovatorsGroupId.Value);
+                        if (group == null)
+                            throw new InvalidOperationException("Specified approvers group not found");
+                        
+                        step.ApprovatorsGroupId = updateDto.ApprovatorsGroupId.Value;
+                        step.ApprovatorId = null; // Clear individual approver if setting group
+                    }
                 }
 
                 await _context.SaveChangesAsync();

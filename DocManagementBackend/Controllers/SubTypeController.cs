@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
+using DocManagementBackend.Services;
 using System.Security.Claims;
 
 namespace DocManagementBackend.Controllers
@@ -13,25 +14,22 @@ namespace DocManagementBackend.Controllers
     public class SubTypeController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserAuthorizationService _authService;
 
-        public SubTypeController(ApplicationDbContext context)
+        public SubTypeController(
+            ApplicationDbContext context,
+            UserAuthorizationService authService)
         {
             _context = context;
+            _authService = authService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SubTypeDto>>> GetSubTypes()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (thisUser == null)
-                return BadRequest("User not found.");
-            if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -60,16 +58,9 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<SubTypeDto>> GetSubType(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (thisUser == null)
-                return BadRequest("User not found.");
-            if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var subType = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -102,16 +93,9 @@ namespace DocManagementBackend.Controllers
         [HttpGet("by-document-type/{docTypeId}")]
         public async Task<ActionResult<IEnumerable<SubTypeDto>>> GetSubTypesByDocType(int docTypeId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (thisUser == null)
-                return BadRequest("User not found.");
-            if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -141,16 +125,9 @@ namespace DocManagementBackend.Controllers
         [HttpGet("for-date/{docTypeId}/{date}")]
         public async Task<ActionResult<IEnumerable<SubTypeDto>>> GetSubTypesForDate(int docTypeId, DateTime date)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (thisUser == null)
-                return BadRequest("User not found.");
-            if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var subTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
@@ -183,23 +160,16 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<SubTypeDto>> CreateSubType([FromBody] CreateSubTypeDto createSubTypeDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (thisUser == null)
-                return BadRequest("User not found.");
-            if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to create subtypes.");
+            var userId = authResult.UserId;
 
             // Check if DocumentType exists
             var documentType = await _context.DocumentTypes.FindAsync(createSubTypeDto.DocumentTypeId);
             if (documentType == null)
-                return BadRequest("Invalid Document Type ID.");
+                return BadRequest("Invalid DocumentType.");
 
             // Validate date range
             if (createSubTypeDto.StartDate >= createSubTypeDto.EndDate)
@@ -295,18 +265,11 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSubType(int id, [FromBody] UpdateSubTypeDto updateSubTypeDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (thisUser == null)
-                return BadRequest("User not found.");
-            if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to update subtypes.");
+            var userId = authResult.UserId;
 
             var subType = await _context.SubTypes.FindAsync(id);
             if (subType == null)
@@ -418,18 +381,11 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSubType(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (thisUser == null)
-                return BadRequest("User not found.");
-            if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (thisUser.Role!.RoleName != "Admin" && thisUser.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to delete subtypes.");
+            var userId = authResult.UserId;
 
             var subType = await _context.SubTypes.FindAsync(id);
             if (subType == null)

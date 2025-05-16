@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using DocManagementBackend.Mappings;
 using DocManagementBackend.Services;
+// using DocManagementBackend.ModelsDtos;
+using DocManagementBackend.Utils;
 
 namespace DocManagementBackend.Controllers
 {
@@ -16,25 +18,24 @@ namespace DocManagementBackend.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly DocumentWorkflowService _workflowService;
+        private readonly UserAuthorizationService _authService;
         
-        public DocumentsController(ApplicationDbContext context, DocumentWorkflowService workflowService) 
+        public DocumentsController(ApplicationDbContext context, DocumentWorkflowService workflowService, UserAuthorizationService authService) 
         { 
             _context = context;
             _workflowService = workflowService;
+            _authService = authService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDocuments()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-            int userId = int.Parse(userIdClaim);
-            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (ThisUser == null)
-                return BadRequest("User not found.");
-            if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
             var documents = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
@@ -50,15 +51,12 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<DocumentDto>> GetDocument(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-            int userId = int.Parse(userIdClaim);
-            var ThisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (ThisUser == null)
-                return BadRequest("User not found.");
-            if (!ThisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
             var documentDto = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
@@ -76,17 +74,12 @@ namespace DocManagementBackend.Controllers
         [HttpGet("recent")]
         public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecentDocuments([FromQuery] int limit = 5)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var thisUser = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (thisUser == null)
-                return BadRequest("User not found.");
-            if (!thisUser.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
+            var userId = authResult.UserId;
+            var thisUser = authResult.User!;
 
             // Ensure the limit is reasonable
             if (limit <= 0)
@@ -111,17 +104,12 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null)
-                return BadRequest("User not found.");
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To do this action...!");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
 
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
@@ -262,17 +250,12 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateDocument(int id, [FromBody] UpdateDocumentRequest request)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null)
-                return BadRequest("User not found.");
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To do this action...!");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
                 return NotFound("Document not found.");
@@ -445,17 +428,12 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDocument(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null)
-                return BadRequest("User not found.");
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To do this action...!");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
 
             try
             {
@@ -498,17 +476,12 @@ namespace DocManagementBackend.Controllers
         [HttpGet("Types")]
         public async Task<ActionResult> GetTypes()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID or Role claim is missing.");
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null)
-                return BadRequest("User not found.");
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To do this action...!");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
             var types = await _context.DocumentTypes.ToListAsync();
             return Ok(types);
         }
@@ -516,18 +489,12 @@ namespace DocManagementBackend.Controllers
         [HttpGet("Types/{id}")]
         public async Task<ActionResult<DocumentType>> GetDocumentType(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
+            var userId = authResult.UserId;
+            var user = authResult.User!;
 
             var documentType = await _context.DocumentTypes.FindAsync(id);
 
@@ -548,17 +515,12 @@ namespace DocManagementBackend.Controllers
         [HttpPost("Types")]
         public async Task<ActionResult> CreateTypes([FromBody] DocumentTypeDto request)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null)
-                return BadRequest("User not found.");
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to do this action.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
             if (string.IsNullOrEmpty(request.TypeName))
                 return BadRequest("Type Name is required!");
             var typeNameExists = await _context.DocumentTypes.AnyAsync(t => t.TypeName == request.TypeName);
@@ -601,6 +563,12 @@ namespace DocManagementBackend.Controllers
         [HttpPut("Types/{id}")]
         public async Task<IActionResult> UpdateType([FromBody] DocumentTypeDto request, int id)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
             var ThisType = await _context.DocumentTypes.FindAsync(id);
             if (ThisType == null)
                 return NotFound("No type with this id!");
@@ -623,17 +591,12 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("Types/{id}")]
         public async Task<IActionResult> DeleteType(int id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null)
-                return BadRequest("User not found.");
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User Not Allowed To do this action...!");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
             var type = await _context.DocumentTypes.FindAsync(id);
             if (type == null)
                 return NotFound("No type with this id!");

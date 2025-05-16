@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using Microsoft.AspNetCore.Authorization;
+using DocManagementBackend.Services;
 using System.Linq;
 
 namespace DocManagementBackend.Controllers
@@ -13,15 +14,23 @@ namespace DocManagementBackend.Controllers
     public class DashboardController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserAuthorizationService _authService;
 
-        public DashboardController(ApplicationDbContext context)
+        public DashboardController(
+            ApplicationDbContext context,
+            UserAuthorizationService authService)
         {
             _context = context;
+            _authService = authService;
         }
 
         [HttpGet("stats")]
         public async Task<IActionResult> GetDashboardStats()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             try
             {
                 // Get total documents count

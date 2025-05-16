@@ -397,25 +397,28 @@ namespace DocManagementBackend.Services
                         // Get ordered users in the group
                         var orderedUsers = group.ApprovatorsGroupUsers
                             .Where(gu => gu.OrderIndex.HasValue)
-                            .OrderBy(gu => gu.OrderIndex.Value)
+                            .OrderBy(gu => gu.OrderIndex!.Value)
                             .ToList();
                             
-                        // If no responses yet, the first user is authorized
-                        if (!responses.Any())
+                        if (orderedUsers.Any())
                         {
-                            isAuthorized = orderedUsers.First().UserId == userId;
-                        }
-                        else
-                        {
-                            // Find the next user in sequence
-                            var highestRespondedIndex = orderedUsers
-                                .Where(gu => respondedUserIds.Contains(gu.UserId))
-                                .Max(gu => gu.OrderIndex.Value);
-                                
-                            var nextUser = orderedUsers
-                                .FirstOrDefault(gu => gu.OrderIndex.Value > highestRespondedIndex);
-                                
-                            isAuthorized = nextUser?.UserId == userId;
+                            // If no responses yet, the first user is authorized
+                            if (!responses.Any())
+                            {
+                                isAuthorized = orderedUsers.First().UserId == userId;
+                            }
+                            else
+                            {
+                                // Find the next user in sequence
+                                var highestRespondedIndex = orderedUsers
+                                    .Where(gu => respondedUserIds.Contains(gu.UserId))
+                                    .Max(gu => gu.OrderIndex!.Value);
+                                    
+                                var nextUser = orderedUsers
+                                    .FirstOrDefault(gu => gu.OrderIndex!.Value > highestRespondedIndex);
+                                    
+                                isAuthorized = nextUser?.UserId == userId;
+                            }
                         }
                     }
                     else
@@ -504,7 +507,7 @@ namespace DocManagementBackend.Services
                             // Need all users to approve in order
                             var orderedUsers = group.ApprovatorsGroupUsers
                                 .Where(gu => gu.OrderIndex.HasValue)
-                                .OrderBy(gu => gu.OrderIndex.Value)
+                                .OrderBy(gu => gu.OrderIndex!.Value)
                                 .ToList();
                                 
                             var approvedUserIds = responses

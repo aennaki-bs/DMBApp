@@ -94,4 +94,71 @@ namespace DocManagementBackend.Models
         public string? Role { get; set; }
         public int? OrderIndex { get; set; }
     }
+
+    public class CreateApprovatorsGroupDto
+    {
+        public int? StepId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Comment { get; set; }
+        public List<int> UserIds { get; set; } = new List<int>();
+        public string RuleType { get; set; } = "All"; // "Any", "All", "Sequential"
+    }
+
+    public class ApprovatorsGroupDetailDto
+    {
+        public int Id { get; set; }
+        public int? StepId { get; set; }
+        public string StepTitle { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Comment { get; set; } = string.Empty;
+        public string RuleType { get; set; } = "All";
+        public List<ApproverInfoDto> Approvers { get; set; } = new List<ApproverInfoDto>();
+    }
+
+    public class CreateApprovatorDto
+    {
+        public int? StepId { get; set; }
+        public int UserId { get; set; }
+        public string Comment { get; set; } = string.Empty;
+    }
+
+    public class ApprovatorDetailDto
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Comment { get; set; } = string.Empty;
+    }
+
+    public class StepApprovalAssignmentDto
+    {
+        public int Id { get; set; }
+        public int StepId { get; set; }
+        public string StepTitle { get; set; } = string.Empty;
+        public ApprovalAssignmentType AssignmentType { get; set; }
+        public int? ApprovatorId { get; set; }
+        public string? ApprovatorUsername { get; set; }
+        public int? ApprovatorsGroupId { get; set; }
+        public string? ApprovatorsGroupName { get; set; }
+    }
+
+    public enum ApprovalAssignmentType
+    {
+        None = 0,
+        SingleApprovator = 1,
+        ApprovatorsGroup = 2
+    }
+
+    public class AssignApprovalToStepDto
+    {
+        public int StepId { get; set; }
+        public ApprovalAssignmentType AssignmentType { get; set; }
+        public int? ApprovatorId { get; set; }
+        public int? ApprovatorsGroupId { get; set; }
+    }
+
+    public class AddUserToGroupDto
+    {
+        public int UserId { get; set; }
+        public int? OrderIndex { get; set; }
+    }
 }

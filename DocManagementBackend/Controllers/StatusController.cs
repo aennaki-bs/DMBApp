@@ -15,28 +15,24 @@ namespace DocManagementBackend.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly CircuitManagementService _circuitService;
+        private readonly UserAuthorizationService _authService;
 
-        public StatusController(ApplicationDbContext context, CircuitManagementService circuitService)
+        public StatusController(
+            ApplicationDbContext context, 
+            CircuitManagementService circuitService,
+            UserAuthorizationService authService)
         {
             _context = context;
             _circuitService = circuitService;
+            _authService = authService;
         }
 
         [HttpGet("circuit/{circuitId}")]
         public async Task<ActionResult<IEnumerable<StatusDto>>> GetStatusesForCircuit(int circuitId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var statuses = await _context.Status
                 .Where(s => s.CircuitId == circuitId)
@@ -61,18 +57,9 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{statusId}")]
         public async Task<ActionResult<StatusDto>> GetStatus(int statusId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var status = await _context.Status.FindAsync(statusId);
             if (status == null)
@@ -97,21 +84,9 @@ namespace DocManagementBackend.Controllers
         [HttpPost("circuit/{circuitId}")]
         public async Task<ActionResult<StatusDto>> AddStatusToCircuit(int circuitId, [FromBody] CreateStatusDto createStatusDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
-
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to add statuses.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             var status = new Status
             {
@@ -158,21 +133,9 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{statusId}")]
         public async Task<IActionResult> UpdateStatus(int statusId, [FromBody] UpdateStatusDto updateStatusDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
-
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to update statuses.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             try
             {
@@ -196,21 +159,9 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{statusId}")]
         public async Task<IActionResult> DeleteStatus(int statusId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
-
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to delete statuses.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
             try
             {

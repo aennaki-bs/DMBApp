@@ -15,31 +15,26 @@ namespace DocManagementBackend.Controllers
     {
         private readonly DocumentWorkflowService _workflowService;
         private readonly ApplicationDbContext _context;
+        private readonly UserAuthorizationService _authService;
 
-        public WorkflowController(DocumentWorkflowService workflowService, ApplicationDbContext context)
+        public WorkflowController(
+            DocumentWorkflowService workflowService, 
+            ApplicationDbContext context,
+            UserAuthorizationService authService)
         {
             _workflowService = workflowService;
             _context = context;
+            _authService = authService;
         }
 
         [HttpPost("assign-circuit")]
         public async Task<IActionResult> AssignDocumentToCircuit([FromBody] AssignCircuitDto assignCircuitDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to assign documents to circuits.");
+            var userId = authResult.UserId;
 
             try
             {
@@ -68,21 +63,11 @@ namespace DocManagementBackend.Controllers
         [HttpPost("perform-action")]
         public async Task<IActionResult> PerformAction([FromBody] PerformActionDto actionDto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user == null)
-                return BadRequest("User not found.");
-
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact un admin!");
-
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to do this action.");
+            var userId = authResult.UserId;
 
             try
             {
@@ -117,22 +102,13 @@ namespace DocManagementBackend.Controllers
         {
             Console.WriteLine($"MoveToStatus called with documentId={moveToStatusDto.DocumentId}, targetStatusId={moveToStatusDto.TargetStatusId}");
             
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                return Unauthorized("User ID claim is missing.");
-        
-            int userId = int.Parse(userIdClaim);
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
-        
-            if (user == null)
-                return BadRequest("User not found.");
-        
-            if (!user.IsActive)
-                return Unauthorized("User account is deactivated. Please contact an admin!");
-        
-            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
-                return Unauthorized("User not allowed to change document status.");
-        
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
+
             try
             {
                 // Get document and status information for logging

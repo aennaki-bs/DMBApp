@@ -53,6 +53,17 @@ namespace DocManagementBackend.Models
         public Status? NextStatus { get; set; }
         public bool RequiresApproval { get; set; } = false;
 
+        // Direct relationship to approver or group (only one should be set)
+        public int? ApprovatorId { get; set; }
+        [ForeignKey("ApprovatorId")]
+        [JsonIgnore]
+        public Approvator? Approvator { get; set; }
+        
+        public int? ApprovatorsGroupId { get; set; }
+        [ForeignKey("ApprovatorsGroupId")]
+        [JsonIgnore]
+        public ApprovatorsGroup? ApprovatorsGroup { get; set; }
+
         [JsonIgnore]
         public ICollection<StepAction> StepActions { get; set; } = new List<StepAction>();
     }

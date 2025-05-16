@@ -25,6 +25,8 @@ namespace DocManagementBackend.Models
         public int CurrentStatusId { get; set; }
         public int NextStatusId { get; set; }
         public bool RequiresApproval { get; set; } = false;
+        public int? ApprovatorId { get; set; }
+        public int? ApprovatorsGroupId { get; set; }
     }
 
     public class UpdateStepDto
@@ -34,6 +36,8 @@ namespace DocManagementBackend.Models
         public int? CurrentStatusId { get; set; }
         public int? NextStatusId { get; set; }
         public bool? RequiresApproval { get; set; }
+        public int? ApprovatorId { get; set; }
+        public int? ApprovatorsGroupId { get; set; }
     }
 
     public class StepDto
@@ -48,6 +52,10 @@ namespace DocManagementBackend.Models
         public int NextStatusId { get; set; }
         public string NextStatusTitle { get; set; } = string.Empty;
         public bool RequiresApproval { get; set; } = false;
+        public int? ApprovatorId { get; set; }
+        public string? ApprovatorUsername { get; set; }
+        public int? ApprovatorsGroupId { get; set; }
+        public string? ApprovatorsGroupName { get; set; }
     }
 
     public class CircuitValidationDto

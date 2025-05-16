@@ -10,21 +10,40 @@ namespace DocManagementBackend.Models
         public int Id { get; set; }
         
         [Required]
-        public int StepId { get; set; }
-        [ForeignKey("StepId")]
-        [JsonIgnore]
-        public Step? Step { get; set; }
-        
-        [Required]
         public int UserId { get; set; }
         [ForeignKey("UserId")]
         [JsonIgnore]
         public User? User { get; set; }
         
         public string Comment { get; set; } = string.Empty;
+
+        // Restore Step relationship
+        public int? StepId { get; set; }
+        [ForeignKey("StepId")]
+        [JsonIgnore]
+        public Step? Step { get; set; }
     }
 
     public class ApprovatorsGroup
+    {
+        [Key]
+        public int Id { get; set; }
+        
+        public string Name { get; set; } = string.Empty;
+        public string Comment { get; set; } = string.Empty;
+        
+        [JsonIgnore]
+        public ICollection<ApprovatorsGroupUser> ApprovatorsGroupUsers { get; set; } = new List<ApprovatorsGroupUser>();
+
+        // Restore Step relationship
+        public int? StepId { get; set; }
+        [ForeignKey("StepId")]
+        [JsonIgnore]
+        public Step? Step { get; set; }
+    }
+
+    // New entity to manage the assignment of approvers to steps
+    public class StepApprovalAssignment
     {
         [Key]
         public int Id { get; set; }
@@ -35,11 +54,16 @@ namespace DocManagementBackend.Models
         [JsonIgnore]
         public Step? Step { get; set; }
         
-        public string Name { get; set; } = string.Empty;
-        public string Comment { get; set; } = string.Empty;
-        
+        // Only one of these should be set (enforced by application logic)
+        public int? ApprovatorId { get; set; }
+        [ForeignKey("ApprovatorId")]
         [JsonIgnore]
-        public ICollection<ApprovatorsGroupUser> ApprovatorsGroupUsers { get; set; } = new List<ApprovatorsGroupUser>();
+        public Approvator? Approvator { get; set; }
+        
+        public int? ApprovatorsGroupId { get; set; }
+        [ForeignKey("ApprovatorsGroupId")]
+        [JsonIgnore]
+        public ApprovatorsGroup? ApprovatorsGroup { get; set; }
     }
 
     public class ApprovatorsGroupUser
@@ -110,7 +134,14 @@ namespace DocManagementBackend.Models
         
         // Can be either an individual or a group
         public int? ApprovatorId { get; set; }
+        [ForeignKey("ApprovatorId")]
+        [JsonIgnore]
+        public Approvator? Approvator { get; set; }
+        
         public int? ApprovatorsGroupId { get; set; }
+        [ForeignKey("ApprovatorsGroupId")]
+        [JsonIgnore]
+        public ApprovatorsGroup? ApprovatorsGroup { get; set; }
         
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

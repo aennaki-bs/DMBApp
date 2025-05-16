@@ -37,6 +37,7 @@ namespace DocManagementBackend.Data
         public DbSet<ApprovatorsGroupRule> ApprovatorsGroupRules { get; set; }
         public DbSet<ApprovalWriting> ApprovalWritings { get; set; }
         public DbSet<ApprovalResponse> ApprovalResponses { get; set; }
+        public DbSet<StepApprovalAssignment> StepApprovalAssignments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -80,6 +81,21 @@ namespace DocManagementBackend.Data
                 .WithMany()
                 .HasForeignKey(s => s.NextStatusId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // Configure the Step -> Approvator and Step -> ApprovatorsGroup relationships
+            modelBuilder.Entity<Step>()
+                .HasOne(s => s.Approvator)
+                .WithMany()
+                .HasForeignKey(s => s.ApprovatorId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+                
+            modelBuilder.Entity<Step>()
+                .HasOne(s => s.ApprovatorsGroup)
+                .WithMany()
+                .HasForeignKey(s => s.ApprovatorsGroupId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             // Document CurrentStatus relationship
             modelBuilder.Entity<Document>()
@@ -169,10 +185,11 @@ namespace DocManagementBackend.Data
 
             // Approval relationships
             modelBuilder.Entity<Approvator>()
-            .HasOne(a => a.Step)
-            .WithMany()
-            .HasForeignKey(a => a.StepId)
-            .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(a => a.Step)
+                .WithMany()
+                .HasForeignKey(a => a.StepId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             modelBuilder.Entity<Approvator>()
                 .HasOne(a => a.User)
@@ -184,7 +201,8 @@ namespace DocManagementBackend.Data
                 .HasOne(g => g.Step)
                 .WithMany()
                 .HasForeignKey(g => g.StepId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
     
             modelBuilder.Entity<ApprovatorsGroupUser>()
                 .HasOne(gu => gu.Group)
@@ -203,6 +221,26 @@ namespace DocManagementBackend.Data
                 .WithMany()
                 .HasForeignKey(r => r.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
+    
+            modelBuilder.Entity<StepApprovalAssignment>()
+                .HasOne(sa => sa.Step)
+                .WithMany()
+                .HasForeignKey(sa => sa.StepId)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            modelBuilder.Entity<StepApprovalAssignment>()
+                .HasOne(sa => sa.Approvator)
+                .WithMany()
+                .HasForeignKey(sa => sa.ApprovatorId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+    
+            modelBuilder.Entity<StepApprovalAssignment>()
+                .HasOne(sa => sa.ApprovatorsGroup)
+                .WithMany()
+                .HasForeignKey(sa => sa.ApprovatorsGroupId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
     
             modelBuilder.Entity<ApprovalWriting>()
                 .HasOne(aw => aw.Document)
