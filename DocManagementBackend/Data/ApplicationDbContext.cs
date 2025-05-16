@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Models;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace DocManagementBackend.Data
 {
@@ -38,6 +40,20 @@ namespace DocManagementBackend.Data
         public DbSet<ApprovalWriting> ApprovalWritings { get; set; }
         public DbSet<ApprovalResponse> ApprovalResponses { get; set; }
         public DbSet<StepApprovalAssignment> StepApprovalAssignments { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                IConfigurationRoot configuration = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json")
+                    .Build();
+                
+                var connectionString = configuration.GetConnectionString("DefaultConnection");
+                optionsBuilder.UseSqlServer(connectionString);
+            }
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
