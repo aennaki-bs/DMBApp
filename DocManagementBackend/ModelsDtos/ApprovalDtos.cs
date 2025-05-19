@@ -125,8 +125,11 @@ namespace DocManagementBackend.Models
     public class ApprovatorDetailDto
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public string Comment { get; set; } = string.Empty;
+        public int? StepId { get; set; }
+        public string StepTitle { get; set; } = string.Empty;
     }
 
     public class StepApprovalAssignmentDto
@@ -160,5 +163,22 @@ namespace DocManagementBackend.Models
     {
         public int UserId { get; set; }
         public int? OrderIndex { get; set; }
+    }
+
+    public class DocumentToApproveDto
+    {
+        public int DocumentId { get; set; }
+        public int ApprovalId { get; set; }
+        public string DocumentKey { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string DocumentType { get; set; } = string.Empty;
+        public string SubType { get; set; } = string.Empty;
+        public string CreatedBy { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public string CurrentStep { get; set; } = string.Empty;
+        public string ApprovalType { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string RequestedBy { get; set; } = string.Empty;
+        public DateTime RequestDate { get; set; }
     }
 }

@@ -226,6 +226,15 @@ namespace DocManagementBackend.Controllers
 
             try
             {
+                // Check if the step already exists (same current & next status combination)
+                var existingStep = await _context.Steps
+                    .AnyAsync(s => s.CircuitId == step.CircuitId &&
+                               s.CurrentStatusId == step.CurrentStatusId &&
+                               s.NextStatusId == step.NextStatusId);
+
+                if (existingStep)
+                    throw new InvalidOperationException("A step with this current and next status combination already exists");
+
                 var createdStep = await _circuitService.AddStepToCircuitAsync(step);
 
                 // Get status titles for response
@@ -439,6 +448,56 @@ namespace DocManagementBackend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("Circuit deleted successfully.");
+        }
+
+        [HttpGet("check-step-exists")]
+        public async Task<ActionResult<object>> CheckStepExists([FromQuery] StepExistenceDto stepExistenceDto)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Check if the step already exists
+            var stepExists = await _context.Steps
+                .AnyAsync(s => s.CircuitId == stepExistenceDto.CircuitId && 
+                           s.CurrentStatusId == stepExistenceDto.CurrentStatusId && 
+                           s.NextStatusId == stepExistenceDto.NextStatusId);
+            
+            // Return true if it DOESN'T exist (it's available to create)
+            return Ok(new { available = stepExists });
+        }
+
+        [HttpGet("{circuitId}/statuses")]
+        public async Task<ActionResult<IEnumerable<StatusDto>>> GetCircuitStatuses(int circuitId)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Check if the circuit exists
+            var circuitExists = await _context.Circuits.AnyAsync(c => c.Id == circuitId);
+            if (!circuitExists)
+                return NotFound($"Circuit with ID {circuitId} not found.");
+
+            // Get all statuses for the specified circuit
+            var statuses = await _context.Status
+                .Where(s => s.CircuitId == circuitId)
+                .OrderBy(s => s.Title)
+                .Select(s => new StatusDto
+                {
+                    StatusId = s.Id,
+                    StatusKey = s.StatusKey,
+                    Title = s.Title,
+                    Description = s.Description,
+                    IsRequired = s.IsRequired,
+                    IsInitial = s.IsInitial,
+                    IsFinal = s.IsFinal,
+                    IsFlexible = s.IsFlexible,
+                    CircuitId = s.CircuitId
+                })
+                .ToListAsync();
+
+            return Ok(statuses);
         }
     }
 }

@@ -90,4 +90,11 @@ namespace DocManagementBackend.Models
         public string? CompletedBy { get; set; }
         public bool RequiresApproval { get; set; } = false;
     }
+
+    public class StepExistenceDto
+    {
+        public int CircuitId { get; set; }
+        public int CurrentStatusId { get; set; }
+        public int NextStatusId { get; set; }
+    }
 }

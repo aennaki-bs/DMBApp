@@ -154,6 +154,133 @@ namespace DocManagementBackend.Controllers
             return Ok(pendingApprovals);
         }
 
+        [HttpGet("pending/user/{userId}")]
+        public async Task<ActionResult<IEnumerable<PendingApprovalDto>>> GetPendingApprovalsByUser(int userId)
+        {
+            // Admin users can view pending approvals for any user
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Verify the specified user exists
+            var targetUser = await _context.Users.FindAsync(userId);
+            if (targetUser == null)
+                return NotFound($"User with ID {userId} not found.");
+
+            // Get all pending approvals for the specified user
+            var pendingApprovals = new List<PendingApprovalDto>();
+
+            // 1. Get single-user approvals
+            var singleApprovals = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Where(aw => 
+                    aw.ApprovatorId.HasValue && 
+                    aw.Status == ApprovalStatus.Open &&
+                    _context.Approvators
+                        .Any(a => a.Id == aw.ApprovatorId && a.UserId == userId))
+                .ToListAsync();
+
+            foreach (var approval in singleApprovals)
+            {
+                pendingApprovals.Add(new PendingApprovalDto
+                {
+                    ApprovalId = approval.Id,
+                    DocumentId = approval.DocumentId,
+                    DocumentKey = approval.Document?.DocumentKey ?? string.Empty,
+                    DocumentTitle = approval.Document?.Title ?? string.Empty,
+                    StepTitle = approval.Step?.Title ?? string.Empty,
+                    RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = approval.CreatedAt,
+                    Comments = approval.Comments,
+                    ApprovalType = "Single"
+                });
+            }
+
+            // 2. Get group approvals
+            var groupApprovals = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Where(aw => 
+                    aw.ApprovatorsGroupId.HasValue && 
+                    (aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress) &&
+                    _context.ApprovatorsGroupUsers
+                        .Any(gu => gu.GroupId == aw.ApprovatorsGroupId && gu.UserId == userId))
+                .ToListAsync();
+
+            foreach (var approval in groupApprovals)
+            {
+                // Check if user has already responded
+                bool hasResponded = await _context.ApprovalResponses
+                    .AnyAsync(ar => ar.ApprovalWritingId == approval.Id && ar.UserId == userId);
+
+                if (hasResponded)
+                    continue;
+
+                // For sequential rule, check if it's this user's turn
+                var group = await _context.ApprovatorsGroups
+                    .Include(g => g.ApprovatorsGroupUsers)
+                    .FirstOrDefaultAsync(g => g.Id == approval.ApprovatorsGroupId);
+
+                var rule = await _context.ApprovatorsGroupRules
+                    .FirstOrDefaultAsync(r => r.GroupId == approval.ApprovatorsGroupId);
+
+                if (rule?.RuleType == RuleType.Sequential && group != null)
+                {
+                    // Get existing responses
+                    var responses = await _context.ApprovalResponses
+                        .Where(r => r.ApprovalWritingId == approval.Id)
+                        .ToListAsync();
+
+                    var respondedUserIds = responses.Select(r => r.UserId).ToList();
+
+                    // Get ordered users in the group
+                    var orderedUsers = group.ApprovatorsGroupUsers
+                        .Where(gu => gu.OrderIndex.HasValue)
+                        .OrderBy(gu => gu.OrderIndex!.Value)
+                        .ToList();
+
+                    // If no responses yet, only first user can approve
+                    if (!responses.Any() && orderedUsers.Any())
+                    {
+                        if (orderedUsers.First().UserId != userId)
+                            continue;
+                    }
+                    else if (orderedUsers.Any() && respondedUserIds.Any())
+                    {
+                        // Find the next user in sequence
+                        var highestRespondedIndex = orderedUsers
+                            .Where(gu => respondedUserIds.Contains(gu.UserId))
+                            .Max(gu => gu.OrderIndex!.Value);
+
+                        var nextUser = orderedUsers
+                            .FirstOrDefault(gu => gu.OrderIndex!.Value > highestRespondedIndex);
+
+                        if (nextUser?.UserId != userId)
+                            continue;
+                    }
+                }
+
+                pendingApprovals.Add(new PendingApprovalDto
+                {
+                    ApprovalId = approval.Id,
+                    DocumentId = approval.DocumentId,
+                    DocumentKey = approval.Document?.DocumentKey ?? string.Empty,
+                    DocumentTitle = approval.Document?.Title ?? string.Empty,
+                    StepTitle = approval.Step?.Title ?? string.Empty,
+                    RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = approval.CreatedAt,
+                    Comments = approval.Comments,
+                    ApprovalType = rule?.RuleType == RuleType.Sequential ? "Sequential" :
+                                 rule?.RuleType == RuleType.All ? "All" : "Any"
+                });
+            }
+
+            return Ok(pendingApprovals);
+        }
+
         [HttpPost("{approvalId}/respond")]
         public async Task<IActionResult> RespondToApproval(int approvalId, [FromBody] ApprovalResponseDto response)
         {
@@ -246,6 +373,150 @@ namespace DocManagementBackend.Controllers
             }
 
             return Ok(approvalHistory);
+        }
+
+        [HttpGet("documents-to-approve")]
+        public async Task<ActionResult<IEnumerable<DocumentToApproveDto>>> GetDocumentsToApprove()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+
+            // Get all documents waiting for this user's approval
+            var documentsToApprove = new List<DocumentToApproveDto>();
+
+            // 1. Get documents requiring individual approval
+            var individualApprovals = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                    .ThenInclude(d => d.DocumentType)
+                .Include(aw => aw.Document)
+                    .ThenInclude(d => d.SubType)
+                .Include(aw => aw.Document)
+                    .ThenInclude(d => d.CreatedBy)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Where(aw => 
+                    aw.Status == ApprovalStatus.Open &&
+                    aw.ApprovatorId.HasValue && 
+                    _context.Approvators.Any(a => a.Id == aw.ApprovatorId && a.UserId == userId))
+                .ToListAsync();
+
+            foreach (var approval in individualApprovals)
+            {
+                if (approval.Document != null)
+                {
+                    documentsToApprove.Add(new DocumentToApproveDto
+                    {
+                        DocumentId = approval.DocumentId,
+                        ApprovalId = approval.Id,
+                        DocumentKey = approval.Document.DocumentKey,
+                        Title = approval.Document.Title,
+                        DocumentType = approval.Document.DocumentType?.TypeName ?? "",
+                        SubType = approval.Document.SubType?.Name ?? "",
+                        CreatedBy = approval.Document.CreatedBy?.Username ?? "",
+                        CreatedAt = approval.Document.CreatedAt,
+                        CurrentStep = approval.Step?.Title ?? "",
+                        ApprovalType = "Individual",
+                        Status = "Pending",
+                        RequestedBy = approval.ProcessedBy?.Username ?? "",
+                        RequestDate = approval.CreatedAt
+                    });
+                }
+            }
+
+            // 2. Get documents requiring group approval
+            var groupApprovals = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                    .ThenInclude(d => d.DocumentType)
+                .Include(aw => aw.Document)
+                    .ThenInclude(d => d.SubType)
+                .Include(aw => aw.Document)
+                    .ThenInclude(d => d.CreatedBy)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Where(aw => 
+                    (aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress) &&
+                    aw.ApprovatorsGroupId.HasValue && 
+                    _context.ApprovatorsGroupUsers.Any(gu => gu.GroupId == aw.ApprovatorsGroupId && gu.UserId == userId))
+                .ToListAsync();
+
+            foreach (var approval in groupApprovals)
+            {
+                // Skip if user has already responded
+                bool hasResponded = await _context.ApprovalResponses
+                    .AnyAsync(ar => ar.ApprovalWritingId == approval.Id && ar.UserId == userId);
+
+                if (hasResponded)
+                    continue;
+
+                // For sequential approvals, check if it's this user's turn
+                var group = await _context.ApprovatorsGroups
+                    .Include(g => g.ApprovatorsGroupUsers)
+                    .FirstOrDefaultAsync(g => g.Id == approval.ApprovatorsGroupId);
+
+                var rule = await _context.ApprovatorsGroupRules
+                    .FirstOrDefaultAsync(r => r.GroupId == approval.ApprovatorsGroupId);
+
+                // Skip if it's not this user's turn in a sequential approval
+                if (rule?.RuleType == RuleType.Sequential && group != null)
+                {
+                    var responses = await _context.ApprovalResponses
+                        .Where(r => r.ApprovalWritingId == approval.Id)
+                        .ToListAsync();
+
+                    var respondedUserIds = responses.Select(r => r.UserId).ToList();
+                    
+                    var orderedUsers = group.ApprovatorsGroupUsers
+                        .Where(gu => gu.OrderIndex.HasValue)
+                        .OrderBy(gu => gu.OrderIndex!.Value)
+                        .ToList();
+
+                    // If no responses yet, only first user can approve
+                    if (!responses.Any() && orderedUsers.Any())
+                    {
+                        if (orderedUsers.First().UserId != userId)
+                            continue;
+                    }
+                    else if (orderedUsers.Any() && respondedUserIds.Any())
+                    {
+                        // Find the next user in sequence
+                        var highestRespondedIndex = orderedUsers
+                            .Where(gu => respondedUserIds.Contains(gu.UserId))
+                            .Max(gu => gu.OrderIndex!.Value);
+
+                        var nextUser = orderedUsers
+                            .FirstOrDefault(gu => gu.OrderIndex!.Value > highestRespondedIndex);
+
+                        if (nextUser?.UserId != userId)
+                            continue;
+                    }
+                }
+
+                if (approval.Document != null)
+                {
+                    documentsToApprove.Add(new DocumentToApproveDto
+                    {
+                        DocumentId = approval.DocumentId,
+                        ApprovalId = approval.Id,
+                        DocumentKey = approval.Document.DocumentKey,
+                        Title = approval.Document.Title,
+                        DocumentType = approval.Document.DocumentType?.TypeName ?? "",
+                        SubType = approval.Document.SubType?.Name ?? "",
+                        CreatedBy = approval.Document.CreatedBy?.Username ?? "",
+                        CreatedAt = approval.Document.CreatedAt,
+                        CurrentStep = approval.Step?.Title ?? "",
+                        ApprovalType = rule?.RuleType == RuleType.Sequential ? "Sequential" :
+                                    rule?.RuleType == RuleType.All ? "All" : "Any",
+                        Status = "Pending",
+                        RequestedBy = approval.ProcessedBy?.Username ?? "",
+                        RequestDate = approval.CreatedAt
+                    });
+                }
+            }
+
+            return Ok(documentsToApprove);
         }
 
         // STEP CONFIGURATION APIS
@@ -903,6 +1174,207 @@ namespace DocManagementBackend.Controllers
                 .ToListAsync();
 
             return Ok(groupUsers);
+        }
+
+        // APPROVATOR CRUD OPERATIONS
+
+        [HttpGet("approvators")]
+        public async Task<ActionResult<IEnumerable<ApprovatorDetailDto>>> GetAllApprovators()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var approvators = await _context.Approvators
+                .Include(a => a.User)
+                .Include(a => a.Step)
+                .Select(a => new ApprovatorDetailDto
+                {
+                    Id = a.Id,
+                    UserId = a.UserId,
+                    Username = a.User!.Username,
+                    Comment = a.Comment,
+                    StepId = a.StepId,
+                    StepTitle = a.Step != null ? a.Step.Title : string.Empty
+                })
+                .ToListAsync();
+
+            return Ok(approvators);
+        }
+
+        [HttpGet("approvators/{id}")]
+        public async Task<ActionResult<ApprovatorDetailDto>> GetApprovator(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var approvator = await _context.Approvators
+                .Include(a => a.User)
+                .Include(a => a.Step)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (approvator == null)
+                return NotFound("Approvator not found.");
+
+            var result = new ApprovatorDetailDto
+            {
+                Id = approvator.Id,
+                UserId = approvator.UserId,
+                Username = approvator.User!.Username,
+                Comment = approvator.Comment,
+                StepId = approvator.StepId,
+                StepTitle = approvator.Step != null ? approvator.Step.Title : string.Empty
+            };
+
+            return Ok(result);
+        }
+
+        [HttpPost("approvators")]
+        public async Task<ActionResult<ApprovatorDetailDto>> CreateApprovator([FromBody] CreateApprovatorDto dto)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Verify user exists
+            var user = await _context.Users.FindAsync(dto.UserId);
+            if (user == null)
+                return NotFound($"User with ID {dto.UserId} not found.");
+
+            // Verify step exists if provided
+            if (dto.StepId.HasValue)
+            {
+                var step = await _context.Steps.FindAsync(dto.StepId.Value);
+                if (step == null)
+                    return NotFound($"Step with ID {dto.StepId.Value} not found.");
+            }
+
+            // Check if user already has an approvator record
+            var existingApprovator = await _context.Approvators
+                .FirstOrDefaultAsync(a => a.UserId == dto.UserId && 
+                                      ((!dto.StepId.HasValue && !a.StepId.HasValue) || 
+                                       (dto.StepId.HasValue && a.StepId == dto.StepId)));
+
+            if (existingApprovator != null)
+                return BadRequest("This user is already configured as an approver for this step.");
+
+            var approvator = new Approvator
+            {
+                UserId = dto.UserId,
+                Comment = dto.Comment,
+                StepId = dto.StepId
+            };
+
+            _context.Approvators.Add(approvator);
+            await _context.SaveChangesAsync();
+
+            var result = new ApprovatorDetailDto
+            {
+                Id = approvator.Id,
+                UserId = approvator.UserId,
+                Username = user.Username,
+                Comment = approvator.Comment,
+                StepId = approvator.StepId,
+                StepTitle = dto.StepId.HasValue ? 
+                    (await _context.Steps.FindAsync(dto.StepId.Value))?.Title ?? string.Empty : 
+                    string.Empty
+            };
+
+            return CreatedAtAction(nameof(GetApprovator), new { id = approvator.Id }, result);
+        }
+
+        [HttpPut("approvators/{id}")]
+        public async Task<IActionResult> UpdateApprovator(int id, [FromBody] CreateApprovatorDto dto)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var approvator = await _context.Approvators.FindAsync(id);
+            if (approvator == null)
+                return NotFound("Approvator not found.");
+
+            // Verify user exists
+            var user = await _context.Users.FindAsync(dto.UserId);
+            if (user == null)
+                return NotFound($"User with ID {dto.UserId} not found.");
+
+            // Verify step exists if provided
+            if (dto.StepId.HasValue)
+            {
+                var step = await _context.Steps.FindAsync(dto.StepId.Value);
+                if (step == null)
+                    return NotFound($"Step with ID {dto.StepId.Value} not found.");
+            }
+
+            // Check if update would create a duplicate
+            if (approvator.UserId != dto.UserId || approvator.StepId != dto.StepId)
+            {
+                var existingApprovator = await _context.Approvators
+                    .FirstOrDefaultAsync(a => a.Id != id && 
+                                          a.UserId == dto.UserId && 
+                                          ((!dto.StepId.HasValue && !a.StepId.HasValue) || 
+                                          (dto.StepId.HasValue && a.StepId == dto.StepId)));
+
+                if (existingApprovator != null)
+                    return BadRequest("This user is already configured as an approver for this step.");
+            }
+
+            // Update approvator
+            approvator.UserId = dto.UserId;
+            approvator.Comment = dto.Comment;
+            approvator.StepId = dto.StepId;
+
+            // Check if this approvator is being used by steps
+            if (approvator.StepId.HasValue)
+            {
+                var step = await _context.Steps.FindAsync(approvator.StepId.Value);
+                if (step != null && step.ApprovatorId == id)
+                {
+                    // Update the step to reflect the new user
+                    step.ApprovatorId = approvator.Id;
+                    _context.Steps.Update(step);
+                }
+            }
+
+            _context.Approvators.Update(approvator);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpDelete("approvators/{id}")]
+        public async Task<IActionResult> DeleteApprovator(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var approvator = await _context.Approvators.FindAsync(id);
+            if (approvator == null)
+                return NotFound("Approvator not found.");
+
+            // Check if approvator is being used by steps
+            var stepsUsingApprovator = await _context.Steps
+                .Where(s => s.ApprovatorId == id)
+                .ToListAsync();
+
+            if (stepsUsingApprovator.Any())
+                return BadRequest("Cannot delete approvator that is in use by steps. Remove the approver from these steps first.");
+
+            // Check if approvator is being used in approval writings
+            var approvatorInUse = await _context.ApprovalWritings
+                .AnyAsync(aw => aw.ApprovatorId == id && 
+                            (aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress));
+
+            if (approvatorInUse)
+                return BadRequest("Cannot delete approvator that is being used in active approvals.");
+
+            _context.Approvators.Remove(approvator);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

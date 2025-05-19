@@ -346,6 +346,8 @@ namespace DocManagementBackend.Services
             int approvalWritingId, int userId, bool isApproved, string comments)
         {
             var approvalWriting = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
                 .FirstOrDefaultAsync(aw => aw.Id == approvalWritingId);
                 
             if (approvalWriting == null)
@@ -455,10 +457,12 @@ namespace DocManagementBackend.Services
             _context.ApprovalResponses.Add(approvalResponse);
             
             // Update the approval writing status based on the response
+            bool approvalCompleted = false;
             if (approvalWriting.ApprovatorId.HasValue)
             {
                 // Single approver - the response determines the outcome
                 approvalWriting.Status = isApproved ? ApprovalStatus.Accepted : ApprovalStatus.Rejected;
+                approvalCompleted = true;
             }
             else if (approvalWriting.ApprovatorsGroupId.HasValue)
             {
@@ -491,6 +495,7 @@ namespace DocManagementBackend.Services
                 {
                     // Any rejection means the overall status is rejected
                     approvalWriting.Status = ApprovalStatus.Rejected;
+                    approvalCompleted = true;
                 }
                 else
                 {
@@ -500,6 +505,7 @@ namespace DocManagementBackend.Services
                         case RuleType.Any:
                             // Any approval is enough
                             approvalWriting.Status = ApprovalStatus.Accepted;
+                            approvalCompleted = true;
                             break;
                             
                         case RuleType.All:
@@ -508,7 +514,10 @@ namespace DocManagementBackend.Services
                             var approvedResponses = responses.Count(r => r.IsApproved);
                             
                             if (approvedResponses == totalUsers)
+                            {
                                 approvalWriting.Status = ApprovalStatus.Accepted;
+                                approvalCompleted = true;
+                            }
                             else
                                 approvalWriting.Status = ApprovalStatus.InProgress;
                             break;
@@ -527,7 +536,10 @@ namespace DocManagementBackend.Services
                                 
                             // Check if all users have approved
                             if (approvedUserIds.Count == orderedUsers.Count)
+                            {
                                 approvalWriting.Status = ApprovalStatus.Accepted;
+                                approvalCompleted = true;
+                            }
                             else
                                 approvalWriting.Status = ApprovalStatus.InProgress;
                             break;
@@ -536,6 +548,21 @@ namespace DocManagementBackend.Services
             }
             
             await _context.SaveChangesAsync();
+
+            // If approval is completed and approved, move the document to the next status
+            if (approvalCompleted && approvalWriting.Status == ApprovalStatus.Accepted && 
+                approvalWriting.Document != null && approvalWriting.Step != null)
+            {
+                // Get the target status (next status) from the step
+                int targetStatusId = approvalWriting.Step.NextStatusId;
+                
+                // Move the document to the next status
+                await MoveToNextStatusAsync(
+                    approvalWriting.DocumentId, 
+                    targetStatusId,
+                    userId, 
+                    $"Automatically moved to next status after approval: {comments}");
+            }
             
             return approvalWriting.Status == ApprovalStatus.Accepted;
         }
