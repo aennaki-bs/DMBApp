@@ -697,95 +697,112 @@ namespace DocManagementBackend.Services
             // Check if step requires approval
             if (!isSpecialTransition && step != null && step.RequiresApproval)
             {
-                // Get user information for auto-approval check
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
-                    throw new KeyNotFoundException("User not found");
+                // First check if there's an existing approved approval writing
+                var existingApproval = await _context.ApprovalWritings
+                    .OrderByDescending(aw => aw.CreatedAt)
+                    .FirstOrDefaultAsync(aw => 
+                        aw.DocumentId == documentId && 
+                        aw.StepId == step.Id);
                 
-                bool isAutoApproved = false;
-                
-                // Check if this is a single approver setup
-                if (step.ApprovatorId.HasValue)
+                // If there's an existing approval that's not accepted, we can't proceed
+                if (existingApproval != null && existingApproval.Status != ApprovalStatus.Accepted)
                 {
-                    var approvator = await _context.Approvators
-                        .FirstOrDefaultAsync(a => a.Id == step.ApprovatorId.Value);
-                        
-                    if (approvator != null && approvator.UserId == userId)
-                    {
-                        // The user is the approver - auto-approve
-                        isAutoApproved = true;
-                    }
+                    return false;
                 }
-                // Check if this is a group approver setup
-                else if (step.ApprovatorsGroupId.HasValue)
+                
+                // If there's no existing approval at all, or the most recent one isn't for the current step
+                if (existingApproval == null)
                 {
-                    var group = await _context.ApprovatorsGroups
-                        .Include(g => g.ApprovatorsGroupUsers)
-                        .FirstOrDefaultAsync(g => g.Id == step.ApprovatorsGroupId.Value);
-                        
-                    if (group != null)
+                    // Get user information for auto-approval check
+                    var user = await _context.Users.FindAsync(userId);
+                    if (user == null)
+                        throw new KeyNotFoundException("User not found");
+                    
+                    bool isAutoApproved = false;
+                    
+                    // Check if this is a single approver setup
+                    if (step.ApprovatorId.HasValue)
                     {
-                        // Check if user is in the group
-                        var groupUser = group.ApprovatorsGroupUsers
-                            .FirstOrDefault(gu => gu.UserId == userId);
+                        var approvator = await _context.Approvators
+                            .FirstOrDefaultAsync(a => a.Id == step.ApprovatorId.Value);
                             
-                        if (groupUser != null)
+                        if (approvator != null && approvator.UserId == userId)
                         {
-                            // Get the group approval rule
-                            var rule = await _context.ApprovatorsGroupRules
-                                .FirstOrDefaultAsync(r => r.GroupId == group.Id);
+                            // The user is the approver - auto-approve
+                            isAutoApproved = true;
+                        }
+                    }
+                    // Check if this is a group approver setup
+                    else if (step.ApprovatorsGroupId.HasValue)
+                    {
+                        var group = await _context.ApprovatorsGroups
+                            .Include(g => g.ApprovatorsGroupUsers)
+                            .FirstOrDefaultAsync(g => g.Id == step.ApprovatorsGroupId.Value);
+                            
+                        if (group != null)
+                        {
+                            // Check if user is in the group
+                            var groupUser = group.ApprovatorsGroupUsers
+                                .FirstOrDefault(gu => gu.UserId == userId);
                                 
-                            if (rule != null && rule.RuleType == RuleType.Any)
+                            if (groupUser != null)
                             {
-                                // For 'Any' rule, a single group member's approval is sufficient
-                                isAutoApproved = true;
+                                // Get the group approval rule
+                                var rule = await _context.ApprovatorsGroupRules
+                                    .FirstOrDefaultAsync(r => r.GroupId == group.Id);
+                                    
+                                if (rule != null && rule.RuleType == RuleType.Any)
+                                {
+                                    // For 'Any' rule, a single group member's approval is sufficient
+                                    isAutoApproved = true;
+                                }
                             }
                         }
                     }
-                }
-                
-                if (isAutoApproved)
-                {
-                    // Create pre-approved approval writing
-                    var approvalWriting = new ApprovalWriting
-                    {
-                        DocumentId = documentId,
-                        StepId = step.Id,
-                        ProcessedByUserId = userId,
-                        ApprovatorId = step.ApprovatorId,
-                        ApprovatorsGroupId = step.ApprovatorsGroupId,
-                        Status = ApprovalStatus.Accepted,
-                        Comments = $"Auto-approved by initiator: {comments}",
-                        CreatedAt = DateTime.UtcNow
-                    };
                     
-                    _context.ApprovalWritings.Add(approvalWriting);
-                    
-                    // Create auto-approval response
-                    var approvalResponse = new ApprovalResponse
+                    if (isAutoApproved)
                     {
-                        ApprovalWritingId = approvalWriting.Id,
-                        UserId = userId,
-                        IsApproved = true,
-                        Comments = "Auto-approved as initiator is an eligible approver",
-                        ResponseDate = DateTime.UtcNow
-                    };
-                    
-                    _context.ApprovalResponses.Add(approvalResponse);
-                }
-                else
-                {
-                    // Initiate normal approval process
-                    var (requiresApproval, approvalWritingId) = await InitiateApprovalIfRequiredAsync(
-                        documentId, step.Id, userId, comments);
-
-                    if (requiresApproval)
-                    {
-                        var approvalWriting = await _context.ApprovalWritings.FindAsync(approvalWritingId);
-                        if (approvalWriting == null || approvalWriting.Status != ApprovalStatus.Accepted)
+                        // Create pre-approved approval writing
+                        var approvalWriting = new ApprovalWriting
                         {
-                            // Approval not yet granted - return false to indicate transition is pending
-                            return false;
+                            DocumentId = documentId,
+                            StepId = step.Id,
+                            ProcessedByUserId = userId,
+                            ApprovatorId = step.ApprovatorId,
+                            ApprovatorsGroupId = step.ApprovatorsGroupId,
+                            Status = ApprovalStatus.Accepted,
+                            Comments = $"Auto-approved by initiator: {comments}",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        
+                        _context.ApprovalWritings.Add(approvalWriting);
+                        
+                        // Create auto-approval response
+                        var approvalResponse = new ApprovalResponse
+                        {
+                            ApprovalWritingId = approvalWriting.Id,
+                            UserId = userId,
+                            IsApproved = true,
+                            Comments = "Auto-approved as initiator is an eligible approver",
+                            ResponseDate = DateTime.UtcNow
+                        };
+                        
+                        _context.ApprovalResponses.Add(approvalResponse);
+                    }
+                    else
+                    {
+                        // Initiate normal approval process
+                        var (requiresApproval, approvalWritingId) = await InitiateApprovalIfRequiredAsync(
+                            documentId, step.Id, userId, comments);
+
+                        if (requiresApproval)
+                        {
+                            var approvalWriting = await _context.ApprovalWritings.FindAsync(approvalWritingId);
+                            if (approvalWriting == null || approvalWriting.Status != ApprovalStatus.Accepted)
+                            {
+                                // Approval not yet granted - return false to indicate transition is pending
+                                return false;
+                            }
                         }
                     }
                 }

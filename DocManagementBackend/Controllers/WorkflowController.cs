@@ -116,8 +116,14 @@ namespace DocManagementBackend.Controllers
                     .Include(d => d.CurrentStatus)
                     .FirstOrDefaultAsync(d => d.Id == moveToStatusDto.DocumentId);
                 
+                if (document == null)
+                    return NotFound("Document not found.");
+                
                 var targetStatus = await _context.Status
                     .FirstOrDefaultAsync(s => s.Id == moveToStatusDto.TargetStatusId);
+                
+                if (targetStatus == null)
+                    return NotFound("Target status not found.");
         
                 Console.WriteLine($"Attempting to move document from status '{document?.CurrentStatus?.Title}' to '{targetStatus?.Title}'");
                 Console.WriteLine($"Target status IsFlexible: {targetStatus?.IsFlexible}");
@@ -141,7 +147,7 @@ namespace DocManagementBackend.Controllers
                         
                 if (step == null)
                     return BadRequest("No valid step found for this transition.");
-                    
+                
                 // Check if step requires approval
                 if (step.RequiresApproval)
                 {
@@ -154,13 +160,16 @@ namespace DocManagementBackend.Controllers
                         var approvalWriting = await _context.ApprovalWritings.FindAsync(approvalWritingId);
                         if (approvalWriting == null || approvalWriting.Status != ApprovalStatus.Accepted)
                         {
-                            // Approval needed but not yet granted
+                            // Approval needed but not yet granted - return here and don't proceed with the status transition
                             return Ok(new { 
                                 message = "This step requires approval. An approval request has been initiated.",
                                 requiresApproval = true,
                                 approvalId = approvalWritingId
                             });
                         }
+                        
+                        // At this point, approval has been granted, so we can proceed
+                        Console.WriteLine($"Approval has been granted for document {moveToStatusDto.DocumentId}, proceeding with status transition");
                     }
                 }
                 
@@ -174,7 +183,10 @@ namespace DocManagementBackend.Controllers
                 if (success)
                 {
                     Console.WriteLine("Document status updated successfully");
-                    return Ok(new { message = "Document status updated successfully." });
+                    return Ok(new { 
+                        message = "Document status updated successfully.",
+                        requiresApproval = false
+                    });
                 }
                 else
                 {

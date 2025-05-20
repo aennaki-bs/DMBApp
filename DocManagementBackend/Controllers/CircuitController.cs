@@ -84,6 +84,26 @@ namespace DocManagementBackend.Controllers
             return Ok(circuitDtos);
         }
 
+        [HttpGet("active")]
+        public async Task<ActionResult<IEnumerable<ActiveCircuitDto>>> GetActiveCircuits()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var activeCircuits = await _context.Circuits
+                .Where(c => c.IsActive)
+                .Select(c => new ActiveCircuitDto
+                {
+                    CircuitId = c.Id,
+                    CircuitKey = c.CircuitKey,
+                    CircuitTitle = c.Title
+                })
+                .ToListAsync();
+
+            return Ok(activeCircuits);
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<CircuitDto>> GetCircuit(int id)
         {
@@ -498,6 +518,30 @@ namespace DocManagementBackend.Controllers
                 .ToListAsync();
 
             return Ok(statuses);
+        }
+
+        [HttpGet("{circuitId}/has-documents")]
+        public async Task<ActionResult<bool>> CircuitHasDocuments(int circuitId)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Check if the circuit exists and is active
+            var circuit = await _context.Circuits
+                .FirstOrDefaultAsync(c => c.Id == circuitId);
+                
+            if (circuit == null)
+                return NotFound($"Circuit with ID {circuitId} not found.");
+                
+            if (!circuit.IsActive)
+                return BadRequest($"Circuit with ID {circuitId} is not active.");
+
+            // Check if there are any documents associated with this circuit
+            bool hasDocuments = await _context.Documents
+                .AnyAsync(d => d.CircuitId == circuitId);
+
+            return Ok(hasDocuments);
         }
     }
 }

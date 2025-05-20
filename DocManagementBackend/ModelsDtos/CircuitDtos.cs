@@ -18,6 +18,13 @@ namespace DocManagementBackend.Models
         public List<StepDto> Steps { get; set; } = new();
     }
 
+    public class ActiveCircuitDto
+    {
+        public int CircuitId { get; set; }
+        public string CircuitKey { get; set; } = string.Empty;
+        public string CircuitTitle { get; set; } = string.Empty;
+    }
+
     public class CreateStepDto
     {
         public string Title { get; set; } = string.Empty;

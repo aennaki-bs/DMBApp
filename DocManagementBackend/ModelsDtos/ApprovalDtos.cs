@@ -56,13 +56,10 @@ namespace DocManagementBackend.Models
 
     public class StepApprovalConfigDto
     {
-        public bool RequiresApproval { get; set; }
-        public string ApprovalType { get; set; } = "None"; // "None", "Single", "Group"
+        // public bool RequiresApproval { get; set; }
+        // public string ApprovalType { get; set; } = "None"; // "None", "Single", "Group"
         public int? SingleApproverId { get; set; }
-        public List<int>? GroupApproverIds { get; set; }
-        public string? GroupName { get; set; }
-        public string? RuleType { get; set; } = "All"; // "Any", "All", "Sequential"
-        public string? Comment { get; set; }
+        public int? ApprovatorsGroupId { get; set; }
     }
 
     public class StepApprovalConfigDetailDto
@@ -81,6 +78,7 @@ namespace DocManagementBackend.Models
         public string ApprovalType { get; set; } = "None"; // "None", "Single", "Group"
         public int? SingleApproverId { get; set; }
         public string? SingleApproverName { get; set; }
+        public int? ApprovatorsGroupId { get; set; }
         public List<ApproverInfoDto>? GroupApprovers { get; set; }
         public string? GroupName { get; set; }
         public string? RuleType { get; set; } = "All"; // "Any", "All", "Sequential"
@@ -180,5 +178,31 @@ namespace DocManagementBackend.Models
         public string Status { get; set; } = string.Empty;
         public string RequestedBy { get; set; } = string.Empty;
         public DateTime RequestDate { get; set; }
+    }
+
+    public class StepReferenceDto
+    {
+        public int StepId { get; set; }
+        public string StepKey { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public int CircuitId { get; set; }
+        public string CircuitTitle { get; set; } = string.Empty;
+    }
+    
+    public class ApprovatorAssociationDto
+    {
+        public int ApprovatorId { get; set; }
+        public int UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public bool IsAssociated { get; set; }
+        public List<StepReferenceDto> AssociatedSteps { get; set; } = new List<StepReferenceDto>();
+    }
+    
+    public class GroupAssociationDto
+    {
+        public int GroupId { get; set; }
+        public string GroupName { get; set; } = string.Empty;
+        public bool IsAssociated { get; set; }
+        public List<StepReferenceDto> AssociatedSteps { get; set; } = new List<StepReferenceDto>();
     }
 }

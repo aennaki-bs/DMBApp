@@ -572,102 +572,38 @@ namespace DocManagementBackend.Controllers
             try
             {
                 // Update the step's RequiresApproval flag
-                step.RequiresApproval = config.RequiresApproval;
+                step.RequiresApproval = true;
                 
-                if (config.RequiresApproval)
+                if (step.RequiresApproval)
                 {
                     // Clear existing approvators and groups
                     step.ApprovatorId = null;
                     step.ApprovatorsGroupId = null;
                     
                     // Add new configuration based on the approval type
-                    if (config.ApprovalType == "Single" && config.SingleApproverId.HasValue)
+                    if (config.SingleApproverId.HasValue && config.SingleApproverId.Value != 0)
                     {
-                        // Verify the approver exists
-                        var approver = await _context.Users.FindAsync(config.SingleApproverId.Value);
-                        if (approver == null)
-                            return NotFound("Approver user not found.");
-                        
-                        // Check if this user already has an approvator record
+                        // Find the existing approvator by ID
                         var approvator = await _context.Approvators
-                            .FirstOrDefaultAsync(a => a.UserId == config.SingleApproverId.Value);
+                            .FindAsync(config.SingleApproverId.Value);
                             
                         if (approvator == null)
-                        {
-                            // Create new approvator
-                            approvator = new Approvator
-                            {
-                                UserId = config.SingleApproverId.Value,
-                                Comment = config.Comment ?? string.Empty,
-                                StepId = stepId  // Set the StepId relationship
-                            };
-                            
-                            _context.Approvators.Add(approvator);
-                            await _context.SaveChangesAsync(); // Save to get ID
-                        }
-                        else
-                        {
-                            // Update existing approvator's StepId
-                            approvator.StepId = stepId;
-                            await _context.SaveChangesAsync();
-                        }
+                            return NotFound($"Approvator with ID {config.SingleApproverId.Value} not found.");
                         
                         step.ApprovatorId = approvator.Id;
+                        step.ApprovatorsGroupId = null; // Ensure only one approval method is set
                     }
-                    else if (config.ApprovalType == "Group" && 
-                             config.GroupApproverIds != null && 
-                             config.GroupApproverIds.Any())
+                    else if (config.ApprovatorsGroupId.HasValue && config.ApprovatorsGroupId.Value != 0)
                     {
-                        // Create group
-                        var group = new ApprovatorsGroup
-                        {
-                            Name = config.GroupName ?? $"Approvers for Step {stepId}",
-                            Comment = config.Comment ?? string.Empty,
-                            StepId = stepId  // Set the StepId relationship
-                        };
-                        
-                        _context.ApprovatorsGroups.Add(group);
-                        await _context.SaveChangesAsync(); // Save to get group ID
-                        
-                        // Add users to group
-                        for (int i = 0; i < config.GroupApproverIds.Count; i++)
-                        {
-                            var groupUser = new ApprovatorsGroupUser
-                            {
-                                GroupId = group.Id,
-                                UserId = config.GroupApproverIds[i],
-                                OrderIndex = config.RuleType == "Sequential" ? i : null
-                            };
+                        // Find the existing approvers group
+                        var group = await _context.ApprovatorsGroups
+                            .FindAsync(config.ApprovatorsGroupId.Value);
                             
-                            _context.ApprovatorsGroupUsers.Add(groupUser);
-                        }
-                        
-                        // Create rule
-                        RuleType ruleType;
-                        
-                        switch (config.RuleType)
-                        {
-                            case "Any":
-                                ruleType = RuleType.Any;
-                                break;
-                            case "Sequential":
-                                ruleType = RuleType.Sequential;
-                                break;
-                            default:
-                                ruleType = RuleType.All;
-                                break;
-                        }
-                        
-                        var rule = new ApprovatorsGroupRule
-                        {
-                            GroupId = group.Id,
-                            RuleType = ruleType
-                        };
-                        
-                        _context.ApprovatorsGroupRules.Add(rule);
-                        await _context.SaveChangesAsync();
+                        if (group == null)
+                            return NotFound($"Approvers group with ID {config.ApprovatorsGroupId.Value} not found.");
                         
                         step.ApprovatorsGroupId = group.Id;
+                        step.ApprovatorId = null; // Ensure only one approval method is set
                     }
                     else
                     {
@@ -725,11 +661,11 @@ namespace DocManagementBackend.Controllers
             
             if (step.RequiresApproval)
             {
-                // Check for single approver
+                // A step can only have either an approvator or a group, not both
                 if (step.ApprovatorId.HasValue && step.Approvator != null)
                 {
                     config.ApprovalType = "Single";
-                    config.SingleApproverId = step.Approvator.UserId;
+                    config.SingleApproverId = step.ApprovatorId;
                     config.SingleApproverName = step.Approvator.User?.Username ?? string.Empty;
                     config.Comment = step.Approvator.Comment;
                 }
@@ -737,6 +673,7 @@ namespace DocManagementBackend.Controllers
                 {
                     // Check for group
                     config.ApprovalType = "Group";
+                    config.ApprovatorsGroupId = step.ApprovatorsGroupId;
                     config.GroupName = step.ApprovatorsGroup.Name;
                     config.Comment = step.ApprovatorsGroup.Comment;
                     
@@ -957,30 +894,25 @@ namespace DocManagementBackend.Controllers
             if (group == null)
                 return NotFound("Approvers group not found.");
             
-            // Check if group is in use
-            var inUse = await _context.Steps.AnyAsync(s => s.ApprovatorsGroupId == id) ||
-                       await _context.ApprovalWritings.AnyAsync(aw => aw.ApprovatorsGroupId == id);
+            // Check if group is in use by steps
+            var stepsUsingGroup = await _context.Steps
+                .Where(s => s.ApprovatorsGroupId == id)
+                .ToListAsync();
                        
-            if (inUse)
-                return BadRequest("Cannot delete group that is in use by steps or approval writings.");
+            if (stepsUsingGroup.Any())
+                return BadRequest($"Cannot delete approvers group that is associated with {stepsUsingGroup.Count} step(s). Remove the group from these steps first.");
+            
+            // Check if group is in use by approval writings
+            var groupInUse = await _context.ApprovalWritings
+                .AnyAsync(aw => aw.ApprovatorsGroupId == id && 
+                              (aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress));
+                       
+            if (groupInUse)
+                return BadRequest("Cannot delete approvers group that is being used in active approvals.");
             
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Update any steps using this group
-                var stepsUsingGroup = await _context.Steps
-                    .Where(s => s.ApprovatorsGroupId == id)
-                    .ToListAsync();
-                
-                foreach (var step in stepsUsingGroup)
-                {
-                    step.ApprovatorsGroupId = null;
-                    if (!step.ApprovatorId.HasValue)
-                    {
-                        step.RequiresApproval = false;
-                    }
-                }
-
                 // Remove group users
                 var groupUsers = await _context.ApprovatorsGroupUsers
                     .Where(gu => gu.GroupId == id)
@@ -1242,32 +1174,35 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return NotFound($"User with ID {dto.UserId} not found.");
 
-            // Verify step exists if provided
-            if (dto.StepId.HasValue)
-            {
-                var step = await _context.Steps.FindAsync(dto.StepId.Value);
-                if (step == null)
-                    return NotFound($"Step with ID {dto.StepId.Value} not found.");
-            }
-
             // Check if user already has an approvator record
             var existingApprovator = await _context.Approvators
-                .FirstOrDefaultAsync(a => a.UserId == dto.UserId && 
-                                      ((!dto.StepId.HasValue && !a.StepId.HasValue) || 
-                                       (dto.StepId.HasValue && a.StepId == dto.StepId)));
+                .FirstOrDefaultAsync(a => a.UserId == dto.UserId);
 
             if (existingApprovator != null)
-                return BadRequest("This user is already configured as an approver for this step.");
+                return BadRequest("This user is already configured as an approver.");
 
             var approvator = new Approvator
             {
                 UserId = dto.UserId,
-                Comment = dto.Comment,
-                StepId = dto.StepId
+                Comment = dto.Comment
+                // No longer setting StepId - approvators can be used by multiple steps
             };
 
             _context.Approvators.Add(approvator);
             await _context.SaveChangesAsync();
+
+            // If a step was specified, associate this approvator with that step
+            if (dto.StepId.HasValue)
+            {
+                var step = await _context.Steps.FindAsync(dto.StepId.Value);
+                if (step != null)
+                {
+                    step.ApprovatorId = approvator.Id;
+                    step.ApprovatorsGroupId = null; // Ensure only one approval method is set
+                    step.RequiresApproval = true; // Enable approval for this step
+                    await _context.SaveChangesAsync();
+                }
+            }
 
             var result = new ApprovatorDetailDto
             {
@@ -1275,7 +1210,7 @@ namespace DocManagementBackend.Controllers
                 UserId = approvator.UserId,
                 Username = user.Username,
                 Comment = approvator.Comment,
-                StepId = approvator.StepId,
+                StepId = dto.StepId, // Return the step ID if it was associated
                 StepTitle = dto.StepId.HasValue ? 
                     (await _context.Steps.FindAsync(dto.StepId.Value))?.Title ?? string.Empty : 
                     string.Empty
@@ -1300,42 +1235,44 @@ namespace DocManagementBackend.Controllers
             if (user == null)
                 return NotFound($"User with ID {dto.UserId} not found.");
 
-            // Verify step exists if provided
+            // Make sure another approvator record doesn't already exist for this user
+            if (approvator.UserId != dto.UserId)
+            {
+                var existingApprovator = await _context.Approvators
+                    .FirstOrDefaultAsync(a => a.Id != id && a.UserId == dto.UserId);
+
+                if (existingApprovator != null)
+                    return BadRequest("This user is already configured as an approver.");
+            }
+
+            // Update approvator details
+            approvator.UserId = dto.UserId;
+            approvator.Comment = dto.Comment;
+
+            // If a step was provided, associate the approvator with it
             if (dto.StepId.HasValue)
             {
                 var step = await _context.Steps.FindAsync(dto.StepId.Value);
                 if (step == null)
                     return NotFound($"Step with ID {dto.StepId.Value} not found.");
+                
+                // Set this approvator as the step's approvator
+                step.ApprovatorId = id;
+                step.ApprovatorsGroupId = null; // Ensure only one approval method is set
+                step.RequiresApproval = true;
+                _context.Steps.Update(step);
             }
 
-            // Check if update would create a duplicate
-            if (approvator.UserId != dto.UserId || approvator.StepId != dto.StepId)
+            // Find all steps that use this approvator
+            var stepsUsingApprovator = await _context.Steps
+                .Where(s => s.ApprovatorId == id)
+                .ToListAsync();
+
+            // Update the User ID in steps that reference this approvator
+            foreach (var step in stepsUsingApprovator)
             {
-                var existingApprovator = await _context.Approvators
-                    .FirstOrDefaultAsync(a => a.Id != id && 
-                                          a.UserId == dto.UserId && 
-                                          ((!dto.StepId.HasValue && !a.StepId.HasValue) || 
-                                          (dto.StepId.HasValue && a.StepId == dto.StepId)));
-
-                if (existingApprovator != null)
-                    return BadRequest("This user is already configured as an approver for this step.");
-            }
-
-            // Update approvator
-            approvator.UserId = dto.UserId;
-            approvator.Comment = dto.Comment;
-            approvator.StepId = dto.StepId;
-
-            // Check if this approvator is being used by steps
-            if (approvator.StepId.HasValue)
-            {
-                var step = await _context.Steps.FindAsync(approvator.StepId.Value);
-                if (step != null && step.ApprovatorId == id)
-                {
-                    // Update the step to reflect the new user
-                    step.ApprovatorId = approvator.Id;
-                    _context.Steps.Update(step);
-                }
+                // We don't need to update any fields on the step since we're just
+                // changing the related approvator's UserId
             }
 
             _context.Approvators.Update(approvator);
@@ -1361,7 +1298,7 @@ namespace DocManagementBackend.Controllers
                 .ToListAsync();
 
             if (stepsUsingApprovator.Any())
-                return BadRequest("Cannot delete approvator that is in use by steps. Remove the approver from these steps first.");
+                return BadRequest($"Cannot delete approvator that is associated with {stepsUsingApprovator.Count} step(s). Remove the approvator from these steps first.");
 
             // Check if approvator is being used in approval writings
             var approvatorInUse = await _context.ApprovalWritings
@@ -1375,6 +1312,84 @@ namespace DocManagementBackend.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("approvators/{id}/check-association")]
+        public async Task<ActionResult<ApprovatorAssociationDto>> CheckApprovatorAssociation(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var approvator = await _context.Approvators
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.Id == id);
+                
+            if (approvator == null)
+                return NotFound($"Approvator with ID {id} not found.");
+                
+            // Find any steps that have this approvator assigned
+            var associatedSteps = await _context.Steps
+                .Include(s => s.Circuit)
+                .Where(s => s.ApprovatorId == id)
+                .Select(s => new StepReferenceDto
+                {
+                    StepId = s.Id,
+                    StepKey = s.StepKey,
+                    Title = s.Title,
+                    CircuitId = s.CircuitId,
+                    CircuitTitle = s.Circuit.Title
+                })
+                .ToListAsync();
+                
+            var result = new ApprovatorAssociationDto
+            {
+                ApprovatorId = id,
+                UserId = approvator.UserId,
+                Username = approvator.User?.Username ?? "Unknown",
+                IsAssociated = associatedSteps.Any(),
+                AssociatedSteps = associatedSteps
+            };
+            
+            return Ok(result);
+        }
+        
+        [HttpGet("groups/{id}/check-association")]
+        public async Task<ActionResult<GroupAssociationDto>> CheckGroupAssociation(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var group = await _context.ApprovatorsGroups
+                .FirstOrDefaultAsync(g => g.Id == id);
+                
+            if (group == null)
+                return NotFound($"Approvers group with ID {id} not found.");
+                
+            // Find any steps that have this group assigned
+            var associatedSteps = await _context.Steps
+                .Include(s => s.Circuit)
+                .Where(s => s.ApprovatorsGroupId == id)
+                .Select(s => new StepReferenceDto
+                {
+                    StepId = s.Id,
+                    StepKey = s.StepKey,
+                    Title = s.Title,
+                    CircuitId = s.CircuitId,
+                    CircuitTitle = s.Circuit.Title
+                })
+                .ToListAsync();
+                
+            var result = new GroupAssociationDto
+            {
+                GroupId = id,
+                GroupName = group.Name,
+                IsAssociated = associatedSteps.Any(),
+                AssociatedSteps = associatedSteps
+            };
+            
+            return Ok(result);
         }
     }
 }
