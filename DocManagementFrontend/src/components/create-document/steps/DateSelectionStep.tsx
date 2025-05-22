@@ -128,6 +128,24 @@ export const DateSelectionStep = ({
         }
       />
 
+      {/* Date filtering information */}
+      <Card className="bg-blue-900/20 border-blue-800/40">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-2">
+            <Info className="h-5 w-5 mt-0.5 text-blue-400" />
+            <div>
+              <h4 className="text-sm font-medium text-blue-400">
+                About Date Selection
+              </h4>
+              <p className="text-sm text-gray-300 mt-1">
+                <strong>Important:</strong> Only document types with active stumps valid for this date will be shown in the next step.
+                If you don't see a document type, it means there are no active stumps for that type on this date.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Accounting Date Selection */}
       <CustomDateTimeSelector
         date={comptableDateObj}
@@ -162,7 +180,7 @@ export const DateSelectionStep = ({
                     isDateValid ? "text-blue-400" : "text-amber-400"
                   }`}
                 >
-                  Valid Date Range for {selectedSubType.name}
+                  Valid Date Range for {selectedSubType.subTypeKey}
                 </h4>
                 <p className="text-sm text-gray-300 mt-1">
                   Documents of this subtype must have a date between:

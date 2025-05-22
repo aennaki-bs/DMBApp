@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDocumentApproval } from "@/hooks/document-workflow/useDocumentApproval";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,13 @@ import {
   Clock,
   Loader2,
   XCircle,
+  User,
+  UserCheck,
+  Users,
+  Shield,
 } from "lucide-react";
+import { ApproverInfo, ApproversGroup } from "@/models/approval";
+import approvalService from "@/services/approvalService";
 
 interface DocumentApprovalStatusProps {
   documentId: number;
@@ -31,6 +37,9 @@ export function DocumentApprovalStatus({
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [comments, setComments] = useState("");
+  const [groupDetails, setGroupDetails] = useState<ApproversGroup | null>(null);
+  const [isLoadingGroup, setIsLoadingGroup] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<ApproverInfo[]>([]);
 
   const {
     approvalHistory,
@@ -47,6 +56,35 @@ export function DocumentApprovalStatus({
   const latestPendingApproval = approvalHistory?.find((approval) =>
     approval.status?.toLowerCase().includes("pending")
   );
+
+  // Get approval group details if this is a group approval
+  useEffect(() => {
+    const fetchGroupDetails = async () => {
+      if (!latestPendingApproval || !latestPendingApproval.assignedToGroup) return;
+
+      try {
+        setIsLoadingGroup(true);
+        // Extract group ID from the group name if available
+        const groupMatch = latestPendingApproval.assignedToGroup.match(/\(ID: (\d+)\)/);
+        const groupId = groupMatch ? parseInt(groupMatch[1], 10) : null;
+
+        if (groupId) {
+          const groupData = await approvalService.getApprovalGroup(groupId);
+          setGroupDetails(groupData);
+
+          // Fetch group members
+          const membersData = await approvalService.getGroupMembers(groupId);
+          setGroupMembers(membersData);
+        }
+      } catch (error) {
+        console.error('Error fetching approval group details:', error);
+      } finally {
+        setIsLoadingGroup(false);
+      }
+    };
+
+    fetchGroupDetails();
+  }, [latestPendingApproval]);
 
   const handleApprove = async () => {
     if (!latestPendingApproval) return;
@@ -98,6 +136,44 @@ export function DocumentApprovalStatus({
     }
 
     return <Badge className="bg-blue-600">No Approval Required</Badge>;
+  };
+
+  // Get rule type badge
+  const getRuleTypeBadge = (ruleType: string) => {
+    if (!ruleType) {
+      return (
+        <Badge variant="outline" className="border-amber-500/30 text-amber-200">
+          Group
+        </Badge>
+      );
+    }
+
+    switch (ruleType.toLowerCase()) {
+      case 'sequential':
+        return (
+          <Badge variant="outline" className="border-purple-500/30 text-purple-200 bg-purple-500/10">
+            Sequential
+          </Badge>
+        );
+      case 'all':
+        return (
+          <Badge variant="outline" className="border-blue-500/30 text-blue-200 bg-blue-500/10">
+            All Approvers Required
+          </Badge>
+        );
+      case 'any':
+        return (
+          <Badge variant="outline" className="border-green-500/30 text-green-200 bg-green-500/10">
+            Any Approver
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="border-amber-500/30 text-amber-200">
+            {ruleType}
+          </Badge>
+        );
+    }
   };
 
   if (isHistoryLoading) {
@@ -176,14 +252,75 @@ export function DocumentApprovalStatus({
 
             {latestPendingApproval && (
               <div className="rounded-md bg-blue-900/20 p-3 border border-blue-800/50">
-                <p className="text-sm text-blue-300 mb-2">
-                  <span className="font-medium">Approval Step:</span>{" "}
-                  {latestPendingApproval.stepTitle}
-                </p>
-                <p className="text-sm text-blue-300">
-                  <span className="font-medium">Requested By:</span>{" "}
-                  {latestPendingApproval.requestedBy}
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-blue-300">
+                    <span className="font-medium">Approval Step:</span>{" "}
+                    {latestPendingApproval.stepTitle}
+                  </p>
+                  
+                  <p className="text-sm text-blue-300">
+                    <span className="font-medium">Requested By:</span>{" "}
+                    {latestPendingApproval.requestedBy}
+                  </p>
+                  
+                  {/* Display individual approver */}
+                  {latestPendingApproval.assignedTo && !latestPendingApproval.assignedToGroup && (
+                    <div className="flex items-center gap-1 text-sm text-blue-300">
+                      <UserCheck className="h-4 w-4 text-blue-400/70" />
+                      <span className="font-medium">Waiting for:</span> 
+                      <span>{latestPendingApproval.assignedTo}</span>
+                    </div>
+                  )}
+                  
+                  {/* Display approver group */}
+                  {latestPendingApproval.assignedToGroup && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1 text-sm text-blue-300">
+                        <Users className="h-4 w-4 text-blue-400/70" />
+                        <span className="font-medium">Approvers Group:</span> 
+                        <span>{latestPendingApproval.assignedToGroup}</span>
+                      </div>
+                      
+                      {isLoadingGroup ? (
+                        <div className="flex items-center gap-1 text-blue-300/50 pl-5 text-sm">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Loading group details...</span>
+                        </div>
+                      ) : groupDetails && (
+                        <div className="pl-5 mt-1 mb-1">
+                          {groupDetails.ruleType && (
+                            <div className="flex items-center gap-1 mb-1 text-sm text-blue-300">
+                              <Shield className="h-4 w-4 text-blue-400/70" />
+                              <span className="font-medium">Approval Rule:</span> 
+                              {getRuleTypeBadge(groupDetails.ruleType)}
+                            </div>
+                          )}
+                          
+                          {groupMembers.length > 0 && (
+                            <div className="mt-1">
+                              <p className="text-sm text-blue-300 font-medium mb-1">Group Members:</p>
+                              <ul className="space-y-1 pl-5 text-sm text-blue-300">
+                                {groupMembers.map((member, index) => (
+                                  <li key={member.userId || index} className="flex items-center gap-1">
+                                    {groupDetails.ruleType && groupDetails.ruleType.toLowerCase() === 'sequential' ? (
+                                      <>
+                                        <span className="text-blue-400/70">{index + 1}.</span>
+                                        <User className="h-3 w-3 text-blue-400/70" />
+                                      </>
+                                    ) : (
+                                      <User className="h-3 w-3 text-blue-400/70" />
+                                    )}
+                                    <span>{member.username || 'Unknown'}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 <div className="mt-4 flex gap-2">
                   <Button
@@ -294,11 +431,10 @@ export function DocumentApprovalStatus({
                 className="bg-[#111633] border-blue-900/50 text-white resize-none focus:border-blue-500/50"
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
-                required
               />
-              {!comments.trim() && (
-                <p className="text-xs text-red-400">
-                  Comments are required for rejection
+              {comments.trim() === "" && (
+                <p className="text-red-400 text-xs mt-1">
+                  A reason is required for rejection
                 </p>
               )}
             </div>
@@ -315,7 +451,7 @@ export function DocumentApprovalStatus({
             </Button>
             <Button
               onClick={handleReject}
-              disabled={isLoading || !comments.trim()}
+              disabled={isLoading || comments.trim() === ""}
               className="bg-red-600 hover:bg-red-700"
             >
               {isLoading ? (

@@ -109,9 +109,9 @@ export default function PendingApprovalsPage() {
       // Use approvalId if available, otherwise fall back to id
       const approvalId = selectedApproval.approvalId || selectedApproval.id;
 
-      // Send the response with approved=true for approve, approved=false for reject
+      // Send the response with isApproved=true for approve, isApproved=false for reject
       await approvalService.respondToApproval(approvalId, {
-        approved: responseType === "approve", // true for approve, false for reject
+        isApproved: responseType === "approve", // true for approve, false for reject
         comments: comments,
       });
 

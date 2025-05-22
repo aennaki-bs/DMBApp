@@ -2,6 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Document, Ligne } from "@/models/document";
+import { WorkflowStatus } from "@/services/workflowService";
+import { ApprovalHistoryItem, ApprovalInfo } from "@/services/approvalService";
 import DocumentDetailsTab from "./DocumentDetailsTab";
 import DocumentLinesTab from "./DocumentLinesTab";
 
@@ -13,6 +15,11 @@ interface DocumentTabsViewProps {
   canManageDocuments: boolean;
   isCreateDialogOpen: boolean;
   setIsCreateDialogOpen: (open: boolean) => void;
+  workflowStatus?: WorkflowStatus;
+  isLoadingWorkflow?: boolean;
+  pendingApproval?: ApprovalHistoryItem;
+  approvalHistory?: ApprovalHistoryItem[];
+  isLoadingApproval?: boolean;
 }
 
 const DocumentTabsView = ({
@@ -23,6 +30,11 @@ const DocumentTabsView = ({
   canManageDocuments,
   isCreateDialogOpen,
   setIsCreateDialogOpen,
+  workflowStatus,
+  isLoadingWorkflow,
+  pendingApproval,
+  approvalHistory,
+  isLoadingApproval
 }: DocumentTabsViewProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -50,7 +62,14 @@ const DocumentTabsView = ({
       </TabsList>
 
       <TabsContent value="details" className="mt-0">
-        <DocumentDetailsTab document={document} />
+        <DocumentDetailsTab 
+          document={document} 
+          workflowStatus={workflowStatus}
+          isLoadingWorkflow={isLoadingWorkflow}
+          pendingApproval={pendingApproval}
+          approvalHistory={approvalHistory}
+          isLoadingApproval={isLoadingApproval}
+        />
       </TabsContent>
 
       <TabsContent value="lignes" className="mt-0">

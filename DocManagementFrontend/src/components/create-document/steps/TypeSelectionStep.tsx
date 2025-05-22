@@ -18,6 +18,7 @@ import {
   Tag,
   ChevronDown,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,12 +30,14 @@ interface TypeSelectionStepProps {
   subTypes: SubType[];
   selectedTypeId: number | null;
   selectedSubTypeId: number | null;
-  documentAlias: string;
+  documentAlias?: string;
   onTypeChange: (value: string) => void;
   onSubTypeChange: (value: string) => void;
-  onAliasChange: (value: string) => void;
+  onAliasChange?: (value: string) => void;
   typeError?: string | null;
   subTypeError?: string | null;
+  isLoadingTypes?: boolean;
+  isLoadingSubTypes?: boolean;
 }
 
 export const TypeSelectionStep = ({
@@ -46,8 +49,10 @@ export const TypeSelectionStep = ({
   onSubTypeChange,
   typeError,
   subTypeError,
+  isLoadingTypes = false,
+  isLoadingSubTypes = false,
 }: TypeSelectionStepProps) => {
-  const [isLoadingSubTypes, setIsLoadingSubTypes] = useState(false);
+  const [localIsLoadingSubTypes, setLocalIsLoadingSubTypes] = useState(false);
   const [filteredSubTypes, setFilteredSubTypes] = useState<SubType[]>([]);
   const [noSubTypesAvailable, setNoSubTypesAvailable] = useState(false);
 
@@ -87,21 +92,23 @@ export const TypeSelectionStep = ({
   // Update filtered subtypes when document type changes or when subTypes prop changes
   useEffect(() => {
     if (selectedTypeId) {
-      setIsLoadingSubTypes(true);
+      setLocalIsLoadingSubTypes(true);
       setNoSubTypesAvailable(false);
 
       // Use the subTypes prop if it's already filtered for the selected type
       if (subTypes && subTypes.length > 0) {
         setFilteredSubTypes(subTypes);
         setNoSubTypesAvailable(subTypes.length === 0);
-        setIsLoadingSubTypes(false);
+        setLocalIsLoadingSubTypes(false);
       } else {
         // Fetch subtypes for the selected document type if not provided
         subTypeService
           .getSubTypesByDocType(selectedTypeId)
           .then((data) => {
-            setFilteredSubTypes(data);
-            if (data.length === 0) {
+            // Filter only active subtypes
+            const activeSubTypes = data.filter(subType => subType.isActive);
+            setFilteredSubTypes(activeSubTypes);
+            if (activeSubTypes.length === 0) {
               setNoSubTypesAvailable(true);
             }
           })
@@ -114,7 +121,7 @@ export const TypeSelectionStep = ({
             setNoSubTypesAvailable(true);
           })
           .finally(() => {
-            setIsLoadingSubTypes(false);
+            setLocalIsLoadingSubTypes(false);
           });
       }
     } else {
@@ -144,27 +151,20 @@ export const TypeSelectionStep = ({
           <Tag className="h-4 w-4 text-blue-400" />
           Document Type*
         </Label>
-        {documentTypes.length === 0 ? (
-          <Card className="bg-gray-800/50 border-gray-700">
+        {isLoadingTypes ? (
+          <div className="flex items-center space-x-3 text-blue-400 text-sm py-4 px-3">
+            <div className="animate-spin h-5 w-5 border-2 border-blue-400 rounded-full border-t-transparent"></div>
+            <span>Loading document types with active stumps...</span>
+          </div>
+        ) : documentTypes.length === 0 ? (
+          <Card className="bg-gray-800/50 border-amber-700/30">
             <CardContent className="p-4">
               <div className="flex items-start space-x-3 text-amber-400">
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div className="space-y-2">
                   <p className="text-sm">
-                    No document types available. Please create a document type
-                    first.
+                    No document types with active stumps available for the selected date. Please select a different date.
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20 transition-colors"
-                    asChild
-                  >
-                    <Link to="/document-types-management">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Create Document Type
-                    </Link>
-                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -244,7 +244,7 @@ export const TypeSelectionStep = ({
             <Layers className="h-4 w-4 text-blue-400" />
             Stump*
           </Label>
-          {isLoadingSubTypes ? (
+          {isLoadingSubTypes || localIsLoadingSubTypes ? (
             <div className="flex items-center space-x-3 text-blue-400 text-sm py-2 px-3">
               <div className="animate-spin h-4 w-4 border-2 border-blue-400 rounded-full border-t-transparent"></div>
               <span>Loading stumps...</span>
@@ -256,7 +256,7 @@ export const TypeSelectionStep = ({
                   <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                   <div className="space-y-2">
                     <p className="text-sm">
-                      No stumps available for this document type.
+                      No active stumps available for this document type.
                     </p>
                     <Button
                       variant="outline"
@@ -338,26 +338,28 @@ export const TypeSelectionStep = ({
               {selectedSubTypeId && (
                 <div className="bg-gray-800/40 border border-gray-700 rounded-md p-3 mt-3">
                   <div className="flex items-center gap-2 text-sm text-blue-400 mb-2">
-                    <Clock className="h-4 w-4" />
-                    <span className="font-medium">Stump Valid Period</span>
+                    <Info className="h-4 w-4" />
+                    <span className="font-medium">Selected Stump Information</span>
                   </div>
                   <p className="text-sm text-gray-300">
-                    Valid from{" "}
-                    <span className="text-white font-medium">
-                      {new Date(
-                        filteredSubTypes.find(
-                          (st) => st.id === selectedSubTypeId
-                        )?.startDate!
-                      ).toLocaleDateString()}
-                    </span>
+                    <span className="font-medium">Code: </span>
+                    {filteredSubTypes.find(
+                      (st) => st.id === selectedSubTypeId
+                    )?.subTypeKey || ""}
+                  </p>
+                  <p className="text-sm text-gray-300 mt-1">
+                    <span className="font-medium">Valid period: </span>
+                    {new Date(
+                      filteredSubTypes.find(
+                        (st) => st.id === selectedSubTypeId
+                      )?.startDate!
+                    ).toLocaleDateString()}
                     {" to "}
-                    <span className="text-white font-medium">
-                      {new Date(
-                        filteredSubTypes.find(
-                          (st) => st.id === selectedSubTypeId
-                        )?.endDate!
-                      ).toLocaleDateString()}
-                    </span>
+                    {new Date(
+                      filteredSubTypes.find(
+                        (st) => st.id === selectedSubTypeId
+                      )?.endDate!
+                    ).toLocaleDateString()}
                   </p>
                 </div>
               )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ import { SubType } from "@/models/subtype";
 import documentService from "@/services/documentService";
 import subTypeService from "@/services/subTypeService";
 import documentTypeService from "@/services/documentTypeService";
+import api from "@/services/api";
 
 // Import step components
 import { DateSelectionStep } from "./steps/DateSelectionStep";
@@ -71,6 +73,9 @@ export default function CreateDocumentWizard({
   onOpenChange,
   onSuccess,
 }: CreateDocumentWizardProps) {
+  // Add navigate function
+  const navigate = useNavigate();
+  
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,8 +155,8 @@ export default function CreateDocumentWizard({
     },
     {
       id: 4,
-      title: "Circuit",
-      description: "Assign to circuit",
+      title: "Circuit (Optional)",
+      description: "Assign to workflow or skip",
       icon: <Share2 className="h-4 w-4" />,
       completed: currentStep > 4,
     },
@@ -203,47 +208,31 @@ export default function CreateDocumentWizard({
   const fetchCircuits = async () => {
     try {
       setIsLoading(true);
-      // Replace with your actual API call to fetch circuits
-      // For now, using mock data that matches the table shown in screenshot
-      const mockCircuits = [
-        {
-          id: 1,
-          name: "circuit",
-          description: "circuit de vente",
-          code: "CR01",
-          isActive: true,
-        },
-        {
-          id: 2,
-          name: "circuitA",
-          description: "circuit test of management",
-          code: "CR02",
-          isActive: false,
-        },
-        {
-          id: 3,
-          name: "adfa",
-          description: "adfa adfaa adfa",
-          code: "CR03",
-          isActive: false,
-        },
-        {
-          id: 4,
-          name: "CircuitC",
-          description: "string",
-          code: "CR04",
-          isActive: false,
-        },
-      ];
-
-      setCircuits(mockCircuits);
+      
+      // Use the API service to get active circuits
+      const response = await api.get('/Circuit/active');
+      
+      // Transform the API response to match our interface
+      const activeCircuits = response.data;
+      const mappedCircuits = activeCircuits.map(circuit => ({
+        id: circuit.circuitId,
+        name: circuit.circuitTitle,
+        code: circuit.circuitKey,
+        description: circuit.circuitTitle, // Use title as description if no description available
+        isActive: true // All circuits from this endpoint are active
+      }));
+      
+      console.log('Active circuits from API:', mappedCircuits);
+      setCircuits(mappedCircuits);
     } catch (error) {
-      console.error("Failed to fetch circuits:", error);
+      console.error("Failed to fetch active circuits:", error);
       toast.error("Failed to load circuits", {
         description:
-          "There was a problem loading circuits. Using fallback data.",
+          "There was a problem loading active circuits from the server.",
         duration: 4000,
       });
+      // Set empty array instead of mock data
+      setCircuits([]);
     } finally {
       setIsLoading(false);
     }
@@ -545,25 +534,18 @@ export default function CreateDocumentWizard({
         return true;
 
       case 4: // Circuit
-        if (!formData.circuitId) {
-          // Check if there are any active circuits available
-          const activeCircuits = circuits.filter((c) => c.isActive);
-          if (activeCircuits.length === 0) {
-            setCircuitError("No active circuits available for assignment");
-            toast.error("No active circuits available", {
-              description:
-                "You need at least one active circuit to assign documents. Please activate a circuit first.",
-              duration: 5000,
-            });
-            return false;
-          }
-
-          setCircuitError("Circuit is required");
-          toast.error("Circuit is required", {
-            description: "Please select a circuit to continue.",
-            duration: 3000,
+        // Circuit selection is optional
+        // Just check if there are active circuits available to show, but don't require selection
+        const activeCircuits = circuits.filter((c) => c.isActive);
+        if (activeCircuits.length === 0) {
+          setCircuitError("No active circuits available for assignment");
+          toast.error("No active circuits available", {
+            description:
+              "There are no active circuits available. You can continue without assigning a circuit or create active circuits first.",
+            duration: 5000,
           });
-          return false;
+          // Still return true since circuit assignment is optional
+          return true;
         }
         return true;
 
@@ -635,10 +617,20 @@ export default function CreateDocumentWizard({
       const response = await documentService.createDocument(requestData);
 
       toast.dismiss();
-      toast.success("Document created successfully");
+      toast.success("Document created successfully", {
+        description: "Redirecting to document view...",
+        duration: 3000,
+      });
 
       onSuccess(); // Notify parent component
       onOpenChange(false); // Close dialog
+      
+      // Navigate to the document view page with a small delay
+      if (response && response.id) {
+        setTimeout(() => {
+          navigate(`/documents/${response.id}`);
+        }, 1000); // 1-second delay for the toast to be visible
+      }
     } catch (error) {
       console.error("Failed to create document:", error);
       toast.dismiss();
@@ -789,14 +781,9 @@ export default function CreateDocumentWizard({
             <div className="space-y-4 py-4">
               <CircuitAssignmentStep
                 circuits={circuits
-                  .filter((circuit) => circuit.isActive) // Only show active circuits
+                  .filter((circuit) => circuit.isActive === true) // Only show circuits where isActive is strictly true
                   .map((circuit) => ({
                     ...circuit,
-                    stats: {
-                      documentsProcessed: 74, // Exact value from screenshot
-                      averageProcessingTime: "19h", // Exact value from screenshot
-                      approvers: 4, // Exact value from screenshot
-                    },
                   }))}
                 selectedCircuitId={formData.circuitId}
                 circuitError={circuitError}
@@ -851,10 +838,13 @@ export default function CreateDocumentWizard({
       <DialogContent className="sm:max-w-[550px] bg-[#0a1033] border border-blue-900/30">
         <DialogHeader>
           <DialogTitle className="text-xl text-blue-100">
-            Create Document
+            {currentStep === 4 ? "Circuit Assignment (Optional)" : "Create Document"}
           </DialogTitle>
           <DialogDescription className="text-blue-300">
-            Create a new document with the selected type and date
+            {currentStep === 4 
+              ? "Assign a circuit or skip this step to create a static document"
+              : "Create a new document with the selected type and date"
+            }
           </DialogDescription>
         </DialogHeader>
 

@@ -40,6 +40,51 @@ interface StepApprovalConfigDto {
   comment?: string;
 }
 
+export interface ApprovalInfo {
+  approvalId: number;
+  documentId: number;
+  documentKey: string;
+  documentTitle: string;
+  stepId: number;
+  stepTitle: string;
+  assignedTo: string;
+  assignedToGroup?: string;
+  status: string;
+  createdAt: string;
+  updatedAt?: string;
+  processedBy?: string;
+  processedAt?: string;
+  comments?: string;
+  isRequired: boolean;
+}
+
+export interface ApprovalHistoryItem extends ApprovalInfo {
+  decisionMadeBy?: string;
+  decisionMadeAt?: string;
+  decision?: string;
+}
+
+export interface ApproversGroup {
+  id: number;
+  name: string;
+  comment?: string;
+  ruleType: string;
+  approvers?: ApproverInfo[];
+}
+
+export interface GroupAssociation {
+  groupId: number;
+  groupName: string;
+  isAssociated: boolean;
+  associatedSteps: {
+    stepId: number;
+    stepKey: string;
+    title: string;
+    circuitId: number;
+    circuitTitle: string;
+  }[];
+}
+
 const approvalService = {
   // Get all approval groups
   getAllApprovalGroups: async (): Promise<ApprovalGroup[]> => {
@@ -203,8 +248,10 @@ const approvalService = {
     }
   },
 
-  // Get pending approvals for the current user
-  getPendingApprovals: async (): Promise<PendingApproval[]> => {
+  /**
+   * Get all pending approvals
+   */
+  getPendingApprovals: async (): Promise<ApprovalInfo[]> => {
     try {
       const response = await api.get('/Approval/pending');
       return response.data;
@@ -214,8 +261,10 @@ const approvalService = {
     }
   },
 
-  // Get pending approvals for a specific user
-  getPendingApprovalsForUser: async (userId: number): Promise<PendingApproval[]> => {
+  /**
+   * Get pending approvals for a specific user
+   */
+  getPendingApprovalsForUser: async (userId: number): Promise<ApprovalInfo[]> => {
     try {
       const response = await api.get(`/Approval/pending/user/${userId}`);
       return response.data;
@@ -225,41 +274,23 @@ const approvalService = {
     }
   },
 
-  // Respond to an approval request
-  respondToApproval: async (
-    approvalId: number,
-    response: ApprovalResponse
-  ): Promise<void> => {
+  /**
+   * Get approval history for a document
+   */
+  getApprovalHistory: async (documentId: number): Promise<ApprovalHistoryItem[]> => {
     try {
-      // Convert to the API expected format
-      const requestData: ApprovalResponsePayload = {
-        isApproved: response.approved,
-        result: response.approved,
-        comments: response.comments || ""
-      };
-      
-      await api.post(`/Approval/${approvalId}/respond`, requestData);
-    } catch (error) {
-      console.error(`Error responding to approval ${approvalId}:`, error);
-      throw error;
-    }
-  },
-
-  // Get approval history for a user
-  getApprovalHistory: async (userId?: number): Promise<ApprovalHistory[]> => {
-    try {
-      // If userId is provided, use the user-specific endpoint
-      const url = userId ? `/Approval/pending/user/${userId}` : '/Approval/pending';
-      const response = await api.get(url);
+      const response = await api.get(`/Approval/history/${documentId}`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching approval data${userId ? ` for user ${userId}` : ''}:`, error);
+      console.error(`Error fetching approval history for document ${documentId}:`, error);
       throw error;
     }
   },
 
-  // Get documents waiting for approval
-  getDocumentsToApprove: async (): Promise<DocumentToApprove[]> => {
+  /**
+   * Get documents waiting for the current user's approval
+   */
+  getDocumentsToApprove: async (): Promise<ApprovalInfo[]> => {
     try {
       const response = await api.get('/Approval/documents-to-approve');
       return response.data;
@@ -269,8 +300,23 @@ const approvalService = {
     }
   },
 
-  // Check if an approval group is associated with any steps
-  checkGroupAssociation: async (groupId: number): Promise<GroupAssociationDto> => {
+  /**
+   * Get a specific approval group
+   */
+  getApprovalGroup: async (groupId: number): Promise<ApproversGroup> => {
+    try {
+      const response = await api.get(`/Approval/groups/${groupId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching approval group ${groupId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Check if a group is associated with any steps
+   */
+  checkGroupAssociation: async (groupId: number): Promise<GroupAssociation> => {
     try {
       const response = await api.get(`/Approval/groups/${groupId}/check-association`);
       return response.data;
@@ -342,6 +388,22 @@ const approvalService = {
       console.error(`Error fetching approval history for document ${documentId}:`, error);
       // Return empty array if API endpoint doesn't exist yet
       return [];
+    }
+  },
+
+  /**
+   * Respond to an approval request
+   */
+  respondToApproval: async (
+    approvalId: number, 
+    data: { isApproved: boolean; comments?: string }
+  ): Promise<any> => {
+    try {
+      const response = await api.post(`/Approval/${approvalId}/respond`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error responding to approval ${approvalId}:`, error);
+      throw error;
     }
   }
 };

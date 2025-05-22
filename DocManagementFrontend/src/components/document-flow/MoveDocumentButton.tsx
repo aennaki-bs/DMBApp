@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, MoveRight, Loader2 } from 'lucide-react';
+import { ArrowRight, MoveRight, Loader2, AlertCircle } from 'lucide-react';
 import circuitService from '@/services/circuitService';
 import { toast } from 'sonner';
 import {
@@ -176,11 +176,32 @@ export function MoveDocumentButton({
       
       // Find the selected status to get the title
       const selectedStatus = nextStatuses.find(status => status.statusId === selectedStatusId);
+      if (!selectedStatus) {
+        toast.error("Selected status not found");
+        setIsMoving(false);
+        return;
+      }
+      
       const statusTitle = selectedStatus ? selectedStatus.title : 'selected status';
+      const requiresApproval = !!selectedStatus.requiresApproval;
       
-      await circuitService.moveToStatus(documentId, selectedStatusId, `Changed status from ${currentStatus?.title} to ${statusTitle}`);
+      console.log("Selected status:", selectedStatus);
+      console.log("Requires approval:", requiresApproval);
       
-      toast.success(`Document moved to ${statusTitle}`);
+      const result = await circuitService.moveToStatus(
+        documentId, 
+        selectedStatusId, 
+        `Changed status from ${currentStatus?.title} to ${statusTitle}`
+      );
+      
+      if (result.requiresApproval || requiresApproval) {
+        toast.info("This step requires approval. An approval request has been initiated.", {
+          duration: 5000 // Make this toast stay longer
+        });
+      } else {
+        toast.success(`Document moved to ${statusTitle}`);
+      }
+      
       onStatusChange();
       setOpen(false);
       setSelectedStatusId(null);
@@ -266,6 +287,13 @@ export function MoveDocumentButton({
                         <h4 className="font-medium">{status.title}</h4>
                         <ArrowRight className="h-4 w-4 text-gray-400" />
                       </div>
+                      
+                      {status.requiresApproval && (
+                        <div className="mt-2 text-xs text-amber-400 flex items-center">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          This step will require approval
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

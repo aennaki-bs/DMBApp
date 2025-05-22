@@ -71,10 +71,21 @@ const DocumentFlowPage = () => {
   // Handle move to status
   const handleMoveToStatus = (statusId: number) => {
     if (workflowStatus && statusId) {
+      // Find the status title from available transitions
+      const targetStatus = workflowStatus.availableStatusTransitions?.find(
+        s => s.statusId === statusId
+      );
+      const statusTitle = targetStatus?.title || `status ID ${statusId}`;
+      const requiresApproval = targetStatus?.requiresApproval;
+      
       circuitService
-        .moveToStatus(Number(id), statusId, `Moving to status ID ${statusId}`)
-        .then(() => {
-          toast.success("Document status updated successfully");
+        .moveToStatus(Number(id), statusId, `Moving to ${statusTitle}`)
+        .then((result) => {
+          if (result.requiresApproval) {
+            toast.info("This step requires approval. An approval request has been initiated.");
+          } else {
+            toast.success("Document status updated successfully");
+          }
           refreshAllData();
         })
         .catch((error) => {

@@ -30,7 +30,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDocuments()
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -51,7 +51,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<DocumentDto>> GetDocument(int id)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -74,7 +74,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet("recent")]
         public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecentDocuments([FromQuery] int limit = 5)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 

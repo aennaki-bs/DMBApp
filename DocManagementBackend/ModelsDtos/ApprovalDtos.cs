@@ -18,6 +18,9 @@ namespace DocManagementBackend.Models
         public DateTime RequestDate { get; set; }
         public string Comments { get; set; } = string.Empty;
         public string ApprovalType { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string? AssignedTo { get; set; }
+        public string? AssignedToGroup { get; set; }
     }
 
     public class ApprovalHistoryDto

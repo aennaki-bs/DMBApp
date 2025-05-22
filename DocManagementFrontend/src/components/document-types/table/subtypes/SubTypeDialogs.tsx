@@ -105,9 +105,11 @@ export default function SubTypeDialogs({
     }
     
     // Add the document type ID to the form data
+    // Map the name field (prefix) to subTypeKey for the backend
     onCreateSubmit({
       ...formData,
-      documentTypeId: documentTypeId
+      documentTypeId: documentTypeId,
+      subTypeKey: formData.name || "" // Map the prefix to subTypeKey field
     });
   };
 
@@ -129,7 +131,11 @@ export default function SubTypeDialogs({
       return;
     }
 
-    onEditSubmit(selectedSubType.id, editedSubType);
+    // Map the name field (prefix) to subTypeKey for the backend
+    onEditSubmit(selectedSubType.id, {
+      ...editedSubType,
+      subTypeKey: editedSubType.name // Map the prefix to subTypeKey field
+    });
   };
 
   const resetCreateForm = () => {

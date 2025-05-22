@@ -519,6 +519,106 @@ namespace DocManagementBackend.Controllers
             return Ok(documentsToApprove);
         }
 
+        /// <summary>
+        /// Get pending approvals for a specific document
+        /// </summary>
+        /// <param name="documentId">The document ID</param>
+        /// <returns>List of pending approvals for the document</returns>
+        [HttpGet("document/{documentId}")]
+        public async Task<ActionResult<IEnumerable<PendingApprovalDto>>> GetDocumentApprovals(int documentId)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Check if document exists
+            var document = await _context.Documents.FindAsync(documentId);
+            if (document == null)
+                return NotFound($"Document with ID {documentId} not found");
+
+            // Get all pending approvals for this document
+            var pendingApprovals = new List<PendingApprovalDto>();
+
+            // 1. Get individual approvals for this document
+            var individualApprovals = await _context.ApprovalWritings
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Include(aw => aw.Approvator)
+                    .ThenInclude(a => a.User)
+                .Where(aw => 
+                    aw.DocumentId == documentId &&
+                    (aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress) &&
+                    aw.ApprovatorId.HasValue)
+                .ToListAsync();
+
+            foreach (var approval in individualApprovals)
+            {
+                pendingApprovals.Add(new PendingApprovalDto
+                {
+                    ApprovalId = approval.Id,
+                    DocumentId = documentId,
+                    DocumentKey = document.DocumentKey,
+                    DocumentTitle = document.Title,
+                    StepTitle = approval.Step?.Title ?? string.Empty,
+                    RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = approval.CreatedAt,
+                    Comments = approval.Comments,
+                    ApprovalType = "Individual",
+                    Status = approval.Status.ToString(),
+                    AssignedTo = approval.Approvator?.User?.Username ?? "Unknown Approver"
+                });
+            }
+
+            // 2. Get group approvals for this document
+            var groupApprovals = await _context.ApprovalWritings
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Include(aw => aw.ApprovatorsGroup)
+                .Where(aw => 
+                    aw.DocumentId == documentId &&
+                    (aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress) &&
+                    aw.ApprovatorsGroupId.HasValue)
+                .ToListAsync();
+
+            foreach (var approval in groupApprovals)
+            {
+                // Get rule type for the group
+                var rule = await _context.ApprovatorsGroupRules
+                    .FirstOrDefaultAsync(r => r.GroupId == approval.ApprovatorsGroupId);
+                
+                string approvalType = "Group";
+                if (rule != null)
+                {
+                    approvalType = rule.RuleType switch
+                    {
+                        RuleType.Sequential => "Sequential",
+                        RuleType.All => "All",
+                        RuleType.Any => "Any",
+                        _ => "Group"
+                    };
+                }
+
+                pendingApprovals.Add(new PendingApprovalDto
+                {
+                    ApprovalId = approval.Id,
+                    DocumentId = documentId,
+                    DocumentKey = document.DocumentKey,
+                    DocumentTitle = document.Title,
+                    StepTitle = approval.Step?.Title ?? string.Empty,
+                    RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = approval.CreatedAt,
+                    Comments = approval.Comments,
+                    ApprovalType = approvalType,
+                    Status = approval.Status.ToString(),
+                    AssignedToGroup = approval.ApprovatorsGroup?.Name != null ? 
+                        $"{approval.ApprovatorsGroup.Name} (ID: {approval.ApprovatorsGroupId})" : 
+                        $"Group ID: {approval.ApprovatorsGroupId}"
+                });
+            }
+
+            return Ok(pendingApprovals);
+        }
+
         // STEP CONFIGURATION APIS
 
         [HttpGet("configure/steps")]
