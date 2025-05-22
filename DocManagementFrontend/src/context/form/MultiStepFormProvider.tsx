@@ -89,10 +89,10 @@ export const MultiStepFormProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
     setFormData({ validationError: undefined });
 
-    // Both flows now have 6 steps (including type selection)
-    // Personal flow: 0. Type Selection, 1. Info, 2. Address, 3. Credentials, 4. Admin Key, 5. Summary
-    // Company flow: 0. Type Selection, 1. Info, 2. Address, 3. Credentials, 4. Admin Key, 5. Summary
-    if (currentStep < 5) setCurrentStep(currentStep + 1);
+    // Both flows now have 7 steps (including type selection)
+    // Personal flow: 0. Type Selection, 1. Info, 2. Address, 3. Username/Email, 4. Password, 5. Admin Key, 6. Summary
+    // Company flow: 0. Type Selection, 1. Info, 2. Address, 3. Username/Email, 4. Password, 5. Admin Key, 6. Summary
+    if (currentStep < 6) setCurrentStep(currentStep + 1);
   };
 
   // Previous step logic

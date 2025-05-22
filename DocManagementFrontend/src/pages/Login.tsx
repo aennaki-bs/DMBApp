@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Lock, User, WifiOff, ShieldAlert } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  User,
+  WifiOff,
+  ShieldAlert,
+  LogIn,
+} from "lucide-react";
 import DocuVerseLogo from "@/components/DocuVerseLogo";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { checkApiConnection } from "@/services/api/connectionCheck";
 import ConnectionErrorFallback from "@/components/shared/ConnectionErrorFallback";
 import { useApiConnection } from "@/hooks/useApiConnection";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
 
 const Login = () => {
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -177,13 +185,13 @@ const Login = () => {
                 >
                   Login
                 </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <div className="relative group">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-500 group-hover:text-gray-400 transition-colors" />
                   <Input
                     id="emailOrUsername"
                     type="text"
                     placeholder="Email or username"
-                    className="pl-10 border-gray-700 bg-[#0d1117] text-gray-300"
+                    className="pl-10 border-gray-700 bg-[#0d1117] text-gray-300 group-hover:border-gray-600 transition-colors"
                     value={emailOrUsername}
                     error={
                       isTouched.emailOrUsername &&
@@ -216,13 +224,13 @@ const Login = () => {
                     Forgot password?
                   </Link>
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500 group-hover:text-gray-400 transition-colors" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="pl-10 border-gray-700 bg-[#0d1117] text-gray-300"
+                    className="pl-10 border-gray-700 bg-[#0d1117] text-gray-300 group-hover:border-gray-600 transition-colors"
                     value={password}
                     error={isTouched.password && Boolean(errors.password)}
                     onChange={(e) =>
@@ -246,56 +254,68 @@ const Login = () => {
                 )}
               </div>
 
-              <Button
+              <EnhancedButton
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white relative overflow-hidden group"
-                disabled={isLoading || !isAvailable}
+                variant="premium"
+                size="lg"
+                fullWidth={true}
+                isLoading={isLoading || isChecking}
+                loadingText="Signing in..."
+                leadingIcon={<LogIn className="h-4 w-4" />}
+                animation="shimmer"
+                rounded="lg"
+                disabled={isLoading || isChecking}
+                className="mt-2"
               >
-                <span className="absolute inset-0 w-0 bg-white/20 transition-all duration-300 ease-out group-hover:w-full"></span>
-                <span className="relative z-10">
-                  {isLoading ? "Signing in..." : "Sign In"}
-                </span>
-              </Button>
+                Sign in
+              </EnhancedButton>
+            </form>
+          </div>
 
-              <div className="text-center text-sm text-gray-400">
-                Don't have an account?{" "}
-                <Link
-                  to="/register"
-                  className="font-medium text-blue-400 hover:text-blue-300"
+          <div className="text-center mt-6">
+            <p className="text-gray-400 text-sm">
+              Don't have an account?{" "}
+              <Link to="/register">
+                <EnhancedButton
+                  variant="ghost"
+                  size="sm"
+                  animation="none"
+                  className="ml-1 text-blue-400 hover:text-blue-300"
                 >
                   Sign up
-                </Link>
-              </div>
-            </form>
+                </EnhancedButton>
+              </Link>
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Right side - Image and text */}
-      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-r from-[#0d1117] to-[#161b22] relative">
+      {/* Right side - Image background */}
+      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-blue-900 to-indigo-900 relative">
+        <div className="absolute inset-0 bg-black/30"></div>
         <div
           className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{
             backgroundImage:
-              "url('data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%232d3748' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E')",
+              "url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2574&q=80')",
           }}
         ></div>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-12">
-          <div className="text-center max-w-lg">
-            <h1 className="text-4xl font-bold text-white mb-4">
-              Welcome to Business Management Platform
-            </h1>
-            <p className="text-lg text-gray-300">
-              Streamline your business operations with our comprehensive
-              management solution
+          <div className="bg-black/30 backdrop-blur-sm p-8 rounded-xl border border-white/10 max-w-lg">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Welcome to DocuVerse
+            </h2>
+            <p className="text-gray-100 mb-6">
+              Manage and organize your documents securely with our cutting-edge
+              document management system. Enjoy fast access, smart document
+              organization, and powerful collaboration features.
             </p>
-
-            <div className="mt-12 space-y-6">
-              <div className="flex items-center space-x-3 bg-[#1c2128]/50 p-3 rounded-lg border border-blue-900/30">
-                <div className="bg-blue-500/20 p-2 rounded-full">
+            <div className="flex space-x-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-blue-400"
+                    className="h-4 w-4 text-blue-300"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -304,25 +324,17 @@ const Login = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
                 </div>
-                <div className="text-left">
-                  <h3 className="text-white font-medium">
-                    Secure Authentication
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    Enterprise-grade security for your data
-                  </p>
-                </div>
+                <span className="text-sm text-gray-200">Secure platform</span>
               </div>
-
-              <div className="flex items-center space-x-3 bg-[#1c2128]/50 p-3 rounded-lg border border-blue-900/30">
-                <div className="bg-purple-500/20 p-2 rounded-full">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-purple-400"
+                    className="h-4 w-4 text-blue-300"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -331,16 +343,11 @@ const Login = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                 </div>
-                <div className="text-left">
-                  <h3 className="text-white font-medium">Powerful Dashboard</h3>
-                  <p className="text-sm text-gray-400">
-                    Manage documents and workflows efficiently
-                  </p>
-                </div>
+                <span className="text-sm text-gray-200">Real-time updates</span>
               </div>
             </div>
           </div>

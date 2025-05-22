@@ -36,7 +36,7 @@ export function SidebarNav() {
   const { data: pendingApprovals = [] } = useQuery({
     queryKey: ["pendingApprovals"],
     queryFn: () => approvalService.getPendingApprovals(),
-    enabled: !!user?.userId,
+    enabled: !!user?.userId && !isSimpleUser,
   });
 
   const isActive = (path: string) => {
@@ -79,27 +79,29 @@ export function SidebarNav() {
             </Link>
           </li>
 
-          {/* Pending Approvals - Visible to all users */}
-          <li>
-            <Link
-              to="/pending-approvals"
-              className={`flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive("/pending-approvals")
-                  ? "bg-blue-600/40 text-blue-200"
-                  : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <ClipboardCheck className="h-5 w-5" />
-                <span>My Approvals</span>
-              </div>
-              {pendingApprovals.length > 0 && (
-                <div className="flex items-center justify-center h-5 w-5 text-xs bg-red-500 text-white rounded-full">
-                  {pendingApprovals.length}
+          {/* Pending Approvals - Not visible to SimpleUser */}
+          {!isSimpleUser && (
+            <li>
+              <Link
+                to="/pending-approvals"
+                className={`flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive("/pending-approvals")
+                    ? "bg-blue-600/40 text-blue-200"
+                    : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5" />
+                  <span>My Approvals</span>
                 </div>
-              )}
-            </Link>
-          </li>
+                {pendingApprovals.length > 0 && (
+                  <div className="flex items-center justify-center h-5 w-5 text-xs bg-red-500 text-white rounded-full">
+                    {pendingApprovals.length}
+                  </div>
+                )}
+              </Link>
+            </li>
+          )}
 
           {/* User Management - Only for Admin */}
           {isAdmin && (

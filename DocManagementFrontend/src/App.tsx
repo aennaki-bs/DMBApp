@@ -42,6 +42,7 @@ import RegistrationSuccess from "./pages/RegistrationSuccess";
 import DocumentTypeDetail from "./pages/DocumentTypeDetail";
 import ApprovalGroupsManagement from "./pages/ApprovalGroupsManagement";
 import ApproversManagement from "./pages/ApproversManagement";
+import ButtonShowcasePage from "./pages/ButtonShowcase";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ const App = () => (
                   path="/update-password/:email"
                   element={<UpdatePassword />}
                 />
+                <Route path="/ui-showcase" element={<ButtonShowcasePage />} />
 
                 {/* Protected routes with layout */}
                 <Route
@@ -247,7 +249,11 @@ const App = () => (
                   />
                   <Route
                     path="/pending-approvals"
-                    element={<PendingApprovalsPage />}
+                    element={
+                      <ProtectedRoute requiredRole={["Admin", "FullUser"]}>
+                        <PendingApprovalsPage />
+                      </ProtectedRoute>
+                    }
                   />
 
                   {/* Approval Groups route */}

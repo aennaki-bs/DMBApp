@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useMultiStepForm } from "@/context/form";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import PersonalUserFields from "./personal/PersonalUserFields";
 import CompanyUserFields from "./company/CompanyUserFields";
@@ -8,6 +7,7 @@ import {
   validatePersonalUserInfo,
   validateCompanyInfo,
 } from "./utils/validation";
+import StepContainer from "./utils/StepContainer";
 
 const StepOneUserInfo = () => {
   const { formData, setFormData, nextStep, prevStep } = useMultiStepForm();
@@ -94,45 +94,21 @@ const StepOneUserInfo = () => {
   });
 
   return (
-    <div className="space-y-5">
-      <div>
-        {/* Personal User Fields */}
-        {formData.userType === "personal" && (
-          <PersonalUserFields
-            formData={formData}
-            localErrors={visibleErrors}
-            handleChange={handleChange}
-          />
-        )}
-
-        {/* Company Fields */}
-        {formData.userType === "company" && (
-          <CompanyUserFields
-            formData={formData}
-            localErrors={visibleErrors}
-            handleChange={handleChange}
-          />
-        )}
-      </div>
-
-      <div className="pt-2 flex gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          className="w-1/3 border-gray-700 hover:bg-gray-800"
-          onClick={handleBack}
-        >
-          Back
-        </Button>
-        <Button
-          type="button"
-          className="w-2/3 bg-docuBlue hover:bg-docuBlue-700"
-          onClick={handleNext}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
+    <StepContainer onNext={handleNext} onBack={handleBack}>
+      {formData.userType === "personal" ? (
+        <PersonalUserFields
+          formData={formData}
+          localErrors={visibleErrors}
+          handleChange={handleChange}
+        />
+      ) : (
+        <CompanyUserFields
+          formData={formData}
+          localErrors={visibleErrors}
+          handleChange={handleChange}
+        />
+      )}
+    </StepContainer>
   );
 };
 

@@ -29,7 +29,7 @@ export function Layout() {
         {/* Dark overlay for background */}
         <div
           className={`absolute inset-0 ${
-            theme === "dark" ? "bg-[#070b28]/90" : "bg-slate-100/80"
+            theme === "dark" ? "bg-[#070b28]/95" : "bg-slate-100/85"
           } z-0`}
         ></div>
 
@@ -39,7 +39,7 @@ export function Layout() {
           <aside
             className={`h-full ${
               isMobile ? "hidden" : "w-64 flex-shrink-0"
-            } border-r border-border transition-all duration-200 z-20`}
+            } border-r border-blue-900/30 transition-all duration-200 z-20`}
           >
             <SidebarNav />
           </aside>
@@ -49,8 +49,8 @@ export function Layout() {
             {/* Top navbar */}
             <header
               className={`${
-                isMobile ? "bg-background" : "bg-background/90"
-              } backdrop-blur-lg border-b border-border z-30`}
+                isMobile ? "bg-[#0a1033]" : "bg-[#0a1033]/90"
+              } backdrop-blur-lg border-b border-blue-900/30 z-30`}
             >
               <div className="flex items-center">
                 {isMobile && <SidebarTrigger className="p-2" />}
@@ -67,8 +67,8 @@ export function Layout() {
             <main className="flex-1 overflow-auto p-4">
               <div
                 className={`${
-                  theme === "dark" ? "bg-[#111633]/95" : "bg-white/95"
-                } h-full rounded-xl border border-border shadow-lg overflow-auto`}
+                  theme === "dark" ? "bg-[#0f1642]/95" : "bg-white/95"
+                } h-full rounded-xl border border-blue-900/30 shadow-lg overflow-auto`}
               >
                 <Outlet />
               </div>

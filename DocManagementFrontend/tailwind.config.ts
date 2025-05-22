@@ -1,5 +1,6 @@
-
 import type { Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
+import plugin from "tailwindcss/plugin";
 
 export default {
 	darkMode: ["class"],
@@ -110,15 +111,24 @@ export default {
 				slideUp: {
 					'0%': { transform: 'translateY(10px)', opacity: '0' },
 					'100%': { transform: 'translateY(0)', opacity: '1' }
-				}
+				},
+				flowRight: {
+					"0%": { transform: "translateX(-100%)" },
+					"100%": { transform: "translateX(100%)" }
+				},
+				flowLeft: {
+					"0%": { transform: "translateX(100%)" },
+					"100%": { transform: "translateX(-100%)" }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fadeIn 0.3s ease-out',
-				'slide-up': 'slideUp 0.4s ease-out'
+				'slide-up': 'slideUp 0.4s ease-out',
+				"pulse-slow": "pulse 3s ease-in-out infinite",
 			}
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+} as Config;
