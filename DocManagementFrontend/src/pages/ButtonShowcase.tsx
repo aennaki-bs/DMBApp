@@ -9,7 +9,7 @@ export default function ButtonShowcasePage() {
       <div className="container mx-auto py-12 px-4">
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-white mb-4">
-            DocuVerse UI Components
+            DocuVerse UI Componentsdd
           </h1>
           <p className="text-gray-400 max-w-3xl">
             This page showcases the enhanced UI components available in the

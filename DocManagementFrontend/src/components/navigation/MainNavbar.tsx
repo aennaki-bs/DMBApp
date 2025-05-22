@@ -16,16 +16,80 @@ import {
   Bell,
   Search,
   ChevronDown,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { useNavSearch } from "@/hooks/useNavSearch";
+import { SearchResults } from "./SearchResults";
+import { useRef, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export function MainNavbar() {
   const { user, logout } = useAuth();
+  const {
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    isSearching,
+    navigateToResult,
+  } = useNavSearch();
+
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     await logout();
   };
+
+  const handleInputFocus = () => {
+    setShowResults(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setShowResults(true);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+  };
+
+  const handleSelectResult = (path: string) => {
+    navigateToResult(path);
+    setShowResults(false);
+  };
+
+  // Handle clicks outside the search component
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Close search results on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   return (
     <nav className="border-b border-blue-900/30 bg-[#0a1033]/95 backdrop-blur-sm h-16 shadow-md w-full">
@@ -42,14 +106,40 @@ export function MainNavbar() {
         </div>
 
         {/* Search bar */}
-        <div className="hidden md:flex flex-1 max-w-md mx-6">
+        <div
+          className="hidden md:flex flex-1 max-w-md mx-6 relative"
+          ref={searchRef}
+        >
           <div className="relative w-full group">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-300 group-hover:text-blue-200 transition-colors duration-200" />
             <Input
-              className="pl-9 bg-blue-950/40 border-blue-800/30 text-white placeholder:text-blue-300/50 w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md transition-all duration-200 group-hover:border-blue-700/50 group-hover:bg-blue-900/40 backdrop-blur-sm shadow-inner"
-              placeholder="Search documents, workflows..."
+              className="pl-9 pr-10 bg-blue-950/40 border-blue-800/30 text-white placeholder:text-blue-300/50 w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md transition-all duration-200 group-hover:border-blue-700/50 group-hover:bg-blue-900/40 backdrop-blur-sm shadow-inner"
+              placeholder="Search pages, documents, workflows..."
+              value={searchQuery}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
             />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 text-blue-300 hover:text-blue-100 hover:bg-blue-800/40 rounded-full"
+                onClick={handleClearSearch}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
           </div>
+
+          {/* Search results dropdown */}
+          {showResults && (
+            <SearchResults
+              results={searchResults}
+              isSearching={isSearching}
+              onSelect={handleSelectResult}
+              searchQuery={searchQuery}
+            />
+          )}
         </div>
 
         {user ? (

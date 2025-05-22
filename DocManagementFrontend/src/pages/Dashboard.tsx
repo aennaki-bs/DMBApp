@@ -164,7 +164,7 @@ export default function Dashboard() {
       )}
 
       {/* UI Showcase Link */}
-      <DashboardCard title="UI Components">
+      {/* <DashboardCard title="UI Components">
         <div className="p-4">
           <p className="text-blue-200 mb-4">
             Explore the enhanced UI components available in DocuVerse with
@@ -182,7 +182,7 @@ export default function Dashboard() {
             </EnhancedButton>
           </Link>
         </div>
-      </DashboardCard>
+      </DashboardCard> */}
     </div>
   );
 }

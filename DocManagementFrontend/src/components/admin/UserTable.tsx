@@ -166,6 +166,7 @@ export function UserTable() {
   const clearAllFilters = () => {
     setStatusFilter("any");
     setRoleFilter("any");
+    setSearchQuery("");
     setFilterOpen(false); // Close popover after clearing
   };
 
@@ -332,6 +333,7 @@ export function UserTable() {
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSort={handleSort}
+        onClearFilters={clearAllFilters}
       />
 
       {selectedUsers.length > 0 && (
