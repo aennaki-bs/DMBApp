@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import documentService from "@/services/documentService";
+import workflowService from "@/services/workflowService";
+import approvalService from "@/services/approvalService";
 
 // Component imports
 import DocumentTitle from "@/components/document/DocumentTitle";
@@ -51,6 +53,42 @@ const ViewDocument = () => {
     enabled: !!id,
   });
 
+  // Fetch workflow status for this document
+  const {
+    data: workflowStatus,
+    isLoading: isLoadingWorkflow,
+    error: workflowError
+  } = useQuery({
+    queryKey: ["documentWorkflow", Number(id)],
+    queryFn: () => workflowService.getDocumentWorkflowStatus(Number(id)),
+    enabled: !!id && !!document?.circuitId,
+    retry: false,  // Don't retry if the document isn't in a workflow
+  });
+
+  // Fetch approval history for this document
+  const {
+    data: approvalHistory,
+    isLoading: isLoadingApprovalHistory,
+    error: approvalHistoryError
+  } = useQuery({
+    queryKey: ["documentApprovalHistory", Number(id)],
+    queryFn: () => approvalService.getApprovalHistory(Number(id)),
+    enabled: !!id,
+    retry: false,
+  });
+  
+  // Fetch pending approvals for this document
+  const {
+    data: pendingApprovals,
+    isLoading: isLoadingApproval,
+    error: approvalError
+  } = useQuery({
+    queryKey: ["documentApprovals", Number(id)],
+    queryFn: () => approvalService.getDocumentApprovals(Number(id)),
+    enabled: !!id,
+    retry: false,
+  });
+
   // Fetch lignes for this document
   const {
     data: lignes = [],
@@ -74,7 +112,22 @@ const ViewDocument = () => {
       console.error(`Failed to fetch lignes for document ${id}:`, lignesError);
       toast.error("Failed to load document lignes");
     }
-  }, [documentError, lignesError, id, navigate]);
+
+    if (workflowError && document?.circuitId) {
+      console.error(`Failed to fetch workflow status for document ${id}:`, workflowError);
+      toast.error("Failed to load workflow status");
+    }
+
+    if (approvalHistoryError) {
+      console.error(`Failed to fetch approval history for document ${id}:`, approvalHistoryError);
+      // Don't show error toast for approval history as it might not exist for all documents
+    }
+    
+    if (approvalError) {
+      console.error(`Failed to fetch pending approvals for document ${id}:`, approvalError);
+      // Don't show error toast for pending approvals as it might not exist for all documents
+    }
+  }, [documentError, lignesError, workflowError, approvalError, approvalHistoryError, id, navigate, document]);
 
   const handleDelete = async () => {
     if (!canManageDocuments) {
@@ -107,6 +160,42 @@ const ViewDocument = () => {
     navigate("/documents");
     return null;
   }
+
+  // Find active approval - prefer direct pending approvals query result
+  const directPendingApproval = pendingApprovals && pendingApprovals.length > 0 
+    ? pendingApprovals[0] 
+    : undefined;
+  
+  // Fallback to approval history if direct pending approvals query returned nothing
+  const historyPendingApproval = !directPendingApproval 
+    ? approvalHistory?.find(approval =>
+        approval.status === "Pending" ||
+        approval.status === "InProgress" ||
+        approval.status === "Waiting" ||
+        approval.status.toLowerCase().includes("wait") ||
+        approval.status.toLowerCase().includes("progress")
+      ) 
+    : undefined;
+
+  // If there's no explicit pending approval but workflow has status, create a synthetic one
+  const syntheticApproval = !directPendingApproval && !historyPendingApproval &&
+    workflowStatus?.currentStatusTitle && workflowStatus?.currentStepId && workflowStatus?.currentStepRequiresApproval
+      ? {
+          approvalId: 0,
+          documentId: Number(id),
+          documentKey: document?.documentKey || '',
+          documentTitle: document?.title || '',
+          stepId: workflowStatus.currentStepId,
+          stepTitle: workflowStatus.currentStatusTitle,
+          assignedTo: "Approval Required",
+          status: "Waiting",
+          createdAt: new Date().toISOString(),
+          isRequired: true
+        } 
+      : undefined;
+
+  // Use the most specific approval information available
+  const effectiveApproval = directPendingApproval || historyPendingApproval || syntheticApproval;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900/20 to-blue-950/30">
@@ -147,6 +236,11 @@ const ViewDocument = () => {
               canManageDocuments={canManageDocuments}
               isCreateDialogOpen={isCreateDialogOpen}
               setIsCreateDialogOpen={setIsCreateDialogOpen}
+              workflowStatus={workflowStatus}
+              isLoadingWorkflow={isLoadingWorkflow}
+              pendingApproval={effectiveApproval}
+              approvalHistory={approvalHistory}
+              isLoadingApproval={isLoadingApproval}
             />
           </motion.div>
         ) : (

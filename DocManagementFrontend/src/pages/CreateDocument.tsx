@@ -10,6 +10,7 @@ import {
   Calendar,
   FileSignature,
   Layers,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import documentService from "@/services/documentService";
@@ -22,6 +23,7 @@ import { DateSelectionStep } from "@/components/create-document/steps/DateSelect
 import { ContentStep } from "@/components/create-document/steps/ContentStep";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import api from "@/services/api";
 
 const MotionDiv = motion.div;
 
@@ -29,9 +31,12 @@ export default function CreateDocument() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [filteredDocumentTypes, setFilteredDocumentTypes] = useState<DocumentType[]>([]);
   const [subTypes, setSubTypes] = useState<SubType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingStumps, setIsLoadingStumps] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [documentTypesWithStumps, setDocumentTypesWithStumps] = useState<Set<number>>(new Set());
 
   // Form data
   const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
@@ -53,23 +58,23 @@ export default function CreateDocument() {
   const steps = [
     {
       id: 1,
-      title: "Document Type",
-      description: "Select document type and subtype",
-      icon: <Layers className="h-4 w-4" />,
+      title: "Document Date",
+      description: "Set document date",
+      icon: <Calendar className="h-4 w-4" />,
       completed: step > 1,
     },
     {
       id: 2,
-      title: "Document Details",
-      description: "Enter title and alias",
-      icon: <FileSignature className="h-4 w-4" />,
+      title: "Document Type",
+      description: "Select document type and stump",
+      icon: <Layers className="h-4 w-4" />,
       completed: step > 2,
     },
     {
       id: 3,
-      title: "Document Date",
-      description: "Set document date",
-      icon: <Calendar className="h-4 w-4" />,
+      title: "Document Details",
+      description: "Enter title and alias",
+      icon: <FileSignature className="h-4 w-4" />,
       completed: step > 3,
     },
     {
@@ -81,6 +86,7 @@ export default function CreateDocument() {
     },
   ];
 
+  // Fetch all document types initially
   useEffect(() => {
     const fetchDocumentTypes = async () => {
       try {
@@ -98,19 +104,122 @@ export default function CreateDocument() {
     fetchDocumentTypes();
   }, []);
 
+  // Check which document types have valid stumps for the selected date
+  useEffect(() => {
+    const checkDocumentTypesWithStumps = async () => {
+      if (!docDate || documentTypes.length === 0) return;
+      
+      setIsLoadingStumps(true);
+      setFilteredDocumentTypes([]); // Clear filtered types immediately
+      
+      try {
+        // Format date correctly for API - needs exact ISO format as per API docs
+        const dateObj = new Date(docDate);
+        const formattedDate = dateObj.toISOString(); // Send full ISO string including time
+        
+        console.log(`Checking active stumps for date ${formattedDate} across ${documentTypes.length} document types`);
+        
+        const validTypeIds = new Set<number>();
+        const validTypes: DocumentType[] = [];
+        
+        // Process each document type one by one
+        for (const docType of documentTypes) {
+          try {
+            // Direct API call as per documentation
+            const response = await api.get(`/Stump/for-date/${docType.id}/${formattedDate}`);
+            
+            // Check if there are any active stumps in the response
+            if (response.data && Array.isArray(response.data)) {
+              const activeStumps = response.data.filter(stump => stump.isActive);
+              
+              console.log(`Type ${docType.id} (${docType.typeName}): Found ${response.data.length} stumps, ${activeStumps.length} active`);
+              
+              // Only add document types with active stumps
+              if (activeStumps.length > 0) {
+                validTypeIds.add(docType.id);
+                validTypes.push(docType);
+                console.log(`Added type ${docType.id} to valid types`);
+              }
+            }
+          } catch (error) {
+            console.error(`Error checking stumps for type ${docType.id}:`, error);
+          }
+        }
+        
+        console.log(`Found ${validTypes.length} document types with active stumps out of ${documentTypes.length}`);
+        
+        // Update state with validated types
+        setDocumentTypesWithStumps(validTypeIds);
+        setFilteredDocumentTypes(validTypes);
+        
+        // Clear selection if selected type is no longer valid
+        if (selectedTypeId && !validTypeIds.has(selectedTypeId)) {
+          console.log(`Selected type ${selectedTypeId} no longer has valid stumps, clearing selection`);
+          setSelectedTypeId(null);
+          setSelectedSubTypeId(null);
+        }
+        
+        // Show warning if no valid types found
+        if (documentTypes.length > 0 && validTypes.length === 0) {
+          toast.warning(
+            "No document types with active stumps available for the selected date. Please select a different date."
+          );
+        }
+      } catch (error) {
+        console.error('Error filtering document types with active stumps:', error);
+        setFilteredDocumentTypes([]);
+        setDocumentTypesWithStumps(new Set());
+      } finally {
+        setIsLoadingStumps(false);
+      }
+    };
+    
+    checkDocumentTypesWithStumps();
+  }, [documentTypes, docDate]);
+
+  // Fetch subtypes when document type is selected
   useEffect(() => {
     const fetchSubTypes = async () => {
-      if (selectedTypeId) {
+      if (selectedTypeId && documentTypesWithStumps.has(selectedTypeId)) {
         try {
           setIsLoading(true);
-          const data = await subTypeService.getSubTypesByDocType(
-            selectedTypeId
-          );
-          setSubTypes(data);
-          setSelectedSubTypeId(null);
+          
+          // Format date correctly for API call - same as in checkDocumentTypesWithStumps
+          const dateObj = new Date(docDate);
+          const formattedDate = dateObj.toISOString();
+          
+          console.log(`Fetching subtypes for type ${selectedTypeId} with date ${formattedDate}`);
+          
+          // Direct API call as per documentation
+          const response = await api.get(`/Stump/for-date/${selectedTypeId}/${formattedDate}`);
+          
+          if (response.data && Array.isArray(response.data)) {
+            // Filter for active stumps only
+            const activeSubTypes = response.data.filter(subType => subType.isActive);
+            
+            console.log(`Fetched ${response.data.length} subtypes, ${activeSubTypes.length} are active`);
+            
+            setSubTypes(activeSubTypes);
+            
+            // Clear selection if no active subtypes or selection is no longer valid
+            if (activeSubTypes.length === 0) {
+              console.log(`No active subtypes found for type ${selectedTypeId}`);
+              setSelectedSubTypeId(null);
+              toast.warning("No active stumps available for this document type on the selected date.");
+            } else if (selectedSubTypeId && !activeSubTypes.some(st => st.id === selectedSubTypeId)) {
+              console.log(`Selected subtype ${selectedSubTypeId} is no longer valid, clearing selection`);
+              setSelectedSubTypeId(null);
+            }
+          } else {
+            console.error('Invalid response format:', response.data);
+            setSubTypes([]);
+            setSelectedSubTypeId(null);
+          }
         } catch (error) {
-          console.error("Failed to fetch subtypes:", error);
-          toast.error("Failed to load subtypes");
+          console.error(`Error fetching subtypes for type ${selectedTypeId}:`, error);
+          toast.error("Failed to load stumps");
+          setSubTypes([]);
+          setSelectedSubTypeId(null);
         } finally {
           setIsLoading(false);
         }
@@ -121,7 +230,7 @@ export default function CreateDocument() {
     };
 
     fetchSubTypes();
-  }, [selectedTypeId]);
+  }, [selectedTypeId, docDate, documentTypesWithStumps, selectedSubTypeId]);
 
   const validateDate = (date: string, subType: SubType | null): boolean => {
     if (!subType) return true;
@@ -183,28 +292,32 @@ export default function CreateDocument() {
   const validateCurrentStep = () => {
     switch (step) {
       case 1:
-        if (!selectedTypeId) {
-          toast.error("Please select a document type");
-          return false;
-        }
-        if (subTypes.length > 0 && !selectedSubTypeId) {
-          toast.error("Please select a subtype");
-          return false;
-        }
-        return true;
-      case 2:
-        if (!title.trim()) {
-          toast.error("Please enter a document title");
-          return false;
-        }
-        return true;
-      case 3:
         if (!docDate) {
           toast.error("Please select a document date");
           return false;
         }
         if (dateError) {
           toast.error(dateError);
+          return false;
+        }
+        if (filteredDocumentTypes.length === 0) {
+          toast.error("No document types with active stumps available for the selected date. Please select a different date.");
+          return false;
+        }
+        return true;
+      case 2:
+        if (!selectedTypeId) {
+          toast.error("Please select a document type");
+          return false;
+        }
+        if (subTypes.length > 0 && !selectedSubTypeId) {
+          toast.error("Please select a stump");
+          return false;
+        }
+        return true;
+      case 3:
+        if (!title.trim()) {
+          toast.error("Please enter a document title");
           return false;
         }
         return true;
@@ -256,25 +369,80 @@ export default function CreateDocument() {
     switch (step) {
       case 1:
         return (
-          <TypeSelectionStep
-            documentTypes={documentTypes}
-            subTypes={subTypes}
-            selectedTypeId={selectedTypeId}
-            selectedSubTypeId={selectedSubTypeId}
-            documentAlias={documentAlias}
-            onTypeChange={handleTypeChange}
-            onSubTypeChange={handleSubTypeChange}
-            onAliasChange={setDocumentAlias}
+          <DateSelectionStep
+            docDate={docDate}
+            comptableDate={null}
+            dateError={dateError}
+            comptableDateError={null}
+            onDateChange={handleDocDateChange}
+            onComptableDateChange={() => {}}
+            selectedSubType={
+              selectedSubTypeId
+                ? subTypes.find((st) => st.id === selectedSubTypeId)
+                : null
+            }
           />
         );
       case 2:
-        return <TitleStep title={title} onTitleChange={setTitle} />;
+        // Empty document types means we're still loading or there are no valid types
+        if (isLoadingStumps) {
+          return (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              <p className="mt-4 text-blue-400">Loading document types...</p>
+            </div>
+          );
+        }
+        
+        // If no document types with active stumps for the date, show message
+        if (filteredDocumentTypes.length === 0) {
+          return (
+            <div className="p-4 bg-amber-900/20 border border-amber-800 rounded-md">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="h-5 w-5 mt-0.5 text-amber-400 flex-shrink-0" />
+                <div>
+                  <h4 className="text-amber-400 font-medium">No Document Types Available</h4>
+                  <p className="text-gray-300 text-sm mt-1">
+                    There are no document types with active stumps available for the selected date ({new Date(docDate).toLocaleDateString()}).
+                  </p>
+                  <p className="text-gray-300 text-sm mt-2">
+                    Please select a different date or create stumps that are active for this date.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-3 border-amber-500/50 text-amber-400 hover:bg-amber-800/20"
+                    onClick={() => setStep(1)}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Change Date
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        // If there are valid document types, show the normal selection step
+        return (
+          <TypeSelectionStep
+            documentTypes={filteredDocumentTypes}
+            subTypes={subTypes}
+            selectedTypeId={selectedTypeId}
+            selectedSubTypeId={selectedSubTypeId}
+            onTypeChange={handleTypeChange}
+            onSubTypeChange={handleSubTypeChange}
+            isLoadingTypes={isLoadingStumps}
+            isLoadingSubTypes={isLoading}
+          />
+        );
       case 3:
         return (
-          <DateSelectionStep
-            docDate={docDate}
-            dateError={dateError}
-            onDateChange={handleDocDateChange}
+          <TitleStep
+            title={title}
+            documentAlias={documentAlias}
+            onTitleChange={setTitle}
+            onDocumentAliasChange={setDocumentAlias}
           />
         );
       case 4:

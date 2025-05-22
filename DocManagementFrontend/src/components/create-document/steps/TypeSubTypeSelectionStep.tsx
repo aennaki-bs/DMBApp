@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { DocumentType } from "@/models/document";
 import { SubType } from "@/models/subtype";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, ChevronDown, Loader2, Tag, Layers } from "lucide-react";
+import { AlertCircle, ChevronDown, Loader2, Tag, Layers, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface TypeSubTypeSelectionStepProps {
@@ -108,8 +108,7 @@ export const TypeSubTypeSelectionStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm">
-                    No document types available. Please contact an
-                    administrator.
+                    No document types with active stumps available for the selected date. Please select a different date.
                   </p>
                 </div>
               </div>
@@ -190,6 +189,19 @@ export const TypeSubTypeSelectionStep = ({
             <Loader2 className="h-4 w-4 animate-spin" />
             <span>Loading stumps...</span>
           </div>
+        ) : selectedTypeId && !isLoadingSubTypes && subTypes.length === 0 ? (
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-3 text-amber-400">
+                <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm">
+                    No active stumps available for this document type on the selected date.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ) : subTypes.length === 0 ? (
           <Card className="bg-gray-800/50 border-gray-700">
             <CardContent className="p-4">
@@ -221,7 +233,7 @@ export const TypeSubTypeSelectionStep = ({
                 className={selectedSubTypeId ? "text-white" : "text-gray-500"}
               >
                 {selectedSubType
-                  ? selectedSubType.name
+                  ? selectedSubType.subTypeKey
                   : "Select document stump"}
               </span>
               <ChevronDown
@@ -244,13 +256,25 @@ export const TypeSubTypeSelectionStep = ({
                           : "text-white"
                       }`}
                     >
-                      {subtype.name}
+                      <span className="font-medium">{subtype.subTypeKey}</span>
+                      {subtype.name && (
+                        <span className="text-gray-400 ml-2 text-xs">
+                          {subtype.name}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
             )}
           </div>
+        )}
+
+        {subTypes.length > 0 && (
+          <p className="text-xs text-gray-400 mt-2">
+            <Info className="h-3.5 w-3.5 inline mr-1" />
+            Only showing active stumps that are valid for the selected document date.
+          </p>
         )}
 
         {subTypeError && <p className="text-sm text-red-500">{subTypeError}</p>}

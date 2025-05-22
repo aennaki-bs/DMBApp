@@ -17,6 +17,7 @@ import { FileText, Info, PencilLine, Lightbulb, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const formSchema = z.object({
   name: z.string().optional(),
@@ -53,11 +54,20 @@ export const SubTypeBasicInfo = () => {
     // Get year and month
     const year = startDate.getFullYear().toString().slice(-2);
     const month = (startDate.getMonth() + 1).toString().padStart(2, "0");
+    const shortMonth = new Intl.DateTimeFormat('en', { month: 'short' }).format(startDate).toUpperCase();
+    const day = startDate.getDate().toString().padStart(2, "0");
 
     // Generate suggestions
     suggestions.push(`STR-${year}${month}`); // STR-YYMM
     suggestions.push(`STN-${year}-${month}`); // STN-YY-MM
     suggestions.push(`TYN-${year}`); // TYN-YY
+    suggestions.push(`${shortMonth}-${year}`); // JAN-23
+    suggestions.push(`${shortMonth}${day}`); // JAN01
+    suggestions.push(`DOC-${year}${month}`); // DOC-2304
+    suggestions.push(`STM-${year}${month}${day}`); // STM-230401
+    suggestions.push(`ID-${month}${year}`); // ID-0423
+    suggestions.push(`REF-${year}${month}`); // REF-2304
+    suggestions.push(`STMP-${shortMonth}-${year}`); // STMP-JAN-23
 
     return suggestions;
   };
@@ -148,23 +158,25 @@ export const SubTypeBasicInfo = () => {
                                 Suggested prefixes based on selected dates:
                               </span>
                             </div>
-                            <div className="space-y-2">
-                              {suggestions.map((suggestion, index) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center justify-between bg-blue-900/40 p-2 rounded-md hover:bg-blue-800/40 transition-colors cursor-pointer"
-                                  onClick={() => applySuggestion(suggestion)}
-                                >
-                                  <span className="text-sm text-white font-medium">
-                                    {suggestion}
-                                  </span>
-                                  <div className="flex items-center text-blue-400 text-xs">
-                                    <Copy className="h-3 w-3 mr-1" />
-                                    Apply
+                            <ScrollArea className="h-[200px] pr-2">
+                              <div className="space-y-2">
+                                {suggestions.map((suggestion, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between bg-blue-900/40 p-2 rounded-md hover:bg-blue-800/40 transition-colors cursor-pointer"
+                                    onClick={() => applySuggestion(suggestion)}
+                                  >
+                                    <span className="text-sm text-white font-medium">
+                                      {suggestion}
+                                    </span>
+                                    <div className="flex items-center text-blue-400 text-xs">
+                                      <Copy className="h-3 w-3 mr-1" />
+                                      Apply
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
                             <p className="text-[10px] text-blue-400/70 mt-2">
                               Choose a prefix that is meaningful and relates to
                               your document stump's purpose and date range.

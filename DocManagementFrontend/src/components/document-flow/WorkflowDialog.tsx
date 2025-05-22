@@ -24,6 +24,7 @@ import { CircuitBoard, ArrowLeft } from "lucide-react";
 import { LoadingState } from "@/components/circuits/document-flow/LoadingState";
 import { NoCircuitAssignedCard } from "@/components/circuits/document-flow/NoCircuitAssignedCard";
 import { ErrorMessage } from "./ErrorMessage";
+import { DocumentApprovalStatus } from "@/components/document-flow/DocumentApprovalStatus";
 
 interface WorkflowDialogProps {
   open: boolean;
@@ -62,10 +63,21 @@ export function WorkflowDialog({
   // Handle move to status
   const handleMoveToStatus = (statusId: number) => {
     if (workflowStatus && statusId) {
+      // Find the status title from available transitions
+      const targetStatus = workflowStatus.availableStatusTransitions?.find(
+        s => s.statusId === statusId
+      );
+      const statusTitle = targetStatus?.title || `status ID ${statusId}`;
+      const requiresApproval = targetStatus?.requiresApproval;
+      
       circuitService
-        .moveToStatus(documentId, statusId, `Moving to status ID ${statusId}`)
-        .then(() => {
-          toast.success("Document status updated successfully");
+        .moveToStatus(documentId, statusId, `Moving to ${statusTitle}`)
+        .then((result) => {
+          if (result.requiresApproval) {
+            toast.info("This step requires approval. An approval request has been initiated.");
+          } else {
+            toast.success("Document status updated successfully");
+          }
           refreshAllData();
         })
         .catch((error) => {
@@ -73,6 +85,11 @@ export function WorkflowDialog({
           toast.error("Failed to update document status");
         });
     }
+  };
+
+  // Handle approval update
+  const handleApprovalUpdate = () => {
+    refreshAllData();
   };
 
   // Collect all errors
@@ -201,6 +218,18 @@ export function WorkflowDialog({
                     )}
                   </CardContent>
                 </Card>
+              </motion.div>
+
+              {/* Approval Status */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <DocumentApprovalStatus
+                  documentId={documentId}
+                  onApprovalUpdate={handleApprovalUpdate}
+                />
               </motion.div>
 
               {/* Main content area - Mind Map */}

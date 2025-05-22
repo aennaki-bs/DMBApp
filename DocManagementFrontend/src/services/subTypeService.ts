@@ -169,27 +169,39 @@ const subTypeService = {
   getSubTypesForDate: async (docTypeId: number, date: Date | string): Promise<SubType[]> => {
     let formattedDate: string;
     if (date instanceof Date) {
-      formattedDate = date.toISOString();
+      formattedDate = date.toISOString().split('T')[0]; // Ensure we just use the date part
     } else {
-      formattedDate = date;
+      // If it's already a string, make sure it's just the date part
+      const dateObj = new Date(date);
+      formattedDate = dateObj.toISOString().split('T')[0];
     }
+    
+    console.log(`SubTypeService: Fetching subtypes for docType ${docTypeId} and date ${formattedDate}`);
     
     try {
       const response = await api.get(`/Stump/for-date/${docTypeId}/${formattedDate}`);
       
       if (response.data && Array.isArray(response.data)) {
-        return response.data;
+        const activeSubTypes = response.data.filter(st => st.isActive);
+        console.log(`SubTypeService: Found ${response.data.length} subtypes, ${activeSubTypes.length} active`);
+        return activeSubTypes; // Only return active subtypes
       } else {
         console.error('Invalid subtypes for date response format:', response.data);
         
-        // Fall back to filtering locally
-        return filterSubtypesByDate(docTypeId, new Date(formattedDate), subTypeService.getSubTypesByDocType);
+        // Fall back to filtering locally - only return active subtypes
+        const allSubTypes = await filterSubtypesByDate(docTypeId, new Date(formattedDate), subTypeService.getSubTypesByDocType);
+        const activeSubTypes = allSubTypes.filter(st => st.isActive);
+        console.log(`SubTypeService (fallback): Found ${allSubTypes.length} subtypes, ${activeSubTypes.length} active`);
+        return activeSubTypes;
       }
     } catch (error) {
       console.error(`Error fetching subtypes for document type ${docTypeId} and date ${formattedDate}:`, error);
       
-      // Fall back to filtering locally
-      return filterSubtypesByDate(docTypeId, new Date(formattedDate), subTypeService.getSubTypesByDocType);
+      // Fall back to filtering locally - only return active subtypes
+      const allSubTypes = await filterSubtypesByDate(docTypeId, new Date(formattedDate), subTypeService.getSubTypesByDocType);
+      const activeSubTypes = allSubTypes.filter(st => st.isActive);
+      console.log(`SubTypeService (error fallback): Found ${allSubTypes.length} subtypes, ${activeSubTypes.length} active`);
+      return activeSubTypes;
     }
   },
 

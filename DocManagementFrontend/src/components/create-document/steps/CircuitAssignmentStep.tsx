@@ -28,11 +28,6 @@ interface Circuit {
   icon?: React.ReactNode;
   code?: string;
   isActive?: boolean;
-  stats?: {
-    documentsProcessed?: number;
-    averageProcessingTime?: string;
-    approvers?: number;
-  };
 }
 
 interface CircuitAssignmentStepProps {
@@ -51,8 +46,11 @@ export const CircuitAssignmentStep = ({
   isLoading,
 }: CircuitAssignmentStepProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDetails, setShowDetails] = useState<number | null>(null);
 
+  // No need to filter by isActive as the API already returns only active circuits
+  // Just log the circuits for debugging
+  console.log('Circuits passed to component:', circuits);
+  
   // Filter circuits based on search query
   const filteredCircuits = circuits.filter(
     (circuit) =>
@@ -73,7 +71,7 @@ export const CircuitAssignmentStep = ({
       <span
         className={cn(
           "text-xs font-medium",
-          isActive ? "text-green-400" : "text-red-400"
+          isActive ? "text-green-400 font-bold" : "text-red-400"
         )}
       >
         {isActive ? "Active" : "Inactive"}
@@ -99,7 +97,7 @@ export const CircuitAssignmentStep = ({
         <div className="flex items-center gap-2">
           <Share2 className="h-4 w-4 text-blue-400" />
           <Label className="text-sm font-medium text-gray-200">
-            Select Circuit*
+            Select Circuit <span className="ml-1 text-blue-400">(Optional)</span>
           </Label>
         </div>
 
@@ -150,8 +148,68 @@ export const CircuitAssignmentStep = ({
               <div>Description</div>
               <div>Status</div>
             </div>
+            
+            <div className="text-xs text-blue-400 mb-2 px-4">
+              Select "No Circuit" (default) or choose an <span className="font-bold">active circuit</span> from the list below
+            </div>
+            
+            <div className="bg-blue-900/30 border border-blue-800/50 rounded-md mb-4 p-2 mx-2">
+              <div className="flex items-center gap-2 text-xs text-blue-300">
+                <Info className="h-3.5 w-3.5 text-blue-400" />
+                <span>Only <span className="font-bold">active circuits</span> are displayed and available for selection</span>
+              </div>
+            </div>
 
             <ScrollArea className="h-[300px] pr-4">
+              {/* Add a "No circuit" option */}
+              <div
+                key="no-circuit"
+                className="mb-6 bg-gray-900 border border-gray-800 rounded-md overflow-hidden"
+              >
+                <div
+                  className={cn(
+                    "cursor-pointer transition-all p-4",
+                    selectedCircuitId === null &&
+                      "bg-blue-900/30 border-blue-500"
+                  )}
+                  onClick={() => onCircuitChange("")}
+                >
+                  <div className="flex items-center">
+                    <RadioGroupItem
+                      value=""
+                      id="circuit-none"
+                      className={cn(
+                        "mr-3",
+                        selectedCircuitId === null && "text-blue-500"
+                      )}
+                    />
+
+                    <div className="flex items-center gap-2 w-20">
+                      <FileText className="h-5 w-5 text-gray-400" />
+                      <span className="font-mono text-sm">
+                        --
+                      </span>
+                    </div>
+
+                    <div className="flex-grow mr-4">
+                      <div className="text-blue-400 font-medium">
+                        No Circuit
+                      </div>
+                    </div>
+
+                    <div className="mr-4 text-sm text-gray-400">
+                      Document will be static (no workflow)
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {selectedCircuitId === null && (
+                        <Badge className="bg-blue-600 ml-2">Selected</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               {filteredCircuits.map((circuit) => (
                 <div
                   key={circuit.id}
@@ -193,55 +251,13 @@ export const CircuitAssignmentStep = ({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {circuit.isActive !== undefined && (
-                          <StatusIndicator isActive={circuit.isActive} />
-                        )}
+                        <StatusIndicator isActive={true} />
                         {selectedCircuitId === circuit.id && (
                           <Badge className="bg-blue-600 ml-2">Selected</Badge>
                         )}
                       </div>
                     </div>
                   </div>
-
-                  {/* Circuit Stats */}
-                  {circuit.stats && (
-                    <div className="grid grid-cols-3 gap-0 border-t border-gray-800">
-                      <div className="flex flex-col items-center py-3 border-r border-gray-800">
-                        <div className="text-gray-400 text-xs">Documents</div>
-                        <div className="text-white font-medium">
-                          {circuit.stats.documentsProcessed}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-center py-3 border-r border-gray-800">
-                        <div className="text-gray-400 text-xs">Avg. Time</div>
-                        <div className="text-white font-medium">
-                          {circuit.stats.averageProcessingTime}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-center py-3">
-                        <div className="text-gray-400 text-xs">Approvers</div>
-                        <div className="text-white font-medium">
-                          {circuit.stats.approvers}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full py-2 text-center text-blue-400 hover:text-blue-300 border-t border-gray-800 rounded-none"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDetails(
-                        showDetails === circuit.id ? null : circuit.id
-                      );
-                    }}
-                  >
-                    Show details
-                  </Button>
                 </div>
               ))}
             </ScrollArea>
@@ -261,10 +277,10 @@ export const CircuitAssignmentStep = ({
         <div>
           <p>
             Assigning a document to a circuit determines its approval workflow
-            and who will process it.
+            and who will process it. This step is optional - documents without a circuit will be static.
           </p>
-          <p className="mt-1 text-blue-400/80">
-            Note: Only active circuits are available for document assignment.
+          <p className="mt-1 text-blue-400/80 font-medium">
+            Important: Only <span className="text-green-400 font-bold">active</span> circuits are available for document assignment. Inactive circuits are not shown.
           </p>
         </div>
       </div>

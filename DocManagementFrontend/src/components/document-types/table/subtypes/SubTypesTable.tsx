@@ -64,10 +64,7 @@ export function SubTypesTable({
       <Table>
         <TableHeader className="bg-[#0a1033]">
           <TableRow className="hover:bg-[#0a1033]/80 border-blue-900/30">
-            <TableHead className="text-blue-300 font-medium">Name</TableHead>
-            <TableHead className="text-blue-300 font-medium">
-              Description
-            </TableHead>
+            <TableHead className="text-blue-300 font-medium">Code</TableHead>
             <TableHead className="text-blue-300 font-medium">
               Start Date
             </TableHead>
@@ -86,27 +83,7 @@ export function SubTypesTable({
               key={subType.id}
               className="hover:bg-blue-900/10 border-blue-900/30"
             >
-              <TableCell className="font-medium">{subType.name}</TableCell>
-              <TableCell className="max-w-xs">
-                {subType.description ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="truncate text-sm text-gray-300">
-                          {subType.description}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-sm bg-[#0d1541] border-blue-900/50 text-white p-3">
-                        <p className="text-sm">{subType.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  <span className="text-sm text-gray-500/60 italic">
-                    No description provided
-                  </span>
-                )}
-              </TableCell>
+              <TableCell className="font-medium">{subType.subTypeKey}</TableCell>
               <TableCell>{formatDate(subType.startDate)}</TableCell>
               <TableCell>{formatDate(subType.endDate)}</TableCell>
               <TableCell>

@@ -378,12 +378,20 @@ const circuitService = {
   moveToStatus: async (documentId: number, targetStatusId: number, comments: string): Promise<boolean> => {
     console.log(`Moving document ${documentId} to status ${targetStatusId} with comments: ${comments}`);
     try {
+      // First get the status information to include the title
+      const availableTransitions = await circuitService.getAvailableTransitions(documentId);
+      const targetStatus = availableTransitions.find(status => status.statusId === targetStatusId);
+      const statusTitle = targetStatus?.title || `status ID ${targetStatusId}`;
+      const requiresApproval = targetStatus?.requiresApproval || false;
+      
       const response = await api.post(`/Workflow/move-to-status`, {
         documentId,
         targetStatusId,
-        comments
+        comments: comments || `Moving to ${statusTitle}`
       });
+      
       console.log('Move to status response:', response.data);
+      
       return response.data;
     } catch (error) {
       console.error('Error in moveToStatus:', error);
