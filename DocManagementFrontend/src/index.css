@@ -264,3 +264,100 @@
     transform: translateY(0);
   }
 }
+
+/* Modern calendar styling for date pickers */
+.react-calendar {
+  width: 100%;
+  background-color: transparent;
+  color: white;
+  font-size: 0.875rem;
+  border: none;
+}
+
+.react-calendar__navigation {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.react-calendar__navigation button {
+  background: none;
+  border: 0;
+  color: white;
+}
+
+.react-calendar__navigation button:disabled {
+  opacity: 0.3;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 6px;
+}
+
+.react-calendar__month-view__weekdays {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(148, 163, 184, 0.8);
+  margin-bottom: 0.25rem;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.25rem;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
+
+.react-calendar__tile {
+  padding: 0.35rem;
+  text-align: center;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  margin: 1px;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: white;
+}
+
+.react-calendar__tile--active {
+  background-color: rgba(59, 130, 246, 0.8) !important;
+  color: white !important;
+  font-weight: 500;
+}
+
+.react-calendar__tile--now {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: white;
+  font-weight: 500;
+}
+
+.react-calendar__month-view__days__day--weekend {
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+.custom-calendar .react-calendar__tile--active {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Dialog and modal styling improvements */
+.create-document-dialog {
+  max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Button transitions */
+button {
+  transition: all 0.2s ease;
+}

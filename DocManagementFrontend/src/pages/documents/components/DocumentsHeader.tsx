@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CreateDocumentModal } from "@/components/create-document/CreateDocumentModal";
+import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
 import AddToCircuitButton from "@/components/circuits/AddToCircuitButton";
 
 interface DocumentsHeaderProps {
@@ -31,22 +31,24 @@ export default function DocumentsHeader({
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Documents</h1>
-        <p className="text-blue-300/80">Manage your documents and files</p>
-      </div>
-      <div className="flex flex-wrap gap-3">
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Documents</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            View, create and manage your documents
+          </p>
+        </div>
+
         {useFakeData && (
-          <Button
-            variant="outline"
-            onClick={fetchDocuments}
-            className="border-amber-500/50 text-amber-500 hover:bg-amber-500/20"
-          >
-            <AlertCircle className="mr-2 h-4 w-4" />
-            Using Test Data
-          </Button>
+          <div className="bg-amber-900/30 border border-amber-900/50 text-amber-300 px-3 py-1.5 rounded-md text-xs flex items-center">
+            <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+            Using sample data
+          </div>
         )}
+      </div>
+
+      <div className="flex gap-2">
         {canManageDocuments ? (
           <>
             <Button
@@ -88,11 +90,11 @@ export default function DocumentsHeader({
         )}
       </div>
 
-      {/* Create Document Modal */}
-      <CreateDocumentModal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onDocumentCreated={fetchDocuments}
+      {/* Create Document Wizard */}
+      <CreateDocumentWizard
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onSuccess={fetchDocuments}
       />
     </div>
   );

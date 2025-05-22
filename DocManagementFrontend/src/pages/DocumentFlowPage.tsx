@@ -11,15 +11,24 @@ import { ErrorMessage } from "@/components/document-flow/ErrorMessage";
 import { WorkflowHistorySection } from "@/components/document-flow/WorkflowHistorySection";
 import { MoveDocumentButton } from "@/components/document-flow/MoveDocumentButton";
 import { DocumentFlowMindMap } from "@/components/document-flow/DocumentFlowMindMap";
+import { DocumentApprovalStatus } from "@/components/document-flow/DocumentApprovalStatus";
+import { ApprovalHistoryComponent } from "@/components/document-workflow/ApprovalHistory";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { AlertCircle, CheckCircle, FileText, CircuitBoard } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle,
+  FileText,
+  CircuitBoard,
+  History,
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDocumentWorkflow } from "@/hooks/useDocumentWorkflow";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const DocumentFlowPage = () => {
   const { id } = useParams();
@@ -73,6 +82,11 @@ const DocumentFlowPage = () => {
           toast.error("Failed to update document status");
         });
     }
+  };
+
+  // Handle approval update
+  const handleApprovalUpdate = () => {
+    refreshAllData();
   };
 
   // Collect all errors
@@ -213,24 +227,63 @@ const DocumentFlowPage = () => {
             </Card>
           </motion.div>
 
-          {/* Main content area - Mind Map and History side by side */}
-          <div className="flex flex-col lg:flex-row gap-3">
-            {/* Mind Map Visualization - Now full width */}
-            <div className="w-full">
-              <DocumentFlowMindMap
-                workflowStatus={workflowStatus}
-                documentId={Number(id)}
-                onStatusComplete={refreshAllData}
-                onMoveToStatus={handleMoveToStatus}
-              />
-            </div>
-          </div>
+          {/* Approval Status */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <DocumentApprovalStatus
+              documentId={Number(id)}
+              onApprovalUpdate={handleApprovalUpdate}
+            />
+          </motion.div>
 
-          {/* History section is now a floating button */}
-          <WorkflowHistorySection
-            history={circuitHistory || []}
-            isLoading={isLoadingHistory}
-          />
+          {/* Main content area with tabs for different views */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Tabs defaultValue="workflow" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="workflow">Workflow Steps</TabsTrigger>
+                <TabsTrigger value="approvals">Approval History</TabsTrigger>
+                <TabsTrigger value="activity">Activity History</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="workflow" className="mt-0">
+                {/* Mind Map Visualization */}
+                <DocumentFlowMindMap
+                  workflowStatus={workflowStatus}
+                  documentId={Number(id)}
+                  onStatusComplete={refreshAllData}
+                  onMoveToStatus={handleMoveToStatus}
+                />
+              </TabsContent>
+
+              <TabsContent value="approvals" className="mt-0">
+                <ApprovalHistoryComponent documentId={Number(id)} />
+              </TabsContent>
+
+              <TabsContent value="activity" className="mt-0">
+                <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xl text-white flex items-center">
+                      <History className="h-5 w-5 mr-2 text-blue-400" />
+                      Activity History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <WorkflowHistorySection
+                      history={circuitHistory || []}
+                      isLoading={isLoadingHistory}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { ArrowUpDown, Tag, FileText, Info, Hash } from "lucide-react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 interface DocumentTypeTableHeaderProps {
   onSelectAll: (checked: boolean) => void;
@@ -22,72 +23,68 @@ export const DocumentTypeTableHeader = ({
   const renderSortableHeader = (
     label: string,
     field: string,
-    icon: React.ReactNode
+    icon: React.ReactNode,
+    className?: string
   ) => (
     <div
-      className="flex items-center gap-1 cursor-pointer select-none"
+      className={cn(
+        "flex items-center gap-1 cursor-pointer select-none hover:text-blue-100 transition-colors",
+        className
+      )}
       onClick={() => onSort(field)}
     >
       {icon}
       {label}
-      <div className="ml-1 w-4 text-center">
-        {sortField === field ? (
-          <ArrowUpDown
-            className="h-3 w-3"
-            style={{
-              transform:
-                sortDirection === "asc" ? "rotate(0deg)" : "rotate(180deg)",
-              opacity: 1,
-            }}
-          />
-        ) : (
-          <ArrowUpDown className="h-3 w-3 opacity-50" />
-        )}
-      </div>
+      <ArrowUpDown
+        className={cn("ml-1 h-3.5 w-3.5", {
+          "text-blue-400": sortField === field,
+          "opacity-50": sortField !== field,
+        })}
+      />
     </div>
   );
 
   return (
     <TableHeader className="bg-blue-900/20 sticky top-0 z-10">
-      <TableRow className="border-blue-900/50 hover:bg-blue-900/30">
-        <TableHead className="w-12 text-blue-300">
+      <TableRow className="border-blue-900/30 hover:bg-transparent">
+        <TableHead className="w-[50px]">
           <Checkbox
             checked={areAllEligibleSelected && hasEligibleTypes}
             onCheckedChange={onSelectAll}
             disabled={!hasEligibleTypes}
             aria-label="Select all types"
-            className="border-blue-500/50"
+            className="translate-y-[2px]"
           />
         </TableHead>
-        <TableHead className="text-blue-300">
+        <TableHead className="w-[150px]">
           {renderSortableHeader(
             "Type Code",
             "typeKey",
-            <Tag className="h-4 w-4" />
+            <Tag className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="text-blue-300">
+        <TableHead>
           {renderSortableHeader(
             "Type Name",
             "typeName",
-            <FileText className="h-4 w-4" />
+            <FileText className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="text-blue-300">
+        <TableHead className="max-w-[300px]">
           {renderSortableHeader(
             "Description",
             "typeAttr",
-            <Info className="h-4 w-4" />
+            <Info className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="text-blue-300">
+        <TableHead className="w-[150px]">
           {renderSortableHeader(
-            "Document Count",
+            "Documents",
             "documentCounter",
-            <Hash className="h-4 w-4" />
+            <Hash className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="text-blue-300 text-right">Actions</TableHead>
+        <TableHead className="text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

@@ -114,7 +114,7 @@ namespace DocManagementBackend.Services
                 {
                     throw new InvalidOperationException("A step can have either an individual approver or a group, but not both");
                 }
-                
+
                 if (step.ApprovatorId.HasValue)
                 {
                     // Verify the approver exists

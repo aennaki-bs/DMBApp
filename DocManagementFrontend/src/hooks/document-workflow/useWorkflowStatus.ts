@@ -1,10 +1,9 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import circuitService from '@/services/circuitService';
 import { DocumentWorkflowStatus } from '@/models/documentCircuit';
 
-export function useWorkflowStatus(documentId: number) {
+export function useWorkflowStatus(documentId: number, enabled: boolean = true) {
   const { 
     data: workflowStatus, 
     isLoading, 
@@ -14,7 +13,7 @@ export function useWorkflowStatus(documentId: number) {
   } = useQuery({
     queryKey: ['document-workflow', documentId],
     queryFn: () => circuitService.getDocumentCurrentStatus(documentId),
-    enabled: !!documentId,
+    enabled: !!documentId && enabled,
     meta: {
       onSettled: (data, err) => {
         if (err) {

@@ -89,13 +89,26 @@ export default function SubTypeDialogs({
   }, [selectedSubType]);
 
   const handleCreateSubmit = (formData: any) => {
+    // Ensure dates are set if they're not already
+    if (!formData.startDate) {
+      formData.startDate = new Date().toISOString().split("T")[0];
+    }
+    
+    if (!formData.endDate) {
+      formData.endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+        .toISOString().split("T")[0];
+    }
+    
+    // Always set isActive to true if it's undefined
+    if (formData.isActive === undefined) {
+      formData.isActive = true;
+    }
+    
     // Add the document type ID to the form data
-    const submissionData = {
+    onCreateSubmit({
       ...formData,
-      documentTypeId,
-    };
-
-    onCreateSubmit(submissionData);
+      documentTypeId: documentTypeId
+    });
   };
 
   const handleEditSubmit = () => {
@@ -146,13 +159,13 @@ export default function SubTypeDialogs({
           if (!open) resetCreateForm();
         }}
       >
-        <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[500px] p-3 overflow-hidden">
+        <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[500px] p-3 overflow-hidden max-h-[85vh]">
           <DialogHeader className="mb-1 pb-1 border-b border-blue-900/30">
             <DialogTitle className="text-lg text-white">
-              Create New Subtype
+              Create New Stump
             </DialogTitle>
             <DialogDescription className="text-blue-300 text-xs">
-              Complete each step to create a new document subtype
+              Complete each step to create a new document stump
             </DialogDescription>
           </DialogHeader>
 
@@ -160,6 +173,7 @@ export default function SubTypeDialogs({
             <SubTypeFormProvider
               onSubmit={handleCreateSubmit}
               onClose={handleCloseCreateDialog}
+              initialData={{ documentTypeId: documentTypeId }}
             >
               <MultiStepSubTypeForm onCancel={handleCloseCreateDialog} />
             </SubTypeFormProvider>
@@ -189,7 +203,7 @@ export default function SubTypeDialogs({
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </span>
-              Edit Subtype
+              Edit Stump
             </DialogTitle>
           </DialogHeader>
 
@@ -284,7 +298,7 @@ export default function SubTypeDialogs({
                   setEditedSubType({ ...editedSubType, name: e.target.value })
                 }
                 className="h-9 w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154]"
-                placeholder="Enter subtype name"
+                placeholder="Enter stump name"
               />
             </div>
 
@@ -306,7 +320,7 @@ export default function SubTypeDialogs({
                   })
                 }
                 className="min-h-[60px] w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] resize-none"
-                placeholder="Enter subtype description"
+                placeholder="Enter stump description"
               />
             </div>
 
@@ -376,7 +390,7 @@ export default function SubTypeDialogs({
               Confirm Deletion
             </AlertDialogTitle>
             <AlertDialogDescription className="text-blue-300/90 mt-2">
-              Are you sure you want to delete the subtype "
+              Are you sure you want to delete the stump "
               <span className="text-white font-medium">
                 {selectedSubType?.name}
               </span>

@@ -242,12 +242,12 @@ export const TypeSelectionStep = ({
             className="text-sm font-medium text-gray-200 flex items-center gap-2"
           >
             <Layers className="h-4 w-4 text-blue-400" />
-            Subtype*
+            Stump*
           </Label>
           {isLoadingSubTypes ? (
             <div className="flex items-center space-x-3 text-blue-400 text-sm py-2 px-3">
               <div className="animate-spin h-4 w-4 border-2 border-blue-400 rounded-full border-t-transparent"></div>
-              <span>Loading subtypes...</span>
+              <span>Loading stumps...</span>
             </div>
           ) : noSubTypesAvailable ? (
             <Card className="bg-gray-800/50 border-gray-700">
@@ -256,7 +256,7 @@ export const TypeSelectionStep = ({
                   <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                   <div className="space-y-2">
                     <p className="text-sm">
-                      No subtypes available for this document type.
+                      No stumps available for this document type.
                     </p>
                     <Button
                       variant="outline"
@@ -266,7 +266,7 @@ export const TypeSelectionStep = ({
                     >
                       <Link to={`/document-types/${selectedTypeId}/subtypes`}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Create Subtypes
+                        Create Stumps
                       </Link>
                     </Button>
                   </div>
@@ -275,7 +275,7 @@ export const TypeSelectionStep = ({
             </Card>
           ) : (
             <>
-              {/* Custom Subtype Select */}
+              {/* Custom Stump Select */}
               <div className="relative" ref={subtypeDropdownRef}>
                 <button
                   type="button"
@@ -297,8 +297,8 @@ export const TypeSelectionStep = ({
                     {selectedSubTypeId
                       ? filteredSubTypes.find(
                           (st) => st.id === selectedSubTypeId
-                        )?.name || "Select subtype"
-                      : "Select subtype"}
+                        )?.name || "Select stump"
+                      : "Select stump"}
                   </span>
                   <ChevronDown
                     className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
@@ -339,7 +339,7 @@ export const TypeSelectionStep = ({
                 <div className="bg-gray-800/40 border border-gray-700 rounded-md p-3 mt-3">
                   <div className="flex items-center gap-2 text-sm text-blue-400 mb-2">
                     <Clock className="h-4 w-4" />
-                    <span className="font-medium">Subtype Valid Period</span>
+                    <span className="font-medium">Stump Valid Period</span>
                   </div>
                   <p className="text-sm text-gray-300">
                     Valid from{" "}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { DocumentType } from '@/models/document';
@@ -13,6 +12,10 @@ import { useDocumentTypePagination } from './document-types/useDocumentTypePagin
 export const useDocumentTypes = () => {
   const [types, setTypes] = useState<DocumentType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [filters, setFilters] = useState<any>({ hasDocuments: 'any' });
+  const [appliedFilters, setAppliedFilters] = useState<any>({ hasDocuments: 'any' });
+  const [filterBadges, setFilterBadges] = useState<any[]>([]);
   const itemsPerPage = 10;
 
   const fetchTypes = async () => {
@@ -28,6 +31,10 @@ export const useDocumentTypes = () => {
     }
   };
 
+  const refreshTypes = async () => {
+    await fetchTypes();
+  };
+
   useEffect(() => {
     fetchTypes();
   }, []);
@@ -35,7 +42,7 @@ export const useDocumentTypes = () => {
   // Use our new utilities
   const { searchQuery, setSearchQuery, filteredTypes } = useDocumentTypeFiltering(types);
   const { sortField, sortDirection, handleSort, sortedTypes } = useDocumentTypeSorting(filteredTypes);
-  const { selectedTypes, handleSelectType, handleSelectAll } = useDocumentTypeSelection(sortedTypes);
+  const { selectedTypes, setSelectedTypes, handleSelectType, handleSelectAll } = useDocumentTypeSelection(sortedTypes);
   
   // Store the result of applying filtering and sorting for pagination and other operations
   const filteredAndSortedTypes = useMemo(() => sortedTypes, [sortedTypes]);
@@ -46,6 +53,17 @@ export const useDocumentTypes = () => {
     paginatedTypes, 
     totalPages 
   } = useDocumentTypePagination(filteredAndSortedTypes, itemsPerPage);
+
+  // Additional props for document types management
+  const documentTypesProps = {
+    sortField,
+    sortDirection,
+    handleSort,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    filteredAndSortedTypes
+  };
 
   return {
     types: paginatedTypes,
@@ -59,9 +77,20 @@ export const useDocumentTypes = () => {
     setCurrentPage,
     totalPages,
     selectedTypes,
+    setSelectedTypes,
     handleSelectType,
     handleSelectAll,
     fetchTypes,
-    filteredAndSortedTypes
+    refreshTypes,
+    filteredAndSortedTypes,
+    viewMode,
+    setViewMode,
+    filters,
+    setFilters,
+    appliedFilters,
+    setAppliedFilters,
+    filterBadges,
+    setFilterBadges,
+    documentTypesProps
   };
 };

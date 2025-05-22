@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { DocumentType } from '@/models/document';
 
@@ -27,6 +26,7 @@ export const useDocumentTypeSelection = (types: DocumentType[]) => {
 
   return {
     selectedTypes,
+    setSelectedTypes,
     handleSelectType,
     handleSelectAll
   };

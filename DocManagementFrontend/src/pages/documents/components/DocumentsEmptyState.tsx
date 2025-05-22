@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { File, Plus, FilterX, Search } from "lucide-react";
 import { useDocumentsFilter } from "../hooks/useDocumentsFilter";
-import { CreateDocumentModal } from "@/components/create-document/CreateDocumentModal";
+import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
 import { motion } from "framer-motion";
 
 interface DocumentsEmptyStateProps {
@@ -92,12 +92,11 @@ export default function DocumentsEmptyState({
         )}
       </div>
 
-      {/* Create Document Modal */}
-      <CreateDocumentModal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onDocumentCreated={() => {
-          setCreateModalOpen(false);
+      {/* Create Document Wizard */}
+      <CreateDocumentWizard
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onSuccess={() => {
           if (onDocumentCreated) onDocumentCreated();
         }}
       />

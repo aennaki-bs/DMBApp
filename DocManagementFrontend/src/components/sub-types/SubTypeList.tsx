@@ -20,13 +20,13 @@ const SubTypeList = ({ subTypes, isLoading, onEdit, onDelete, isSimpleUser }: Su
   };
 
   if (isLoading) {
-    return <div className="text-blue-300/70 text-sm">Loading subtypes...</div>;
+    return <div className="text-blue-300/70 text-sm">Loading stumps...</div>;
   }
 
   if (subTypes.length === 0) {
     return (
       <div className="text-blue-300/70 text-sm text-center py-8">
-        No subtypes found.
+        No stumps found.
       </div>
     );
   }

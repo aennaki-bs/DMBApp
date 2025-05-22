@@ -1,11 +1,16 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, GitBranch } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { Document } from '@/models/document';
+import React from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, GitBranch } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Document } from "@/models/document";
 
 interface DocumentEditHeaderProps {
   document: Document | null;
@@ -14,11 +19,11 @@ interface DocumentEditHeaderProps {
   onDocumentFlow: () => void;
 }
 
-const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({ 
-  document, 
+const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
+  document,
   documentId,
   onBack,
-  onDocumentFlow
+  onDocumentFlow,
 }) => {
   return (
     <div className="space-y-4">
@@ -28,7 +33,10 @@ const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/documents" className="text-blue-400/80 hover:text-blue-300">
+                  <Link
+                    to="/documents"
+                    className="text-blue-400/80 hover:text-blue-300"
+                  >
                     Documents
                   </Link>
                 </BreadcrumbLink>
@@ -36,7 +44,10 @@ const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={`/documents/${documentId}`} className="text-blue-400/80 hover:text-blue-300">
+                  <Link
+                    to={`/documents/${documentId}`}
+                    className="text-blue-400/80 hover:text-blue-300"
+                  >
                     {document?.documentKey || documentId}
                   </Link>
                 </BreadcrumbLink>
@@ -47,14 +58,12 @@ const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          
-          <h1 className="text-3xl font-bold text-white mt-2">
-            Edit Document
-          </h1>
+
+          <h1 className="text-3xl font-bold text-white mt-2">Edit Document</h1>
         </div>
-        
+
         <div className="flex space-x-3">
-          {document?.circuitId && (
+          {/* {document?.circuitId && (
             <Button
               variant="outline"
               size="lg"
@@ -63,10 +72,10 @@ const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
             >
               <GitBranch className="h-5 w-5 mr-2" /> Document Flow
             </Button>
-          )}
+          )} */}
           <Button
-            variant="outline" 
-            size="lg" 
+            variant="outline"
+            size="lg"
             onClick={onBack}
             className="border-blue-900/30 text-white hover:bg-blue-900/20"
           >
@@ -74,7 +83,7 @@ const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
           </Button>
         </div>
       </div>
-      
+
       {document && (
         <div className="flex items-center">
           <Badge variant="outline" className="font-mono text-sm mr-3">

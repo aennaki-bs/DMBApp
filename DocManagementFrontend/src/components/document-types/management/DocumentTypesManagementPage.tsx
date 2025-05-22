@@ -11,119 +11,169 @@ import { toast } from "sonner";
 import documentService from "@/services/documentService";
 import { FilterContent } from "@/components/shared/FilterContent";
 import { FilterBadges, FilterBadge } from "@/components/shared/FilterBadges";
-import { Tag } from "lucide-react";
+import { Tag, Trash2 } from "lucide-react";
+import { BulkActionsBar, BulkAction } from "@/components/shared/BulkActionsBar";
+import { AnimatePresence } from "framer-motion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const DocumentTypesManagementPage = () => {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [typeToDelete, setTypeToDelete] = useState<number | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [currentType, setCurrentType] = useState<DocumentType | null>(null);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
-  const [showFilters, setShowFilters] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState<any>({});
-  const [attributeFilter, setAttributeFilter] = useState("any");
-
   const {
     types,
     isLoading,
-    selectedTypes,
-    handleSelectType,
-    handleSelectAll,
-    fetchTypes,
+    filteredAndSortedTypes,
     searchQuery,
     setSearchQuery,
-    // We still have access to all other properties from useDocumentTypes
-    // but we're only explicitly listing the ones we use in this component
-    ...documentTypesProps
+    selectedTypes,
+    setSelectedTypes,
+    viewMode,
+    setViewMode,
+    sortField,
+    sortDirection,
+    handleSort,
+    handleSelectType,
+    handleSelectAll,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    documentTypesProps,
+    filters,
+    setFilters,
+    appliedFilters,
+    setAppliedFilters,
+    filterBadges,
+    setFilterBadges,
+    refreshTypes,
   } = useDocumentTypes();
 
-  const openDeleteDialog = (id: number) => {
-    setTypeToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDelete = async () => {
-    try {
-      if (typeToDelete) {
-        await documentService.deleteDocumentType(typeToDelete);
-        toast.success("Document type deleted successfully");
-        fetchTypes();
-      }
-    } catch (error) {
-      console.error("Failed to delete document type:", error);
-      toast.error("Failed to delete document type");
-    } finally {
-      setDeleteDialogOpen(false);
-      setTypeToDelete(null);
-    }
-  };
-
-  const handleEditType = (type: DocumentType) => {
-    setCurrentType(type);
-    setIsEditMode(true);
-    setIsDrawerOpen(true);
-  };
-
-  const handleBulkDelete = async () => {
-    try {
-      await documentService.deleteMultipleDocumentTypes(selectedTypes);
-      toast.success(
-        `Successfully deleted ${selectedTypes.length} document types`
-      );
-      fetchTypes();
-    } catch (error) {
-      console.error("Failed to delete document types in bulk:", error);
-      toast.error("Failed to delete some or all document types");
-    } finally {
-      setBulkDeleteDialogOpen(false);
-    }
-  };
-
-  const handleCloseDrawer = () => {
-    setIsDrawerOpen(false);
-    setCurrentType(null);
-    setIsEditMode(false);
-  };
-
-  const handleViewModeChange = (value: "table" | "grid") => {
-    if (value) setViewMode(value);
-  };
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [typeToEdit, setTypeToEdit] = useState<DocumentType | null>(null);
+  const [typeToDelete, setTypeToDelete] = useState<DocumentType | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const handleToggleFilters = () => {
     setShowFilters(!showFilters);
   };
 
-  const handleFilterChange = (filters: any) => {
-    setAppliedFilters(filters);
-    setAttributeFilter(filters.attributes || "any");
-    // The actual filtering logic would be implemented in the useDocumentTypes hook
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+    setAppliedFilters(newFilters);
+
+    // Create filter badges
+    const badges: FilterBadge[] = [];
+    if (newFilters.hasDocuments !== "any") {
+      badges.push({
+        id: "hasDocuments",
+        label:
+          newFilters.hasDocuments === "yes" ? "Has Documents" : "No Documents",
+        onRemove: () => {
+          const updatedFilters = { ...newFilters, hasDocuments: "any" };
+          setFilters(updatedFilters);
+          setAppliedFilters(updatedFilters);
+          handleFilterChange(updatedFilters);
+        },
+      });
+    }
+
+    setFilterBadges(badges);
   };
 
-  // Clear all filters
   const clearAllFilters = () => {
-    setAttributeFilter("any");
-    setAppliedFilters({});
+    const defaultFilters = {
+      hasDocuments: "any",
+    };
+    setFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
+    setFilterBadges([]);
     setShowFilters(false);
   };
 
-  // Create filter badges
-  const filterBadges: FilterBadge[] = [];
+  const handleViewModeChange = (mode: "table" | "grid") => {
+    setViewMode(mode);
+  };
 
-  if (attributeFilter !== "any") {
-    filterBadges.push({
-      id: "attribute",
-      label: "Attributes",
-      value:
-        attributeFilter === "with" ? "With Attributes" : "Without Attributes",
-      icon: <Tag className="h-3.5 w-3.5" />,
-      onRemove: () => {
-        setAttributeFilter("any");
-        setAppliedFilters({ ...appliedFilters, attributes: "any" });
-      },
-    });
-  }
+  const handleEditType = (type: DocumentType) => {
+    setTypeToEdit(type);
+    setIsDrawerOpen(true);
+  };
+
+  const handleDeleteType = (id: number) => {
+    const typeToDelete = types.find((type) => type.id === id);
+    if (typeToDelete) {
+      setTypeToDelete(typeToDelete);
+    }
+  };
+
+  const confirmDeleteType = async () => {
+    if (!typeToDelete) return;
+
+    try {
+      await documentService.deleteDocumentType(typeToDelete.id!);
+      toast.success(
+        `Document type "${typeToDelete.typeName}" deleted successfully`
+      );
+      refreshTypes();
+      setTypeToDelete(null);
+    } catch (error) {
+      console.error("Error deleting document type:", error);
+      toast.error("Failed to delete document type");
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedTypes.length === 0) {
+      toast.error("No document types selected");
+      return;
+    }
+
+    // Check if any selected type has documents
+    const hasDocuments = types
+      .filter((type) => selectedTypes.includes(type.id!))
+      .some((type) => type.documentCounter! > 0);
+
+    if (hasDocuments) {
+      toast.error("Cannot delete types with associated documents");
+      return;
+    }
+
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      await documentService.deleteMultipleDocumentTypes(selectedTypes);
+      toast.success(
+        `${selectedTypes.length} document types deleted successfully`
+      );
+      refreshTypes();
+      setSelectedTypes([]);
+      setBulkDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting document types:", error);
+      toast.error("Failed to delete document types");
+    }
+  };
+
+  const bulkActions: BulkAction[] = [
+    {
+      id: "delete",
+      label: "Delete Selected",
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleBulkDelete,
+      variant: "destructive",
+      className:
+        "bg-red-900/30 border-red-500/30 text-red-300 hover:text-red-200 hover:bg-red-900/50 hover:border-red-400/50 transition-all duration-200 shadow-md",
+    },
+  ];
 
   return (
     <div className="space-y-2 p-6 bg-[#070b28]">
@@ -167,7 +217,7 @@ const DocumentTypesManagementPage = () => {
         types={types}
         viewMode={viewMode}
         selectedTypes={selectedTypes}
-        onDeleteType={openDeleteDialog}
+        onDeleteType={handleDeleteType}
         onEditType={handleEditType}
         onSelectType={handleSelectType}
         onSelectAll={handleSelectAll}
@@ -177,40 +227,65 @@ const DocumentTypesManagementPage = () => {
       />
 
       <DocumentTypeDrawer
-        isOpen={isDrawerOpen}
+        open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
-        documentType={currentType}
-        isEditMode={isEditMode}
+        type={typeToEdit}
         onSuccess={() => {
-          handleCloseDrawer();
-          fetchTypes();
-          toast.success(
-            isEditMode
-              ? "Document type updated successfully"
-              : "Document type created successfully"
-          );
+          refreshTypes();
+          setTypeToEdit(null);
         }}
-        onCancel={handleCloseDrawer}
       />
 
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDelete}
+        open={!!typeToDelete}
+        onOpenChange={(open) => !open && setTypeToDelete(null)}
+        onConfirm={confirmDeleteType}
+        title="Delete Document Type"
+        description={
+          typeToDelete
+            ? `Are you sure you want to delete "${typeToDelete.typeName}"? This action cannot be undone.`
+            : ""
+        }
       />
 
-      <DeleteConfirmDialog
+      <AnimatePresence>
+        {selectedTypes.length > 0 && (
+          <BulkActionsBar
+            selectedCount={selectedTypes.length}
+            entityName="document type"
+            actions={bulkActions}
+            icon={<Tag className="w-5 h-5 text-blue-400" />}
+          />
+        )}
+      </AnimatePresence>
+
+      <AlertDialog
         open={bulkDeleteDialogOpen}
         onOpenChange={setBulkDeleteDialogOpen}
-        onConfirm={handleBulkDelete}
-        isBulk={true}
-        count={selectedTypes.length}
-      />
-
-      <BottomActionBar
-        selectedCount={selectedTypes.length}
-        onBulkDelete={() => setBulkDeleteDialogOpen(true)}
-      />
+      >
+        <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl text-blue-100">
+              Delete Multiple Document Types
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-blue-300">
+              Are you sure you want to delete {selectedTypes.length} document
+              types? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-red-900/30 text-red-300 hover:bg-red-900/50 hover:text-red-200 border border-red-500/30 hover:border-red-400/50 transition-all duration-200"
+            >
+              Delete Types
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

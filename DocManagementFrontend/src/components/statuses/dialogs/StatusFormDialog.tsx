@@ -33,7 +33,6 @@ export type Step = 1 | 2 | 3;
 export interface FormValues {
   title: string;
   description: string;
-  isRequired: boolean;
   isInitial: boolean;
   isFinal: boolean;
   isFlexible: boolean;
@@ -52,7 +51,6 @@ export function StatusFormDialog({
   const [formValues, setFormValues] = useState<FormValues>({
     title: "",
     description: "",
-    isRequired: false,
     isInitial: false,
     isFinal: false,
     isFlexible: false,
@@ -94,7 +92,6 @@ export function StatusFormDialog({
         setFormValues({
           title: status.title || "",
           description: status.description || "",
-          isRequired: status.isRequired || false,
           isInitial: status.isInitial || false,
           isFinal: status.isFinal || false,
           isFlexible: false,
@@ -104,7 +101,6 @@ export function StatusFormDialog({
         setFormValues({
           title: "",
           description: "",
-          isRequired: false,
           isInitial: false,
           isFinal: false,
           isFlexible: false,
@@ -136,7 +132,6 @@ export function StatusFormDialog({
     setFormValues({
       title: "",
       description: "",
-      isRequired: false,
       isInitial: false,
       isFinal: false,
       isFlexible: false,
@@ -180,7 +175,7 @@ export function StatusFormDialog({
       const statusData = {
         title: formValues.title,
         description: formValues.description,
-        isRequired: formValues.isRequired,
+        isRequired: false,
         isInitial: formValues.isInitial,
         isFinal: formValues.isFinal,
         isFlexible: false,

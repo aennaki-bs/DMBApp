@@ -788,6 +788,10 @@ namespace DocManagementBackend.Services
                         };
                         
                         _context.ApprovalResponses.Add(approvalResponse);
+                        
+                        // Save the approval records - we'll continue with the document movement
+                        // since it's auto-approved
+                        await _context.SaveChangesAsync();
                     }
                     else
                     {
@@ -819,7 +823,7 @@ namespace DocManagementBackend.Services
 
             if (documentStatus != null)
             {
-                documentStatus.IsComplete = true;
+                documentStatus.IsComplete = false;
                 documentStatus.CompletedByUserId = userId;
                 documentStatus.CompletedAt = DateTime.UtcNow;
             }

@@ -41,6 +41,13 @@ interface ExtendedCircuit extends Circuit {
   }[];
 }
 
+// Active Circuit type from API
+interface ActiveCircuit {
+  circuitId: number;
+  circuitKey: string;
+  circuitTitle: string;
+}
+
 const formSchema = z.object({
   circuitId: z.string().min(1, "Please select a circuit"),
 });
@@ -85,22 +92,33 @@ export default function AssignCircuitDialog({
     useState<ExtendedCircuit | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const { data: circuits, isLoading: isCircuitsLoading } = useQuery<
-    ExtendedCircuit[]
+  // Fetch active circuits from API
+  const { data: activeCircuits, isLoading: isCircuitsLoading } = useQuery<
+    ActiveCircuit[]
   >({
-    queryKey: ["circuits"],
-    queryFn: circuitService.getAllCircuits,
+    queryKey: ["active-circuits"],
+    queryFn: circuitService.getActiveCircuits,
     enabled: open,
   });
 
-  // Filter circuits to only include those that have steps
-  const circuitsWithSteps = circuits?.filter(
-    (circuit) => circuit.steps && circuit.steps.length > 0
-  );
+  // Fetch detailed circuit information when a circuit is selected
+  const { data: selectedCircuitDetails, isLoading: isCircuitDetailsLoading } =
+    useQuery<ExtendedCircuit>({
+      queryKey: ["circuit-details", selectedCircuitId],
+      queryFn: () =>
+        circuitService.getCircuitById(parseInt(selectedCircuitId || "0")),
+      enabled: !!selectedCircuitId && open,
+    });
+
+  // Update selected circuit when details are loaded
+  useEffect(() => {
+    if (selectedCircuitDetails) {
+      setSelectedCircuit(selectedCircuitDetails);
+    }
+  }, [selectedCircuitDetails]);
 
   const noCircuitsAvailable =
-    !isCircuitsLoading &&
-    (!circuitsWithSteps || circuitsWithSteps.length === 0);
+    !isCircuitsLoading && (!activeCircuits || activeCircuits.length === 0);
 
   // Get circuit validation data - DISABLED since endpoint doesn't exist
   const { data: circuitValidation, isLoading: isValidationLoading } =
@@ -137,44 +155,41 @@ export default function AssignCircuitDialog({
 
   const handleFormSubmit = async (values: FormValues) => {
     const circuitId = parseInt(values.circuitId);
-    const circuit = circuits?.find((c) => c.id === circuitId) as
-      | ExtendedCircuit
-      | undefined;
 
-    if (circuit) {
-      setSelectedCircuitId(circuitId.toString());
-      setSelectedCircuit(circuit);
-
-      // Basic validation
-      if (!circuit.steps || circuit.steps.length === 0) {
-        toast.error(
-          "Selected circuit has no steps. Please add steps to the circuit first."
-        );
-        return;
-      }
-
-      if (!circuit.statuses || circuit.statuses.length === 0) {
-        toast.error(
-          "Selected circuit has no statuses. Please add statuses to the circuit first."
-        );
-        return;
-      }
-
-      // Check if there's an initial status
-      const hasInitialStatus = circuit.statuses.some(
-        (status) => status.isInitial
-      );
-      if (!hasInitialStatus) {
-        toast.error(
-          "Selected circuit has no initial status. At least one status must be marked as initial."
-        );
-        return;
-      }
-
-      // Skip validation check since the endpoint doesn't exist
-      // Just proceed to confirmation
-      setShowConfirmation(true);
+    if (!selectedCircuit) {
+      toast.error("Please select a valid circuit");
+      return;
     }
+
+    // Basic validation
+    if (!selectedCircuit.steps || selectedCircuit.steps.length === 0) {
+      toast.error(
+        "Selected circuit has no steps. Please add steps to the circuit first."
+      );
+      return;
+    }
+
+    if (!selectedCircuit.statuses || selectedCircuit.statuses.length === 0) {
+      toast.error(
+        "Selected circuit has no statuses. Please add statuses to the circuit first."
+      );
+      return;
+    }
+
+    // Check if there's an initial status
+    const hasInitialStatus = selectedCircuit.statuses.some(
+      (status) => status.isInitial
+    );
+    if (!hasInitialStatus) {
+      toast.error(
+        "Selected circuit has no initial status. At least one status must be marked as initial."
+      );
+      return;
+    }
+
+    // Skip validation check since the endpoint doesn't exist
+    // Just proceed to confirmation
+    setShowConfirmation(true);
   };
 
   const confirmAssignment = async () => {
@@ -185,15 +200,6 @@ export default function AssignCircuitDialog({
       const circuitId = parseInt(selectedCircuitId);
 
       console.log(`Assigning document ${documentId} to circuit ${circuitId}`);
-
-      // Always activate the circuit when assigning a document
-      if (selectedCircuit && !selectedCircuit.isActive) {
-        console.log(`Activating circuit ${circuitId} before assignment`);
-        await circuitService.updateCircuit(circuitId, {
-          ...selectedCircuit,
-          isActive: true,
-        });
-      }
 
       // Check if the circuit has steps before assigning
       if (!selectedCircuit?.steps || selectedCircuit.steps.length === 0) {
@@ -256,8 +262,6 @@ export default function AssignCircuitDialog({
   // Handle circuit selection
   const handleCircuitSelect = (circuitId: string) => {
     setSelectedCircuitId(circuitId);
-    const circuit = circuits?.find((c) => c.id === parseInt(circuitId));
-    setSelectedCircuit((circuit as ExtendedCircuit) || null);
     setDropdownOpen(false);
   };
 
@@ -294,7 +298,7 @@ export default function AssignCircuitDialog({
                 <p>
                   <span className="text-blue-400">Steps:</span>{" "}
                   <span className="text-white">
-                    {circuitValidation.totalSteps}
+                    {selectedCircuit?.steps?.length || 0}
                   </span>
                 </p>
               )}
@@ -349,13 +353,13 @@ export default function AssignCircuitDialog({
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-300">
-                  No circuits available
+                  No active circuits available
                 </h3>
                 <div className="mt-2 text-sm text-blue-200">
                   <p>
-                    There are no circuits with steps available for assignment.
-                    You need to create a circuit with at least one step before
-                    you can assign documents.
+                    There are no active circuits available for assignment. You
+                    need to create a circuit and activate it before you can
+                    assign documents.
                   </p>
                 </div>
                 <div className="mt-4">
@@ -409,18 +413,20 @@ export default function AssignCircuitDialog({
                       }`}
                     >
                       <span className="truncate">
-                        {selectedCircuitId
-                          ? circuits?.find(
-                              (c) => c.id === parseInt(selectedCircuitId)
+                        {selectedCircuitId && activeCircuits
+                          ? activeCircuits.find(
+                              (c) => c.circuitId === parseInt(selectedCircuitId)
                             )
                             ? `${
-                                circuits.find(
-                                  (c) => c.id === parseInt(selectedCircuitId)
+                                activeCircuits.find(
+                                  (c) =>
+                                    c.circuitId === parseInt(selectedCircuitId)
                                 )?.circuitKey
                               } - ${
-                                circuits.find(
-                                  (c) => c.id === parseInt(selectedCircuitId)
-                                )?.title
+                                activeCircuits.find(
+                                  (c) =>
+                                    c.circuitId === parseInt(selectedCircuitId)
+                                )?.circuitTitle
                               }`
                             : "Select a circuit"
                           : "Select a circuit"}
@@ -432,16 +438,17 @@ export default function AssignCircuitDialog({
                     {dropdownOpen && (
                       <div className="absolute z-[9999] w-full mt-1 rounded-md border border-blue-900/50 bg-[#0d1117] shadow-lg">
                         <div className="max-h-60 overflow-auto py-1">
-                          {circuitsWithSteps?.map((circuit) => (
+                          {activeCircuits?.map((circuit) => (
                             <div
-                              key={circuit.id}
+                              key={circuit.circuitId}
                               className="px-2 py-1.5 text-sm text-white hover:bg-blue-900/30 cursor-pointer"
                               onClick={() =>
-                                handleCircuitSelect(circuit.id.toString())
+                                handleCircuitSelect(
+                                  circuit.circuitId.toString()
+                                )
                               }
                             >
-                              {circuit.circuitKey} - {circuit.title}
-                              {!circuit.isActive && " (Inactive)"}
+                              {circuit.circuitKey} - {circuit.circuitTitle}
                             </div>
                           ))}
                         </div>
@@ -470,6 +477,7 @@ export default function AssignCircuitDialog({
                 disabled={
                   isSubmitting ||
                   isCircuitsLoading ||
+                  isCircuitDetailsLoading ||
                   isValidationLoading ||
                   !selectedCircuitId
                 }

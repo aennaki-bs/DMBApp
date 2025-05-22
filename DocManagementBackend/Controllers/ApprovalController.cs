@@ -730,6 +730,31 @@ namespace DocManagementBackend.Controllers
             return Ok(eligibleUsers);
         }
 
+        [HttpGet("available-approvers")]
+        public async Task<ActionResult<IEnumerable<ApproverInfoDto>>> GetAvailableApprovers()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Get all users with Admin or FullUser roles who are NOT already in the Approvators table
+            var availableUsers = await _context.Users
+                .Include(u => u.Role)
+                .Where(u => u.IsActive && 
+                        (u.Role!.RoleName == "Admin" || u.Role.RoleName == "FullUser") &&
+                        !_context.Approvators.Any(a => a.UserId == u.Id))
+                .OrderBy(u => u.Username)
+                .Select(u => new ApproverInfoDto
+                {
+                    UserId = u.Id,
+                    Username = u.Username,
+                    Role = u.Role!.RoleName
+                })
+                .ToListAsync();
+
+            return Ok(availableUsers);
+        }
+
         [HttpPost("groups")]
         public async Task<IActionResult> CreateApprovatorsGroup([FromBody] CreateApprovatorsGroupDto request)
         {

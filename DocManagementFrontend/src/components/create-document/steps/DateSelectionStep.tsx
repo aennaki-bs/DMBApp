@@ -1,22 +1,28 @@
-import { Label } from "@/components/ui/label";
-import { DatePickerInput } from "@/components/document/DatePickerInput";
 import { SubType } from "@/models/subtype";
-import { Calendar, Info } from "lucide-react";
+import { Calendar, Info, Calculator } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { format, isWithinInterval, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import { CustomDateTimeSelector } from "@/components/document/CustomDateTimeSelector";
 
 interface DateSelectionStepProps {
   docDate: string;
+  comptableDate: string | null;
   dateError: string | null;
+  comptableDateError: string | null;
   onDateChange: (date: Date | undefined) => void;
+  onComptableDateChange: (date: Date | undefined) => void;
   selectedSubType?: SubType | null;
 }
 
 export const DateSelectionStep = ({
   docDate,
+  comptableDate,
   dateError,
+  comptableDateError,
   onDateChange,
+  onComptableDateChange,
   selectedSubType,
 }: DateSelectionStepProps) => {
   const [dateObj, setDateObj] = useState<Date>(() => {
@@ -28,6 +34,18 @@ export const DateSelectionStep = ({
     }
   });
 
+  const [comptableDateObj, setComptableDateObj] = useState<Date | undefined>(
+    () => {
+      if (!comptableDate) return undefined;
+      try {
+        return new Date(comptableDate);
+      } catch (e) {
+        console.error("Error parsing comptableDate:", e);
+        return undefined;
+      }
+    }
+  );
+
   // Update dateObj when docDate changes
   useEffect(() => {
     try {
@@ -36,6 +54,20 @@ export const DateSelectionStep = ({
       console.error("Error updating dateObj:", e);
     }
   }, [docDate]);
+
+  // Update comptableDateObj when comptableDate changes
+  useEffect(() => {
+    if (!comptableDate) {
+      setComptableDateObj(undefined);
+      return;
+    }
+
+    try {
+      setComptableDateObj(new Date(comptableDate));
+    } catch (e) {
+      console.error("Error updating comptableDateObj:", e);
+    }
+  }, [comptableDate]);
 
   // Calculate if the selected date is within the valid range
   const isDateValid = (() => {
@@ -72,42 +104,53 @@ export const DateSelectionStep = ({
     onDateChange(date);
   };
 
+  const handleComptableDateChange = (date: Date | undefined) => {
+    console.log("DateSelectionStep received comptable date change:", date);
+    onComptableDateChange(date);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <Label
-          htmlFor="docDate"
-          className="text-sm font-medium text-gray-200 flex items-center gap-2"
-        >
-          <Calendar className="h-4 w-4 text-blue-400" />
-          Document Date*
-        </Label>
+      {/* Document Date Selection */}
+      <CustomDateTimeSelector
+        date={dateObj}
+        onChange={handleDateChange}
+        error={dateError}
+        label="Document Date"
+        description="The document date determines when this document is considered effective."
+        icon={<Calendar className="h-5 w-5" />}
+        iconColor="text-blue-400"
+        minDate={
+          selectedSubType ? new Date(selectedSubType.startDate) : undefined
+        }
+        maxDate={
+          selectedSubType ? new Date(selectedSubType.endDate) : undefined
+        }
+      />
 
-        <DatePickerInput
-          date={dateObj}
-          onDateChange={handleDateChange}
-          error={!!dateError}
-          minDate={
-            selectedSubType ? new Date(selectedSubType.startDate) : undefined
-          }
-          maxDate={
-            selectedSubType ? new Date(selectedSubType.endDate) : undefined
-          }
-        />
+      {/* Accounting Date Selection */}
+      <CustomDateTimeSelector
+        date={comptableDateObj}
+        onChange={handleComptableDateChange}
+        error={comptableDateError}
+        label="Accounting Date"
+        description="The accounting date is used for financial reporting purposes and may differ from the document date."
+        icon={<Calculator className="h-5 w-5" />}
+        iconColor="text-green-400"
+        isOptional={true}
+      />
 
-        {dateError && <p className="text-sm text-red-500">{dateError}</p>}
-      </div>
-
+      {/* Valid Date Range Information */}
       {selectedSubType && (
         <Card
           className={`bg-opacity-20 border ${
             isDateValid
-              ? "bg-blue-900 border-blue-800"
-              : "bg-amber-900 border-amber-800"
+              ? "bg-blue-900/20 border-blue-800"
+              : "bg-amber-900/20 border-amber-800"
           }`}
         >
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-start gap-2">
+          <CardContent className="p-3.5 space-y-2">
+            <div className="flex items-start gap-3">
               <Info
                 className={`h-5 w-5 mt-0.5 ${
                   isDateValid ? "text-blue-400" : "text-amber-400"
@@ -124,7 +167,7 @@ export const DateSelectionStep = ({
                 <p className="text-sm text-gray-300 mt-1">
                   Documents of this subtype must have a date between:
                 </p>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2.5">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500"></div>
                     <span className="text-white font-medium">
@@ -156,13 +199,6 @@ export const DateSelectionStep = ({
           </CardContent>
         </Card>
       )}
-
-      <div className="text-sm text-gray-400">
-        <p>
-          The document date determines when this document is considered
-          effective.
-        </p>
-      </div>
     </div>
   );
 };

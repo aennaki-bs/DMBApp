@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Edit, Trash, GitBranch } from "lucide-react";
+import { Edit, Trash, GitBranch, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Document } from "@/models/document";
 import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { WorkflowDialogButton } from "@/components/document-flow/WorkflowDialogButton";
 
 interface DocumentActionsProps {
   document: Document;
@@ -34,14 +35,13 @@ const DocumentActions = ({
   return (
     <>
       <div className="flex space-x-3">
-        {document.circuitId && canManageDocuments && (
-          <Button
-            variant="outline"
-            className="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50 flex items-center gap-2"
-            onClick={onDocumentFlow}
-          >
-            <GitBranch className="h-4 w-4 mr-2" /> Document Flow
-          </Button>
+        {document.circuitId && (
+          <WorkflowDialogButton
+            documentId={document.id}
+            hasCircuit={!!document.circuitId}
+            buttonClassName="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50"
+            title="Document Flow"
+          />
         )}
 
         {/* Show Assign to Circuit button when document has no circuit and user can manage documents */}

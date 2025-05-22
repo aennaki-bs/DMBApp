@@ -21,8 +21,8 @@ const SubTypeManagement = () => {
         const data = await subTypeService.getAllSubTypes();
         setSubTypes(data);
       } catch (error) {
-        console.error("Failed to load subtypes:", error);
-        toast.error("Failed to load subtypes");
+        console.error("Failed to load stumps:", error);
+        toast.error("Failed to load stumps");
       } finally {
         setIsLoading(false);
       }
@@ -38,11 +38,11 @@ const SubTypeManagement = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-semibold text-white flex items-center">
-              <Layers className="mr-3 h-6 w-6 text-blue-400" /> Subtype
+              <Layers className="mr-3 h-6 w-6 text-blue-400" /> Stump
               Management
             </h1>
             <p className="text-blue-300/70 mt-1">
-              Manage document subtypes across all document types
+              Manage document stumps across all document types
             </p>
           </div>
         </div>
@@ -53,13 +53,13 @@ const SubTypeManagement = () => {
         {isLoading ? (
           <div className="text-center py-10">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="text-blue-300 mt-4">Loading subtypes...</p>
+            <p className="text-blue-300 mt-4">Loading stumps...</p>
           </div>
         ) : subTypes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-lg text-blue-300">No subtypes found</p>
+            <p className="text-lg text-blue-300">No stumps found</p>
             <p className="text-blue-400/70 mt-2">
-              Start by creating subtypes in specific document types
+              Start by creating stumps in specific document types
             </p>
             <button
               onClick={() => navigate("/document-types-management")}
@@ -71,10 +71,10 @@ const SubTypeManagement = () => {
         ) : (
           <div className="text-center py-12">
             <p className="text-lg text-blue-300">
-              This is a placeholder for the SubType Management page.
+              This is a placeholder for the Stump Management page.
             </p>
             <p className="text-blue-400/70 mt-2">
-              Please manage subtypes directly from the Document Types detail
+              Please manage stumps directly from the Document Types detail
               pages.
             </p>
             <button

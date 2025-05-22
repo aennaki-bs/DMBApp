@@ -31,7 +31,7 @@ import CircuitStepsPage from "./pages/CircuitStepsPage";
 import CircuitStatusesPage from "./pages/CircuitStatusesPage";
 import CircuitStatusStepsPage from "./pages/CircuitTransitionsPage";
 import StepStatusesPage from "./pages/StepStatusesPage";
-import PendingApprovalsPage from "./pages/PendingApprovals";
+import PendingApprovalsPage from "./pages/PendingApprovalsPage";
 import UserManagement from "./pages/UserManagement";
 import DocumentFlowPage from "./pages/DocumentFlowPage";
 import { Layout } from "./components/layout/Layout";
@@ -40,6 +40,8 @@ import { SettingsProvider } from "./context/SettingsContext";
 import SubTypeManagementPage from "./pages/SubTypeManagementPage";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
 import DocumentTypeDetail from "./pages/DocumentTypeDetail";
+import ApprovalGroupsManagement from "./pages/ApprovalGroupsManagement";
+import ApproversManagement from "./pages/ApproversManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -233,6 +235,10 @@ const App = () => (
                   />
                   <Route
                     path="/circuit/:circuitId/steps"
+                    element={<CircuitStepsPage />}
+                  />
+                  <Route
+                    path="/circuit/:circuitId/transitions"
                     element={<CircuitStatusStepsPage />}
                   />
                   <Route
@@ -242,6 +248,32 @@ const App = () => (
                   <Route
                     path="/pending-approvals"
                     element={<PendingApprovalsPage />}
+                  />
+
+                  {/* Approval Groups route */}
+                  <Route
+                    path="/approval-groups"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <ApprovalGroupsManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Approvers Management route */}
+                  <Route
+                    path="/approvers-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <ApproversManagement />
+                      </ProtectedRoute>
+                    }
                   />
 
                   {/* Settings route */}

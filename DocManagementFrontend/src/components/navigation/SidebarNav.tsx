@@ -9,9 +9,19 @@ import {
   CalendarRange,
   Settings,
   PlayCircle,
+  UserCheck,
+  ChevronDown,
+  ChevronRight,
+  UserCog,
+  UsersRound,
+  ClipboardCheck,
+  Bell,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import approvalService from "@/services/approvalService";
 
 export function SidebarNav() {
   const { user } = useAuth();
@@ -19,9 +29,28 @@ export function SidebarNav() {
   const isAdmin = user?.role === "Admin";
   const isSimpleUser = user?.role === "SimpleUser";
 
+  // State for the approval submenu
+  const [approvalMenuOpen, setApprovalMenuOpen] = useState(false);
+
+  // Fetch pending approvals count
+  const { data: pendingApprovals = [] } = useQuery({
+    queryKey: ["pendingApprovals"],
+    queryFn: () => approvalService.getPendingApprovals(),
+    enabled: !!user?.userId,
+  });
+
   const isActive = (path: string) => {
     return (
       location.pathname === path || location.pathname.startsWith(path + "/")
+    );
+  };
+
+  // Check if any approval-related route is active
+  const isApprovalActive = () => {
+    return (
+      isActive("/approval-groups") ||
+      isActive("/approvers-management") ||
+      isActive("/pending-approvals")
     );
   };
 
@@ -47,6 +76,28 @@ export function SidebarNav() {
             >
               <LayoutDashboard className="h-5 w-5" />
               <span>Dashboard</span>
+            </Link>
+          </li>
+
+          {/* Pending Approvals - Visible to all users */}
+          <li>
+            <Link
+              to="/pending-approvals"
+              className={`flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive("/pending-approvals")
+                  ? "bg-blue-600/40 text-blue-200"
+                  : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <ClipboardCheck className="h-5 w-5" />
+                <span>My Approvals</span>
+              </div>
+              {pendingApprovals.length > 0 && (
+                <div className="flex items-center justify-center h-5 w-5 text-xs bg-red-500 text-white rounded-full">
+                  {pendingApprovals.length}
+                </div>
+              )}
             </Link>
           </li>
 
@@ -125,20 +176,60 @@ export function SidebarNav() {
                   <span>Circuits</span>
                 </Link>
               </li>
-              {/* Actions Management */}
-              {/* <li>
-                <Link
-                  to="/actions"
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/actions")
+
+              {/* Approval Section with submenu */}
+              <li>
+                <button
+                  onClick={() => setApprovalMenuOpen(!approvalMenuOpen)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isApprovalActive()
                       ? "bg-blue-600/40 text-blue-200"
                       : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                   }`}
                 >
-                  <PlayCircle className="h-5 w-5" />
-                  <span>Actions</span>
-                </Link>
-              </li> */}
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-5 w-5" />
+                    <span>Approval</span>
+                  </div>
+                  {approvalMenuOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+
+                {/* Submenu for Approval section */}
+                {approvalMenuOpen && (
+                  <ul className="ml-6 mt-1 space-y-1 border-l-2 border-blue-900/30 pl-2">
+                    <li>
+                      <Link
+                        to="/approval-groups"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/approval-groups")
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <UsersRound className="h-4 w-4" />
+                        <span>Groups</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/approvers-management"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/approvers-management")
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <UserCog className="h-4 w-4" />
+                        <span>Approvers</span>
+                      </Link>
+                    </li>
+                  </ul>
+                )}
+              </li>
             </>
           )}
         </ul>

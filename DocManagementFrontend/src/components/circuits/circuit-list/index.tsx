@@ -5,6 +5,7 @@ import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
 import { Trash, GitBranch } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 
 interface CircuitsListProps {
   onApiError?: (errorMessage: string) => void;
@@ -50,6 +51,11 @@ export default function CircuitsList({
     searchQuery,
     statusFilter,
   });
+
+  // Refresh data when component mounts or when searchQuery/statusFilter changes
+  useEffect(() => {
+    refetch();
+  }, [searchQuery, statusFilter, refetch]);
 
   return (
     <>

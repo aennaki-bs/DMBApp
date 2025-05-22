@@ -98,6 +98,7 @@ export function CircuitListContent({
                 sortConfig={sortConfig}
                 onSort={onSort}
                 onBulkDelete={onBulkDelete}
+                refetch={refetch}
               />
             </div>
           </ScrollArea>

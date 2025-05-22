@@ -39,7 +39,7 @@ export function SubTypesTable({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-blue-300/70">
         <Loader2 className="h-8 w-8 animate-spin mb-2 text-blue-400" />
-        <div className="text-sm">Loading subtypes...</div>
+        <div className="text-sm">Loading stumps...</div>
       </div>
     );
   }
@@ -49,11 +49,11 @@ export function SubTypesTable({
       <div className="bg-[#0a1033]/60 border border-blue-900/30 rounded-lg p-8 text-center">
         <AlertCircle className="h-10 w-10 text-blue-400/70 mx-auto mb-3" />
         <h3 className="text-lg font-medium text-blue-300 mb-1">
-          No subtypes found
+          No stumps found
         </h3>
         <p className="text-blue-300/70 text-sm max-w-md mx-auto">
-          No subtypes match your current filters. Try adjusting your search
-          criteria or create a new subtype.
+          No stumps match your current filters. Try adjusting your search
+          criteria or create a new stump.
         </p>
       </div>
     );
@@ -128,7 +128,7 @@ export function SubTypesTable({
                     size="icon"
                     className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
                     onClick={() => onEdit(subType)}
-                    title="Edit subtype"
+                    title="Edit stump"
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -137,7 +137,7 @@ export function SubTypesTable({
                     size="icon"
                     className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
                     onClick={() => onDelete(subType)}
-                    title="Delete subtype"
+                    title="Delete stump"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -149,7 +149,7 @@ export function SubTypesTable({
       </Table>
       <div className="p-2 text-xs text-gray-500 bg-[#0a1033]/70 border-t border-blue-900/30">
         Showing {subTypes.length}{" "}
-        {subTypes.length === 1 ? "subtype" : "subtypes"}
+        {subTypes.length === 1 ? "stump" : "stumps"}
       </div>
     </div>
   );

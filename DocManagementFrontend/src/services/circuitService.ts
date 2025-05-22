@@ -9,6 +9,7 @@ import {
   DocumentStatus,
   CircuitValidation
 } from '@/models/documentCircuit';
+import { toast } from 'sonner';
 
 /**
  * Service for managing circuits
@@ -35,7 +36,32 @@ const circuitService = {
   },
 
   deleteCircuit: async (id: number): Promise<void> => {
-    await api.delete(`/Circuit/${id}`);
+    try {
+      // First check if the circuit is used by any documents
+      const usageInfo = await circuitService.checkCircuitUsage(id);
+      
+      if (usageInfo.isUsed) {
+        throw new Error(`Cannot delete circuit: It is currently used by ${usageInfo.documentCount} document(s)`);
+      }
+      
+      // If not in use, proceed with deletion
+      await api.delete(`/Circuit/${id}`);
+    } catch (error) {
+      // If it's our custom error about circuit being in use, rethrow it
+      if (error instanceof Error && error.message.includes('Cannot delete circuit')) {
+        throw error;
+      }
+      
+      // For API errors, check if the message indicates the circuit is in use
+      if (error instanceof Error && 
+          (error.message.includes('in use') || 
+           error.message.includes('documents assigned'))) {
+        throw new Error('Cannot delete circuit that is in use by documents');
+      }
+      
+      // For any other errors, rethrow
+      throw error;
+    }
   },
 
   // Method for circuit validation (disabled since endpoint doesn't exist)
@@ -46,6 +72,53 @@ const circuitService = {
       isValid: true,
       errors: []
     };
+  },
+
+  // Check if a circuit is used by any documents
+  checkCircuitUsage: async (circuitId: number): Promise<{ isUsed: boolean, documentCount: number }> => {
+    try {
+      const response = await api.get(`/Circuit/${circuitId}/has-documents`);
+      return {
+        isUsed: response.data,
+        documentCount: response.data ? 1 : 0 // We don't know exact count, but at least 1 if used
+      };
+    } catch (error) {
+      console.error(`Error checking circuit usage for ID ${circuitId}:`, error);
+      
+      // If the endpoint doesn't exist, try an alternative approach
+      try {
+        // Try the previous endpoint
+        const usageResponse = await api.get(`/Circuit/${circuitId}/usage`);
+        return usageResponse.data;
+      } catch (fallbackError) {
+        console.error('Alternative circuit usage check failed:', fallbackError);
+        // Return a default response
+        return { isUsed: false, documentCount: 0 };
+      }
+    }
+  },
+
+  // Toggle circuit activation status
+  toggleCircuitActivation: async (circuit: Circuit): Promise<Circuit> => {
+    try {
+      // If trying to deactivate, check if the circuit is used by any documents
+      if (circuit.isActive) {
+        const usageInfo = await circuitService.checkCircuitUsage(circuit.id);
+        if (usageInfo.isUsed) {
+          throw new Error(`Cannot deactivate circuit: It is currently used by ${usageInfo.documentCount} document(s)`);
+        }
+      }
+
+      // Update the circuit with the toggled status
+      const updatedCircuit = { ...circuit, isActive: !circuit.isActive };
+      await circuitService.updateCircuit(circuit.id, updatedCircuit);
+      
+      // Return the updated circuit
+      return updatedCircuit;
+    } catch (error) {
+      console.error(`Error toggling activation for circuit ${circuit.id}:`, error);
+      throw error;
+    }
   },
 
   // Circuit Steps endpoints - these are part of the Circuit response now
@@ -322,6 +395,17 @@ const circuitService = {
   getNextStatuses: async (documentId: number): Promise<any[]> => {
     if (!documentId) return [];
     const response = await api.get(`/Workflow/document/${documentId}/next-statuses`);
+    return response.data;
+  },
+
+  // Method to delete a status
+  deleteStatus: async (statusId: number): Promise<void> => {
+    await api.delete(`/Status/${statusId}`);
+  },
+
+  // Method to get active circuits
+  getActiveCircuits: async (): Promise<any[]> => {
+    const response = await api.get('/Circuit/active');
     return response.data;
   },
 };

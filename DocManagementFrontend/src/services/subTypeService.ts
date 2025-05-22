@@ -72,10 +72,46 @@ const FALLBACK_SUBTYPES: Record<number, SubType[]> = {
   ]
 };
 
+// Helper function to filter subtypes by date - moved outside of the subTypeService object
+const filterSubtypesByDate = async (
+  docTypeId: number, 
+  date: Date, 
+  getSubTypesByDocTypeFunc: (id: number) => Promise<SubType[]>
+): Promise<SubType[]> => {
+  try {
+    // Get all subtypes for this document type
+    const allSubtypes = await getSubTypesByDocTypeFunc(docTypeId);
+    
+    // Filter by date range
+    return allSubtypes.filter(subtype => {
+      const startDate = subtype.startDate ? new Date(subtype.startDate) : null;
+      const endDate = subtype.endDate ? new Date(subtype.endDate) : null;
+      
+      if (!startDate || !endDate) return false;
+      
+      return date >= startDate && date <= endDate;
+    });
+  } catch (error) {
+    console.error(`Error filtering subtypes locally for type ${docTypeId}:`, error);
+    
+    // Use fallback data as last resort
+    const fallbackSubtypes = FALLBACK_SUBTYPES[docTypeId] || [];
+    
+    return fallbackSubtypes.filter(subtype => {
+      const startDate = subtype.startDate ? new Date(subtype.startDate) : null;
+      const endDate = subtype.endDate ? new Date(subtype.endDate) : null;
+      
+      if (!startDate || !endDate) return false;
+      
+      return date >= startDate && date <= endDate;
+    });
+  }
+};
+
 const subTypeService = {
   getAllSubTypes: async (): Promise<SubType[]> => {
     try {
-      const response = await api.get('/Documents/SubTypes');
+      const response = await api.get('/Stump');
       console.log('All subtypes response:', response.data);
       return response.data;
     } catch (error) {
@@ -93,7 +129,7 @@ const subTypeService = {
   getSubTypesByDocType: async (docTypeId: number): Promise<SubType[]> => {
     try {
       console.log(`Fetching subtypes for document type ID: ${docTypeId}`);
-      const response = await api.get(`/SubType/by-document-type/${docTypeId}`);
+      const response = await api.get(`/Stump/by-document-type/${docTypeId}`);
       console.log(`Subtypes for document type ${docTypeId}:`, response.data);
       
       if (response.data && Array.isArray(response.data)) {
@@ -122,7 +158,7 @@ const subTypeService = {
 
   getSubType: async (id: number): Promise<SubType> => {
     try {
-      const response = await api.get(`/Documents/SubTypes/${id}`);
+      const response = await api.get(`/Stump/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching subtype with ID ${id}:`, error);
@@ -139,23 +175,27 @@ const subTypeService = {
     }
     
     try {
-      const response = await api.get(`/SubType/for-date/${docTypeId}/${formattedDate}`);
+      const response = await api.get(`/Stump/for-date/${docTypeId}/${formattedDate}`);
       
       if (response.data && Array.isArray(response.data)) {
         return response.data;
       } else {
         console.error('Invalid subtypes for date response format:', response.data);
-        return [];
+        
+        // Fall back to filtering locally
+        return filterSubtypesByDate(docTypeId, new Date(formattedDate), subTypeService.getSubTypesByDocType);
       }
     } catch (error) {
       console.error(`Error fetching subtypes for document type ${docTypeId} and date ${formattedDate}:`, error);
-      throw error;
+      
+      // Fall back to filtering locally
+      return filterSubtypesByDate(docTypeId, new Date(formattedDate), subTypeService.getSubTypesByDocType);
     }
   },
 
   createSubType: async (subType: Partial<SubType>): Promise<void> => {
     try {
-      await api.post('/Documents/SubTypes', subType);
+      await api.post('/Stump', subType);
     } catch (error) {
       console.error('Error creating subtype:', error);
       throw error;
@@ -164,7 +204,7 @@ const subTypeService = {
 
   updateSubType: async (id: number, subType: Partial<SubType>): Promise<void> => {
     try {
-      await api.put(`/Documents/SubTypes/${id}`, subType);
+      await api.put(`/Stump/${id}`, subType);
     } catch (error) {
       console.error(`Error updating subtype with ID ${id}:`, error);
       throw error;
@@ -173,7 +213,7 @@ const subTypeService = {
 
   deleteSubType: async (id: number): Promise<void> => {
     try {
-      await api.delete(`/Documents/SubTypes/${id}`);
+      await api.delete(`/Stump/${id}`);
     } catch (error) {
       console.error(`Error deleting subtype with ID ${id}:`, error);
       throw error;
@@ -183,10 +223,46 @@ const subTypeService = {
   deleteMultipleSubTypes: async (ids: number[]): Promise<void> => {
     try {
       // Since the API doesn't support bulk deletion, we'll delete one by one
-      await Promise.all(ids.map(id => api.delete(`/Documents/SubTypes/${id}`)));
+      await Promise.all(ids.map(id => api.delete(`/Stump/${id}`)));
     } catch (error) {
       console.error('Error deleting multiple subtypes:', error);
       throw error;
+    }
+  },
+
+  checkOverlappingDateIntervals: async (docTypeId: number, startDate: string | Date, endDate: string | Date, currentSubTypeId?: number): Promise<{ overlapping: boolean; overlappingWith?: SubType }> => {
+    try {
+      // Convert dates to consistent format
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      // Get all subtypes for this document type
+      const allSubtypes = await subTypeService.getSubTypesByDocType(docTypeId);
+      
+      // Find if any subtype date range overlaps with the given date range
+      const overlappingSubType = allSubtypes.find(subtype => {
+        // Skip the current subtype if we're editing (using its ID)
+        if (currentSubTypeId && subtype.id === currentSubTypeId) {
+          return false;
+        }
+        
+        const subtypeStart = new Date(subtype.startDate);
+        const subtypeEnd = new Date(subtype.endDate);
+        
+        // Check for overlap: 
+        // (start1 <= end2) && (end1 >= start2)
+        return (start <= subtypeEnd && end >= subtypeStart);
+      });
+      
+      return {
+        overlapping: !!overlappingSubType,
+        overlappingWith: overlappingSubType
+      };
+    } catch (error) {
+      console.error(`Error checking overlapping intervals for type ${docTypeId}:`, error);
+      // Return no overlap in case of error to avoid blocking user flow
+      // UI will show a warning that verification couldn't be completed
+      return { overlapping: false };
     }
   }
 };

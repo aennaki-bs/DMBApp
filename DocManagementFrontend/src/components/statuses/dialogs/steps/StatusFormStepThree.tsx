@@ -33,19 +33,6 @@ export default function StatusFormStepThree({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="isRequired"
-            checked={values.isRequired}
-            onCheckedChange={(checked) => onChange("isRequired", !!checked)}
-            disabled={disabled}
-            className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-          />
-          <Label htmlFor="isRequired" className="cursor-pointer text-blue-200">
-            This status is required
-          </Label>
-        </div>
-
         {isCircuitStatus && (
           <>
             <div className="flex items-center space-x-2">

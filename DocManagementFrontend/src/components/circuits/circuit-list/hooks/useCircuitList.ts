@@ -32,6 +32,8 @@ export function useCircuitList({ onApiError, searchQuery, statusFilter = 'any' }
   } = useQuery({
     queryKey: ['circuits'],
     queryFn: circuitService.getAllCircuits,
+    refetchOnWindowFocus: true,
+    staleTime: 5000, // Consider data stale after 5 seconds
     meta: {
       onSettled: (data, err) => {
         if (err) {

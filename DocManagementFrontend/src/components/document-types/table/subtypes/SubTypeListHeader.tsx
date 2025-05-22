@@ -15,10 +15,10 @@ export default function SubTypeListHeader({
       <div>
         <h2 className="text-xl font-semibold text-white flex items-center">
           <Layers className="h-5 w-5 mr-2 text-blue-400" />
-          Subtypes
+          Stumps
         </h2>
         <p className="text-sm text-blue-300/80 mt-1">
-          Manage subtypes for{" "}
+          Manage stumps for{" "}
           <span className="text-blue-300 font-medium">{documentTypeName}</span>
         </p>
       </div>
@@ -26,7 +26,7 @@ export default function SubTypeListHeader({
         onClick={onCreateClick}
         className="bg-blue-600 hover:bg-blue-700 text-white px-3"
       >
-        <Plus className="h-4 w-4 mr-2" /> Add Subtype
+        <Plus className="h-4 w-4 mr-2" /> Add Stump
       </Button>
     </div>
   );

@@ -5,246 +5,199 @@ import { CreateSubTypeDto } from "@/models/subtype";
 import subTypeService from "@/services/subTypeService";
 import { useNavigate } from "react-router-dom";
 
-interface FormData extends CreateSubTypeDto {
-  // Additional fields for internal form state management if needed
+interface SubTypeFormData {
+  name?: string;
+  description?: string;
+  startDate?: string | Date;
+  endDate?: string | Date;
+  isActive?: boolean;
+  documentTypeId?: number;
+  id?: number; // Added ID for edit cases
 }
 
-interface FormContextType {
+interface SubTypeFormContextType {
+  formData: SubTypeFormData;
+  updateForm: (data: Partial<SubTypeFormData>) => void;
   currentStep: number;
-  totalSteps: number;
-  formData: FormData;
-  isSubmitting: boolean;
-  isSubmitSuccess: boolean | null;
-  submitError: string | null;
-  updateForm: (updates: Partial<FormData>) => void;
-  setFormData: (updates: Partial<FormData>) => void;
-  errors: Record<string, string>;
-  goToStep: (stepNumber: number) => void;
   nextStep: () => void;
   prevStep: () => void;
-  submitForm: () => Promise<void>;
-  resetForm: () => void;
+  errors: Record<string, string>;
+  setErrors: (errors: Record<string, string>) => void;
+  handleSubmit: () => void;
+  setHandleSubmit: (cb: () => void) => void;
+  validateCurrentStep: () => boolean;
+  isLoading: boolean;
 }
 
-const defaultFormData: Omit<FormData, "documentTypeId"> = {
-  name: "",
-  description: "",
-  startDate: "",
-  endDate: "",
-  isActive: true,
-};
-
-const FormContext = createContext<FormContextType | undefined>(undefined);
+const SubTypeFormContext = createContext<SubTypeFormContextType | undefined>(
+  undefined
+);
 
 interface SubTypeFormProviderProps {
+  onSubmit: (data: SubTypeFormData) => void;
+  onClose: () => void;
   children: React.ReactNode;
-  documentType?: DocumentType;
-  onSubmit?: (formData: FormData) => void;
-  onClose?: () => void;
+  initialData?: SubTypeFormData;
 }
 
-export const SubTypeFormProvider: React.FC<SubTypeFormProviderProps> = ({
-  children,
-  documentType,
+export const SubTypeFormProvider = ({
   onSubmit,
   onClose,
-}) => {
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [formData, setFormData] = useState<FormData>({
-    ...defaultFormData,
-    documentTypeId: documentType?.id ? Number(documentType.id) : 0,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitSuccess, setIsSubmitSuccess] = useState<boolean | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  children,
+  initialData = {},
+}: SubTypeFormProviderProps) => {
+  const [formData, setFormData] = useState<SubTypeFormData>(initialData);
+  const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitHandler, setSubmitHandler] = useState<() => void>(() => {});
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
-  const updateForm = (updates: Partial<FormData>) => {
-    setFormData((prev) => ({
-      ...prev,
-      ...updates,
-      documentTypeId: documentType?.id
-        ? Number(documentType.id)
-        : prev.documentTypeId,
-    }));
-
-    // Clear any errors for the updated fields
-    if (updates) {
-      const updatedErrors = { ...errors };
-      Object.keys(updates).forEach((key) => {
-        delete updatedErrors[key];
-      });
-      setErrors(updatedErrors);
-    }
+  const updateForm = (data: Partial<SubTypeFormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
   };
 
-  const goToStep = (stepNumber: number) => {
-    if (stepNumber >= 1 && stepNumber <= 3) {
-      setCurrentStep(stepNumber);
+  const validateCurrentStep = async (): Promise<boolean> => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    if (currentStep === 1) {
+      // Date step validation
+      if (!formData.startDate) {
+        newErrors.startDate = "Start date is required";
+        isValid = false;
+      }
+
+      if (!formData.endDate) {
+        newErrors.endDate = "End date is required";
+        isValid = false;
+      }
+
+      if (formData.startDate && formData.endDate) {
+        const startDate = new Date(formData.startDate);
+        const endDate = new Date(formData.endDate);
+
+        if (endDate < startDate) {
+          newErrors.endDate = "End date must be after start date";
+          isValid = false;
+        }
+
+        // Only check for overlaps if we have a document type ID and valid date range
+        if (isValid && formData.documentTypeId) {
+          setIsLoading(true);
+          try {
+            const { overlapping, overlappingWith } = await subTypeService.checkOverlappingDateIntervals(
+              formData.documentTypeId,
+              formData.startDate,
+              formData.endDate,
+              formData.id // Pass ID for edit cases
+            );
+
+            if (overlapping && overlappingWith) {
+              newErrors.startDate = `Date range overlaps with existing stump: ${overlappingWith.name}`;
+              isValid = false;
+              toast.toast({
+                title: "Date Overlap Detected",
+                description: `Your selected date range overlaps with an existing stump: ${overlappingWith.name}`,
+                variant: "destructive"
+              });
+            }
+          } catch (error) {
+            console.error("Error checking date overlaps:", error);
+            toast.toast({
+              title: "Warning",
+              description: "Could not verify date range overlap. You may proceed, but be cautious.",
+              variant: "warning"
+            });
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      }
+    } else if (currentStep === 2) {
+      // Basic info validation - name field is now optional
+      // No validation needed for name since it's optional
+      
+      // Apply defaults for dates if they're still not set
+      if (!formData.startDate) {
+        updateForm({ startDate: new Date().toISOString().split('T')[0] });
+      }
+      
+      if (!formData.endDate) {
+        updateForm({ 
+          endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+            .toISOString().split('T')[0] 
+        });
+      }
     }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
-  const nextStep = () => {
-    if (currentStep < 3) {
-      setCurrentStep((prev) => prev + 1);
+  const nextStep = async () => {
+    setIsLoading(true);
+    const isValid = await validateCurrentStep();
+    setIsLoading(false);
+    
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3));
     }
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
-    }
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const resetForm = () => {
-    setFormData({
-      ...defaultFormData,
-      documentTypeId: documentType?.id ? Number(documentType.id) : 0,
-    });
-    setCurrentStep(1);
-    setIsSubmitSuccess(null);
-    setSubmitError(null);
-    setErrors({});
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    // Basic validation
-    if (!formData.name?.trim()) {
-      newErrors.name = "Name is required";
-      toast({
-        title: "Error",
-        description: "Name is required",
-        variant: "destructive",
-      });
-    }
-
-    if (!formData.startDate) {
-      newErrors.startDate = "Start date is required";
-      toast({
-        title: "Error",
-        description: "Start date is required",
-        variant: "destructive",
-      });
-    }
-
-    if (!formData.endDate) {
-      newErrors.endDate = "End date is required";
-      toast({
-        title: "Error",
-        description: "End date is required",
-        variant: "destructive",
-      });
-    }
-
-    // Validate that end date is after start date
-    if (
-      formData.startDate &&
-      formData.endDate &&
-      new Date(formData.endDate) <= new Date(formData.startDate)
-    ) {
-      newErrors.endDate = "End date must be after start date";
-      toast({
-        title: "Error",
-        description: "End date must be after start date",
-        variant: "destructive",
-      });
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      setCurrentStep(1);
-      return;
-    }
-
-    try {
-      const payload: CreateSubTypeDto = {
-        ...formData,
-        documentTypeId: documentType?.id
-          ? Number(documentType.id)
-          : formData.documentTypeId,
-      };
-
-      setIsSubmitting(true);
-      setSubmitError(null);
-      setIsSubmitSuccess(null);
-
-      if (onSubmit) {
-        onSubmit(formData);
-        setIsSubmitSuccess(true);
-
-        if (onClose) {
-          setTimeout(() => {
-            onClose();
-          }, 2000);
-        }
-      } else {
-        await subTypeService.createSubType(payload);
-
-        setIsSubmitSuccess(true);
-        toast({
-          title: "Success!",
-          description: `Subtype "${formData.name}" was created successfully`,
-          variant: "default",
-        });
-
-        setTimeout(() => {
-          if (documentType?.id) {
-            navigate(`/document-types/${documentType.id}/subtypes`);
-          } else {
-            navigate("/document-types");
-          }
-        }, 2000);
+  const handleSubmit = () => {
+    // Final validation before submitting
+    if (currentStep === 3) {
+      // Apply defaults for any missing required fields
+      const finalData = { ...formData };
+      
+      if (!finalData.startDate) {
+        finalData.startDate = new Date().toISOString().split('T')[0];
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-
-      setIsSubmitSuccess(false);
-      setSubmitError(
-        error instanceof Error ? error.message : "Failed to create subtype"
-      );
-
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to create subtype",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+      
+      if (!finalData.endDate) {
+        finalData.endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+          .toISOString().split('T')[0];
+      }
+      
+      if (finalData.isActive === undefined) {
+        finalData.isActive = true;
+      }
+      
+      onSubmit(finalData);
+    } else {
+      submitHandler();
     }
   };
 
-  const value: FormContextType = {
-    currentStep,
-    totalSteps: 3,
-    formData,
-    isSubmitting,
-    isSubmitSuccess,
-    submitError,
-    updateForm,
-    setFormData: updateForm,
-    errors,
-    goToStep,
-    nextStep,
-    prevStep,
-    submitForm: handleSubmit,
-    resetForm,
-  };
-
-  return <FormContext.Provider value={value}>{children}</FormContext.Provider>;
+  return (
+    <SubTypeFormContext.Provider
+      value={{
+        formData,
+        updateForm,
+        currentStep,
+        nextStep,
+        prevStep,
+        errors,
+        setErrors,
+        handleSubmit,
+        setHandleSubmit: setSubmitHandler,
+        validateCurrentStep,
+        isLoading
+      }}
+    >
+      {children}
+    </SubTypeFormContext.Provider>
+  );
 };
 
 export const useSubTypeForm = () => {
-  const context = useContext(FormContext);
-  if (context === undefined) {
+  const context = useContext(SubTypeFormContext);
+  if (!context) {
     throw new Error("useSubTypeForm must be used within a SubTypeFormProvider");
   }
   return context;

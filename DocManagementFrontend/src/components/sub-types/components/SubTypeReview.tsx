@@ -14,9 +14,21 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect } from "react";
 
 export const SubTypeReview = () => {
-  const { formData, goToStep, submitForm } = useSubTypeForm();
+  const { formData, prevStep, handleSubmit } = useSubTypeForm();
+
+  // Apply default dates if they're not set
+  useEffect(() => {
+    if (!formData.startDate || !formData.endDate) {
+      // This will trigger a re-render with the default dates
+      prevStep();
+      setTimeout(() => {
+        prevStep(); // Go back to review step after defaults are applied
+      }, 100);
+    }
+  }, []);
 
   const formatSimpleDate = (dateStr?: string | Date) => {
     if (!dateStr) return "Not set";
@@ -92,6 +104,16 @@ export const SubTypeReview = () => {
     show: { opacity: 1, y: 0 },
   };
 
+  // Go to specific step (replacement for previous goToStep function)
+  const goToStep = (step: number) => {
+    if (step === 1) {
+      prevStep();
+      prevStep();
+    } else if (step === 2) {
+      prevStep();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
@@ -154,9 +176,9 @@ export const SubTypeReview = () => {
                             {formatSimpleDate(formData.startDate)}
                           </p>
                         ) : (
-                          <p className="text-sm text-red-400 flex items-center">
+                          <p className="text-sm text-yellow-400 flex items-center">
                             <AlertCircle className="h-3 w-3 mr-1" />
-                            Not set
+                            Using default date
                           </p>
                         )}
                       </div>
@@ -181,9 +203,9 @@ export const SubTypeReview = () => {
                             {formatSimpleDate(formData.endDate)}
                           </p>
                         ) : (
-                          <p className="text-sm text-red-400 flex items-center">
+                          <p className="text-sm text-yellow-400 flex items-center">
                             <AlertCircle className="h-3 w-3 mr-1" />
-                            Not set
+                            Using default date
                           </p>
                         )}
                       </div>
@@ -209,13 +231,13 @@ export const SubTypeReview = () => {
                     <div className="flex items-center">
                       <div
                         className={`h-2.5 w-2.5 rounded-full mr-1.5 ${
-                          formData.isActive ? "bg-green-500" : "bg-red-500"
+                          formData.isActive === false ? "bg-red-500" : "bg-green-500"
                         }`}
                       ></div>
                       <div className="flex items-center">
                         <Power className="h-3.5 w-3.5 mr-1.5 text-blue-400/80" />
                         <p className="text-sm text-white font-medium">
-                          {formData.isActive ? "Active" : "Inactive"}
+                          {formData.isActive === false ? "Inactive" : "Active"}
                         </p>
                       </div>
                     </div>
@@ -227,7 +249,7 @@ export const SubTypeReview = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-blue-300 flex items-center">
                     <FileText className="h-4 w-4 mr-2 text-blue-400" />
-                    Enter Code
+                    Prefix
                   </h3>
                   <Button
                     type="button"
@@ -245,13 +267,13 @@ export const SubTypeReview = () => {
                   <div>
                     <div className="flex items-center mb-1">
                       <span className="text-xs text-blue-300/70 font-medium mr-1">
-                        Code
+                        Prefix
                       </span>
                       <Badge
                         variant="outline"
                         className="text-[9px] px-1 py-0 h-4 font-normal text-blue-300/70 border-blue-900/50"
                       >
-                        Required
+                        Optional
                       </Badge>
                     </div>
                     <div className="flex items-center">
@@ -260,9 +282,8 @@ export const SubTypeReview = () => {
                           {formData.name}
                         </p>
                       ) : (
-                        <p className="text-sm text-red-400 font-medium flex items-center">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          Not set
+                        <p className="text-sm text-gray-400 font-medium italic">
+                          No prefix provided
                         </p>
                       )}
                     </div>

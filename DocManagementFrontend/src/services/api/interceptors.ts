@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import api from './core';
 import { handleErrorResponse, shouldSkipAuthRedirect, shouldSkipErrorToast } from './errorHandlers';
@@ -67,14 +66,25 @@ const setupResponseInterceptor = () => {
       }
       
       // Network errors (no connection to server)
-      if (error.code === 'ERR_NETWORK') {
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
         console.error('Network error detected:', error);
         
         // Don't show error toast for login/register as they handle errors themselves
-        if (!error.config.url.includes('/Auth/login') && !error.config.url.includes('/Auth/register')) {
-          toast.error('Network error. Please check your connection and try again.', {
-            description: 'Unable to connect to the server'
-          });
+        if (!error.config?.url?.includes('/Auth/login') && !error.config?.url?.includes('/Auth/register')) {
+          // Static paths that should show connection errors (important actions)
+          const criticalPaths = ['/documents', '/document-types'];
+          const isCriticalPath = criticalPaths.some(path => window.location.pathname.includes(path));
+          
+          // Only show error once per session unless it's a critical path
+          const lastErrorTime = sessionStorage.getItem('lastNetworkErrorTime');
+          const now = Date.now();
+          
+          if (!lastErrorTime || (now - parseInt(lastErrorTime)) > 60000 || isCriticalPath) {
+            sessionStorage.setItem('lastNetworkErrorTime', now.toString());
+            toast.error('Network error. Please check your connection and try again.', {
+              description: 'Unable to connect to the server'
+            });
+          }
         }
         
         return Promise.reject(error);
@@ -84,7 +94,7 @@ const setupResponseInterceptor = () => {
       if (error.message?.includes('SSL') || error.code === 'ERR_SSL_PROTOCOL_ERROR') {
         console.error('SSL error detected:', error);
         
-        if (!error.config.url.includes('/Auth/login') && !error.config.url.includes('/Auth/register')) {
+        if (!error.config?.url?.includes('/Auth/login') && !error.config?.url?.includes('/Auth/register')) {
           toast.error('SSL connection error. Contact your administrator to configure correct API settings.');
         }
         
@@ -94,7 +104,7 @@ const setupResponseInterceptor = () => {
       console.error('API Response Error:', error.response || error);
       
       // Skip toast for endpoints that handle their own errors
-      const skipToast = shouldSkipErrorToast(error.config.url);
+      const skipToast = shouldSkipErrorToast(error.config?.url || '');
                       
       const originalRequest = error.config;
       
@@ -103,7 +113,7 @@ const setupResponseInterceptor = () => {
         originalRequest._retry = true;
         
         // If it's not one of the exceptions and is a 401, only then redirect
-        const shouldRedirect = !shouldSkipAuthRedirect(originalRequest.url);
+        const shouldRedirect = !shouldSkipAuthRedirect(originalRequest?.url || '');
         
         if (shouldRedirect) {
           localStorage.removeItem('token');
@@ -119,7 +129,7 @@ const setupResponseInterceptor = () => {
         });
         
         // If accessing admin endpoint, redirect to dashboard
-        if (originalRequest.url.includes('/Admin/')) {
+        if (originalRequest?.url?.includes('/Admin/')) {
           window.location.href = '/dashboard';
         }
       }

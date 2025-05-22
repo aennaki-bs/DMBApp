@@ -32,7 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
-import { CreateDocumentModal } from "@/components/create-document/CreateDocumentModal";
+import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
 import { useDocumentsFilter } from "./hooks/useDocumentsFilter";
 
 const DocumentsPage = () => {
@@ -86,27 +86,21 @@ const DocumentsPage = () => {
     return filteredItems.slice(start, end);
   };
 
-  const handleSelectDocument = (id: number) => {
-    if (!canManageDocuments) {
-      toast.error("You do not have permission to select documents");
-      return;
-    }
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
+  const handleSelectDocument = (documentId: number) => {
     setSelectedDocuments((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((docId) => docId !== id);
+      if (prev.includes(documentId)) {
+        return prev.filter((id) => id !== documentId);
       } else {
-        return [...prev, id];
+        return [...prev, documentId];
       }
     });
   };
 
   const handleSelectAll = () => {
-    if (!canManageDocuments) {
-      toast.error("You do not have permission to select documents");
-      return;
-    }
-
     if (selectedDocuments.length === getPageDocuments().length) {
       setSelectedDocuments([]);
     } else {
@@ -114,86 +108,59 @@ const DocumentsPage = () => {
     }
   };
 
-  const openDeleteDialog = (id?: number) => {
-    if (!canManageDocuments) {
-      toast.error("You do not have permission to delete documents");
-      return;
-    }
-
-    if (id) {
-      setDocumentToDelete(id);
-    } else if (selectedDocuments.length > 0) {
-      setDocumentToDelete(null);
-    } else {
-      return;
-    }
+  const openDeleteDialog = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleDelete = async () => {
+  const openDeleteSingleDialog = (documentId: number) => {
+    setDocumentToDelete(documentId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      if (documentToDelete) {
+      if (documentToDelete !== null) {
+        // Single document delete
         await deleteDocument(documentToDelete);
-        toast.success(
-          "Document deleted successfully" + (useFakeData ? " (simulated)" : "")
-        );
+        toast.success("Document deleted successfully");
       } else if (selectedDocuments.length > 0) {
+        // Multiple documents delete
         await deleteMultipleDocuments(selectedDocuments);
         toast.success(
-          `${selectedDocuments.length} documents deleted successfully` +
-            (useFakeData ? " (simulated)" : "")
+          `${selectedDocuments.length} documents deleted successfully`
         );
-        setSelectedDocuments([]);
       }
-    } catch (error) {
-      console.error("Failed to delete document(s):", error);
-      toast.error("Failed to delete document(s)");
-    } finally {
+
+      setSelectedDocuments([]);
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
+      fetchDocuments();
+    } catch (error) {
+      console.error("Error deleting document(s):", error);
+      toast.error("Failed to delete document(s)");
     }
   };
 
   const openAssignCircuitDialog = (document: Document) => {
-    if (!canManageDocuments) {
-      toast.error("You do not have permission to assign documents to circuits");
-      return;
-    }
-
     setDocumentToAssign(document);
     setAssignCircuitDialogOpen(true);
   };
 
   const handleAssignCircuitSuccess = () => {
-    toast.success("Document assigned to circuit successfully");
-    if (!useFakeData) {
-      fetchDocuments();
-    }
-  };
-
-  const clearFiltersAndRefresh = () => {
-    resetFilters();
+    setAssignCircuitDialogOpen(false);
+    setDocumentToAssign(null);
     fetchDocuments();
+    toast.success("Document assigned to circuit successfully");
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="container mx-auto px-4 py-6">
       <PageHeader
         title="Documents"
-        description="Manage your documents and files"
-        icon={<FileText className="h-6 w-6 text-blue-400" />}
+        description="View and manage your documents"
+        icon={<FileText className="h-6 w-6 text-blue-500" />}
         actions={
           <>
-            {useFakeData && (
-              <Button
-                variant="outline"
-                onClick={fetchDocuments}
-                className="border-amber-500/50 text-amber-500 hover:bg-amber-500/20"
-              >
-                <AlertCircle className="mr-2 h-4 w-4" />
-                Using Test Data
-              </Button>
-            )}
             {canManageDocuments ? (
               <>
                 <Button
@@ -226,200 +193,140 @@ const DocumentsPage = () => {
         }
       />
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Card className="border-blue-900/30 bg-gradient-to-b from-[#0a1033]/95 to-[#0a1033]/100 backdrop-blur-sm shadow-xl overflow-hidden rounded-xl">
-          <CardHeader className="p-4 border-b border-blue-900/30 bg-gradient-to-r from-[#1a2c6b]/50 to-[#0a1033]/50">
-            <DocumentsFilterBar />
-          </CardHeader>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="p-8 space-y-4">
-                <div className="h-10 bg-blue-900/20 rounded animate-pulse"></div>
-                {[...Array(5)].map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-16 bg-blue-900/10 rounded animate-pulse"
-                  ></div>
-                ))}
-              </div>
-            ) : getPageDocuments().length > 0 ? (
-              <div className="overflow-x-auto">
-                <DocumentsTable
-                  documents={getPageDocuments()}
-                  selectedDocuments={selectedDocuments}
-                  canManageDocuments={canManageDocuments}
-                  handleSelectDocument={handleSelectDocument}
-                  handleSelectAll={handleSelectAll}
-                  openDeleteDialog={openDeleteDialog}
-                  openAssignCircuitDialog={openAssignCircuitDialog}
-                  page={page}
-                  pageSize={pageSize}
-                  sortConfig={sortConfig}
-                  requestSort={requestSort}
-                />
-              </div>
-            ) : (
-              <DocumentsEmptyState
-                canManageDocuments={canManageDocuments}
-                onDocumentCreated={fetchDocuments}
-                hasFilters={hasActiveFilters}
-                onClearFilters={clearFiltersAndRefresh}
-              />
-            )}
+      {/* Filter Bar */}
+      <DocumentsFilterBar />
 
-            {totalPages > 1 && filteredItems.length > 0 && (
-              <div className="p-4 border-t border-blue-900/30 bg-gradient-to-b from-[#0a1033]/0 to-[#1a2c6b]/20">
-                <Pagination className="justify-center">
+      {/* Selected Documents Bar */}
+      <AnimatePresence>
+        {selectedDocuments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <BulkActionsBar
+              selectedCount={selectedDocuments.length}
+              entityName="document"
+              icon={<FileText className="h-4 w-4 text-blue-400" />}
+              actions={[
+                {
+                  id: "delete",
+                  label: "Delete Selected",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: openDeleteDialog,
+                  variant: "destructive",
+                },
+              ]}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <Card className="mt-6 border-gray-800 bg-[#0d1117]/60 backdrop-blur-sm shadow-md">
+        {isLoading ? (
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+              <p className="text-gray-400">Loading documents...</p>
+            </div>
+          </CardContent>
+        ) : filteredItems.length === 0 ? (
+          <DocumentsEmptyState
+            canManageDocuments={canManageDocuments}
+            onDocumentCreated={fetchDocuments}
+            hasFilters={hasActiveFilters}
+            onClearFilters={resetFilters}
+          />
+        ) : (
+          <>
+            <CardContent className="p-0">
+              <DocumentsTable
+                documents={getPageDocuments()}
+                selectedDocuments={selectedDocuments}
+                canManageDocuments={canManageDocuments}
+                handleSelectDocument={handleSelectDocument}
+                handleSelectAll={handleSelectAll}
+                openDeleteDialog={openDeleteSingleDialog}
+                openAssignCircuitDialog={openAssignCircuitDialog}
+                sortConfig={sortConfig}
+                requestSort={requestSort}
+                page={page}
+                pageSize={pageSize}
+              />
+            </CardContent>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center py-4 border-t border-gray-800">
+                <Pagination>
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        onClick={() => handlePageChange(Math.max(1, page - 1))}
                         className={
                           page === 1
                             ? "pointer-events-none opacity-50"
-                            : "hover:bg-blue-800/30"
+                            : "cursor-pointer"
                         }
                       />
                     </PaginationItem>
-
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum = page;
-                      if (page <= 3) {
-                        pageNum = i + 1;
-                      } else if (page >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = page - 2 + i;
-                      }
-
-                      if (pageNum > 0 && pageNum <= totalPages) {
-                        return (
-                          <PaginationItem key={i}>
-                            <PaginationLink
-                              onClick={() => setPage(pageNum)}
-                              isActive={page === pageNum}
-                              className={
-                                page === pageNum
-                                  ? "bg-blue-600"
-                                  : "hover:bg-blue-800/30"
-                              }
-                            >
-                              {pageNum}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      }
-                      return null;
-                    })}
-
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(i + 1)}
+                          isActive={page === i + 1}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
                     <PaginationItem>
                       <PaginationNext
                         onClick={() =>
-                          setPage((p) => Math.min(totalPages, p + 1))
+                          handlePageChange(Math.min(totalPages, page + 1))
                         }
                         className={
                           page === totalPages
                             ? "pointer-events-none opacity-50"
-                            : "hover:bg-blue-800/30"
+                            : "cursor-pointer"
                         }
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
-
-                <div className="text-center text-xs text-blue-400 mt-2">
-                  Showing {(page - 1) * pageSize + 1} to{" "}
-                  {Math.min(page * pageSize, filteredItems.length)} of{" "}
-                  {filteredItems.length} documents
-                </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Floating action button for clearing filters */}
-      <AnimatePresence>
-        {hasActiveFilters && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed bottom-24 right-6 z-10"
-          >
-            <Button
-              onClick={clearFiltersAndRefresh}
-              className="rounded-full h-12 px-4 bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center gap-2 border border-blue-500/50"
-            >
-              <FilterX className="h-5 w-5" />
-              <span>Clear Filters</span>
-            </Button>
-          </motion.div>
+          </>
         )}
-      </AnimatePresence>
+      </Card>
 
-      {/* Dialogs */}
-      <CreateDocumentModal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onDocumentCreated={fetchDocuments}
-      />
-
+      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDelete}
-        isBulk={documentToDelete === null}
-        count={documentToDelete === null ? selectedDocuments.length : 1}
+        onConfirm={handleDeleteConfirm}
+        count={documentToDelete ? 1 : selectedDocuments.length}
       />
 
-      <AssignCircuitDialog
-        open={assignCircuitDialogOpen}
-        onOpenChange={setAssignCircuitDialogOpen}
-        documentId={documentToAssign?.id || 0}
-        documentTitle={documentToAssign?.title || ""}
-        onSuccess={handleAssignCircuitSuccess}
-      />
+      {/* Assign Circuit Dialog */}
+      {documentToAssign && (
+        <AssignCircuitDialog
+          open={assignCircuitDialogOpen}
+          onOpenChange={setAssignCircuitDialogOpen}
+          documentId={documentToAssign.id}
+          documentTitle={documentToAssign.title}
+          onSuccess={handleAssignCircuitSuccess}
+        />
+      )}
 
-      {/* Bulk Actions Bar */}
-      <AnimatePresence>
-        {selectedDocuments.length > 0 && (
-          <BulkActionsBar
-            selectedCount={selectedDocuments.length}
-            entityName="document"
-            icon={<FileText className="w-5 h-5 text-blue-400" />}
-            actions={[
-              {
-                id: "delete",
-                label: "Delete",
-                icon: <Trash2 className="h-4 w-4" />,
-                onClick: () => openDeleteDialog(),
-                variant: "destructive",
-                className:
-                  "bg-red-900/30 border-red-500/30 text-red-200 hover:text-red-100 hover:bg-red-800/50 hover:border-red-400/50",
-              },
-              ...(selectedDocuments.length === 1
-                ? [
-                    {
-                      id: "assign",
-                      label: "Assign to Circuit",
-                      icon: <GitBranch className="h-4 w-4" />,
-                      onClick: () =>
-                        openAssignCircuitDialog(
-                          documents.find((d) => d.id === selectedDocuments[0])!
-                        ),
-                    },
-                  ]
-                : []),
-            ]}
-          />
-        )}
-      </AnimatePresence>
+      {/* Create Document Wizard */}
+      <CreateDocumentWizard
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onSuccess={fetchDocuments}
+      />
     </div>
   );
 };

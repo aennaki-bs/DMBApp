@@ -1,11 +1,10 @@
-
 import api from './core';
 import { setupInterceptors } from './interceptors';
-import { checkApiConnection } from './connectionCheck';
+import { checkApiConnection, getCachedConnectionStatus } from './connectionCheck';
 
 // Set up interceptors
 setupInterceptors();
 
 // Export the api instance and utilities
-export { checkApiConnection };
+export { checkApiConnection, getCachedConnectionStatus };
 export default api;

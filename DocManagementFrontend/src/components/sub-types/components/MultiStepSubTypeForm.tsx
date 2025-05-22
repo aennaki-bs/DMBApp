@@ -29,15 +29,12 @@ export const MultiStepSubTypeForm = ({
   };
 
   return (
-    <div className="w-full mx-auto flex flex-col h-[450px] max-h-[80vh]">
-      <div className="flex-shrink-0">
+    <div className="w-full mx-auto flex flex-col h-[500px] max-h-[80vh] relative pb-20">
+      <div className="flex-shrink-0 mb-3">
         <SubTypeFormProgress />
       </div>
 
-      <div
-        className="flex-grow overflow-auto mb-1 px-1"
-        style={{ minHeight: "250px", maxHeight: "320px" }}
-      >
+      <div className="flex-grow overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -52,7 +49,7 @@ export const MultiStepSubTypeForm = ({
         </AnimatePresence>
       </div>
 
-      <div className="flex-shrink-0">
+      <div className="absolute bottom-0 left-0 right-0">
         <SubTypeFormActions onCancel={onCancel} />
       </div>
     </div>

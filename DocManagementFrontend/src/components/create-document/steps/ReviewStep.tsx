@@ -18,6 +18,8 @@ import {
   Edit,
   Check,
   Copy,
+  Calculator,
+  Share2,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -27,11 +29,14 @@ interface ReviewStepProps {
   documentAlias: string;
   title: string;
   docDate: string;
+  comptableDate: string | null;
   content: string;
+  circuitName: string;
   onEditTypeClick: () => void;
   onEditDetailsClick: () => void;
   onEditDateClick: () => void;
   onEditContentClick: () => void;
+  onEditCircuitClick: () => void;
 }
 
 export const ReviewStep = ({
@@ -40,11 +45,14 @@ export const ReviewStep = ({
   documentAlias,
   title,
   docDate,
+  comptableDate,
   content,
+  circuitName,
   onEditTypeClick,
   onEditDetailsClick,
   onEditDateClick,
   onEditContentClick,
+  onEditCircuitClick,
 }: ReviewStepProps) => {
   return (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -67,7 +75,7 @@ export const ReviewStep = ({
               Document Type
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Type and subtype information
+              Type and stump information
             </CardDescription>
           </div>
           <Button
@@ -91,7 +99,7 @@ export const ReviewStep = ({
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Subtype</p>
+              <p className="text-xs text-gray-400">Stump</p>
               <p className="text-sm text-white">
                 {selectedSubType?.name || "N/A"}
               </p>
@@ -150,7 +158,7 @@ export const ReviewStep = ({
           <div>
             <CardTitle className="text-md text-white flex items-center gap-2">
               <Calendar className="h-4 w-4 text-blue-400" />
-              Document Date
+              Document Dates
             </CardTitle>
           </div>
           <Button
@@ -163,8 +171,57 @@ export const ReviewStep = ({
           </Button>
         </CardHeader>
         <CardContent>
+          <div className="space-y-3">
+            <div>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 text-blue-400 mr-2" />
+                <p className="text-xs text-gray-400">Document Date</p>
+              </div>
+              <p className="text-sm text-white">
+                {docDate ? format(new Date(docDate), "PPP") : "N/A"}
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center">
+                <Calculator className="h-4 w-4 text-green-400 mr-2" />
+                <p className="text-xs text-gray-400">Accounting Date</p>
+              </div>
+              <p className="text-sm text-white">
+                {comptableDate
+                  ? format(new Date(comptableDate), "PPP")
+                  : "Not specified"}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Circuit Information */}
+      <Card className="bg-[#0a1033]/80 border-gray-800">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-md text-white flex items-center gap-2">
+              <Share2 className="h-4 w-4 text-blue-400" />
+              Circuit Assignment
+            </CardTitle>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-400 hover:bg-blue-900/20"
+            onClick={onEditCircuitClick}
+          >
+            <Edit className="h-4 w-4 mr-1" /> Edit
+          </Button>
+        </CardHeader>
+        <CardContent>
           <p className="text-sm text-white">
-            {docDate ? format(new Date(docDate), "PPP") : "N/A"}
+            {circuitName || "No circuit assigned"}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            This document will be processed according to the {circuitName}{" "}
+            workflow
           </p>
         </CardContent>
       </Card>

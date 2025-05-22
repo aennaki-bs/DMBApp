@@ -148,50 +148,186 @@ namespace DocManagementBackend.Controllers
                 if (step == null)
                     return BadRequest("No valid step found for this transition.");
                 
-                // Check if step requires approval
-                if (step.RequiresApproval)
+                try
                 {
-                    // Initiate approval process
-                    var (requiresApproval, approvalWritingId) = await _workflowService.InitiateApprovalIfRequiredAsync(
-                        moveToStatusDto.DocumentId, step.Id, userId, moveToStatusDto.Comments);
-                        
-                    if (requiresApproval)
+                    // Check if step requires approval
+                    if (step.RequiresApproval)
                     {
-                        var approvalWriting = await _context.ApprovalWritings.FindAsync(approvalWritingId);
-                        if (approvalWriting == null || approvalWriting.Status != ApprovalStatus.Accepted)
+                        Console.WriteLine($"Step requires approval. Checking if user {userId} can auto-approve");
+                        
+                        // Track whether auto-approval has been performed
+                        bool isAutoApproved = false;
+                        
+                        // Check if the user can auto-approve
+                        // Case 1: User is the single approver assigned to this step
+                        if (step.ApprovatorId.HasValue)
                         {
-                            // Approval needed but not yet granted - return here and don't proceed with the status transition
-                            return Ok(new { 
-                                message = "This step requires approval. An approval request has been initiated.",
-                                requiresApproval = true,
-                                approvalId = approvalWritingId
-                            });
+                            var approvator = await _context.Approvators
+                                .FirstOrDefaultAsync(a => a.Id == step.ApprovatorId.Value);
+                                
+                            if (approvator != null)
+                            {
+                                Console.WriteLine($"Step has approvator ID: {approvator.Id}, User ID: {approvator.UserId}");
+                                
+                                if (approvator.UserId == userId)
+                                {
+                                    Console.WriteLine($"User {userId} is the assigned approvator - creating auto-approved record");
+                                    
+                                    // Create an auto-approved record
+                                    var approvalWriting = new ApprovalWriting
+                                    {
+                                        DocumentId = moveToStatusDto.DocumentId,
+                                        StepId = step.Id,
+                                        ProcessedByUserId = userId,
+                                        ApprovatorId = step.ApprovatorId,
+                                        Status = ApprovalStatus.Accepted,
+                                        Comments = $"Auto-approved by {user.Username}: {moveToStatusDto.Comments}",
+                                        CreatedAt = DateTime.UtcNow
+                                    };
+                                    
+                                    _context.ApprovalWritings.Add(approvalWriting);
+                                    await _context.SaveChangesAsync();
+                                    
+                                    // Create auto-approval response record
+                                    var approvalResponse = new ApprovalResponse
+                                    {
+                                        ApprovalWritingId = approvalWriting.Id,
+                                        UserId = userId,
+                                        IsApproved = true,
+                                        Comments = "Auto-approved as user is the assigned approvator",
+                                        ResponseDate = DateTime.UtcNow
+                                    };
+                                    
+                                    _context.ApprovalResponses.Add(approvalResponse);
+                                    await _context.SaveChangesAsync();
+                                    
+                                    isAutoApproved = true;
+                                    Console.WriteLine($"Created auto-approved record with ID {approvalWriting.Id}");
+                                }
+                            }
+                        }
+                        // Case 2: User is in an approvers group with "Any" rule
+                        else if (step.ApprovatorsGroupId.HasValue && !isAutoApproved)
+                        {
+                            var group = await _context.ApprovatorsGroups
+                                .Include(g => g.ApprovatorsGroupUsers)
+                                .FirstOrDefaultAsync(g => g.Id == step.ApprovatorsGroupId.Value);
+                                
+                            if (group != null)
+                            {
+                                Console.WriteLine($"Step has approvers group ID: {group.Id}");
+                                
+                                // Check if user is in the group
+                                var groupUser = group.ApprovatorsGroupUsers
+                                    .FirstOrDefault(gu => gu.UserId == userId);
+                                    
+                                if (groupUser != null)
+                                {
+                                    Console.WriteLine($"User {userId} is in the approvers group");
+                                    
+                                    // Get the group approval rule
+                                    var rule = await _context.ApprovatorsGroupRules
+                                        .FirstOrDefaultAsync(r => r.GroupId == group.Id);
+                                        
+                                    if (rule != null && rule.RuleType == RuleType.Any)
+                                    {
+                                        Console.WriteLine($"Group has 'Any' rule - creating auto-approved record");
+                                        
+                                        // Create an auto-approved record
+                                        var approvalWriting = new ApprovalWriting
+                                        {
+                                            DocumentId = moveToStatusDto.DocumentId,
+                                            StepId = step.Id,
+                                            ProcessedByUserId = userId,
+                                            ApprovatorsGroupId = step.ApprovatorsGroupId,
+                                            Status = ApprovalStatus.Accepted,
+                                            Comments = $"Auto-approved by {user.Username}: {moveToStatusDto.Comments}",
+                                            CreatedAt = DateTime.UtcNow
+                                        };
+                                        
+                                        _context.ApprovalWritings.Add(approvalWriting);
+                                        await _context.SaveChangesAsync();
+                                        
+                                        // Create auto-approval response record
+                                        var approvalResponse = new ApprovalResponse
+                                        {
+                                            ApprovalWritingId = approvalWriting.Id,
+                                            UserId = userId,
+                                            IsApproved = true,
+                                            Comments = "Auto-approved as user is in approvers group with 'Any' rule",
+                                            ResponseDate = DateTime.UtcNow
+                                        };
+                                        
+                                        _context.ApprovalResponses.Add(approvalResponse);
+                                        await _context.SaveChangesAsync();
+                                        
+                                        isAutoApproved = true;
+                                        Console.WriteLine($"Created auto-approved record with ID {approvalWriting.Id}");
+                                    }
+                                }
+                            }
                         }
                         
-                        // At this point, approval has been granted, so we can proceed
-                        Console.WriteLine($"Approval has been granted for document {moveToStatusDto.DocumentId}, proceeding with status transition");
+                        // If not auto-approved, initiate normal approval process
+                        if (!isAutoApproved)
+                        {
+                            Console.WriteLine($"User {userId} cannot auto-approve - initiating normal approval process");
+                            
+                            // Initiate approval process
+                            var (requiresApproval, approvalWritingId) = await _workflowService.InitiateApprovalIfRequiredAsync(
+                                moveToStatusDto.DocumentId, step.Id, userId, moveToStatusDto.Comments);
+                                
+                            if (requiresApproval)
+                            {
+                                var approvalWriting = await _context.ApprovalWritings.FindAsync(approvalWritingId);
+                                if (approvalWriting == null || approvalWriting.Status != ApprovalStatus.Accepted)
+                                {
+                                    // Approval needed but not yet granted - return here and don't proceed with the status transition
+                                    return Ok(new { 
+                                        message = "This step requires approval. An approval request has been initiated.",
+                                        requiresApproval = true,
+                                        approvalId = approvalWritingId
+                                    });
+                                }
+                                
+                                // At this point, approval has been granted, so we can proceed
+                                Console.WriteLine($"Approval has been granted for document {moveToStatusDto.DocumentId}, proceeding with status transition");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Auto-approval successful for document {moveToStatusDto.DocumentId}, proceeding with status transition");
+                        }
+                    }
+                    
+                    // Approval is not required or has been granted, so proceed with the status transition
+                    var success = await _workflowService.MoveToNextStatusAsync(
+                        moveToStatusDto.DocumentId,
+                        moveToStatusDto.TargetStatusId,
+                        userId,
+                        moveToStatusDto.Comments);
+            
+                    if (success)
+                    {
+                        Console.WriteLine("Document status updated successfully");
+                        return Ok(new { 
+                            message = "Document status updated successfully.",
+                            requiresApproval = false
+                        });
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to update document status");
+                        return BadRequest("Failed to update document status.");
                     }
                 }
-                
-                // Approval is not required or has been granted, so proceed with the status transition
-                var success = await _workflowService.MoveToNextStatusAsync(
-                    moveToStatusDto.DocumentId,
-                    moveToStatusDto.TargetStatusId,
-                    userId,
-                    moveToStatusDto.Comments);
-        
-                if (success)
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Document status updated successfully");
-                    return Ok(new { 
-                        message = "Document status updated successfully.",
-                        requiresApproval = false
-                    });
-                }
-                else
-                {
-                    Console.WriteLine("Failed to update document status");
-                    return BadRequest("Failed to update document status.");
+                    Console.WriteLine($"Exception in auto-approval process: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    
+                    // Return with more diagnostic information
+                    return StatusCode(500, $"Auto-approval error: {ex.Message}");
                 }
             }
             catch (KeyNotFoundException ex)

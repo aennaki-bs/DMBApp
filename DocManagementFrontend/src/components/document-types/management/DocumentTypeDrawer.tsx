@@ -1,43 +1,44 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import DocumentTypeForm from "@/components/document-types/DocumentTypeForm";
+import { DocumentTypeForm } from "@/components/document-types/DocumentTypeForm";
 import { DocumentType } from "@/models/document";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface DocumentTypeDrawerProps {
-  isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
-  documentType: DocumentType | null;
-  isEditMode: boolean;
+  type: DocumentType | null;
   onSuccess: () => void;
-  onCancel: () => void;
 }
 
 const DocumentTypeDrawer = ({
-  isOpen,
+  open,
   onOpenChange,
-  documentType,
-  isEditMode,
+  type,
   onSuccess,
-  onCancel,
 }: DocumentTypeDrawerProps) => {
   // Use a simple handler to ensure the dialog is properly closed
   const handleCancel = () => {
     onOpenChange(false);
-    onCancel();
+  };
+
+  // Handle successful form submission
+  const handleSuccess = () => {
+    onSuccess();
+    onOpenChange(false); // Close the dialog when successful
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <AnimatePresence>
-        {isOpen && (
+        {open && (
           <DialogContent
-            className="p-0 border-none shadow-none bg-transparent max-w-2xl mx-auto"
+            className="p-0 border-none shadow-none bg-transparent max-w-2xl mx-auto [&>button]:hidden"
             forceMount
           >
             <DocumentTypeForm
-              documentType={documentType}
-              isEditMode={isEditMode}
-              onSuccess={onSuccess}
+              documentType={type}
+              isEditMode={!!type}
+              onSuccess={handleSuccess}
               onCancel={handleCancel}
             />
           </DialogContent>

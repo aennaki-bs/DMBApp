@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import circuitService from '@/services/circuitService';
 import { toast } from 'sonner';
 
-export function useDocumentWorkflow(documentId: number) {
+export function useDocumentWorkflow(documentId: number, enabled: boolean = true) {
   const queryClient = useQueryClient();
   
   // Get document workflow status
@@ -16,7 +16,7 @@ export function useDocumentWorkflow(documentId: number) {
     isError, 
     error,
     refetch 
-  } = useWorkflowStatus(documentId);
+  } = useWorkflowStatus(documentId, enabled);
 
   // Get workflow action handlers
   const { isActionLoading, performAction } = useWorkflowActions(documentId, refetch);
