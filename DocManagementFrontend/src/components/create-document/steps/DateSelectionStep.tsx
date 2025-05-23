@@ -1,10 +1,9 @@
 import { SubType } from "@/models/subtype";
 import { Calendar, Info, Calculator } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { format } from "date-fns";
-import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
-import { CustomDateTimeSelector } from "@/components/document/CustomDateTimeSelector";
+import { format, isValid } from "date-fns";
+import { useEffect, useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface DateSelectionStepProps {
   docDate: string;
@@ -25,57 +24,69 @@ export const DateSelectionStep = ({
   onComptableDateChange,
   selectedSubType,
 }: DateSelectionStepProps) => {
-  const [dateObj, setDateObj] = useState<Date>(() => {
+  // State for date values
+  const [documentDate, setDocumentDate] = useState<Date | undefined>(() => {
+    if (!docDate) return new Date();
     try {
-      return new Date(docDate);
+      const parsed = new Date(docDate);
+      return isValid(parsed) ? parsed : new Date();
     } catch (e) {
       console.error("Error parsing docDate:", e);
       return new Date();
     }
   });
 
-  const [comptableDateObj, setComptableDateObj] = useState<Date | undefined>(
-    () => {
-      if (!comptableDate) return undefined;
-      try {
-        return new Date(comptableDate);
-      } catch (e) {
-        console.error("Error parsing comptableDate:", e);
-        return undefined;
-      }
-    }
-  );
-
-  // Update dateObj when docDate changes
-  useEffect(() => {
+  const [accountingDate, setAccountingDate] = useState<Date | undefined>(() => {
+    if (!comptableDate) return undefined;
     try {
-      setDateObj(new Date(docDate));
+      const parsed = new Date(comptableDate);
+      return isValid(parsed) ? parsed : undefined;
     } catch (e) {
-      console.error("Error updating dateObj:", e);
+      console.error("Error parsing comptableDate:", e);
+      return undefined;
+    }
+  });
+
+  // Refs for the date pickers
+  const docDateRef = useRef<HTMLInputElement>(null);
+  const accountingDateRef = useRef<HTMLInputElement>(null);
+
+  // Update state when props change
+  useEffect(() => {
+    if (docDate) {
+      try {
+        const parsed = new Date(docDate);
+        if (isValid(parsed)) {
+          setDocumentDate(parsed);
+        }
+      } catch (e) {
+        console.error("Error updating document date:", e);
+      }
     }
   }, [docDate]);
 
-  // Update comptableDateObj when comptableDate changes
   useEffect(() => {
-    if (!comptableDate) {
-      setComptableDateObj(undefined);
-      return;
-    }
-
-    try {
-      setComptableDateObj(new Date(comptableDate));
-    } catch (e) {
-      console.error("Error updating comptableDateObj:", e);
+    if (comptableDate) {
+      try {
+        const parsed = new Date(comptableDate);
+        if (isValid(parsed)) {
+          setAccountingDate(parsed);
+        }
+      } catch (e) {
+        console.error("Error updating accounting date:", e);
+      }
+    } else {
+      setAccountingDate(undefined);
     }
   }, [comptableDate]);
 
   // Calculate if the selected date is within the valid range
   const isDateValid = (() => {
-    if (!selectedSubType) return true;
+    if (!selectedSubType || !documentDate) return true;
 
     try {
       // Create dates and normalize them to avoid timezone issues
-      const selectedDate = new Date(docDate);
+      const selectedDate = new Date(documentDate);
       const startDate = new Date(selectedSubType.startDate);
       const endDate = new Date(selectedSubType.endDate);
 
@@ -83,13 +94,6 @@ export const DateSelectionStep = ({
       selectedDate.setHours(0, 0, 0, 0);
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(0, 0, 0, 0);
-
-      console.log("Date validation check:", {
-        selectedDate,
-        startDate,
-        endDate,
-        isValid: selectedDate >= startDate && selectedDate <= endDate,
-      });
 
       // Compare dates directly
       return selectedDate >= startDate && selectedDate <= endDate;
@@ -99,123 +103,161 @@ export const DateSelectionStep = ({
     }
   })();
 
-  const handleDateChange = (date: Date | undefined) => {
-    console.log("DateSelectionStep received date change:", date);
+  // Format date for input
+  const formatDateForInput = (date: Date | undefined): string => {
+    if (!date) return "";
+    return date.toISOString().split("T")[0];
+  };
+
+  // Handle document date change
+  const handleDocumentDateChange = (date: Date | undefined) => {
+    setDocumentDate(date);
     onDateChange(date);
   };
 
-  const handleComptableDateChange = (date: Date | undefined) => {
-    console.log("DateSelectionStep received comptable date change:", date);
+  // Handle accounting date change
+  const handleAccountingDateChange = (date: Date | undefined) => {
+    setAccountingDate(date);
     onComptableDateChange(date);
   };
 
   return (
     <div className="space-y-6">
-      {/* Document Date Selection */}
-      <CustomDateTimeSelector
-        date={dateObj}
-        onChange={handleDateChange}
-        error={dateError}
-        label="Document Date"
-        description="The document date determines when this document is considered effective."
-        icon={<Calendar className="h-5 w-5" />}
-        iconColor="text-blue-400"
-        minDate={
-          selectedSubType ? new Date(selectedSubType.startDate) : undefined
-        }
-        maxDate={
-          selectedSubType ? new Date(selectedSubType.endDate) : undefined
-        }
-      />
+      {/* Document Date */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-blue-400" />
+            <h3 className="text-base font-medium text-white">Document Date</h3>
+          </div>
+          <span className="text-xs text-blue-300">Required</span>
+        </div>
+
+        <DatePicker
+          ref={docDateRef}
+          value={formatDateForInput(documentDate)}
+          onDateChange={handleDocumentDateChange}
+        />
+
+        {dateError && (
+          <div className="text-red-500 text-xs flex items-center gap-1.5 mt-1">
+            <Info className="h-3.5 w-3.5" />
+            <span>{dateError}</span>
+          </div>
+        )}
+
+        {selectedSubType && !isDateValid && (
+          <div className="text-xs text-amber-400 flex items-center gap-1.5 mt-1">
+            <Info className="h-3.5 w-3.5" />
+            <span>
+              Selected date is outside the valid range for this document type
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Date filtering information */}
-      <Card className="bg-blue-900/20 border-blue-800/40">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2">
-            <Info className="h-5 w-5 mt-0.5 text-blue-400" />
-            <div>
-              <h4 className="text-sm font-medium text-blue-400">
-                About Date Selection
-              </h4>
-              <p className="text-sm text-gray-300 mt-1">
-                <strong>Important:</strong> Only document types with active stumps valid for this date will be shown in the next step.
-                If you don't see a document type, it means there are no active stumps for that type on this date.
-              </p>
-            </div>
+      <div className="bg-[#0a1033] border border-blue-900/30 rounded-md p-4">
+        <div className="flex items-start gap-2">
+          <Info className="h-5 w-5 mt-0.5 text-blue-400" />
+          <div>
+            <h4 className="text-sm font-medium text-blue-400">
+              About Date Selection
+            </h4>
+            <p className="text-sm text-gray-300 mt-1">
+              <strong>Important:</strong> Only document types with active stumps
+              valid for this date will be shown in the next step. If you don't
+              see a document type, it means there are no active stumps for that
+              type on this date.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Accounting Date Selection */}
-      <CustomDateTimeSelector
-        date={comptableDateObj}
-        onChange={handleComptableDateChange}
-        error={comptableDateError}
-        label="Accounting Date"
-        description="The accounting date is used for financial reporting purposes and may differ from the document date."
-        icon={<Calculator className="h-5 w-5" />}
-        iconColor="text-green-400"
-        isOptional={true}
-      />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calculator className="h-5 w-5 text-green-400" />
+            <h3 className="text-base font-medium text-white">
+              Accounting Date
+            </h3>
+          </div>
+          <span className="text-xs text-gray-400">(Optional)</span>
+        </div>
+        <p className="text-sm text-gray-400">
+          The accounting date is used for financial reporting purposes and may
+          differ from the document date.
+        </p>
+
+        <DatePicker
+          ref={accountingDateRef}
+          value={formatDateForInput(accountingDate)}
+          onDateChange={handleAccountingDateChange}
+          placeholder="Select date"
+        />
+
+        {comptableDateError && (
+          <div className="text-red-500 text-xs flex items-center gap-1.5 mt-1">
+            <Info className="h-3.5 w-3.5" />
+            <span>{comptableDateError}</span>
+          </div>
+        )}
+      </div>
 
       {/* Valid Date Range Information */}
       {selectedSubType && (
-        <Card
-          className={`bg-opacity-20 border ${
+        <div
+          className={`bg-opacity-20 border rounded-md p-4 ${
             isDateValid
               ? "bg-blue-900/20 border-blue-800"
               : "bg-amber-900/20 border-amber-800"
           }`}
         >
-          <CardContent className="p-3.5 space-y-2">
-            <div className="flex items-start gap-3">
-              <Info
-                className={`h-5 w-5 mt-0.5 ${
+          <div className="flex items-start gap-3">
+            <Info
+              className={`h-5 w-5 mt-0.5 ${
+                isDateValid ? "text-blue-400" : "text-amber-400"
+              }`}
+            />
+            <div>
+              <h4
+                className={`text-sm font-medium ${
                   isDateValid ? "text-blue-400" : "text-amber-400"
                 }`}
-              />
-              <div>
-                <h4
-                  className={`text-sm font-medium ${
-                    isDateValid ? "text-blue-400" : "text-amber-400"
-                  }`}
-                >
-                  Valid Date Range for {selectedSubType.subTypeKey}
-                </h4>
-                <p className="text-sm text-gray-300 mt-1">
-                  Documents of this subtype must have a date between:
-                </p>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-white font-medium">
-                      {format(
-                        new Date(selectedSubType.startDate),
-                        "MMMM d, yyyy"
-                      )}
-                    </span>
-                  </div>
-                  <span className="hidden sm:inline text-gray-400">to</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <span className="text-white font-medium">
-                      {format(
-                        new Date(selectedSubType.endDate),
-                        "MMMM d, yyyy"
-                      )}
-                    </span>
-                  </div>
+              >
+                Valid Date Range for {selectedSubType.subTypeKey}
+              </h4>
+              <p className="text-sm text-gray-300 mt-1">
+                Documents of this subtype must have a date between:
+              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="text-white font-medium">
+                    {format(
+                      new Date(selectedSubType.startDate),
+                      "MMMM d, yyyy"
+                    )}
+                  </span>
                 </div>
-
-                {!isDateValid && (
-                  <p className="text-amber-400 text-sm mt-3 font-medium">
-                    The selected date is outside the valid range.
-                  </p>
-                )}
+                <span className="hidden sm:inline text-gray-400">to</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                  <span className="text-white font-medium">
+                    {format(new Date(selectedSubType.endDate), "MMMM d, yyyy")}
+                  </span>
+                </div>
               </div>
+
+              {!isDateValid && (
+                <p className="text-amber-400 text-sm mt-3 font-medium">
+                  The selected date is outside the valid range.
+                </p>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );

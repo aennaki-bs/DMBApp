@@ -8,15 +8,15 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSubTypeForm } from "./SubTypeFormProvider";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, CalendarDays, Info, Power } from "lucide-react";
+import { CalendarClock, Info, Power } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const formSchema = z.object({
   startDate: z.union([z.string().min(1, "Start date is required"), z.date()]),
@@ -29,16 +29,23 @@ type FormValues = z.infer<typeof formSchema>;
 export const SubTypeDates = () => {
   const { formData, updateForm, errors } = useSubTypeForm();
 
+  // Refs for date pickers
+  const startDateRef = useRef<HTMLInputElement>(null);
+  const endDateRef = useRef<HTMLInputElement>(null);
+
   // Set default dates if they're not provided
   useEffect(() => {
     if (!formData.startDate) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       updateForm({ startDate: today });
     }
-    
+
     if (!formData.endDate) {
-      const nextYear = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-        .toISOString().split('T')[0];
+      const nextYear = new Date(
+        new Date().setFullYear(new Date().getFullYear() + 1)
+      )
+        .toISOString()
+        .split("T")[0];
       updateForm({ endDate: nextYear });
     }
   }, []);
@@ -74,6 +81,18 @@ export const SubTypeDates = () => {
   const handleChange = (field: keyof FormValues, value: any) => {
     form.setValue(field, value);
     updateForm({ [field]: value });
+  };
+
+  const handleDateChange = (
+    field: "startDate" | "endDate",
+    date: Date | undefined
+  ) => {
+    if (date) {
+      const dateString = date.toISOString().split("T")[0];
+      handleChange(field, dateString);
+    } else {
+      handleChange(field, "");
+    }
   };
 
   const startDateValue = form.watch("startDate");
@@ -169,39 +188,17 @@ export const SubTypeDates = () => {
                               </Badge>
                             </div>
                             <FormControl>
-                              <div className="relative group">
-                                <Input
-                                  type="date"
-                                  {...field}
-                                  value={
-                                    typeof field.value === "string"
-                                      ? field.value
-                                      : getDateString(field.value)
-                                  }
-                                  onChange={(e) =>
-                                    handleChange("startDate", e.target.value)
-                                  }
-                                  className="h-9 pl-8 bg-[#0a1033] border-blue-900/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 text-white rounded-md text-xs group-hover:border-blue-700/60 transition-all w-full appearance-none"
-                                  style={{
-                                    colorScheme: 'dark',
-                                  }}
-                                />
-                                <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500/70 group-hover:text-blue-400/80 transition-colors pointer-events-none" />
-                                <button 
-                                  type="button"
-                                  onClick={() => {
-                                    // Try to trigger the native date picker by focusing and clicking
-                                    const input = document.querySelector('input[name="startDate"]') as HTMLInputElement;
-                                    if (input) {
-                                      input.focus();
-                                      input.showPicker && input.showPicker();
-                                    }
-                                  }}
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
-                                >
-                                  {/* Sélectionner une date */}
-                                </button>
-                              </div>
+                              <DatePicker
+                                ref={startDateRef}
+                                value={
+                                  typeof field.value === "string"
+                                    ? field.value
+                                    : getDateString(field.value)
+                                }
+                                onDateChange={(date) =>
+                                  handleDateChange("startDate", date)
+                                }
+                              />
                             </FormControl>
                             <AnimatePresence>
                               {errors.startDate && (
@@ -244,39 +241,17 @@ export const SubTypeDates = () => {
                               </Badge>
                             </div>
                             <FormControl>
-                              <div className="relative group">
-                                <Input
-                                  type="date"
-                                  {...field}
-                                  value={
-                                    typeof field.value === "string"
-                                      ? field.value
-                                      : getDateString(field.value)
-                                  }
-                                  onChange={(e) =>
-                                    handleChange("endDate", e.target.value)
-                                  }
-                                  className="h-9 pl-8 bg-[#0a1033] border-blue-900/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 text-white rounded-md text-xs group-hover:border-blue-700/60 transition-all w-full appearance-none"
-                                  style={{
-                                    colorScheme: 'dark',
-                                  }}
-                                />
-                                <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500/70 group-hover:text-blue-400/80 transition-colors pointer-events-none" />
-                                <button 
-                                  type="button"
-                                  onClick={() => {
-                                    // Try to trigger the native date picker by focusing and clicking
-                                    const input = document.querySelector('input[name="endDate"]') as HTMLInputElement;
-                                    if (input) {
-                                      input.focus();
-                                      input.showPicker && input.showPicker();
-                                    }
-                                  }}
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
-                                >
-                                  {/* Sélectionner une date */}
-                                </button>
-                              </div>
+                              <DatePicker
+                                ref={endDateRef}
+                                value={
+                                  typeof field.value === "string"
+                                    ? field.value
+                                    : getDateString(field.value)
+                                }
+                                onDateChange={(date) =>
+                                  handleDateChange("endDate", date)
+                                }
+                              />
                             </FormControl>
                             <AnimatePresence>
                               {errors.endDate && (
@@ -314,7 +289,9 @@ export const SubTypeDates = () => {
                         {duration.valid ? (
                           <span>
                             Duration:{" "}
-                            <span className="text-blue-300">{duration.text}</span>
+                            <span className="text-blue-300">
+                              {duration.text}
+                            </span>
                           </span>
                         ) : (
                           <span className="text-amber-400">
@@ -374,7 +351,7 @@ export const SubTypeDates = () => {
         </ScrollArea>
       </Card>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
@@ -382,8 +359,8 @@ export const SubTypeDates = () => {
       >
         <p className="text-xs text-amber-300/90 flex items-center">
           <Info className="h-3.5 w-3.5 mr-1.5 text-amber-400/80" />
-          Date ranges will be checked for overlaps with other stumps in the same document type.
-          Overlapping date ranges are not allowed.
+          Date ranges will be checked for overlaps with other stumps in the same
+          document type. Overlapping date ranges are not allowed.
         </p>
       </motion.div>
     </motion.div>

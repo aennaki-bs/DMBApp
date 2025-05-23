@@ -13,6 +13,8 @@ import {
   CalendarDays,
   Calculator,
   X,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
@@ -69,7 +71,7 @@ export function CustomDateTimeSelector({
   // Format the displayed date/time
   const getFormattedDateTime = () => {
     if (!date) return "Select date & time";
-    return format(date, "MMMM d, yyyy • h:mm a");
+    return format(date, "MM/dd/yyyy");
   };
 
   // Handle calendar date selection
@@ -137,21 +139,30 @@ export function CustomDateTimeSelector({
     setSelectedMonth(newMonth);
   };
 
+  // Check if there are date constraints
+  const hasDateConstraints = minDate || maxDate;
+
   return (
     <div className={cn("mb-4", className)} ref={containerRef}>
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className={cn("", iconColor)}>{icon}</span>
-        <Label className="text-base font-medium text-white">
-          {label}
-          {isOptional && (
-            <span className="text-xs text-gray-400 ml-1">(Optional)</span>
+      <div className="flex flex-col gap-1 mb-2">
+        <div className="flex items-center gap-2">
+          <span className={cn("", iconColor)}>{icon}</span>
+          <Label className="text-base font-medium text-white">
+            {label}
+            {isOptional && (
+              <span className="text-xs text-gray-400 ml-1">(Optional)</span>
+            )}
+          </Label>
+          {hasDateConstraints && (
+            <div className="ml-auto text-xs text-amber-400 flex items-center gap-1">
+              <Info className="h-3.5 w-3.5" />
+              <span>Date restrictions apply</span>
+            </div>
           )}
-        </Label>
-      </div>
+        </div>
 
-      {description && (
-        <p className="text-sm text-gray-400 mb-2">{description}</p>
-      )}
+        {description && <p className="text-sm text-gray-400">{description}</p>}
+      </div>
 
       <div className="relative">
         <div
@@ -165,7 +176,7 @@ export function CustomDateTimeSelector({
           onClick={() => setIsOpen(!isOpen)}
         >
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 opacity-70" />
+            <Calendar className="h-4 w-4 opacity-70" />
             <span className="text-sm font-medium">
               {getFormattedDateTime()}
             </span>
@@ -215,7 +226,7 @@ export function CustomDateTimeSelector({
               </div>
 
               {/* Calendar */}
-              <div className="px-2 pt-1 pb-2">
+              <div className="p-2 border-b border-gray-800">
                 {/* Calendar Navigation */}
                 <div className="px-2 py-1 flex justify-between items-center mb-1">
                   <Button
@@ -260,7 +271,7 @@ export function CustomDateTimeSelector({
               </div>
 
               {/* Time Selection */}
-              <div className="p-2 border-t border-gray-800">
+              <div className="p-2">
                 <div className="text-xs font-medium text-gray-400 mb-2 px-1">
                   Select Time
                 </div>
@@ -290,9 +301,29 @@ export function CustomDateTimeSelector({
       </div>
 
       {error && (
-        <p className="text-sm text-red-500 mt-1.5 flex items-center gap-1.5">
-          <span className="text-red-500">•</span> {error}
-        </p>
+        <div className="flex items-center gap-1.5 mt-1.5">
+          <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+          <p className="text-sm text-red-500">{error}</p>
+        </div>
+      )}
+
+      {/* Date constraints info */}
+      {hasDateConstraints && (
+        <div className="mt-2 text-xs text-amber-400 flex items-center gap-1.5">
+          <Info className="h-3.5 w-3.5" />
+          <span>
+            {minDate && maxDate
+              ? `End date must be after start date (${format(
+                  minDate,
+                  "MM/dd/yyyy"
+                )} - ${format(maxDate, "MM/dd/yyyy")})`
+              : minDate
+              ? `Date must be after ${format(minDate, "MM/dd/yyyy")}`
+              : maxDate
+              ? `Date must be before ${format(maxDate, "MM/dd/yyyy")}`
+              : ""}
+          </span>
+        </div>
       )}
     </div>
   );
