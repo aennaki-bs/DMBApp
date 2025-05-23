@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Document } from '@/models/document';
 import documentService from '@/services/documentService';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ export function useDocumentsData() {
   
   const { searchQuery, dateRange, activeFilters } = useDocumentsFilter();
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await documentService.getAllDocuments();
@@ -26,11 +26,11 @@ export function useDocumentsData() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [fetchDocuments]);
 
   useEffect(() => {
     if (useFakeData) {
@@ -41,84 +41,70 @@ export function useDocumentsData() {
     }
   }, [useFakeData]);
 
-  const deleteDocument = async (id: number) => {
+  const deleteDocument = useCallback(async (id: number) => {
     if (useFakeData) {
       setDocuments(prev => prev.filter(doc => doc.id !== id));
     } else {
       await documentService.deleteDocument(id);
       fetchDocuments();
     }
-  };
+  }, [useFakeData, fetchDocuments]);
 
-  const deleteMultipleDocuments = async (ids: number[]) => {
+  const deleteMultipleDocuments = useCallback(async (ids: number[]) => {
     if (useFakeData) {
       setDocuments(prev => prev.filter(doc => !ids.includes(doc.id)));
     } else {
       await documentService.deleteMultipleDocuments(ids);
       fetchDocuments();
     }
-  };
+  }, [useFakeData, fetchDocuments]);
 
-  const requestSort = (key: string) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    
-    setSortConfig({ key, direction });
-  };
-  
+  // Sort documents based on sortConfig
   const sortedItems = useMemo(() => {
-    let sortableItems = [...documents];
-    
+    const sortableItems = [...documents];
     if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
-        
-        switch(sortConfig.key) {
-          case 'title':
-            aValue = a.title;
-            bValue = b.title;
-            break;
-          case 'documentKey':
-            aValue = a.documentKey;
-            bValue = b.documentKey;
-            break;
-          case 'documentType':
-            aValue = a.documentType.typeName;
-            bValue = b.documentType.typeName;
-            break;
-          case 'createdAt':
-            aValue = new Date(a.createdAt).getTime();
-            bValue = new Date(b.createdAt).getTime();
-            break;
-          case 'createdBy':
-            aValue = a.createdBy.username;
-            bValue = b.createdBy.username;
-            break;
-          case 'docDate':
-            aValue = new Date(a.docDate).getTime();
-            bValue = new Date(b.docDate).getTime();
-            break;
-          default:
-            return 0;
+      sortableItems.sort((a: any, b: any) => {
+        // Handle nested properties with dot notation
+        const getSortValue = (item: any, key: string) => {
+          const keys = key.split('.');
+          let value = item;
+          for (const k of keys) {
+            if (!value) return '';
+            value = value[k];
+          }
+          return value;
+        };
+
+        const aValue = getSortValue(a, sortConfig.key);
+        const bValue = getSortValue(b, sortConfig.key);
+
+        if (aValue === bValue) {
+          return 0;
         }
-        
-        if (aValue < bValue) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
+
+        // Handle different data types
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          const result = aValue.localeCompare(bValue, undefined, { sensitivity: 'base' });
+          return sortConfig.direction === 'ascending' ? result : -result;
+        } else {
+          const result = aValue > bValue ? 1 : -1;
+          return sortConfig.direction === 'ascending' ? result : -result;
         }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
-        return 0;
       });
     }
-    
     return sortableItems;
   }, [documents, sortConfig]);
 
+  // Request sort function
+  const requestSort = useCallback((key: string) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  }, [sortConfig]);
+
+  // Filter documents based on activeFilters
   const filteredItems = useMemo(() => {
     return sortedItems.filter(doc => {
       // Text search filter based on search field
@@ -165,18 +151,19 @@ export function useDocumentsData() {
       // Type filter
       let matchesType = true;
       if (activeFilters.typeFilter && activeFilters.typeFilter !== 'any') {
-        matchesType = doc.typeId.toString() === activeFilters.typeFilter;
+        matchesType = doc.documentType && doc.documentType.id && 
+          doc.documentType.id.toString() === activeFilters.typeFilter;
       }
       
       // Date range filter
       let matchesDateRange = true;
-      if (dateRange && dateRange.from) {
+      if (activeFilters.dateRange && activeFilters.dateRange.from) {
         const docDate = new Date(doc.docDate);
-        const fromDate = new Date(dateRange.from);
+        const fromDate = new Date(activeFilters.dateRange.from);
         fromDate.setHours(0, 0, 0, 0);
         
-        if (dateRange.to) {
-          const toDate = new Date(dateRange.to);
+        if (activeFilters.dateRange.to) {
+          const toDate = new Date(activeFilters.dateRange.to);
           toDate.setHours(23, 59, 59, 999);
           matchesDateRange = docDate >= fromDate && docDate <= toDate;
         } else {
@@ -186,9 +173,9 @@ export function useDocumentsData() {
       
       return matchesSearch && matchesStatus && matchesType && matchesDateRange;
     });
-  }, [sortedItems, searchQuery, dateRange, activeFilters]);
+  }, [sortedItems, searchQuery, activeFilters]);
 
-  return { 
+  return {
     documents,
     filteredItems,
     isLoading,
@@ -198,7 +185,7 @@ export function useDocumentsData() {
     useFakeData,
     sortConfig,
     setSortConfig,
-    requestSort
+    requestSort,
   };
 }
 

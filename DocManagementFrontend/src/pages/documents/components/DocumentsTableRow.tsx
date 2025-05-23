@@ -175,19 +175,12 @@ export default function DocumentsTableRow({
         >
           <FileText className="h-3.5 w-3.5 opacity-70" />
           {document.documentKey}
+          <span className="text-blue-400 hover:text-blue-300 font-medium ml-2">
+            {document.title}
+          </span>
         </Link>
       </TableCell>
-      <TableCell className="py-3">
-        <div className="flex items-center gap-2">
-          <Link
-            to={`/documents/${document.id}`}
-            className="text-blue-400 hover:text-blue-300 font-medium hover:underline transition-colors"
-          >
-            {document.title}
-          </Link>
-          {getStatusBadge(document.status)}
-        </div>
-      </TableCell>
+      <TableCell className="py-3">{getStatusBadge(document.status)}</TableCell>
       <TableCell className="text-blue-100 py-3">
         {document.documentType.typeName}
       </TableCell>
@@ -234,29 +227,27 @@ function getStatusBadge(status: number) {
   switch (status) {
     case 0:
       return (
-        <Badge className="bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 border-amber-500/30 px-2 py-0.5 text-xs font-medium">
+        <Badge className="bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 border-amber-500/30 px-3 py-1 text-xs font-medium">
           Draft
         </Badge>
       );
     case 1:
       return (
-        <Badge className="bg-green-600/20 text-green-500 hover:bg-green-600/30 border-green-500/30 px-2 py-0.5 text-xs font-medium">
+        <Badge className="bg-green-600/20 text-green-500 hover:bg-green-600/30 border-green-500/30 px-3 py-1 text-xs font-medium">
           In progress
         </Badge>
       );
     case 2:
       return (
-        <Badge className="bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 border-blue-500/30 px-2 py-0.5 text-xs font-medium">
+        <Badge className="bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 border-blue-500/30 px-3 py-1 text-xs font-medium">
           Completed
         </Badge>
       );
-    case 3:
+    default:
       return (
-        <Badge className="bg-red-600/20 text-red-500 hover:bg-red-600/30 border-red-500/30 px-2 py-0.5 text-xs font-medium">
-          Rejected
+        <Badge className="bg-gray-600/20 text-gray-400 hover:bg-gray-600/30 border-gray-500/30 px-3 py-1 text-xs font-medium">
+          Unknown
         </Badge>
       );
-    default:
-      return <Badge variant="outline">Unknown</Badge>;
   }
 }

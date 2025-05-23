@@ -8,6 +8,13 @@ import {
   Calendar,
   ChevronDown,
   SlidersHorizontal,
+  CalendarRange,
+  Check,
+  Tag,
+  FileText,
+  Clock,
+  RefreshCw,
+  User,
 } from "lucide-react";
 import {
   DEFAULT_STATUS_FILTERS,
@@ -30,12 +37,62 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import {
+  format,
+  isToday,
+  isYesterday,
+  addDays,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+} from "date-fns";
 import { DateRange } from "react-day-picker";
 import { useQuery } from "@tanstack/react-query";
 import documentTypeService from "@/services/documentTypeService";
 import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+const DATE_PRESETS = [
+  {
+    label: "Today",
+    value: "today",
+    icon: <Clock className="h-3.5 w-3.5 mr-1.5" />,
+  },
+  {
+    label: "Yesterday",
+    value: "yesterday",
+    icon: <Clock className="h-3.5 w-3.5 mr-1.5" />,
+  },
+  {
+    label: "This Week",
+    value: "thisWeek",
+    icon: <CalendarRange className="h-3.5 w-3.5 mr-1.5" />,
+  },
+  {
+    label: "Last Week",
+    value: "lastWeek",
+    icon: <CalendarRange className="h-3.5 w-3.5 mr-1.5" />,
+  },
+  {
+    label: "This Month",
+    value: "thisMonth",
+    icon: <CalendarRange className="h-3.5 w-3.5 mr-1.5" />,
+  },
+  {
+    label: "Last Month",
+    value: "lastMonth",
+    icon: <CalendarRange className="h-3.5 w-3.5 mr-1.5" />,
+  },
+  {
+    label: "Custom Range",
+    value: "custom",
+    icon: <Calendar className="h-3.5 w-3.5 mr-1.5" />,
+  },
+];
 
 export default function DocumentsFilterBar() {
   const {
@@ -46,13 +103,17 @@ export default function DocumentsFilterBar() {
     activeFilters,
     applyFilters,
     resetFilters,
+    isFilterActive,
+    activeFilterCount,
   } = useDocumentsFilter();
 
   const [searchField, setSearchField] = useState(
     activeFilters.searchField || "all"
   );
-  const [isDatePickerEnabled, setIsDatePickerEnabled] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("filters");
+  const [selectedDatePreset, setSelectedDatePreset] =
+    useState<string>("custom");
 
   // Advanced filters state
   const [statusFilter, setStatusFilter] = useState(
@@ -88,19 +149,20 @@ export default function DocumentsFilterBar() {
     return baseOptions;
   }, [documentTypes]);
 
-  useEffect(() => {
-    setIsDatePickerEnabled(searchField === "docDate");
-    if (searchField !== "docDate" && dateRange) {
-      setDateRange(undefined);
-    }
-  }, [searchField, dateRange, setDateRange]);
-
   // Update local state when activeFilters change
   useEffect(() => {
     setSearchField(activeFilters.searchField || "all");
     setStatusFilter(activeFilters.statusFilter || "any");
     setTypeFilter(activeFilters.typeFilter || "any");
     setAdvancedDateRange(activeFilters.dateRange);
+
+    // Determine if a date preset is active
+    if (activeFilters.dateRange) {
+      const preset = getDatePresetFromRange(activeFilters.dateRange);
+      setSelectedDatePreset(preset || "custom");
+    } else {
+      setSelectedDatePreset("custom");
+    }
   }, [activeFilters]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,14 +185,27 @@ export default function DocumentsFilterBar() {
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value);
+    applyFilters({
+      ...activeFilters,
+      statusFilter: value,
+    });
   };
 
   const handleTypeChange = (value: string) => {
     setTypeFilter(value);
+    applyFilters({
+      ...activeFilters,
+      typeFilter: value,
+    });
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setAdvancedDateRange(range);
+    setDateRange(range);
+    applyFilters({
+      ...activeFilters,
+      dateRange: range,
+    });
   };
 
   const applyAdvancedFilters = () => {
@@ -147,20 +222,190 @@ export default function DocumentsFilterBar() {
     setStatusFilter("any");
     setTypeFilter("any");
     setAdvancedDateRange(undefined);
+    setSelectedDatePreset("custom");
     resetFilters();
     setFilterOpen(false);
   };
 
-  // Check if any filters are active
-  const hasActiveFilters =
-    activeFilters.statusFilter !== "any" ||
-    activeFilters.typeFilter !== "any" ||
-    activeFilters.dateRange !== undefined;
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + F to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        const searchInput = document.querySelector(
+          'input[placeholder="Search documents..."]'
+        ) as HTMLInputElement;
+        if (searchInput) searchInput.focus();
+      }
 
-  // Count active filters
-  const activeFilterCount = Object.values(activeFilters).filter(
-    (val) => val !== "any" && val !== undefined && val !== ""
-  ).length;
+      // Escape to close filter popover
+      if (e.key === "Escape" && filterOpen) {
+        setFilterOpen(false);
+      }
+
+      // Alt + F to open filter
+      if (e.altKey && e.key === "f") {
+        e.preventDefault();
+        setFilterOpen(true);
+      }
+
+      // Alt + C to clear all filters
+      if (e.altKey && e.key === "c" && isFilterActive) {
+        e.preventDefault();
+        clearAllFilters();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [filterOpen, isFilterActive, clearAllFilters]);
+
+  // Apply date preset
+  const applyDatePreset = (preset: string) => {
+    setSelectedDatePreset(preset);
+
+    let newRange: DateRange | undefined;
+    const today = new Date();
+
+    switch (preset) {
+      case "today":
+        newRange = { from: today, to: today };
+        break;
+      case "yesterday":
+        const yesterday = subDays(today, 1);
+        newRange = { from: yesterday, to: yesterday };
+        break;
+      case "thisWeek":
+        newRange = {
+          from: startOfWeek(today, { weekStartsOn: 0 }),
+          to: endOfWeek(today, { weekStartsOn: 0 }),
+        };
+        break;
+      case "lastWeek":
+        const lastWeekStart = subDays(
+          startOfWeek(today, { weekStartsOn: 0 }),
+          7
+        );
+        newRange = {
+          from: lastWeekStart,
+          to: addDays(lastWeekStart, 6),
+        };
+        break;
+      case "thisMonth":
+        newRange = {
+          from: startOfMonth(today),
+          to: endOfMonth(today),
+        };
+        break;
+      case "lastMonth":
+        const lastMonth = subDays(startOfMonth(today), 1);
+        newRange = {
+          from: startOfMonth(lastMonth),
+          to: endOfMonth(lastMonth),
+        };
+        break;
+      case "custom":
+        // Keep the current advanced date range
+        newRange = advancedDateRange;
+        break;
+      default:
+        newRange = undefined;
+    }
+
+    setAdvancedDateRange(newRange);
+    handleDateRangeChange(newRange);
+  };
+
+  // Get date preset from range
+  const getDatePresetFromRange = (range: DateRange): string | null => {
+    if (!range.from || !range.to) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const from = new Date(range.from);
+    const to = new Date(range.to);
+    from.setHours(0, 0, 0, 0);
+    to.setHours(0, 0, 0, 0);
+
+    if (
+      from.getTime() === today.getTime() &&
+      to.getTime() === today.getTime()
+    ) {
+      return "today";
+    }
+
+    const yesterday = subDays(today, 1);
+    if (
+      from.getTime() === yesterday.getTime() &&
+      to.getTime() === yesterday.getTime()
+    ) {
+      return "yesterday";
+    }
+
+    const thisWeekStart = startOfWeek(today, { weekStartsOn: 0 });
+    const thisWeekEnd = endOfWeek(today, { weekStartsOn: 0 });
+    if (
+      from.getTime() === thisWeekStart.getTime() &&
+      to.getTime() === thisWeekEnd.getTime()
+    ) {
+      return "thisWeek";
+    }
+
+    const lastWeekStart = subDays(thisWeekStart, 7);
+    const lastWeekEnd = subDays(thisWeekEnd, 7);
+    if (
+      from.getTime() === lastWeekStart.getTime() &&
+      to.getTime() === lastWeekEnd.getTime()
+    ) {
+      return "lastWeek";
+    }
+
+    const thisMonthStart = startOfMonth(today);
+    const thisMonthEnd = endOfMonth(today);
+    if (
+      from.getTime() === thisMonthStart.getTime() &&
+      to.getTime() === thisMonthEnd.getTime()
+    ) {
+      return "thisMonth";
+    }
+
+    const lastMonth = subDays(thisMonthStart, 1);
+    const lastMonthStart = startOfMonth(lastMonth);
+    const lastMonthEnd = endOfMonth(lastMonth);
+    if (
+      from.getTime() === lastMonthStart.getTime() &&
+      to.getTime() === lastMonthEnd.getTime()
+    ) {
+      return "lastMonth";
+    }
+
+    return null;
+  };
+
+  // Format date range for display
+  const formatDateRangeDisplay = (range: DateRange | undefined): string => {
+    if (!range || !range.from) return "Any date";
+
+    const from = new Date(range.from);
+
+    if (!range.to) {
+      return `From ${format(from, "MMM d, yyyy")}`;
+    }
+
+    const to = new Date(range.to);
+
+    if (from.getTime() === to.getTime()) {
+      if (isToday(from)) return "Today";
+      if (isYesterday(from)) return "Yesterday";
+      return format(from, "MMM d, yyyy");
+    }
+
+    return `${format(from, "MMM d")} - ${format(to, "MMM d, yyyy")}`;
+  };
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -173,8 +418,14 @@ export default function DocumentsFilterBar() {
               value={searchQuery}
               onChange={handleSearchChange}
               className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+              aria-label="Search documents"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center">
+              <Search className="h-4 w-4 text-blue-400" />
+              {/* <kbd className="sr-only md:not-sr-only md:ml-2 text-[10px] text-blue-300 bg-blue-900/40 px-1.5 py-0.5 rounded border border-blue-800/50 hidden md:inline-block">
+                Ctrl+F
+              </kbd> */}
+            </div>
             {searchQuery && (
               <button
                 onClick={() => {
@@ -185,6 +436,7 @@ export default function DocumentsFilterBar() {
                   });
                 }}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300"
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -199,26 +451,36 @@ export default function DocumentsFilterBar() {
               variant="outline"
               className={cn(
                 "bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-md rounded-md flex items-center gap-2 h-10 px-4 min-w-[120px] transition-all duration-200",
-                hasActiveFilters && "border-blue-500 bg-blue-900/40"
+                isFilterActive && "border-blue-500 bg-blue-900/40"
               )}
+              aria-label="Toggle filter panel"
             >
               <SlidersHorizontal
                 className={cn(
                   "h-4 w-4",
-                  hasActiveFilters ? "text-blue-300" : "text-blue-400"
+                  isFilterActive ? "text-blue-300" : "text-blue-400"
                 )}
               />
               <span className="flex-1 text-left">Filter</span>
-              {hasActiveFilters ? (
+              {isFilterActive ? (
                 <Badge className="bg-blue-600 text-white text-xs py-0 px-1.5 rounded-full">
                   {activeFilterCount}
                 </Badge>
               ) : (
-                <ChevronDown className="h-4 w-4 text-blue-400" />
+                <>
+                  <ChevronDown className="h-4 w-4 text-blue-400" />
+                  <kbd className="sr-only md:not-sr-only text-[10px] text-blue-300 bg-blue-900/40 px-1.5 py-0.5 rounded border border-blue-800/50 hidden md:inline-block ml-1">
+                    Alt+F
+                  </kbd>
+                </>
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[340px] sm:w-[400px] bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-xl p-0 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200">
+          <PopoverContent
+            className="w-[340px] sm:w-[400px] bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-xl p-0 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200"
+            align="end"
+            sideOffset={5}
+          >
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -235,152 +497,223 @@ export default function DocumentsFilterBar() {
               </p>
             </motion.div>
 
-            <div className="p-4 space-y-5 max-h-[70vh] overflow-y-auto">
-              {/* Search field filter */}
-              <div>
-                <label className="text-sm font-medium text-blue-200 block mb-2">
-                  Search In
-                </label>
-                <Select
-                  value={searchField}
-                  onValueChange={handleSearchFieldChange}
+            <Tabs
+              defaultValue="filters"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="w-full bg-blue-900/20 border-b border-blue-900/30 rounded-none">
+                <TabsTrigger
+                  value="filters"
+                  className="flex-1 data-[state=active]:bg-blue-800/30"
                 >
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                    <SelectValue>
-                      {DEFAULT_DOCUMENT_SEARCH_FIELDS.find(
-                        (opt) => opt.id === searchField
-                      )?.label || "All fields"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
-                    {DEFAULT_DOCUMENT_SEARCH_FIELDS.map((opt) => (
-                      <SelectItem
-                        key={opt.id}
-                        value={String(opt.id)}
-                        className="hover:bg-blue-800/40"
-                      >
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <Tag className="h-4 w-4 mr-2" /> Filters
+                </TabsTrigger>
+                <TabsTrigger
+                  value="date"
+                  className="flex-1 data-[state=active]:bg-blue-800/30"
+                >
+                  <CalendarRange className="h-4 w-4 mr-2" /> Date Range
+                </TabsTrigger>
+              </TabsList>
 
-              {/* Status filter */}
-              <div>
-                <label className="text-sm font-medium text-blue-200 block mb-2">
-                  Status
-                </label>
-                <Select value={statusFilter} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
-                    {DEFAULT_STATUS_FILTERS.map((option) => (
-                      <SelectItem
-                        key={option.id}
-                        value={String(option.value)}
-                        className="hover:bg-blue-800/40"
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Type filter */}
-              <div>
-                <label className="text-sm font-medium text-blue-200 block mb-2">
-                  Document Type
-                </label>
-                <Select value={typeFilter} onValueChange={handleTypeChange}>
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 max-h-[200px]">
-                    {typeFilterOptions.map((option) => (
-                      <SelectItem
-                        key={option.id}
-                        value={String(option.value)}
-                        className="hover:bg-blue-800/40"
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Date range filter */}
-              <div>
-                <label className="text-sm font-medium text-blue-200 block mb-2">
-                  Document Date Range
-                </label>
-                <div className="bg-[#22306e] text-blue-100 border border-blue-900/40 rounded-md p-4 shadow-inner">
-                  <CalendarComponent
-                    initialFocus
-                    mode="range"
-                    defaultMonth={advancedDateRange?.from}
-                    selected={advancedDateRange}
-                    onSelect={handleDateRangeChange}
-                    numberOfMonths={1}
-                    className="bg-[#22306e]"
-                    classNames={{
-                      day_selected: "bg-blue-600 text-white hover:bg-blue-700",
-                      day_today: "bg-blue-900/30 text-blue-100",
-                      day_range_middle: "bg-blue-800/30 text-blue-100",
-                      day_range_end: "bg-blue-600 text-white",
-                      day_range_start: "bg-blue-600 text-white",
-                      day_outside: "text-blue-500/50",
-                      button_reset: "text-blue-400 hover:text-blue-300",
-                      caption: "text-blue-200",
-                      nav_button: "text-blue-300 hover:text-blue-200",
-                      table: "border-blue-900/20",
-                      head_cell: "text-blue-300",
-                      cell: "text-blue-200",
-                    }}
-                  />
-                </div>
-                {advancedDateRange?.from && (
-                  <div className="text-sm text-blue-300 mt-3 flex items-center justify-between bg-blue-900/20 p-2 rounded-md">
-                    <span className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2 text-blue-400" />
-                      {format(advancedDateRange.from, "MMM dd, yyyy")}
-                      {advancedDateRange.to &&
-                        ` - ${format(advancedDateRange.to, "MMM dd, yyyy")}`}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setAdvancedDateRange(undefined)}
-                      className="h-7 px-2 text-xs text-blue-400 hover:text-blue-300"
+              <ScrollArea className="h-[350px] overflow-auto">
+                <TabsContent value="filters" className="p-4 space-y-4 mt-0">
+                  {/* Search field filter */}
+                  <div>
+                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
+                      <Search className="h-4 w-4 mr-2 text-blue-400" />
+                      Search In
+                    </label>
+                    <Select
+                      value={searchField}
+                      onValueChange={handleSearchFieldChange}
                     >
-                      <X className="h-3 w-3 mr-1" /> Clear
-                    </Button>
+                      <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                        <SelectValue>
+                          {DEFAULT_DOCUMENT_SEARCH_FIELDS.find(
+                            (opt) => opt.id === searchField
+                          )?.label || "All fields"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                        {DEFAULT_DOCUMENT_SEARCH_FIELDS.map((opt) => (
+                          <SelectItem
+                            key={opt.id}
+                            value={String(opt.id)}
+                            className="hover:bg-blue-800/40"
+                          >
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
 
-              <Separator className="bg-blue-900/30 my-4" />
+                  {/* Status filter */}
+                  <div>
+                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
+                      <Clock className="h-4 w-4 mr-2 text-blue-400" />
+                      Status
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {DEFAULT_STATUS_FILTERS.map((status) => (
+                        <Button
+                          key={status.value}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 h-9",
+                            statusFilter === status.value &&
+                              "bg-blue-800 border-blue-500"
+                          )}
+                          onClick={() => handleStatusChange(status.value)}
+                        >
+                          {statusFilter === status.value && (
+                            <Check className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
+                          )}
+                          {status.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="flex justify-between pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearAllFilters}
-                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/40 border-blue-900/40"
-                >
-                  Clear All
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={applyAdvancedFilters}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Apply Filters
-                </Button>
-              </div>
+                  {/* Document Type filter */}
+                  <div>
+                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
+                      <FileText className="h-4 w-4 mr-2 text-blue-400" />
+                      Document Type
+                    </label>
+                    <Select value={typeFilter} onValueChange={handleTypeChange}>
+                      <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                        <SelectValue>
+                          {typeFilterOptions.find(
+                            (opt) => opt.value === typeFilter
+                          )?.label || "Any Type"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 max-h-[200px]">
+                        {typeFilterOptions.map((type) => (
+                          <SelectItem
+                            key={type.value}
+                            value={type.value}
+                            className="hover:bg-blue-800/40"
+                          >
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="date" className="p-4 space-y-4 mt-0">
+                  {/* Date range presets */}
+                  <div>
+                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
+                      <Clock className="h-4 w-4 mr-2 text-blue-400" />
+                      Quick Date Ranges
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {DATE_PRESETS.map((preset) => (
+                        <Button
+                          key={preset.value}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 h-9 justify-start",
+                            selectedDatePreset === preset.value &&
+                              "bg-blue-800 border-blue-500"
+                          )}
+                          onClick={() => applyDatePreset(preset.value)}
+                        >
+                          {preset.icon}
+                          {preset.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Calendar date picker */}
+                  {selectedDatePreset === "custom" && (
+                    <div className="border border-blue-900/40 rounded-md p-3 bg-blue-900/20">
+                      <label className="text-sm font-medium text-blue-200 block mb-2">
+                        Select Custom Date Range
+                      </label>
+                      <div className="flex justify-center">
+                        <CalendarComponent
+                          mode="range"
+                          selected={advancedDateRange}
+                          onSelect={handleDateRangeChange}
+                          className="bg-[#22306e] border border-blue-900/40 rounded-md shadow-md"
+                          classNames={{
+                            day_selected: "bg-blue-600 text-white",
+                            day_today: "bg-blue-900/40 text-blue-200",
+                          }}
+                        />
+                      </div>
+                      <div className="mt-2 text-xs text-blue-300">
+                        {advancedDateRange?.from ? (
+                          advancedDateRange.to ? (
+                            <>
+                              <span>
+                                {format(advancedDateRange.from, "PPP")} -{" "}
+                                {format(advancedDateRange.to, "PPP")}
+                              </span>
+                            </>
+                          ) : (
+                            <span>{format(advancedDateRange.from, "PPP")}</span>
+                          )
+                        ) : (
+                          <span>Select a date range</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-2">
+                    <div className="bg-blue-900/20 p-2 rounded-md border border-blue-900/40">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-blue-300 font-medium">
+                          Active Date Filter:
+                        </span>
+                        <span className="text-sm text-white">
+                          {dateRange
+                            ? formatDateRangeDisplay(dateRange)
+                            : "Any date"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
+
+            <div className="p-3 border-t border-blue-900/30 bg-blue-900/20 flex justify-between items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="text-blue-300 hover:text-blue-200 hover:bg-blue-800/40"
+              >
+                <RefreshCw className="h-4 w-4 mr-1.5" />
+                Reset All
+                <kbd className="sr-only md:not-sr-only text-[10px] text-blue-400/70 bg-blue-900/40 px-1.5 py-0.5 rounded border border-blue-800/30 ml-1.5 hidden md:inline-block">
+                  Alt+C
+                </kbd>
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setFilterOpen(false)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                size="sm"
+              >
+                Apply Filters
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -388,33 +721,48 @@ export default function DocumentsFilterBar() {
 
       {/* Active filters display */}
       <AnimatePresence>
-        {hasActiveFilters && (
+        {isFilterActive && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="flex flex-wrap gap-2 mt-1"
+            className="flex flex-wrap gap-2 overflow-hidden"
           >
-            {activeFilters.statusFilter !== "any" && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
+            {activeFilters.searchQuery && (
+              <Badge
+                variant="outline"
+                className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
               >
-                <Badge
-                  className="bg-blue-900/40 hover:bg-blue-800/50 text-blue-100 px-3 py-1.5 flex items-center gap-1 rounded-md border border-blue-700/40 shadow-sm"
-                  variant="outline"
+                <Search className="h-3 w-3 text-blue-400" />
+                <span className="text-xs">{activeFilters.searchQuery}</span>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    applyFilters({
+                      ...activeFilters,
+                      searchQuery: "",
+                    });
+                  }}
+                  className="ml-1 text-blue-400 hover:text-blue-300"
                 >
-                  <span className="font-medium text-blue-300 mr-1">
-                    Status:
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+
+            {activeFilters.statusFilter &&
+              activeFilters.statusFilter !== "any" && (
+                <Badge
+                  variant="outline"
+                  className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
+                >
+                  <Clock className="h-3 w-3 text-blue-400" />
+                  <span className="text-xs">
+                    {DEFAULT_STATUS_FILTERS.find(
+                      (s) => s.value === activeFilters.statusFilter
+                    )?.label || "Status"}
                   </span>
-                  {DEFAULT_STATUS_FILTERS.find(
-                    (s) => s.value === activeFilters.statusFilter
-                  )?.label || activeFilters.statusFilter}
-                  <X
-                    className="h-3.5 w-3.5 ml-2 cursor-pointer text-blue-400 hover:text-blue-300"
+                  <button
                     onClick={() => {
                       setStatusFilter("any");
                       applyFilters({
@@ -422,87 +770,73 @@ export default function DocumentsFilterBar() {
                         statusFilter: "any",
                       });
                     }}
-                  />
+                    className="ml-1 text-blue-400 hover:text-blue-300"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </Badge>
-              </motion.div>
-            )}
+              )}
 
-            {activeFilters.typeFilter !== "any" && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
+            {activeFilters.typeFilter && activeFilters.typeFilter !== "any" && (
+              <Badge
+                variant="outline"
+                className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
               >
-                <Badge
-                  className="bg-blue-900/40 hover:bg-blue-800/50 text-blue-100 px-3 py-1.5 flex items-center gap-1 rounded-md border border-blue-700/40 shadow-sm"
-                  variant="outline"
-                >
-                  <span className="font-medium text-blue-300 mr-1">Type:</span>
+                <FileText className="h-3 w-3 text-blue-400" />
+                <span className="text-xs">
                   {typeFilterOptions.find(
                     (t) => t.value === activeFilters.typeFilter
-                  )?.label || activeFilters.typeFilter}
-                  <X
-                    className="h-3.5 w-3.5 ml-2 cursor-pointer text-blue-400 hover:text-blue-300"
-                    onClick={() => {
-                      setTypeFilter("any");
-                      applyFilters({
-                        ...activeFilters,
-                        typeFilter: "any",
-                      });
-                    }}
-                  />
-                </Badge>
-              </motion.div>
+                  )?.label || "Type"}
+                </span>
+                <button
+                  onClick={() => {
+                    setTypeFilter("any");
+                    applyFilters({
+                      ...activeFilters,
+                      typeFilter: "any",
+                    });
+                  }}
+                  className="ml-1 text-blue-400 hover:text-blue-300"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
             )}
 
-            {activeFilters.dateRange && activeFilters.dateRange.from && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
+            {activeFilters.dateRange && (
+              <Badge
+                variant="outline"
+                className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
               >
-                <Badge
-                  className="bg-blue-900/40 hover:bg-blue-800/50 text-blue-100 px-3 py-1.5 flex items-center gap-1 rounded-md border border-blue-700/40 shadow-sm"
-                  variant="outline"
+                <Calendar className="h-3 w-3 text-blue-400" />
+                <span className="text-xs">
+                  {formatDateRangeDisplay(activeFilters.dateRange)}
+                </span>
+                <button
+                  onClick={() => {
+                    setDateRange(undefined);
+                    setAdvancedDateRange(undefined);
+                    setSelectedDatePreset("custom");
+                    applyFilters({
+                      ...activeFilters,
+                      dateRange: undefined,
+                    });
+                  }}
+                  className="ml-1 text-blue-400 hover:text-blue-300"
                 >
-                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
-                  <span className="font-medium text-blue-300 mr-1">Date:</span>
-                  {format(activeFilters.dateRange.from, "MMM dd, yyyy")}
-                  {activeFilters.dateRange.to &&
-                    ` - ${format(activeFilters.dateRange.to, "MMM dd, yyyy")}`}
-                  <X
-                    className="h-3.5 w-3.5 ml-2 cursor-pointer text-blue-400 hover:text-blue-300"
-                    onClick={() => {
-                      setAdvancedDateRange(undefined);
-                      applyFilters({
-                        ...activeFilters,
-                        dateRange: undefined,
-                      });
-                    }}
-                  />
-                </Badge>
-              </motion.div>
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
             )}
 
-            {hasActiveFilters && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2, delay: 0.1 }}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllFilters}
-                  className="text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 h-8 px-3 rounded-md"
-                >
-                  <X className="h-3.5 w-3.5 mr-1.5" /> Clear all filters
-                </Button>
-              </motion.div>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className="h-6 px-2 py-0 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
+            >
+              Clear all
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

@@ -5,9 +5,11 @@ import {
   ReactNode,
   useCallback,
   useEffect,
+  useMemo,
 } from "react";
 import { DateRange } from "react-day-picker";
 import { FilterState } from "@/components/table";
+import { debounce } from "lodash";
 
 interface DocumentsFilterContextType {
   searchQuery: string;
@@ -17,6 +19,8 @@ interface DocumentsFilterContextType {
   activeFilters: FilterState;
   applyFilters: (filters: FilterState) => void;
   resetFilters: () => void;
+  isFilterActive: boolean;
+  activeFilterCount: number;
 }
 
 const initialFilterState: FilterState = {
@@ -73,6 +77,46 @@ export function DocumentsFilterProvider({ children }: { children: ReactNode }) {
     savedFilters || initialFilterState
   );
 
+  // Debounced search to avoid too many filter updates
+  const debouncedSetSearchQuery = useCallback(
+    debounce((query: string) => {
+      setSearchQuery(query);
+      setActiveFilters((prev) => ({
+        ...prev,
+        searchQuery: query,
+      }));
+
+      // Save to local storage
+      try {
+        const updatedFilters = {
+          ...activeFilters,
+          searchQuery: query,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFilters));
+      } catch (error) {
+        console.error("Error saving filters:", error);
+      }
+    }, 300),
+    [activeFilters]
+  );
+
+  // Calculate if any filters are active
+  const isFilterActive = useMemo(() => {
+    return (
+      activeFilters.searchQuery !== "" ||
+      activeFilters.statusFilter !== "any" ||
+      activeFilters.typeFilter !== "any" ||
+      activeFilters.dateRange !== undefined
+    );
+  }, [activeFilters]);
+
+  // Count active filters
+  const activeFilterCount = useMemo(() => {
+    return Object.values(activeFilters).filter(
+      (val) => val !== "any" && val !== undefined && val !== ""
+    ).length;
+  }, [activeFilters]);
+
   const applyFilters = useCallback(
     (filters: FilterState) => {
       // Update local state for UI components
@@ -118,12 +162,14 @@ export function DocumentsFilterProvider({ children }: { children: ReactNode }) {
     <DocumentsFilterContext.Provider
       value={{
         searchQuery,
-        setSearchQuery,
+        setSearchQuery: debouncedSetSearchQuery,
         dateRange,
         setDateRange,
         activeFilters,
         applyFilters,
         resetFilters,
+        isFilterActive,
+        activeFilterCount,
       }}
     >
       {children}
@@ -147,6 +193,46 @@ export function useDocumentsFilter() {
     const [activeFilters, setActiveFilters] = useState<FilterState>(
       savedFilters || initialFilterState
     );
+
+    // Debounced search to avoid too many filter updates
+    const debouncedSetSearchQuery = useCallback(
+      debounce((query: string) => {
+        setSearchQuery(query);
+        setActiveFilters((prev) => ({
+          ...prev,
+          searchQuery: query,
+        }));
+
+        // Save to local storage
+        try {
+          const updatedFilters = {
+            ...activeFilters,
+            searchQuery: query,
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFilters));
+        } catch (error) {
+          console.error("Error saving filters:", error);
+        }
+      }, 300),
+      [activeFilters]
+    );
+
+    // Calculate if any filters are active
+    const isFilterActive = useMemo(() => {
+      return (
+        activeFilters.searchQuery !== "" ||
+        activeFilters.statusFilter !== "any" ||
+        activeFilters.typeFilter !== "any" ||
+        activeFilters.dateRange !== undefined
+      );
+    }, [activeFilters]);
+
+    // Count active filters
+    const activeFilterCount = useMemo(() => {
+      return Object.values(activeFilters).filter(
+        (val) => val !== "any" && val !== undefined && val !== ""
+      ).length;
+    }, [activeFilters]);
 
     const applyFilters = useCallback(
       (filters: FilterState) => {
@@ -191,12 +277,14 @@ export function useDocumentsFilter() {
 
     return {
       searchQuery,
-      setSearchQuery,
+      setSearchQuery: debouncedSetSearchQuery,
       dateRange,
       setDateRange,
       activeFilters,
       applyFilters,
       resetFilters,
+      isFilterActive,
+      activeFilterCount,
     };
   }
 

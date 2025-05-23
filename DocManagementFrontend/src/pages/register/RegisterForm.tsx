@@ -188,14 +188,291 @@ const RegisterForm: React.FC = () => {
     }
   };
 
+  // Get the current step information for the guide
+  const getCurrentStepGuide = () => {
+    const currentStepInfo = steps[indicatorStep];
+
+    if (currentStep === 0) {
+      return {
+        title: "Choose Your Account Type",
+        description: "Select the type of account that best suits your needs.",
+        icon: <User className="h-8 w-8 text-blue-400" />,
+        details: [
+          {
+            title: "Personal Account",
+            description: "For individual users managing their own documents",
+            icon: <User className="h-5 w-5 text-blue-400" />,
+          },
+          {
+            title: "Company Account",
+            description:
+              "For businesses with multiple users and advanced needs",
+            icon: <Building2 className="h-5 w-5 text-blue-400" />,
+          },
+        ],
+        tips: [
+          "Choose Personal if you're an individual user",
+          "Choose Company if you need to manage documents for an organization",
+        ],
+      };
+    }
+
+    if (isPersonal) {
+      switch (currentStep) {
+        case 1:
+          return {
+            title: "Personal Information",
+            description:
+              "Tell us about yourself to personalize your experience.",
+            icon: <User className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Basic Details",
+                description:
+                  "Your name and personal information help us personalize your experience",
+              },
+            ],
+            tips: [
+              "Use your real name for easier identification",
+              "Your information is protected by our privacy policy",
+            ],
+          };
+        case 2:
+          return {
+            title: "Your Address",
+            description: "Add your address information for your profile.",
+            icon: <MapPin className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Location Details",
+                description:
+                  "Your address helps us provide location-specific services",
+              },
+            ],
+            tips: [
+              "Enter a complete address for better service",
+              "This information is kept private and secure",
+            ],
+          };
+        case 3:
+          return {
+            title: "Account Credentials",
+            description: "Create your unique username and provide your email.",
+            icon: <Mail className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Username",
+                description: "Your unique identifier in the system",
+              },
+              {
+                title: "Email Address",
+                description:
+                  "We'll use this for account verification and notifications",
+              },
+            ],
+            tips: [
+              "Choose a username that's easy to remember",
+              "Use an email address you check regularly",
+              "We'll send a verification link to this email",
+            ],
+          };
+        case 4:
+          return {
+            title: "Secure Your Account",
+            description: "Create a strong password to protect your account.",
+            icon: <Lock className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Password Security",
+                description:
+                  "A strong password helps protect your account from unauthorized access",
+              },
+            ],
+            tips: [
+              "Use a combination of letters, numbers, and symbols",
+              "Avoid using easily guessable information",
+              "Your password should be at least 8 characters long",
+            ],
+          };
+        case 5:
+          return {
+            title: "Admin Access",
+            description: "Set up administrative privileges for your account.",
+            icon: <Shield className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Administrator Key",
+                description:
+                  "Optional: Enter an admin key if you were provided one",
+              },
+            ],
+            tips: [
+              "Admin access provides additional management capabilities",
+              "Leave this blank if you weren't provided an admin key",
+              "Contact your system administrator if you need admin access",
+            ],
+          };
+        case 6:
+          return {
+            title: "Review & Confirm",
+            description:
+              "Review your information before completing registration.",
+            icon: <CheckSquare className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Account Summary",
+                description: "Review all the information you've provided",
+              },
+            ],
+            tips: [
+              "Verify that all information is correct",
+              "You can go back to previous steps to make changes",
+              "Once submitted, you'll need to verify your email",
+            ],
+          };
+        default:
+          return {
+            title: "Getting Started",
+            description: "Create your DocuVerse account in a few simple steps.",
+            icon: <User className="h-8 w-8 text-blue-400" />,
+            tips: [],
+          };
+      }
+    } else {
+      // Company flow guides
+      switch (currentStep) {
+        case 1:
+          return {
+            title: "Company Information",
+            description: "Tell us about your company to set up your account.",
+            icon: <Building2 className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Company Details",
+                description: "Basic information about your organization",
+              },
+            ],
+            tips: [
+              "Enter your official company name",
+              "The company information will appear on shared documents",
+              "You can add more users to your company account later",
+            ],
+          };
+        case 2:
+          return {
+            title: "Company Address",
+            description: "Add your company's address information.",
+            icon: <MapPin className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Business Location",
+                description:
+                  "Your company's official address for records and communications",
+              },
+            ],
+            tips: [
+              "Enter your company's registered address",
+              "This information may be used for billing and legal purposes",
+              "Make sure the address is complete and accurate",
+            ],
+          };
+        case 3:
+          return {
+            title: "Account Credentials",
+            description:
+              "Create your administrator username and provide your email.",
+            icon: <Mail className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Administrator Account",
+                description:
+                  "You'll be the primary administrator for your company's account",
+              },
+            ],
+            tips: [
+              "Choose a professional username for your company admin account",
+              "Use a company email for better security and management",
+              "You'll receive important notifications at this email address",
+            ],
+          };
+        case 4:
+          return {
+            title: "Secure Your Account",
+            description:
+              "Create a strong password to protect your company account.",
+            icon: <Lock className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Password Security",
+                description:
+                  "A strong password helps protect your company data",
+              },
+            ],
+            tips: [
+              "Use a complex password with mixed characters",
+              "Consider using a password manager for security",
+              "Never share your admin password with unauthorized personnel",
+            ],
+          };
+        case 5:
+          return {
+            title: "Admin Access",
+            description:
+              "Set up administrative privileges for your company account.",
+            icon: <Shield className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Administrator Key",
+                description:
+                  "Optional: Enter an admin key if you were provided one",
+              },
+            ],
+            tips: [
+              "The admin key provides enhanced management capabilities",
+              "This is typically provided by your IT department or system vendor",
+              "Contact support if you need an admin key for your company",
+            ],
+          };
+        case 6:
+          return {
+            title: "Review & Confirm",
+            description:
+              "Review your company information before completing registration.",
+            icon: <CheckSquare className="h-8 w-8 text-blue-400" />,
+            details: [
+              {
+                title: "Company Account Summary",
+                description: "Review all the information you've provided",
+              },
+            ],
+            tips: [
+              "Verify that all company information is correct",
+              "You can go back to previous steps to make changes",
+              "After registration, you'll be able to add team members",
+            ],
+          };
+        default:
+          return {
+            title: "Getting Started",
+            description:
+              "Create your company's DocuVerse account in a few simple steps.",
+            icon: <Building2 className="h-8 w-8 text-blue-400" />,
+            tips: [],
+          };
+      }
+    }
+  };
+
+  const currentGuide = getCurrentStepGuide();
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0a0f1d]">
       {/* Main layout container */}
       <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Left side - Information panel */}
+        {/* Left side - Step Guide panel */}
         <div className="hidden lg:flex lg:w-2/5 bg-[#0a0f1d] relative order-1 lg:order-1 border-r border-blue-900/20">
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-20"
+            className="absolute inset-0 bg-cover bg-center opacity-10"
             style={{
               backgroundImage:
                 "url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80')",
@@ -204,89 +481,110 @@ const RegisterForm: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f1d] to-[#0a0f1d]/80"></div>
           <div className="relative z-10 flex flex-col justify-center w-full p-10">
             <div className="max-w-md mx-auto">
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                Welcome to DocuVerse
-              </h1>
-              <p className="text-gray-300 text-base mb-8">
-                Manage and organize your documents securely with our
-                cutting-edge document management system. Enjoy fast access,
-                smart document organization, and powerful collaboration
-                features.
-              </p>
-
-              <div className="flex flex-wrap gap-3 mb-8">
-                <div className="flex items-center gap-2 bg-blue-900/30 backdrop-blur-sm px-4 py-2 rounded-md border border-blue-500/20">
-                  <div className="p-1.5 bg-blue-500/20 rounded-full">
-                    <Shield className="h-4 w-4 text-blue-400" />
+              {/* Step progress indicator */}
+              {currentStep > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-blue-400">
+                      Step {currentStep} of {steps.length - 1}
+                    </span>
+                    <span className="text-sm text-blue-400">
+                      {Math.round((currentStep / (steps.length - 1)) * 100)}%
+                      Complete
+                    </span>
                   </div>
-                  <span className="text-sm text-blue-200">Secure platform</span>
+                  <div className="w-full bg-blue-900/30 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${(currentStep / (steps.length - 1)) * 100}%`,
+                      }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 bg-blue-900/30 backdrop-blur-sm px-4 py-2 rounded-md border border-blue-500/20">
-                  <div className="p-1.5 bg-blue-500/20 rounded-full">
-                    <Clock className="h-4 w-4 text-blue-400" />
+              )}
+
+              {/* Current step guide */}
+              <div className="mb-8">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 bg-blue-900/30 rounded-xl border border-blue-500/20">
+                    {currentGuide.icon}
                   </div>
-                  <span className="text-sm text-blue-200">
-                    Real-time updates
-                  </span>
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                      {currentGuide.title}
+                    </h1>
+                    <p className="text-blue-300 text-sm mt-1">
+                      {currentGuide.description}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-start gap-3 bg-blue-900/20 backdrop-blur-sm p-4 rounded-md border border-blue-500/10">
-                  <div className="p-2 bg-blue-500/20 rounded-md mt-0.5">
-                    <FileText className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-medium text-white">
-                      Document Management
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Store, organize and access your documents from anywhere
-                    </p>
+              {/* Step details */}
+              {currentGuide.details && currentGuide.details.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    What you'll need:
+                  </h3>
+                  <div className="space-y-4">
+                    {currentGuide.details.map((detail, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-3 bg-blue-900/20 backdrop-blur-sm p-4 rounded-md border border-blue-500/10"
+                      >
+                        <div className="p-2 bg-blue-500/20 rounded-md mt-0.5">
+                          {detail.icon || (
+                            <FileText className="h-5 w-5 text-blue-400" />
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <h3 className="text-sm font-medium text-white">
+                            {detail.title}
+                          </h3>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {detail.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
+              )}
 
-                <div className="flex items-start gap-3 bg-blue-900/20 backdrop-blur-sm p-4 rounded-md border border-blue-500/10">
-                  <div className="p-2 bg-blue-500/20 rounded-md mt-0.5">
-                    <Share2 className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-medium text-white">
-                      Seamless Sharing
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Share documents securely with team members and clients
-                    </p>
+              {/* Tips section */}
+              {currentGuide.tips && currentGuide.tips.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    Helpful Tips:
+                  </h3>
+                  <div className="bg-blue-900/20 rounded-lg border border-blue-500/10 p-4">
+                    <ul className="space-y-2">
+                      {currentGuide.tips.map((tip, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 text-sm"
+                        >
+                          <Check className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-blue-200">{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
+              )}
 
-                <div className="flex items-start gap-3 bg-blue-900/20 backdrop-blur-sm p-4 rounded-md border border-blue-500/10">
-                  <div className="p-2 bg-blue-500/20 rounded-md mt-0.5">
-                    <BarChart3 className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-medium text-white">
-                      Advanced Analytics
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Gain insights from document usage and workflow patterns
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 bg-blue-900/20 backdrop-blur-sm p-4 rounded-md border border-blue-500/10">
-                  <div className="p-2 bg-blue-500/20 rounded-md mt-0.5">
-                    <CheckSquare className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-medium text-white">
-                      Workflow Automation
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Streamline approvals and document processing
-                    </p>
-                  </div>
-                </div>
+              {/* Already have an account link */}
+              <div className="mt-auto pt-4 text-center">
+                <p className="text-sm text-blue-300">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="text-blue-400 hover:text-blue-300 font-medium inline-flex items-center"
+                  >
+                    Sign in <LogIn className="ml-1 h-3.5 w-3.5" />
+                  </Link>
+                </p>
               </div>
             </div>
           </div>
