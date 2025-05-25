@@ -375,14 +375,18 @@ const circuitService = {
   },
 
   // Method to move document to a new status
-  moveToStatus: async (documentId: number, targetStatusId: number, comments: string): Promise<boolean> => {
+  moveToStatus: async (documentId: number, targetStatusId: number, comments: string): Promise<{
+    success: boolean;
+    requiresApproval?: boolean;
+    approvalId?: number;
+    message?: string;
+  }> => {
     console.log(`Moving document ${documentId} to status ${targetStatusId} with comments: ${comments}`);
     try {
       // First get the status information to include the title
       const availableTransitions = await circuitService.getAvailableTransitions(documentId);
       const targetStatus = availableTransitions.find(status => status.statusId === targetStatusId);
       const statusTitle = targetStatus?.title || `status ID ${targetStatusId}`;
-      const requiresApproval = targetStatus?.requiresApproval || false;
       
       const response = await api.post(`/Workflow/move-to-status`, {
         documentId,
@@ -392,7 +396,22 @@ const circuitService = {
       
       console.log('Move to status response:', response.data);
       
-      return response.data;
+      // Check if the response indicates approval is required
+      if (response.data && response.data.requiresApproval) {
+        return {
+          success: true,
+          requiresApproval: true,
+          approvalId: response.data.approvalId,
+          message: response.data.message
+        };
+      }
+      
+      // If no approval required, return success
+      return {
+        success: true,
+        requiresApproval: false,
+        message: response.data?.message || 'Document status updated successfully'
+      };
     } catch (error) {
       console.error('Error in moveToStatus:', error);
       throw error;

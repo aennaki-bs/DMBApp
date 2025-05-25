@@ -24,9 +24,14 @@ import {
 
 interface MoveDocumentButtonProps {
   documentId: number;
-  onStatusChange: () => void;
+  onStatusChange: (result?: {
+    requiresApproval?: boolean;
+    approvalId?: number;
+    success?: boolean;
+    message?: string;
+  }) => void;
   disabled?: boolean;
-  transitions: DocumentStatus[];
+  transitions?: any[];
 }
 
 export function MoveDocumentButton({ 
@@ -202,7 +207,7 @@ export function MoveDocumentButton({
         toast.success(`Document moved to ${statusTitle}`);
       }
       
-      onStatusChange();
+      onStatusChange(result);
       setOpen(false);
       setSelectedStatusId(null);
     } catch (error) {

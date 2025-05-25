@@ -29,6 +29,16 @@ import {
 import { Step } from "@/models/step";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+// Add Approvator interface since it's not exported from approvalService
+interface Approvator {
+  id: number;
+  userId: number;
+  username: string;
+  comment?: string;
+  stepId?: number;
+  stepTitle?: string;
+}
+
 interface AssignApprovalDialogProps {
   step: Step;
   isOpen: boolean;
@@ -74,8 +84,18 @@ export function AssignApprovalDialog({
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true);
-      const usersList = await approvalService.getAvailableApprovers();
-      setUsers(usersList);
+      // For step approval assignment, get existing approvators (users already in the approvers table)
+      const usersList = await approvalService.getAllApprovators();
+      
+      // Transform Approvator to ApproverInfo for compatibility
+      const approversInfo: ApproverInfo[] = usersList.map(approvator => ({
+        id: approvator.id,
+        userId: approvator.userId,
+        username: approvator.username,
+        role: undefined, // Role not included in Approvator response
+      }));
+      
+      setUsers(approversInfo);
     } catch (err) {
       console.error("Failed to fetch users:", err);
       setError("Failed to load approvers. Please try again.");

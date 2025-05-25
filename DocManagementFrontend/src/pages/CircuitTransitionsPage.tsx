@@ -154,7 +154,7 @@ export default function CircuitStatusStepsPage() {
   return (
     <div className="container-fluid responsive-padding space-y-6">
       <PageHeader
-        title={`Status Steps for Circuit: ${circuit.title}`}
+        title={`Circuit Steps for Circuit: ${circuit.title}`}
         description="Configure the steps between different statuses in the circuit workflow."
         actions={
           !isSimpleUser && (

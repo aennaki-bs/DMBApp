@@ -455,6 +455,9 @@ namespace DocManagementBackend.Controllers
             if (!user.IsActive)
                 return Unauthorized("User account is deactivated. Please contact un admin!");
 
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
+                return Unauthorized("User not allowed to perform this action.");
+
             try
             {
                 var success = await _workflowService.CompleteDocumentStatusAsync(
@@ -948,7 +951,7 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("User account is deactivated. Please contact an admin!");
 
             // Only allow Admin users to reinitialize workflows
-            if (user.Role!.RoleName != "Admin")
+            if (user.Role!.RoleName != "Admin" && user.Role!.RoleName != "FullUser")
                 return Unauthorized("Only administrators are allowed to reinitialize document workflows.");
 
             try

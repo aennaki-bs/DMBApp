@@ -16,6 +16,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import approvalService from "@/services/approvalService";
 import { ApproverInfo, ApprovalGroup } from "@/models/approval";
 
+// Add Approvator interface since it's not exported from approvalService
+interface Approvator {
+  id: number;
+  userId: number;
+  username: string;
+  comment?: string;
+  stepId?: number;
+  stepTitle?: string;
+}
+
 export const StepApprovalConfig = () => {
   const { formData, setFormData } = useStepForm();
   const [users, setUsers] = useState<ApproverInfo[]>([]);
@@ -43,8 +53,18 @@ export const StepApprovalConfig = () => {
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true);
-      const usersList = await approvalService.getAvailableApprovers();
-      setUsers(usersList);
+      // For step approval configuration, get existing approvators (users already in the approvers table)
+      const usersList = await approvalService.getAllApprovators();
+      
+      // Transform Approvator to ApproverInfo for compatibility
+      const approversInfo: ApproverInfo[] = usersList.map(approvator => ({
+        id: approvator.id,
+        userId: approvator.userId,
+        username: approvator.username,
+        role: undefined, // Role not included in Approvator response
+      }));
+      
+      setUsers(approversInfo);
     } catch (err) {
       console.error("Failed to fetch users:", err);
       setError("Failed to load approvers. Please try again.");

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import documentService from "@/services/documentService";
@@ -39,6 +39,7 @@ export function WorkflowDialog({
 }: WorkflowDialogProps) {
   const { user } = useAuth();
   const isSimpleUser = user?.role === "SimpleUser";
+  const [approvalRefreshTrigger, setApprovalRefreshTrigger] = useState(0);
 
   // Use the document flow hook to manage all workflow-related state and operations
   const {
@@ -68,13 +69,14 @@ export function WorkflowDialog({
         s => s.statusId === statusId
       );
       const statusTitle = targetStatus?.title || `status ID ${statusId}`;
-      const requiresApproval = targetStatus?.requiresApproval;
       
       circuitService
         .moveToStatus(documentId, statusId, `Moving to ${statusTitle}`)
         .then((result) => {
           if (result.requiresApproval) {
             toast.info("This step requires approval. An approval request has been initiated.");
+            // Trigger refresh of DocumentApprovalStatus
+            setApprovalRefreshTrigger(prev => prev + 1);
           } else {
             toast.success("Document status updated successfully");
           }
@@ -89,6 +91,20 @@ export function WorkflowDialog({
 
   // Handle approval update
   const handleApprovalUpdate = () => {
+    refreshAllData();
+  };
+
+  // Handle status change from MoveDocumentButton
+  const handleStatusChange = (result?: {
+    requiresApproval?: boolean;
+    approvalId?: number;
+    success?: boolean;
+    message?: string;
+  }) => {
+    if (result?.requiresApproval && result.approvalId) {
+      // Trigger refresh of DocumentApprovalStatus
+      setApprovalRefreshTrigger(prev => prev + 1);
+    }
     refreshAllData();
   };
 
@@ -209,7 +225,7 @@ export function WorkflowDialog({
                     {workflowStatus?.isCircuitCompleted && !isSimpleUser && (
                       <MoveDocumentButton
                         documentId={documentId}
-                        onStatusChange={refreshAllData}
+                        onStatusChange={handleStatusChange}
                         disabled={false}
                         transitions={
                           workflowStatus?.availableStatusTransitions || []
@@ -229,6 +245,7 @@ export function WorkflowDialog({
                 <DocumentApprovalStatus
                   documentId={documentId}
                   onApprovalUpdate={handleApprovalUpdate}
+                  refreshTrigger={approvalRefreshTrigger}
                 />
               </motion.div>
 

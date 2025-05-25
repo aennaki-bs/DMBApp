@@ -1,16 +1,8 @@
 import { useState, useEffect } from "react";
 import { useDocumentApproval } from "@/hooks/document-workflow/useDocumentApproval";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   AlertCircle,
   CheckCircle,
@@ -28,15 +20,14 @@ import approvalService from "@/services/approvalService";
 interface DocumentApprovalStatusProps {
   documentId: number;
   onApprovalUpdate?: () => void;
+  refreshTrigger?: number;
 }
 
 export function DocumentApprovalStatus({
   documentId,
   onApprovalUpdate,
+  refreshTrigger,
 }: DocumentApprovalStatusProps) {
-  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [comments, setComments] = useState("");
   const [groupDetails, setGroupDetails] = useState<ApproversGroup | null>(null);
   const [isLoadingGroup, setIsLoadingGroup] = useState(false);
   const [groupMembers, setGroupMembers] = useState<ApproverInfo[]>([]);
@@ -45,27 +36,38 @@ export function DocumentApprovalStatus({
     approvalHistory,
     isHistoryLoading,
     isHistoryError,
-    respondToApproval,
-    isLoading,
     hasPendingApprovals,
     latestApprovalStatus,
     wasRejected,
+    refetchHistory,
   } = useDocumentApproval(documentId);
 
+  // Also fetch pending approvals for this document to get assignment info
+  const { data: pendingApprovals } = useQuery({
+    queryKey: ['documentApprovals', documentId],
+    queryFn: () => approvalService.getDocumentApprovals(documentId),
+    enabled: !!documentId && hasPendingApprovals,
+    refetchInterval: hasPendingApprovals ? 30000 : false, // Refetch every 30s if pending
+  });
+
   // Get the latest pending approval
-  const latestPendingApproval = approvalHistory?.find((approval) =>
-    approval.status?.toLowerCase().includes("pending")
-  );
+  const latestPendingApproval = approvalHistory?.find((approval) => {
+    const status = approval.status?.toLowerCase();
+    return status === 'open' || status === 'inprogress';
+  });
+
+  // Get assignment information from pending approvals
+  const latestPendingAssignment = pendingApprovals?.[0];
 
   // Get approval group details if this is a group approval
   useEffect(() => {
     const fetchGroupDetails = async () => {
-      if (!latestPendingApproval || !latestPendingApproval.assignedToGroup) return;
+      if (!latestPendingAssignment || !latestPendingAssignment.assignedToGroup) return;
 
       try {
         setIsLoadingGroup(true);
         // Extract group ID from the group name if available
-        const groupMatch = latestPendingApproval.assignedToGroup.match(/\(ID: (\d+)\)/);
+        const groupMatch = latestPendingAssignment.assignedToGroup.match(/\(ID: (\d+)\)/);
         const groupId = groupMatch ? parseInt(groupMatch[1], 10) : null;
 
         if (groupId) {
@@ -84,39 +86,14 @@ export function DocumentApprovalStatus({
     };
 
     fetchGroupDetails();
-  }, [latestPendingApproval]);
+  }, [latestPendingAssignment]);
 
-  const handleApprove = async () => {
-    if (!latestPendingApproval) return;
-
-    const success = await respondToApproval(
-      latestPendingApproval.approvalId,
-      true,
-      comments
-    );
-
-    if (success) {
-      setComments("");
-      setIsApproveDialogOpen(false);
-      if (onApprovalUpdate) onApprovalUpdate();
+  // Refetch approval data when refresh trigger changes
+  useEffect(() => {
+    if (refreshTrigger) {
+      refetchHistory();
     }
-  };
-
-  const handleReject = async () => {
-    if (!latestPendingApproval || !comments.trim()) return;
-
-    const success = await respondToApproval(
-      latestPendingApproval.approvalId,
-      false,
-      comments
-    );
-
-    if (success) {
-      setComments("");
-      setIsRejectDialogOpen(false);
-      if (onApprovalUpdate) onApprovalUpdate();
-    }
-  };
+  }, [refreshTrigger, refetchHistory]);
 
   const getStatusBadge = () => {
     if (isHistoryLoading) {
@@ -264,21 +241,21 @@ export function DocumentApprovalStatus({
                   </p>
                   
                   {/* Display individual approver */}
-                  {latestPendingApproval.assignedTo && !latestPendingApproval.assignedToGroup && (
+                  {latestPendingAssignment?.assignedTo && !latestPendingAssignment.assignedToGroup && (
                     <div className="flex items-center gap-1 text-sm text-blue-300">
                       <UserCheck className="h-4 w-4 text-blue-400/70" />
                       <span className="font-medium">Waiting for:</span> 
-                      <span>{latestPendingApproval.assignedTo}</span>
+                      <span>{latestPendingAssignment.assignedTo}</span>
                     </div>
                   )}
                   
                   {/* Display approver group */}
-                  {latestPendingApproval.assignedToGroup && (
+                  {latestPendingAssignment?.assignedToGroup && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-1 text-sm text-blue-300">
                         <Users className="h-4 w-4 text-blue-400/70" />
                         <span className="font-medium">Approvers Group:</span> 
-                        <span>{latestPendingApproval.assignedToGroup}</span>
+                        <span>{latestPendingAssignment.assignedToGroup}</span>
                       </div>
                       
                       {isLoadingGroup ? (
@@ -321,25 +298,6 @@ export function DocumentApprovalStatus({
                     </div>
                   )}
                 </div>
-
-                <div className="mt-4 flex gap-2">
-                  <Button
-                    onClick={() => setIsApproveDialogOpen(true)}
-                    className="bg-green-600 hover:bg-green-700"
-                    disabled={isLoading}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Approve
-                  </Button>
-                  <Button
-                    onClick={() => setIsRejectDialogOpen(true)}
-                    className="bg-red-600 hover:bg-red-700"
-                    disabled={isLoading}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reject
-                  </Button>
-                </div>
               </div>
             )}
 
@@ -354,121 +312,6 @@ export function DocumentApprovalStatus({
           </div>
         </CardContent>
       </Card>
-
-      {/* Approve Dialog */}
-      <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
-        <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Approve Document</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="approve-comments"
-                className="text-sm font-medium text-gray-200"
-              >
-                Comments (optional)
-              </label>
-              <Textarea
-                id="approve-comments"
-                placeholder="Add any comments about your approval decision..."
-                className="bg-[#111633] border-blue-900/50 text-white resize-none focus:border-blue-500/50"
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsApproveDialogOpen(false)}
-              disabled={isLoading}
-              className="border-blue-800 text-gray-300 hover:bg-blue-900/20"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleApprove}
-              disabled={isLoading}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Approving...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Confirm Approval
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Reject Document</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="reject-comments"
-                className="text-sm font-medium text-gray-200"
-              >
-                Rejection Reason <span className="text-red-400">*</span>
-              </label>
-              <Textarea
-                id="reject-comments"
-                placeholder="Please provide a reason for rejection..."
-                className="bg-[#111633] border-blue-900/50 text-white resize-none focus:border-blue-500/50"
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-              />
-              {comments.trim() === "" && (
-                <p className="text-red-400 text-xs mt-1">
-                  A reason is required for rejection
-                </p>
-              )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRejectDialogOpen(false)}
-              disabled={isLoading}
-              className="border-blue-800 text-gray-300 hover:bg-blue-900/20"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleReject}
-              disabled={isLoading || comments.trim() === ""}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Rejecting...
-                </>
-              ) : (
-                <>
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Confirm Rejection
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

@@ -35,6 +35,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AssignApprovalDialog } from "@/components/workflow/AssignApprovalDialog";
+import { StepDetailsDialog } from "@/components/steps/StepDetailsDialog";
 import { Step } from "@/models/step";
 import approvalService from "@/services/approvalService";
 
@@ -81,6 +82,7 @@ export const StepTableRow = ({
   const ref = React.useRef<HTMLTableRowElement>(null);
   const [isAssignApprovalDialogOpen, setIsAssignApprovalDialogOpen] =
     useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [approvalInfo, setApprovalInfo] = useState<ApprovalInfo>({
     requiresApproval: step.requiresApproval,
@@ -406,6 +408,11 @@ export const StepTableRow = ({
               align="end"
               className="bg-background border-blue-900/30"
             >
+              <DropdownMenuItem onClick={() => setIsDetailsDialogOpen(true)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               {onEditStep && (
                 <TooltipProvider>
                   <Tooltip delayDuration={300}>
@@ -481,6 +488,11 @@ export const StepTableRow = ({
         stepId={step.id}
         stepTitle={step.title}
         onSuccess={handleApprovalAssigned}
+      />
+      <StepDetailsDialog
+        open={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
+        step={step}
       />
     </>
   );

@@ -86,17 +86,22 @@ export interface ApprovalResponsePayload {
  * Interface for approval history data
  */
 export interface ApprovalHistory {
-  id: number;
-  documentId: number;
-  documentTitle: string;
-  stepId: number;
+  approvalId: number;
   stepTitle: string;
   requestedBy: string;
-  requestedAt: string;
-  respondedBy: string;
-  respondedAt: string;
-  approved: boolean;
+  requestDate: string;
+  status: string;
   comments?: string;
+  responses: ApprovalResponseHistory[];
+  // Legacy fields for backward compatibility
+  id?: number;
+  documentId?: number;
+  documentTitle?: string;
+  stepId?: number;
+  requestedAt?: string;
+  respondedBy?: string;
+  respondedAt?: string;
+  approved?: boolean;
 }
 
 /**

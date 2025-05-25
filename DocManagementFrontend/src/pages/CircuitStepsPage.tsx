@@ -11,6 +11,7 @@ import { CircuitStepsSearchBar } from '@/components/circuit-steps/CircuitStepsSe
 import { CircuitStepsContent } from '@/components/circuit-steps/CircuitStepsContent';
 import { CircuitStepsError } from '@/components/circuit-steps/CircuitStepsError';
 import { toast } from 'sonner';
+import stepService from '@/services/stepService';
 
 export default function CircuitStepsPage() {
   const { circuitId = '' } = useParams<{ circuitId: string }>();
@@ -19,7 +20,9 @@ export default function CircuitStepsPage() {
   
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [selectedStep, setSelectedStep] = useState<Step | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     circuit,
@@ -67,14 +70,34 @@ export default function CircuitStepsPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (isCircuitActive) {
       toast.error("Cannot delete steps from an active circuit");
       return;
     }
-    // Implement bulk delete functionality here
-    // You would call a service method to delete multiple steps
-    setSelectedSteps([]);
+    
+    if (selectedSteps.length === 0) {
+      toast.error("No steps selected for deletion");
+      return;
+    }
+
+    // Show confirmation dialog
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      setIsDeleting(true);
+      setBulkDeleteDialogOpen(false);
+      await stepService.deleteMultipleSteps(selectedSteps);
+      setSelectedSteps([]);
+      refetchSteps();
+    } catch (error) {
+      console.error('Failed to delete steps:', error);
+      toast.error('Failed to delete selected steps');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -95,7 +118,7 @@ export default function CircuitStepsPage() {
   }
 
   return (
-    <div className="container-fluid responsive-padding space-y-6">
+    <div className="container-fluid responsive-padding space-y-6 mb-8">
       <CircuitStepsHeader 
         circuit={circuit} 
         onAddStep={handleAddStep} 
@@ -129,7 +152,10 @@ export default function CircuitStepsPage() {
       <BulkActionBar
         selectedCount={selectedSteps.length}
         onBulkDelete={handleBulkDelete}
-        disabled={isCircuitActive}
+        disabled={isCircuitActive || isSimpleUser || isDeleting}
+        isDeleting={isDeleting}
+        isCircuitActive={isCircuitActive}
+        isSimpleUser={isSimpleUser}
       />
       
       {/* Step Form Dialog - Now passing the circuit ID */}
@@ -151,6 +177,18 @@ export default function CircuitStepsPage() {
           onSuccess={refetchSteps}
         />
       )}
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <DeleteStepDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        stepId={0} // Not used for bulk delete
+        stepTitle={`${selectedSteps.length} selected steps`}
+        onSuccess={refetchSteps}
+        onConfirm={confirmBulkDelete}
+        isBulk={true}
+        count={selectedSteps.length}
+      />
     </div>
   );
 }

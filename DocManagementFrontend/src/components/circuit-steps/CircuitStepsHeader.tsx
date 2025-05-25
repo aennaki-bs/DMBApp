@@ -53,7 +53,7 @@ export const CircuitStepsHeader = ({
             asChild
           >
             <Link to={`/circuit/${circuit.id}/steps`}>
-              <Network className="mr-2 h-4 w-4" /> Status Steps
+              <Network className="mr-2 h-4 w-4" /> Circuit Steps
             </Link>
           </Button>
         )}

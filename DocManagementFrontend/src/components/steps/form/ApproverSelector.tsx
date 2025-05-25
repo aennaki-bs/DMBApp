@@ -17,6 +17,16 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ApprovalRuleType } from "@/models/approval";
 
+// Add Approvator interface since it's not exported from approvalService
+interface Approvator {
+  id: number;
+  userId: number;
+  username: string;
+  comment?: string;
+  stepId?: number;
+  stepTitle?: string;
+}
+
 interface ApproverSelectorProps {
   selectedUserId?: number;
   selectedGroupId?: number;
@@ -127,35 +137,35 @@ export function ApproverSelector({
     try {
       // Fetch approvers and groups in parallel for better performance
       const [approversResponse, groupsResponse] = await Promise.allSettled([
-        approvalService.getAvailableApprovers(),
+        approvalService.getAllApprovators(),
         approvalService.getAllApprovalGroups(),
       ]);
 
       // Handle approvers response
       if (approversResponse.status === "fulfilled") {
-        const fetchedApprovers = Array.isArray(approversResponse.value)
+        const fetchedApprovators = Array.isArray(approversResponse.value)
           ? approversResponse.value
           : [];
 
-        console.log("Fetched approvers:", fetchedApprovers);
+        console.log("Fetched approvators:", fetchedApprovators);
 
-        if (fetchedApprovers.length === 0) {
-          console.warn("No approvers returned from API");
+        if (fetchedApprovators.length === 0) {
+          console.warn("No approvators returned from API");
         }
 
-        setApprovers(
-          fetchedApprovers.filter(
-            (approver): approver is ApproverInfo =>
-              approver &&
-              typeof approver === "object" &&
-              "userId" in approver &&
-              "username" in approver
-          )
-        );
+        // Transform Approvator to ApproverInfo for compatibility
+        const approversInfo: ApproverInfo[] = fetchedApprovators.map(approvator => ({
+          id: approvator.id,
+          userId: approvator.userId,
+          username: approvator.username,
+          role: undefined, // Role not included in Approvator response
+        }));
+
+        setApprovers(approversInfo);
 
         // If we have a selected userId, find and select the approver now
         if (selectedUserId) {
-          const approver = fetchedApprovers.find(
+          const approver = approversInfo.find(
             (a) => a.userId === selectedUserId
           );
           if (approver) {

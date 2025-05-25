@@ -37,8 +37,8 @@ export function StepsTable({
   if (steps.length === 0) {
     return (
       <EmptyState
-        title="No Status Steps"
-        description="No status steps have been configured for this circuit yet."
+        title="No Circuit Steps"
+        description="No Circuit Steps have been configured for this circuit yet."
         icon="diagram"
       />
     );
@@ -47,7 +47,7 @@ export function StepsTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Status Steps</CardTitle>
+        <CardTitle>Circuit Steps</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>

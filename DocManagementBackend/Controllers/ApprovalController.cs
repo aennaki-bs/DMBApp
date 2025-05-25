@@ -624,7 +624,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet("configure/steps")]
         public async Task<ActionResult<IEnumerable<StepWithApprovalDto>>> GetStepsWithApproval()
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -658,7 +658,7 @@ namespace DocManagementBackend.Controllers
         public async Task<IActionResult> ConfigureStepApproval(
             int stepId, [FromBody] StepApprovalConfigDto config)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -726,7 +726,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet("configure/step/{stepId}")]
         public async Task<ActionResult<StepApprovalConfigDetailDto>> GetStepApprovalConfig(int stepId)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -810,7 +810,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet("eligible-approvers")]
         public async Task<ActionResult<IEnumerable<ApproverInfoDto>>> GetEligibleApprovers()
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -833,7 +833,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet("available-approvers")]
         public async Task<ActionResult<IEnumerable<ApproverInfoDto>>> GetAvailableApprovers()
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -858,7 +858,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost("groups")]
         public async Task<IActionResult> CreateApprovatorsGroup([FromBody] CreateApprovatorsGroupDto request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -933,7 +933,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet("groups/{id}")]
         public async Task<ActionResult<ApprovatorsGroupDetailDto>> GetApprovatorsGroup(int id)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -972,7 +972,7 @@ namespace DocManagementBackend.Controllers
         [HttpGet("groups")]
         public async Task<ActionResult<IEnumerable<ApprovatorsGroupDetailDto>>> GetAllApprovatorsGroups()
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -1011,7 +1011,7 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("groups/{id}")]
         public async Task<IActionResult> DeleteApprovatorsGroup(int id)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -1070,7 +1070,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost("groups/{groupId}/users")]
         public async Task<IActionResult> AddUserToGroup(int groupId, [FromBody] AddUserToGroupDto request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -1152,7 +1152,7 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("groups/{groupId}/users/{userId}")]
         public async Task<IActionResult> RemoveUserFromGroup(int groupId, int userId)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -1290,7 +1290,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost("approvators")]
         public async Task<ActionResult<ApprovatorDetailDto>> CreateApprovator([FromBody] CreateApprovatorDto dto)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -1347,7 +1347,7 @@ namespace DocManagementBackend.Controllers
         [HttpPut("approvators/{id}")]
         public async Task<IActionResult> UpdateApprovator(int id, [FromBody] CreateApprovatorDto dto)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -1409,7 +1409,7 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("approvators/{id}")]
         public async Task<IActionResult> DeleteApprovator(int id)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 

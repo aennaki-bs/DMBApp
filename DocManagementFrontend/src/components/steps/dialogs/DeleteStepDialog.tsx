@@ -1,4 +1,3 @@
-
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useStepManagement } from '@/hooks/useStepManagement';
 import { useState } from 'react';
@@ -24,6 +23,8 @@ export function DeleteStepDialog({
   documentId,
   onSuccess,
   onConfirm,
+  isBulk = false,
+  count = 0,
 }: DeleteStepDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const { deleteStep } = useStepManagement();
@@ -33,7 +34,7 @@ export function DeleteStepDialog({
     try {
       // If onConfirm is provided, use that, otherwise use the hook
       if (onConfirm) {
-        onConfirm();
+        await onConfirm();
       } else {
         await deleteStep(stepId);
       }
@@ -44,13 +45,18 @@ export function DeleteStepDialog({
     }
   };
 
+  const title = isBulk ? "Delete Multiple Steps" : "Delete Step";
+  const description = isBulk 
+    ? `Are you sure you want to delete ${count} selected steps? This action cannot be undone.`
+    : `Are you sure you want to delete the step "${stepTitle}"? This action cannot be undone.`;
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="bg-[#0f1642] text-white border-blue-900/30">
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Step</AlertDialogTitle>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-blue-200">
-            Are you sure you want to delete the step "{stepTitle}"? This action cannot be undone.
+            {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

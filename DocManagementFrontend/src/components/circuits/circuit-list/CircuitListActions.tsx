@@ -73,7 +73,7 @@ export function CircuitListActions({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Status Steps</p>
+                  <p>Circuit Steps</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
