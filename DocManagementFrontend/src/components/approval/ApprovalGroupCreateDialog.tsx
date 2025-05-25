@@ -112,10 +112,13 @@ export default function ApprovalGroupCreateDialog({
   const fetchAvailableUsers = async () => {
     try {
       setIsLoadingUsers(true);
-      const users = await approvalService.getAvailableApprovers();
+      // For approval groups, get eligible approvers (accessible to both Admins and FullUsers)
+      // Unlike individual approver creation, we don't need to filter out existing approvers
+      const users = await approvalService.getEligibleApprovers();
+      
       setAvailableUsers(users);
     } catch (error) {
-      console.error("Failed to fetch available approvers:", error);
+      console.error("Failed to fetch available users:", error);
       toast.error("Failed to load users");
     } finally {
       setIsLoadingUsers(false);

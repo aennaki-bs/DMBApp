@@ -553,6 +553,10 @@ namespace DocManagementBackend.Controllers
         [HttpPost("valide-type")]
         public async Task<IActionResult> ValideType([FromBody] DocumentTypeDto request)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+                
             var typeName = request.TypeName.ToLower();
             var type = await _context.DocumentTypes.AnyAsync(t => t.TypeName.ToLower() == typeName);
             if (type)

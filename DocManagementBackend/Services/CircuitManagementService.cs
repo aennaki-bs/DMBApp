@@ -42,7 +42,7 @@ namespace DocManagementBackend.Services
                 throw new KeyNotFoundException("Circuit not found");
 
             // Generate a unique key for the status
-            status.StatusKey = $"ST-{circuit.CircuitKey}-{Guid.NewGuid().ToString().Substring(0, 8)}";
+            status.StatusKey = $"ST{circuit.CircuitKey}-{Guid.NewGuid().ToString().Substring(0, 3)}";
 
             // Validate that a status can't be both initial and final
             if (status.IsInitial && status.IsFinal)
@@ -142,7 +142,7 @@ namespace DocManagementBackend.Services
             }
 
             // Generate a unique key for the step
-            step.StepKey = $"STP-{circuit.CircuitKey}-{Guid.NewGuid().ToString().Substring(0, 8)}";
+            step.StepKey = $"STP{circuit.CircuitKey}-{Guid.NewGuid().ToString().Substring(0, 3)}";
 
             _context.Steps.Add(step);
             await _context.SaveChangesAsync();

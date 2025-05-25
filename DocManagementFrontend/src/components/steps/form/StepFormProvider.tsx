@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import stepService from "@/services/stepService";
 import { Step } from "@/models/step";
 import api from "@/services/api/core";
+import approvalService from "@/services/approvalService";
 
 // Step form interface
 interface StepFormData {
@@ -228,17 +229,52 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
   };
 
   const submitForm = async (): Promise<boolean> => {
-    // Validate the current step before submitting
-    if (registeredForms[currentStep]) {
-      const isValid = await registeredForms[currentStep].validate();
-      if (!isValid) {
-        return false;
-      }
+    setFormErrors({});
+
+    // Validate all steps before submission
+    const allValid = await validateAllSteps();
+    if (!allValid) {
+      return false;
     }
 
     setIsSubmitting(true);
+
     try {
       // Prepare the data with approval settings and map to API field names
+      let approvatorId = undefined;
+      
+      // If using individual user approval, we need to convert userId to approvatorId
+      if (formData.approvalType === "user" && formData.approvalUserId) {
+        try {
+          // Fetch all approvators to find the one with matching userId
+          const approvators = await approvalService.getAllApprovators();
+          const matchingApprovator = approvators.find(a => a.userId === formData.approvalUserId);
+          
+          if (!matchingApprovator) {
+            setFormErrors((prev) => ({
+              ...prev,
+              4: [
+                ...(prev[4] || []),
+                "Selected approver not found in the approvators table. Please ensure the user is configured as an approver.",
+              ],
+            }));
+            return false;
+          }
+          
+          approvatorId = matchingApprovator.id; // Use the approvator ID, not the user ID
+        } catch (error) {
+          console.error("Error fetching approvators:", error);
+          setFormErrors((prev) => ({
+            ...prev,
+            4: [
+              ...(prev[4] || []),
+              "Failed to validate approver. Please try again.",
+            ],
+          }));
+          return false;
+        }
+      }
+
       const stepData = {
         title: formData.title,
         descriptif: formData.descriptif,
@@ -248,11 +284,8 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
         isFinalStep: formData.isFinalStep,
         requiresApproval: formData.requiresApproval,
 
-        // Map to API field names
-        approvatorId:
-          formData.approvalType === "user"
-            ? formData.approvalUserId
-            : undefined,
+        // Map to API field names with correct IDs
+        approvatorId: approvatorId, // Now using the correct approvator ID
         approvatorsGroupId:
           formData.approvalType === "group"
             ? formData.approvalGroupId
@@ -340,59 +373,88 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
 
   // Validate the current step
   const validateCurrentStep = async (): Promise<boolean> => {
-    // If we have a registered form for this step, use its validation
+    // Clear any previous errors for the current step
+    setFormErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[currentStep];
+      return newErrors;
+    });
+
+    // First, validate using the registered form if available
     if (registeredForms[currentStep]) {
-      return await registeredForms[currentStep].validate();
+      const isValid = await registeredForms[currentStep].validate();
+      if (!isValid) {
+        return false;
+      }
     }
 
-    // Basic validation based on step
+    // Then apply our custom validation logic
     switch (currentStep) {
-      case 1: // Basic Info
+      case 1: // Basic Information
         if (!formData.title.trim()) {
           setFormErrors((prev) => ({
             ...prev,
-            1: [...(prev[1] || []), "Please enter a step title"],
+            1: [...(prev[1] || []), "Step title is required"],
           }));
           return false;
         }
-        return true;
-      case 2: // Status Selection
-        if (!formData.currentStatusId || !formData.nextStatusId) {
+        if (!formData.circuitId) {
           setFormErrors((prev) => ({
             ...prev,
-            2: [
-              ...(prev[2] || []),
-              "Please select both current and next status",
-            ],
+            1: [...(prev[1] || []), "Circuit is required"],
+          }));
+          return false;
+        }
+        return true;
+
+      case 2: // Status Selection
+        if (!formData.currentStatusId) {
+          setFormErrors((prev) => ({
+            ...prev,
+            2: [...(prev[2] || []), "Current status is required"],
+          }));
+          return false;
+        }
+        if (!formData.nextStatusId) {
+          setFormErrors((prev) => ({
+            ...prev,
+            2: [...(prev[2] || []), "Next status is required"],
           }));
           return false;
         }
 
-        // Check if a step with these statuses already exists
-        try {
-          // Use the dedicated service function
-          const exists = await stepService.checkStepExists(
-            formData.circuitId,
-            formData.currentStatusId,
-            formData.nextStatusId
-          );
+        // Check for duplicate step only if we're creating a new step
+        if (
+          !isEditMode &&
+          formData.circuitId &&
+          formData.currentStatusId &&
+          formData.nextStatusId
+        ) {
+          try {
+            const exists = await stepService.checkStepExists(
+              formData.circuitId,
+              formData.currentStatusId,
+              formData.nextStatusId
+            );
 
-          if (exists && !isEditMode) {
-            setFormErrors((prev) => ({
-              ...prev,
-              2: [
-                ...(prev[2] || []),
-                "A step with these status transitions already exists. Please choose different statuses.",
-              ],
-            }));
-            return false;
+            if (exists) {
+              setFormErrors((prev) => ({
+                ...prev,
+                2: [
+                  ...(prev[2] || []),
+                  "A step with this status transition already exists",
+                ],
+              }));
+              return false;
+            }
+          } catch (error) {
+            console.error("Error checking step existence:", error);
+            // Don't fail validation if the check fails
           }
-        } catch (error) {
-          console.error("Error checking if step exists:", error);
-          // Continue even if the check fails
         }
 
         return true;
+
       case 3: // Options
         if (formData.requiresApproval) {
           if (!formData.approvalType) {
@@ -423,6 +485,112 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
       default:
         return true;
     }
+  };
+
+  // Add validateAllSteps function
+  const validateAllSteps = async (): Promise<boolean> => {
+    let allValid = true;
+    const newErrors: Record<number, string[]> = {};
+
+    // Validate each step without changing the current step
+    for (let step = 1; step <= totalSteps; step++) {
+      const stepErrors: string[] = [];
+
+      // Call registered form validation if available
+      if (registeredForms[step]) {
+        try {
+          const isStepValid = await registeredForms[step].validate();
+          if (!isStepValid) {
+            allValid = false;
+            // The registered form should have set its own errors
+          }
+        } catch (error) {
+          allValid = false;
+          stepErrors.push(`Validation error on step ${step}`);
+        }
+      }
+
+      // Apply custom validation logic for each step
+      switch (step) {
+        case 1: // Basic Information
+          if (!formData.title.trim()) {
+            stepErrors.push("Step title is required");
+            allValid = false;
+          }
+          if (!formData.circuitId) {
+            stepErrors.push("Circuit is required");
+            allValid = false;
+          }
+          break;
+
+        case 2: // Status Selection
+          if (!formData.currentStatusId) {
+            stepErrors.push("Current status is required");
+            allValid = false;
+          }
+          if (!formData.nextStatusId) {
+            stepErrors.push("Next status is required");
+            allValid = false;
+          }
+
+          // Check for duplicate step only if we're creating a new step
+          if (
+            !isEditMode &&
+            formData.circuitId &&
+            formData.currentStatusId &&
+            formData.nextStatusId
+          ) {
+            try {
+              const exists = await stepService.checkStepExists(
+                formData.circuitId,
+                formData.currentStatusId,
+                formData.nextStatusId
+              );
+
+              if (exists) {
+                stepErrors.push("A step with this status transition already exists");
+                allValid = false;
+              }
+            } catch (error) {
+              console.error("Error checking step existence:", error);
+              // Don't fail validation if the check fails
+            }
+          }
+          break;
+
+        case 3: // Options
+          if (formData.requiresApproval) {
+            if (!formData.approvalType) {
+              stepErrors.push("Please select an approval type");
+              allValid = false;
+            }
+            if (formData.approvalType === "user" && !formData.approvalUserId) {
+              stepErrors.push("Please select an approver");
+              allValid = false;
+            }
+            if (formData.approvalType === "group" && !formData.approvalGroupId) {
+              stepErrors.push("Please select an approval group");
+              allValid = false;
+            }
+          }
+          break;
+
+        case 4: // Review
+          // No validation needed for review step
+          break;
+      }
+
+      if (stepErrors.length > 0) {
+        newErrors[step] = stepErrors;
+      }
+    }
+
+    // Set all errors at once
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+    }
+    
+    return allValid;
   };
 
   return (

@@ -29,12 +29,14 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 
 const DocumentFlowPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const isSimpleUser = user?.role === "SimpleUser";
+  const [approvalRefreshTrigger, setApprovalRefreshTrigger] = useState(0);
 
   // Use the document flow hook to manage all workflow-related state and operations
   const {
@@ -76,13 +78,14 @@ const DocumentFlowPage = () => {
         s => s.statusId === statusId
       );
       const statusTitle = targetStatus?.title || `status ID ${statusId}`;
-      const requiresApproval = targetStatus?.requiresApproval;
       
       circuitService
         .moveToStatus(Number(id), statusId, `Moving to ${statusTitle}`)
         .then((result) => {
           if (result.requiresApproval) {
             toast.info("This step requires approval. An approval request has been initiated.");
+            // Trigger refresh of DocumentApprovalStatus
+            setApprovalRefreshTrigger(prev => prev + 1);
           } else {
             toast.success("Document status updated successfully");
           }
@@ -97,6 +100,20 @@ const DocumentFlowPage = () => {
 
   // Handle approval update
   const handleApprovalUpdate = () => {
+    refreshAllData();
+  };
+
+  // Handle status change from MoveDocumentButton
+  const handleStatusChange = (result?: {
+    requiresApproval?: boolean;
+    approvalId?: number;
+    success?: boolean;
+    message?: string;
+  }) => {
+    if (result?.requiresApproval && result.approvalId) {
+      // Trigger refresh of DocumentApprovalStatus
+      setApprovalRefreshTrigger(prev => prev + 1);
+    }
     refreshAllData();
   };
 
@@ -227,7 +244,7 @@ const DocumentFlowPage = () => {
                 {workflowStatus?.isCircuitCompleted && !isSimpleUser && (
                   <MoveDocumentButton
                     documentId={Number(id)}
-                    onStatusChange={refreshAllData}
+                    onStatusChange={handleStatusChange}
                     disabled={false}
                     transitions={
                       workflowStatus?.availableStatusTransitions || []
@@ -247,6 +264,7 @@ const DocumentFlowPage = () => {
             <DocumentApprovalStatus
               documentId={Number(id)}
               onApprovalUpdate={handleApprovalUpdate}
+              refreshTrigger={approvalRefreshTrigger}
             />
           </motion.div>
 

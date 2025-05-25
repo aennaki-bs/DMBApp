@@ -48,14 +48,17 @@ export function useDocumentApproval(documentId: number) {
 
   // Check if document has pending approvals
   const hasPendingApprovals = !!approvalHistory?.some(
-    approval => approval.status?.toLowerCase().includes('pending')
+    approval => {
+      const status = approval.status?.toLowerCase();
+      return status === 'open' || status === 'inprogress';
+    }
   );
 
   // Get the latest approval status
   const latestApprovalStatus = approvalHistory?.[0]?.status;
 
   // Check if document was rejected - only look at most recent approval status
-  const wasRejected = latestApprovalStatus?.toLowerCase().includes('rejected') || false;
+  const wasRejected = latestApprovalStatus?.toLowerCase() === 'rejected';
 
   return {
     approvalHistory,

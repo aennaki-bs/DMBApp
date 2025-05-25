@@ -141,6 +141,8 @@ export default function ApproverCreateWizard({
   const fetchAvailableUsers = async () => {
     try {
       setIsLoadingUsers(true);
+      // For individual approvers, get only users who are NOT already in the approvers table
+      // This prevents duplicate approver assignments
       const users = await approvalService.getAvailableApprovers();
       setEligibleUsers(users);
       setFilteredUsers(users);

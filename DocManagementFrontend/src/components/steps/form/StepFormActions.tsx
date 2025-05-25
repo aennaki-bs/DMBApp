@@ -18,6 +18,7 @@ export const StepFormActions = ({ onCancel }: StepFormActionsProps) => {
     isEditMode,
     totalSteps,
     formErrors,
+    formData,
   } = useStepForm();
 
   const isFirstStep = currentStep === 1;
@@ -26,6 +27,15 @@ export const StepFormActions = ({ onCancel }: StepFormActionsProps) => {
   // Check if there are errors for the current step
   const currentStepErrors = formErrors[currentStep] || [];
   const hasErrors = currentStepErrors.length > 0;
+
+  // Check if all required data is present for submission
+  const canSubmit = formData.title.trim() && 
+                   formData.circuitId && 
+                   formData.currentStatusId && 
+                   formData.nextStatusId &&
+                   (!formData.requiresApproval || 
+                    (formData.approvalType === "user" && formData.approvalUserId) ||
+                    (formData.approvalType === "group" && formData.approvalGroupId));
 
   const handleNext = async () => {
     if (isLastStep) {
@@ -77,9 +87,9 @@ export const StepFormActions = ({ onCancel }: StepFormActionsProps) => {
         <Button
           type="button"
           onClick={handleNext}
-          disabled={isSubmitting}
+          disabled={isSubmitting || (isLastStep && !canSubmit)}
           className={`flex-1 sm:flex-none px-3 py-1 text-xs bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-md h-8 
-            ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+            ${(isSubmitting || (isLastStep && !canSubmit)) ? "opacity-50 cursor-not-allowed" : ""}`}
           size="sm"
         >
           {isSubmitting ? (
