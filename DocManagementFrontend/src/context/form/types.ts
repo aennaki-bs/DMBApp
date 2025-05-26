@@ -20,6 +20,7 @@ export interface FormData {
   cin?: string;
   companyName?: string;
   companyRC?: string;
+  industry?: string;
   companyPhone?: string;
   companyAddress?: string;
   companyCity?: string;
@@ -35,6 +36,7 @@ export interface FormData {
   password: string;
   confirmPassword: string;
   adminSecretKey: string;
+  role?: string;
   validationError?: string; // Added for form validation errors
 }
 
@@ -64,4 +66,7 @@ export interface MultiStepFormContextType {
   registerUser: () => Promise<boolean>;
   verifyEmail: (code: string) => Promise<boolean>;
   resetForm: () => void;
+  validateCurrentStep: () => Promise<boolean>;
+  submitForm: () => Promise<boolean>;
+  goToStep: (step: number) => void;
 }

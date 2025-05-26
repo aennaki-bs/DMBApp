@@ -1,57 +1,88 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import StepOneUserInfo from "@/components/register/StepOneUserInfo";
-import StepTwoUsernameEmail from "@/components/register/StepTwoUsernameEmail";
-import StepThreePassword from "@/components/register/StepThreePassword";
-import StepThreePersonalAddress from "@/components/register/StepThreePersonalAddress";
-import StepFourAdminKey from "@/components/register/StepFourAdminKey";
-import StepFiveSummary from "@/components/register/StepFiveSummary";
-import StepTwoCompanyAddress from "@/components/register/StepTwoCompanyAddress";
-import StepThreeCompanyUsernameEmail from "@/components/register/StepThreeCompanyUsernameEmail";
-import StepFourCompanyPassword from "@/components/register/StepFourCompanyPassword";
+import { motion, AnimatePresence } from "framer-motion";
 import { useMultiStepForm } from "@/context/form";
 import { FormError } from "@/components/ui/form-error";
-import UserTypeSelectionStep from "@/components/register/UserTypeSelectionStep";
-import { motion } from "framer-motion";
 import {
   User,
   Building2,
   MapPin,
-  Key,
-  Shield,
-  CheckSquare,
-  Check,
-  LogIn,
-  Clock,
-  FileText,
-  Share2,
-  BarChart3,
   Mail,
   Lock,
+  Shield,
+  CheckSquare,
   ArrowRight,
+  ArrowLeft,
+  Check,
+  CircleCheck,
+  PenLine,
+  UserPlus,
+  Database,
+  BarChart3,
+  Layers,
+  Fingerprint,
+  FileText,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-// Define our own StepInfo interface since we removed the StepIndicator component
+// Step Components
+import UserTypeSelection from "@/components/register/StepOneTypeSelector";
+import PersonalInfoForm from "@/components/register/StepTwoPersonalInfo";
+import AddressStep from "@/components/register/StepThreeAddressInfo";
+import UsernameEmailForm from "@/components/register/StepFourCredentials";
+import PasswordForm from "@/components/register/StepFivePassword";
+import AdminAccessForm from "@/components/register/StepSixAdminAccess";
+import ReviewStep from "@/components/register/StepSevenSummary";
+
+// Define our StepInfo interface
 export interface StepInfo {
+  id: number;
   title: string;
   description: string;
   icon: React.ReactNode;
 }
 
-const MotionDiv = motion.div;
+// Animation variants for step transitions
+const variants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 200 : -200,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? 200 : -200,
+    opacity: 0,
+  }),
+};
 
-// For personal users: 0. type selection, 1. info, 2. address, 3. username/email, 4. password, 5. admin key, 6. summary
-// For company users:  0. type selection, 1. info, 2. address, 3. username/email, 4. password, 5. admin key, 6. summary
+// Background icons for aesthetic purposes
+const BackgroundIcon = ({
+  icon,
+  className,
+}: {
+  icon: React.ReactNode;
+  className: string;
+}) => (
+  <div className={`absolute opacity-5 text-blue-300 ${className}`}>{icon}</div>
+);
 
 const RegisterForm: React.FC = () => {
-  const { currentStep, formData, stepValidation } = useMultiStepForm();
+  const {
+    currentStep,
+    formData,
+    stepValidation,
+    nextStep,
+    prevStep,
+    validateCurrentStep,
+  } = useMultiStepForm();
+  const [direction, setDirection] = useState(0);
+  const [attemptedNext, setAttemptedNext] = useState(false);
   const isPersonal = formData.userType === "personal";
 
-  // Only show one error message based on priority:
-  // 1. Server-side registration error
-  // 2. Form validation error
-  // 3. Username/email availability errors (only on step 3 for both personal and company)
+  // Error handling
   const errorMessage =
     stepValidation.errors.registration ||
     formData.validationError ||
@@ -59,633 +90,459 @@ const RegisterForm: React.FC = () => {
       ? stepValidation.errors.username || stepValidation.errors.email
       : undefined);
 
-  // Create step information dynamically based on user type
-  const getSteps = (): StepInfo[] => {
-    const baseSteps: StepInfo[] = [
-      {
-        title: "Account Type",
-        description: "Choose between personal or company account",
-        icon: <User className="h-5 w-5" />,
-      },
-    ];
+  // Step information
+  const steps: StepInfo[] = [
+    {
+      id: 0,
+      title: "Account Type",
+      description: "Choose between personal or company account",
+      icon: <User className="h-5 w-5" />,
+    },
+    {
+      id: 1,
+      title: "Account Details",
+      description: isPersonal
+        ? "Enter your personal information"
+        : "Enter your company information",
+      icon: <PenLine className="h-5 w-5" />,
+    },
+    {
+      id: 2,
+      title: "Address",
+      description: "Enter your contact information",
+      icon: <MapPin className="h-5 w-5" />,
+    },
+    {
+      id: 3,
+      title: "Username & Email",
+      description: "Create your account identifiers",
+      icon: <Mail className="h-5 w-5" />,
+    },
+    {
+      id: 4,
+      title: "Password",
+      description: "Create a secure password",
+      icon: <Lock className="h-5 w-5" />,
+    },
+    {
+      id: 5,
+      title: "Admin Access",
+      description: "Optional admin privileges",
+      icon: <Shield className="h-5 w-5" />,
+    },
+    {
+      id: 6,
+      title: "Review",
+      description: "Review and confirm your information",
+      icon: <CircleCheck className="h-5 w-5" />,
+    },
+  ];
 
-    // Add different steps based on user type
-    if (!formData.userType || formData.userType === "personal") {
-      return [
-        ...baseSteps,
-        {
-          title: "Account Details",
-          description: "Enter your personal information",
-          icon: <User className="h-5 w-5" />,
-        },
-        {
-          title: "Address",
-          description: "Enter your address information",
-          icon: <MapPin className="h-5 w-5" />,
-        },
-        {
-          title: "Username & Email",
-          description: "Create your account identifiers",
-          icon: <Mail className="h-5 w-5" />,
-        },
-        {
-          title: "Password",
-          description: "Create a secure password",
-          icon: <Lock className="h-5 w-5" />,
-        },
-        {
-          title: "Admin Access",
-          description: "Optional admin privileges",
-          icon: <Shield className="h-5 w-5" />,
-        },
-        {
-          title: "Summary",
-          description: "Review and confirm your information",
-          icon: <CheckSquare className="h-5 w-5" />,
-        },
-      ];
+  // Handle next button click
+  const handleNext = async () => {
+    setAttemptedNext(true);
+
+    // Validate current step before proceeding
+    const isValid = await validateCurrentStep();
+
+    if (isValid) {
+      setDirection(1);
+      nextStep();
+      setAttemptedNext(false);
     } else {
-      return [
-        ...baseSteps,
-        {
-          title: "Company Details",
-          description: "Enter your company information",
-          icon: <Building2 className="h-5 w-5" />,
-        },
-        {
-          title: "Company Address",
-          description: "Enter your company address",
-          icon: <MapPin className="h-5 w-5" />,
-        },
-        {
-          title: "Username & Email",
-          description: "Create your account identifiers",
-          icon: <Mail className="h-5 w-5" />,
-        },
-        {
-          title: "Password",
-          description: "Create a secure password",
-          icon: <Lock className="h-5 w-5" />,
-        },
-        {
-          title: "Admin Access",
-          description: "Optional admin privileges",
-          icon: <Shield className="h-5 w-5" />,
-        },
-        {
-          title: "Summary",
-          description: "Review and confirm your information",
-          icon: <CheckSquare className="h-5 w-5" />,
-        },
-      ];
+      // Show error state but don't proceed
+      console.log("Validation failed. Please check the form.");
     }
   };
 
-  const steps = getSteps();
-  const indicatorStep =
-    currentStep > steps.length - 1 ? steps.length - 1 : currentStep;
+  // Handle prev button click
+  const handlePrev = () => {
+    setDirection(-1);
+    prevStep();
+    setAttemptedNext(false);
+  };
 
+  // Determine if the next button should be disabled
+  const isNextDisabled = () => {
+    // Always allow moving to the next step from the account type selection
+    if (currentStep === 0) return false;
+
+    // For the review step, don't show the next button
+    if (currentStep === 6) return true;
+
+    // For steps where validation results are available
+    return (
+      attemptedNext &&
+      stepValidation.errors &&
+      Object.keys(stepValidation.errors).length > 0
+    );
+  };
+
+  // Render current step content
   const renderStep = () => {
-    // Step 0 is the user type selection for both flows
-    if (currentStep === 0) {
-      return <UserTypeSelectionStep />;
-    }
-
-    if (isPersonal) {
-      switch (currentStep) {
-        case 1:
-          return <StepOneUserInfo />;
-        case 2:
-          return <StepThreePersonalAddress />;
-        case 3:
-          return <StepTwoUsernameEmail />;
-        case 4:
-          return <StepThreePassword />;
-        case 5:
-          return <StepFourAdminKey />;
-        case 6:
-          return <StepFiveSummary />;
-        default:
-          return <UserTypeSelectionStep />;
-      }
-    }
-    // Company flow:
     switch (currentStep) {
+      case 0:
+        return <UserTypeSelection />;
       case 1:
-        return <StepOneUserInfo />;
+        return <PersonalInfoForm />;
       case 2:
-        return <StepTwoCompanyAddress />;
+        return <AddressStep />;
       case 3:
-        return <StepThreeCompanyUsernameEmail />;
+        return <UsernameEmailForm />;
       case 4:
-        return <StepFourCompanyPassword />;
+        return <PasswordForm />;
       case 5:
-        return <StepFourAdminKey />;
+        return <AdminAccessForm />;
       case 6:
-        return <StepFiveSummary />;
+        return <ReviewStep />;
       default:
-        return <UserTypeSelectionStep />;
+        return <UserTypeSelection />;
     }
   };
-
-  // Get the current step information for the guide
-  const getCurrentStepGuide = () => {
-    const currentStepInfo = steps[indicatorStep];
-
-    if (currentStep === 0) {
-      return {
-        title: "Choose Your Account Type",
-        description: "Select the type of account that best suits your needs.",
-        icon: <User className="h-8 w-8 text-blue-400" />,
-        details: [
-          {
-            title: "Personal Account",
-            description: "For individual users managing their own documents",
-            icon: <User className="h-5 w-5 text-blue-400" />,
-          },
-          {
-            title: "Company Account",
-            description:
-              "For businesses with multiple users and advanced needs",
-            icon: <Building2 className="h-5 w-5 text-blue-400" />,
-          },
-        ],
-        tips: [
-          "Choose Personal if you're an individual user",
-          "Choose Company if you need to manage documents for an organization",
-        ],
-      };
-    }
-
-    if (isPersonal) {
-      switch (currentStep) {
-        case 1:
-          return {
-            title: "Personal Information",
-            description:
-              "Tell us about yourself to personalize your experience.",
-            icon: <User className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Basic Details",
-                description:
-                  "Your name and personal information help us personalize your experience",
-              },
-            ],
-            tips: [
-              "Use your real name for easier identification",
-              "Your information is protected by our privacy policy",
-            ],
-          };
-        case 2:
-          return {
-            title: "Your Address",
-            description: "Add your address information for your profile.",
-            icon: <MapPin className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Location Details",
-                description:
-                  "Your address helps us provide location-specific services",
-              },
-            ],
-            tips: [
-              "Enter a complete address for better service",
-              "This information is kept private and secure",
-            ],
-          };
-        case 3:
-          return {
-            title: "Account Credentials",
-            description: "Create your unique username and provide your email.",
-            icon: <Mail className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Username",
-                description: "Your unique identifier in the system",
-              },
-              {
-                title: "Email Address",
-                description:
-                  "We'll use this for account verification and notifications",
-              },
-            ],
-            tips: [
-              "Choose a username that's easy to remember",
-              "Use an email address you check regularly",
-              "We'll send a verification link to this email",
-            ],
-          };
-        case 4:
-          return {
-            title: "Secure Your Account",
-            description: "Create a strong password to protect your account.",
-            icon: <Lock className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Password Security",
-                description:
-                  "A strong password helps protect your account from unauthorized access",
-              },
-            ],
-            tips: [
-              "Use a combination of letters, numbers, and symbols",
-              "Avoid using easily guessable information",
-              "Your password should be at least 8 characters long",
-            ],
-          };
-        case 5:
-          return {
-            title: "Admin Access",
-            description: "Set up administrative privileges for your account.",
-            icon: <Shield className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Administrator Key",
-                description:
-                  "Optional: Enter an admin key if you were provided one",
-              },
-            ],
-            tips: [
-              "Admin access provides additional management capabilities",
-              "Leave this blank if you weren't provided an admin key",
-              "Contact your system administrator if you need admin access",
-            ],
-          };
-        case 6:
-          return {
-            title: "Review & Confirm",
-            description:
-              "Review your information before completing registration.",
-            icon: <CheckSquare className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Account Summary",
-                description: "Review all the information you've provided",
-              },
-            ],
-            tips: [
-              "Verify that all information is correct",
-              "You can go back to previous steps to make changes",
-              "Once submitted, you'll need to verify your email",
-            ],
-          };
-        default:
-          return {
-            title: "Getting Started",
-            description: "Create your DocuVerse account in a few simple steps.",
-            icon: <User className="h-8 w-8 text-blue-400" />,
-            tips: [],
-          };
-      }
-    } else {
-      // Company flow guides
-      switch (currentStep) {
-        case 1:
-          return {
-            title: "Company Information",
-            description: "Tell us about your company to set up your account.",
-            icon: <Building2 className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Company Details",
-                description: "Basic information about your organization",
-              },
-            ],
-            tips: [
-              "Enter your official company name",
-              "The company information will appear on shared documents",
-              "You can add more users to your company account later",
-            ],
-          };
-        case 2:
-          return {
-            title: "Company Address",
-            description: "Add your company's address information.",
-            icon: <MapPin className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Business Location",
-                description:
-                  "Your company's official address for records and communications",
-              },
-            ],
-            tips: [
-              "Enter your company's registered address",
-              "This information may be used for billing and legal purposes",
-              "Make sure the address is complete and accurate",
-            ],
-          };
-        case 3:
-          return {
-            title: "Account Credentials",
-            description:
-              "Create your administrator username and provide your email.",
-            icon: <Mail className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Administrator Account",
-                description:
-                  "You'll be the primary administrator for your company's account",
-              },
-            ],
-            tips: [
-              "Choose a professional username for your company admin account",
-              "Use a company email for better security and management",
-              "You'll receive important notifications at this email address",
-            ],
-          };
-        case 4:
-          return {
-            title: "Secure Your Account",
-            description:
-              "Create a strong password to protect your company account.",
-            icon: <Lock className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Password Security",
-                description:
-                  "A strong password helps protect your company data",
-              },
-            ],
-            tips: [
-              "Use a complex password with mixed characters",
-              "Consider using a password manager for security",
-              "Never share your admin password with unauthorized personnel",
-            ],
-          };
-        case 5:
-          return {
-            title: "Admin Access",
-            description:
-              "Set up administrative privileges for your company account.",
-            icon: <Shield className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Administrator Key",
-                description:
-                  "Optional: Enter an admin key if you were provided one",
-              },
-            ],
-            tips: [
-              "The admin key provides enhanced management capabilities",
-              "This is typically provided by your IT department or system vendor",
-              "Contact support if you need an admin key for your company",
-            ],
-          };
-        case 6:
-          return {
-            title: "Review & Confirm",
-            description:
-              "Review your company information before completing registration.",
-            icon: <CheckSquare className="h-8 w-8 text-blue-400" />,
-            details: [
-              {
-                title: "Company Account Summary",
-                description: "Review all the information you've provided",
-              },
-            ],
-            tips: [
-              "Verify that all company information is correct",
-              "You can go back to previous steps to make changes",
-              "After registration, you'll be able to add team members",
-            ],
-          };
-        default:
-          return {
-            title: "Getting Started",
-            description:
-              "Create your company's DocuVerse account in a few simple steps.",
-            icon: <Building2 className="h-8 w-8 text-blue-400" />,
-            tips: [],
-          };
-      }
-    }
-  };
-
-  const currentGuide = getCurrentStepGuide();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0f1d]">
-      {/* Main layout container */}
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Left side - Step Guide panel */}
-        <div className="hidden lg:flex lg:w-2/5 bg-[#0a0f1d] relative order-1 lg:order-1 border-r border-blue-900/20">
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-10"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80')",
-            }}
-          ></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f1d] to-[#0a0f1d]/80"></div>
-          <div className="relative z-10 flex flex-col justify-center w-full p-10">
-            <div className="max-w-md mx-auto">
-              {/* Step progress indicator */}
-              {currentStep > 0 && (
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-blue-400">
-                      Step {currentStep} of {steps.length - 1}
-                    </span>
-                    <span className="text-sm text-blue-400">
-                      {Math.round((currentStep / (steps.length - 1)) * 100)}%
-                      Complete
-                    </span>
-                  </div>
-                  <div className="w-full bg-blue-900/30 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${(currentStep / (steps.length - 1)) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              )}
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#0a1033] to-[#040714] py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* ERP-themed background elements */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_rgba(29,78,216,0.15),transparent_80%)]"></div>
+        <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_left,_rgba(30,64,175,0.15),transparent_80%)]"></div>
 
-              {/* Current step guide */}
-              <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-blue-900/30 rounded-xl border border-blue-500/20">
-                    {currentGuide.icon}
+        {/* Decorative icons */}
+        <BackgroundIcon
+          icon={<Database size={120} />}
+          className="top-[10%] left-[5%] transform rotate-12"
+        />
+        <BackgroundIcon
+          icon={<BarChart3 size={150} />}
+          className="top-[30%] right-[8%] transform -rotate-15"
+        />
+        <BackgroundIcon
+          icon={<Layers size={100} />}
+          className="bottom-[20%] left-[15%]"
+        />
+        <BackgroundIcon
+          icon={<Fingerprint size={180} />}
+          className="bottom-[10%] right-[10%] transform rotate-45"
+        />
+        <BackgroundIcon
+          icon={<FileText size={130} />}
+          className="top-[50%] left-[50%] transform -rotate-6"
+        />
+
+        {/* Digital circuit pattern */}
+        <svg
+          className="absolute top-0 left-0 w-full h-full opacity-[0.03] z-0"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 100 100"
+        >
+          <path
+            d="M0 50 H100 M50 0 V100 M25 0 V100 M75 0 V100 M0 25 H100 M0 75 H100"
+            stroke="currentColor"
+            strokeWidth="0.5"
+            fill="none"
+          />
+          <circle cx="50" cy="50" r="3" fill="currentColor" />
+          <circle cx="25" cy="25" r="2" fill="currentColor" />
+          <circle cx="75" cy="75" r="2" fill="currentColor" />
+          <circle cx="25" cy="75" r="2" fill="currentColor" />
+          <circle cx="75" cy="25" r="2" fill="currentColor" />
+        </svg>
+
+        {/* Blue glow effects */}
+        <div className="absolute top-[20%] left-[30%] w-64 h-64 rounded-full bg-blue-600/10 blur-[100px]"></div>
+        <div className="absolute bottom-[20%] right-[20%] w-80 h-80 rounded-full bg-blue-500/10 blur-[120px]"></div>
+      </div>
+
+      <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-8 z-10 relative">
+        {/* Left side - Step guide */}
+        <div className="md:w-1/3 md:flex-shrink-0">
+          <div className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 rounded-xl shadow-[0_0_25px_rgba(59,130,246,0.2)] p-6 md:sticky md:top-8 text-white">
+            <h2 className="text-2xl font-bold text-blue-100 mb-6 flex items-center gap-2">
+              <div className="p-2 rounded-full bg-blue-600/20 text-blue-400">
+                <UserPlus className="h-5 w-5" />
+              </div>
+              Registration Steps
+            </h2>
+
+            {/* ERP banner */}
+            <div className="mb-6 p-3 bg-gradient-to-r from-blue-900/50 to-blue-900/20 rounded-lg border border-blue-800/30 relative overflow-hidden">
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-10">
+                <svg
+                  className="w-16 h-16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M22 8V16C22 17.1046 21.1046 18 20 18H4C2.89543 18 2 17.1046 2 16V8M22 8C22 6.89543 21.1046 6 20 6H4C2.89543 6 2 6.89543 2 8M22 8H2M6 12H8M16 12H18M11 12H13"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm font-medium text-blue-300">
+                Enterprise Resource Platform
+              </h3>
+              <p className="text-xs text-blue-400 mt-1">
+                Document Management System
+              </p>
+            </div>
+
+            {/* Steps navigation */}
+            <div className="space-y-4 mb-6">
+              {steps.map((step) => (
+                <div
+                  key={step.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                    currentStep === step.id
+                      ? "bg-blue-800/20 border-l-4 border-blue-500"
+                      : step.id < currentStep
+                      ? "text-blue-300"
+                      : "text-blue-400/70"
+                  }`}
+                >
+                  <div
+                    className={`p-2 rounded-full ${
+                      currentStep === step.id
+                        ? "bg-blue-600 text-white pulse-animation"
+                        : step.id < currentStep
+                        ? "bg-green-600/30 text-green-300"
+                        : "bg-blue-900/30 text-blue-400/70"
+                    }`}
+                  >
+                    {step.id < currentStep ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      step.icon
+                    )}
                   </div>
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-white">
-                      {currentGuide.title}
-                    </h1>
-                    <p className="text-blue-300 text-sm mt-1">
-                      {currentGuide.description}
+                    <h3
+                      className={`font-medium ${
+                        currentStep === step.id ? "text-blue-100" : ""
+                      }`}
+                    >
+                      {step.title}
+                    </h3>
+                    <p className="text-xs text-blue-300/80">
+                      {step.description}
                     </p>
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              {/* Step details */}
-              {currentGuide.details && currentGuide.details.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-white mb-3">
-                    What you'll need:
-                  </h3>
-                  <div className="space-y-4">
-                    {currentGuide.details.map((detail, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-3 bg-blue-900/20 backdrop-blur-sm p-4 rounded-md border border-blue-500/10"
-                      >
-                        <div className="p-2 bg-blue-500/20 rounded-md mt-0.5">
-                          {detail.icon || (
-                            <FileText className="h-5 w-5 text-blue-400" />
-                          )}
-                        </div>
-                        <div className="text-left">
-                          <h3 className="text-sm font-medium text-white">
-                            {detail.title}
-                          </h3>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {detail.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Tips section */}
-              {currentGuide.tips && currentGuide.tips.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-white mb-3">
-                    Helpful Tips:
-                  </h3>
-                  <div className="bg-blue-900/20 rounded-lg border border-blue-500/10 p-4">
-                    <ul className="space-y-2">
-                      {currentGuide.tips.map((tip, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm"
-                        >
-                          <Check className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                          <span className="text-blue-200">{tip}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {/* Already have an account link */}
-              <div className="mt-auto pt-4 text-center">
-                <p className="text-sm text-blue-300">
-                  Already have an account?{" "}
-                  <Link
-                    to="/login"
-                    className="text-blue-400 hover:text-blue-300 font-medium inline-flex items-center"
-                  >
-                    Sign in <LogIn className="ml-1 h-3.5 w-3.5" />
-                  </Link>
-                </p>
-              </div>
+            {/* ERP Footer */}
+            <div className="mt-6 flex items-center justify-center">
+              <motion.div
+                initial={{ opacity: 0.6 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  duration: 2,
+                }}
+                className="flex gap-2 text-blue-500/60 text-xs font-medium"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21.6 7H25.2V16.8H21.6V7ZM19.2 10.8H15.6V16.8H19.2V10.8ZM13.2 7H9.6V16.8H13.2V7ZM7.2 3.2H3.6V16.8H7.2V3.2Z"
+                    fill="currentColor"
+                    fillOpacity="0.7"
+                  />
+                </svg>
+                <span>Enterprise Resource Platform</span>
+              </motion.div>
             </div>
           </div>
         </div>
 
-        {/* Right side - Form side */}
-        <div className="w-full lg:w-3/5 flex flex-col bg-[#0a0f1d] order-2 lg:order-2">
-          <div className="flex-1 flex flex-col p-4 sm:p-8">
-            <Card className="border-0 shadow-xl bg-gradient-to-br from-[#0d1528] to-[#0a0f1d] relative flex-1 flex flex-col">
-              {/* Glass effect decorative elements */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-60 h-60 bg-indigo-500/5 rounded-full blur-3xl"></div>
-
-              {currentStep > 0 && (
-                <div className="py-6 px-6 sm:px-8 relative z-10">
-                  <div className="flex items-center justify-between mb-2 relative">
-                    {/* Background line (gray) */}
-                    <div className="absolute top-5 left-0 w-full h-[2px] bg-gray-700/30 transform -translate-y-1/2 z-0"></div>
-
-                    {/* Progress line (blue) */}
-                    <div
-                      className="absolute top-5 left-0 h-[2px] bg-gradient-to-r from-blue-500 to-indigo-500 transform -translate-y-1/2 z-0 transition-all duration-300"
-                      style={{
-                        width: `${(currentStep / (steps.length - 1)) * 100}%`,
-                      }}
-                    ></div>
-
-                    {steps.map((step, idx) => (
-                      <div
-                        key={idx}
-                        className={`relative flex flex-col items-center z-10 ${
-                          idx < currentStep
-                            ? "text-blue-400"
-                            : idx === currentStep
-                            ? "text-blue-400"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        <div
-                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-sm ${
-                            idx < currentStep
-                              ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/20"
-                              : idx === currentStep
-                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white ring-4 ring-blue-500/20 shadow-lg shadow-blue-500/30"
-                              : "bg-[#1a233a] text-gray-400"
-                          }`}
-                        >
-                          {idx < currentStep ? (
-                            <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-                          ) : (
-                            <div className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
-                              {React.cloneElement(
-                                step.icon as React.ReactElement,
-                                {
-                                  className: "h-4 w-4 sm:h-5 sm:w-5",
-                                }
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-[10px] sm:text-xs mt-1 font-medium hidden sm:block">
-                          {step.title}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <CardContent className="px-4 sm:px-8 py-6 flex-1 flex flex-col relative z-10">
-                {/* Display error message at the top of the form - only if there's an error */}
-                {errorMessage && (
-                  <FormError message={errorMessage} className="mb-6" />
-                )}
-
-                {currentStep > 0 && (
-                  <div className="mb-6 text-center">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                      {steps[indicatorStep]?.title}
-                    </h2>
-                    <p className="text-sm text-blue-200/70 mt-1">
-                      {steps[indicatorStep]?.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* Scrollable content area */}
-                <div className="flex-1 flex flex-col">
-                  <MotionDiv
-                    key={`step-${currentStep}`}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-full mx-auto flex-1 flex flex-col"
+        {/* Right side - Form content */}
+        <div className="md:w-2/3 flex flex-col space-y-6">
+          <div className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl overflow-hidden">
+            {/* Header */}
+            <div className="p-6 border-b border-blue-900/30 relative overflow-hidden">
+              {/* Background header pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <svg
+                  width="100%"
+                  height="100%"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <pattern
+                    id="circuitPattern"
+                    x="0"
+                    y="0"
+                    width="40"
+                    height="40"
+                    patternUnits="userSpaceOnUse"
                   >
-                    {renderStep()}
-                  </MotionDiv>
+                    <path
+                      d="M0 20h40M20 0v40M10 0v10M30 0v10M10 30v10M30 30v10M0 10h10M30 10h10M0 30h10M30 30h10"
+                      stroke="currentColor"
+                      strokeWidth="0.5"
+                      fill="none"
+                    />
+                  </pattern>
+                  <rect
+                    x="0"
+                    y="0"
+                    width="100%"
+                    height="100%"
+                    fill="url(#circuitPattern)"
+                  />
+                </svg>
+              </div>
+
+              <h1 className="text-xl text-blue-100 flex items-center gap-3 mb-1 relative z-10">
+                <div className="p-2 rounded-full bg-blue-600/20 text-blue-400">
+                  {steps[currentStep].icon}
                 </div>
-              </CardContent>
-            </Card>
+                {steps[currentStep].title}
+                <span className="ml-auto px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded-full border border-blue-800/30">
+                  Step {currentStep + 1} of 7
+                </span>
+              </h1>
+              <p className="text-blue-300 relative z-10">
+                {steps[currentStep].description}
+              </p>
+
+              {/* Error message */}
+              {errorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-3 bg-red-900/30 border border-red-800/30 rounded-md text-red-300 text-sm relative z-10"
+                >
+                  {errorMessage}
+                </motion.div>
+              )}
+            </div>
+
+            {/* Step indicators for smaller screens */}
+            <div className="px-6 pt-6 pb-0 md:hidden">
+              <div className="flex justify-between items-center">
+                {steps.map((step) => (
+                  <div key={step.id} className="flex flex-col items-center">
+                    <div
+                      className={`relative flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-300 ${
+                        currentStep === step.id
+                          ? "bg-blue-600 border-blue-400 text-white scale-110 pulse-animation"
+                          : currentStep > step.id
+                          ? "bg-green-600/30 border-green-400/50 text-green-300"
+                          : "bg-blue-900/30 border-blue-900/50 text-blue-300/50"
+                      }`}
+                    >
+                      {currentStep > step.id ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <span className="text-xs">{step.id + 1}</span>
+                      )}
+
+                      {/* Connecting line */}
+                      {step.id < steps.length - 1 && (
+                        <div
+                          className={`absolute top-1/2 left-full w-[calc(100%-8px)] h-[2px] -translate-y-1/2 transition-all duration-300 ${
+                            currentStep > step.id
+                              ? "bg-green-500/50"
+                              : "bg-blue-900/50"
+                          }`}
+                        ></div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Form content with animation */}
+            <div className="p-6 min-h-[400px]">
+              <AnimatePresence initial={false} custom={direction} mode="wait">
+                <motion.div
+                  key={currentStep}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
+                  }}
+                >
+                  {renderStep()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Navigation buttons */}
+            <div className="px-6 pb-6 pt-2 border-t border-blue-900/30 flex justify-between items-center bg-gradient-to-r from-blue-900/10 to-transparent">
+              <Button
+                type="button"
+                onClick={handlePrev}
+                disabled={currentStep === 0}
+                className={`border border-blue-900/50 transition-all duration-200 flex items-center gap-2 ${
+                  currentStep === 0
+                    ? "opacity-50 bg-blue-950/30 text-blue-300/50"
+                    : "bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                }`}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+
+              <div className="hidden sm:flex items-center gap-1 px-3">
+                {steps.map((step) => (
+                  <div
+                    key={step.id}
+                    className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                      currentStep === step.id
+                        ? "bg-blue-500 w-6"
+                        : currentStep > step.id
+                        ? "bg-green-500"
+                        : "bg-blue-900"
+                    }`}
+                  ></div>
+                ))}
+              </div>
+
+              {currentStep < 6 && (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={isNextDisabled()}
+                  className={`bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] ${
+                    isNextDisabled() ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                >
+                  Next
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Help Card - Moved below main content with proper spacing */}
+          <div className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] p-5 text-white max-w-md mx-auto w-full">
+            <h3 className="text-lg font-medium text-blue-200 mb-1">
+              Need Help?
+            </h3>
+            <p className="text-sm text-blue-300 mb-3">
+              Already have an account? Sign in to access your documents.
+            </p>
+            <Link
+              to="/login"
+              className="flex items-center justify-center w-full bg-blue-600/60 hover:bg-blue-600/80 text-white py-2.5 rounded-md transition-all duration-200 font-medium hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+            >
+              Sign in to your account
+            </Link>
           </div>
         </div>
       </div>

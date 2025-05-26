@@ -107,6 +107,20 @@ export const MultiStepFormProvider: React.FC<{ children: React.ReactNode }> = ({
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
 
+  // Go to a specific step
+  const goToStep = (step: number) => {
+    if (step >= 0 && step <= 6) {
+      setCurrentStep(step);
+
+      // Clear any validation errors when jumping to a step
+      setStepValidation((prev) => ({
+        ...prev,
+        errors: {},
+      }));
+      setFormData({ validationError: undefined });
+    }
+  };
+
   const resetForm = () => {
     setCurrentStep(0);
     setFormDataState(initialFormData);
@@ -121,6 +135,97 @@ export const MultiStepFormProvider: React.FC<{ children: React.ReactNode }> = ({
     return validateEmailUtil(formData.email, setStepValidation);
   };
 
+  // Validate the current step
+  const validateCurrentStep = async (): Promise<boolean> => {
+    // Clear previous errors
+    setStepValidation((prev) => ({
+      ...prev,
+      errors: {},
+    }));
+
+    try {
+      // Step-specific validation
+      switch (currentStep) {
+        case 0: // Account type selection - always valid
+          return true;
+
+        case 1: // Personal/Company Info
+          if (formData.userType === "personal") {
+            if (!formData.firstName || !formData.lastName) {
+              setFormData({
+                validationError: "Please fill out all required fields",
+              });
+              return false;
+            }
+          } else {
+            if (!formData.companyName || !formData.companyRC) {
+              setFormData({
+                validationError: "Please fill out all required fields",
+              });
+              return false;
+            }
+          }
+          return true;
+
+        case 2: // Address
+          // Basic validation for address fields
+          const requiredAddressFields = ["city", "country"];
+          const missingAddressField = requiredAddressFields.some(
+            (field) => !formData[field as keyof FormData]
+          );
+
+          if (missingAddressField) {
+            setFormData({
+              validationError: "Please fill out all required address fields",
+            });
+            return false;
+          }
+          return true;
+
+        case 3: // Username/Email
+          // Username validation
+          const isUserValid = await validateUsername();
+          // Email validation
+          const isEmailValid = await validateEmail();
+
+          return isUserValid && isEmailValid;
+
+        case 4: // Password
+          if (!formData.password) {
+            setFormData({ validationError: "Password is required" });
+            return false;
+          }
+
+          if (formData.password !== formData.confirmPassword) {
+            setFormData({ validationError: "Passwords do not match" });
+            return false;
+          }
+
+          if (formData.password.length < 8) {
+            setFormData({
+              validationError: "Password must be at least 8 characters",
+            });
+            return false;
+          }
+
+          return true;
+
+        case 5: // Admin access - No required fields
+          return true;
+
+        case 6: // Review - No validation needed
+          return true;
+
+        default:
+          return true;
+      }
+    } catch (error) {
+      console.error("Validation error:", error);
+      setFormData({ validationError: "An error occurred during validation" });
+      return false;
+    }
+  };
+
   const registerUser = async (): Promise<boolean> => {
     // Clear any previous validation errors before attempting registration
     setStepValidation((prev) => ({
@@ -129,6 +234,51 @@ export const MultiStepFormProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
 
     return registerUserUtil(formData, setStepValidation, navigate);
+  };
+
+  // Submit form - called from the review step
+  const submitForm = async (): Promise<boolean> => {
+    // Final validation of all steps
+    try {
+      // Set loading state
+      setStepValidation((prev) => ({
+        ...prev,
+        isLoading: true,
+      }));
+
+      // Validate username and email again as final check
+      const isUsernameValid = await validateUsername();
+      const isEmailValid = await validateEmail();
+
+      if (!isUsernameValid || !isEmailValid) {
+        setStepValidation((prev) => ({
+          ...prev,
+          isLoading: false,
+        }));
+        return false;
+      }
+
+      // Attempt to register the user
+      const success = await registerUser();
+
+      setStepValidation((prev) => ({
+        ...prev,
+        isLoading: false,
+      }));
+
+      return success;
+    } catch (error) {
+      console.error("Form submission error:", error);
+      setStepValidation((prev) => ({
+        ...prev,
+        isLoading: false,
+        errors: {
+          ...prev.errors,
+          registration: "An unexpected error occurred during submission",
+        },
+      }));
+      return false;
+    }
   };
 
   const verifyEmail = async (code: string): Promise<boolean> => {
@@ -156,6 +306,9 @@ export const MultiStepFormProvider: React.FC<{ children: React.ReactNode }> = ({
         registerUser,
         verifyEmail,
         resetForm,
+        validateCurrentStep,
+        submitForm,
+        goToStep,
       }}
     >
       {children}

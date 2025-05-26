@@ -1,4 +1,3 @@
-
 import { createContext } from 'react';
 import { MultiStepFormContextType, initialFormData } from './types';
 
@@ -15,6 +14,9 @@ const MultiStepFormContext = createContext<MultiStepFormContextType>({
   registerUser: async () => false,
   verifyEmail: async () => false,
   resetForm: () => {},
+  validateCurrentStep: async () => false,
+  submitForm: async () => false,
+  goToStep: () => {},
 });
 
 export default MultiStepFormContext;

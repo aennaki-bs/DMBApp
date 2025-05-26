@@ -80,10 +80,22 @@ const adminService = {
   // Create new user
   createUser: async (userData: CreateUserRequest): Promise<UserDto> => {
     try {
+      // Validate required fields
+      if (!userData.email || !userData.username || !userData.passwordHash || 
+          !userData.firstName || !userData.lastName || !userData.roleName) {
+        throw new Error('Missing required user data fields');
+      }
+      
       const response = await api.post('/Admin/users', userData);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error);
+      // More specific error handling based on response
+      if (error.response?.status === 409) {
+        throw new Error('Username or email already exists');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data || 'Invalid user data');
+      }
       throw error;
     }
   },

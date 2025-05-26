@@ -1,13 +1,12 @@
-
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { UserTable } from '@/components/admin/UserTable';
-import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
-import { Button } from '@/components/ui/button';
-import { UserPlus, Users } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { UserTable } from "@/components/admin/UserTable";
+import { CreateUserMultiStep } from "@/components/admin/CreateUserMultiStep";
+import { Button } from "@/components/ui/button";
+import { UserPlus, Users } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const UserManagement = () => {
   const { user, isAuthenticated } = useAuth();
@@ -17,13 +16,15 @@ const UserManagement = () => {
   useEffect(() => {
     // Check if user is authenticated and has admin role
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
-    if (user?.role !== 'Admin') {
-      toast.error('You do not have permission to access the user management page');
-      navigate('/dashboard');
+    if (user?.role !== "Admin") {
+      toast.error(
+        "You do not have permission to access the user management page"
+      );
+      navigate("/dashboard");
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -39,8 +40,8 @@ const UserManagement = () => {
               Manage users and their permissions
             </p>
           </div>
-          <Button 
-            onClick={() => setIsCreateUserOpen(true)} 
+          <Button
+            onClick={() => setIsCreateUserOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
           >
             <UserPlus className="h-4 w-4" />
@@ -48,13 +49,13 @@ const UserManagement = () => {
           </Button>
         </div>
       </div>
-      
+
       <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 transition-all">
         <UserTable />
       </div>
 
-      <CreateUserDialog 
-        open={isCreateUserOpen} 
+      <CreateUserMultiStep
+        open={isCreateUserOpen}
         onOpenChange={setIsCreateUserOpen}
       />
     </div>

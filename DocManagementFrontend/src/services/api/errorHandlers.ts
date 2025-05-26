@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 
 // Helper function to extract error message from various API response formats
@@ -80,8 +79,11 @@ export const getErrorMessage = (error: any): string => {
 
 // Function to handle error response
 export const handleErrorResponse = (error: any, skipToast: boolean = false): Promise<never> => {
+  // Check for specific user creation errors first
+  const userCreationError = getUserCreationErrorMessage(error);
+  
   // Extract detailed error message from response if available
-  const errorMessage = getErrorMessage(error);
+  const errorMessage = userCreationError || getErrorMessage(error);
   
   // Determine the type of notification to show
   const isNotFoundError = error.response?.status === 404;
@@ -132,3 +134,35 @@ export const shouldSkipErrorToast = (url: string): boolean => {
          url.includes('/Auth/verify-email') ||
          url.includes('/Account/resend-code');
 };
+
+// Helper function to get specific error message for Admin/user operations
+export const getUserCreationErrorMessage = (error: any): string | null => {
+  if (!error.response) return null;
+  
+  const { data, status } = error.response;
+  
+  // User creation specific errors
+  if (error.config?.url?.includes('/Admin/users')) {
+    if (typeof data === 'string') {
+      if (data.includes('Email is already in use')) {
+        return 'This email address is already registered.';
+      }
+      if (data.includes('Username is already in use')) {
+        return 'This username is already taken.';
+      }
+      return data; // Return the original error message
+    }
+    
+    // Generic error based on status
+    switch (status) {
+      case 400:
+        return 'Invalid user data. Please check all fields and try again.';
+      case 409:
+        return 'User with this email or username already exists.';
+      case 500:
+        return 'Server error while creating user. Please try again later.';
+    }
+  }
+  
+  return null;
+}

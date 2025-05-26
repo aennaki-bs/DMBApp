@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -41,6 +41,7 @@ import {
   User,
   Key,
   Shield,
+  Users,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -109,8 +110,13 @@ export function CreateUserDialog({
       icon: <User className="h-4 w-4" />,
     },
     {
+      title: "Role Assignment",
+      description: "Select user permissions",
+      icon: <Users className="h-4 w-4" />,
+    },
+    {
       title: "Security",
-      description: "Set password and role",
+      description: "Set a secure password",
       icon: <Key className="h-4 w-4" />,
     },
     {
@@ -130,7 +136,41 @@ export function CreateUserDialog({
       passwordHash: "",
       roleName: "SimpleUser",
     },
+    mode: "onChange",
   });
+
+  // Add error checking on email and username fields
+  const email = form.watch("email");
+  const username = form.watch("username");
+
+  // Use effect to validate email and username
+  useEffect(() => {
+    const validateEmailFormat = () => {
+      if (email && !email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+        form.setError("email", {
+          message: "Please enter a valid email address",
+        });
+      }
+    };
+
+    // Add debounce to avoid too many checks
+    const timeoutId = setTimeout(validateEmailFormat, 500);
+    return () => clearTimeout(timeoutId);
+  }, [email, form]);
+
+  useEffect(() => {
+    const validateUsername = () => {
+      if (username && username.length < 3) {
+        form.setError("username", {
+          message: "Username must be at least 3 characters",
+        });
+      }
+    };
+
+    // Add debounce to avoid too many checks
+    const timeoutId = setTimeout(validateUsername, 500);
+    return () => clearTimeout(timeoutId);
+  }, [username, form]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -143,7 +183,9 @@ export function CreateUserDialog({
         : currentStep === 1
         ? ["firstName", "lastName"]
         : currentStep === 2
-        ? ["passwordHash", "roleName"]
+        ? ["roleName"]
+        : currentStep === 3
+        ? ["passwordHash"]
         : [];
 
     if (fieldsToValidate.length > 0) {
@@ -164,6 +206,18 @@ export function CreateUserDialog({
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
+      // Ensure we have all required data
+      if (
+        !values.email ||
+        !values.username ||
+        !values.firstName ||
+        !values.lastName ||
+        !values.passwordHash ||
+        !values.roleName
+      ) {
+        throw new Error("Please fill in all required fields");
+      }
+
       const userData: CreateUserRequest = {
         email: values.email,
         username: values.username,
@@ -180,7 +234,24 @@ export function CreateUserDialog({
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error creating user:", error);
-      toast.error(error.response?.data || "Failed to create user");
+
+      // Get the error message from the response
+      let errorMessage = "Failed to create user";
+
+      if (error.response?.data) {
+        // Handle string error message
+        if (typeof error.response.data === "string") {
+          errorMessage = error.response.data;
+        }
+        // Handle object error message
+        else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -222,6 +293,18 @@ export function CreateUserDialog({
   };
 
   const passwordStrength = getPasswordStrength();
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      // Reset form and step with a slight delay to avoid visual glitches
+      setTimeout(() => {
+        setCurrentStep(0);
+        form.reset();
+        setShowPassword(false);
+      }, 300);
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -397,6 +480,124 @@ export function CreateUserDialog({
                   <div className="space-y-4 bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
                     <FormField
                       control={form.control}
+                      name="roleName"
+                      render={({ field }) => (
+                        <FormItem className="z-50">
+                          <FormLabel className="text-blue-200 flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-blue-400" />
+                            User Role
+                          </FormLabel>
+                          <FormDescription className="text-xs text-blue-300 mt-1 mb-3">
+                            Select the appropriate access level for this user
+                          </FormDescription>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white focus:border-blue-500/50 relative z-50">
+                                <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent
+                              position="popper"
+                              className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-blue-100 rounded-lg shadow-lg z-[9999]"
+                              sideOffset={5}
+                            >
+                              <SelectItem
+                                value="Admin"
+                                className="text-red-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
+                              >
+                                Admin
+                              </SelectItem>
+                              <SelectItem
+                                value="FullUser"
+                                className="text-emerald-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
+                              >
+                                Full User
+                              </SelectItem>
+                              <SelectItem
+                                value="SimpleUser"
+                                className="text-blue-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
+                              >
+                                Simple User
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-red-300" />
+
+                          <div className="mt-4 pt-4 border-t border-blue-900/30">
+                            <h4 className="text-sm font-medium text-blue-200 mb-2">
+                              Role Permissions:
+                            </h4>
+                            {field.value === "Admin" && (
+                              <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
+                                <h5 className="text-red-300 font-medium mb-1 flex items-center gap-1.5">
+                                  <Shield className="h-3.5 w-3.5" />
+                                  Administrator
+                                </h5>
+                                <ul className="text-xs text-blue-200 space-y-1 mt-2">
+                                  <li>• Full access to all system features</li>
+                                  <li>• Can manage users and permissions</li>
+                                  <li>
+                                    • Can view, create, edit, and delete all
+                                    documents
+                                  </li>
+                                  <li>
+                                    • Access to system settings and
+                                    configurations
+                                  </li>
+                                </ul>
+                              </div>
+                            )}
+                            {field.value === "FullUser" && (
+                              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-md p-3">
+                                <h5 className="text-emerald-300 font-medium mb-1 flex items-center gap-1.5">
+                                  <Shield className="h-3.5 w-3.5" />
+                                  Full User
+                                </h5>
+                                <ul className="text-xs text-blue-200 space-y-1 mt-2">
+                                  <li>
+                                    • Can create, edit, and manage documents
+                                  </li>
+                                  <li>
+                                    • Can share documents with other users
+                                  </li>
+                                  <li>
+                                    • Access to advanced document features
+                                  </li>
+                                  <li>• Limited access to system settings</li>
+                                </ul>
+                              </div>
+                            )}
+                            {field.value === "SimpleUser" && (
+                              <div className="bg-blue-500/10 border border-blue-500/20 rounded-md p-3">
+                                <h5 className="text-blue-300 font-medium mb-1 flex items-center gap-1.5">
+                                  <Shield className="h-3.5 w-3.5" />
+                                  Simple User
+                                </h5>
+                                <ul className="text-xs text-blue-200 space-y-1 mt-2">
+                                  <li>• Basic access to the system</li>
+                                  <li>
+                                    • Can view and interact with assigned
+                                    documents
+                                  </li>
+                                  <li>• Limited editing capabilities</li>
+                                  <li>• No access to system settings</li>
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                {currentStep === 3 && (
+                  <div className="space-y-4 bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
+                    <FormField
+                      control={form.control}
                       name="passwordHash"
                       render={({ field }) => (
                         <FormItem>
@@ -488,65 +689,10 @@ export function CreateUserDialog({
                         </FormItem>
                       )}
                     />
-
-                    <FormField
-                      control={form.control}
-                      name="roleName"
-                      render={({ field }) => (
-                        <FormItem className="z-50">
-                          <FormLabel className="text-blue-200">
-                            User Role
-                          </FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white focus:border-blue-500/50 relative z-50">
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent
-                              position="popper"
-                              className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-blue-100 rounded-lg shadow-lg z-[9999]"
-                              sideOffset={5}
-                            >
-                              <SelectItem
-                                value="Admin"
-                                className="text-red-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
-                              >
-                                Admin
-                              </SelectItem>
-                              <SelectItem
-                                value="FullUser"
-                                className="text-emerald-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
-                              >
-                                Full User
-                              </SelectItem>
-                              <SelectItem
-                                value="SimpleUser"
-                                className="text-blue-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
-                              >
-                                Simple User
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage className="text-red-300" />
-                          <FormDescription className="text-xs text-blue-400 mt-2">
-                            {field.value === "Admin" &&
-                              "Administrators have full access to all features and settings."}
-                            {field.value === "FullUser" &&
-                              "Full users can create, edit, and manage documents."}
-                            {field.value === "SimpleUser" &&
-                              "Simple users can only view and interact with assigned documents."}
-                          </FormDescription>
-                        </FormItem>
-                      )}
-                    />
                   </div>
                 )}
 
-                {currentStep === 3 && (
+                {currentStep === 4 && (
                   <div className="space-y-4 bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
                     <h3 className="text-blue-100 font-medium mb-2">
                       Review User Information
