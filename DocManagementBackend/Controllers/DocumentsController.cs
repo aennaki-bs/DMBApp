@@ -265,6 +265,13 @@ namespace DocManagementBackend.Controllers
             document.Title = request.Title ?? document.Title;
             document.DocDate = request.DocDate ?? document.DocDate;
             
+            // Debug logging for ComptableDate
+            if (request.ComptableDate.HasValue)
+            {
+                Console.WriteLine($"Updating ComptableDate from {document.ComptableDate} to {request.ComptableDate}");
+                document.ComptableDate = request.ComptableDate.Value;
+            }
+            
             // Update DocumentExterne if provided
             if (request.DocumentExterne != null)
             {

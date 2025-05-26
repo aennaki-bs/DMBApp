@@ -383,15 +383,26 @@ const circuitService = {
   }> => {
     console.log(`Moving document ${documentId} to status ${targetStatusId} with comments: ${comments}`);
     try {
-      // First get the status information to include the title
-      const availableTransitions = await circuitService.getAvailableTransitions(documentId);
+      // Get current document status and available transitions
+      const [currentStatus, availableTransitions] = await Promise.all([
+        circuitService.getDocumentCurrentStatus(documentId),
+        circuitService.getAvailableTransitions(documentId)
+      ]);
+      
+      // Find target status info
       const targetStatus = availableTransitions.find(status => status.statusId === targetStatusId);
-      const statusTitle = targetStatus?.title || `status ID ${targetStatusId}`;
+      const targetStatusTitle = targetStatus?.title || `Status ID ${targetStatusId}`;
+      
+      // Get current status title
+      const currentStatusTitle = currentStatus?.currentStatusTitle || 'Unknown Status';
+      
+      // Create descriptive comment
+      const defaultComment = `Moving from ${currentStatusTitle} to ${targetStatusTitle}`;
       
       const response = await api.post(`/Workflow/move-to-status`, {
         documentId,
         targetStatusId,
-        comments: comments || `Moving to ${statusTitle}`
+        comments: comments || defaultComment
       });
       
       console.log('Move to status response:', response.data);

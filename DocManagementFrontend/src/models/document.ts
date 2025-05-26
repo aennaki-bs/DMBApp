@@ -9,6 +9,7 @@ export interface Document {
   updatedAt: string;
   typeId: number;
   docDate: string;
+  comptableDate: string;
   documentType: DocumentType;
   circuitId?: number;
   circuit?: Circuit;
@@ -56,6 +57,7 @@ export interface UpdateDocumentRequest {
   documentAlias?: string;
   typeId?: number;
   docDate?: string;
+  comptableDate?: string;
   circuitId?: number;
 }
 

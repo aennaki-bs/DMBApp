@@ -602,6 +602,7 @@ namespace DocManagementBackend.Controllers
                 {
                     ApprovalId = approval.Id,
                     DocumentId = documentId,
+                    StepId = approval.StepId,
                     DocumentKey = document.DocumentKey,
                     DocumentTitle = document.Title,
                     StepTitle = approval.Step?.Title ?? string.Empty,

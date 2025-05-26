@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDocumentWorkflow } from "@/hooks/useDocumentWorkflow";
+import { useDocumentApproval } from "@/hooks/document-workflow/useDocumentApproval";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,12 @@ const DocumentFlowPage = () => {
     refetch: refetchWorkflow,
     refreshAllData,
   } = useDocumentWorkflow(Number(id));
+
+  // Use the document approval hook to check for pending approvals
+  const {
+    hasPendingApprovals,
+    wasRejected,
+  } = useDocumentApproval(Number(id));
 
   // Fetch the document information
   const {
@@ -77,10 +84,11 @@ const DocumentFlowPage = () => {
       const targetStatus = workflowStatus.availableStatusTransitions?.find(
         s => s.statusId === statusId
       );
-      const statusTitle = targetStatus?.title || `status ID ${statusId}`;
+      const targetStatusTitle = targetStatus?.title || `Status ID ${statusId}`;
+      const currentStatusTitle = workflowStatus.currentStatusTitle || 'Unknown Status';
       
       circuitService
-        .moveToStatus(Number(id), statusId, `Moving to ${statusTitle}`)
+        .moveToStatus(Number(id), statusId, `Moving from ${currentStatusTitle} to ${targetStatusTitle}`)
         .then((result) => {
           if (result.requiresApproval) {
             toast.info("This step requires approval. An approval request has been initiated.");
@@ -245,7 +253,8 @@ const DocumentFlowPage = () => {
                   <MoveDocumentButton
                     documentId={Number(id)}
                     onStatusChange={handleStatusChange}
-                    disabled={false}
+                    disabled={hasPendingApprovals}
+                    disabledReason={hasPendingApprovals ? "Document cannot be moved while approval is pending" : undefined}
                     transitions={
                       workflowStatus?.availableStatusTransitions || []
                     }
@@ -288,6 +297,7 @@ const DocumentFlowPage = () => {
                   documentId={Number(id)}
                   onStatusComplete={refreshAllData}
                   onMoveToStatus={handleMoveToStatus}
+                  hasPendingApprovals={hasPendingApprovals}
                 />
               </TabsContent>
 

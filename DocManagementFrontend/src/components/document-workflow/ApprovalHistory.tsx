@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import {
   CheckCircle,
@@ -38,6 +38,7 @@ export function ApprovalHistoryComponent({
   documentId,
 }: ApprovalHistoryComponentProps) {
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const {
     data: approvalHistory,
@@ -57,6 +58,21 @@ export function ApprovalHistoryComponent({
     );
   };
 
+  // Auto-expand all items when approval history loads to show full content
+  useEffect(() => {
+    if (approvalHistory && approvalHistory.length > 0) {
+      const allIds = approvalHistory.map(approval => approval.approvalId);
+      setExpandedItems(allIds);
+      
+      // Scroll to top of the approval history after expansion
+      setTimeout(() => {
+        if (scrollAreaRef.current) {
+          scrollAreaRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [approvalHistory]);
+
   const getStatusBadge = (status: string | undefined) => {
     if (!status) return null;
 
@@ -66,7 +82,7 @@ export function ApprovalHistoryComponent({
     if (status.toLowerCase().includes("rejected")) {
       return <Badge className="bg-red-600">Rejected</Badge>;
     }
-    if (status.toLowerCase().includes("pending")) {
+            if (status.toLowerCase() === 'open' || status.toLowerCase() === 'inprogress' || status.toLowerCase().includes("pending")) {
       return <Badge className="bg-amber-500">Pending</Badge>;
     }
 
@@ -133,15 +149,34 @@ export function ApprovalHistoryComponent({
   return (
     <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-xl text-white">Approval History</CardTitle>
-        <CardDescription>
-          {approvalHistory.length} approval request
-          {approvalHistory.length !== 1 ? "s" : ""}
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl text-white">Approval History</CardTitle>
+            <CardDescription>
+              {approvalHistory.length} approval request
+              {approvalHistory.length !== 1 ? "s" : ""} • Scroll to see all
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (expandedItems.length === approvalHistory.length) {
+                setExpandedItems([]);
+              } else {
+                setExpandedItems(approvalHistory.map(a => a.approvalId));
+              }
+            }}
+            className="bg-blue-950/40 border-blue-900/30 text-blue-300 hover:bg-blue-900/40 hover:text-blue-200"
+          >
+            {expandedItems.length === approvalHistory.length ? 'Collapse All' : 'Expand All'}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="max-h-[400px]">
-          <div className="space-y-4 p-4">
+        <div className="relative">
+          <ScrollArea ref={scrollAreaRef} className="max-h-[60vh] overflow-y-auto">
+            <div className="space-y-4 p-4">
             {approvalHistory.map((approval) => (
               <Collapsible
                 key={approval.approvalId}
@@ -241,8 +276,13 @@ export function ApprovalHistoryComponent({
                 </CollapsibleContent>
               </Collapsible>
             ))}
+            </div>
+          </ScrollArea>
+          {/* Scroll indicator */}
+          <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#1a2c6b]/80 to-transparent pointer-events-none flex items-end justify-center pb-1">
+            <div className="text-xs text-blue-300/60">↓ Scroll for more ↓</div>
           </div>
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );

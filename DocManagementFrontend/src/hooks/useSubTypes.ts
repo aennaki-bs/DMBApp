@@ -4,6 +4,26 @@ import { SubType } from '@/models/subtype';
 import subTypeService from '@/services/subTypeService';
 import { toast } from 'sonner';
 
+// Utility function to extract error messages from API responses
+const extractErrorMessage = (error: any, defaultMessage: string): string => {
+  if (error?.response?.data) {
+    if (typeof error.response.data === 'string') {
+      return error.response.data;
+    } else if (error.response.data.message) {
+      return error.response.data.message;
+    } else if (error.response.data.title) {
+      return error.response.data.title;
+    } else if (error.response.data.errors) {
+      // Handle validation errors
+      const validationErrors = Object.values(error.response.data.errors).flat();
+      return validationErrors.join(', ');
+    }
+  } else if (error?.message) {
+    return error.message;
+  }
+  return defaultMessage;
+};
+
 export const useSubTypes = (documentTypeId: number) => {
   const [subTypes, setSubTypes] = useState<SubType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,9 +61,14 @@ export const useSubTypes = (documentTypeId: number) => {
       toast.success('Subtype created successfully');
       fetchSubTypes();
       setCreateDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating subtype:', error);
-      toast.error('Failed to create subtype');
+      const errorMessage = extractErrorMessage(error, 'Failed to create subtype');
+      
+      toast.error(errorMessage, {
+        duration: 5000,
+        description: 'Please check your input and try again.'
+      });
     }
   };
 
@@ -53,9 +78,13 @@ export const useSubTypes = (documentTypeId: number) => {
       toast.success('Subtype updated successfully');
       fetchSubTypes();
       setEditDialogOpen(false);
-    } catch (error) {
+      return { success: true };
+    } catch (error: any) {
       console.error('Error updating subtype:', error);
-      toast.error('Failed to update subtype');
+      const errorMessage = extractErrorMessage(error, 'Failed to update subtype');
+      
+      // Return the error message instead of showing toast
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -65,9 +94,14 @@ export const useSubTypes = (documentTypeId: number) => {
       toast.success('Subtype deleted successfully');
       fetchSubTypes();
       setDeleteDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting subtype:', error);
-      toast.error('Failed to delete subtype');
+      const errorMessage = extractErrorMessage(error, 'Failed to delete subtype');
+      
+      toast.error(errorMessage, {
+        duration: 5000,
+        description: 'Please check if the subtype is being used by documents.'
+      });
     }
   };
 

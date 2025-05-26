@@ -22,6 +22,7 @@ interface DocumentFlowMindMapProps {
   documentId: number;
   onStatusComplete: () => void;
   onMoveToStatus: (statusId: number) => void;
+  hasPendingApprovals?: boolean;
 }
 
 export function DocumentFlowMindMap({
@@ -29,6 +30,7 @@ export function DocumentFlowMindMap({
   documentId,
   onStatusComplete,
   onMoveToStatus,
+  hasPendingApprovals = false,
 }: DocumentFlowMindMapProps) {
   const { completeStatus } = useWorkflowStepStatuses(documentId);
   const [nextStatuses, setNextStatuses] = useState<any[]>([]);
@@ -347,9 +349,14 @@ export function DocumentFlowMindMap({
                 <Card
                   className={cn(
                     "border border-blue-500/30 bg-gradient-to-r from-blue-900/20 to-indigo-900/10 overflow-hidden",
-                    "transform hover:-translate-y-1 hover:border-blue-400/50 transition-all duration-200 cursor-pointer"
+                    "transform hover:-translate-y-1 hover:border-blue-400/50 transition-all duration-200",
+                    hasPendingApprovals ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                   )}
-                  onClick={() => handleNextStatusClick(status.statusId)}
+                  onClick={() => {
+                    if (!hasPendingApprovals) {
+                      handleNextStatusClick(status.statusId);
+                    }
+                  }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -361,14 +368,19 @@ export function DocumentFlowMindMap({
                       </div>
                       <Button
                         size="sm"
+                        disabled={hasPendingApprovals}
                         className={cn(
                           "bg-blue-600 hover:bg-blue-700",
-                          status.requiresApproval && "bg-amber-600 hover:bg-amber-700"
+                          status.requiresApproval && "bg-amber-600 hover:bg-amber-700",
+                          hasPendingApprovals && "opacity-50 cursor-not-allowed"
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleNextStatusClick(status.statusId);
+                          if (!hasPendingApprovals) {
+                            handleNextStatusClick(status.statusId);
+                          }
                         }}
+                        title={hasPendingApprovals ? "Document cannot be moved while approval is pending" : undefined}
                       >
                         Move
                       </Button>

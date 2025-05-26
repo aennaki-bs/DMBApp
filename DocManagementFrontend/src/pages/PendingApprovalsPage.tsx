@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CircleCheck,
   CircleX,
@@ -39,6 +40,7 @@ import {
 export default function PendingApprovalsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApproval, setSelectedApproval] = useState<any>(null);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
@@ -271,9 +273,21 @@ export default function PendingApprovalsPage() {
                         className="border-blue-900/30 hover:bg-blue-900/20"
                       >
                         <TableCell className="font-medium text-blue-100">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-blue-400" />
-                            {approval.documentTitle || "Untitled Document"}
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => navigate(`/documents/${approval.documentId}`)}
+                              className="flex items-center gap-2 text-left hover:text-blue-300 transition-colors cursor-pointer group"
+                            >
+                              <FileText className="h-4 w-4 text-blue-400 group-hover:text-blue-300" />
+                              <div className="flex flex-col">
+                                <span className="font-mono text-blue-300 text-sm group-hover:text-blue-200">
+                                  {approval.documentKey || "No Key"}
+                                </span>
+                                <span className="text-blue-100 group-hover:text-blue-300">
+                                  {approval.documentTitle || "Untitled Document"}
+                                </span>
+                              </div>
+                            </button>
                           </div>
                         </TableCell>
                         <TableCell className="text-blue-200">
@@ -394,9 +408,21 @@ export default function PendingApprovalsPage() {
                         className="border-blue-900/30 hover:bg-blue-900/20"
                       >
                         <TableCell className="font-medium text-blue-100">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-blue-400" />
-                            {approval.documentTitle || "Untitled Document"}
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => navigate(`/documents/${approval.documentId}`)}
+                              className="flex items-center gap-2 text-left hover:text-blue-300 transition-colors cursor-pointer group"
+                            >
+                              <FileText className="h-4 w-4 text-blue-400 group-hover:text-blue-300" />
+                              <div className="flex flex-col">
+                                <span className="font-mono text-blue-300 text-sm group-hover:text-blue-200">
+                                  {approval.documentKey || "No Key"}
+                                </span>
+                                <span className="text-blue-100 group-hover:text-blue-300">
+                                  {approval.documentTitle || "Untitled Document"}
+                                </span>
+                              </div>
+                            </button>
                           </div>
                         </TableCell>
                         <TableCell className="text-blue-200">

@@ -113,7 +113,7 @@ export const DateContabilityStep = ({
                 </h4>
                 <p className="text-sm text-gray-300 mt-1">
                   This document will be included in financial reports and
-                  accounting records. The comptable date will be set to the
+                  accounting records. The accounting date will be set to the
                   document date ({format(new Date(docDate), "MMMM d, yyyy")}).
                 </p>
               </div>

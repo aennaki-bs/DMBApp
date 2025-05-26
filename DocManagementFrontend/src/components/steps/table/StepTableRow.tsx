@@ -103,8 +103,8 @@ export const StepTableRow = ({
               requiresApproval: config.requiresApproval,
               approvalType: config.approvalType,
               approverName:
-                config.approvalType === "Individual"
-                  ? config.approverName
+                config.approvalType === "Single"
+                  ? config.singleApproverName
                   : undefined,
               groupName:
                 config.approvalType === "Group" ? config.groupName : undefined,
@@ -270,7 +270,7 @@ export const StepTableRow = ({
 
     // Case 1: Individual approver with name
     if (
-      approvalInfo.approvalType === "Individual" &&
+      approvalInfo.approvalType === "Single" &&
       approvalInfo.approverName
     ) {
       return (
@@ -296,7 +296,7 @@ export const StepTableRow = ({
     }
 
     // Case 3: Individual approver type is set but name is missing
-    if (approvalInfo.approvalType === "Individual") {
+    if (approvalInfo.approvalType === "Single") {
       return (
         <div className="flex items-center">
           <UserCheck className="h-4 w-4 mr-2 text-blue-400" />

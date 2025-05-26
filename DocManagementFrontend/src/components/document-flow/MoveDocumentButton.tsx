@@ -32,13 +32,15 @@ interface MoveDocumentButtonProps {
   }) => void;
   disabled?: boolean;
   transitions?: any[];
+  disabledReason?: string;
 }
 
 export function MoveDocumentButton({ 
   documentId,
   onStatusChange,
   disabled = false,
-  transitions
+  transitions,
+  disabledReason
 }: MoveDocumentButtonProps) {
   const [open, setOpen] = useState(false);
   const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
@@ -221,7 +223,7 @@ export function MoveDocumentButton({
   // Add tooltip message based on disabled state
   const getDisabledMessage = () => {
     if (disabled) {
-      return "You must mark the current status as complete before moving the document";
+      return disabledReason || "You must mark the current status as complete before moving the document";
     }
     return null;
   };

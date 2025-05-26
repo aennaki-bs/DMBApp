@@ -25,13 +25,12 @@ export function UserProfileSection() {
             {user.profilePicture ? (
               <img
                 src={user.profilePicture}
-                alt={`${user.firstName} ${user.lastName}`}
+                alt={user.username || "User"}
                 className="h-full w-full object-cover"
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-white text-xl font-bold">
-                {user.firstName?.[0]}
-                {user.lastName?.[0]}
+                {user.username?.[0]?.toUpperCase() || "U"}
               </div>
             )}
           </div>
@@ -45,7 +44,7 @@ export function UserProfileSection() {
 
         <div className="text-center">
           <h3 className="text-blue-50 font-semibold text-sm">
-            {user.firstName} {user.lastName}
+            {user.username || "User"}
           </h3>
           <div className="mt-1 inline-flex px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/20">
             <p className="text-blue-300 text-xs font-medium">

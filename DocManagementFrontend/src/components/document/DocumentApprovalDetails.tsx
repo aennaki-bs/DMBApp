@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { 
   AlertCircle, Clock8, User, UserCheck, Users, Loader2, 
-  Clock, Shield, CheckCircle2, XCircle, Calendar
+  Clock, Shield, CheckCircle2, XCircle, Calendar, Check, X, ArrowRight
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { ApprovalHistoryItem, ApproverInfo, ApproversGroup } from '@/services/approvalService';
+import { ApprovalHistoryItem, ApproversGroup } from '@/services/approvalService';
+import { ApproverInfo, StepApprovalConfigDetailDto } from '@/models/approval';
 import approvalService from '@/services/approvalService';
+import { useQuery } from '@tanstack/react-query';
 
 interface DocumentApprovalDetailsProps {
   pendingApproval?: ApprovalHistoryItem;
@@ -21,6 +23,13 @@ const DocumentApprovalDetails = ({
   const [groupDetails, setGroupDetails] = useState<ApproversGroup | null>(null);
   const [isLoadingGroup, setIsLoadingGroup] = useState(false);
   const [groupMembers, setGroupMembers] = useState<ApproverInfo[]>([]);
+
+  // Fetch step configuration when we have a pending approval
+  const { data: stepConfig } = useQuery<StepApprovalConfigDetailDto>({
+    queryKey: ['stepConfig', pendingApproval?.stepId],
+    queryFn: () => approvalService.getStepApprovalConfig(pendingApproval!.stepId),
+    enabled: !!pendingApproval?.stepId,
+  });
 
   // Get approval group details if this is a group approval
   useEffect(() => {
@@ -51,6 +60,25 @@ const DocumentApprovalDetails = ({
     fetchGroupDetails();
   }, [pendingApproval]);
 
+  // Helper function to get approval status for a specific user
+  const getUserApprovalStatus = (username: string) => {
+    if (!approvalHistory || !pendingApproval) return null;
+
+    // Find the current approval in the history
+    const currentApproval = approvalHistory.find(
+      item => item.approvalId === pendingApproval.approvalId
+    );
+
+    if (!currentApproval || !currentApproval.responses) return null;
+
+    // Find this user's response
+    const userResponse = currentApproval.responses.find(
+      response => response.responderName === username
+    );
+
+    return userResponse;
+  };
+
   if (isLoadingApproval) {
     return (
       <div className="mb-6 p-3 bg-blue-900/20 border border-blue-800/30 rounded-md flex items-center gap-2">
@@ -73,13 +101,26 @@ const DocumentApprovalDetails = ({
         </div>
         
         <div className="pl-7 space-y-1 text-sm">
-          <p className="flex items-center gap-1">
-            <Clock8 className="h-4 w-4 text-blue-400/70" />
-            <span className="text-blue-200/80">Step:</span> 
-            <span className="text-blue-100">
-              {pendingApproval.stepTitle || "Unknown Step"}
-            </span>
-          </p>
+          {stepConfig && (
+            <>
+              <p className="flex items-center gap-1">
+                <Clock8 className="h-4 w-4 text-blue-400/70" />
+                <span className="text-blue-200/80">Step:</span> 
+                <span className="text-blue-100">{stepConfig.stepKey}</span>
+              </p>
+              <div className="flex items-center gap-2 text-sm pl-5">
+                <span className="text-blue-300">Moving from</span>
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-200">
+                  {stepConfig.currentStatusTitle}
+                </Badge>
+                <ArrowRight className="h-4 w-4 text-blue-300" />
+                <span className="text-blue-300">to</span>
+                <Badge variant="outline" className="bg-green-500/10 text-green-200">
+                  {stepConfig.nextStatusTitle}
+                </Badge>
+              </div>
+            </>
+          )}
           <p className="text-blue-200/80">
             This step does not require any approval action at this time.
           </p>
@@ -175,13 +216,26 @@ const DocumentApprovalDetails = ({
           </span>
         </p>
         
-        <p className="flex items-center gap-1">
-          <Clock8 className="h-4 w-4 text-amber-400/70" />
-          <span className="text-amber-200/80">Step:</span> 
-          <span className="text-amber-100">
-            {pendingApproval.stepTitle || "Unknown Step"}
-          </span>
-        </p>
+        {stepConfig && (
+          <>
+            <p className="flex items-center gap-1">
+              <Clock8 className="h-4 w-4 text-amber-400/70" />
+              <span className="text-amber-200/80">Step:</span> 
+              <span className="text-amber-100">{stepConfig.stepKey}</span>
+            </p>
+            <div className="flex items-center gap-2 text-sm pl-5">
+              <span className="text-amber-300">Moving from</span>
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-200">
+                {stepConfig.currentStatusTitle}
+              </Badge>
+              <ArrowRight className="h-4 w-4 text-amber-300" />
+              <span className="text-amber-300">to</span>
+              <Badge variant="outline" className="bg-green-500/10 text-green-200">
+                {stepConfig.nextStatusTitle}
+              </Badge>
+            </div>
+          </>
+        )}
         
         {pendingApproval.processedBy && (
           <p className="flex items-center gap-1">
@@ -204,7 +258,7 @@ const DocumentApprovalDetails = ({
             <p className="flex items-center gap-1">
               <Users className="h-4 w-4 text-amber-400/70" />
               <span className="text-amber-200/80">Approvers Group:</span> 
-              <span className="text-amber-100">{pendingApproval.assignedToGroup}</span>
+              <span className="text-amber-100">{pendingApproval.assignedToGroup?.replace(/\s*\(ID:\s*\d+\)/, '')}</span>
             </p>
             
             {isLoadingGroup ? (
@@ -224,22 +278,60 @@ const DocumentApprovalDetails = ({
                 
                 {groupMembers.length > 0 && (
                   <div className="mt-2">
-                    <p className="text-amber-200/80 mb-1">Group Members:</p>
-                    <ul className="space-y-1 pl-5 text-amber-100">
-                      {groupMembers.map((member, index) => (
-                        <li key={member.userId} className="flex items-center gap-1">
-                          {groupDetails.ruleType && groupDetails.ruleType.toLowerCase() === 'sequential' ? (
-                            <>
-                              <span className="text-amber-400/70">{index + 1}.</span>
-                              <User className="h-3 w-3 text-amber-400/70" />
-                            </>
-                          ) : (
-                            <User className="h-3 w-3 text-amber-400/70" />
-                          )}
-                          <span>{member.username || 'Unknown'}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="text-amber-200/80 mb-2">Group Members:</p>
+                    <div className="space-y-2 pl-5">
+                      {groupMembers.map((member, index) => {
+                        const userStatus = getUserApprovalStatus(member.username);
+                        const hasApproved = userStatus?.isApproved === true;
+                        const hasRejected = userStatus?.isApproved === false;
+                        const hasPending = !userStatus;
+                        
+                        return (
+                          <div key={member.userId} className="flex items-center gap-2">
+                            {groupDetails.ruleType && groupDetails.ruleType.toLowerCase() === 'sequential' && (
+                              <span className="text-amber-400/70 text-xs">{index + 1}.</span>
+                            )}
+                            
+                            {/* Status icon */}
+                            {hasApproved ? (
+                              <Check className="h-4 w-4 text-green-400" />
+                            ) : hasRejected ? (
+                              <X className="h-4 w-4 text-red-400" />
+                            ) : (
+                              <Clock className="h-4 w-4 text-amber-400/70" />
+                            )}
+                            
+                            {/* User name */}
+                            <span className={`${
+                              hasApproved ? 'text-green-200' : 
+                              hasRejected ? 'text-red-200' : 
+                              'text-amber-100'
+                            }`}>
+                              {member.username || 'Unknown'}
+                            </span>
+                            
+                            {/* Status badge */}
+                            <Badge 
+                              variant="outline" 
+                              className={`text-xs ${
+                                hasApproved ? 'border-green-500/30 text-green-200 bg-green-500/10' :
+                                hasRejected ? 'border-red-500/30 text-red-200 bg-red-500/10' :
+                                'border-amber-500/30 text-amber-200 bg-amber-500/10'
+                              }`}
+                            >
+                              {hasApproved ? 'Approved' : hasRejected ? 'Rejected' : 'Pending'}
+                            </Badge>
+                            
+                            {/* Response date */}
+                            {userStatus && (
+                              <span className="text-xs text-amber-200/50">
+                                {new Date(userStatus.responseDate).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -257,15 +349,7 @@ const DocumentApprovalDetails = ({
           </p>
         )}
         
-        <div className="mt-2 flex gap-2 items-center">
-          {getStatusBadge(pendingApproval.status)}
-          
-          {pendingApproval.comments && (
-            <span className="text-amber-100 italic text-xs">
-              "{pendingApproval.comments}"
-            </span>
-          )}
-        </div>
+
       </div>
       
       {/* If there's approval history, show recent actions */}

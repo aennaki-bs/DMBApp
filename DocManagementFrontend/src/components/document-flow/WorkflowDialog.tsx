@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import documentService from "@/services/documentService";
@@ -6,6 +6,7 @@ import circuitService from "@/services/circuitService";
 import { DocumentFlowMindMap } from "./DocumentFlowMindMap";
 import { MoveDocumentButton } from "./MoveDocumentButton";
 import { useDocumentWorkflow } from "@/hooks/useDocumentWorkflow";
+import { useDocumentApproval } from "@/hooks/document-workflow/useDocumentApproval";
 import { useAuth } from "@/context/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -25,6 +26,7 @@ import { LoadingState } from "@/components/circuits/document-flow/LoadingState";
 import { NoCircuitAssignedCard } from "@/components/circuits/document-flow/NoCircuitAssignedCard";
 import { ErrorMessage } from "./ErrorMessage";
 import { DocumentApprovalStatus } from "@/components/document-flow/DocumentApprovalStatus";
+import { ApprovalHistoryComponent } from "../document-workflow/ApprovalHistory";
 
 interface WorkflowDialogProps {
   open: boolean;
@@ -40,6 +42,9 @@ export function WorkflowDialog({
   const { user } = useAuth();
   const isSimpleUser = user?.role === "SimpleUser";
   const [approvalRefreshTrigger, setApprovalRefreshTrigger] = useState(0);
+  const [showApprovalHistory, setShowApprovalHistory] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const approvalHistoryRef = useRef<HTMLDivElement>(null);
 
   // Use the document flow hook to manage all workflow-related state and operations
   const {
@@ -49,6 +54,12 @@ export function WorkflowDialog({
     error: workflowError,
     refreshAllData,
   } = useDocumentWorkflow(documentId);
+
+  // Use the document approval hook to check for pending approvals
+  const {
+    hasPendingApprovals,
+    wasRejected,
+  } = useDocumentApproval(documentId);
 
   // Fetch the document information
   const {
@@ -68,10 +79,11 @@ export function WorkflowDialog({
       const targetStatus = workflowStatus.availableStatusTransitions?.find(
         s => s.statusId === statusId
       );
-      const statusTitle = targetStatus?.title || `status ID ${statusId}`;
+      const targetStatusTitle = targetStatus?.title || `Status ID ${statusId}`;
+      const currentStatusTitle = workflowStatus.currentStatusTitle || 'Unknown Status';
       
       circuitService
-        .moveToStatus(documentId, statusId, `Moving to ${statusTitle}`)
+        .moveToStatus(documentId, statusId, `Moving from ${currentStatusTitle} to ${targetStatusTitle}`)
         .then((result) => {
           if (result.requiresApproval) {
             toast.info("This step requires approval. An approval request has been initiated.");
@@ -93,6 +105,48 @@ export function WorkflowDialog({
   const handleApprovalUpdate = () => {
     refreshAllData();
   };
+
+  // Handle approval history toggle with scroll
+  const handleToggleApprovalHistory = () => {
+    setShowApprovalHistory(!showApprovalHistory);
+  };
+
+  // Scroll to approval history when it's shown
+  useEffect(() => {
+    if (showApprovalHistory && approvalHistoryRef.current && scrollContainerRef.current) {
+      // Small delay to ensure the component is rendered and expanded
+      setTimeout(() => {
+        const container = scrollContainerRef.current;
+        const historyElement = approvalHistoryRef.current;
+        
+        if (container && historyElement) {
+          // Scroll the approval history into view
+          historyElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+          
+          // Additional scroll to ensure full visibility
+          setTimeout(() => {
+            const containerRect = container.getBoundingClientRect();
+            const historyRect = historyElement.getBoundingClientRect();
+            
+            // Calculate if we need additional scrolling
+            const availableHeight = containerRect.height;
+            const historyHeight = historyRect.height;
+            
+            // If history is taller than available space, scroll to show more
+            if (historyHeight > availableHeight * 0.7) {
+              container.scrollBy({
+                top: historyHeight * 0.3,
+                behavior: 'smooth'
+              });
+            }
+          }, 300);
+        }
+      }, 200);
+    }
+  }, [showApprovalHistory]);
 
   // Handle status change from MoveDocumentButton
   const handleStatusChange = (result?: {
@@ -131,7 +185,7 @@ export function WorkflowDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl p-0 max-h-[90vh] overflow-hidden flex flex-col bg-[#0a1033]">
+      <DialogContent className={`max-w-5xl p-0 ${showApprovalHistory ? 'max-h-[95vh]' : 'max-h-[90vh]'} overflow-hidden flex flex-col bg-[#0a1033]`}>
         <DialogHeader className="px-4 py-2 border-b border-blue-900/30">
           <div className="flex items-center">
             <div>
@@ -145,7 +199,7 @@ export function WorkflowDialog({
           </div>
         </DialogHeader>
 
-        <div className="overflow-y-auto flex-1 p-4 space-y-4">
+        <div ref={scrollContainerRef} className="overflow-y-auto flex-1 p-4 space-y-4" style={{ scrollBehavior: 'smooth' }}>
           <ErrorMessage error={errorMessage} />
 
           {/* Loading state */}
@@ -226,7 +280,8 @@ export function WorkflowDialog({
                       <MoveDocumentButton
                         documentId={documentId}
                         onStatusChange={handleStatusChange}
-                        disabled={false}
+                        disabled={hasPendingApprovals}
+                        disabledReason={hasPendingApprovals ? "Document cannot be moved while approval is pending" : undefined}
                         transitions={
                           workflowStatus?.availableStatusTransitions || []
                         }
@@ -246,8 +301,23 @@ export function WorkflowDialog({
                   documentId={documentId}
                   onApprovalUpdate={handleApprovalUpdate}
                   refreshTrigger={approvalRefreshTrigger}
+                  showApprovalHistory={showApprovalHistory}
+                  onToggleApprovalHistory={handleToggleApprovalHistory}
                 />
               </motion.div>
+
+              {/* Approval History - Conditionally shown */}
+              {showApprovalHistory && (
+                <motion.div
+                  ref={approvalHistoryRef}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.3 }}
+                  className="border-t border-blue-900/30 pt-4"
+                >
+                  <ApprovalHistoryComponent documentId={documentId} />
+                </motion.div>
+              )}
 
               {/* Main content area - Mind Map */}
               <div className="w-full">
@@ -256,6 +326,7 @@ export function WorkflowDialog({
                   documentId={documentId}
                   onStatusComplete={refreshAllData}
                   onMoveToStatus={handleMoveToStatus}
+                  hasPendingApprovals={hasPendingApprovals}
                 />
               </div>
             </div>

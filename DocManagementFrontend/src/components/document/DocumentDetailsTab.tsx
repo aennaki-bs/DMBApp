@@ -115,10 +115,10 @@ const DocumentDetailsTab = ({
             </p>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-blue-300 mb-1">Comptable Date</h3>
+            <h3 className="text-sm font-medium text-blue-300 mb-1">Accounting Date</h3>
             <p className="font-medium flex items-center gap-1">
               <Calendar className="h-4 w-4 text-blue-400" />
-              22/05/2025
+              {new Date(document.comptableDate).toLocaleDateString()}
             </p>
           </div>
           <div>
