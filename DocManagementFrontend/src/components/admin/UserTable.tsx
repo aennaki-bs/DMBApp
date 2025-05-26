@@ -5,9 +5,10 @@ import { UserTableHeader } from "./table/UserTableHeader";
 import { UserTableContent } from "./table/UserTableContent";
 import { BulkActionsBar } from "./table/BulkActionsBar";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
-import { EditUserDialog } from "./EditUserDialog";
-import { EditUserEmailDialog } from "./EditUserEmailDialog";
+import { DirectEditUserModal } from "./DirectEditUserModal";
+import { DirectEditUserEmailModal } from "./DirectEditUserEmailModal";
 import { ViewUserLogsDialog } from "./ViewUserLogsDialog";
+import { TestDialog } from "./TestDialog";
 import {
   Select,
   SelectContent,
@@ -31,6 +32,11 @@ import { BulkRoleChangeDialog } from "./dialogs/BulkRoleChangeDialog";
 import { BulkDeleteDialog } from "./dialogs/BulkDeleteDialog";
 
 export function UserTable() {
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [directEditModalOpen, setDirectEditModalOpen] = useState(false);
+  const [directEditEmailModalOpen, setDirectEditEmailModalOpen] =
+    useState(false);
+
   const {
     selectedUsers,
     editingUser,
@@ -68,7 +74,6 @@ export function UserTable() {
     handleSelectAll,
     handleUserEdited,
     handleUserEmailEdited,
-    handleUserDeleted,
     handleMultipleDeleted,
   } = useUserManagement();
 
@@ -130,6 +135,31 @@ export function UserTable() {
     } catch (error) {
       toast.error("Failed to delete users");
       console.error(error);
+    }
+  };
+
+  // Handle user edit using the direct modal
+  const handleEditUser = async (userId: number, userData: any) => {
+    try {
+      await adminService.updateUser(userId, userData);
+      refetch();
+      return Promise.resolve();
+    } catch (error) {
+      console.error(`Failed to update user ${userId}:`, error);
+      return Promise.reject(error);
+    }
+  };
+
+  // Handle email edit using the direct modal
+  const handleEditUserEmail = async (userId: number, newEmail: string) => {
+    try {
+      await adminService.updateUserEmail(userId, newEmail);
+      refetch();
+      handleUserEmailEdited();
+      return Promise.resolve();
+    } catch (error) {
+      console.error(`Failed to update email for user ${userId}:`, error);
+      return Promise.reject(error);
     }
   };
 
@@ -317,6 +347,15 @@ export function UserTable() {
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* Test button */}
+        <Button
+          variant="outline"
+          onClick={() => setTestDialogOpen(true)}
+          className="bg-green-700 hover:bg-green-600 text-white border-none"
+        >
+          Test Dialog System
+        </Button>
       </div>
 
       <UserTableContent
@@ -326,8 +365,16 @@ export function UserTable() {
         onSelectUser={handleSelectUser}
         onToggleStatus={handleToggleUserStatus}
         onRoleChange={handleUserRoleChange}
-        onEdit={setEditingUser}
-        onEditEmail={setEditEmailUser}
+        onEdit={(user) => {
+          console.log("Editing user:", user);
+          setEditingUser(user);
+          setDirectEditModalOpen(true);
+        }}
+        onEditEmail={(user) => {
+          console.log("Editing email for user:", user);
+          setEditEmailUser(user);
+          setDirectEditEmailModalOpen(true);
+        }}
         onViewLogs={setViewingUserLogs}
         onDelete={setDeletingUser}
         sortBy={sortBy}
@@ -344,23 +391,27 @@ export function UserTable() {
         />
       )}
 
-      {editingUser && (
-        <EditUserDialog
-          user={editingUser}
-          open={!!editingUser}
-          onOpenChange={(open) => !open && setEditingUser(null)}
-          onSuccess={handleUserEdited}
-        />
-      )}
+      {/* Direct Edit Modal */}
+      <DirectEditUserModal
+        user={editingUser}
+        isOpen={directEditModalOpen}
+        onClose={() => {
+          setDirectEditModalOpen(false);
+          setEditingUser(null);
+        }}
+        onSave={handleEditUser}
+      />
 
-      {editEmailUser && (
-        <EditUserEmailDialog
-          user={editEmailUser}
-          open={!!editEmailUser}
-          onOpenChange={(open) => !open && setEditEmailUser(null)}
-          onSuccess={handleUserEmailEdited}
-        />
-      )}
+      {/* Direct Email Edit Modal */}
+      <DirectEditUserEmailModal
+        user={editEmailUser}
+        isOpen={directEditEmailModalOpen}
+        onClose={() => {
+          setDirectEditEmailModalOpen(false);
+          setEditEmailUser(null);
+        }}
+        onSave={handleEditUserEmail}
+      />
 
       {viewingUserLogs !== null && (
         <ViewUserLogsDialog
@@ -381,7 +432,8 @@ export function UserTable() {
               if (deletingUser) {
                 await adminService.deleteUser(deletingUser);
                 toast.success("User deleted successfully");
-                handleUserDeleted();
+                setDeletingUser(null);
+                refetch();
               }
             } catch (error) {
               toast.error("Failed to delete user");
@@ -410,6 +462,9 @@ export function UserTable() {
           onRoleChange={setSelectedRole}
         />
       )}
+
+      {/* Test Dialog */}
+      <TestDialog open={testDialogOpen} onOpenChange={setTestDialogOpen} />
     </div>
   );
 }

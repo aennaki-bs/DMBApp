@@ -15,6 +15,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogPortal,
+  DialogOverlay,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -35,8 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { motion } from "framer-motion";
-import { UserCog, Save, Key, User, Shield } from "lucide-react";
+import { UserCog, Save, Key, User, Shield, Mail } from "lucide-react";
 
 const formSchema = z.object({
   username: z
@@ -61,8 +62,6 @@ interface EditUserDialogProps {
   onSuccess: () => void;
 }
 
-const MotionDialogContent = motion(DialogContent);
-
 export function EditUserDialog({
   user,
   open,
@@ -70,6 +69,9 @@ export function EditUserDialog({
   onSuccess,
 }: EditUserDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  console.log("EditUserDialog rendering with open state:", open);
+  console.log("User data:", user);
 
   // Helper function to get the role name as a string
   const getRoleString = (
@@ -161,260 +163,295 @@ export function EditUserDialog({
     updateUserMutation.mutate(updateData);
   };
 
+  // Determine if user is a SimpleUser (dependent) or FullUser/Admin (company user)
+  const isSimpleUser = getRoleString(user.role) === "SimpleUser";
+
+  if (!open) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <MotionDialogContent
-        className="sm:max-w-[550px] p-0 overflow-hidden bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.3 }}
-      >
-        <DialogHeader className="p-6 border-b border-blue-900/30">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="p-2 rounded-full bg-blue-500/10 text-blue-400">
-              <UserCog className="h-5 w-5" />
-            </div>
-            <DialogTitle className="text-xl text-blue-100">
-              Edit User
-            </DialogTitle>
-          </div>
-          <DialogDescription className="text-blue-300">
-            Update user information for {user.firstName} {user.lastName}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <div className="space-y-5">
-                <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
-                  <h3 className="text-blue-100 font-medium mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4 text-blue-400" />
-                    Personal Information
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-blue-200">
-                            First Name
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-300" />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-blue-200">
-                            Last Name
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
-                            />
-                          </FormControl>
-                          <FormMessage className="text-red-300" />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
-                  <h3 className="text-blue-100 font-medium mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4 text-blue-400" />
-                    Account Information
-                  </h3>
-                  <FormField
-                    control={form.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-200">
-                          Username
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-300" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
-                  <h3 className="text-blue-100 font-medium mb-3 flex items-center gap-2">
-                    <Key className="h-4 w-4 text-blue-400" />
-                    Security
-                  </h3>
-                  <FormField
-                    control={form.control}
-                    name="passwordHash"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-200">
-                          New Password (leave blank to keep current)
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            {...field}
-                            className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-300" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
-                  <h3 className="text-blue-100 font-medium mb-3 flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-blue-400" />
-                    Role & Permissions
-                  </h3>
-                  <FormField
-                    control={form.control}
-                    name="roleName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-200">Role</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white focus:border-blue-500/50">
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-blue-100 rounded-lg shadow-lg">
-                            <SelectItem
-                              value="Admin"
-                              className="text-red-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
-                            >
-                              Admin
-                            </SelectItem>
-                            <SelectItem
-                              value="FullUser"
-                              className="text-emerald-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
-                            >
-                              Full User
-                            </SelectItem>
-                            <SelectItem
-                              value="SimpleUser"
-                              className="text-blue-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
-                            >
-                              Simple User
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="text-red-300" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <FormField
-                      control={form.control}
-                      name="isActive"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-blue-900/30 p-3 bg-[#111633]">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-blue-200">
-                              Active Status
-                            </FormLabel>
-                            <FormDescription className="text-xs text-blue-400">
-                              User can access the system
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              className={
-                                field.value
-                                  ? "bg-emerald-600 data-[state=checked]:bg-emerald-600"
-                                  : "bg-red-600 data-[state=unchecked]:bg-red-600"
-                              }
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="isEmailConfirmed"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-blue-900/30 p-3 bg-[#111633]">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-blue-200">
-                              Email Confirmed
-                            </FormLabel>
-                            <FormDescription className="text-xs text-blue-400">
-                              Email verification status
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              className={
-                                field.value
-                                  ? "bg-emerald-600 data-[state=checked]:bg-emerald-600"
-                                  : "bg-red-600 data-[state=unchecked]:bg-red-600"
-                              }
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
+          <DialogHeader className="p-6 border-b border-blue-900/30">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 rounded-full bg-blue-500/10 text-blue-400">
+                <UserCog className="h-5 w-5" />
               </div>
+              <DialogTitle className="text-xl text-blue-100">
+                Edit User
+              </DialogTitle>
+            </div>
+            <DialogDescription className="text-blue-300">
+              Update user information for {user.firstName} {user.lastName}
+            </DialogDescription>
+          </DialogHeader>
 
-              <DialogFooter className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting}
-                  className="bg-transparent border-blue-500/30 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200 hover:border-blue-400/40 transition-all duration-200"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
-                >
-                  <Save className="h-4 w-4" />
-                  {isSubmitting ? "Saving..." : "Save Changes"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </div>
-      </MotionDialogContent>
+          <div className="p-6">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-5"
+              >
+                <div className="space-y-5">
+                  <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
+                    <h3 className="text-blue-100 font-medium mb-3 flex items-center gap-2">
+                      <User className="h-4 w-4 text-blue-400" />
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-blue-200">
+                              First Name
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-300" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-blue-200">
+                              Last Name
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-300" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
+                    <h3 className="text-blue-100 font-medium mb-3 flex items-center gap-2">
+                      <User className="h-4 w-4 text-blue-400" />
+                      Account Information
+                    </h3>
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-blue-200">
+                              Username
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-300" />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Display email field as read-only */}
+                      <div className="space-y-2">
+                        <FormLabel className="text-blue-200">
+                          Email Address
+                        </FormLabel>
+                        <div className="flex items-center">
+                          <div className="flex-1 bg-[#111633] border border-blue-900/50 rounded-md p-2.5 text-gray-300">
+                            {user.email}
+                          </div>
+                          <div
+                            className="ml-2 text-blue-400"
+                            title="Email cannot be edited here"
+                          >
+                            <Mail className="h-5 w-5" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-blue-400">
+                          Email cannot be modified from this form
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
+                    <h3 className="text-blue-100 font-medium mb-3 flex items-center gap-2">
+                      <Key className="h-4 w-4 text-blue-400" />
+                      Security
+                    </h3>
+                    <FormField
+                      control={form.control}
+                      name="passwordHash"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-blue-200">
+                            New Password (leave blank to keep current)
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="••••••••"
+                              {...field}
+                              className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-red-300" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
+                    <h3 className="text-blue-100 font-medium mb-3 flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-blue-400" />
+                      Role & Permissions
+                    </h3>
+                    <FormField
+                      control={form.control}
+                      name="roleName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-blue-200">Role</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white focus:border-blue-500/50">
+                                <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-blue-100 rounded-lg shadow-lg">
+                              <SelectItem
+                                value="Admin"
+                                className="text-red-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
+                              >
+                                Admin (Company User)
+                              </SelectItem>
+                              <SelectItem
+                                value="FullUser"
+                                className="text-emerald-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
+                              >
+                                Full User (Company User)
+                              </SelectItem>
+                              <SelectItem
+                                value="SimpleUser"
+                                className="text-blue-300 hover:bg-blue-900/30 focus:bg-blue-900/30 rounded-md"
+                              >
+                                Simple User (Dependent User)
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription className="text-xs text-blue-400 mt-1">
+                            {isSimpleUser
+                              ? "Dependent users have limited permissions"
+                              : "Company users have extended system access"}
+                          </FormDescription>
+                          <FormMessage className="text-red-300" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <FormField
+                        control={form.control}
+                        name="isActive"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-blue-900/30 p-3 bg-[#111633]">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-blue-200">
+                                Active Status
+                              </FormLabel>
+                              <FormDescription className="text-xs text-blue-400">
+                                User can access the system
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                className={
+                                  field.value
+                                    ? "bg-emerald-600 data-[state=checked]:bg-emerald-600"
+                                    : "bg-red-600 data-[state=unchecked]:bg-red-600"
+                                }
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="isEmailConfirmed"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-blue-900/30 p-3 bg-[#111633]">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-blue-200">
+                                Email Confirmed
+                              </FormLabel>
+                              <FormDescription className="text-xs text-blue-400">
+                                Email verification status
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                className={
+                                  field.value
+                                    ? "bg-emerald-600 data-[state=checked]:bg-emerald-600"
+                                    : "bg-red-600 data-[state=unchecked]:bg-red-600"
+                                }
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    disabled={isSubmitting}
+                    className="bg-transparent border-blue-500/30 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200 hover:border-blue-400/40 transition-all duration-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    {isSubmitting ? "Saving..." : "Save Changes"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }

@@ -1,44 +1,22 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  PlusCircle,
-  Trash2,
-  Search,
   UsersRound,
   ShieldAlert,
-  Users,
-  UserPlus,
-  CheckCircle2,
-  Filter,
-  LayoutGrid,
-  LayoutList,
-  UserRound,
-  Settings,
   Info,
-  List,
   PencilIcon,
+  Trash2,
+  UserPlus,
   AlertTriangle,
+  Users,
+  Search,
+  Filter,
+  X,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { ApprovalGroup } from "@/models/approval";
 import approvalService from "@/services/approvalService";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,28 +27,56 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DataTable, Column } from "@/components/ui/data-table";
+import {
+  UnifiedTable,
+  Column,
+  BulkAction,
+} from "@/components/admin/table/UnifiedTable";
 import ApprovalGroupCreateDialog from "@/components/approval/ApprovalGroupCreateDialog";
 import ApprovalGroupEditDialog from "@/components/approval/ApprovalGroupEditDialog";
+import ApprovalGroupViewDialog from "@/components/approval/ApprovalGroupViewDialog";
+import { ApprovalActionsDropdown } from "@/components/approval/ApprovalActionsDropdown";
+import { ApprovalBulkActionsBar } from "@/components/approval/ApprovalBulkActionsBar";
+import { Input } from "@/components/ui/input";
+import { AnimatePresence } from "framer-motion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function ApprovalGroupsManagement() {
   const [approvalGroups, setApprovalGroups] = useState<ApprovalGroup[]>([]);
   const [filteredGroups, setFilteredGroups] = useState<ApprovalGroup[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchField, setSearchField] = useState("all");
+  const [ruleTypeFilter, setRuleTypeFilter] = useState("any");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<ApprovalGroup | null>(null);
-  const [groupToDelete, setGroupToDelete] = useState<ApprovalGroup | null>(null);
-  const [associatedGroups, setAssociatedGroups] = useState<Record<number, boolean>>({});
+  const [selectedGroup, setSelectedGroup] = useState<ApprovalGroup | null>(
+    null
+  );
+  const [groupToDelete, setGroupToDelete] = useState<ApprovalGroup | null>(
+    null
+  );
+  const [associatedGroups, setAssociatedGroups] = useState<
+    Record<number, boolean>
+  >({});
   const [checkingAssociation, setCheckingAssociation] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
-  const [selectAll, setSelectAll] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "card">("list");
 
   // Fetch approval groups on component mount
@@ -85,31 +91,44 @@ export default function ApprovalGroupsManagement() {
     }
   }, [approvalGroups]);
 
-  // Handle selecting all groups when selectAll changes
+  // Filter groups based on search and filter criteria
   useEffect(() => {
-    if (selectAll) {
-      setSelectedGroups(filteredGroups.map((group) => group.id));
-    } else {
-      setSelectedGroups([]);
-    }
-  }, [selectAll, filteredGroups]);
+    let filtered = [...approvalGroups];
 
-  // Filter groups when search query or groups change
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredGroups(approvalGroups);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = approvalGroups.filter(
-        (group) =>
-          group.name.toLowerCase().includes(query) ||
-          group.comment?.toLowerCase().includes(query) ||
-          group.stepTitle?.toLowerCase().includes(query) ||
-          group.ruleType.toLowerCase().includes(query)
-      );
-      setFilteredGroups(filtered);
+    // Apply rule type filter
+    if (ruleTypeFilter !== "any") {
+      filtered = filtered.filter((group) => group.ruleType === ruleTypeFilter);
     }
-  }, [searchQuery, approvalGroups]);
+
+    // Apply search query
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+
+      if (searchField === "all") {
+        filtered = filtered.filter(
+          (group) =>
+            group.name.toLowerCase().includes(query) ||
+            group.comment?.toLowerCase().includes(query) ||
+            group.stepTitle?.toLowerCase().includes(query) ||
+            group.ruleType.toLowerCase().includes(query)
+        );
+      } else if (searchField === "name") {
+        filtered = filtered.filter((group) =>
+          group.name.toLowerCase().includes(query)
+        );
+      } else if (searchField === "comment") {
+        filtered = filtered.filter((group) =>
+          group.comment?.toLowerCase().includes(query)
+        );
+      } else if (searchField === "ruleType") {
+        filtered = filtered.filter((group) =>
+          group.ruleType.toLowerCase().includes(query)
+        );
+      }
+    }
+
+    setFilteredGroups(filtered);
+  }, [searchQuery, searchField, ruleTypeFilter, approvalGroups]);
 
   // Define table columns
   const columns: Column<ApprovalGroup>[] = [
@@ -117,30 +136,31 @@ export default function ApprovalGroupsManagement() {
       id: "name",
       header: "Group Name",
       accessorKey: "name",
-      cell: (row) => (
+      cell: (item) => (
         <div className="font-medium text-blue-200 flex items-center">
           <UsersRound className="h-4 w-4 mr-2 text-blue-400" />
-          {row.name}
+          {item.name}
         </div>
       ),
+      enableSorting: true,
     },
     {
       id: "ruleType",
       header: "Approval Rule",
       accessorKey: "ruleType",
-      cell: (row) => (
+      cell: (item) => (
         <Badge
           className={`${
-            row.ruleType === "All"
+            item.ruleType === "All"
               ? "bg-emerald-600/60 text-emerald-100"
-              : row.ruleType === "Any"
+              : item.ruleType === "Any"
               ? "bg-amber-600/60 text-amber-100"
               : "bg-blue-600/60 text-blue-100"
           }`}
         >
-          {row.ruleType === "All"
+          {item.ruleType === "All"
             ? "All Must Approve"
-            : row.ruleType === "Any"
+            : item.ruleType === "Any"
             ? "Any Can Approve"
             : "Sequential"}
         </Badge>
@@ -150,10 +170,10 @@ export default function ApprovalGroupsManagement() {
       id: "comment",
       header: "Comment",
       accessorKey: "comment",
-      cell: (row) => (
+      cell: (item) => (
         <>
-          {row.comment ? (
-            <span className="text-blue-200">{row.comment}</span>
+          {item.comment ? (
+            <span className="text-blue-200">{item.comment}</span>
           ) : (
             <span className="text-blue-300/50 text-sm italic">No comment</span>
           )}
@@ -164,65 +184,57 @@ export default function ApprovalGroupsManagement() {
       id: "approversCount",
       header: "Approvers",
       accessorKey: "approvers",
-      cell: (row) => (
+      cell: (item) => (
         <Badge className="bg-blue-800/60 text-blue-100">
-          {row.approvers?.length || 0}{" "}
-          {row.approvers?.length === 1 ? "member" : "members"}
+          {item.approvers?.length || 0}{" "}
+          {item.approvers?.length === 1 ? "member" : "members"}
         </Badge>
       ),
     },
     {
       id: "actions",
       header: "Actions",
-      cell: (row) => (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleViewDetails(row)}
-            className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-          >
-            <Info className="h-4 w-4 mr-1" />
-            View
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEditGroup(row)}
-            disabled={associatedGroups[row.id] || checkingAssociation}
-            className={`${
-              associatedGroups[row.id] || checkingAssociation
-                ? "text-blue-500/40 cursor-not-allowed"
-                : "text-blue-400 hover:text-blue-300 hover:bg-blue-900/40 border-blue-800"
-            }`}
-            title={associatedGroups[row.id] ? "Cannot edit a group that is associated with steps" : ""}
-          >
-            <PencilIcon className="h-4 w-4 mr-1" />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => openDeleteDialog(row)}
-            disabled={associatedGroups[row.id] || checkingAssociation}
-            className={`${
-              associatedGroups[row.id] || checkingAssociation
-                ? "text-red-500/40 cursor-not-allowed"
-                : "text-red-400 hover:text-red-300 hover:bg-red-900/40 border-red-900/50"
-            }`}
-            title={associatedGroups[row.id] ? "Cannot delete a group that is associated with steps" : ""}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Delete
-          </Button>
-        </div>
+      accessorKey: "id",
+      isAction: true,
+      cell: (item) => (
+        <ApprovalActionsDropdown
+          item={item}
+          onView={() => handleViewDetails(item)}
+          onEdit={() => handleEditGroup(item)}
+          onDelete={() => openDeleteDialog(item)}
+          isEditDisabled={associatedGroups[item.id] || checkingAssociation}
+          isDeleteDisabled={associatedGroups[item.id] || checkingAssociation}
+          disabledTooltip="Cannot modify a group that is associated with workflow steps"
+        />
       ),
     },
   ];
 
   // Define bulk actions
-  const bulkActions = [
-    { label: "Delete Selected", value: "delete", color: "red" },
+  const bulkActions: BulkAction[] = [
+    {
+      id: "delete",
+      label: "Delete Selected",
+      icon: <Trash2 className="h-4 w-4 mr-1" />,
+      variant: "destructive",
+      onClick: () => openBulkDeleteDialog(),
+    },
+  ];
+
+  // Search fields
+  const searchFields = [
+    { id: "all", label: "All Fields" },
+    { id: "name", label: "Group Name" },
+    { id: "comment", label: "Comment" },
+    { id: "ruleType", label: "Rule Type" },
+  ];
+
+  // Filter options
+  const ruleTypeOptions = [
+    { id: "any", label: "Any Rule Type", value: "any" },
+    { id: "All", label: "All Must Approve", value: "All" },
+    { id: "Any", label: "Any Can Approve", value: "Any" },
+    { id: "Sequential", label: "Sequential", value: "Sequential" },
   ];
 
   const fetchApprovalGroups = async () => {
@@ -243,19 +255,24 @@ export default function ApprovalGroupsManagement() {
     try {
       setCheckingAssociation(true);
       const associationMap: Record<number, boolean> = {};
-      
+
       // Check association for each group in parallel
       const associationPromises = approvalGroups.map(async (group) => {
         try {
-          const association = await approvalService.checkGroupAssociation(group.id);
+          const association = await approvalService.checkGroupAssociation(
+            group.id
+          );
           associationMap[group.id] = association.isAssociated;
-        } catch (err) {
-          console.error(`Failed to check association for group ${group.id}:`, err);
-          // Default to assuming it is associated (safer)
+        } catch (error) {
+          console.error(
+            `Failed to check association for group ${group.id}:`,
+            error
+          );
+          // Default to true (cannot delete) if check fails
           associationMap[group.id] = true;
         }
       });
-      
+
       await Promise.all(associationPromises);
       setAssociatedGroups(associationMap);
     } catch (error) {
@@ -270,12 +287,17 @@ export default function ApprovalGroupsManagement() {
 
     try {
       await approvalService.deleteApprovalGroup(groupToDelete.id);
-      setApprovalGroups((prev) =>
-        prev.filter((group) => group.id !== groupToDelete.id)
+
+      setApprovalGroups((prevGroups) =>
+        prevGroups.filter((group) => group.id !== groupToDelete.id)
       );
+
       toast.success(
         `Approval group "${groupToDelete.name}" deleted successfully`
       );
+
+      // Remove the deleted group from selected groups if it was selected
+      setSelectedGroups((prev) => prev.filter((id) => id !== groupToDelete.id));
     } catch (error) {
       console.error(
         `Failed to delete approval group with ID ${groupToDelete.id}:`,
@@ -289,54 +311,59 @@ export default function ApprovalGroupsManagement() {
   };
 
   const openDeleteDialog = (group: ApprovalGroup) => {
-    // Don't open delete dialog if group is associated with steps
     if (associatedGroups[group.id]) {
-      toast.error(`Cannot delete group "${group.name}" because it is associated with workflow steps`);
+      toast.error(
+        "Cannot delete a group that is associated with workflow steps"
+      );
       return;
     }
-    
     setGroupToDelete(group);
     setDeleteDialogOpen(true);
   };
 
   const handleCreateGroupSuccess = () => {
-    setCreateDialogOpen(false);
     fetchApprovalGroups();
-    toast.success("Approval group created successfully");
-  };
-
-  const toggleGroupSelection = (id: number) => {
-    setSelectedGroups((prev) =>
-      prev.includes(id)
-        ? prev.filter((groupId) => groupId !== id)
-        : [...prev, id]
-    );
-  };
-
-  const toggleSelectAll = () => {
-    setSelectAll(!selectAll);
+    setCreateDialogOpen(false);
   };
 
   const handleBulkDelete = async () => {
     if (selectedGroups.length === 0) return;
 
     try {
-      // Delete each selected group
-      const deletePromises = selectedGroups.map((id) =>
+      // Filter out groups that are associated with workflow steps
+      const eligibleGroups = selectedGroups.filter(
+        (id) => !associatedGroups[id]
+      );
+
+      if (eligibleGroups.length === 0) {
+        toast.error(
+          "None of the selected groups can be deleted as they are all associated with workflow steps"
+        );
+        setBulkDeleteDialogOpen(false);
+        return;
+      }
+
+      if (eligibleGroups.length !== selectedGroups.length) {
+        toast.warning(
+          "Some groups cannot be deleted as they are associated with workflow steps"
+        );
+      }
+
+      // Delete groups in parallel
+      const deletePromises = eligibleGroups.map((id) =>
         approvalService.deleteApprovalGroup(id)
       );
 
       await Promise.all(deletePromises);
 
-      setApprovalGroups((prev) =>
-        prev.filter((group) => !selectedGroups.includes(group.id))
+      setApprovalGroups((prevGroups) =>
+        prevGroups.filter((group) => !eligibleGroups.includes(group.id))
       );
 
       toast.success(
-        `${selectedGroups.length} approval groups deleted successfully`
+        `${eligibleGroups.length} approval groups deleted successfully`
       );
       setSelectedGroups([]);
-      setSelectAll(false);
     } catch (error) {
       console.error("Failed to delete approval groups:", error);
       toast.error("Failed to delete selected approval groups");
@@ -346,28 +373,21 @@ export default function ApprovalGroupsManagement() {
   };
 
   const openBulkDeleteDialog = () => {
-    if (selectedGroups.length === 0) {
-      toast.error("Please select at least one approval group to delete");
+    // Count how many selected groups are eligible for deletion
+    const eligibleGroups = selectedGroups.filter((id) => !associatedGroups[id]);
+
+    if (eligibleGroups.length === 0) {
+      toast.error(
+        "None of the selected groups can be deleted as they are all associated with workflow steps"
+      );
       return;
     }
+
     setBulkDeleteDialogOpen(true);
   };
 
   const handleViewModeChange = (mode: "list" | "card") => {
     setViewMode(mode);
-  };
-
-  const handleBulkActions = (
-    action: string,
-    selectedItems: ApprovalGroup[]
-  ) => {
-    if (action === "delete") {
-      openBulkDeleteDialog();
-    }
-  };
-
-  const handleRowSelect = (ids: (string | number)[]) => {
-    setSelectedGroups(ids as number[]);
   };
 
   const handleViewDetails = (group: ApprovalGroup) => {
@@ -376,31 +396,67 @@ export default function ApprovalGroupsManagement() {
   };
 
   const handleEditGroup = (group: ApprovalGroup) => {
-    // Don't allow editing if group is associated with steps
     if (associatedGroups[group.id]) {
-      toast.error(`Cannot edit group "${group.name}" because it is associated with workflow steps`);
+      toast.error("Cannot edit a group that is associated with workflow steps");
       return;
     }
-    
-    // Set the selected group and show an edit dialog
     setSelectedGroup(group);
     setEditDialogOpen(true);
   };
 
   const handleEditGroupSuccess = () => {
-    setEditDialogOpen(false);
     fetchApprovalGroups();
-    toast.success("Approval group updated successfully");
+    setEditDialogOpen(false);
+    setSelectedGroup(null);
   };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setRuleTypeFilter("any");
+    setFilterOpen(false);
+  };
+
+  const emptyState = (
+    <div className="text-center py-6">
+      <Users className="h-12 w-12 text-blue-500/50 mx-auto mb-3" />
+      <h3 className="text-xl font-medium text-blue-300 mb-2">
+        No Approval Groups Found
+      </h3>
+      <p className="text-blue-400 mb-4">
+        Get started by adding your first approval group
+      </p>
+      <Button
+        onClick={() => setCreateDialogOpen(true)}
+        className="bg-blue-600 hover:bg-blue-700"
+      >
+        <UserPlus className="h-4 w-4 mr-2" />
+        Add Approval Group
+      </Button>
+    </div>
+  );
+
+  // Create a "New Approval Group" button for the header action
+  const headerAction = (
+    <Button
+      onClick={() => setCreateDialogOpen(true)}
+      className="bg-blue-600 hover:bg-blue-700"
+      size="sm"
+    >
+      <UserPlus className="h-4 w-4 mr-1" />
+      New Group
+    </Button>
+  );
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header Section */}
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 mb-6 transition-all">
+      {/* Header Section - styled consistently with UserManagement */}
+      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 mb-6 shadow-md transition-all">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-white flex items-center">
-              <Users className="mr-3 h-6 w-6 text-blue-400" /> Approval Groups
+              <UsersRound className="mr-3 h-6 w-6 text-blue-400" /> Approval
+              Groups
             </h1>
             <p className="text-sm md:text-base text-gray-400">
               Manage approval groups for document workflows
@@ -410,179 +466,202 @@ export default function ApprovalGroupsManagement() {
             onClick={() => setCreateDialogOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
           >
-            <UserPlus className="h-4 w-4" />
+            <UserPlus className="h-4 w-4 mr-1" />
             New Approval Group
           </Button>
         </div>
       </div>
 
-      {/* Search and Tools Section */}
-      <div className="bg-[#1e2a4a] border border-blue-900/40 rounded-xl p-4 shadow-lg">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400" />
-            <Input
-              placeholder="Search approval groups..."
-              className="pl-10 bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div className="flex gap-2 w-full sm:w-auto">
-            {/* View Toggle Buttons */}
-            <div className="bg-[#101a3f] rounded-md border border-blue-900/40 flex">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleViewModeChange("list")}
-                className={`rounded-r-none ${
-                  viewMode === "list"
-                    ? "bg-blue-800/50 text-white"
-                    : "text-blue-300/70"
-                }`}
-              >
-                <LayoutList className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">List</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleViewModeChange("card")}
-                className={`rounded-l-none ${
-                  viewMode === "card"
-                    ? "bg-blue-800/50 text-white"
-                    : "text-blue-300/70"
-                }`}
-              >
-                <LayoutGrid className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Cards</span>
-              </Button>
+      {/* Modern Search UI similar to UserManagement */}
+      <div className="bg-[#1e2a4a] border border-blue-900/40 rounded-xl p-4 shadow-lg mb-6">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            <Select value={searchField} onValueChange={setSearchField}>
+              <SelectTrigger className="w-[140px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+                <SelectValue>
+                  {searchFields.find((field) => field.id === searchField)
+                    ?.label || "All Fields"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                {searchFields.map((field) => (
+                  <SelectItem
+                    key={field.id}
+                    value={field.id}
+                    className="hover:bg-blue-800/40"
+                  >
+                    {field.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative flex-1">
+              <Input
+                placeholder="Search approval groups..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+              {searchQuery && (
+                <button
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
-
-            {/* Bulk Actions */}
-            {selectedGroups.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={openBulkDeleteDialog}
-                className="bg-red-700/70 hover:bg-red-700 text-white"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Selected ({selectedGroups.length})
-              </Button>
-            )}
           </div>
+
+          {/* Filter popover */}
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2 ml-2"
+              >
+                <Filter className="h-4 w-4 text-blue-400" />
+                Filter
+                {ruleTypeFilter !== "any" && (
+                  <Badge className="ml-1 bg-blue-600 text-white px-1.5 py-0.5 text-xs">
+                    1
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
+              <div className="mb-2 text-blue-200 font-semibold flex justify-between items-center">
+                <span>Filters</span>
+                {ruleTypeFilter !== "any" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="h-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
+                  >
+                    Clear All
+                  </Button>
+                )}
+              </div>
+
+              {/* Rule Type Filter */}
+              <div className="flex flex-col gap-1 mt-3">
+                <span className="text-sm text-blue-200">Rule Type</span>
+                <Select
+                  value={ruleTypeFilter}
+                  onValueChange={setRuleTypeFilter}
+                >
+                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+                    <SelectValue>
+                      {ruleTypeOptions.find(
+                        (opt) => opt.value === ruleTypeFilter
+                      )?.label || "Any Rule Type"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                    {ruleTypeOptions.map((opt) => (
+                      <SelectItem
+                        key={opt.id}
+                        value={opt.value}
+                        className="hover:bg-blue-800/40"
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
-        {/* Selection Info */}
-        {selectedGroups.length > 0 && (
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-blue-800/50">
-            <div className="flex items-center gap-2 text-blue-300">
-              <CheckCircle2 className="h-4 w-4 text-blue-500" />
-              <span>
-                {selectedGroups.length} group
-                {selectedGroups.length !== 1 ? "s" : ""} selected
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedGroups([])}
-              className="text-blue-400 hover:text-blue-300"
-            >
-              Clear selection
-            </Button>
+        {/* Display active filters */}
+        {ruleTypeFilter !== "any" && (
+          <div className="flex gap-2 mt-3">
+            <Badge className="bg-blue-800/60 text-blue-200 px-2.5 py-1 flex items-center gap-1">
+              Rule Type:{" "}
+              {
+                ruleTypeOptions.find((opt) => opt.value === ruleTypeFilter)
+                  ?.label
+              }
+              <button
+                className="ml-1.5 hover:text-white"
+                onClick={() => setRuleTypeFilter("any")}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
           </div>
         )}
       </div>
 
-      {/* Data Table */}
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-0 transition-all overflow-hidden">
-        <DataTable
+      {/* Unified Table Component - with improved spacing and hiding search */}
+      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg overflow-hidden shadow-lg">
+        <UnifiedTable
           data={filteredGroups}
           columns={columns}
           keyField="id"
+          title="Approval Groups"
+          subtitle="Manage groups for document approval workflows"
           isLoading={isLoading}
-          searchPlaceholder="Search approval groups..."
-          searchQuery={searchQuery}
-          onSearchChange={(query) => setSearchQuery(query)}
-          onRowSelect={handleRowSelect}
-          onBulkAction={handleBulkActions}
           bulkActions={bulkActions}
-          emptyStateMessage="No approval groups created yet"
-          emptyStateIcon={
-            <UsersRound className="h-10 w-10 mb-3 text-blue-400/50" />
-          }
-          emptySearchMessage="No approval groups found matching"
-          hideSearchBar={true}
-          showRowActions={false}
+          showViewToggle={true}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          selectedItems={selectedGroups}
+          onSelectItems={setSelectedGroups}
+          emptyState={emptyState}
+          headerAction={headerAction}
+          // Don't pass search props to hide the built-in search in UnifiedTable
         />
       </div>
 
-      {/* Selection summary area displayed at the bottom */}
-      {selectedGroups.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-[#0a1033]/90 backdrop-blur-sm py-3 px-6 border-t border-blue-900/40 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <Badge className="bg-blue-600 text-white px-3 py-1 text-sm">
-              {selectedGroups.length} selected
-            </Badge>
-            <span className="text-blue-200">
-              {selectedGroups.length === 1
-                ? "1 group selected"
-                : `${selectedGroups.length} groups selected`}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedGroups([])}
-              className="border-blue-500/30 text-blue-300 hover:bg-blue-900/20"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={openBulkDeleteDialog}
-              className="bg-red-600/80 hover:bg-red-700 text-white"
-            >
-              Delete Selected
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Create Approval Group Dialog */}
+      {/* Dialogs */}
+      {/* Create Group Dialog */}
       <ApprovalGroupCreateDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSuccess={handleCreateGroupSuccess}
       />
 
-      {/* Delete Confirmation Dialog */}
+      {/* Edit Group Dialog */}
+      {selectedGroup && (
+        <ApprovalGroupEditDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          group={selectedGroup}
+          onSuccess={handleEditGroupSuccess}
+        />
+      )}
+
+      {/* View Group Details Dialog */}
+      {selectedGroup && (
+        <ApprovalGroupViewDialog
+          open={detailsDialogOpen}
+          onOpenChange={setDetailsDialogOpen}
+          group={selectedGroup}
+          isAssociated={associatedGroups[selectedGroup.id] || false}
+        />
+      )}
+
+      {/* Delete Group Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#0a1033] border border-red-500/30">
+        <AlertDialogContent className="bg-[#1e2a4a] border border-blue-900/70 text-blue-100">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-300">
-              Delete Approval Group
-            </AlertDialogTitle>
+            <AlertDialogTitle>Confirm Delete Group</AlertDialogTitle>
             <AlertDialogDescription className="text-blue-300">
               Are you sure you want to delete the approval group "
-              <span className="font-medium text-white">
-                {groupToDelete?.name}
-              </span>
-              "? This action cannot be undone.
+              {groupToDelete?.name}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border border-blue-500/30 text-blue-300 hover:bg-blue-950/50">
+            <AlertDialogCancel className="bg-blue-950 text-blue-300 hover:bg-blue-900 hover:text-blue-200 border border-blue-800">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteGroup}
-              className="bg-red-600/80 text-white hover:bg-red-700"
+              className="bg-red-900/70 hover:bg-red-900 text-red-100"
             >
               Delete
             </AlertDialogAction>
@@ -590,166 +669,52 @@ export default function ApprovalGroupsManagement() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Bulk Delete Confirmation Dialog */}
+      {/* Bulk Delete Dialog */}
       <AlertDialog
         open={bulkDeleteDialogOpen}
         onOpenChange={setBulkDeleteDialogOpen}
       >
-        <AlertDialogContent className="bg-[#0a1033] border border-red-500/30">
+        <AlertDialogContent className="bg-[#1e2a4a] border border-blue-900/70 text-blue-100">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-300">
-              Delete Multiple Approval Groups
-            </AlertDialogTitle>
+            <AlertDialogTitle>Confirm Bulk Delete</AlertDialogTitle>
             <AlertDialogDescription className="text-blue-300">
-              Are you sure you want to delete {selectedGroups.length} selected
-              approval group{selectedGroups.length !== 1 ? "s" : ""}? This
+              Are you sure you want to delete the selected approval groups? This
               action cannot be undone.
+              {selectedGroups.some((id) => associatedGroups[id]) && (
+                <div className="mt-2 text-amber-300 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>
+                    Some selected groups cannot be deleted as they are
+                    associated with workflow steps.
+                  </span>
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border border-blue-500/30 text-blue-300 hover:bg-blue-950/50">
+            <AlertDialogCancel className="bg-blue-950 text-blue-300 hover:bg-blue-900 hover:text-blue-200 border border-blue-800">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkDelete}
-              className="bg-red-600/80 text-white hover:bg-red-700"
+              className="bg-red-900/70 hover:bg-red-900 text-red-100"
             >
-              Delete All Selected
+              Delete Groups
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Group Details Dialog */}
-      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="bg-[#0a1033] border border-blue-900/30 max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
-              <UsersRound className="h-5 w-5 text-blue-400" />
-              Group Details
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedGroup && (
-            <div className="space-y-4 py-4">
-              <div className="flex items-center justify-between bg-blue-950/50 p-4 rounded-lg border border-blue-900/30">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-900/60 p-3 rounded-full">
-                    <UsersRound className="h-6 w-6 text-blue-300" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white">{selectedGroup.name}</h3>
-                    {selectedGroup.comment && (
-                      <p className="text-blue-300 text-sm mt-1">{selectedGroup.comment}</p>
-                    )}
-                  </div>
-                </div>
-                <Badge
-                  className={`${
-                    selectedGroup.ruleType === "All"
-                      ? "bg-emerald-600/60 text-emerald-100"
-                      : selectedGroup.ruleType === "Any"
-                      ? "bg-amber-600/60 text-amber-100"
-                      : "bg-blue-600/60 text-blue-100"
-                  } px-3 py-1`}
-                >
-                  {selectedGroup.ruleType === "All"
-                    ? "All Must Approve"
-                    : selectedGroup.ruleType === "Any"
-                    ? "Any Can Approve"
-                    : "Sequential Approval"}
-                </Badge>
-              </div>
-
-              {associatedGroups[selectedGroup.id] && (
-                <div className="bg-amber-950/20 border border-amber-900/30 rounded-md p-3 flex items-start gap-2">
-                  <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-amber-200 text-sm font-medium">
-                      This group is currently associated with workflow steps
-                    </p>
-                    <p className="text-amber-200/70 text-xs mt-1">
-                      You cannot edit or delete this group while it's in use. Remove its associations from workflow steps first.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="border border-blue-900/30 rounded-lg">
-                <div className="p-3 border-b border-blue-900/30 bg-blue-950/50">
-                  <h4 className="flex items-center gap-2 text-blue-200 font-medium">
-                    <UserRound className="h-4 w-4 text-blue-400" />
-                    Group Members ({selectedGroup.approvers?.length || 0})
-                  </h4>
-                </div>
-                <div className="p-4 max-h-[300px] overflow-y-auto">
-                  {selectedGroup.approvers && selectedGroup.approvers.length > 0 ? (
-                    <div className="space-y-2">
-                      {selectedGroup.approvers.map((user, index) => (
-                        <div 
-                          key={user.userId} 
-                          className={`flex items-center p-3 rounded-md ${
-                            selectedGroup.ruleType === "Sequential" 
-                              ? 'bg-blue-900/20 border border-blue-800/30' 
-                              : 'bg-blue-950/50'
-                          }`}
-                        >
-                          {selectedGroup.ruleType === "Sequential" && (
-                            <div className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-800/50 text-blue-200 text-xs mr-3">
-                              {index + 1}
-                            </div>
-                          )}
-                          <UserRound className="h-4 w-4 text-blue-400 mr-2" />
-                          <span className="text-blue-100">{user.username}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center p-6 text-blue-500/60">
-                      <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                      <p>No members in this group</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="bg-blue-950/30 p-4 rounded-md border border-blue-900/20 flex gap-3">
-                <Info className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-300">
-                  <p className="mb-1">This approval group defines how document approvals are processed.</p>
-                  {selectedGroup.ruleType === "All" && (
-                    <p>All members must approve for the document to proceed.</p>
-                  )}
-                  {selectedGroup.ruleType === "Any" && (
-                    <p>Any single member can approve the document to proceed.</p>
-                  )}
-                  {selectedGroup.ruleType === "Sequential" && (
-                    <p>Members must approve in the specified order shown above.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-end pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setDetailsDialogOpen(false)}
-              className="border-blue-800 text-blue-300 hover:bg-blue-900/20"
-            >
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Group Dialog */}
-      <ApprovalGroupEditDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        group={selectedGroup}
-        onSuccess={handleEditGroupSuccess}
-      />
+      {/* Bulk Actions Bar */}
+      <AnimatePresence>
+        {selectedGroups.length > 0 && (
+          <ApprovalBulkActionsBar
+            selectedCount={selectedGroups.length}
+            onDelete={openBulkDeleteDialog}
+            entityName="groups"
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

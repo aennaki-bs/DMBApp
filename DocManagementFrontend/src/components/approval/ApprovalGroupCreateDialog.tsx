@@ -18,6 +18,7 @@ import {
   Settings,
   FileText,
   UserRound,
+  UsersRound,
 } from "lucide-react";
 import {
   ApprovalGroupFormData,
@@ -115,7 +116,7 @@ export default function ApprovalGroupCreateDialog({
       // For approval groups, get eligible approvers (accessible to both Admins and FullUsers)
       // Unlike individual approver creation, we don't need to filter out existing approvers
       const users = await approvalService.getEligibleApprovers();
-      
+
       setAvailableUsers(users);
     } catch (error) {
       console.error("Failed to fetch available users:", error);
@@ -190,6 +191,7 @@ export default function ApprovalGroupCreateDialog({
       await approvalService.createApprovalGroup(requestData);
 
       onSuccess(); // Notify parent component
+      toast.success("Approval group created successfully!");
     } catch (error) {
       console.error("Failed to create approval group:", error);
       toast.error("Failed to create approval group");
@@ -255,10 +257,9 @@ export default function ApprovalGroupCreateDialog({
             transition={{ duration: 0.2 }}
           >
             <SelectUsersStep
-              availableUsers={availableUsers}
               selectedUsers={formData.selectedUsers}
+              availableUsers={availableUsers}
               isLoading={isLoadingUsers}
-              isSequential={formData.ruleType === "Sequential"}
               onSelectedUsersChange={(users) =>
                 handleUpdateFormData("selectedUsers", users)
               }
@@ -275,7 +276,10 @@ export default function ApprovalGroupCreateDialog({
             variants={variants}
             transition={{ duration: 0.2 }}
           >
-            <ReviewStep formData={formData} />
+            <ReviewStep
+              formData={formData}
+              onEdit={(step) => setCurrentStep(step)}
+            />
           </MotionDiv>
         );
       default:
@@ -285,93 +289,87 @@ export default function ApprovalGroupCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.3)] max-w-3xl mx-auto rounded-xl">
         <DialogHeader>
-          <DialogTitle>Create Approval Group</DialogTitle>
-          <DialogDescription>
+          <div className="flex items-center gap-2 mb-1">
+            <UsersRound className="h-5 w-5 text-blue-400" />
+            <DialogTitle className="text-xl text-blue-100">
+              Create Approval Group
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-blue-300">
             Create a new group for managing document approvals
           </DialogDescription>
         </DialogHeader>
 
-        {/* Progress Steps */}
-        <div className="mb-4 mt-2">
-          <div className="flex justify-between">
-            {steps.map((step) => (
+        {/* Progress indicator */}
+        <div className="grid grid-cols-4 gap-2 mb-6 mt-2">
+          {steps.map((step) => (
+            <div key={step.id} className="relative">
               <div
-                key={step.id}
-                className="flex flex-col items-center text-center"
+                className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-full mx-auto mb-2 transition-all duration-200",
+                  currentStep === step.id
+                    ? "bg-blue-600 text-white"
+                    : step.completed
+                    ? "bg-green-600/70 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                )}
               >
-                <div
+                {step.completed ? <Check className="h-5 w-5" /> : step.icon}
+              </div>
+              <div className="text-center">
+                <p
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full border-2",
-                    step.id === currentStep
-                      ? "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500"
+                    "text-xs font-medium",
+                    currentStep === step.id
+                      ? "text-blue-200"
                       : step.completed
-                      ? "border-green-600 bg-green-600 text-white dark:border-green-500 dark:bg-green-500"
-                      : "border-gray-300 text-gray-500 dark:border-gray-700"
-                  )}
-                >
-                  {step.completed ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    step.icon || step.id
-                  )}
-                </div>
-                <span
-                  className={cn(
-                    "mt-2 text-sm font-medium",
-                    step.id === currentStep
-                      ? "text-blue-600 dark:text-blue-500"
-                      : step.completed
-                      ? "text-green-600 dark:text-green-500"
-                      : "text-gray-500 dark:text-gray-400"
+                      ? "text-green-400"
+                      : "text-blue-400/70"
                   )}
                 >
                   {step.title}
-                </span>
-                <span
+                </p>
+                <p
                   className={cn(
-                    "text-xs text-gray-500 dark:text-gray-400 hidden sm:block",
-                    step.id === currentStep &&
-                      "text-blue-600 dark:text-blue-500"
+                    "text-[10px]",
+                    currentStep === step.id
+                      ? "text-blue-300/90"
+                      : step.completed
+                      ? "text-green-400/70"
+                      : "text-blue-400/50"
                   )}
                 >
                   {step.description}
-                </span>
+                </p>
               </div>
-            ))}
-          </div>
-
-          {/* Progress line */}
-          <div className="relative mt-4 mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full h-1 bg-gray-200 dark:bg-gray-800 rounded"></div>
+              {step.id < steps.length && (
+                <div
+                  className={cn(
+                    "absolute top-5 left-[calc(50%+5px)] w-[calc(100%-10px)] h-0.5",
+                    step.completed ? "bg-green-500/50" : "bg-blue-900/50"
+                  )}
+                />
+              )}
             </div>
-            <div className="absolute inset-0 flex items-center">
-              <div
-                className="h-1 bg-blue-600 dark:bg-blue-500 rounded transition-all duration-300"
-                style={{
-                  width: `${((currentStep - 1) / (TOTAL_STEPS - 1)) * 100}%`,
-                }}
-              ></div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Step Content */}
-        <div className="py-2 min-h-[300px]">{renderStepContent()}</div>
+        {/* Step content */}
+        <div className="min-h-[260px]">{renderStepContent()}</div>
 
-        {/* Navigation Buttons */}
-        <DialogFooter className="flex justify-between">
+        {/* Actions */}
+        <DialogFooter className="flex justify-between mt-6 pt-4 border-t border-blue-900/40">
           <div>
             {currentStep > 1 && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={prevStep}
-                disabled={isSubmitting}
+                className="border-blue-500/30 text-blue-300 hover:bg-blue-900/20 hover:text-blue-200"
               >
-                <ArrowLeft className="mr-2 h-4 w-4" />
+                <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
             )}
@@ -379,32 +377,56 @@ export default function ApprovalGroupCreateDialog({
           <div className="flex gap-2">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              className="text-blue-300 hover:text-blue-200 hover:bg-blue-900/30"
             >
-              <X className="mr-2 h-4 w-4" />
               Cancel
             </Button>
             {currentStep < TOTAL_STEPS ? (
-              <Button type="button" onClick={nextStep} disabled={isSubmitting}>
+              <Button
+                type="button"
+                onClick={nextStep}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 Next
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
               <Button
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700"
               >
                 {isSubmitting ? (
-                  <>
-                    <div className="spinner mr-2" /> Creating...
-                  </>
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Creating...
+                  </span>
                 ) : (
                   <>
-                    <Check className="mr-2 h-4 w-4" /> Create Group
+                    <Check className="w-4 h-4 mr-2" />
+                    Create Group
                   </>
                 )}
               </Button>

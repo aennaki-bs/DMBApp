@@ -22,6 +22,10 @@ import {
   Layers,
   Fingerprint,
   FileText,
+  LogIn,
+  AlertCircle,
+  HelpCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -41,6 +45,14 @@ export interface StepInfo {
   description: string;
   icon: React.ReactNode;
 }
+
+// Define error types for categorization
+type ErrorType =
+  | "validation"
+  | "availability"
+  | "security"
+  | "server"
+  | "general";
 
 // Animation variants for step transitions
 const variants = {
@@ -82,13 +94,99 @@ const RegisterForm: React.FC = () => {
   const [attemptedNext, setAttemptedNext] = useState(false);
   const isPersonal = formData.userType === "personal";
 
-  // Error handling
-  const errorMessage =
-    stepValidation.errors.registration ||
-    formData.validationError ||
-    (currentStep === 3
-      ? stepValidation.errors.username || stepValidation.errors.email
-      : undefined);
+  // Function to determine error type based on error messages
+  const determineErrorType = (): ErrorType => {
+    // Error from username/email availability check
+    if (
+      stepValidation.errors.username?.includes("already taken") ||
+      stepValidation.errors.email?.includes("already registered")
+    ) {
+      return "availability";
+    }
+
+    // Password related errors
+    if (formData.validationError?.includes("Password") || currentStep === 4) {
+      return "security";
+    }
+
+    // Registration submission errors
+    if (
+      stepValidation.errors.registration?.includes("server") ||
+      stepValidation.errors.registration?.includes("unexpected")
+    ) {
+      return "server";
+    }
+
+    // Default case - validation errors
+    return "validation";
+  };
+
+  // Get appropriate icon for error message
+  const getErrorIcon = (errorType: ErrorType) => {
+    switch (errorType) {
+      case "availability":
+        return <User className="h-4 w-4 text-amber-300" />;
+      case "security":
+        return <Shield className="h-4 w-4 text-red-300" />;
+      case "server":
+        return <AlertTriangle className="h-4 w-4 text-purple-300" />;
+      case "validation":
+      default:
+        return <AlertCircle className="h-4 w-4 text-red-300" />;
+    }
+  };
+
+  // Get title for error message
+  const getErrorTitle = (errorType: ErrorType) => {
+    switch (errorType) {
+      case "availability":
+        return "Availability Issue";
+      case "security":
+        return "Security Requirement";
+      case "server":
+        return "Server Error";
+      case "validation":
+      default:
+        return "Validation Error";
+    }
+  };
+
+  // Get appropriate background and border colors for error type
+  const getErrorStyles = (errorType: ErrorType) => {
+    switch (errorType) {
+      case "availability":
+        return "bg-amber-900/20 border-amber-800/30 text-amber-100";
+      case "security":
+        return "bg-red-900/20 border-red-800/30 text-red-100";
+      case "server":
+        return "bg-purple-900/20 border-purple-800/30 text-purple-100";
+      case "validation":
+      default:
+        return "bg-red-900/20 border-red-800/30 text-red-100";
+    }
+  };
+
+  // Get current error message - consolidated logic to avoid duplications
+  const getErrorMessage = () => {
+    if (currentStep === 3) {
+      // Username and email errors have priority in step 3
+      return (
+        stepValidation.errors.username ||
+        stepValidation.errors.email ||
+        formData.validationError ||
+        stepValidation.errors.registration
+      );
+    }
+
+    // For other steps
+    return formData.validationError || stepValidation.errors.registration;
+  };
+
+  // Error message to display
+  const errorMessage = getErrorMessage();
+
+  // Error type determined from the message
+  const errorType = errorMessage ? determineErrorType() : "validation";
 
   // Step information
   const steps: StepInfo[] = [
@@ -200,348 +298,346 @@ const RegisterForm: React.FC = () => {
     }
   };
 
+  // Render error message component with enhanced UI
+  const renderErrorMessage = () => {
+    if (!errorMessage) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10, height: 0 }}
+        animate={{ opacity: 1, y: 0, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        className={`mt-4 p-4 rounded-lg border ${getErrorStyles(
+          errorType
+        )} relative overflow-hidden`}
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className={`p-1.5 rounded-full ${
+              errorType === "availability"
+                ? "bg-amber-800/50"
+                : errorType === "security"
+                ? "bg-red-800/50"
+                : errorType === "server"
+                ? "bg-purple-800/50"
+                : "bg-red-800/50"
+            } mt-0.5`}
+          >
+            {getErrorIcon(errorType)}
+          </div>
+          <div>
+            <h3
+              className={`text-sm font-medium mb-1 ${
+                errorType === "availability"
+                  ? "text-amber-200"
+                  : errorType === "security"
+                  ? "text-red-200"
+                  : errorType === "server"
+                  ? "text-purple-200"
+                  : "text-red-200"
+              }`}
+            >
+              {getErrorTitle(errorType)}
+            </h3>
+            <p className="text-gray-300">{errorMessage}</p>
+
+            {/* Add helpful tips based on error type */}
+            {errorType === "availability" && (
+              <div className="mt-2 text-xs text-amber-200/80 bg-amber-800/20 p-2 rounded border border-amber-800/20 flex items-start gap-2">
+                <HelpCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                <span>
+                  Try a different{" "}
+                  {stepValidation.errors.username
+                    ? "username"
+                    : "email address"}{" "}
+                  or login if you already have an account.
+                </span>
+              </div>
+            )}
+
+            {errorType === "security" && (
+              <div className="mt-2 text-xs text-red-200/80 bg-red-800/20 p-2 rounded border border-red-800/20 flex items-start gap-2">
+                <Shield className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                <span>
+                  Strong passwords include a mix of uppercase and lowercase
+                  letters, numbers, and special characters.
+                </span>
+              </div>
+            )}
+
+            {errorType === "server" && (
+              <div className="mt-2 text-xs text-purple-200/80 bg-purple-800/20 p-2 rounded border border-purple-800/20 flex items-start gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                <span>
+                  Please try again later or contact support if the problem
+                  persists.
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Animated background pulse for error */}
+        <motion.div
+          className={`absolute inset-0 opacity-10 ${
+            errorType === "availability"
+              ? "bg-amber-500"
+              : errorType === "security"
+              ? "bg-red-500"
+              : errorType === "server"
+              ? "bg-purple-500"
+              : "bg-red-500"
+          }`}
+          initial={{ opacity: 0.05 }}
+          animate={{
+            opacity: [0.05, 0.1, 0.05],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 2,
+            ease: "easeInOut",
+          }}
+        />
+      </motion.div>
+    );
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#0a1033] to-[#040714] py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* ERP-themed background elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_rgba(29,78,216,0.15),transparent_80%)]"></div>
-        <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_left,_rgba(30,64,175,0.15),transparent_80%)]"></div>
+    <div className="py-8 px-4 sm:px-6 lg:px-8 relative overflow-auto">
+      {/* Background glow effects */}
+      <div className="absolute top-[20%] left-[30%] w-64 h-64 rounded-full bg-blue-600/5 blur-[100px] pointer-events-none z-0"></div>
+      <div className="absolute bottom-[20%] right-[20%] w-80 h-80 rounded-full bg-blue-500/5 blur-[120px] pointer-events-none z-0"></div>
 
-        {/* Decorative icons */}
-        <BackgroundIcon
-          icon={<Database size={120} />}
-          className="top-[10%] left-[5%] transform rotate-12"
-        />
-        <BackgroundIcon
-          icon={<BarChart3 size={150} />}
-          className="top-[30%] right-[8%] transform -rotate-15"
-        />
-        <BackgroundIcon
-          icon={<Layers size={100} />}
-          className="bottom-[20%] left-[15%]"
-        />
-        <BackgroundIcon
-          icon={<Fingerprint size={180} />}
-          className="bottom-[10%] right-[10%] transform rotate-45"
-        />
-        <BackgroundIcon
-          icon={<FileText size={130} />}
-          className="top-[50%] left-[50%] transform -rotate-6"
-        />
+      <div className="w-full max-w-3xl mx-auto z-10 relative">
+        {/* ERP banner */}
+        {/* <div className="p-4 bg-gradient-to-r from-blue-900/50 to-blue-900/20 rounded-lg border border-blue-800/30 mb-6 relative overflow-hidden">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-10">
+            <svg
+              className="w-16 h-16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22 8V16C22 17.1046 21.1046 18 20 18H4C2.89543 18 2 17.1046 2 16V8M22 8C22 6.89543 21.1046 6 20 6H4C2.89543 6 2 6.89543 2 8M22 8H2M6 12H8M16 12H18M11 12H13"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+          <h3 className="text-sm font-medium text-blue-300">
+            Enterprise Resource Platform
+          </h3>
+          <p className="text-xs text-blue-400 mt-1">
+            Document Management System
+          </p>
+        </div> */}
 
-        {/* Digital circuit pattern */}
-        <svg
-          className="absolute top-0 left-0 w-full h-full opacity-[0.03] z-0"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 100 100"
-        >
-          <path
-            d="M0 50 H100 M50 0 V100 M25 0 V100 M75 0 V100 M0 25 H100 M0 75 H100"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            fill="none"
-          />
-          <circle cx="50" cy="50" r="3" fill="currentColor" />
-          <circle cx="25" cy="25" r="2" fill="currentColor" />
-          <circle cx="75" cy="75" r="2" fill="currentColor" />
-          <circle cx="25" cy="75" r="2" fill="currentColor" />
-          <circle cx="75" cy="25" r="2" fill="currentColor" />
-        </svg>
-
-        {/* Blue glow effects */}
-        <div className="absolute top-[20%] left-[30%] w-64 h-64 rounded-full bg-blue-600/10 blur-[100px]"></div>
-        <div className="absolute bottom-[20%] right-[20%] w-80 h-80 rounded-full bg-blue-500/10 blur-[120px]"></div>
-      </div>
-
-      <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-8 z-10 relative">
-        {/* Left side - Step guide */}
-        <div className="md:w-1/3 md:flex-shrink-0">
-          <div className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 rounded-xl shadow-[0_0_25px_rgba(59,130,246,0.2)] p-6 md:sticky md:top-8 text-white">
-            <h2 className="text-2xl font-bold text-blue-100 mb-6 flex items-center gap-2">
-              <div className="p-2 rounded-full bg-blue-600/20 text-blue-400">
-                <UserPlus className="h-5 w-5" />
-              </div>
-              Registration Steps
-            </h2>
-
-            {/* ERP banner */}
-            <div className="mb-6 p-3 bg-gradient-to-r from-blue-900/50 to-blue-900/20 rounded-lg border border-blue-800/30 relative overflow-hidden">
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-10">
-                <svg
-                  className="w-16 h-16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M22 8V16C22 17.1046 21.1046 18 20 18H4C2.89543 18 2 17.1046 2 16V8M22 8C22 6.89543 21.1046 6 20 6H4C2.89543 6 2 6.89543 2 8M22 8H2M6 12H8M16 12H18M11 12H13"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-sm font-medium text-blue-300">
-                Enterprise Resource Platform
-              </h3>
-              <p className="text-xs text-blue-400 mt-1">
-                Document Management System
-              </p>
+        {/* Advanced Linear Step Indicator */}
+        <div className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 rounded-xl shadow-[0_0_25px_rgba(59,130,246,0.2)] p-6 mb-6 text-white">
+          <h2 className="text-xl font-bold text-blue-100 mb-4 flex items-center gap-2">
+            <div className="p-2 rounded-full bg-blue-600/20 text-blue-400">
+              <UserPlus className="h-5 w-5" />
             </div>
+            Registration Steps
+          </h2>
 
-            {/* Steps navigation */}
-            <div className="space-y-4 mb-6">
+          {/* Horizontal Steps Indicator */}
+          <div className="w-full relative mt-6">
+            {/* Connector line */}
+            <div className="absolute top-[14px] left-0 right-0 h-[2px] bg-blue-900/50 z-0"></div>
+
+            {/* Steps */}
+            <div className="flex justify-between items-center relative z-10">
               {steps.map((step) => (
-                <div
-                  key={step.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
-                    currentStep === step.id
-                      ? "bg-blue-800/20 border-l-4 border-blue-500"
-                      : step.id < currentStep
-                      ? "text-blue-300"
-                      : "text-blue-400/70"
-                  }`}
-                >
-                  <div
-                    className={`p-2 rounded-full ${
-                      currentStep === step.id
-                        ? "bg-blue-600 text-white pulse-animation"
-                        : step.id < currentStep
-                        ? "bg-green-600/30 text-green-300"
-                        : "bg-blue-900/30 text-blue-400/70"
-                    }`}
+                <div key={step.id} className="flex flex-col items-center">
+                  {/* Step Circle */}
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{
+                      scale: currentStep === step.id ? 1.1 : 1,
+                      y: currentStep === step.id ? -2 : 0,
+                    }}
+                    className={`relative flex items-center justify-center rounded-full transition-all duration-300 border-2
+                      ${
+                        currentStep === step.id
+                          ? "w-8 h-8 bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)] pulse-animation"
+                          : currentStep > step.id
+                          ? "w-7 h-7 bg-green-600/80 border-green-400 text-white"
+                          : "w-7 h-7 bg-blue-900/60 border-blue-800 text-blue-400/70"
+                      }`}
                   >
-                    {step.id < currentStep ? (
-                      <Check className="h-4 w-4" />
+                    {currentStep > step.id ? (
+                      <Check className="h-3 w-3" />
                     ) : (
-                      step.icon
+                      <span className="text-xs">{step.id + 1}</span>
                     )}
-                  </div>
-                  <div>
-                    <h3
-                      className={`font-medium ${
-                        currentStep === step.id ? "text-blue-100" : ""
+                  </motion.div>
+
+                  {/* Label (only show for current step and adjacent steps) */}
+                  {(currentStep === step.id ||
+                    Math.abs(currentStep - step.id) <= 1) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className={`mt-2 text-center w-20 ${
+                        currentStep === step.id
+                          ? "text-blue-200"
+                          : "text-blue-400/70"
                       }`}
                     >
-                      {step.title}
-                    </h3>
-                    <p className="text-xs text-blue-300/80">
-                      {step.description}
-                    </p>
-                  </div>
+                      <p className="text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                        {step.title}
+                      </p>
+                      {currentStep === step.id && (
+                        <motion.div
+                          className="h-0.5 w-0 bg-blue-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 0.4, delay: 0.2 }}
+                        />
+                      )}
+                    </motion.div>
+                  )}
                 </div>
               ))}
-            </div>
-
-            {/* ERP Footer */}
-            <div className="mt-6 flex items-center justify-center">
-              <motion.div
-                initial={{ opacity: 0.6 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  duration: 2,
-                }}
-                className="flex gap-2 text-blue-500/60 text-xs font-medium"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M21.6 7H25.2V16.8H21.6V7ZM19.2 10.8H15.6V16.8H19.2V10.8ZM13.2 7H9.6V16.8H13.2V7ZM7.2 3.2H3.6V16.8H7.2V3.2Z"
-                    fill="currentColor"
-                    fillOpacity="0.7"
-                  />
-                </svg>
-                <span>Enterprise Resource Platform</span>
-              </motion.div>
             </div>
           </div>
         </div>
 
-        {/* Right side - Form content */}
-        <div className="md:w-2/3 flex flex-col space-y-6">
-          <div className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl overflow-hidden">
-            {/* Header */}
-            <div className="p-6 border-b border-blue-900/30 relative overflow-hidden">
-              {/* Background header pattern */}
-              <div className="absolute inset-0 opacity-5">
-                <svg
+        {/* Form content */}
+        <div className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl overflow-hidden mb-6">
+          {/* Header */}
+          <div className="p-6 border-b border-blue-900/30 relative overflow-hidden">
+            {/* Background header pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <svg
+                width="100%"
+                height="100%"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <pattern
+                  id="circuitPattern"
+                  x="0"
+                  y="0"
+                  width="40"
+                  height="40"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M0 20h40M20 0v40M10 0v10M30 0v10M10 30v10M30 30v10M0 10h10M30 10h10M0 30h10M30 30h10"
+                    stroke="currentColor"
+                    strokeWidth="0.5"
+                    fill="none"
+                  />
+                </pattern>
+                <rect
+                  x="0"
+                  y="0"
                   width="100%"
                   height="100%"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <pattern
-                    id="circuitPattern"
-                    x="0"
-                    y="0"
-                    width="40"
-                    height="40"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path
-                      d="M0 20h40M20 0v40M10 0v10M30 0v10M10 30v10M30 30v10M0 10h10M30 10h10M0 30h10M30 30h10"
-                      stroke="currentColor"
-                      strokeWidth="0.5"
-                      fill="none"
-                    />
-                  </pattern>
-                  <rect
-                    x="0"
-                    y="0"
-                    width="100%"
-                    height="100%"
-                    fill="url(#circuitPattern)"
-                  />
-                </svg>
+                  fill="url(#circuitPattern)"
+                />
+              </svg>
+            </div>
+
+            <h1 className="text-xl text-blue-100 flex items-center gap-3 mb-1 relative z-10">
+              <div className="p-2 rounded-full bg-blue-600/20 text-blue-400">
+                {steps[currentStep].icon}
               </div>
+              {steps[currentStep].title}
+              <span className="ml-auto px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded-full border border-blue-800/30">
+                Step {currentStep + 1} of 7
+              </span>
+            </h1>
+            <p className="text-blue-300 relative z-10">
+              {steps[currentStep].description}
+            </p>
 
-              <h1 className="text-xl text-blue-100 flex items-center gap-3 mb-1 relative z-10">
-                <div className="p-2 rounded-full bg-blue-600/20 text-blue-400">
-                  {steps[currentStep].icon}
-                </div>
-                {steps[currentStep].title}
-                <span className="ml-auto px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded-full border border-blue-800/30">
-                  Step {currentStep + 1} of 7
-                </span>
-              </h1>
-              <p className="text-blue-300 relative z-10">
-                {steps[currentStep].description}
-              </p>
-
-              {/* Error message */}
-              {errorMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 p-3 bg-red-900/30 border border-red-800/30 rounded-md text-red-300 text-sm relative z-10"
-                >
-                  {errorMessage}
-                </motion.div>
-              )}
-            </div>
-
-            {/* Step indicators for smaller screens */}
-            <div className="px-6 pt-6 pb-0 md:hidden">
-              <div className="flex justify-between items-center">
-                {steps.map((step) => (
-                  <div key={step.id} className="flex flex-col items-center">
-                    <div
-                      className={`relative flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-300 ${
-                        currentStep === step.id
-                          ? "bg-blue-600 border-blue-400 text-white scale-110 pulse-animation"
-                          : currentStep > step.id
-                          ? "bg-green-600/30 border-green-400/50 text-green-300"
-                          : "bg-blue-900/30 border-blue-900/50 text-blue-300/50"
-                      }`}
-                    >
-                      {currentStep > step.id ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <span className="text-xs">{step.id + 1}</span>
-                      )}
-
-                      {/* Connecting line */}
-                      {step.id < steps.length - 1 && (
-                        <div
-                          className={`absolute top-1/2 left-full w-[calc(100%-8px)] h-[2px] -translate-y-1/2 transition-all duration-300 ${
-                            currentStep > step.id
-                              ? "bg-green-500/50"
-                              : "bg-blue-900/50"
-                          }`}
-                        ></div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Form content with animation */}
-            <div className="p-6 min-h-[400px]">
-              <AnimatePresence initial={false} custom={direction} mode="wait">
-                <motion.div
-                  key={currentStep}
-                  custom={direction}
-                  variants={variants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 },
-                  }}
-                >
-                  {renderStep()}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Navigation buttons */}
-            <div className="px-6 pb-6 pt-2 border-t border-blue-900/30 flex justify-between items-center bg-gradient-to-r from-blue-900/10 to-transparent">
-              <Button
-                type="button"
-                onClick={handlePrev}
-                disabled={currentStep === 0}
-                className={`border border-blue-900/50 transition-all duration-200 flex items-center gap-2 ${
-                  currentStep === 0
-                    ? "opacity-50 bg-blue-950/30 text-blue-300/50"
-                    : "bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
-                }`}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-
-              <div className="hidden sm:flex items-center gap-1 px-3">
-                {steps.map((step) => (
-                  <div
-                    key={step.id}
-                    className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                      currentStep === step.id
-                        ? "bg-blue-500 w-6"
-                        : currentStep > step.id
-                        ? "bg-green-500"
-                        : "bg-blue-900"
-                    }`}
-                  ></div>
-                ))}
-              </div>
-
-              {currentStep < 6 && (
-                <Button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={isNextDisabled()}
-                  className={`bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] ${
-                    isNextDisabled() ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Next
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+            {/* Enhanced error message display */}
+            <AnimatePresence>
+              {errorMessage && renderErrorMessage()}
+            </AnimatePresence>
           </div>
 
-          {/* Help Card - Moved below main content with proper spacing */}
-          <div className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] p-5 text-white max-w-md mx-auto w-full">
-            <h3 className="text-lg font-medium text-blue-200 mb-1">
-              Need Help?
-            </h3>
-            <p className="text-sm text-blue-300 mb-3">
-              Already have an account? Sign in to access your documents.
-            </p>
+          {/* Form content with animation */}
+          <div className="p-6 min-h-[400px]">
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              <motion.div
+                key={currentStep}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 },
+                }}
+              >
+                {renderStep()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="px-6 pb-6 pt-2 border-t border-blue-900/30 flex justify-between items-center bg-gradient-to-r from-blue-900/10 to-transparent">
+            <Button
+              type="button"
+              onClick={handlePrev}
+              disabled={currentStep === 0}
+              className={`border border-blue-900/50 transition-all duration-200 flex items-center gap-2 ${
+                currentStep === 0
+                  ? "opacity-50 bg-blue-950/30 text-blue-300/50"
+                  : "bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+              }`}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+
+            {currentStep < 6 && (
+              <Button
+                type="button"
+                onClick={handleNext}
+                disabled={isNextDisabled()}
+                className={`bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] ${
+                  isNextDisabled() ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+              >
+                Next
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Simplified Login Link */}
+        <div className="flex items-center justify-center my-6">
+          <div className="relative">
+            {/* Decorative elements */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/10 to-blue-600/0 blur-sm rounded-full"></div>
             <Link
               to="/login"
-              className="flex items-center justify-center w-full bg-blue-600/60 hover:bg-blue-600/80 text-white py-2.5 rounded-md transition-all duration-200 font-medium hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+              className="group relative flex items-center gap-2 text-blue-300 hover:text-blue-200 py-2 px-4 transition-all duration-300"
             >
-              Sign in to your account
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-900/40 border border-blue-700/50 group-hover:bg-blue-800/60 group-hover:border-blue-600/50 transition-all duration-300">
+                <LogIn className="h-4 w-4" />
+              </span>
+              <span>
+                Already have an account?{" "}
+                <span className="font-medium underline decoration-blue-500/30 underline-offset-2 group-hover:decoration-blue-500/60">
+                  Sign in
+                </span>
+              </span>
+              <motion.span
+                className="absolute bottom-0 left-10 right-10 h-[1px] bg-gradient-to-r from-blue-500/0 via-blue-500/40 to-blue-500/0"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              />
             </Link>
           </div>
         </div>

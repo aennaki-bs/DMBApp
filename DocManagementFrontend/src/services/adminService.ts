@@ -166,6 +166,18 @@ const adminService = {
       console.error('Error fetching roles:', error);
       throw error;
     }
+  },
+
+  checkEmailExists: async (email: string): Promise<boolean> => {
+    try {
+      const response = await api.get(`/admin/users/check-email?email=${encodeURIComponent(email)}`);
+      return response.data.exists;
+    } catch (error) {
+      // If the API doesn't support this endpoint yet, let's assume the email doesn't exist
+      // In a real application, you'd want to handle this differently
+      console.error("Error checking email existence:", error);
+      return false;
+    }
   }
 };
 

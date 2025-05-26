@@ -10,7 +10,7 @@ const AccountTypeCard = ({
   title,
   description,
   icon,
-  features,
+  // features,
   selected,
   onClick,
 }: {
@@ -18,7 +18,7 @@ const AccountTypeCard = ({
   title: string;
   description: string;
   icon: React.ReactNode;
-  features: string[];
+  // features: string[];
   selected: boolean;
   onClick: () => void;
 }) => {
@@ -75,7 +75,7 @@ const AccountTypeCard = ({
         <p className="text-sm text-blue-300/80 mb-5">{description}</p>
 
         {/* Features list */}
-        <ul className="space-y-3 mt-auto">
+        {/* <ul className="space-y-3 mt-auto">
           {features.map((feature, i) => (
             <motion.li
               key={i}
@@ -93,7 +93,7 @@ const AccountTypeCard = ({
               {feature}
             </motion.li>
           ))}
-        </ul>
+        </ul> */}
       </div>
 
       {/* Card decoration */}
@@ -167,12 +167,12 @@ const UserTypeSelection: React.FC = () => {
           title="Personal Account"
           description="For individual users who want to manage their own documents"
           icon={<User size={24} />}
-          features={[
-            "Store and organize your documents",
-            "Share documents with others",
-            "Access from any device",
-            "User-friendly dashboard",
-          ]}
+          // features={[
+          //   "Store and organize your documents",
+          //   "Share documents with others",
+          //   "Access from any device",
+          //   "User-friendly dashboard",
+          // ]}
           selected={selectedType === "personal"}
           onClick={() => handleTypeSelect("personal")}
         />
@@ -183,12 +183,12 @@ const UserTypeSelection: React.FC = () => {
           title="Company Account"
           description="For businesses and organizations with multiple users"
           icon={<Building2 size={24} />}
-          features={[
-            "Multi-user collaboration",
-            "Advanced security features",
-            "Custom workflow automation",
-            "User permissions management",
-          ]}
+          // features={[
+          //   "Multi-user collaboration",
+          //   "Advanced security features",
+          //   "Custom workflow automation",
+          //   "User permissions management",
+          // ]}
           selected={selectedType === "company"}
           onClick={() => handleTypeSelect("company")}
         />

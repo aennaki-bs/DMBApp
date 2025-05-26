@@ -65,6 +65,11 @@ export function UserTableRow({
     setShowBlockDialog(false);
   };
 
+  const handleEdit = () => {
+    console.log("Handling edit for user:", user);
+    onEdit(user);
+  };
+
   return (
     <>
       <TableRow
@@ -159,7 +164,7 @@ export function UserTableRow({
         <TableCell className="text-right">
           <UserActionsDropdown
             user={user}
-            onEdit={onEdit}
+            onEdit={handleEdit}
             onEditEmail={onEditEmail}
             onViewLogs={onViewLogs}
             onDelete={onDelete}
