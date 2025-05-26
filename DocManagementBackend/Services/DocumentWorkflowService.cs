@@ -857,12 +857,8 @@ namespace DocManagementBackend.Services
                 _context.DocumentStepHistory.Add(stepHistory);
             }
 
-            // Check if the new status is a final status
-            if (targetStatus.IsFinal)
-            {
-                document.IsCircuitCompleted = true;
-                document.Status = 2; // Completed status
-            }
+            // Note: Circuit completion is now handled in CompleteDocumentStatusAsync
+            // when the final status is actually marked as complete
 
             await _context.SaveChangesAsync();
             return true;
@@ -967,10 +963,18 @@ namespace DocManagementBackend.Services
             int documentId, int statusId, int userId, bool isComplete, string comments)
         {
             var documentStatus = await _context.DocumentStatus
+                .Include(ds => ds.Status)
                 .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == statusId);
 
             if (documentStatus == null)
                 throw new KeyNotFoundException("Document status not found");
+
+            // Get the document to potentially update circuit completion
+            var document = await _context.Documents
+                .FirstOrDefaultAsync(d => d.Id == documentId);
+
+            if (document == null)
+                throw new KeyNotFoundException("Document not found");
 
             // Update completion status
             documentStatus.IsComplete = isComplete;
@@ -979,11 +983,25 @@ namespace DocManagementBackend.Services
             {
                 documentStatus.CompletedByUserId = userId;
                 documentStatus.CompletedAt = DateTime.UtcNow;
+
+                // Check if this is a final status being completed
+                if (documentStatus.Status?.IsFinal == true)
+                {
+                    document.IsCircuitCompleted = true;
+                    document.Status = 2; // Completed status
+                }
             }
             else
             {
                 documentStatus.CompletedByUserId = null;
                 documentStatus.CompletedAt = null;
+
+                // If uncompleting a final status, reopen the circuit
+                if (documentStatus.Status?.IsFinal == true)
+                {
+                    document.IsCircuitCompleted = false;
+                    document.Status = 1; // In Progress
+                }
             }
 
             // Create history entry

@@ -43,26 +43,22 @@ export interface AddUserToGroupRequest {
 }
 
 /**
- * Interface for pending approval data
+ * Interface for pending approval information
  */
 export interface PendingApproval {
-  id?: number;
-  approvalId?: number;
+  approvalId: number;
   documentId: number;
-  documentKey?: string;
+  documentKey: string;
   documentTitle: string;
-  stepId?: number;
+  stepId: number;
   stepTitle: string;
   requestedBy: string;
-  requestedAt?: string;
-  requestDate?: string;
+  requestDate: string;
   comments?: string;
   approvalType: string;
-  isGroupApproval?: boolean;
-  groupId?: number;
-  groupName?: string;
-  approverId?: number;
-  approverName?: string;
+  status: string;
+  assignedTo?: string;
+  assignedToGroup?: string;
 }
 
 /**
@@ -198,6 +194,36 @@ export interface StepReferenceDto {
   title: string;
   circuitId: number;
   circuitTitle: string;
+}
+
+/**
+ * Interface for step approval configuration detail response
+ */
+export interface StepApprovalConfigDetailDto {
+  stepId: number;
+  stepKey: string;
+  circuitId: number;
+  circuitTitle: string;
+  title: string;
+  descriptif: string;
+  currentStatusId: number;
+  currentStatusTitle: string;
+  nextStatusId: number;
+  nextStatusTitle: string;
+  requiresApproval: boolean;
+  approvalType: string;
+  singleApproverId?: number;
+  singleApproverName?: string;
+  approvatorsGroupId?: number;
+  groupApprovers?: {
+    userId: number;
+    username: string;
+    role?: string;
+    orderIndex?: number;
+  }[];
+  groupName?: string;
+  ruleType?: string;
+  comment: string;
 }
 
 /**

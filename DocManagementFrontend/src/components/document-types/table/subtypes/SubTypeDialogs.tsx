@@ -69,22 +69,55 @@ export default function SubTypeDialogs({
   const [editedSubType, setEditedSubType] = useState({
     name: "",
     description: "",
+    subTypeKey: "",
     startDate: "",
     endDate: "",
     isActive: true,
   });
+
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  const [submitError, setSubmitError] = useState<string>("");
+
+  // Helper function to format date for input[type="date"]
+  const formatDateForInput = (dateValue: Date | string) => {
+    if (!dateValue) return "";
+    
+    try {
+      // Create a new Date object from the input
+      const date = new Date(dateValue);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.error("Invalid date:", dateValue);
+        return "";
+      }
+      
+      // Format as YYYY-MM-DD for input[type="date"]
+      // Use local date to avoid timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Error formatting date:", dateValue, error);
+      return "";
+    }
+  };
 
   useEffect(() => {
     if (selectedSubType) {
       setEditedSubType({
         name: selectedSubType.name,
         description: selectedSubType.description,
-        startDate: new Date(selectedSubType.startDate)
-          .toISOString()
-          .split("T")[0],
-        endDate: new Date(selectedSubType.endDate).toISOString().split("T")[0],
+        subTypeKey: selectedSubType.subTypeKey,
+        startDate: formatDateForInput(selectedSubType.startDate),
+        endDate: formatDateForInput(selectedSubType.endDate),
         isActive: selectedSubType.isActive,
       });
+      // Clear any previous errors when opening edit dialog
+      setFieldErrors({});
+      setSubmitError("");
     }
   }, [selectedSubType]);
 
@@ -116,26 +149,97 @@ export default function SubTypeDialogs({
   const handleEditSubmit = () => {
     if (!selectedSubType) return;
 
-    if (!editedSubType.name) {
-      toast.error("Name is required");
+    // Clear previous errors
+    setFieldErrors({});
+    setSubmitError("");
+
+    // Comprehensive validation
+    const errors: string[] = [];
+    const newFieldErrors: {[key: string]: string} = {};
+
+
+
+    if (!editedSubType.subTypeKey?.trim()) {
+      errors.push("Code is required");
+      newFieldErrors.subTypeKey = "Code is required";
+    } else if (!/^[A-Z0-9-]+$/i.test(editedSubType.subTypeKey)) {
+      errors.push("Code can only contain letters, numbers, and hyphens");
+      newFieldErrors.subTypeKey = "Code can only contain letters, numbers, and hyphens";
+    }
+
+    if (!editedSubType.startDate) {
+      errors.push("Start date is required");
+      newFieldErrors.startDate = "Start date is required";
+    }
+
+    if (!editedSubType.endDate) {
+      errors.push("End date is required");
+      newFieldErrors.endDate = "End date is required";
+    }
+
+    if (editedSubType.startDate && editedSubType.endDate) {
+      const startDate = new Date(editedSubType.startDate);
+      const endDate = new Date(editedSubType.endDate);
+      
+      // Check if dates are valid
+      if (isNaN(startDate.getTime())) {
+        errors.push("Start date is invalid");
+        newFieldErrors.startDate = "Invalid date format";
+      }
+      
+      if (isNaN(endDate.getTime())) {
+        errors.push("End date is invalid");
+        newFieldErrors.endDate = "Invalid date format";
+      }
+
+      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+        if (startDate >= endDate) {
+          errors.push("Start date must be before end date");
+          newFieldErrors.startDate = "Must be before end date";
+          newFieldErrors.endDate = "Must be after start date";
+        }
+
+        // Check if start date is not too far in the past
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        if (startDate < oneYearAgo) {
+          errors.push("Start date cannot be more than one year in the past");
+          newFieldErrors.startDate = "Cannot be more than one year in the past";
+        }
+
+        // Check if end date is not too far in the future
+        const tenYearsFromNow = new Date();
+        tenYearsFromNow.setFullYear(tenYearsFromNow.getFullYear() + 10);
+        if (endDate > tenYearsFromNow) {
+          errors.push("End date cannot be more than 10 years in the future");
+          newFieldErrors.endDate = "Cannot be more than 10 years in the future";
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      setFieldErrors(newFieldErrors);
+      setSubmitError("Please fix the validation errors above and try again.");
       return;
     }
 
-    if (!editedSubType.startDate || !editedSubType.endDate) {
-      toast.error("Start and end dates are required");
-      return;
-    }
+    // Send the correct fields to the backend including subTypeKey
+    const submitData = async () => {
+      const result = await onEditSubmit(selectedSubType.id, {
+        name: selectedSubType.name, // Keep original name
+        subTypeKey: editedSubType.subTypeKey.trim(),
+        description: selectedSubType.description || "", // Keep original description
+        startDate: editedSubType.startDate,
+        endDate: editedSubType.endDate,
+        isActive: editedSubType.isActive
+      });
 
-    if (new Date(editedSubType.startDate) > new Date(editedSubType.endDate)) {
-      toast.error("Start date must be before end date");
-      return;
-    }
+      if (result && !result.success) {
+        setSubmitError(result.error);
+      }
+    };
 
-    // Map the name field (prefix) to subTypeKey for the backend
-    onEditSubmit(selectedSubType.id, {
-      ...editedSubType,
-      subTypeKey: editedSubType.name // Map the prefix to subTypeKey field
-    });
+    submitData();
   };
 
   const resetCreateForm = () => {
@@ -213,6 +317,53 @@ export default function SubTypeDialogs({
             </DialogTitle>
           </DialogHeader>
 
+          {/* Error Card */}
+          {submitError && (
+            <div className="mx-4 mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-md">
+              <div className="flex items-start gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-red-400 mt-0.5 flex-shrink-0"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" x2="9" y1="9" y2="15" />
+                  <line x1="9" x2="15" y1="9" y2="15" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-red-400 text-sm font-medium">Error</p>
+                  <p className="text-red-300 text-sm mt-1">{submitError}</p>
+                </div>
+                <button
+                  onClick={() => setSubmitError("")}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" x2="6" y1="6" y2="18" />
+                    <line x1="6" x2="18" y1="6" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="p-4 space-y-4">
             {/* Date Range Fields */}
             <div className="space-y-1.5">
@@ -244,14 +395,26 @@ export default function SubTypeDialogs({
                     id="edit-start-date"
                     type="date"
                     value={editedSubType.startDate}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setEditedSubType({
                         ...editedSubType,
                         startDate: e.target.value,
-                      })
-                    }
-                    className="h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154]"
+                      });
+                      // Clear errors when user starts typing
+                      if (fieldErrors.startDate) {
+                        setFieldErrors(prev => ({ ...prev, startDate: "" }));
+                      }
+                      if (submitError) {
+                        setSubmitError("");
+                      }
+                    }}
+                    className={`h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
+                      fieldErrors.startDate ? 'border-red-500 focus:border-red-400' : ''
+                    }`}
                   />
+                  {fieldErrors.startDate && (
+                    <p className="text-red-400 text-xs mt-1">{fieldErrors.startDate}</p>
+                  )}
                 </div>
                 <div className="relative flex items-center">
                   <div className="absolute left-2 z-10">
@@ -277,58 +440,62 @@ export default function SubTypeDialogs({
                     id="edit-end-date"
                     type="date"
                     value={editedSubType.endDate}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setEditedSubType({
                         ...editedSubType,
                         endDate: e.target.value,
-                      })
-                    }
-                    className="h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154]"
+                      });
+                      // Clear errors when user starts typing
+                      if (fieldErrors.endDate) {
+                        setFieldErrors(prev => ({ ...prev, endDate: "" }));
+                      }
+                      if (submitError) {
+                        setSubmitError("");
+                      }
+                    }}
+                    className={`h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
+                      fieldErrors.endDate ? 'border-red-500 focus:border-red-400' : ''
+                    }`}
                   />
+                  {fieldErrors.endDate && (
+                    <p className="text-red-400 text-xs mt-1">{fieldErrors.endDate}</p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Name Field */}
+            {/* Code Field */}
             <div className="space-y-1.5">
               <Label
-                htmlFor="edit-name"
+                htmlFor="edit-code"
                 className="text-sm font-medium text-blue-300"
               >
-                Name
+                Code
               </Label>
               <Input
-                id="edit-name"
-                value={editedSubType.name}
-                onChange={(e) =>
-                  setEditedSubType({ ...editedSubType, name: e.target.value })
-                }
-                className="h-9 w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154]"
-                placeholder="Enter stump name"
+                id="edit-code"
+                value={editedSubType.subTypeKey}
+                onChange={(e) => {
+                  setEditedSubType({ ...editedSubType, subTypeKey: e.target.value });
+                  // Clear errors when user starts typing
+                  if (fieldErrors.subTypeKey) {
+                    setFieldErrors(prev => ({ ...prev, subTypeKey: "" }));
+                  }
+                  if (submitError) {
+                    setSubmitError("");
+                  }
+                }}
+                className={`h-9 w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
+                  fieldErrors.subTypeKey ? 'border-red-500 focus:border-red-400' : ''
+                }`}
+                placeholder="Enter stump code"
               />
+              {fieldErrors.subTypeKey && (
+                <p className="text-red-400 text-xs mt-1">{fieldErrors.subTypeKey}</p>
+              )}
             </div>
 
-            {/* Description Field */}
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="edit-description"
-                className="text-sm font-medium text-blue-300"
-              >
-                Description
-              </Label>
-              <Textarea
-                id="edit-description"
-                value={editedSubType.description}
-                onChange={(e) =>
-                  setEditedSubType({
-                    ...editedSubType,
-                    description: e.target.value,
-                  })
-                }
-                className="min-h-[60px] w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] resize-none"
-                placeholder="Enter stump description"
-              />
-            </div>
+
 
             {/* Active Status */}
             <div className="flex items-center justify-between py-1">

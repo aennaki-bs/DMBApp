@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDocumentApproval } from "@/hooks/document-workflow/useDocumentApproval";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertCircle,
@@ -13,24 +14,49 @@ import {
   UserCheck,
   Users,
   Shield,
+  Check,
+  X,
+  ArrowRight,
+  History,
+  ChevronDown,
+  ChevronUp,
+  CircleCheck,
+  CircleX
 } from "lucide-react";
-import { ApproverInfo, ApproversGroup } from "@/models/approval";
+import { ApproverInfo, StepApprovalConfigDetailDto, ApprovalHistory, PendingApproval } from "@/models/approval";
 import approvalService from "@/services/approvalService";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface DocumentApprovalStatusProps {
   documentId: number;
   onApprovalUpdate?: () => void;
   refreshTrigger?: number;
+  showApprovalHistory?: boolean;
+  onToggleApprovalHistory?: () => void;
 }
 
 export function DocumentApprovalStatus({
   documentId,
   onApprovalUpdate,
   refreshTrigger,
+  showApprovalHistory,
+  onToggleApprovalHistory,
 }: DocumentApprovalStatusProps) {
-  const [groupDetails, setGroupDetails] = useState<ApproversGroup | null>(null);
-  const [isLoadingGroup, setIsLoadingGroup] = useState(false);
-  const [groupMembers, setGroupMembers] = useState<ApproverInfo[]>([]);
+  const { user } = useAuth();
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+  const [responseType, setResponseType] = useState<"approve" | "reject" | null>(null);
+  const [comments, setComments] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     approvalHistory,
@@ -40,53 +66,142 @@ export function DocumentApprovalStatus({
     latestApprovalStatus,
     wasRejected,
     refetchHistory,
+    respondToApproval,
   } = useDocumentApproval(documentId);
 
   // Also fetch pending approvals for this document to get assignment info
-  const { data: pendingApprovals } = useQuery({
+  const { data: pendingApprovals } = useQuery<PendingApproval[]>({
     queryKey: ['documentApprovals', documentId],
     queryFn: () => approvalService.getDocumentApprovals(documentId),
     enabled: !!documentId && hasPendingApprovals,
     refetchInterval: hasPendingApprovals ? 30000 : false, // Refetch every 30s if pending
   });
 
-  // Get the latest pending approval
-  const latestPendingApproval = approvalHistory?.find((approval) => {
-    const status = approval.status?.toLowerCase();
-    return status === 'open' || status === 'inprogress';
-  });
+  // Get the latest pending approval from approval history
+  const latestPendingApproval = approvalHistory && Array.isArray(approvalHistory) ? 
+    approvalHistory.find((approval: ApprovalHistory) => {
+      const status = approval.status?.toLowerCase();
+      return status === 'open' || status === 'inprogress' || status === 'pending';
+    }) : undefined;
 
-  // Get assignment information from pending approvals
+  // Get assignment information from pending approvals (this has the stepId)
   const latestPendingAssignment = pendingApprovals?.[0];
 
-  // Get approval group details if this is a group approval
-  useEffect(() => {
-    const fetchGroupDetails = async () => {
-      if (!latestPendingAssignment || !latestPendingAssignment.assignedToGroup) return;
+  // Use stepId from pending assignment, not from approval history (which doesn't have stepId)
+  const stepIdForConfig = latestPendingAssignment?.stepId;
 
-      try {
-        setIsLoadingGroup(true);
-        // Extract group ID from the group name if available
-        const groupMatch = latestPendingAssignment.assignedToGroup.match(/\(ID: (\d+)\)/);
-        const groupId = groupMatch ? parseInt(groupMatch[1], 10) : null;
+  // Fetch step configuration when we have a pending approval
+  const { data: stepConfig } = useQuery<StepApprovalConfigDetailDto>({
+    queryKey: ['stepConfig', stepIdForConfig],
+    queryFn: () => approvalService.getStepApprovalConfig(stepIdForConfig!),
+    enabled: !!stepIdForConfig,
+  });
 
-        if (groupId) {
-          const groupData = await approvalService.getApprovalGroup(groupId);
-          setGroupDetails(groupData);
+  // Check if current user can approve this document
+  const canCurrentUserApprove = () => {
+    console.log('=== Checking approval permissions ===');
+    console.log('user:', user?.username);
+    console.log('latestPendingAssignment:', latestPendingAssignment);
+    console.log('stepConfig:', stepConfig);
+    
+    if (!user || !latestPendingAssignment || !stepConfig) {
+      console.log('Missing required data for approval check');
+      return false;
+    }
 
-          // Fetch group members
-          const membersData = await approvalService.getGroupMembers(groupId);
-          setGroupMembers(membersData);
-        }
-      } catch (error) {
-        console.error('Error fetching approval group details:', error);
-      } finally {
-        setIsLoadingGroup(false);
+    // Check if it's a single approver and current user is the approver
+    if (stepConfig.approvalType === "Single" && stepConfig.singleApproverName) {
+      const canApprove = stepConfig.singleApproverName === user.username;
+      console.log('Single approver check - stepConfig.singleApproverName:', stepConfig.singleApproverName, 'user.username:', user.username, 'canApprove:', canApprove);
+      return canApprove;
+    }
+
+    // Check if it's a group approval and current user is in the group
+    if (stepConfig.approvalType === "Group" && stepConfig.groupApprovers) {
+      const userInGroup = stepConfig.groupApprovers.some(
+        approver => approver.username === user.username
+      );
+      
+      if (!userInGroup) return false;
+
+      // Check if user has already responded
+      const userResponse = getUserApprovalStatus(user.username);
+      if (userResponse) return false; // User already responded
+
+      // For sequential approval, check if it's user's turn
+      if (stepConfig.ruleType?.toLowerCase() === 'sequential') {
+        const userIndex = stepConfig.groupApprovers.findIndex(
+          approver => approver.username === user.username
+        );
+        
+        // Count how many users have responded
+        const respondedCount = stepConfig.groupApprovers.filter(
+          approver => getUserApprovalStatus(approver.username)
+        ).length;
+        
+        // User can approve if it's their turn (their index equals responded count)
+        return userIndex === respondedCount;
       }
-    };
 
-    fetchGroupDetails();
-  }, [latestPendingAssignment]);
+      // For "All" or "Any" rules, user can approve if they haven't responded yet
+      return true;
+    }
+
+    return false;
+  };
+
+  // Handle approval response
+  const handleApprovalResponse = async () => {
+    if (!latestPendingAssignment || !responseType) return;
+
+    setIsSubmitting(true);
+    try {
+      const success = await respondToApproval(
+        latestPendingAssignment.approvalId,
+        responseType === "approve",
+        comments
+      );
+
+      if (success) {
+        setIsApprovalDialogOpen(false);
+        setResponseType(null);
+        setComments("");
+        if (onApprovalUpdate) {
+          onApprovalUpdate();
+        }
+      }
+    } catch (error) {
+      console.error("Error responding to approval:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Open approval dialog
+  const openApprovalDialog = (type: "approve" | "reject") => {
+    setResponseType(type);
+    setComments("");
+    setIsApprovalDialogOpen(true);
+  };
+
+  // Helper function to get approval status for a specific user
+  const getUserApprovalStatus = (username: string) => {
+    if (!approvalHistory || !Array.isArray(approvalHistory) || !latestPendingAssignment) return null;
+
+    // Find the current approval in the history
+    const currentApproval = approvalHistory.find(
+      (item: ApprovalHistory) => item.approvalId === latestPendingAssignment.approvalId
+    );
+
+    if (!currentApproval || !currentApproval.responses) return null;
+
+    // Find this user's response
+    const userResponse = currentApproval.responses.find(
+      response => response.responderName === username
+    );
+
+    return userResponse;
+  };
 
   // Refetch approval data when refresh trigger changes
   useEffect(() => {
@@ -184,7 +299,7 @@ export function DocumentApprovalStatus({
     );
   }
 
-  if (!approvalHistory || approvalHistory.length === 0) {
+  if (!approvalHistory || !Array.isArray(approvalHistory) || approvalHistory.length === 0) {
     return (
       <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         <CardHeader className="pb-2">
@@ -203,7 +318,30 @@ export function DocumentApprovalStatus({
     <>
       <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg text-white">Approval Status</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg text-white">Approval Status</CardTitle>
+            {onToggleApprovalHistory && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onToggleApprovalHistory}
+                className="flex items-center gap-2 bg-blue-950/40 border-blue-900/30 text-blue-300 hover:bg-blue-900/40 hover:text-blue-200"
+              >
+                <History className="h-4 w-4" />
+                {showApprovalHistory ? (
+                  <>
+                    Hide History
+                    <ChevronUp className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Show History
+                    <ChevronDown className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -227,77 +365,167 @@ export function DocumentApprovalStatus({
               {getStatusBadge()}
             </div>
 
-            {latestPendingApproval && (
-              <div className="rounded-md bg-blue-900/20 p-3 border border-blue-800/50">
-                <div className="space-y-2">
-                  <p className="text-sm text-blue-300">
-                    <span className="font-medium">Approval Step:</span>{" "}
-                    {latestPendingApproval.stepTitle}
-                  </p>
+            {/* Show detailed waiting approval information */}
+            {hasPendingApprovals && latestPendingAssignment && (
+              <div className="rounded-md bg-amber-500/10 border border-amber-500/30 p-3">
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-amber-400/70" />
+                    <span className="text-amber-200/80">Status:</span> 
+                    <span className="text-amber-100">
+                      {latestPendingAssignment.status || "Pending"}
+                    </span>
+                  </div>
                   
-                  <p className="text-sm text-blue-300">
-                    <span className="font-medium">Requested By:</span>{" "}
-                    {latestPendingApproval.requestedBy}
-                  </p>
+                  {stepConfig && (
+                    <>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4 text-amber-400/70" />
+                        <span className="text-amber-200/80">Step:</span> 
+                        <span className="text-amber-100">{stepConfig.stepKey}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm pl-5">
+                        <span className="text-amber-300">Moving from</span>
+                        <Badge variant="outline" className="bg-blue-500/10 text-blue-200">
+                          {stepConfig.currentStatusTitle}
+                        </Badge>
+                        <ArrowRight className="h-4 w-4 text-amber-300" />
+                        <span className="text-amber-300">to</span>
+                        <Badge variant="outline" className="bg-green-500/10 text-green-200">
+                          {stepConfig.nextStatusTitle}
+                        </Badge>
+                      </div>
+                    </>
+                  )}
+                  
+                  {latestPendingAssignment.requestedBy && (
+                    <div className="flex items-center gap-1">
+                      <User className="h-4 w-4 text-amber-400/70" />
+                      <span className="text-amber-200/80">Requested by:</span> 
+                      <span className="text-amber-100">{latestPendingAssignment.requestedBy}</span>
+                    </div>
+                  )}
                   
                   {/* Display individual approver */}
-                  {latestPendingAssignment?.assignedTo && !latestPendingAssignment.assignedToGroup && (
-                    <div className="flex items-center gap-1 text-sm text-blue-300">
-                      <UserCheck className="h-4 w-4 text-blue-400/70" />
-                      <span className="font-medium">Waiting for:</span> 
-                      <span>{latestPendingAssignment.assignedTo}</span>
+                  {stepConfig?.approvalType === "Single" && stepConfig.singleApproverName && (
+                    <div className="flex items-center gap-1">
+                      <UserCheck className="h-4 w-4 text-amber-400/70" />
+                      <span className="text-amber-200/80">Waiting for:</span> 
+                      <span className="text-amber-100">{stepConfig.singleApproverName}</span>
                     </div>
                   )}
                   
                   {/* Display approver group */}
-                  {latestPendingAssignment?.assignedToGroup && (
+                  {stepConfig?.approvalType === "Group" && stepConfig.groupName && (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-1 text-sm text-blue-300">
-                        <Users className="h-4 w-4 text-blue-400/70" />
-                        <span className="font-medium">Approvers Group:</span> 
-                        <span>{latestPendingAssignment.assignedToGroup}</span>
+                      <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4 text-amber-400/70" />
+                        <span className="text-amber-200/80">Approvers Group:</span> 
+                        <span className="text-amber-100">{stepConfig.groupName.replace(/\s*\(ID:\s*\d+\)/, '')}</span>
                       </div>
                       
-                      {isLoadingGroup ? (
-                        <div className="flex items-center gap-1 text-blue-300/50 pl-5 text-sm">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          <span>Loading group details...</span>
+                      {stepConfig.ruleType && (
+                        <div className="flex items-center gap-1 mb-1">
+                          <Shield className="h-4 w-4 text-amber-400/70" />
+                          <span className="text-amber-200/80">Approval Rule:</span> 
+                          {getRuleTypeBadge(stepConfig.ruleType)}
                         </div>
-                      ) : groupDetails && (
-                        <div className="pl-5 mt-1 mb-1">
-                          {groupDetails.ruleType && (
-                            <div className="flex items-center gap-1 mb-1 text-sm text-blue-300">
-                              <Shield className="h-4 w-4 text-blue-400/70" />
-                              <span className="font-medium">Approval Rule:</span> 
-                              {getRuleTypeBadge(groupDetails.ruleType)}
-                            </div>
-                          )}
-                          
-                          {groupMembers.length > 0 && (
-                            <div className="mt-1">
-                              <p className="text-sm text-blue-300 font-medium mb-1">Group Members:</p>
-                              <ul className="space-y-1 pl-5 text-sm text-blue-300">
-                                {groupMembers.map((member, index) => (
-                                  <li key={member.userId || index} className="flex items-center gap-1">
-                                    {groupDetails.ruleType && groupDetails.ruleType.toLowerCase() === 'sequential' ? (
-                                      <>
-                                        <span className="text-blue-400/70">{index + 1}.</span>
-                                        <User className="h-3 w-3 text-blue-400/70" />
-                                      </>
-                                    ) : (
-                                      <User className="h-3 w-3 text-blue-400/70" />
-                                    )}
-                                    <span>{member.username || 'Unknown'}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                      )}
+                      
+                      {stepConfig.groupApprovers && stepConfig.groupApprovers.length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-amber-200/80 mb-2">Group Members:</p>
+                          <div className="space-y-1 pl-5">
+                            {stepConfig.groupApprovers.map((member, index) => {
+                              const userStatus = getUserApprovalStatus(member.username);
+                              const hasApproved = userStatus?.isApproved === true;
+                              const hasRejected = userStatus?.isApproved === false;
+                              const hasPending = !userStatus;
+                              
+                              return (
+                                <div key={member.userId || index} className="flex items-center gap-2">
+                                  {stepConfig.ruleType?.toLowerCase() === 'sequential' && (
+                                    <span className="text-amber-400/70 text-xs">{index + 1}.</span>
+                                  )}
+                                  
+                                  {/* Status icon */}
+                                  {hasApproved ? (
+                                    <Check className="h-4 w-4 text-green-400" />
+                                  ) : hasRejected ? (
+                                    <X className="h-4 w-4 text-red-400" />
+                                  ) : (
+                                    <Clock className="h-4 w-4 text-amber-400/70" />
+                                  )}
+                                  
+                                  {/* User name */}
+                                  <span className={`${
+                                    hasApproved ? 'text-green-200' : 
+                                    hasRejected ? 'text-red-200' : 
+                                    'text-amber-100'
+                                  }`}>
+                                    {member.username}
+                                  </span>
+                                  
+                                  {/* Status badge */}
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-xs ${
+                                      hasApproved ? 'border-green-500/30 text-green-200 bg-green-500/10' :
+                                      hasRejected ? 'border-red-500/30 text-red-200 bg-red-500/10' :
+                                      'border-amber-500/30 text-amber-200 bg-amber-500/10'
+                                    }`}
+                                  >
+                                    {hasApproved ? 'Approved' : hasRejected ? 'Rejected' : 'Pending'}
+                                  </Badge>
+                                  
+                                  {/* Response date */}
+                                  {userStatus && (
+                                    <span className="text-xs text-amber-200/50">
+                                      {new Date(userStatus.responseDate).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
                   )}
+                  
+                  {latestPendingAssignment.requestDate && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-amber-400/70" />
+                      <span className="text-amber-200/80">Waiting since:</span> 
+                      <span className="text-amber-100">
+                        {new Date(latestPendingAssignment.requestDate).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
                 </div>
+
+                {/* Approval Action Buttons - Show only if current user can approve */}
+                {canCurrentUserApprove() && (
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-amber-500/20">
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                      onClick={() => openApprovalDialog("approve")}
+                    >
+                      <CircleCheck className="h-4 w-4 mr-2" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-red-900/30 border-red-500/30 text-red-400 hover:bg-red-800/50 hover:text-red-300 flex-1"
+                      onClick={() => openApprovalDialog("reject")}
+                    >
+                      <CircleX className="h-4 w-4 mr-2" />
+                      Reject
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -312,6 +540,93 @@ export function DocumentApprovalStatus({
           </div>
         </CardContent>
       </Card>
+
+      {/* Approval Response Dialog */}
+      <Dialog open={isApprovalDialogOpen} onOpenChange={setIsApprovalDialogOpen}>
+        <DialogContent className="bg-[#0a1033] border-blue-900/50 text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {responseType === "approve" ? "Approve Document" : "Reject Document"}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {responseType === "approve"
+                ? "You're about to approve this document. Please provide any comments if needed."
+                : "You're about to reject this document. Please provide a reason for rejection."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {latestPendingAssignment && (
+              <div className="bg-blue-950/50 p-3 rounded-md border border-blue-900/30">
+                <p className="text-sm text-gray-400">Step</p>
+                <p className="font-medium text-blue-300">
+                  {latestPendingAssignment.stepTitle || "Unknown Step"}
+                </p>
+                <p className="text-sm text-gray-400 mt-2">Requested by</p>
+                <p className="font-medium text-blue-300">
+                  {latestPendingAssignment.requestedBy || "Unknown User"}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="comments" className="text-sm font-medium text-gray-400">
+                Comments
+              </label>
+              <Textarea
+                id="comments"
+                placeholder={
+                  responseType === "approve"
+                    ? "Optional comments..."
+                    : "Reason for rejection..."
+                }
+                className="mt-1 bg-blue-950/40 border-blue-900/30 text-white"
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+                required={responseType === "reject"}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsApprovalDialogOpen(false)}
+              className="bg-transparent border-blue-900/50 text-gray-300 hover:bg-blue-900/20"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className={
+                responseType === "approve"
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-red-600 hover:bg-red-700 text-white"
+              }
+              onClick={handleApprovalResponse}
+              disabled={isSubmitting || (responseType === "reject" && !comments.trim())}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {responseType === "approve" ? "Approving..." : "Rejecting..."}
+                </>
+              ) : (
+                <>
+                  {responseType === "approve" ? (
+                    <CircleCheck className="mr-2 h-4 w-4" />
+                  ) : (
+                    <CircleX className="mr-2 h-4 w-4" />
+                  )}
+                  {responseType === "approve" ? "Approve" : "Reject"}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

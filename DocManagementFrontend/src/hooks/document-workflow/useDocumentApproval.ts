@@ -50,7 +50,7 @@ export function useDocumentApproval(documentId: number) {
   const hasPendingApprovals = !!approvalHistory?.some(
     approval => {
       const status = approval.status?.toLowerCase();
-      return status === 'open' || status === 'inprogress';
+      return status === 'open' || status === 'inprogress' || status === 'pending';
     }
   );
 

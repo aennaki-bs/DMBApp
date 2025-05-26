@@ -11,6 +11,7 @@ namespace DocManagementBackend.Models
     {
         public int ApprovalId { get; set; }
         public int DocumentId { get; set; }
+        public int StepId { get; set; }
         public string DocumentKey { get; set; } = string.Empty;
         public string DocumentTitle { get; set; } = string.Empty;
         public string StepTitle { get; set; } = string.Empty;

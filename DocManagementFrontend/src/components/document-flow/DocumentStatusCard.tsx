@@ -59,9 +59,10 @@ export function DocumentStatusCard({
   });
 
   // Check if there are pending approvals
-  const hasPendingApprovals = approvalHistory?.some((approval) =>
-    approval.status?.toLowerCase().includes("pending")
-  );
+  const hasPendingApprovals = approvalHistory?.some((approval) => {
+    const status = approval.status?.toLowerCase();
+    return status === 'open' || status === 'inprogress' || status === 'pending';
+  });
 
   // Check if document was rejected
   const wasRejected = approvalHistory?.some((approval) =>

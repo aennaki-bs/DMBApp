@@ -34,36 +34,41 @@ const DocumentEditForm = ({
   onCancel
 }: DocumentEditFormProps) => {
   // Form data
-  const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
   const [title, setTitle] = useState('');
-  const [documentAlias, setDocumentAlias] = useState('');
-  const [docDate, setDocDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [accountingDate, setAccountingDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [content, setContent] = useState('');
   
   // Track which fields have been edited
   const [editedFields, setEditedFields] = useState<Record<string, boolean>>({
-    typeId: false,
     title: false,
-    documentAlias: false,
-    docDate: false,
+    accountingDate: false,
     content: false
   });
 
   useEffect(() => {
     if (document) {
-      setSelectedTypeId(document.typeId);
       setTitle(document.title);
-      setDocumentAlias(document.documentAlias);
-      setDocDate(new Date(document.docDate).toISOString().split('T')[0]);
+      // Set accounting date from the document's comptableDate
+      console.log('Document comptableDate:', document.comptableDate);
+      // Parse the date and format it for the input field
+      const date = new Date(document.comptableDate);
+      // Use local date to avoid timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      console.log('Formatted accounting date for input:', formattedDate);
+      setAccountingDate(formattedDate);
       setContent(document.content);
+      
+      // Reset edited fields when document changes
+      setEditedFields({
+        title: false,
+        accountingDate: false,
+        content: false
+      });
     }
   }, [document]);
-
-  const handleTypeIdChange = (value: string) => {
-    const numValue = Number(value);
-    setSelectedTypeId(numValue);
-    setEditedFields({...editedFields, typeId: numValue !== document?.typeId});
-  };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -71,17 +76,22 @@ const DocumentEditForm = ({
     setEditedFields({...editedFields, title: newValue !== document?.title});
   };
 
-  const handleDocumentAliasChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAccountingDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setDocumentAlias(newValue);
-    setEditedFields({...editedFields, documentAlias: newValue !== document?.documentAlias});
-  };
-
-  const handleDocDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setDocDate(newValue);
-    const originalDate = document?.docDate ? new Date(document.docDate).toISOString().split('T')[0] : '';
-    setEditedFields({...editedFields, docDate: newValue !== originalDate});
+    setAccountingDate(newValue);
+    
+    // Format original date the same way for comparison
+    let originalDate = '';
+    if (document?.comptableDate) {
+      const date = new Date(document.comptableDate);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      originalDate = `${year}-${month}-${day}`;
+    }
+    
+    console.log('Comparing dates - new:', newValue, 'original:', originalDate);
+    setEditedFields({...editedFields, accountingDate: newValue !== originalDate});
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -96,16 +106,12 @@ const DocumentEditForm = ({
       return false;
     }
     
-    if (editedFields.typeId && !selectedTypeId) {
-      toast.error('Please select a document type');
-      return false;
-    }
     if (editedFields.title && !title.trim()) {
       toast.error('Please enter a document title');
       return false;
     }
-    if (editedFields.docDate && !docDate) {
-      toast.error('Please select a document date');
+    if (editedFields.accountingDate && !accountingDate) {
+      toast.error('Please select an accounting date');
       return false;
     }
     if (editedFields.content && !content.trim()) {
@@ -121,12 +127,17 @@ const DocumentEditForm = ({
     // Only include fields that have been edited
     const documentData: UpdateDocumentRequest = {};
     
-    if (editedFields.typeId) documentData.typeId = selectedTypeId || undefined;
     if (editedFields.title) documentData.title = title;
-    if (editedFields.documentAlias) documentData.documentAlias = documentAlias;
-    if (editedFields.docDate) documentData.docDate = docDate;
+    if (editedFields.accountingDate) {
+      // Convert the date string to ISO format for the backend
+      // Create date at noon UTC to avoid timezone issues
+      const dateToSend = new Date(accountingDate + 'T12:00:00.000Z').toISOString();
+      console.log('Sending accounting date:', accountingDate, 'as ISO:', dateToSend);
+      documentData.comptableDate = dateToSend;
+    }
     if (editedFields.content) documentData.content = content;
 
+    console.log('Submitting document data:', documentData);
     await onSubmit(documentData);
   };
 
@@ -168,53 +179,6 @@ const DocumentEditForm = ({
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label htmlFor="documentType" className="text-base font-medium text-blue-100">Document Type*</Label>
-              <Select 
-                value={selectedTypeId?.toString() || ''} 
-                onValueChange={handleTypeIdChange}
-              >
-                <SelectTrigger className="h-12 text-base bg-[#111633] border-blue-900/30 text-white">
-                  <SelectValue placeholder="Select document type" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#111633] border-blue-900/30 text-white">
-                  {documentTypes.map(type => (
-                    <SelectItem key={type.id} value={type.id!.toString()}>
-                      {type.typeName} ({type.typeKey})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {editedFields.typeId && (
-                <p className="text-xs text-yellow-400">
-                  ⚠️ Changing the document type may update the document key
-                </p>
-              )}
-            </div>
-            
-            <div className="space-y-3">
-              <Label htmlFor="documentAlias" className="text-base font-medium text-blue-100">Document Alias</Label>
-              <Input 
-                id="documentAlias" 
-                value={documentAlias} 
-                onChange={handleDocumentAliasChange}
-                placeholder="e.g., INV for Invoice"
-                maxLength={10}
-                className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
-              />
-              <p className={`text-xs ${
-                editedFields.documentAlias 
-                  ? "text-yellow-400" 
-                  : "text-gray-400"
-              }`}>
-                {document.documentKey.includes(documentAlias) ? 
-                  'Current document key contains this alias' : 
-                  '⚠️ Changing this will update the document key'}
-              </p>
-            </div>
-          </div>
-
           <div className="space-y-3">
             <Label htmlFor="title" className="text-base font-medium text-blue-100">Document Title*</Label>
             <Input 
@@ -232,17 +196,17 @@ const DocumentEditForm = ({
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="docDate" className="text-base font-medium text-blue-100">Document Date*</Label>
+            <Label htmlFor="accountingDate" className="text-base font-medium text-blue-100">Accounting Date*</Label>
             <Input 
-              id="docDate" 
+              id="accountingDate" 
               type="date" 
-              value={docDate} 
-              onChange={handleDocDateChange}
+              value={accountingDate} 
+              onChange={handleAccountingDateChange}
               className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
             />
-            {editedFields.docDate && (
+            {editedFields.accountingDate && (
               <p className="text-xs text-blue-400">
-                ℹ️ Date has been modified
+                ℹ️ Accounting date has been modified
               </p>
             )}
           </div>

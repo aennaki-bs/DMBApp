@@ -9,7 +9,8 @@ import {
   ApprovalHistory,
   DocumentToApprove,
   ApprovalRuleType,
-  GroupAssociationDto
+  GroupAssociationDto,
+  StepApprovalConfigDetailDto
 } from '@/models/approval';
 
 // Approvator (individual approver) interface
@@ -58,10 +59,18 @@ export interface ApprovalInfo {
   isRequired: boolean;
 }
 
+export interface ApprovalResponseHistoryDto {
+  responderName: string;
+  responseDate: string;
+  isApproved: boolean;
+  comments: string;
+}
+
 export interface ApprovalHistoryItem extends ApprovalInfo {
   decisionMadeBy?: string;
   decisionMadeAt?: string;
   decision?: string;
+  responses?: ApprovalResponseHistoryDto[];
 }
 
 export interface ApproversGroup {
@@ -338,7 +347,7 @@ const approvalService = {
   },
   
   // Get step approval configuration
-  getStepApprovalConfig: async (stepId: number): Promise<any> => {
+  getStepApprovalConfig: async (stepId: number): Promise<StepApprovalConfigDetailDto> => {
     try {
       const response = await api.get(`/Approval/configure/step/${stepId}`);
       return response.data;

@@ -72,7 +72,7 @@ export default function PendingDocumentsList({ onSelectionChange }: PendingDocum
   const displayedDocuments = useFakeData ? mockPendingDocuments : pendingDocuments || [];
 
   const getStatusBadge = (status) => {
-    if (status?.toLowerCase().includes('pending') || status?.toLowerCase().includes('awaiting')) {
+          if (status?.toLowerCase() === 'open' || status?.toLowerCase() === 'inprogress' || status?.toLowerCase().includes('pending') || status?.toLowerCase().includes('awaiting')) {
       return <Badge className="bg-amber-500">Pending</Badge>;
     }
     if (status?.toLowerCase().includes('progress')) {

@@ -14,6 +14,7 @@ namespace DocManagementBackend.Models
     public class UpdateSubTypeDto
     {
         public string? Name { get; set; }
+        public string? SubTypeKey { get; set; }
         public string? Description { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

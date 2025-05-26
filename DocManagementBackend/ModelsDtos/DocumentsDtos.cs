@@ -23,6 +23,7 @@ namespace DocManagementBackend.Models
         public string? DocumentAlias { get; set; }
         public string? DocumentExterne { get; set; }
         public DateTime? DocDate { get; set; }
+        public DateTime? ComptableDate { get; set; }
         public int? CircuitId { get; set; }
     }
     public class DocumentDto

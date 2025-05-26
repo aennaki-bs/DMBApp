@@ -163,19 +163,18 @@ export function MainNavbar() {
                 >
                   <div className="hidden md:block text-right">
                     <p className="text-sm font-medium">
-                      {user.firstName} {user.lastName}
+                      {user.username || "User"}
                     </p>
                     <p className="text-xs text-blue-300">{user.role}</p>
                   </div>
                   <Avatar className="h-8 w-8 ring-2 ring-blue-600/30">
                     <AvatarImage
                       src={user.profilePicture}
-                      alt={`${user.firstName} ${user.lastName}`}
+                      alt={user.username || "User"}
                       className="object-cover"
                     />
                     <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-                      {user.firstName?.[0]}
-                      {user.lastName?.[0]}
+                      {user.username?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <ChevronDown className="h-4 w-4 text-blue-300" />

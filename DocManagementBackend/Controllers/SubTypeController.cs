@@ -219,7 +219,7 @@ namespace DocManagementBackend.Controllers
                 string newKey;
                 do
                 {
-                    newKey = $"{subTypeKey}{counter}";
+                    newKey = $"{subTypeKey}-{counter}";
                     keyExists = await _context.SubTypes.AnyAsync(st => st.SubTypeKey == newKey);
                     counter++;
                 } while (keyExists && counter < 100);
@@ -330,9 +330,19 @@ namespace DocManagementBackend.Controllers
             if (updateSubTypeDto.IsActive.HasValue)
                 subType.IsActive = updateSubTypeDto.IsActive.Value;
 
-            // If the name or dates changed, update the SubTypeKey
-            if (updateSubTypeDto.Name != null || updateSubTypeDto.EndDate.HasValue)
+            // Handle SubTypeKey update
+            if (updateSubTypeDto.SubTypeKey != null)
             {
+                // Check if the new SubTypeKey is unique
+                bool keyExists = await _context.SubTypes.AnyAsync(st => st.SubTypeKey == updateSubTypeDto.SubTypeKey && st.Id != id);
+                if (keyExists)
+                    return BadRequest($"SubType key '{updateSubTypeDto.SubTypeKey}' already exists.");
+                
+                subType.SubTypeKey = updateSubTypeDto.SubTypeKey;
+            }
+            else if (updateSubTypeDto.Name != null || updateSubTypeDto.EndDate.HasValue)
+            {
+                // If the name or dates changed but no explicit SubTypeKey provided, auto-generate it
                 var documentType = await _context.DocumentTypes.FindAsync(subType.DocumentTypeId);
                 if (documentType != null)
                 {
