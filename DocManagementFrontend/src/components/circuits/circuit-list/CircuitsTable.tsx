@@ -33,6 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import CircuitActivationDialog from "../CircuitActivationDialog";
 
 interface CircuitsTableProps {
   circuits: Circuit[];
@@ -68,9 +69,14 @@ export function CircuitsTable({
   const [circuitToDeactivate, setCircuitToDeactivate] =
     useState<Circuit | null>(null);
 
+  // Navigate to the circuit statuses page when clicking on a circuit
   const handleCircuitClick = (circuitId: number) => {
     navigate(`/circuits/${circuitId}/statuses`);
   };
+
+  const [circuitToActivate, setCircuitToActivate] = useState<Circuit | null>(
+    null
+  );
 
   const handleToggleActive = async (circuit: Circuit, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -78,9 +84,9 @@ export function CircuitsTable({
     // Prevent multiple clicks
     if (loadingCircuits.includes(circuit.id)) return;
 
-    // For activation, no confirmation needed
+    // For activation, show the activation dialog
     if (!circuit.isActive) {
-      performToggle(circuit);
+      setCircuitToActivate(circuit);
       return;
     }
 
@@ -169,6 +175,19 @@ export function CircuitsTable({
 
   return (
     <>
+      {/* Circuit Activation Dialog */}
+      <CircuitActivationDialog
+        isOpen={circuitToActivate !== null}
+        onClose={() => setCircuitToActivate(null)}
+        circuit={circuitToActivate as Circuit}
+        onActivate={() => {
+          if (circuitToActivate) {
+            performToggle(circuitToActivate);
+            setCircuitToActivate(null);
+          }
+        }}
+      />
+
       <Table>
         <TableHeader className="bg-blue-900/20 sticky top-0 z-10">
           <TableRow className="border-blue-900/50 hover:bg-blue-900/30">

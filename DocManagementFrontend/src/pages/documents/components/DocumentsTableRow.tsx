@@ -175,9 +175,14 @@ export default function DocumentsTableRow({
         >
           <FileText className="h-3.5 w-3.5 opacity-70" />
           {document.documentKey}
-          <span className="text-blue-400 hover:text-blue-300 font-medium ml-2">
-            {document.title}
-          </span>
+        </Link>
+      </TableCell>
+      <TableCell className="py-3">
+        <Link
+          to={`/documents/${document.id}`}
+          className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
+        >
+          {document.title}
         </Link>
       </TableCell>
       <TableCell className="py-3">{getStatusBadge(document.status)}</TableCell>

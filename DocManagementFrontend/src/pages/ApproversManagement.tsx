@@ -491,7 +491,7 @@ export default function ApproversManagement() {
           title="Approvers"
           subtitle="Manage your document workflow approvers"
           isLoading={isLoading}
-          bulkActions={bulkActions}
+          bulkActions={[]}
           showViewToggle={true}
           viewMode={viewMode}
           onViewModeChange={setViewMode}

@@ -1,7 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import EditCircuitDialog from "../EditCircuitDialog";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
-import CircuitDetailsDialog from "../CircuitDetailsDialog";
 import { CircuitLoadingState } from "./CircuitLoadingState";
 import { CircuitEmptyState } from "./CircuitEmptyState";
 import { CircuitsTable } from "./CircuitsTable";
@@ -133,12 +132,6 @@ export function CircuitListContent({
               />
             </>
           )}
-
-          <CircuitDetailsDialog
-            circuit={selectedCircuit}
-            open={detailsDialogOpen}
-            onOpenChange={setDetailsDialogOpen}
-          />
         </>
       )}
     </>

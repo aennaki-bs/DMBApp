@@ -11,8 +11,9 @@ declare module 'axios' {
 // Create axios instance with default configuration
 const api = axios.create({
   // Use the correct port for the API (5205) as seen in the network tab
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5205/api',
-  // baseURL: import.meta.env.VITE_API_URL || 'http://192.168.1.94:5205/api',
+  // baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5205/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://192.168.1.94:5205/api',
+  // baseURL: import.meta.env.VITE_API_URL || 'http://172.20.10.4:5205/api',
   headers: {
     'Content-Type': 'application/json',
   },

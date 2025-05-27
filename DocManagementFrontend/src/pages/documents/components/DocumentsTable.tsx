@@ -111,6 +111,13 @@ export default function DocumentsTable({
                 </TableHead>
                 <TableHead className="text-blue-300 font-medium">
                   {renderSortableHeader(
+                    "Title",
+                    "title",
+                    <FileText className="h-4 w-4 text-blue-400" />
+                  )}
+                </TableHead>
+                <TableHead className="text-blue-300 font-medium">
+                  {renderSortableHeader(
                     "Status",
                     "status",
                     <AlertCircle className="h-4 w-4 text-blue-400" />

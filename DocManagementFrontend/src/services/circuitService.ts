@@ -107,6 +107,12 @@ const circuitService = {
         if (usageInfo.isUsed) {
           throw new Error(`Cannot deactivate circuit: It is currently used by ${usageInfo.documentCount} document(s)`);
         }
+      } else {
+        // If trying to activate, check if the circuit has setup steps
+        const hasSteps = await circuitService.checkStepExists(circuit.id);
+        if (!hasSteps) {
+          throw new Error("Cannot activate circuit: It does not have any setup steps.");
+        }
       }
 
       // Update the circuit with the toggled status
@@ -445,6 +451,21 @@ const circuitService = {
   getActiveCircuits: async (): Promise<any[]> => {
     const response = await api.get('/Circuit/active');
     return response.data;
+  },
+
+  // Check if a circuit has setup steps before allowing activation
+  checkStepExists: async (circuitId: number): Promise<boolean> => {
+    try {
+      // Instead of a separate endpoint, use the circuit data we already have
+      const circuit = await circuitService.getCircuitById(circuitId);
+      
+      // Check if the circuit has steps and if there's at least one step
+      return Array.isArray(circuit.steps) && circuit.steps.length > 0;
+    } catch (error) {
+      console.error(`Error checking if circuit ${circuitId} has steps:`, error);
+      // Return false by default if the API call fails
+      return false;
+    }
   },
 };
 

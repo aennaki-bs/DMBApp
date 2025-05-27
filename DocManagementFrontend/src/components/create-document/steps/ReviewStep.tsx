@@ -20,8 +20,10 @@ import {
   Copy,
   Calculator,
   Share2,
+  ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 interface ReviewStepProps {
   selectedType: DocumentType | undefined;
@@ -32,6 +34,8 @@ interface ReviewStepProps {
   comptableDate: string | null;
   content: string;
   circuitName: string;
+  isExternal?: boolean;
+  externalReference?: string;
   onEditTypeClick: () => void;
   onEditDetailsClick: () => void;
   onEditDateClick: () => void;
@@ -48,6 +52,8 @@ export const ReviewStep = ({
   comptableDate,
   content,
   circuitName,
+  isExternal = false,
+  externalReference = "",
   onEditTypeClick,
   onEditDetailsClick,
   onEditDateClick,
@@ -120,14 +126,16 @@ export const ReviewStep = ({
       {/* Document Details */}
       <Card className="bg-[#0a1033]/80 border-gray-800">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <div>
+          <div className="flex items-center gap-2">
             <CardTitle className="text-md text-white flex items-center gap-2">
               <FileSignature className="h-4 w-4 text-blue-400" />
               Document Details
             </CardTitle>
-            <CardDescription className="text-gray-400">
-              Title and alias information
-            </CardDescription>
+            {isExternal && (
+              <Badge className="bg-blue-600 text-white text-xs flex items-center gap-1">
+                <ExternalLink className="h-3 w-3" /> External
+              </Badge>
+            )}
           </div>
           <Button
             variant="ghost"
@@ -143,10 +151,34 @@ export const ReviewStep = ({
             <p className="text-xs text-gray-400">Title</p>
             <p className="text-sm text-white">{title || "N/A"}</p>
           </div>
-          {documentAlias && (
+
+          {isExternal ? (
             <div>
-              <p className="text-xs text-gray-400">Alias</p>
-              <p className="text-sm text-white">{documentAlias}</p>
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <ExternalLink className="h-3 w-3 text-blue-400" /> External
+                Reference
+              </p>
+              <p className="text-sm text-white">{externalReference || "N/A"}</p>
+            </div>
+          ) : (
+            documentAlias && (
+              <div>
+                <p className="text-xs text-gray-400">Alias</p>
+                <p className="text-sm text-white">{documentAlias}</p>
+              </div>
+            )
+          )}
+
+          {isExternal && (
+            <div className="pt-2 mt-2 border-t border-gray-800/50">
+              <div className="flex items-start gap-2 bg-blue-900/20 p-2 rounded-md">
+                <ExternalLink className="h-4 w-4 mt-0.5 text-blue-400" />
+                <p className="text-xs text-gray-300">
+                  This document is marked as external. The external reference
+                  will be sent as "documentExterne" and will completely replace
+                  the alias field.
+                </p>
+              </div>
             </div>
           )}
         </CardContent>

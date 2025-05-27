@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import circuitService from '@/services/circuitService';
 
 interface UseCircuitListProps {
@@ -10,6 +11,7 @@ interface UseCircuitListProps {
 }
 
 export function useCircuitList({ onApiError, searchQuery, statusFilter = 'any' }: UseCircuitListProps) {
+  const navigate = useNavigate();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -190,8 +192,9 @@ export function useCircuitList({ onApiError, searchQuery, statusFilter = 'any' }
   };
 
   const handleViewDetails = (circuit: Circuit) => {
-    setSelectedCircuit(circuit);
-    setDetailsDialogOpen(true);
+    if (circuit && circuit.id) {
+      navigate(`/circuits/${circuit.id}/statuses`);
+    }
   };
 
   const confirmDelete = async () => {

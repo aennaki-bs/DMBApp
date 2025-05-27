@@ -1,9 +1,17 @@
-import React from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { AtSign, Mail, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import PasswordStrengthIndicator from '@/components/register/password/PasswordStrengthIndicator';
+import React from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AtSign,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import PasswordStrengthIndicator from "@/components/register/password/PasswordStrengthIndicator";
 
 interface CompanyCredentialsFieldsProps {
   formData: {
@@ -26,14 +34,23 @@ const CompanyCredentialsFields: React.FC<CompanyCredentialsFieldsProps> = ({
   localErrors,
   validationErrors,
   handleChange,
-  passwordStrength
+  passwordStrength,
 }) => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   // Helper function to determine if a field is valid
   const isFieldValid = (fieldName: string, value?: string) => {
-    return value && value.trim().length > 0 && !localErrors[fieldName] && !validationErrors[fieldName];
+    return (
+      value &&
+      value.trim().length > 0 &&
+      !localErrors[fieldName] &&
+      !validationErrors[fieldName]
+    );
+  };
+
+  const hasFieldError = (fieldName: string) => {
+    return !!localErrors[fieldName] || !!validationErrors[fieldName];
   };
 
   return (
@@ -49,16 +66,22 @@ const CompanyCredentialsFields: React.FC<CompanyCredentialsFieldsProps> = ({
             type="email"
             placeholder="yourcompany@example.com"
             className="pl-10 pr-10"
-            error={!!localErrors.email || !!validationErrors.email}
-            value={formData.companyEmail || ''}
+            error={hasFieldError("email")}
+            value={formData.companyEmail || ""}
             onChange={handleChange}
           />
-          {isFieldValid('email', formData.companyEmail) && (
-            <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+          {hasFieldError("email") ? (
+            <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+          ) : (
+            isFieldValid("email", formData.companyEmail) && (
+              <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+            )
           )}
         </div>
         {(localErrors.email || validationErrors.email) && (
-          <p className="text-xs text-red-500">{localErrors.email || validationErrors.email}</p>
+          <p className="text-xs text-red-500">
+            {localErrors.email || validationErrors.email}
+          </p>
         )}
       </div>
 
@@ -72,18 +95,26 @@ const CompanyCredentialsFields: React.FC<CompanyCredentialsFieldsProps> = ({
             name="username"
             placeholder="company_username"
             className="pl-10 pr-10"
-            error={!!localErrors.username || !!validationErrors.username}
-            value={formData.username || ''}
+            error={hasFieldError("username")}
+            value={formData.username || ""}
             onChange={handleChange}
           />
-          {isFieldValid('username', formData.username) && (
-            <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+          {hasFieldError("username") ? (
+            <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+          ) : (
+            isFieldValid("username", formData.username) && (
+              <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+            )
           )}
         </div>
         {(localErrors.username || validationErrors.username) && (
-          <p className="text-xs text-red-500">{localErrors.username || validationErrors.username}</p>
+          <p className="text-xs text-red-500">
+            {localErrors.username || validationErrors.username}
+          </p>
         )}
-        <p className="text-xs text-gray-400">Username must be at least 4 characters</p>
+        <p className="text-xs text-gray-400">
+          Username must be at least 4 characters
+        </p>
       </div>
 
       {/* Password */}
@@ -98,7 +129,7 @@ const CompanyCredentialsFields: React.FC<CompanyCredentialsFieldsProps> = ({
             placeholder="••••••••"
             className="pl-10 pr-10"
             error={!!localErrors.password}
-            value={formData.password || ''}
+            value={formData.password || ""}
             onChange={handleChange}
           />
           <Button
@@ -121,7 +152,7 @@ const CompanyCredentialsFields: React.FC<CompanyCredentialsFieldsProps> = ({
         {localErrors.password && (
           <p className="text-xs text-red-500">{localErrors.password}</p>
         )}
-        
+
         {formData.password && (
           <PasswordStrengthIndicator strength={passwordStrength} />
         )}
@@ -139,7 +170,7 @@ const CompanyCredentialsFields: React.FC<CompanyCredentialsFieldsProps> = ({
             placeholder="••••••••"
             className="pl-10 pr-10"
             error={!!localErrors.confirmPassword}
-            value={formData.confirmPassword || ''}
+            value={formData.confirmPassword || ""}
             onChange={handleChange}
           />
           <Button
@@ -167,4 +198,4 @@ const CompanyCredentialsFields: React.FC<CompanyCredentialsFieldsProps> = ({
   );
 };
 
-export default CompanyCredentialsFields; 
+export default CompanyCredentialsFields;

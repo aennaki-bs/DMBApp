@@ -204,7 +204,7 @@ export default function ApproverEditWizard({
                     <h3 className="text-md font-medium text-blue-100">
                       {formData.username}
                     </h3>
-                    <p className="text-sm text-blue-400">User ID: {formData.userId}</p>
+                    {/* <p className="text-sm text-blue-400">User ID: {formData.userId}</p> */}
                   </div>
                 </div>
               </div>
@@ -224,7 +224,8 @@ export default function ApproverEditWizard({
                     }
                   />
                   <p className="text-sm text-blue-400 mt-1">
-                    This comment will help identify the approver's role or purpose.
+                    This comment will help identify the approver's role or
+                    purpose.
                   </p>
                 </div>
               </div>
@@ -418,4 +419,4 @@ export default function ApproverEditWizard({
       </DialogContent>
     </Dialog>
   );
-} 
+}

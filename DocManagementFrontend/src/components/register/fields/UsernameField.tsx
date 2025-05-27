@@ -1,6 +1,6 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { User, CheckCircle2, UserCircle } from "lucide-react";
+import { User, CheckCircle2, UserCircle, AlertCircle } from "lucide-react";
 
 interface UsernameFieldProps {
   value: string;
@@ -47,10 +47,16 @@ const UsernameField: React.FC<UsernameFieldProps> = ({
           value={value}
           onChange={onChange}
         />
-        {isValid && (
+        {hasError ? (
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <AlertCircle className="h-4 w-4 text-red-500" />
           </div>
+        ) : (
+          isValid && (
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+            </div>
+          )
         )}
       </div>
       {(localErrors.username || validationErrors.username) && (

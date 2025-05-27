@@ -605,7 +605,7 @@ export default function ApprovalGroupsManagement() {
           title="Approval Groups"
           subtitle="Manage groups for document approval workflows"
           isLoading={isLoading}
-          bulkActions={bulkActions}
+          bulkActions={[]}
           showViewToggle={true}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}

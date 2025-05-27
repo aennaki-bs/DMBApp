@@ -5,7 +5,7 @@ import { validateUsernameEmailStep } from "./utils/validation";
 import StepContainer from "./utils/StepContainer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AtSign, Mail, CheckCircle2 } from "lucide-react";
+import { AtSign, Mail, CheckCircle2, AlertCircle } from "lucide-react";
 
 const StepThreeCompanyUsernameEmail = () => {
   const {
@@ -149,8 +149,12 @@ const StepThreeCompanyUsernameEmail = () => {
             value={formData.email || ""}
             onChange={handleChange}
           />
-          {isFieldValid("email", formData.email) && (
-            <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+          {visibleErrors.email || stepValidation.errors.email ? (
+            <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+          ) : (
+            isFieldValid("email", formData.email) && (
+              <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+            )
           )}
         </div>
         {(visibleErrors.email || stepValidation.errors.email) && (
@@ -184,8 +188,12 @@ const StepThreeCompanyUsernameEmail = () => {
             value={formData.username || ""}
             onChange={handleChange}
           />
-          {isFieldValid("username", formData.username) && (
-            <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+          {visibleErrors.username || stepValidation.errors.username ? (
+            <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+          ) : (
+            isFieldValid("username", formData.username) && (
+              <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+            )
           )}
         </div>
         {(visibleErrors.username || stepValidation.errors.username) && (

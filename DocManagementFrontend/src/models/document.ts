@@ -5,6 +5,7 @@ export interface Document {
   content: string;
   status: number;
   documentAlias: string;
+  documentExterne?: string;
   createdAt: string;
   updatedAt: string;
   typeId: number;
@@ -45,6 +46,7 @@ export interface CreateDocumentRequest {
   title: string;
   content: string;
   documentAlias?: string;
+  documentExterne?: string;
   typeId: number;
   subTypeId?: number | null;
   docDate?: string;
@@ -55,6 +57,7 @@ export interface UpdateDocumentRequest {
   title?: string;
   content?: string;
   documentAlias?: string;
+  documentExterne?: string;
   typeId?: number;
   docDate?: string;
   comptableDate?: string;

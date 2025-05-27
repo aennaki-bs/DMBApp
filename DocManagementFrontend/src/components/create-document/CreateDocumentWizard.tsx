@@ -64,6 +64,8 @@ interface FormData {
   content: string;
   circuitId: number | null;
   circuitName: string;
+  isExternal: boolean;
+  externalReference: string;
 }
 
 const MotionDiv = motion.div;
@@ -75,7 +77,7 @@ export default function CreateDocumentWizard({
 }: CreateDocumentWizardProps) {
   // Add navigate function
   const navigate = useNavigate();
-  
+
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,6 +93,8 @@ export default function CreateDocumentWizard({
     content: "",
     circuitId: null,
     circuitName: "",
+    isExternal: false,
+    externalReference: "",
   });
 
   // Data fetching states
@@ -124,6 +128,8 @@ export default function CreateDocumentWizard({
         content: "",
         circuitId: null,
         circuitName: "",
+        isExternal: false,
+        externalReference: "",
       });
       fetchDocumentTypes();
       fetchCircuits();
@@ -208,21 +214,21 @@ export default function CreateDocumentWizard({
   const fetchCircuits = async () => {
     try {
       setIsLoading(true);
-      
+
       // Use the API service to get active circuits
-      const response = await api.get('/Circuit/active');
-      
+      const response = await api.get("/Circuit/active");
+
       // Transform the API response to match our interface
       const activeCircuits = response.data;
-      const mappedCircuits = activeCircuits.map(circuit => ({
+      const mappedCircuits = activeCircuits.map((circuit) => ({
         id: circuit.circuitId,
         name: circuit.circuitTitle,
         code: circuit.circuitKey,
         description: circuit.circuitTitle, // Use title as description if no description available
-        isActive: true // All circuits from this endpoint are active
+        isActive: true, // All circuits from this endpoint are active
       }));
-      
-      console.log('Active circuits from API:', mappedCircuits);
+
+      console.log("Active circuits from API:", mappedCircuits);
       setCircuits(mappedCircuits);
     } catch (error) {
       console.error("Failed to fetch active circuits:", error);
@@ -605,12 +611,15 @@ export default function CreateDocumentWizard({
         typeId: formData.selectedTypeId!,
         subTypeId: formData.selectedSubTypeId!,
         title: formData.title,
-        documentAlias: formData.documentAlias,
+        documentAlias: formData.isExternal ? "" : formData.documentAlias,
         docDate: formData.docDate,
         comptableDate: formData.comptableDate,
         content: formData.content,
         circuitId: formData.circuitId,
         circuitName: formData.circuitName,
+        ...(formData.isExternal && {
+          documentExterne: formData.externalReference,
+        }),
       };
 
       // Call the API to create the document
@@ -624,7 +633,7 @@ export default function CreateDocumentWizard({
 
       onSuccess(); // Notify parent component
       onOpenChange(false); // Close dialog
-      
+
       // Navigate to the document view page with a small delay
       if (response && response.id) {
         setTimeout(() => {
@@ -685,6 +694,14 @@ export default function CreateDocumentWizard({
     }
   };
 
+  const handleExternalChange = (value: boolean) => {
+    handleUpdateFormData("isExternal", value);
+  };
+
+  const handleExternalReferenceChange = (value: string) => {
+    handleUpdateFormData("externalReference", value);
+  };
+
   const jumpToStep = (step: number) => {
     setCurrentStep(step);
   };
@@ -743,6 +760,7 @@ export default function CreateDocumentWizard({
                 typeError={typeError}
                 subTypeError={subTypeError}
                 documentDate={formData.docDate}
+                jumpToDateStep={() => setCurrentStep(1)}
               />
             </div>
           </MotionDiv>
@@ -763,6 +781,10 @@ export default function CreateDocumentWizard({
                 content={formData.content}
                 onContentChange={handleContentChange}
                 contentError={contentError}
+                isExternal={formData.isExternal}
+                onExternalChange={handleExternalChange}
+                externalReference={formData.externalReference}
+                onExternalReferenceChange={handleExternalReferenceChange}
               />
             </div>
           </MotionDiv>
@@ -818,6 +840,8 @@ export default function CreateDocumentWizard({
                 comptableDate={formData.comptableDate}
                 content={formData.content}
                 circuitName={formData.circuitName}
+                isExternal={formData.isExternal}
+                externalReference={formData.externalReference}
                 onEditTypeClick={() => jumpToStep(2)}
                 onEditDetailsClick={() => jumpToStep(3)}
                 onEditDateClick={() => jumpToStep(1)}
@@ -835,21 +859,22 @@ export default function CreateDocumentWizard({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] bg-[#0a1033] border border-blue-900/30">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[650px] bg-[#0a1033] border border-blue-900/30 flex flex-col max-h-[90vh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl text-blue-100">
-            {currentStep === 4 ? "Circuit Assignment (Optional)" : "Create Document"}
+            {currentStep === 4
+              ? "Circuit Assignment (Optional)"
+              : "Create Document"}
           </DialogTitle>
           <DialogDescription className="text-blue-300">
-            {currentStep === 4 
+            {currentStep === 4
               ? "Assign a circuit or skip this step to create a static document"
-              : "Create a new document with the selected type and date"
-            }
+              : "Create a new document with the selected type and date"}
           </DialogDescription>
         </DialogHeader>
 
         {/* Progress Steps */}
-        <div className="mb-4 mt-2">
+        <div className="mb-4 mt-2 flex-shrink-0">
           <div className="flex justify-between">
             {steps.map((step) => (
               <div
@@ -913,11 +938,13 @@ export default function CreateDocumentWizard({
           </div>
         </div>
 
-        {/* Step Content */}
-        <div className="py-2 min-h-[300px]">{renderStepContent()}</div>
+        {/* Step Content - Scrollable */}
+        <div className="py-2 flex-grow overflow-y-auto min-h-0">
+          {renderStepContent()}
+        </div>
 
         {/* Navigation Buttons */}
-        <DialogFooter className="flex justify-between">
+        <DialogFooter className="flex justify-between mt-4 flex-shrink-0">
           <div>
             {currentStep > 1 && (
               <Button

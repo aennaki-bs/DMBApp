@@ -205,13 +205,13 @@ const UsernameEmailForm: React.FC = () => {
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
                 </div>
+              ) : errors.username ? (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                </div>
               ) : touched.username && !errors.username ? (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <Check className="h-4 w-4 text-green-500" />
-                </div>
-              ) : touched.username && errors.username ? (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <AlertCircle className="h-4 w-4 text-red-500" />
                 </div>
               ) : null}
             </div>
@@ -253,13 +253,13 @@ const UsernameEmailForm: React.FC = () => {
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
                 </div>
+              ) : errors.email ? (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                </div>
               ) : touched.email && !errors.email ? (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <Check className="h-4 w-4 text-green-500" />
-                </div>
-              ) : touched.email && errors.email ? (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <AlertCircle className="h-4 w-4 text-red-500" />
                 </div>
               ) : null}
             </div>
