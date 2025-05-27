@@ -70,18 +70,19 @@ export default function ApprovalGroupEditDialog({
     if (open && group) {
       // Reset the current step
       setCurrentStep(1);
-      
+
       // Initialize form data with group values
       setFormData({
         name: group.name || "",
         comment: group.comment || "",
-        selectedUsers: group.approvers?.map(a => ({
-          userId: a.userId,
-          username: a.username,
-        })) || [],
-        ruleType: group.ruleType as ApprovalRuleType || "Any",
+        selectedUsers:
+          group.approvers?.map((a) => ({
+            userId: a.userId,
+            username: a.username,
+          })) || [],
+        ruleType: (group.ruleType as ApprovalRuleType) || "Any",
       });
-      
+
       // Fetch available users
       fetchAvailableUsers();
     }
@@ -157,11 +158,30 @@ export default function ApprovalGroupEditDialog({
         return true;
       case 3: // Select Users
         if (formData.selectedUsers.length === 0) {
-          toast.error("Please select at least one user");
+          if (formData.ruleType === "Sequential") {
+            toast.error(
+              "Sequential approval requires at least one user to define the approval order"
+            );
+          } else {
+            toast.error("Please select at least one user");
+          }
           return false;
         }
         return true;
       case 4: // Review
+        // Final validation before submission
+        if (formData.selectedUsers.length === 0) {
+          if (formData.ruleType === "Sequential") {
+            toast.error(
+              "Cannot update sequential approval group without users"
+            );
+          } else {
+            toast.error(
+              "Please select at least one user for the approval group"
+            );
+          }
+          return false;
+        }
         return true;
       default:
         return true;
@@ -185,6 +205,12 @@ export default function ApprovalGroupEditDialog({
     if (!validateCurrentStep()) return;
     if (!group) return;
 
+    // Final validation before API call
+    if (formData.selectedUsers.length === 0) {
+      toast.error("Cannot update an approval group without members");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -196,10 +222,14 @@ export default function ApprovalGroupEditDialog({
         ruleType: formData.ruleType,
       };
 
+      // Log the request payload
+      console.log("Updating approval group with payload:", requestData);
+
       // Call the API to update the group
       await approvalService.updateApprovalGroup(group.id, requestData);
 
       onSuccess(); // Notify parent component
+      toast.success("Approval group updated successfully!");
     } catch (error) {
       console.error("Failed to update approval group:", error);
       toast.error("Failed to update approval group");
@@ -424,4 +454,4 @@ export default function ApprovalGroupEditDialog({
       </DialogContent>
     </Dialog>
   );
-} 
+}

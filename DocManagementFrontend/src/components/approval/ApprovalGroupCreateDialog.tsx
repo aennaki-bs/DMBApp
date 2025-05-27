@@ -41,6 +41,11 @@ interface ApprovalGroupCreateDialogProps {
   onSuccess: () => void;
 }
 
+interface ExtendedReviewStepProps {
+  formData: ApprovalGroupFormData;
+  onEdit?: (step: number) => void;
+}
+
 const MotionDiv = motion.div;
 
 export default function ApprovalGroupCreateDialog({
@@ -53,7 +58,7 @@ export default function ApprovalGroupCreateDialog({
     name: "",
     comment: "",
     selectedUsers: [],
-    ruleType: "Any",
+    ruleType: ApprovalRuleType.Any,
   });
 
   // Step management
@@ -70,7 +75,7 @@ export default function ApprovalGroupCreateDialog({
         name: "",
         comment: "",
         selectedUsers: [],
-        ruleType: "Any",
+        ruleType: ApprovalRuleType.Any,
       });
       fetchAvailableUsers();
     }
@@ -149,11 +154,30 @@ export default function ApprovalGroupCreateDialog({
         return true;
       case 3: // Select Users
         if (formData.selectedUsers.length === 0) {
-          toast.error("Please select at least one user");
+          if (formData.ruleType === "Sequential") {
+            toast.error(
+              "Sequential approval requires at least one user to define the approval order"
+            );
+          } else {
+            toast.error("Please select at least one user");
+          }
           return false;
         }
         return true;
       case 4: // Review
+        // Final validation before submission
+        if (formData.selectedUsers.length === 0) {
+          if (formData.ruleType === "Sequential") {
+            toast.error(
+              "Cannot create sequential approval group without users"
+            );
+          } else {
+            toast.error(
+              "Please select at least one user for the approval group"
+            );
+          }
+          return false;
+        }
         return true;
       default:
         return true;
@@ -176,6 +200,12 @@ export default function ApprovalGroupCreateDialog({
   const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
 
+    // Final validation before API call
+    if (formData.selectedUsers.length === 0) {
+      toast.error("Cannot create an approval group without members");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -186,6 +216,9 @@ export default function ApprovalGroupCreateDialog({
         userIds: formData.selectedUsers.map((user) => user.userId),
         ruleType: formData.ruleType,
       };
+
+      // Log the request payload
+      console.log("Creating approval group with payload:", requestData);
 
       // Call the API to create the group
       await approvalService.createApprovalGroup(requestData);
@@ -260,6 +293,7 @@ export default function ApprovalGroupCreateDialog({
               selectedUsers={formData.selectedUsers}
               availableUsers={availableUsers}
               isLoading={isLoadingUsers}
+              isSequential={formData.ruleType === "Sequential"}
               onSelectedUsersChange={(users) =>
                 handleUpdateFormData("selectedUsers", users)
               }
@@ -276,10 +310,7 @@ export default function ApprovalGroupCreateDialog({
             variants={variants}
             transition={{ duration: 0.2 }}
           >
-            <ReviewStep
-              formData={formData}
-              onEdit={(step) => setCurrentStep(step)}
-            />
+            <ReviewStep formData={formData} />
           </MotionDiv>
         );
       default:
@@ -289,26 +320,26 @@ export default function ApprovalGroupCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.3)] max-w-3xl mx-auto rounded-xl">
-        <DialogHeader>
-          <div className="flex items-center gap-2 mb-1">
+      <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.3)] max-w-3xl mx-auto rounded-xl h-[90vh] max-h-[700px] flex flex-col p-5">
+        <DialogHeader className="mb-2">
+          <div className="flex items-center gap-2">
             <UsersRound className="h-5 w-5 text-blue-400" />
-            <DialogTitle className="text-xl text-blue-100">
+            <DialogTitle className="text-lg text-blue-100">
               Create Approval Group
             </DialogTitle>
           </div>
-          <DialogDescription className="text-blue-300">
+          <DialogDescription className="text-blue-300 text-xs">
             Create a new group for managing document approvals
           </DialogDescription>
         </DialogHeader>
 
         {/* Progress indicator */}
-        <div className="grid grid-cols-4 gap-2 mb-6 mt-2">
+        <div className="grid grid-cols-4 gap-2 mb-2">
           {steps.map((step) => (
             <div key={step.id} className="relative">
               <div
                 className={cn(
-                  "flex items-center justify-center w-10 h-10 rounded-full mx-auto mb-2 transition-all duration-200",
+                  "flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-1 transition-all duration-200",
                   currentStep === step.id
                     ? "bg-blue-600 text-white"
                     : step.completed
@@ -316,7 +347,7 @@ export default function ApprovalGroupCreateDialog({
                     : "bg-blue-900/50 text-blue-300"
                 )}
               >
-                {step.completed ? <Check className="h-5 w-5" /> : step.icon}
+                {step.completed ? <Check className="h-4 w-4" /> : step.icon}
               </div>
               <div className="text-center">
                 <p
@@ -333,7 +364,7 @@ export default function ApprovalGroupCreateDialog({
                 </p>
                 <p
                   className={cn(
-                    "text-[10px]",
+                    "text-[10px] hidden sm:block",
                     currentStep === step.id
                       ? "text-blue-300/90"
                       : step.completed
@@ -347,7 +378,7 @@ export default function ApprovalGroupCreateDialog({
               {step.id < steps.length && (
                 <div
                   className={cn(
-                    "absolute top-5 left-[calc(50%+5px)] w-[calc(100%-10px)] h-0.5",
+                    "absolute top-4 left-[calc(50%+4px)] w-[calc(100%-8px)] h-0.5",
                     step.completed ? "bg-green-500/50" : "bg-blue-900/50"
                   )}
                 />
@@ -356,20 +387,23 @@ export default function ApprovalGroupCreateDialog({
           ))}
         </div>
 
-        {/* Step content */}
-        <div className="min-h-[260px]">{renderStepContent()}</div>
+        {/* Step content - The flex-grow allows this to take remaining space */}
+        <div className="flex-grow overflow-auto p-1 my-1">
+          {renderStepContent()}
+        </div>
 
-        {/* Actions */}
-        <DialogFooter className="flex justify-between mt-6 pt-4 border-t border-blue-900/40">
+        {/* Actions - Fixed at bottom */}
+        <DialogFooter className="flex justify-between mt-2 pt-2 border-t border-blue-900/40 shrink-0">
           <div>
             {currentStep > 1 && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={prevStep}
-                className="border-blue-500/30 text-blue-300 hover:bg-blue-900/20 hover:text-blue-200"
+                className="border-blue-500/30 text-blue-300 hover:bg-blue-900/20 hover:text-blue-200 h-8 px-3 py-1"
+                size="sm"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-3 h-3 mr-1" />
                 Back
               </Button>
             )}
@@ -379,7 +413,8 @@ export default function ApprovalGroupCreateDialog({
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="text-blue-300 hover:text-blue-200 hover:bg-blue-900/30"
+              className="text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 h-8 px-3 py-1"
+              size="sm"
             >
               Cancel
             </Button>
@@ -387,22 +422,24 @@ export default function ApprovalGroupCreateDialog({
               <Button
                 type="button"
                 onClick={nextStep}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 h-8 px-3 py-1"
+                size="sm"
               >
                 Next
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-3 h-3 ml-1" />
               </Button>
             ) : (
               <Button
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 h-8 px-3 py-1"
+                size="sm"
               >
                 {isSubmitting ? (
                   <span className="flex items-center">
                     <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      className="animate-spin -ml-1 mr-2 h-3 w-3 text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -425,7 +462,7 @@ export default function ApprovalGroupCreateDialog({
                   </span>
                 ) : (
                   <>
-                    <Check className="w-4 h-4 mr-2" />
+                    <Check className="w-3 h-3 mr-1" />
                     Create Group
                   </>
                 )}

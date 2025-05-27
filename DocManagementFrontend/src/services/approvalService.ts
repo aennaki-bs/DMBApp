@@ -118,9 +118,42 @@ const approvalService = {
   },
 
   // Create new approval group
-  createApprovalGroup: async (group: CreateApprovalGroupRequest): Promise<void> => {
+  createApprovalGroup: async (group: { 
+    name: string, 
+    comment?: string, 
+    userIds: number[], 
+    ruleType: string 
+  }): Promise<void> => {
     try {
-      await api.post('/Approval/groups', group);
+      // Check if userIds array exists and has entries
+      if (!group.userIds || group.userIds.length === 0) {
+        console.warn('Creating approval group with no users');
+      }
+      
+      // Define payload type with optional users property
+      type GroupPayload = {
+        name: string;
+        comment?: string;
+        userIds: number[];
+        ruleType: string;
+        users?: { userId: number; orderIndex: number }[];
+      };
+      
+      // For sequential approval type, we include orderIndex information
+      // For API compatibility, maintain the original userIds array
+      const payload: GroupPayload = { 
+        ...group
+      };
+      
+      // Only for Sequential rule type, add the ordered users array
+      if (group.ruleType === 'Sequential' && group.userIds.length > 0) {
+        payload.users = group.userIds.map((userId, index) => ({
+          userId,
+          orderIndex: index
+        }));
+      }
+      
+      await api.post('/Approval/groups', payload);
     } catch (error) {
       console.error('Error creating approval group:', error);
       throw error;
@@ -128,13 +161,47 @@ const approvalService = {
   },
 
   // Update existing approval group (remove and recreate)
-  updateApprovalGroup: async (id: number, group: CreateApprovalGroupRequest): Promise<void> => {
+  updateApprovalGroup: async (id: number, group: { 
+    name: string, 
+    comment?: string, 
+    userIds: number[], 
+    ruleType: string 
+  }): Promise<void> => {
     try {
       // Since there's no specific update endpoint, we need to:
       // 1. Delete the existing group
       // 2. Create a new group with the updated data
       await api.delete(`/Approval/groups/${id}`);
-      await api.post('/Approval/groups', group);
+      
+      // Check if userIds array exists and has entries
+      if (!group.userIds || group.userIds.length === 0) {
+        console.warn('Updating approval group with no users');
+      }
+      
+      // Define payload type with optional users property
+      type GroupPayload = {
+        name: string;
+        comment?: string;
+        userIds: number[];
+        ruleType: string;
+        users?: { userId: number; orderIndex: number }[];
+      };
+      
+      // For sequential approval type, we include orderIndex information
+      // For API compatibility, maintain the original userIds array
+      const payload: GroupPayload = { 
+        ...group
+      };
+      
+      // Only for Sequential rule type, add the ordered users array
+      if (group.ruleType === 'Sequential' && group.userIds.length > 0) {
+        payload.users = group.userIds.map((userId, index) => ({
+          userId,
+          orderIndex: index
+        }));
+      }
+      
+      await api.post('/Approval/groups', payload);
     } catch (error) {
       console.error(`Error updating approval group with ID ${id}:`, error);
       throw error;

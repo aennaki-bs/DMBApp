@@ -8,7 +8,6 @@ import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import { DirectEditUserModal } from "./DirectEditUserModal";
 import { DirectEditUserEmailModal } from "./DirectEditUserEmailModal";
 import { ViewUserLogsDialog } from "./ViewUserLogsDialog";
-import { TestDialog } from "./TestDialog";
 import {
   Select,
   SelectContent,
@@ -32,7 +31,6 @@ import { BulkRoleChangeDialog } from "./dialogs/BulkRoleChangeDialog";
 import { BulkDeleteDialog } from "./dialogs/BulkDeleteDialog";
 
 export function UserTable() {
-  const [testDialogOpen, setTestDialogOpen] = useState(false);
   const [directEditModalOpen, setDirectEditModalOpen] = useState(false);
   const [directEditEmailModalOpen, setDirectEditEmailModalOpen] =
     useState(false);
@@ -347,15 +345,6 @@ export function UserTable() {
             </div>
           </PopoverContent>
         </Popover>
-
-        {/* Test button */}
-        <Button
-          variant="outline"
-          onClick={() => setTestDialogOpen(true)}
-          className="bg-green-700 hover:bg-green-600 text-white border-none"
-        >
-          Test Dialog System
-        </Button>
       </div>
 
       <UserTableContent
@@ -462,9 +451,6 @@ export function UserTable() {
           onRoleChange={setSelectedRole}
         />
       )}
-
-      {/* Test Dialog */}
-      <TestDialog open={testDialogOpen} onOpenChange={setTestDialogOpen} />
     </div>
   );
 }
