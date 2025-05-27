@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useMultiStepForm } from "@/context/form";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Check, X, Shield } from "lucide-react";
-import { FormInput } from "./FormInput";
+import { Eye, EyeOff, Lock, Check, X, Shield, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 // Password component with strength meter
 const PasswordForm: React.FC = () => {
@@ -202,186 +204,206 @@ const PasswordForm: React.FC = () => {
 
   const strengthInfo = getStrengthText(passwordStrength);
 
-  // Check if field has error
-  const hasError = (name: string) => {
-    return !!(touched[name] && errors[name]);
-  };
-
-  // Render error message
-  const renderError = (fieldName: string) => {
-    if (hasError(fieldName)) {
-      return (
-        <motion.p
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-xs text-red-400 mt-1.5 ml-1"
-        >
-          {errors[fieldName]}
-        </motion.p>
-      );
+  // Helper function to determine input border color based on error state
+  const getInputBorderClass = (field: string) => {
+    if (touched[field] && errors[field]) {
+      return "border-red-500/70 focus:border-red-500/70 focus:shadow-[0_0_0_1px_rgba(239,68,68,0.5),0_0_15px_rgba(239,68,68,0.2)]";
     }
-    return null;
+    return "border-blue-900/50 focus:border-blue-500/50 focus:shadow-[0_0_0_1px_rgba(59,130,246,0.3),0_0_15px_rgba(59,130,246,0.1)]";
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="space-y-6">
+      <div className="space-y-3">
         {/* Password Section */}
-        <div className="rounded-lg border border-blue-800/30 bg-blue-900/10 p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-full bg-blue-800/20 text-blue-400">
-              <Shield className="h-5 w-5" />
+        <div className="rounded-lg border border-blue-800/30 bg-blue-900/10 p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-1.5 rounded-full bg-blue-800/20 text-blue-400">
+              <Shield className="h-4 w-4" />
             </div>
-            <h3 className="text-base font-medium text-blue-200">
+            <h3 className="text-sm font-medium text-blue-200">
               Create Secure Password
             </h3>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-3">
             {/* Password Field */}
-            <div className="relative">
-              <FormInput
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password || ""}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="Password"
-                icon={<Lock className="h-4 w-4" />}
-                error={hasError("password")}
-                showLabelAnimation
-                showSuccessIndicator={false}
-                isSuccess={
-                  !!(
-                    touched.password &&
-                    !errors.password &&
-                    passwordStrength >= 60
-                  )
-                }
-                autoComplete="new-password"
-                aria-label="Password"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-300 z-10"
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-              {renderError("password")}
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-blue-200 text-xs">
+                Password
+              </Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+                  <Lock className="h-4 w-4" />
+                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password || ""}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="••••••••"
+                  className={`pl-10 h-9 w-full rounded-md transition-all duration-200 bg-[#081029] ${getInputBorderClass(
+                    "password"
+                  )} text-white placeholder:text-blue-300/50`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+                {touched.password && errors.password && (
+                  <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                    <motion.div
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="text-red-500"
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                    </motion.div>
+                  </div>
+                )}
+              </div>
+              {touched.password && errors.password && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-red-400 mt-1 ml-1 flex items-center gap-1"
+                >
+                  <span className="inline-block w-1 h-1 rounded-full bg-red-400"></span>
+                  {errors.password}
+                </motion.p>
+              )}
             </div>
 
-            {/* Password strength meter */}
+            {/* Password Strength Meter */}
             {formData.password && (
-              <div className="mt-3 space-y-2">
+              <div className="space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-blue-300">
-                    Password Strength
+                    Password strength:
                   </span>
                   <span className={`text-xs font-medium ${strengthInfo.color}`}>
                     {strengthInfo.text}
                   </span>
                 </div>
-                <Progress
-                  value={passwordStrength}
-                  max={100}
-                  className="h-1.5 bg-blue-950/50"
-                >
+                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-blue-900/50">
                   <div
-                    className={`h-full ${getStrengthColor(
-                      passwordStrength
-                    )} transition-all duration-300`}
+                    className={cn("h-full", getStrengthColor(passwordStrength))}
                     style={{ width: `${passwordStrength}%` }}
                   />
-                </Progress>
+                </div>
               </div>
             )}
 
             {/* Confirm Password Field */}
-            <div className="relative">
-              <FormInput
-                id="confirmPassword"
-                name="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                value={formData.confirmPassword || ""}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="Confirm Password"
-                icon={<Lock className="h-4 w-4" />}
-                error={hasError("confirmPassword")}
-                showLabelAnimation
-                showSuccessIndicator={false}
-                isSuccess={
-                  !!(
-                    touched.confirmPassword &&
-                    !errors.confirmPassword &&
-                    formData.confirmPassword === formData.password &&
-                    formData.confirmPassword
-                  )
-                }
-                autoComplete="new-password"
-                aria-label="Confirm Password"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-300 z-10"
-                tabIndex={-1}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="confirmPassword"
+                className="text-blue-200 text-xs"
               >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-              {renderError("confirmPassword")}
-            </div>
-          </div>
-
-          {/* Password Requirements */}
-          <div className="mt-6 bg-blue-900/20 p-4 rounded-md border border-blue-800/30">
-            <h4 className="text-xs font-medium text-blue-300 mb-3">
-              Password Requirements
-            </h4>
-            <div className="space-y-2">
-              {passwordRequirements.map((requirement) => (
-                <div
-                  key={requirement.id}
-                  className="flex items-center gap-2 text-xs"
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                      requirementPasses(requirement)
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-blue-800/30 text-blue-400/70"
-                    }`}
-                  >
-                    {requirementPasses(requirement) ? (
-                      <Check className="w-3 h-3" />
-                    ) : (
-                      <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                    )}
-                  </div>
-                  <span
-                    className={
-                      requirementPasses(requirement)
-                        ? "text-blue-200"
-                        : "text-blue-400/70"
-                    }
-                  >
-                    {requirement.label}
-                  </span>
+                Confirm Password
+              </Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+                  <Lock className="h-4 w-4" />
                 </div>
-              ))}
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formData.confirmPassword || ""}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="••••••••"
+                  className={`pl-10 h-9 w-full rounded-md transition-all duration-200 bg-[#081029] ${getInputBorderClass(
+                    "confirmPassword"
+                  )} text-white placeholder:text-blue-300/50`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+                {touched.confirmPassword && errors.confirmPassword && (
+                  <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                    <motion.div
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="text-red-500"
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                    </motion.div>
+                  </div>
+                )}
+              </div>
+              {touched.confirmPassword && errors.confirmPassword && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-red-400 mt-1 ml-1 flex items-center gap-1"
+                >
+                  <span className="inline-block w-1 h-1 rounded-full bg-red-400"></span>
+                  {errors.confirmPassword}
+                </motion.p>
+              )}
+            </div>
+
+            {/* Password Requirements */}
+            <div className="bg-blue-900/40 rounded-md p-2.5 space-y-1.5">
+              <p className="text-xs font-medium text-blue-200 mb-1.5">
+                Password requirements:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {passwordRequirements.map((req) => (
+                  <div key={req.id} className="flex items-center gap-2 text-xs">
+                    <div
+                      className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${
+                        requirementPasses(req)
+                          ? "bg-green-900/30 text-green-400"
+                          : "bg-blue-900/50 text-blue-400/50"
+                      }`}
+                    >
+                      {requirementPasses(req) ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <X className="h-3 w-3" />
+                      )}
+                    </div>
+                    <span
+                      className={
+                        requirementPasses(req)
+                          ? "text-green-300"
+                          : "text-blue-300/70"
+                      }
+                    >
+                      {req.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Info Message */}
-        <div className="bg-blue-900/30 rounded-lg p-4 text-sm text-blue-300 border border-blue-800/30">
-          <p className="flex items-center gap-2">
+        {/* Info message */}
+        <div className="bg-blue-900/30 rounded-lg p-2.5 text-xs text-blue-300 border border-blue-800/30">
+          <p className="flex items-center gap-1.5">
             <svg
-              className="h-5 w-5 text-blue-400"
+              className="h-4 w-4 text-blue-400 flex-shrink-0"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="none"
@@ -394,57 +416,9 @@ const PasswordForm: React.FC = () => {
               <path d="M12 16v-4" />
               <path d="M12 8h.01" />
             </svg>
-            Create a strong, unique password to protect your account.
+            A secure password helps protect your account from unauthorized
+            access.
           </p>
-        </div>
-
-        {/* ERP decoration */}
-        <div className="flex justify-center mt-4 opacity-20">
-          <svg
-            width="120"
-            height="20"
-            viewBox="0 0 120 20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <pattern
-              id="circuit"
-              x="0"
-              y="0"
-              width="20"
-              height="20"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M0 10h20M10 0v20"
-                stroke="currentColor"
-                strokeOpacity="0.5"
-                strokeWidth="0.5"
-                fill="none"
-              />
-            </pattern>
-            <rect width="120" height="20" fill="url(#circuit)" />
-            <circle
-              cx="60"
-              cy="10"
-              r="3"
-              fill="currentColor"
-              fillOpacity="0.8"
-            />
-            <circle
-              cx="20"
-              cy="10"
-              r="2"
-              fill="currentColor"
-              fillOpacity="0.6"
-            />
-            <circle
-              cx="100"
-              cy="10"
-              r="2"
-              fill="currentColor"
-              fillOpacity="0.6"
-            />
-          </svg>
         </div>
       </div>
     </form>

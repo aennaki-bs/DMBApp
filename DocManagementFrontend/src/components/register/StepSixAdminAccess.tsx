@@ -3,42 +3,7 @@ import { useMultiStepForm } from "@/context/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { Shield, Eye, EyeOff, Check, Info, UserCog } from "lucide-react";
-
-// Define roles
-interface Role {
-  id: string;
-  name: string;
-  description: string;
-  requiresKey: boolean;
-}
-
-const roles: Role[] = [
-  {
-    id: "user",
-    name: "User",
-    description: "Standard user with basic access",
-    requiresKey: false,
-  },
-  {
-    id: "editor",
-    name: "Editor",
-    description: "Can create and edit documents",
-    requiresKey: false,
-  },
-  {
-    id: "manager",
-    name: "Manager",
-    description: "Has additional team management capabilities",
-    requiresKey: false,
-  },
-  {
-    id: "admin",
-    name: "Admin",
-    description: "Full system access",
-    requiresKey: true,
-  },
-];
+import { Shield, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 const AdminAccessForm: React.FC = () => {
   const { formData, setFormData, nextStep } = useMultiStepForm();
@@ -47,9 +12,7 @@ const AdminAccessForm: React.FC = () => {
   const [showKey, setShowKey] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [selectedRole, setSelectedRole] = useState<string>(
-    formData.role || "user"
-  );
+  const [adminKeyRequired, setAdminKeyRequired] = useState(false);
 
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,15 +25,21 @@ const AdminAccessForm: React.FC = () => {
     }
   };
 
-  // Handle role selection
-  const handleRoleSelection = (roleId: string) => {
-    setSelectedRole(roleId);
-    setFormData({ role: roleId });
+  // Handle checkbox toggle
+  const handleToggleAdminKey = () => {
+    const newState = !adminKeyRequired;
+    setAdminKeyRequired(newState);
 
-    // Clear admin key if not needed
-    const requiresKey = roles.find((r) => r.id === roleId)?.requiresKey;
-    if (!requiresKey) {
-      setFormData({ adminSecretKey: "" });
+    // Update the form data
+    setFormData({
+      role: newState ? "admin" : "user",
+      // Clear the admin key if not required
+      adminSecretKey: newState ? formData.adminSecretKey : "",
+    });
+
+    // Clear errors
+    if (!newState) {
+      setErrors({});
     }
   };
 
@@ -78,9 +47,9 @@ const AdminAccessForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // If admin role is selected, validate admin key
-    if (selectedRole === "admin" && !formData.adminSecretKey) {
-      setErrors({ adminSecretKey: "Admin key is required for Admin role" });
+    // If admin key is required, validate it
+    if (adminKeyRequired && !formData.adminSecretKey) {
+      setErrors({ adminSecretKey: "Admin key is required for admin access" });
       setTouched({ adminSecretKey: true });
       return;
     }
@@ -88,127 +57,166 @@ const AdminAccessForm: React.FC = () => {
     nextStep();
   };
 
+  // Helper function to determine input border color based on error state
+  const getInputBorderClass = (field: string) => {
+    if (touched[field] && errors[field]) {
+      return "border-red-500/70 focus:border-red-500/70 focus:shadow-[0_0_0_1px_rgba(239,68,68,0.5),0_0_15px_rgba(239,68,68,0.2)]";
+    }
+    return "border-blue-900/50 focus:border-blue-500/50 focus:shadow-[0_0_0_1px_rgba(59,130,246,0.3),0_0_15px_rgba(59,130,246,0.1)]";
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="role" className="flex items-center gap-1 mb-3">
-            <UserCog className="h-3.5 w-3.5 text-blue-500" />
-            Select User Role
-          </Label>
-
-          <div className="grid grid-cols-1 gap-3">
-            {roles.map((role) => (
-              <motion.div
-                key={role.id}
-                className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all ${
-                  selectedRole === role.id
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300 bg-white"
-                }`}
-                onClick={() => handleRoleSelection(role.id)}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {selectedRole === role.id && (
-                  <div className="absolute -right-2 -top-2 rounded-full bg-blue-500 p-1">
-                    <Check className="h-3 w-3 text-white" />
-                  </div>
-                )}
-
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-full ${
-                      selectedRole === role.id
-                        ? "bg-blue-100 text-blue-600"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    <Shield className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-sm">
-                      {role.name}
-                      {role.requiresKey && (
-                        <span className="ml-2 text-xs py-0.5 px-2 bg-amber-100 text-amber-700 rounded-full">
-                          Requires Key
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-xs text-gray-500">{role.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="rounded-lg border border-blue-800/30 bg-blue-900/10 p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="p-1.5 rounded-full bg-blue-800/20 text-blue-400">
+            <Shield className="h-4 w-4" />
           </div>
+          <h3 className="text-sm font-medium text-blue-200">Admin Access</h3>
         </div>
 
-        {selectedRole === "admin" && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-4"
+        <div className="space-y-3">
+          {/* Admin Key Toggle */}
+          <div
+            className={`relative rounded-lg p-3 cursor-pointer transition-all border-2 ${
+              adminKeyRequired
+                ? "border-amber-500/70 bg-amber-900/10"
+                : "border-blue-800/30 bg-blue-900/20 hover:border-blue-700/40"
+            }`}
+            onClick={handleToggleAdminKey}
           >
-            <Label
-              htmlFor="adminSecretKey"
-              className="flex items-center gap-1 mb-1.5"
-            >
-              <Shield className="h-3.5 w-3.5 text-blue-500" />
-              Admin Secret Key
-            </Label>
-            <div className="relative">
-              <Input
-                id="adminSecretKey"
-                name="adminSecretKey"
-                type={showKey ? "text" : "password"}
-                value={formData.adminSecretKey || ""}
-                onChange={handleChange}
-                onBlur={() => setTouched({ adminSecretKey: true })}
-                placeholder="Enter admin secret key"
-                className={
-                  errors.adminSecretKey && touched.adminSecretKey
-                    ? "border-red-300 pr-10"
-                    : "pr-10"
-                }
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                tabIndex={-1} // Prevent tab focus
-              >
-                {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+            <div className="flex items-center">
+              <div className="mr-3 flex items-center justify-center">
+                <div
+                  className={`w-5 h-5 rounded-sm border flex items-center justify-center ${
+                    adminKeyRequired
+                      ? "bg-amber-500 border-amber-400"
+                      : "border-blue-700/50 bg-blue-900/40"
+                  }`}
+                >
+                  {adminKeyRequired && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3.5 w-3.5 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <div>
+                <span
+                  className={`text-sm font-medium ${
+                    adminKeyRequired ? "text-amber-300" : "text-blue-200"
+                  }`}
+                >
+                  Requires Admin Key
+                </span>
+                <p className="text-xs text-blue-300/80 mt-0.5">
+                  Full system access with administrator privileges
+                </p>
+                {adminKeyRequired && (
+                  <span className="inline-block mt-1 text-xs py-0.5 px-2 bg-amber-900/40 text-amber-300 rounded-sm border border-amber-700/50">
+                    Requires Key
+                  </span>
+                )}
+              </div>
             </div>
-            {errors.adminSecretKey && touched.adminSecretKey && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-xs text-red-500 mt-1"
-              >
-                {errors.adminSecretKey}
-              </motion.p>
-            )}
-            <div className="flex items-start gap-2 mt-2 p-3 bg-blue-50 rounded-md">
-              <Info className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-blue-700">
-                The admin key is provided to authorized administrators only. If
-                you don't have an admin key, please select a different role.
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </div>
+          </div>
 
-      <div className="pt-4">
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-1"
-        >
-          Continue
-        </button>
+          {/* Admin Key Input - Only shown when toggle is active */}
+          {adminKeyRequired && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-1.5"
+            >
+              <Label
+                htmlFor="adminSecretKey"
+                className="text-blue-200 text-xs flex items-center gap-1"
+              >
+                Admin Secret Key
+              </Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+                  <Shield className="h-4 w-4" />
+                </div>
+                <Input
+                  id="adminSecretKey"
+                  name="adminSecretKey"
+                  type={showKey ? "text" : "password"}
+                  value={formData.adminSecretKey || ""}
+                  onChange={handleChange}
+                  onBlur={() => setTouched({ adminSecretKey: true })}
+                  placeholder="Enter admin secret key"
+                  className={`pl-10 h-9 w-full rounded-md transition-all duration-200 bg-[#081029] ${getInputBorderClass(
+                    "adminSecretKey"
+                  )} text-white placeholder:text-blue-300/50`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  {showKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+                {touched.adminSecretKey && errors.adminSecretKey && (
+                  <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                    <motion.div
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="text-red-500"
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                    </motion.div>
+                  </div>
+                )}
+              </div>
+              {touched.adminSecretKey && errors.adminSecretKey && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-red-400 mt-1 ml-1 flex items-center gap-1"
+                >
+                  <span className="inline-block w-1 h-1 rounded-full bg-red-400"></span>
+                  {errors.adminSecretKey}
+                </motion.p>
+              )}
+              <div className="mt-2 text-xs text-blue-300 bg-blue-900/30 rounded-lg p-2.5 border border-blue-800/30">
+                <p className="flex items-center gap-1.5">
+                  <svg
+                    className="h-4 w-4 text-blue-400 flex-shrink-0"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" />
+                    <path d="M12 8h.01" />
+                  </svg>
+                  The admin key is provided to authorized administrators only.
+                  If you don't have an admin key, please uncheck this option.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </div>
       </div>
     </form>
   );

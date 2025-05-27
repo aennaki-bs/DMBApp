@@ -265,14 +265,64 @@ const RegisterForm: React.FC = () => {
     // Always allow moving to the next step from the account type selection
     if (currentStep === 0) return false;
 
+    // For the address step (step 2), only require city and country fields
+    if (currentStep === 2) {
+      // Check if city and country are filled
+      const isCityEmpty = !(formData as any).city;
+      const isCountryEmpty = !(formData as any).country;
+
+      // Allow proceeding if both required fields are filled and there are no validation errors
+      return !!(
+        isCityEmpty ||
+        isCountryEmpty ||
+        (stepValidation.errors &&
+          ((stepValidation.errors as any).city ||
+            (stepValidation.errors as any).country))
+      );
+    }
+
     // For the review step, don't show the next button
     if (currentStep === 6) return true;
 
-    // For steps where validation results are available
-    return (
-      attemptedNext &&
-      stepValidation.errors &&
-      Object.keys(stepValidation.errors).length > 0
+    // For required info steps, check if essential fields are filled
+    if (currentStep === 1) {
+      if (formData.userType === "personal") {
+        return !formData.firstName || !formData.lastName;
+      } else {
+        return !formData.companyName || !formData.companyRC;
+      }
+    }
+
+    // For credentials step, check if username and email are valid
+    if (currentStep === 3) {
+      return !!(
+        !formData.username ||
+        !formData.email ||
+        (stepValidation.errors &&
+          (stepValidation.errors.username || stepValidation.errors.email))
+      );
+    }
+
+    // For password step, check if passwords match and meet requirements
+    if (currentStep === 4) {
+      return !!(
+        !formData.password ||
+        !formData.confirmPassword ||
+        formData.password !== formData.confirmPassword ||
+        formData.password.length < 8
+      );
+    }
+
+    // For admin access step (optional), don't disable unless errors exist
+    if (currentStep === 5) {
+      return !!(
+        stepValidation.errors && Object.keys(stepValidation.errors).length > 0
+      );
+    }
+
+    // Default case for other steps - disable if validation errors exist
+    return !!(
+      stepValidation.errors && Object.keys(stepValidation.errors).length > 0
     );
   };
 
