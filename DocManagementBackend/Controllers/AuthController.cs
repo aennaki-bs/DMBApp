@@ -35,43 +35,99 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] User user)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
-            var existingUser = await _context.Users.AnyAsync(u => u.Email == user.Email);
+            var existingUser = await _context.Users.AnyAsync(u => u.Email == request.Email);
             if (existingUser)
                 return BadRequest("Email is already in use.");
-            var existingUsername = await _context.Users.AnyAsync(u => u.Username == user.Username);
+            var existingUsername = await _context.Users.AnyAsync(u => u.Username == request.Username);
             if (existingUsername)
                 return BadRequest("Username is already in use.");
-            if (!AuthHelper.IsValidPassword(user.PasswordHash))
+            if (!AuthHelper.IsValidPassword(request.PasswordHash))
                 return BadRequest("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.");
+
+            // Handle Responsibility Centre
+            int? responsibilityCentreId = null;
+            if (request.ResponsibilityCentreId.HasValue)
+            {
+                // User selected an existing responsibility centre
+                var existingRC = await _context.ResponsibilityCentres
+                    .FirstOrDefaultAsync(rc => rc.Id == request.ResponsibilityCentreId.Value && rc.IsActive);
+                if (existingRC == null)
+                    return BadRequest("Selected Responsibility Centre not found or inactive.");
+                responsibilityCentreId = existingRC.Id;
+            }
+            else if (request.NewResponsibilityCentre != null)
+            {
+                // User wants to create a new responsibility centre
+                if (string.IsNullOrWhiteSpace(request.NewResponsibilityCentre.Code))
+                    return BadRequest("Responsibility Centre code is required.");
+                if (string.IsNullOrWhiteSpace(request.NewResponsibilityCentre.Descr))
+                    return BadRequest("Responsibility Centre description is required.");
+
+                // Check if code already exists
+                var existingCode = await _context.ResponsibilityCentres
+                    .AnyAsync(rc => rc.Code.ToUpper() == request.NewResponsibilityCentre.Code.ToUpper());
+                if (existingCode)
+                    return BadRequest("A Responsibility Centre with this code already exists.");
+
+                // Create new responsibility centre
+                var newRC = new ResponsibilityCentre
+                {
+                    Code = request.NewResponsibilityCentre.Code.ToUpper().Trim(),
+                    Descr = request.NewResponsibilityCentre.Descr.Trim(),
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+                _context.ResponsibilityCentres.Add(newRC);
+                await _context.SaveChangesAsync(); // Save to get the ID
+                responsibilityCentreId = newRC.Id;
+            }
+
             var adminSecretHeader = Request.Headers["AdminSecret"].FirstOrDefault();
+            Role? userRole = null;
             if (!string.IsNullOrEmpty(adminSecretHeader))
             {
                 var expectedAdminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET");
                 if (adminSecretHeader == expectedAdminSecret)
                 {
-                    var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
-                    if (adminRole != null)
-                        {user.RoleId = adminRole.Id; user.Role = adminRole;}
+                    userRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
                 }
                 else
                     return Unauthorized("Invalid admin secret.");
             }
             else
             {
-                var simpleUserRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "SimpleUser");
-                if (simpleUserRole != null)
-                    {user.RoleId = simpleUserRole.Id; user.Role = simpleUserRole;}
-                else
+                userRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "SimpleUser");
+                if (userRole == null)
                     return BadRequest("Default role not found.");
             }
-            user.EmailVerificationCode = new Random().Next(100000, 999999).ToString();
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-            user.IsActive = false;
-            user.IsEmailConfirmed = false;
-            user.ProfilePicture = "/images/profile/default.png";
+
+            var user = new User
+            {
+                Email = request.Email,
+                Username = request.Username,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash),
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                UserType = request.UserType,
+                City = request.City,
+                Address = request.Address,
+                PhoneNumber = request.PhoneNumber,
+                Country = request.Country,
+                WebSite = request.WebSite,
+                Identity = request.Identity,
+                RoleId = userRole!.Id,
+                Role = userRole,
+                ResponsibilityCentreId = responsibilityCentreId,
+                EmailVerificationCode = new Random().Next(100000, 999999).ToString(),
+                IsActive = false,
+                IsEmailConfirmed = false,
+                ProfilePicture = "/images/profile/default.png"
+            };
+
             string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
             var verificationLink = $"{frontDomain}/verify/{user.Email}";
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);

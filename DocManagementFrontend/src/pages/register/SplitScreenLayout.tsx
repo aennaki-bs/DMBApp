@@ -186,7 +186,31 @@ const StepGuidance = () => {
       ],
       note: "Admin privileges allow you to manage other users and system settings.",
     },
-    // Step 6: Review
+    // Step 6: Responsibility Centre
+    {
+      title: "Responsibility Centre",
+      description: "Select an existing responsibility centre (optional)",
+      icon: <Building2 className="h-6 w-6" />,
+      tips: [
+        {
+          icon: <Building2 size={18} />,
+          title: "Optional Selection",
+          content: "Choose from existing responsibility centres",
+        },
+        {
+          icon: <AlertCircle size={18} />,
+          title: "Contact Administration",
+          content: "If your centre doesn't exist, contact the administration",
+        },
+        {
+          icon: <Users size={18} />,
+          title: "Department Assignment",
+          content: "This helps organize documents by department or team",
+        },
+      ],
+      note: "If your responsibility centre doesn't exist, please contact the administration.",
+    },
+    // Step 7: Review
     {
       title: "Review Your Information",
       description: "Verify all details before completing registration",

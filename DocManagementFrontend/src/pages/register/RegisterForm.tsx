@@ -36,6 +36,7 @@ import AddressStep from "@/components/register/StepThreeAddressInfo";
 import UsernameEmailForm from "@/components/register/StepFourCredentials";
 import PasswordForm from "@/components/register/StepFivePassword";
 import AdminAccessForm from "@/components/register/StepSixAdminAccess";
+import StepResponsibilityCentre from "@/components/register/StepResponsibilityCentre";
 import ReviewStep from "@/components/register/StepSevenSummary";
 
 // Define our StepInfo interface
@@ -230,6 +231,12 @@ const RegisterForm: React.FC = () => {
     },
     {
       id: 6,
+      title: "Responsibility Centre",
+      description: "Select or create a responsibility centre",
+      icon: <Building2 className="h-5 w-5" />,
+    },
+    {
+      id: 7,
       title: "Review",
       description: "Review and confirm your information",
       icon: <CircleCheck className="h-5 w-5" />,
@@ -282,7 +289,7 @@ const RegisterForm: React.FC = () => {
     }
 
     // For the review step, don't show the next button
-    if (currentStep === 6) return true;
+    if (currentStep === 7) return true;
 
     // For required info steps, check if essential fields are filled
     if (currentStep === 1) {
@@ -313,11 +320,18 @@ const RegisterForm: React.FC = () => {
       );
     }
 
-    // For admin access step (optional), don't disable unless errors exist
+    // For admin access step, check if admin key is required and provided
     if (currentStep === 5) {
-      return !!(
-        stepValidation.errors && Object.keys(stepValidation.errors).length > 0
-      );
+      // If admin access is requested, admin key is required
+      if (formData.requestAdminAccess && !formData.adminSecretKey) {
+        return true; // Disable next button if admin key is required but not provided
+      }
+      return false; // Allow proceeding if admin access is not requested or admin key is provided
+    }
+
+    // For responsibility centre step (optional), allow proceeding regardless
+    if (currentStep === 6) {
+      return false; // Never disable the next button for responsibility centre step
     }
 
     // Default case for other steps - disable if validation errors exist
@@ -342,6 +356,8 @@ const RegisterForm: React.FC = () => {
       case 5:
         return <AdminAccessForm />;
       case 6:
+        return <StepResponsibilityCentre />;
+      case 7:
         return <ReviewStep />;
       default:
         return <UserTypeSelection />;
@@ -599,7 +615,7 @@ const RegisterForm: React.FC = () => {
               </div>
               {steps[currentStep].title}
               <span className="ml-auto px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded-full border border-blue-800/30">
-                Step {currentStep + 1} of 7
+                Step {currentStep + 1} of 8
               </span>
             </h1>
             <p className="text-blue-300 relative z-10">
@@ -648,7 +664,7 @@ const RegisterForm: React.FC = () => {
               Back
             </Button>
 
-            {currentStep < 6 && (
+            {currentStep < 7 && (
               <Button
                 type="button"
                 onClick={handleNext}

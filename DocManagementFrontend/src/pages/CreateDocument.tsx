@@ -11,6 +11,7 @@ import {
   FileSignature,
   Layers,
   AlertCircle,
+  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import documentService from "@/services/documentService";
@@ -21,6 +22,7 @@ import { TypeSelectionStep } from "@/components/create-document/steps/TypeSelect
 import { TitleStep } from "@/components/create-document/steps/TitleStep";
 import { DateSelectionStep } from "@/components/create-document/steps/DateSelectionStep";
 import { ContentStep } from "@/components/create-document/steps/ContentStep";
+import { ResponsibilityCentreStep } from "@/components/create-document/steps/ResponsibilityCentreStep";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import api from "@/services/api";
@@ -50,9 +52,10 @@ export default function CreateDocument() {
   );
   const [content, setContent] = useState("");
   const [dateError, setDateError] = useState<string | null>(null);
+  const [selectedCentreId, setSelectedCentreId] = useState<number | undefined>(undefined);
 
   // Total number of steps
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 5;
 
   // Step definitions
   const steps = [
@@ -79,6 +82,13 @@ export default function CreateDocument() {
     },
     {
       id: 4,
+      title: "Responsibility Centre",
+      description: "Assign to responsibility centre",
+      icon: <Building2 className="h-4 w-4" />,
+      completed: step > 4,
+    },
+    {
+      id: 5,
       title: "Content",
       description: "Add document content",
       icon: <FileText className="h-4 w-4" />,
@@ -350,6 +360,7 @@ export default function CreateDocument() {
         documentAlias,
         docDate,
         subTypeId: selectedSubTypeId,
+        responsibilityCentreId: selectedCentreId,
       };
 
       const createdDocument = await documentService.createDocument(
@@ -446,6 +457,15 @@ export default function CreateDocument() {
           />
         );
       case 4:
+        return (
+          <ResponsibilityCentreStep
+            selectedCentreId={selectedCentreId}
+            onCentreChange={setSelectedCentreId}
+            userHasCentre={false} // TODO: Get from user context
+            userCentreName={undefined} // TODO: Get from user context
+          />
+        );
+      case 5:
         return <ContentStep content={content} onContentChange={setContent} />;
       default:
         return null;

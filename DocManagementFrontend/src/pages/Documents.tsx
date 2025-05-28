@@ -35,6 +35,7 @@ import {
   Filter,
   GitBranch,
   Users,
+  Building2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import documentService from "@/services/documentService";
@@ -79,6 +80,8 @@ import { FilterBadges, FilterBadge } from "@/components/shared/FilterBadges";
 import { BulkActionsBar, BulkAction } from "@/components/shared/BulkActionsBar";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AnimatePresence } from "framer-motion";
+import responsibilityCentreService from "@/services/responsibilityCentreService";
+import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
 
 const mockDocuments: Document[] = [
   {
@@ -227,13 +230,25 @@ const Documents = () => {
   const [typeFilter, setTypeFilter] = useState("any");
   const [statusFilter, setStatusFilter] = useState("any");
   const [createdByFilter, setCreatedByFilter] = useState("any");
+  const [responsibilityCentreFilter, setResponsibilityCentreFilter] = useState("any");
+  const [responsibilityCentres, setResponsibilityCentres] = useState<ResponsibilityCentreSimple[]>([]);
 
   const canManageDocuments =
     user && (user.role === "Admin" || user.role === "FullUser");
 
   useEffect(() => {
     fetchDocuments();
+    fetchResponsibilityCentres();
   }, []);
+
+  const fetchResponsibilityCentres = async () => {
+    try {
+      const centres = await responsibilityCentreService.getSimple();
+      setResponsibilityCentres(centres);
+    } catch (error) {
+      console.error("Failed to fetch responsibility centres:", error);
+    }
+  };
 
   const fetchDocuments = async () => {
     try {
@@ -475,12 +490,23 @@ const Documents = () => {
         matchesCreatedBy = doc.createdBy.id === parseInt(createdByFilter);
       }
 
+      // Responsibility centre filter
+      let matchesResponsibilityCentre = true;
+      if (responsibilityCentreFilter !== "any") {
+        if (responsibilityCentreFilter === "none") {
+          matchesResponsibilityCentre = !doc.responsibilityCentreId;
+        } else {
+          matchesResponsibilityCentre = doc.responsibilityCentreId === parseInt(responsibilityCentreFilter);
+        }
+      }
+
       return (
         matchesSearch &&
         matchesDateRange &&
         matchesStatus &&
         matchesType &&
-        matchesCreatedBy
+        matchesCreatedBy &&
+        matchesResponsibilityCentre
       );
     });
   }, [
@@ -490,6 +516,7 @@ const Documents = () => {
     statusFilter,
     typeFilter,
     createdByFilter,
+    responsibilityCentreFilter,
   ]);
 
   const getPageDocuments = () => {
@@ -559,6 +586,7 @@ const Documents = () => {
     setTypeFilter("any");
     setStatusFilter("any");
     setCreatedByFilter("any");
+    setResponsibilityCentreFilter("any");
     setDateRange(undefined);
     setFilterOpen(false);
   };
@@ -611,6 +639,26 @@ const Documents = () => {
           : "Strategy",
       icon: <Tag className="h-3.5 w-3.5" />,
       onRemove: () => setTypeFilter("any"),
+    });
+  }
+
+  if (responsibilityCentreFilter !== "any") {
+    let value = "Unknown";
+    if (responsibilityCentreFilter === "none") {
+      value = "No Centre Assigned";
+    } else {
+      const selectedCentre = responsibilityCentres.find(
+        (centre) => centre.id.toString() === responsibilityCentreFilter
+      );
+      value = selectedCentre ? `${selectedCentre.code} - ${selectedCentre.descr}` : "Unknown";
+    }
+    
+    filterBadges.push({
+      id: "responsibilityCentre",
+      label: "Responsibility Centre",
+      value: value,
+      icon: <Building2 className="h-3.5 w-3.5" />,
+      onRemove: () => setResponsibilityCentreFilter("any"),
     });
   }
 
@@ -769,6 +817,35 @@ const Documents = () => {
                     <SelectItem value="5" className="hover:bg-blue-800/40">
                       Strategy
                     </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Responsibility Centre filter */}
+              <div>
+                <label className="block text-sm text-blue-300 mb-1">
+                  Responsibility Centre
+                </label>
+                <Select value={responsibilityCentreFilter} onValueChange={setResponsibilityCentreFilter}>
+                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
+                    <SelectValue placeholder="Select centre" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                    <SelectItem value="any" className="hover:bg-blue-800/40">
+                      Any Centre
+                    </SelectItem>
+                    <SelectItem value="none" className="hover:bg-blue-800/40">
+                      No Centre Assigned
+                    </SelectItem>
+                    {responsibilityCentres.map((centre) => (
+                      <SelectItem 
+                        key={centre.id} 
+                        value={centre.id.toString()} 
+                        className="hover:bg-blue-800/40"
+                      >
+                        {centre.code} - {centre.descr}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

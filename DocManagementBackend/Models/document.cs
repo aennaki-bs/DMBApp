@@ -32,6 +32,11 @@ namespace DocManagementBackend.Models
         [ForeignKey("CircuitId")]
         public Circuit? Circuit { get; set; }
         public bool IsCircuitCompleted { get; set; } = false;
+        
+        public int? ResponsibilityCentreId { get; set; }
+        [ForeignKey("ResponsibilityCentreId")]
+        [JsonIgnore]
+        public ResponsibilityCentre? ResponsibilityCentre { get; set; }
         [Required]
         public string DocumentKey { get; set; } = string.Empty;
         public string DocumentAlias { get; set; } = string.Empty;

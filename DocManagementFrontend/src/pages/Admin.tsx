@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Settings, Activity } from 'lucide-react';
+import { Users, Settings, Activity, Building2 } from 'lucide-react';
 
 const AdminPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -60,6 +60,22 @@ const AdminPage = () => {
           <div className="mt-4 flex gap-2 flex-wrap">
             <Badge variant="secondary" className="bg-purple-500/10 text-purple-400">Configuration</Badge>
             <Badge variant="secondary" className="bg-purple-500/10 text-purple-400">Preferences</Badge>
+          </div>
+        </div>
+        
+        {/* Responsibility Centre Management Card */}
+        <div 
+          className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-4 md:p-6 transition-all hover:border-blue-500/50 hover:shadow-blue-500/10 hover:shadow-lg cursor-pointer" 
+          onClick={() => navigate('/responsibility-centre-management')}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-white">Responsibility Centres</h2>
+            <Building2 className="h-8 w-8 text-orange-500" />
+          </div>
+          <p className="text-gray-400">Manage responsibility centres for document organization</p>
+          <div className="mt-4 flex gap-2 flex-wrap">
+            <Badge variant="secondary" className="bg-orange-500/10 text-orange-400">Centres</Badge>
+            <Badge variant="secondary" className="bg-orange-500/10 text-orange-400">Organization</Badge>
           </div>
         </div>
         

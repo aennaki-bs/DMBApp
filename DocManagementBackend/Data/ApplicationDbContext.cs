@@ -12,6 +12,7 @@ namespace DocManagementBackend.Data
         public DbSet<User> Users { get; set; }
         public DbSet<LogHistory> LogHistories { get; set; }
         public DbSet<Document> Documents { get; set; }
+        public DbSet<ResponsibilityCentre> ResponsibilityCentres { get; set; }
         public DbSet<Ligne> Lignes { get; set; }
         public DbSet<SousLigne> SousLignes { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -41,6 +42,27 @@ namespace DocManagementBackend.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // ResponsibilityCentre unique constraint on Code
+            modelBuilder.Entity<ResponsibilityCentre>()
+                .HasIndex(rc => rc.Code)
+                .IsUnique();
+
+            // User -> ResponsibilityCentre relationship
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.ResponsibilityCentre)
+                .WithMany(rc => rc.Users)
+                .HasForeignKey(u => u.ResponsibilityCentreId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Document -> ResponsibilityCentre relationship
+            modelBuilder.Entity<Document>()
+                .HasOne(d => d.ResponsibilityCentre)
+                .WithMany(rc => rc.Documents)
+                .HasForeignKey(d => d.ResponsibilityCentreId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
             // SubType relationship with Document
             modelBuilder.Entity<Document>()
                 .HasOne(d => d.SubType)
@@ -277,6 +299,15 @@ namespace DocManagementBackend.Data
                 new Role { Id = 1, RoleName = "Admin", IsAdmin = true, IsSimpleUser = false, IsFullUser = false },
                 new Role { Id = 2, RoleName = "SimpleUser", IsAdmin = false, IsSimpleUser = true, IsFullUser = false },
                 new Role { Id = 3, RoleName = "FullUser", IsAdmin = false, IsSimpleUser = false, IsFullUser = true }
+            );
+
+            // Seed ResponsibilityCentres
+            modelBuilder.Entity<ResponsibilityCentre>().HasData(
+                new ResponsibilityCentre { Id = 1, Code = "ADMIN", Descr = "Administration Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
+                new ResponsibilityCentre { Id = 2, Code = "FINANCE", Descr = "Finance Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
+                new ResponsibilityCentre { Id = 3, Code = "HR", Descr = "Human Resources Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
+                new ResponsibilityCentre { Id = 4, Code = "IT", Descr = "Information Technology Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
+                new ResponsibilityCentre { Id = 5, Code = "SALES", Descr = "Sales Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true }
             );
         }
     }

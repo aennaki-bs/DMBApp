@@ -12,6 +12,7 @@ namespace DocManagementBackend.Models
         public DateTime? DocDate { get; set; }
         public DateTime? ComptableDate { get; set; }
         public int? CircuitId { get; set; }
+        public int? ResponsibilityCentreId { get; set; }
     }
 
     public class UpdateDocumentRequest
@@ -53,6 +54,8 @@ namespace DocManagementBackend.Models
         public int? CurrentStatusId { get; set; }
         public string CurrentStatusTitle { get; set; } = string.Empty;
         public bool IsCircuitCompleted { get; set; }
+        public int? ResponsibilityCentreId { get; set; }
+        public ResponsibilityCentreSimpleDto? ResponsibilityCentre { get; set; }
     }
 }
 

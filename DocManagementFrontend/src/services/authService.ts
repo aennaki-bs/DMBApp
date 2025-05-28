@@ -6,25 +6,25 @@ export interface LoginCredentials {
 }
 
 export interface RegisterCredentials {
-  email: string;
-  passwordHash: string;
-  confirmPassword: string;
-  firstName: string;
-  lastName: string;
-  username?: string;
+  Email: string;
+  Username: string;
+  PasswordHash: string;
+  FirstName: string;
+  LastName: string;
+  UserType: string;
+  City: string;
+  Address: string;
+  PhoneNumber: string;
+  Country: string;
+  WebSite: string;
+  Identity: string;
+  ResponsibilityCentreId?: number | null;
+  NewResponsibilityCentre?: {
+    code: string;
+    descr: string;
+  } | null;
+  // Keep adminSecretKey for header processing
   adminSecretKey?: string;
-  userType?: 'personal' | 'company';
-  // Personal user fields
-  cin?: string;
-  personalAddress?: string;
-  personalPhone?: string;
-  // Company fields
-  companyName?: string;
-  companyRC?: string;
-  companyAddress?: string;
-  companyPhone?: string;
-  companyEmail?: string;
-  companyWebsite?: string;
 }
 
 export interface UserInfo {

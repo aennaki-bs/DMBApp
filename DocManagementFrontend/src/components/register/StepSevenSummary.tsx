@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMultiStepForm } from "@/context/form";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,6 +14,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import responsibilityCentreService from "@/services/responsibilityCentreService";
+import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
 
 // Form data interface to provide proper typing
 interface FormData {
@@ -36,6 +38,8 @@ interface FormData {
   password?: string;
   confirmPassword?: string;
   roleName?: string;
+  requestAdminAccess?: boolean;
+  responsibilityCentreId?: number;
   [key: string]: any;
 }
 
@@ -56,14 +60,40 @@ interface ReviewSectionProps {
 }
 
 const ReviewStep: React.FC = () => {
-  const { formData, submitForm } = useMultiStepForm();
+  const { formData, submitForm, goToStep, stepValidation } = useMultiStepForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedSection, setExpandedSection] = useState<number | null>(0);
+  const [responsibilityCentre, setResponsibilityCentre] = useState<ResponsibilityCentreSimple | null>(null);
+  const [isLoadingCentre, setIsLoadingCentre] = useState(false);
 
   // Typed formData for better TypeScript support
   const typedFormData = formData as FormData;
 
   const isPersonal = typedFormData.userType === "personal";
+
+  // Fetch responsibility centre details if ID is provided
+  useEffect(() => {
+    const fetchResponsibilityCentre = async () => {
+      if (typedFormData.responsibilityCentreId) {
+        try {
+          setIsLoadingCentre(true);
+          // Get all simple centres and find the matching one
+          const centres = await responsibilityCentreService.getSimple();
+          const selectedCentre = centres.find(c => c.id === typedFormData.responsibilityCentreId);
+          setResponsibilityCentre(selectedCentre || null);
+        } catch (error) {
+          console.error('Failed to fetch responsibility centre:', error);
+          setResponsibilityCentre(null);
+        } finally {
+          setIsLoadingCentre(false);
+        }
+      } else {
+        setResponsibilityCentre(null);
+      }
+    };
+
+    fetchResponsibilityCentre();
+  }, [typedFormData.responsibilityCentreId]);
 
   // Function to handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,18 +101,20 @@ const ReviewStep: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await submitForm();
-      // Success handling is done in the submitForm function
+      const success = await submitForm();
+      if (!success) {
+        // If submission failed, reset the submitting state
+        setIsSubmitting(false);
+      }
+      // If successful, the submitForm function handles navigation
     } catch (error) {
       console.error("Error submitting form:", error);
       setIsSubmitting(false);
     }
   };
 
-  // Function to go to a specific step
-  const goToStep = (stepIndex: number) => {
-    // The useMultiStepForm context should provide a way to go to a specific step
-    const { goToStep } = useMultiStepForm();
+  // Function to handle edit button click
+  const handleEdit = (stepIndex: number) => {
     if (goToStep) {
       goToStep(stepIndex);
     }
@@ -116,16 +148,28 @@ const ReviewStep: React.FC = () => {
 
   // Format role with proper styling
   const formatRole = () => {
-    const role = typedFormData.roleName || "User";
-    let roleColor = "text-blue-300";
-
-    if (role === "Admin") {
-      roleColor = "text-red-300";
-    } else if (role === "FullUser") {
-      roleColor = "text-emerald-300";
+    if (typedFormData.requestAdminAccess) {
+      return <span className="text-amber-300">Admin Access Requested</span>;
     }
+    return <span className="text-blue-300">Standard User</span>;
+  };
 
-    return <span className={roleColor}>{role}</span>;
+  // Format responsibility centre
+  const formatResponsibilityCentre = () => {
+    if (isLoadingCentre) {
+      return <span className="text-blue-400">Loading...</span>;
+    }
+    
+    if (responsibilityCentre) {
+      return (
+        <div className="space-y-1">
+          <div className="text-blue-100">{responsibilityCentre.code} - {responsibilityCentre.descr}</div>
+          <div className="text-xs text-blue-400">ID: {responsibilityCentre.id}</div>
+        </div>
+      );
+    }
+    
+    return <span className="text-gray-400">Not selected</span>;
   };
 
   // Define review sections
@@ -194,8 +238,39 @@ const ReviewStep: React.FC = () => {
     {
       title: "Access Level",
       icon: <Shield className="h-5 w-5" />,
-      items: [{ label: "Role", value: formatRole() }],
+      items: [
+        { 
+          label: "Access Type", 
+          value: formatRole() 
+        },
+        ...(typedFormData.requestAdminAccess ? [
+          { 
+            label: "Admin Key", 
+            value: typedFormData.adminSecretKey ? "●●●●●●●●●" : "Not provided",
+            private: true 
+          }
+        ] : [])
+      ],
       stepIndex: 5,
+    },
+    {
+      title: "Responsibility Centre",
+      icon: <Building2 className="h-5 w-5" />,
+      items: [
+        {
+          label: "Selected Centre",
+          value: formatResponsibilityCentre(),
+        },
+        {
+          label: "Status",
+          value: typedFormData.responsibilityCentreId ? (
+            <span className="text-green-300">Assigned</span>
+          ) : (
+            <span className="text-gray-400">Optional - Not selected</span>
+          ),
+        },
+      ],
+      stepIndex: 6,
     },
   ];
 
@@ -242,7 +317,7 @@ const ReviewStep: React.FC = () => {
               >
                 <ReviewSection
                   {...section}
-                  onEdit={goToStep}
+                  onEdit={handleEdit}
                   expanded={expandedSection === index}
                   toggleExpand={() => toggleSection(index)}
                 />
@@ -266,14 +341,73 @@ const ReviewStep: React.FC = () => {
           </p>
         </motion.div>
 
+        {/* Error Display - Moved to bottom for better visibility */}
+        {stepValidation.errors.registration && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-red-900/30 border-2 border-red-500/50 rounded-lg p-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-full bg-red-500/20 text-red-400 mt-0.5">
+                <svg
+                  className="h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-red-200 mb-2">
+                  Registration Error
+                </h3>
+                <p className="text-red-100 mb-3">
+                  {stepValidation.errors.registration}
+                </p>
+                <div className="text-sm text-red-300 bg-red-800/20 p-3 rounded border border-red-700/30">
+                  <p className="flex items-center gap-2">
+                    <svg
+                      className="h-4 w-4 flex-shrink-0"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4" />
+                      <path d="M12 8h.01" />
+                    </svg>
+                    Please review your information and try again. You can edit any section by clicking the "Edit" button.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Submit button */}
         <div className="pt-4 flex justify-end">
           <Button
             type="submit"
-            disabled={isSubmitting}
-            className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]"
+            disabled={isSubmitting || stepValidation.isLoading || !!stepValidation.errors.registration}
+            className={`transition-all duration-200 flex items-center gap-2 ${
+              stepValidation.errors.registration
+                ? "bg-gray-600/50 text-gray-300 border border-gray-600/50 cursor-not-allowed"
+                : "bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]"
+            }`}
           >
-            {isSubmitting ? (
+            {(isSubmitting || stepValidation.isLoading) ? (
               <>
                 <svg
                   className="animate-spin h-4 w-4 text-white mr-1"
@@ -296,6 +430,24 @@ const ReviewStep: React.FC = () => {
                   ></path>
                 </svg>
                 Processing...
+              </>
+            ) : stepValidation.errors.registration ? (
+              <>
+                <svg
+                  className="h-4 w-4 mr-1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                Fix Errors to Continue
               </>
             ) : (
               <>Complete Registration</>

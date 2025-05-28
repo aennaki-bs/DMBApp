@@ -41,6 +41,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.DocumentType)
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
+                .Include(d => d.ResponsibilityCentre)
                 .Include(d => d.Lignes)
                 .Select(DocumentMappings.ToDocumentDto)
                 .ToListAsync();
@@ -62,6 +63,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.DocumentType)
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
+                .Include(d => d.ResponsibilityCentre)
                 .Include(d => d.Lignes)
                 .Where(d => d.Id == id)
                 .Select(DocumentMappings.ToDocumentDto)
@@ -92,6 +94,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.DocumentType)
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
+                .Include(d => d.ResponsibilityCentre)
                 .Include(d => d.Lignes)
                 .OrderByDescending(d => d.CreatedAt) // Sort by creation date, newest first
                 .Take(limit) // Take only the specified number of documents
@@ -110,6 +113,31 @@ namespace DocManagementBackend.Controllers
 
             var userId = authResult.UserId;
             var user = authResult.User!;
+
+            // Handle Responsibility Centre logic
+            int? responsibilityCentreId = null;
+            if (user.ResponsibilityCentreId.HasValue)
+            {
+                // User has a responsibility centre, use it automatically
+                responsibilityCentreId = user.ResponsibilityCentreId.Value;
+            }
+            else if (request.ResponsibilityCentreId.HasValue)
+            {
+                // User has no responsibility centre, but one was provided explicitly
+                // Validate the provided responsibility centre
+                var responsibilityCentre = await _context.ResponsibilityCentres
+                    .FirstOrDefaultAsync(rc => rc.Id == request.ResponsibilityCentreId.Value && rc.IsActive);
+                if (responsibilityCentre == null)
+                    return BadRequest("Invalid or inactive Responsibility Centre.");
+                
+                responsibilityCentreId = request.ResponsibilityCentreId.Value;
+            }
+            else
+            {
+                // Neither user nor request has a responsibility centre - this is allowed for now
+                // but should be handled in business logic
+                responsibilityCentreId = null;
+            }
 
             var docType = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.Id == request.TypeId);
             if (docType == null)
@@ -142,7 +170,8 @@ namespace DocManagementBackend.Controllers
             }
 
             var docDate = request.DocDate ?? DateTime.UtcNow;
-            var docAlias = "D";
+            var docAlias = "";
+
             if (!string.IsNullOrEmpty(request.DocumentAlias))
                 docAlias = request.DocumentAlias.ToUpper();
 
@@ -153,9 +182,9 @@ namespace DocManagementBackend.Controllers
 
             string documentKey;
             if (subType != null)
-                documentKey = $"{subType.SubTypeKey}-{docAlias}-{paddedCounter}";
+                documentKey = $"{subType.SubTypeKey}-{docAlias}{paddedCounter}";
             else
-                documentKey = $"{docType.TypeKey}-{docAlias}-{paddedCounter}";
+                documentKey = $"{docType.TypeKey}-{docAlias}{paddedCounter}";
 
             var document = new Document
             {
@@ -169,6 +198,7 @@ namespace DocManagementBackend.Controllers
                 DocumentType = docType,
                 SubTypeId = request.SubTypeId,
                 SubType = subType,
+                ResponsibilityCentreId = responsibilityCentreId,
                 // Don't set CircuitId here, will be set by workflow service if needed
                 CircuitId = null,
                 ComptableDate = request.ComptableDate ?? DateTime.UtcNow,
@@ -206,6 +236,7 @@ namespace DocManagementBackend.Controllers
                     .Include(d => d.SubType)
                     .Include(d => d.CurrentStep)
                     .Include(d => d.CurrentStatus)
+                    .Include(d => d.ResponsibilityCentre)
                     .Where(d => d.Id == document.Id)
                     .Select(DocumentMappings.ToDocumentDto)
                     .FirstOrDefaultAsync();

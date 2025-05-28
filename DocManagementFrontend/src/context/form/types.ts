@@ -37,7 +37,14 @@ export interface FormData {
   confirmPassword: string;
   adminSecretKey: string;
   role?: string;
+  requestAdminAccess?: boolean; // Track if user wants admin access
   validationError?: string; // Added for form validation errors
+  // Responsibility Centre fields
+  responsibilityCentreId?: number;
+  newResponsibilityCentre?: {
+    code: string;
+    descr: string;
+  };
 }
 
 export const initialFormData: FormData = {

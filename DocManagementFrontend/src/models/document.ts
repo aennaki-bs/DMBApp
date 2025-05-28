@@ -1,3 +1,5 @@
+import { ResponsibilityCentreSimple } from './responsibilityCentre';
+
 export interface Document {
   id: number;
   title: string;
@@ -21,6 +23,8 @@ export interface Document {
   lignesCount?: number;
   sousLignesCount?: number;
   lignes?: Ligne[];
+  responsibilityCentreId?: number;
+  responsibilityCentre?: ResponsibilityCentreSimple;
 }
 
 export interface DocumentType {
@@ -51,6 +55,7 @@ export interface CreateDocumentRequest {
   subTypeId?: number | null;
   docDate?: string;
   circuitId?: number;
+  responsibilityCentreId?: number;
 }
 
 export interface UpdateDocumentRequest {

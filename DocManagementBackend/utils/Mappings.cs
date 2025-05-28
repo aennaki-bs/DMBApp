@@ -165,7 +165,15 @@ namespace DocManagementBackend.Mappings
             CircuitId = d.CircuitId,
             CurrentStatusId = d.CurrentStatusId,
             CurrentStatusTitle = d.CurrentStatus != null ? d.CurrentStatus.Title : string.Empty,
-            IsCircuitCompleted = d.IsCircuitCompleted
+            IsCircuitCompleted = d.IsCircuitCompleted,
+            ResponsibilityCentreId = d.ResponsibilityCentreId,
+            ResponsibilityCentre = d.ResponsibilityCentre == null ? null : new ResponsibilityCentreSimpleDto
+            {
+                Id = d.ResponsibilityCentre.Id,
+                Code = d.ResponsibilityCentre.Code,
+                Descr = d.ResponsibilityCentre.Descr,
+                IsActive = d.ResponsibilityCentre.IsActive
+            }
         };
     }
 

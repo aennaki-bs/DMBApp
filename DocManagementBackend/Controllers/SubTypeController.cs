@@ -9,14 +9,14 @@ using System.Security.Claims;
 namespace DocManagementBackend.Controllers
 {
     [Authorize]
-    [Route("api/Stump")]
+    [Route("api/Series")]
     [ApiController]
-    public class StumpController : ControllerBase
+    public class SeriesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly UserAuthorizationService _authService;
 
-        public StumpController(
+        public SeriesController(
             ApplicationDbContext context,
             UserAuthorizationService authService)
         {

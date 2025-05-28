@@ -132,16 +132,6 @@ const RegistrationSuccess = () => {
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </CardContent>
-
-        <CardFooter className="border-t border-blue-900/30 bg-blue-950/30 backdrop-blur-xl flex justify-between py-4 px-6 relative z-10">
-          <div className="text-xs text-blue-300/70">
-            Reference ID:{" "}
-            {Math.random().toString(36).substring(2, 10).toUpperCase()}
-          </div>
-          <div className="text-xs text-blue-300/70">
-            {new Date().toLocaleString()}
-          </div>
-        </CardFooter>
       </Card>
     </div>
   );
