@@ -19,7 +19,7 @@ interface DeleteConfirmDialogProps {
   count: number;
 }
 
-const MotionAlertDialogContent = motion(AlertDialogContent);
+const MotionAlertDialogContent = motion.create(AlertDialogContent);
 
 export default function DeleteConfirmDialog({
   open,

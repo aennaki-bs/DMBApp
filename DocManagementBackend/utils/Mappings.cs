@@ -15,6 +15,61 @@ namespace DocManagementBackend.Mappings
             Title = l.Title,
             Article = l.Article,
             Prix = l.Prix,
+            SousLignesCount = l.SousLignes.Count,
+            
+            // Type information
+            TypeId = l.TypeId,
+            Type = l.Type == null ? null : new LignesElementTypeDto
+            {
+                Id = l.Type.Id,
+                TypeElement = l.Type.TypeElement,
+                Description = l.Type.Description,
+                TableName = l.Type.TableName,
+                CreatedAt = l.Type.CreatedAt,
+                UpdatedAt = l.Type.UpdatedAt
+            },
+            
+            // Element references
+            ItemCode = l.ItemCode,
+            Item = l.Item == null ? null : new ItemDto
+            {
+                Code = l.Item.Code,
+                Description = l.Item.Description,
+                Unite = l.Item.Unite,
+                UniteCodeNavigation = l.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
+                {
+                    Code = l.Item.UniteCodeNavigation.Code,
+                    Description = l.Item.UniteCodeNavigation.Description,
+                    CreatedAt = l.Item.UniteCodeNavigation.CreatedAt,
+                    UpdatedAt = l.Item.UniteCodeNavigation.UpdatedAt,
+                    ItemsCount = l.Item.UniteCodeNavigation.Items.Count()
+                },
+                CreatedAt = l.Item.CreatedAt,
+                UpdatedAt = l.Item.UpdatedAt,
+                LignesCount = l.Item.Lignes.Count()
+            },
+            GeneralAccountsCode = l.GeneralAccountsCode,
+            GeneralAccounts = l.GeneralAccounts == null ? null : new GeneralAccountsDto
+            {
+                Code = l.GeneralAccounts.Code,
+                Description = l.GeneralAccounts.Description,
+                CreatedAt = l.GeneralAccounts.CreatedAt,
+                UpdatedAt = l.GeneralAccounts.UpdatedAt,
+                LignesCount = l.GeneralAccounts.Lignes.Count()
+            },
+            
+            // Pricing fields
+            Quantity = l.Quantity,
+            PriceHT = l.PriceHT,
+            DiscountPercentage = l.DiscountPercentage,
+            DiscountAmount = l.DiscountAmount,
+            VatPercentage = l.VatPercentage,
+            
+            // Calculated fields
+            AmountHT = l.AmountHT,
+            AmountVAT = l.AmountVAT,
+            AmountTTC = l.AmountTTC,
+            
             CreatedAt = l.CreatedAt,
             UpdatedAt = l.UpdatedAt,
             Document = new DocumentDto
@@ -53,8 +108,7 @@ namespace DocManagementBackend.Mappings
                     },
                 LignesCount = l.Document.Lignes.Count,
                 SousLignesCount = l.Document.Lignes.Sum(ll => ll.SousLignes.Count)
-            },
-            SousLignesCount = l.SousLignes.Count
+            }
         };
 
     }
@@ -67,14 +121,71 @@ namespace DocManagementBackend.Mappings
             LigneId = s.LigneId,
             Title = s.Title,
             Attribute = s.Attribute,
+            CreatedAt = s.CreatedAt,
+            UpdatedAt = s.UpdatedAt,
             Ligne = new LigneDto
             {
-                Id = s.Id,
-                DocumentId = s.Ligne!.DocumentId,
+                Id = s.Ligne!.Id,
+                DocumentId = s.Ligne.DocumentId,
                 LingeKey = s.Ligne.LigneKey,
                 Title = s.Ligne.Title,
                 Article = s.Ligne.Article,
                 Prix = s.Ligne.Prix,
+                SousLignesCount = s.Ligne.SousLignes.Count,
+                
+                // Type information
+                TypeId = s.Ligne.TypeId,
+                Type = s.Ligne.Type == null ? null : new LignesElementTypeDto
+                {
+                    Id = s.Ligne.Type.Id,
+                    TypeElement = s.Ligne.Type.TypeElement,
+                    Description = s.Ligne.Type.Description,
+                    TableName = s.Ligne.Type.TableName,
+                    CreatedAt = s.Ligne.Type.CreatedAt,
+                    UpdatedAt = s.Ligne.Type.UpdatedAt
+                },
+                
+                // Element references
+                ItemCode = s.Ligne.ItemCode,
+                Item = s.Ligne.Item == null ? null : new ItemDto
+                {
+                    Code = s.Ligne.Item.Code,
+                    Description = s.Ligne.Item.Description,
+                    Unite = s.Ligne.Item.Unite,
+                    UniteCodeNavigation = s.Ligne.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
+                    {
+                        Code = s.Ligne.Item.UniteCodeNavigation.Code,
+                        Description = s.Ligne.Item.UniteCodeNavigation.Description,
+                        CreatedAt = s.Ligne.Item.UniteCodeNavigation.CreatedAt,
+                        UpdatedAt = s.Ligne.Item.UniteCodeNavigation.UpdatedAt,
+                        ItemsCount = s.Ligne.Item.UniteCodeNavigation.Items.Count()
+                    },
+                    CreatedAt = s.Ligne.Item.CreatedAt,
+                    UpdatedAt = s.Ligne.Item.UpdatedAt,
+                    LignesCount = s.Ligne.Item.Lignes.Count()
+                },
+                GeneralAccountsCode = s.Ligne.GeneralAccountsCode,
+                GeneralAccounts = s.Ligne.GeneralAccounts == null ? null : new GeneralAccountsDto
+                {
+                    Code = s.Ligne.GeneralAccounts.Code,
+                    Description = s.Ligne.GeneralAccounts.Description,
+                    CreatedAt = s.Ligne.GeneralAccounts.CreatedAt,
+                    UpdatedAt = s.Ligne.GeneralAccounts.UpdatedAt,
+                    LignesCount = s.Ligne.GeneralAccounts.Lignes.Count()
+                },
+                
+                // Pricing fields
+                Quantity = s.Ligne.Quantity,
+                PriceHT = s.Ligne.PriceHT,
+                DiscountPercentage = s.Ligne.DiscountPercentage,
+                DiscountAmount = s.Ligne.DiscountAmount,
+                VatPercentage = s.Ligne.VatPercentage,
+                
+                // Calculated fields
+                AmountHT = s.Ligne.AmountHT,
+                AmountVAT = s.Ligne.AmountVAT,
+                AmountTTC = s.Ligne.AmountTTC,
+                
                 CreatedAt = s.Ligne.CreatedAt,
                 UpdatedAt = s.Ligne.UpdatedAt,
                 Document = new DocumentDto
@@ -163,16 +274,13 @@ namespace DocManagementBackend.Mappings
             LignesCount = d.Lignes.Count,
             SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count),
             CircuitId = d.CircuitId,
-            CurrentStatusId = d.CurrentStatusId,
-            CurrentStatusTitle = d.CurrentStatus != null ? d.CurrentStatus.Title : string.Empty,
-            IsCircuitCompleted = d.IsCircuitCompleted,
+            CurrentStepId = d.CurrentStepId,
             ResponsibilityCentreId = d.ResponsibilityCentreId,
             ResponsibilityCentre = d.ResponsibilityCentre == null ? null : new ResponsibilityCentreSimpleDto
             {
                 Id = d.ResponsibilityCentre.Id,
                 Code = d.ResponsibilityCentre.Code,
-                Descr = d.ResponsibilityCentre.Descr,
-                IsActive = d.ResponsibilityCentre.IsActive
+                Descr = d.ResponsibilityCentre.Descr
             }
         };
     }

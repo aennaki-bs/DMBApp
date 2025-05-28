@@ -26,7 +26,6 @@ namespace DocManagementBackend.Controllers
         public async Task<ActionResult<IEnumerable<ResponsibilityCentreDto>>> GetResponsibilityCentres()
         {
             var responsibilityCentres = await _context.ResponsibilityCentres
-                .Where(rc => rc.IsActive)
                 .Select(rc => new ResponsibilityCentreDto
                 {
                     Id = rc.Id,
@@ -34,9 +33,25 @@ namespace DocManagementBackend.Controllers
                     Descr = rc.Descr,
                     CreatedAt = rc.CreatedAt,
                     UpdatedAt = rc.UpdatedAt,
-                    IsActive = rc.IsActive,
                     UsersCount = rc.Users.Count(),
-                    DocumentsCount = rc.Documents.Count()
+                    DocumentsCount = rc.Documents.Count(),
+                    Users = rc.Users.Select(u => new ResponsibilityCentreUserDto
+                    {
+                        Id = u.Id,
+                        Email = u.Email,
+                        Username = u.Username,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        UserType = u.UserType,
+                        IsActive = u.IsActive,
+                        IsOnline = u.IsOnline,
+                        ProfilePicture = u.ProfilePicture,
+                        Role = u.Role == null ? null : new RoleDto
+                        {
+                            RoleId = u.Role.Id,
+                            RoleName = u.Role.RoleName
+                        }
+                    }).ToList()
                 })
                 .OrderBy(rc => rc.Code)
                 .ToListAsync();
@@ -50,13 +65,11 @@ namespace DocManagementBackend.Controllers
         public async Task<ActionResult<IEnumerable<ResponsibilityCentreSimpleDto>>> GetResponsibilityCentresSimple()
         {
             var responsibilityCentres = await _context.ResponsibilityCentres
-                .Where(rc => rc.IsActive)
                 .Select(rc => new ResponsibilityCentreSimpleDto
                 {
                     Id = rc.Id,
                     Code = rc.Code,
-                    Descr = rc.Descr,
-                    IsActive = rc.IsActive
+                    Descr = rc.Descr
                 })
                 .OrderBy(rc => rc.Code)
                 .ToListAsync();
@@ -77,9 +90,26 @@ namespace DocManagementBackend.Controllers
                     Descr = rc.Descr,
                     CreatedAt = rc.CreatedAt,
                     UpdatedAt = rc.UpdatedAt,
-                    IsActive = rc.IsActive,
                     UsersCount = rc.Users.Count(),
-                    DocumentsCount = rc.Documents.Count()
+                    DocumentsCount = rc.Documents.Count(),
+                    Users = rc.Users.Select(u => new ResponsibilityCentreUserDto
+                    {
+                        Id = u.Id,
+                        Email = u.Email,
+                        Username = u.Username,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        UserType = u.UserType,
+                        IsActive = u.IsActive,
+                        IsOnline = u.IsOnline,
+                        CreatedAt = u.CreatedAt,
+                        ProfilePicture = u.ProfilePicture,
+                        Role = u.Role == null ? null : new RoleDto
+                        {
+                            RoleId = u.Role.Id,
+                            RoleName = u.Role.RoleName
+                        }
+                    }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
@@ -128,8 +158,7 @@ namespace DocManagementBackend.Controllers
                 Code = request.Code.ToUpper().Trim(),
                 Descr = request.Descr.Trim(),
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsActive = true
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.ResponsibilityCentres.Add(responsibilityCentre);
@@ -145,9 +174,9 @@ namespace DocManagementBackend.Controllers
                     Descr = responsibilityCentre.Descr,
                     CreatedAt = responsibilityCentre.CreatedAt,
                     UpdatedAt = responsibilityCentre.UpdatedAt,
-                    IsActive = responsibilityCentre.IsActive,
                     UsersCount = 0,
-                    DocumentsCount = 0
+                    DocumentsCount = 0,
+                    Users = new List<ResponsibilityCentreUserDto>()
                 };
 
                 return CreatedAtAction(nameof(GetResponsibilityCentre), new { id = responsibilityCentre.Id }, createdDto);
@@ -194,10 +223,6 @@ namespace DocManagementBackend.Controllers
             if (!string.IsNullOrWhiteSpace(request.Descr))
                 responsibilityCentre.Descr = request.Descr.Trim();
 
-            // Update IsActive if provided
-            if (request.IsActive.HasValue)
-                responsibilityCentre.IsActive = request.IsActive.Value;
-
             responsibilityCentre.UpdatedAt = DateTime.UtcNow;
 
             try
@@ -211,6 +236,209 @@ namespace DocManagementBackend.Controllers
                     return BadRequest("A Responsibility Centre with this code already exists.");
                 
                 return StatusCode(500, $"An error occurred while updating the Responsibility Centre: {ex.Message}");
+            }
+        }
+
+        // POST: api/ResponsibilityCentre/associate-users
+        [HttpPost("associate-users")]
+        public async Task<ActionResult<AssociateUsersToResponsibilityCentreResponse>> AssociateUsersToResponsibilityCentre([FromBody] AssociateUsersToResponsibilityCentreRequest request)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Validate request
+            if (request.UserIds == null || !request.UserIds.Any())
+                return BadRequest("At least one user ID must be provided.");
+
+            if (request.UserIds.Count > 100)
+                return BadRequest("Cannot associate more than 100 users at once.");
+
+            // Check if responsibility centre exists
+            var responsibilityCentre = await _context.ResponsibilityCentres
+                .FirstOrDefaultAsync(rc => rc.Id == request.ResponsibilityCentreId);
+
+            if (responsibilityCentre == null)
+                return NotFound("Responsibility Centre not found.");
+
+            var response = new AssociateUsersToResponsibilityCentreResponse
+            {
+                ResponsibilityCentreId = responsibilityCentre.Id,
+                ResponsibilityCentreCode = responsibilityCentre.Code,
+                ResponsibilityCentreDescription = responsibilityCentre.Descr,
+                TotalUsersRequested = request.UserIds.Count
+            };
+
+            // Get all users to be associated
+            var users = await _context.Users
+                .Where(u => request.UserIds.Contains(u.Id))
+                .Include(u => u.ResponsibilityCentre)
+                .ToListAsync();
+
+            var foundUserIds = users.Select(u => u.Id).ToList();
+            var notFoundUserIds = request.UserIds.Except(foundUserIds).ToList();
+
+            // Add errors for users not found
+            foreach (var notFoundId in notFoundUserIds)
+            {
+                response.Results.Add(new UserAssociationResult
+                {
+                    UserId = notFoundId,
+                    UserEmail = "Unknown",
+                    UserName = "Unknown",
+                    Success = false,
+                    ErrorMessage = "User not found"
+                });
+                response.Errors.Add($"User with ID {notFoundId} not found.");
+            }
+
+            // Process found users
+            foreach (var user in users)
+            {
+                var result = new UserAssociationResult
+                {
+                    UserId = user.Id,
+                    UserEmail = user.Email,
+                    UserName = $"{user.FirstName} {user.LastName}".Trim(),
+                    PreviousResponsibilityCentre = user.ResponsibilityCentre?.Code
+                };
+
+                try
+                {
+                    // Update user's responsibility centre
+                    user.ResponsibilityCentreId = request.ResponsibilityCentreId;
+                    result.Success = true;
+                    response.UsersSuccessfullyAssociated++;
+                }
+                catch (Exception ex)
+                {
+                    result.Success = false;
+                    result.ErrorMessage = ex.Message;
+                    response.Errors.Add($"Failed to associate user {user.Email}: {ex.Message}");
+                }
+
+                response.Results.Add(result);
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                
+                // If some users failed, return partial success
+                if (response.Errors.Any())
+                {
+                    return StatusCode(207, response); // 207 Multi-Status
+                }
+
+                return Ok(response);
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, new AssociateUsersToResponsibilityCentreResponse
+                {
+                    ResponsibilityCentreId = request.ResponsibilityCentreId,
+                    TotalUsersRequested = request.UserIds.Count,
+                    UsersSuccessfullyAssociated = 0,
+                    Errors = new List<string> { $"Database error occurred: {ex.Message}" }
+                });
+            }
+        }
+
+        // POST: api/ResponsibilityCentre/remove-users
+        [HttpPost("remove-users")]
+        public async Task<ActionResult<AssociateUsersToResponsibilityCentreResponse>> RemoveUsersFromResponsibilityCentre([FromBody] RemoveUsersFromResponsibilityCentreRequest request)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Validate request
+            if (request.UserIds == null || !request.UserIds.Any())
+                return BadRequest("At least one user ID must be provided.");
+
+            if (request.UserIds.Count > 100)
+                return BadRequest("Cannot remove more than 100 users at once.");
+
+            var response = new AssociateUsersToResponsibilityCentreResponse
+            {
+                ResponsibilityCentreId = 0, // No specific centre since we're removing
+                ResponsibilityCentreCode = "NONE",
+                ResponsibilityCentreDescription = "No Responsibility Centre",
+                TotalUsersRequested = request.UserIds.Count
+            };
+
+            // Get all users to be removed from responsibility centres
+            var users = await _context.Users
+                .Where(u => request.UserIds.Contains(u.Id))
+                .Include(u => u.ResponsibilityCentre)
+                .ToListAsync();
+
+            var foundUserIds = users.Select(u => u.Id).ToList();
+            var notFoundUserIds = request.UserIds.Except(foundUserIds).ToList();
+
+            // Add errors for users not found
+            foreach (var notFoundId in notFoundUserIds)
+            {
+                response.Results.Add(new UserAssociationResult
+                {
+                    UserId = notFoundId,
+                    UserEmail = "Unknown",
+                    UserName = "Unknown",
+                    Success = false,
+                    ErrorMessage = "User not found"
+                });
+                response.Errors.Add($"User with ID {notFoundId} not found.");
+            }
+
+            // Process found users
+            foreach (var user in users)
+            {
+                var result = new UserAssociationResult
+                {
+                    UserId = user.Id,
+                    UserEmail = user.Email,
+                    UserName = $"{user.FirstName} {user.LastName}".Trim(),
+                    PreviousResponsibilityCentre = user.ResponsibilityCentre?.Code
+                };
+
+                try
+                {
+                    // Remove user from responsibility centre
+                    user.ResponsibilityCentreId = null;
+                    result.Success = true;
+                    response.UsersSuccessfullyAssociated++;
+                }
+                catch (Exception ex)
+                {
+                    result.Success = false;
+                    result.ErrorMessage = ex.Message;
+                    response.Errors.Add($"Failed to remove user {user.Email}: {ex.Message}");
+                }
+
+                response.Results.Add(result);
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                
+                // If some users failed, return partial success
+                if (response.Errors.Any())
+                {
+                    return StatusCode(207, response); // 207 Multi-Status
+                }
+
+                return Ok(response);
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, new AssociateUsersToResponsibilityCentreResponse
+                {
+                    ResponsibilityCentreId = 0,
+                    TotalUsersRequested = request.UserIds.Count,
+                    UsersSuccessfullyAssociated = 0,
+                    Errors = new List<string> { $"Database error occurred: {ex.Message}" }
+                });
             }
         }
 
@@ -248,44 +476,6 @@ namespace DocManagementBackend.Controllers
             {
                 return StatusCode(500, $"An error occurred while deleting the Responsibility Centre: {ex.Message}");
             }
-        }
-
-        // PUT: api/ResponsibilityCentre/5/deactivate
-        [HttpPut("{id}/deactivate")]
-        public async Task<IActionResult> DeactivateResponsibilityCentre(int id)
-        {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
-            if (!authResult.IsAuthorized)
-                return authResult.ErrorResponse!;
-
-            var responsibilityCentre = await _context.ResponsibilityCentres.FindAsync(id);
-            if (responsibilityCentre == null)
-                return NotFound("Responsibility Centre not found.");
-
-            responsibilityCentre.IsActive = false;
-            responsibilityCentre.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        // PUT: api/ResponsibilityCentre/5/activate
-        [HttpPut("{id}/activate")]
-        public async Task<IActionResult> ActivateResponsibilityCentre(int id)
-        {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
-            if (!authResult.IsAuthorized)
-                return authResult.ErrorResponse!;
-
-            var responsibilityCentre = await _context.ResponsibilityCentres.FindAsync(id);
-            if (responsibilityCentre == null)
-                return NotFound("Responsibility Centre not found.");
-
-            responsibilityCentre.IsActive = true;
-            responsibilityCentre.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-            return NoContent();
         }
     }
 } 

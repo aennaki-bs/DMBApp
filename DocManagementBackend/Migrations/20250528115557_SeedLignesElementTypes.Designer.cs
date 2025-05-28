@@ -4,6 +4,7 @@ using DocManagementBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocManagementBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250528115557_SeedLignesElementTypes")]
+    partial class SeedLignesElementTypes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -576,10 +579,6 @@ namespace DocManagementBackend.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("Unite")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -587,8 +586,6 @@ namespace DocManagementBackend.Migrations
 
                     b.HasIndex("Code")
                         .IsUnique();
-
-                    b.HasIndex("Unite");
 
                     b.ToTable("Items");
                 });
@@ -648,6 +645,10 @@ namespace DocManagementBackend.Migrations
                     b.Property<int?>("TypeId")
                         .HasColumnType("int");
 
+                    b.Property<string>("UniteCodeCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -663,6 +664,8 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("ItemCode");
 
                     b.HasIndex("TypeId");
+
+                    b.HasIndex("UniteCodeCode");
 
                     b.ToTable("Lignes");
                 });
@@ -707,20 +710,29 @@ namespace DocManagementBackend.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 5, 28, 11, 55, 56, 371, DateTimeKind.Utc).AddTicks(6786),
                             Description = "Product or service items",
                             TableName = "Item",
                             TypeElement = "Item",
-                            UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 56, 371, DateTimeKind.Utc).AddTicks(7057)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 5, 28, 11, 55, 56, 371, DateTimeKind.Utc).AddTicks(7303),
+                            Description = "Unit of measurement codes",
+                            TableName = "UniteCode",
+                            TypeElement = "Unite code",
+                            UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 56, 371, DateTimeKind.Utc).AddTicks(7303)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2025, 5, 28, 11, 55, 56, 371, DateTimeKind.Utc).AddTicks(7305),
                             Description = "General accounting codes",
                             TableName = "GeneralAccounts",
                             TypeElement = "General Accounts",
-                            UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 56, 371, DateTimeKind.Utc).AddTicks(7306)
                         });
                 });
 
@@ -1490,16 +1502,6 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.Item", b =>
-                {
-                    b.HasOne("DocManagementBackend.Models.UniteCode", "UniteCodeNavigation")
-                        .WithMany("Items")
-                        .HasForeignKey("Unite")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("UniteCodeNavigation");
-                });
-
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
                 {
                     b.HasOne("DocManagementBackend.Models.Document", "Document")
@@ -1523,6 +1525,11 @@ namespace DocManagementBackend.Migrations
                         .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("DocManagementBackend.Models.UniteCode", "UniteCode")
+                        .WithMany("Lignes")
+                        .HasForeignKey("UniteCodeCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Document");
 
                     b.Navigation("GeneralAccounts");
@@ -1530,6 +1537,8 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Item");
 
                     b.Navigation("Type");
+
+                    b.Navigation("UniteCode");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.LogHistory", b =>
@@ -1745,7 +1754,7 @@ namespace DocManagementBackend.Migrations
 
             modelBuilder.Entity("DocManagementBackend.Models.UniteCode", b =>
                 {
-                    b.Navigation("Items");
+                    b.Navigation("Lignes");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>

@@ -1,32 +1,38 @@
+export interface ResponsibilityCentreSimple {
+  id: number;
+  code: string;
+  descr: string;
+}
+
+export interface ResponsibilityCentreUser {
+  id: number;
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  userType: string;
+  isActive: boolean;
+  isOnline: boolean;
+  createdAt: string;
+  profilePicture?: string;
+  role?: {
+    roleId: number;
+    roleName: string;
+  };
+}
+
 export interface ResponsibilityCentre {
   id: number;
   code: string;
   descr: string;
   createdAt: string;
   updatedAt: string;
-  isActive: boolean;
-  usersCount?: number;
-  documentsCount?: number;
-}
-
-export interface ResponsibilityCentreSimple {
-  id: number;
-  code: string;
-  descr: string;
-  isActive: boolean;
+  usersCount: number;
+  documentsCount: number;
+  users: ResponsibilityCentreUser[];
 }
 
 export interface CreateResponsibilityCentreRequest {
   code: string;
   descr: string;
-}
-
-export interface UpdateResponsibilityCentreRequest {
-  code?: string;
-  descr?: string;
-  isActive?: boolean;
-}
-
-export interface ValidateCodeRequest {
-  code: string;
 } 

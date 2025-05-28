@@ -4,6 +4,7 @@ using DocManagementBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocManagementBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250528104502_RemoveDefaultResponsibilityCentres")]
+    partial class RemoveDefaultResponsibilityCentres
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -537,62 +540,6 @@ namespace DocManagementBackend.Migrations
                     b.ToTable("DocumentTypes");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.GeneralAccounts", b =>
-                {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Code");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("GeneralAccounts");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.Item", b =>
-                {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Unite")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Code");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.HasIndex("Unite");
-
-                    b.ToTable("Items");
-                });
-
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
                 {
                     b.Property<int>("Id")
@@ -608,35 +555,15 @@ namespace DocManagementBackend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal?>("DiscountAmount")
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("DiscountPercentage")
-                        .HasColumnType("decimal(5,4)");
-
                     b.Property<int>("DocumentId")
                         .HasColumnType("int");
-
-                    b.Property<string>("GeneralAccountsCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("ItemCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("LigneKey")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("PriceHT")
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<float>("Prix")
                         .HasColumnType("real");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("decimal(18,4)");
 
                     b.Property<int>("SousLigneCounter")
                         .HasColumnType("int");
@@ -645,83 +572,14 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TypeId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<decimal>("VatPercentage")
-                        .HasColumnType("decimal(5,4)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentId");
 
-                    b.HasIndex("GeneralAccountsCode");
-
-                    b.HasIndex("ItemCode");
-
-                    b.HasIndex("TypeId");
-
                     b.ToTable("Lignes");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.LignesElementType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("TableName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("TypeElement")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TypeElement")
-                        .IsUnique();
-
-                    b.ToTable("LignesElementTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, 0, DateTimeKind.Utc),
-                            Description = "Product or service items",
-                            TableName = "Item",
-                            TypeElement = "Item",
-                            UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, 0, DateTimeKind.Utc),
-                            Description = "General accounting codes",
-                            TableName = "GeneralAccounts",
-                            TypeElement = "General Accounts",
-                            UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, 0, DateTimeKind.Utc)
-                        });
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.LogHistory", b =>
@@ -772,6 +630,9 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1074,31 +935,6 @@ namespace DocManagementBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TypeCounter");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.UniteCode", b =>
-                {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Code");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("UniteCodes");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>
@@ -1490,16 +1326,6 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.Item", b =>
-                {
-                    b.HasOne("DocManagementBackend.Models.UniteCode", "UniteCodeNavigation")
-                        .WithMany("Items")
-                        .HasForeignKey("Unite")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("UniteCodeNavigation");
-                });
-
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
                 {
                     b.HasOne("DocManagementBackend.Models.Document", "Document")
@@ -1508,28 +1334,7 @@ namespace DocManagementBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DocManagementBackend.Models.GeneralAccounts", "GeneralAccounts")
-                        .WithMany("Lignes")
-                        .HasForeignKey("GeneralAccountsCode")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DocManagementBackend.Models.Item", "Item")
-                        .WithMany("Lignes")
-                        .HasForeignKey("ItemCode")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DocManagementBackend.Models.LignesElementType", "Type")
-                        .WithMany("Lignes")
-                        .HasForeignKey("TypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Document");
-
-                    b.Navigation("GeneralAccounts");
-
-                    b.Navigation("Item");
-
-                    b.Navigation("Type");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.LogHistory", b =>
@@ -1706,24 +1511,9 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Documents");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.GeneralAccounts", b =>
-                {
-                    b.Navigation("Lignes");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.Item", b =>
-                {
-                    b.Navigation("Lignes");
-                });
-
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
                 {
                     b.Navigation("SousLignes");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.LignesElementType", b =>
-                {
-                    b.Navigation("Lignes");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.ResponsibilityCentre", b =>
@@ -1741,11 +1531,6 @@ namespace DocManagementBackend.Migrations
             modelBuilder.Entity("DocManagementBackend.Models.SubType", b =>
                 {
                     b.Navigation("Documents");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.UniteCode", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>

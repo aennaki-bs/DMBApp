@@ -23,6 +23,12 @@ namespace DocManagementBackend.Data
         public DbSet<DocumentCircuitHistory> DocumentCircuitHistory { get; set; }
         public DbSet<DocumentStepHistory> DocumentStepHistory { get; set; }
 
+        // Line element reference tables
+        public DbSet<LignesElementType> LignesElementTypes { get; set; }
+        public DbSet<Item> Items { get; set; }
+        public DbSet<UniteCode> UniteCodes { get; set; }
+        public DbSet<GeneralAccounts> GeneralAccounts { get; set; }
+
         // Workflow entities
         public DbSet<Status> Status { get; set; }
         public DbSet<Step> Steps { get; set; }
@@ -294,6 +300,59 @@ namespace DocManagementBackend.Data
                 .HasForeignKey(ar => ar.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // Line element relationships
+            // LignesElementType unique constraint on TypeElement
+            modelBuilder.Entity<LignesElementType>()
+                .HasIndex(let => let.TypeElement)
+                .IsUnique();
+
+            // Item unique constraint on Code
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.Code)
+                .IsUnique();
+
+            // Item -> UniteCode relationship
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.UniteCodeNavigation)
+                .WithMany(uc => uc.Items)
+                .HasForeignKey(i => i.Unite)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // UniteCode unique constraint on Code
+            modelBuilder.Entity<UniteCode>()
+                .HasIndex(uc => uc.Code)
+                .IsUnique();
+
+            // GeneralAccounts unique constraint on Code
+            modelBuilder.Entity<GeneralAccounts>()
+                .HasIndex(ga => ga.Code)
+                .IsUnique();
+
+            // Ligne -> LignesElementType relationship
+            modelBuilder.Entity<Ligne>()
+                .HasOne(l => l.Type)
+                .WithMany(let => let.Lignes)
+                .HasForeignKey(l => l.TypeId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Ligne -> Item relationship
+            modelBuilder.Entity<Ligne>()
+                .HasOne(l => l.Item)
+                .WithMany(i => i.Lignes)
+                .HasForeignKey(l => l.ItemCode)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Ligne -> GeneralAccounts relationship
+            modelBuilder.Entity<Ligne>()
+                .HasOne(l => l.GeneralAccounts)
+                .WithMany(ga => ga.Lignes)
+                .HasForeignKey(l => l.GeneralAccountsCode)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
             // Seed data
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, RoleName = "Admin", IsAdmin = true, IsSimpleUser = false, IsFullUser = false },
@@ -301,13 +360,26 @@ namespace DocManagementBackend.Data
                 new Role { Id = 3, RoleName = "FullUser", IsAdmin = false, IsSimpleUser = false, IsFullUser = true }
             );
 
-            // Seed ResponsibilityCentres
-            modelBuilder.Entity<ResponsibilityCentre>().HasData(
-                new ResponsibilityCentre { Id = 1, Code = "ADMIN", Descr = "Administration Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
-                new ResponsibilityCentre { Id = 2, Code = "FINANCE", Descr = "Finance Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
-                new ResponsibilityCentre { Id = 3, Code = "HR", Descr = "Human Resources Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
-                new ResponsibilityCentre { Id = 4, Code = "IT", Descr = "Information Technology Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
-                new ResponsibilityCentre { Id = 5, Code = "SALES", Descr = "Sales Department", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true }
+            // Seed data for LignesElementType
+            modelBuilder.Entity<LignesElementType>().HasData(
+                new LignesElementType 
+                { 
+                    Id = 1, 
+                    TypeElement = "Item", 
+                    Description = "Product or service items", 
+                    TableName = "Item",
+                    CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc)
+                },
+                new LignesElementType 
+                { 
+                    Id = 2, 
+                    TypeElement = "General Accounts", 
+                    Description = "General accounting codes", 
+                    TableName = "GeneralAccounts",
+                    CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc)
+                }
             );
         }
     }

@@ -24,7 +24,7 @@ interface DeleteConfirmDialogProps {
   children?: React.ReactNode;
 }
 
-const MotionAlertDialogContent = motion(AlertDialogContent);
+const MotionAlertDialogContent = motion.create(AlertDialogContent);
 
 export function DeleteConfirmDialog({
   title,

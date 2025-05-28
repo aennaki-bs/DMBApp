@@ -53,9 +53,9 @@ namespace DocManagementBackend.Controllers
             {
                 // User selected an existing responsibility centre
                 var existingRC = await _context.ResponsibilityCentres
-                    .FirstOrDefaultAsync(rc => rc.Id == request.ResponsibilityCentreId.Value && rc.IsActive);
+                    .FirstOrDefaultAsync(rc => rc.Id == request.ResponsibilityCentreId.Value);
                 if (existingRC == null)
-                    return BadRequest("Selected Responsibility Centre not found or inactive.");
+                    return BadRequest("Selected Responsibility Centre not found.");
                 responsibilityCentreId = existingRC.Id;
             }
             else if (request.NewResponsibilityCentre != null)
@@ -78,8 +78,7 @@ namespace DocManagementBackend.Controllers
                     Code = request.NewResponsibilityCentre.Code.ToUpper().Trim(),
                     Descr = request.NewResponsibilityCentre.Descr.Trim(),
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    IsActive = true
+                    UpdatedAt = DateTime.UtcNow
                 };
                 _context.ResponsibilityCentres.Add(newRC);
                 await _context.SaveChangesAsync(); // Save to get the ID

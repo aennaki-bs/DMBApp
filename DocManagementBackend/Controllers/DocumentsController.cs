@@ -126,9 +126,9 @@ namespace DocManagementBackend.Controllers
                 // User has no responsibility centre, but one was provided explicitly
                 // Validate the provided responsibility centre
                 var responsibilityCentre = await _context.ResponsibilityCentres
-                    .FirstOrDefaultAsync(rc => rc.Id == request.ResponsibilityCentreId.Value && rc.IsActive);
+                    .FirstOrDefaultAsync(rc => rc.Id == request.ResponsibilityCentreId.Value);
                 if (responsibilityCentre == null)
-                    return BadRequest("Invalid or inactive Responsibility Centre.");
+                    return BadRequest("Invalid Responsibility Centre.");
                 
                 responsibilityCentreId = request.ResponsibilityCentreId.Value;
             }
