@@ -54,7 +54,9 @@ export const SubTypeBasicInfo = () => {
     // Get year and month
     const year = startDate.getFullYear().toString().slice(-2);
     const month = (startDate.getMonth() + 1).toString().padStart(2, "0");
-    const shortMonth = new Intl.DateTimeFormat('en', { month: 'short' }).format(startDate).toUpperCase();
+    const shortMonth = new Intl.DateTimeFormat("en", { month: "short" })
+      .format(startDate)
+      .toUpperCase();
     const day = startDate.getDate().toString().padStart(2, "0");
 
     // Generate suggestions
@@ -93,7 +95,7 @@ export const SubTypeBasicInfo = () => {
             Enter Prefix
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-3 flex-grow">
+        <CardContent className="p-3 flex-grow" style={{ minHeight: "400px" }}>
           <Form {...form}>
             <form className="space-y-3 h-full flex flex-col">
               <FormField
@@ -122,7 +124,7 @@ export const SubTypeBasicInfo = () => {
                         <div className="relative group flex-1">
                           <FormControl>
                             <Input
-                              placeholder="Enter stump prefix"
+                              placeholder="Enter series prefix"
                               {...field}
                               onChange={(e) =>
                                 handleChange("name", e.target.value)
@@ -179,7 +181,7 @@ export const SubTypeBasicInfo = () => {
                             </ScrollArea>
                             <p className="text-[10px] text-blue-400/70 mt-2">
                               Choose a prefix that is meaningful and relates to
-                              your document stump's purpose and date range.
+                              your document series's purpose and date range.
                             </p>
                           </motion.div>
                         )}
@@ -206,7 +208,7 @@ export const SubTypeBasicInfo = () => {
               <div className="mt-2 bg-blue-900/20 p-2 rounded-md border border-blue-900/30">
                 <p className="text-xs text-blue-300/90">
                   <Info className="h-3.5 w-3.5 inline-block mr-1 text-blue-400/80" />
-                  Enter an optional prefix that identifies this stump. Consider
+                  Enter an optional prefix that identifies this series. Consider
                   using a format that includes information about the document
                   type and date range (e.g., TYN-23 for Type Year Number).
                 </p>

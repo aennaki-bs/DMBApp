@@ -75,29 +75,29 @@ export default function SubTypeDialogs({
     isActive: true,
   });
 
-  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [submitError, setSubmitError] = useState<string>("");
 
   // Helper function to format date for input[type="date"]
   const formatDateForInput = (dateValue: Date | string) => {
     if (!dateValue) return "";
-    
+
     try {
       // Create a new Date object from the input
       const date = new Date(dateValue);
-      
+
       // Check if date is valid
       if (isNaN(date.getTime())) {
         console.error("Invalid date:", dateValue);
         return "";
       }
-      
+
       // Format as YYYY-MM-DD for input[type="date"]
       // Use local date to avoid timezone issues
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
       return `${year}-${month}-${day}`;
     } catch (error) {
       console.error("Error formatting date:", dateValue, error);
@@ -126,23 +126,26 @@ export default function SubTypeDialogs({
     if (!formData.startDate) {
       formData.startDate = new Date().toISOString().split("T")[0];
     }
-    
+
     if (!formData.endDate) {
-      formData.endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-        .toISOString().split("T")[0];
+      formData.endDate = new Date(
+        new Date().setFullYear(new Date().getFullYear() + 1)
+      )
+        .toISOString()
+        .split("T")[0];
     }
-    
+
     // Always set isActive to true if it's undefined
     if (formData.isActive === undefined) {
       formData.isActive = true;
     }
-    
+
     // Add the document type ID to the form data
     // Map the name field (prefix) to subTypeKey for the backend
     onCreateSubmit({
       ...formData,
       documentTypeId: documentTypeId,
-      subTypeKey: formData.name || "" // Map the prefix to subTypeKey field
+      subTypeKey: formData.name || "", // Map the prefix to subTypeKey field
     });
   };
 
@@ -155,16 +158,15 @@ export default function SubTypeDialogs({
 
     // Comprehensive validation
     const errors: string[] = [];
-    const newFieldErrors: {[key: string]: string} = {};
-
-
+    const newFieldErrors: { [key: string]: string } = {};
 
     if (!editedSubType.subTypeKey?.trim()) {
       errors.push("Code is required");
       newFieldErrors.subTypeKey = "Code is required";
     } else if (!/^[A-Z0-9-]+$/i.test(editedSubType.subTypeKey)) {
       errors.push("Code can only contain letters, numbers, and hyphens");
-      newFieldErrors.subTypeKey = "Code can only contain letters, numbers, and hyphens";
+      newFieldErrors.subTypeKey =
+        "Code can only contain letters, numbers, and hyphens";
     }
 
     if (!editedSubType.startDate) {
@@ -180,13 +182,13 @@ export default function SubTypeDialogs({
     if (editedSubType.startDate && editedSubType.endDate) {
       const startDate = new Date(editedSubType.startDate);
       const endDate = new Date(editedSubType.endDate);
-      
+
       // Check if dates are valid
       if (isNaN(startDate.getTime())) {
         errors.push("Start date is invalid");
         newFieldErrors.startDate = "Invalid date format";
       }
-      
+
       if (isNaN(endDate.getTime())) {
         errors.push("End date is invalid");
         newFieldErrors.endDate = "Invalid date format";
@@ -225,17 +227,22 @@ export default function SubTypeDialogs({
 
     // Send the correct fields to the backend including subTypeKey
     const submitData = async () => {
-      const result = await onEditSubmit(selectedSubType.id, {
-        name: selectedSubType.name, // Keep original name
-        subTypeKey: editedSubType.subTypeKey.trim(),
-        description: selectedSubType.description || "", // Keep original description
-        startDate: editedSubType.startDate,
-        endDate: editedSubType.endDate,
-        isActive: editedSubType.isActive
-      });
-
-      if (result && !result.success) {
-        setSubmitError(result.error);
+      try {
+        await onEditSubmit(selectedSubType.id, {
+          name: selectedSubType.name, // Keep original name
+          subTypeKey: editedSubType.subTypeKey.trim(),
+          description: selectedSubType.description || "", // Keep original description
+          startDate: editedSubType.startDate,
+          endDate: editedSubType.endDate,
+          isActive: editedSubType.isActive,
+        });
+      } catch (error) {
+        console.error("Error submitting edit:", error);
+        if (error instanceof Error) {
+          setSubmitError(error.message);
+        } else {
+          setSubmitError("An unknown error occurred while saving changes");
+        }
       }
     };
 
@@ -269,17 +276,17 @@ export default function SubTypeDialogs({
           if (!open) resetCreateForm();
         }}
       >
-        <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[500px] p-3 overflow-hidden max-h-[85vh]">
+        <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[500px] min-h-[650px] max-h-[90vh] p-3 overflow-auto fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
           <DialogHeader className="mb-1 pb-1 border-b border-blue-900/30">
             <DialogTitle className="text-lg text-white">
-              Create New Stump
+              Create New Series
             </DialogTitle>
             <DialogDescription className="text-blue-300 text-xs">
-              Complete each step to create a new document stump
+              Complete each step to create a new document series
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-1">
+          <div className="py-1 h-full overflow-y-auto">
             <SubTypeFormProvider
               onSubmit={handleCreateSubmit}
               onClose={handleCloseCreateDialog}
@@ -293,27 +300,10 @@ export default function SubTypeDialogs({
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[425px] p-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b border-blue-900/30 bg-[#0a1033]/50">
-            <DialogTitle className="text-lg font-medium text-white flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-blue-400"
-                >
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </span>
-              Edit Stump
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-white">
+              Edit Series
             </DialogTitle>
           </DialogHeader>
 
@@ -402,18 +392,22 @@ export default function SubTypeDialogs({
                       });
                       // Clear errors when user starts typing
                       if (fieldErrors.startDate) {
-                        setFieldErrors(prev => ({ ...prev, startDate: "" }));
+                        setFieldErrors((prev) => ({ ...prev, startDate: "" }));
                       }
                       if (submitError) {
                         setSubmitError("");
                       }
                     }}
                     className={`h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
-                      fieldErrors.startDate ? 'border-red-500 focus:border-red-400' : ''
+                      fieldErrors.startDate
+                        ? "border-red-500 focus:border-red-400"
+                        : ""
                     }`}
                   />
                   {fieldErrors.startDate && (
-                    <p className="text-red-400 text-xs mt-1">{fieldErrors.startDate}</p>
+                    <p className="text-red-400 text-xs mt-1">
+                      {fieldErrors.startDate}
+                    </p>
                   )}
                 </div>
                 <div className="relative flex items-center">
@@ -447,18 +441,22 @@ export default function SubTypeDialogs({
                       });
                       // Clear errors when user starts typing
                       if (fieldErrors.endDate) {
-                        setFieldErrors(prev => ({ ...prev, endDate: "" }));
+                        setFieldErrors((prev) => ({ ...prev, endDate: "" }));
                       }
                       if (submitError) {
                         setSubmitError("");
                       }
                     }}
                     className={`h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
-                      fieldErrors.endDate ? 'border-red-500 focus:border-red-400' : ''
+                      fieldErrors.endDate
+                        ? "border-red-500 focus:border-red-400"
+                        : ""
                     }`}
                   />
                   {fieldErrors.endDate && (
-                    <p className="text-red-400 text-xs mt-1">{fieldErrors.endDate}</p>
+                    <p className="text-red-400 text-xs mt-1">
+                      {fieldErrors.endDate}
+                    </p>
                   )}
                 </div>
               </div>
@@ -474,28 +472,22 @@ export default function SubTypeDialogs({
               </Label>
               <Input
                 id="edit-code"
+                placeholder="Enter series code"
                 value={editedSubType.subTypeKey}
-                onChange={(e) => {
-                  setEditedSubType({ ...editedSubType, subTypeKey: e.target.value });
-                  // Clear errors when user starts typing
-                  if (fieldErrors.subTypeKey) {
-                    setFieldErrors(prev => ({ ...prev, subTypeKey: "" }));
-                  }
-                  if (submitError) {
-                    setSubmitError("");
-                  }
-                }}
-                className={`h-9 w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
-                  fieldErrors.subTypeKey ? 'border-red-500 focus:border-red-400' : ''
-                }`}
-                placeholder="Enter stump code"
+                onChange={(e) =>
+                  setEditedSubType({
+                    ...editedSubType,
+                    subTypeKey: e.target.value,
+                  })
+                }
+                className={fieldErrors.subTypeKey ? "border-red-500" : ""}
               />
               {fieldErrors.subTypeKey && (
-                <p className="text-red-400 text-xs mt-1">{fieldErrors.subTypeKey}</p>
+                <p className="text-red-400 text-xs mt-1">
+                  {fieldErrors.subTypeKey}
+                </p>
               )}
             </div>
-
-
 
             {/* Active Status */}
             <div className="flex items-center justify-between py-1">
@@ -543,34 +535,12 @@ export default function SubTypeDialogs({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-[#0f1642] border-blue-900/50 text-white max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg text-white flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-red-500/20 flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-red-400"
-                >
-                  <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                </svg>
-              </span>
-              Confirm Deletion
+            <AlertDialogTitle className="text-lg text-white">
+              Are you sure you want to delete the series "
+              {selectedSubType?.name}"?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-blue-300/90 mt-2">
-              Are you sure you want to delete the stump "
-              <span className="text-white font-medium">
-                {selectedSubType?.name}
-              </span>
-              "?
-              <p className="mt-2 text-red-300/90">
-                This action cannot be undone.
-              </p>
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="border-t border-blue-900/30 mt-4 pt-4 flex space-x-2">

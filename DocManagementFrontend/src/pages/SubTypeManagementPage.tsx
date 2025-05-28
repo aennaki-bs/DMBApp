@@ -85,7 +85,7 @@ export default function SubTypeManagementPage() {
           </Button>
           <h1 className="text-2xl font-semibold text-white flex items-center">
             <Layers className="mr-3 h-6 w-6 text-blue-400" />
-            Manage Stumps: {documentType.typeName}
+            Manage Series: {documentType.typeName}
           </h1>
         </div>
       </div>

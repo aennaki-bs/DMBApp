@@ -1,10 +1,17 @@
-import { useEffect } from 'react';
-import { SubType } from '@/models/subtype';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Edit2, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
+import { useEffect } from "react";
+import { SubType } from "@/models/subtype";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Edit2, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 interface SubTypeListProps {
   subTypes: SubType[];
@@ -14,19 +21,25 @@ interface SubTypeListProps {
   isSimpleUser: boolean;
 }
 
-const SubTypeList = ({ subTypes, isLoading, onEdit, onDelete, isSimpleUser }: SubTypeListProps) => {
+const SubTypeList = ({
+  subTypes,
+  isLoading,
+  onEdit,
+  onDelete,
+  isSimpleUser,
+}: SubTypeListProps) => {
   const formatDate = (date: Date | string) => {
-    return format(new Date(date), 'MMM d, yyyy');
+    return format(new Date(date), "MMM d, yyyy");
   };
 
   if (isLoading) {
-    return <div className="text-blue-300/70 text-sm">Loading stumps...</div>;
+    return <div className="text-blue-300/70 text-sm">Loading series...</div>;
   }
 
   if (subTypes.length === 0) {
     return (
       <div className="text-blue-300/70 text-sm text-center py-8">
-        No stumps found.
+        No series found.
       </div>
     );
   }
@@ -48,9 +61,13 @@ const SubTypeList = ({ subTypes, isLoading, onEdit, onDelete, isSimpleUser }: Su
         <TableBody>
           {subTypes.map((subType) => (
             <TableRow key={subType.id}>
-              <TableCell className="font-mono text-sm text-blue-300">{subType.subTypeKey}</TableCell>
+              <TableCell className="font-mono text-sm text-blue-300">
+                {subType.subTypeKey}
+              </TableCell>
               <TableCell>{subType.name}</TableCell>
-              <TableCell className="text-muted-foreground">{subType.description}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {subType.description}
+              </TableCell>
               <TableCell>{formatDate(subType.startDate)}</TableCell>
               <TableCell>{formatDate(subType.endDate)}</TableCell>
               <TableCell>

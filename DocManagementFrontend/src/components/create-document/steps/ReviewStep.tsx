@@ -81,7 +81,7 @@ export const ReviewStep = ({
               Document Type
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Type and stump information
+              Type and series information
             </CardDescription>
           </div>
           <Button
@@ -105,7 +105,7 @@ export const ReviewStep = ({
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Stump</p>
+              <p className="text-xs text-gray-400">Series</p>
               <p className="text-sm text-white">
                 {selectedSubType?.name || "N/A"}
               </p>

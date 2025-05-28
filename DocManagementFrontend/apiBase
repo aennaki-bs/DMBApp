@@ -1,10 +1,5 @@
 {
-  "openapi": "3.0.1",
-  "info": {
-    "title": "Document Management API",
-    "description": "Backend API for Document Management System",
-    "version": "v1"
-  },
+
   "paths": {
     "/api/Account/user-info": {
       "get": {
@@ -546,6 +541,18 @@
         }
       }
     },
+    "/api/Admin/users/unassigned": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Admin/users/{id}": {
       "get": {
         "tags": [
@@ -966,6 +973,55 @@
         }
       }
     },
+    "/api/Approval/document/{documentId}": {
+      "get": {
+        "tags": [
+          "Approval"
+        ],
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingApprovalDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingApprovalDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingApprovalDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Approval/configure/steps": {
       "get": {
         "tags": [
@@ -1085,6 +1141,44 @@
       }
     },
     "/api/Approval/eligible-approvers": {
+      "get": {
+        "tags": [
+          "Approval"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApproverInfoDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApproverInfoDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApproverInfoDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Approval/available-approvers": {
       "get": {
         "tags": [
           "Approval"
@@ -1556,6 +1650,86 @@
         }
       }
     },
+    "/api/Approval/approvators/{id}/check-association": {
+      "get": {
+        "tags": [
+          "Approval"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovatorAssociationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovatorAssociationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovatorAssociationDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Approval/groups/{id}/check-association": {
+      "get": {
+        "tags": [
+          "Approval"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupAssociationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupAssociationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupAssociationDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Auth/valide-email": {
       "post": {
         "tags": [
@@ -1627,17 +1801,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/RegisterRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/RegisterRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/RegisterRequest"
               }
             }
           }
@@ -2261,6 +2435,46 @@
         }
       }
     },
+    "/api/Circuit/{circuitId}/has-documents": {
+      "get": {
+        "tags": [
+          "Circuit"
+        ],
+        "parameters": [
+          {
+            "name": "circuitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Dashboard/stats": {
       "get": {
         "tags": [
@@ -2711,6 +2925,477 @@
         }
       }
     },
+    "/api/GeneralAccounts": {
+      "get": {
+        "tags": [
+          "GeneralAccounts"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GeneralAccountsDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GeneralAccountsDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GeneralAccountsDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "GeneralAccounts"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGeneralAccountsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGeneralAccountsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGeneralAccountsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneralAccountsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneralAccountsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneralAccountsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/GeneralAccounts/simple": {
+      "get": {
+        "tags": [
+          "GeneralAccounts"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GeneralAccountsSimpleDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GeneralAccountsSimpleDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GeneralAccountsSimpleDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/GeneralAccounts/{code}": {
+      "get": {
+        "tags": [
+          "GeneralAccounts"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneralAccountsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneralAccountsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneralAccountsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "GeneralAccounts"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGeneralAccountsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGeneralAccountsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGeneralAccountsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "GeneralAccounts"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Item": {
+      "get": {
+        "tags": [
+          "Item"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Item"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateItemRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateItemRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Item/simple": {
+      "get": {
+        "tags": [
+          "Item"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemSimpleDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemSimpleDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemSimpleDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Item/{code}": {
+      "get": {
+        "tags": [
+          "Item"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Item"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateItemRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateItemRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Item"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Item/validate-code": {
+      "post": {
+        "tags": [
+          "Item"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateItemRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateItemRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Lignes": {
       "get": {
         "tags": [
@@ -2756,17 +3441,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Ligne"
+                "$ref": "#/components/schemas/CreateLigneRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Ligne"
+                "$ref": "#/components/schemas/CreateLigneRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Ligne"
+                "$ref": "#/components/schemas/CreateLigneRequest"
               }
             }
           }
@@ -2853,17 +3538,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Ligne"
+                "$ref": "#/components/schemas/UpdateLigneRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Ligne"
+                "$ref": "#/components/schemas/UpdateLigneRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Ligne"
+                "$ref": "#/components/schemas/UpdateLigneRequest"
               }
             }
           }
@@ -2945,6 +3630,229 @@
         }
       }
     },
+    "/api/LignesElementType": {
+      "get": {
+        "tags": [
+          "LignesElementType"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LignesElementTypeDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LignesElementTypeDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LignesElementTypeDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LignesElementType"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLignesElementTypeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLignesElementTypeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLignesElementTypeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/LignesElementTypeDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LignesElementTypeDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LignesElementTypeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/LignesElementType/simple": {
+      "get": {
+        "tags": [
+          "LignesElementType"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LignesElementTypeSimpleDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LignesElementTypeSimpleDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LignesElementTypeSimpleDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/LignesElementType/{id}": {
+      "get": {
+        "tags": [
+          "LignesElementType"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/LignesElementTypeDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LignesElementTypeDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LignesElementTypeDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LignesElementType"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLignesElementTypeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLignesElementTypeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLignesElementTypeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "LignesElementType"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/OAuth/google-login": {
       "post": {
         "tags": [
@@ -2972,6 +3880,648 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ResponsibilityCentre": {
+      "get": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponsibilityCentreRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponsibilityCentreRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponsibilityCentreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ResponsibilityCentre/simple": {
+      "get": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResponsibilityCentreSimpleDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResponsibilityCentreSimpleDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResponsibilityCentreSimpleDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ResponsibilityCentre/{id}": {
+      "get": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityCentreDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateResponsibilityCentreRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateResponsibilityCentreRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateResponsibilityCentreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ResponsibilityCentre/validate-code": {
+      "post": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponsibilityCentreRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponsibilityCentreRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponsibilityCentreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ResponsibilityCentre/associate-users": {
+      "post": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ResponsibilityCentre/remove-users": {
+      "post": {
+        "tags": [
+          "ResponsibilityCentre"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveUsersFromResponsibilityCentreRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveUsersFromResponsibilityCentreRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveUsersFromResponsibilityCentreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssociateUsersToResponsibilityCentreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Series": {
+      "get": {
+        "tags": [
+          "Series"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Series"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubTypeDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubTypeDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubTypeDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubTypeDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubTypeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Series/{id}": {
+      "get": {
+        "tags": [
+          "Series"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubTypeDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubTypeDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubTypeDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Series"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubTypeDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubTypeDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Series"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Series/by-document-type/{docTypeId}": {
+      "get": {
+        "tags": [
+          "Series"
+        ],
+        "parameters": [
+          {
+            "name": "docTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Series/for-date/{docTypeId}/{date}": {
+      "get": {
+        "tags": [
+          "Series"
+        ],
+        "parameters": [
+          {
+            "name": "docTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubTypeDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3448,10 +4998,10 @@
         }
       }
     },
-    "/api/SubType": {
+    "/api/UniteCode": {
       "get": {
         "tags": [
-          "SubType"
+          "UniteCode"
         ],
         "responses": {
           "200": {
@@ -3461,7 +5011,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
+                    "$ref": "#/components/schemas/UniteCodeDto"
                   }
                 }
               },
@@ -3469,7 +5019,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
+                    "$ref": "#/components/schemas/UniteCodeDto"
                   }
                 }
               },
@@ -3477,7 +5027,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
+                    "$ref": "#/components/schemas/UniteCodeDto"
                   }
                 }
               }
@@ -3487,23 +5037,23 @@
       },
       "post": {
         "tags": [
-          "SubType"
+          "UniteCode"
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateSubTypeDto"
+                "$ref": "#/components/schemas/CreateUniteCodeRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateSubTypeDto"
+                "$ref": "#/components/schemas/CreateUniteCodeRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateSubTypeDto"
+                "$ref": "#/components/schemas/CreateUniteCodeRequest"
               }
             }
           }
@@ -3514,17 +5064,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubTypeDto"
+                  "$ref": "#/components/schemas/UniteCodeDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubTypeDto"
+                  "$ref": "#/components/schemas/UniteCodeDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubTypeDto"
+                  "$ref": "#/components/schemas/UniteCodeDto"
                 }
               }
             }
@@ -3532,19 +5082,56 @@
         }
       }
     },
-    "/api/SubType/{id}": {
+    "/api/UniteCode/simple": {
       "get": {
         "tags": [
-          "SubType"
+          "UniteCode"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UniteCodeSimpleDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UniteCodeSimpleDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UniteCodeSimpleDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UniteCode/{code}": {
+      "get": {
+        "tags": [
+          "UniteCode"
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "code",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           }
         ],
@@ -3554,17 +5141,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubTypeDto"
+                  "$ref": "#/components/schemas/UniteCodeDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubTypeDto"
+                  "$ref": "#/components/schemas/UniteCodeDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubTypeDto"
+                  "$ref": "#/components/schemas/UniteCodeDto"
                 }
               }
             }
@@ -3573,16 +5160,15 @@
       },
       "put": {
         "tags": [
-          "SubType"
+          "UniteCode"
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "code",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           }
         ],
@@ -3590,17 +5176,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateSubTypeDto"
+                "$ref": "#/components/schemas/UpdateUniteCodeRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateSubTypeDto"
+                "$ref": "#/components/schemas/UpdateUniteCodeRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateSubTypeDto"
+                "$ref": "#/components/schemas/UpdateUniteCodeRequest"
               }
             }
           }
@@ -3613,129 +5199,21 @@
       },
       "delete": {
         "tags": [
-          "SubType"
+          "UniteCode"
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "code",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/SubType/by-document-type/{docTypeId}": {
-      "get": {
-        "tags": [
-          "SubType"
-        ],
-        "parameters": [
-          {
-            "name": "docTypeId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/SubType/for-date/{docTypeId}/{date}": {
-      "get": {
-        "tags": [
-          "SubType"
-        ],
-        "parameters": [
-          {
-            "name": "docTypeId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "date",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubTypeDto"
-                  }
-                }
-              }
-            }
           }
         }
       }
@@ -4320,2281 +5798,6 @@
         }
       }
     }
-  },
-  "components": {
-    "schemas": {
-      "ActionDto": {
-        "type": "object",
-        "properties": {
-          "actionId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "actionKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ActiveCircuitDto": {
-        "type": "object",
-        "properties": {
-          "circuitId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "circuitKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "circuitTitle": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "AddUserToGroupDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "orderIndex": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "AdminCreateUserRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "username": {
-            "type": "string",
-            "nullable": true
-          },
-          "passwordHash": {
-            "type": "string",
-            "nullable": true
-          },
-          "firstName": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastName": {
-            "type": "string",
-            "nullable": true
-          },
-          "roleName": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "AdminUpdateUserRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "username": {
-            "type": "string",
-            "nullable": true
-          },
-          "passwordHash": {
-            "type": "string",
-            "nullable": true
-          },
-          "firstName": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastName": {
-            "type": "string",
-            "nullable": true
-          },
-          "isEmailConfirmed": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "roleName": {
-            "type": "string",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ApprovalHistoryDto": {
-        "type": "object",
-        "properties": {
-          "approvalId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stepTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "status": {
-            "type": "string",
-            "nullable": true
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          },
-          "responses": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApprovalResponseHistoryDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ApprovalResponseDto": {
-        "type": "object",
-        "properties": {
-          "isApproved": {
-            "type": "boolean"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ApprovalResponseHistoryDto": {
-        "type": "object",
-        "properties": {
-          "responderName": {
-            "type": "string",
-            "nullable": true
-          },
-          "responseDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "isApproved": {
-            "type": "boolean"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ApprovatorDetailDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "userId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "username": {
-            "type": "string",
-            "nullable": true
-          },
-          "comment": {
-            "type": "string",
-            "nullable": true
-          },
-          "stepId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "stepTitle": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ApprovatorsGroupDetailDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stepId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "stepTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "comment": {
-            "type": "string",
-            "nullable": true
-          },
-          "ruleType": {
-            "type": "string",
-            "nullable": true
-          },
-          "approvers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApproverInfoDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ApproverInfoDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "username": {
-            "type": "string",
-            "nullable": true
-          },
-          "role": {
-            "type": "string",
-            "nullable": true
-          },
-          "orderIndex": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "AssignActionToStepDto": {
-        "type": "object",
-        "properties": {
-          "stepId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "actionId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusEffects": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StatusEffectDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "AssignCircuitDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "CircuitDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "circuitKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "descriptif": {
-            "type": "string",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "statuses": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StatusDto"
-            },
-            "nullable": true
-          },
-          "steps": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StepDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CircuitValidationDto": {
-        "type": "object",
-        "properties": {
-          "circuitId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "circuitTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "hasStatuses": {
-            "type": "boolean"
-          },
-          "totalStatuses": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "hasInitialStatus": {
-            "type": "boolean"
-          },
-          "hasFinalStatus": {
-            "type": "boolean"
-          },
-          "hasSteps": {
-            "type": "boolean"
-          },
-          "totalSteps": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "isValid": {
-            "type": "boolean"
-          },
-          "validationMessages": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "warnings": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CompleteStatusDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "isComplete": {
-            "type": "boolean"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateActionDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateApprovatorDto": {
-        "type": "object",
-        "properties": {
-          "stepId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "userId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "comment": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateApprovatorsGroupDto": {
-        "type": "object",
-        "properties": {
-          "stepId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "comment": {
-            "type": "string",
-            "nullable": true
-          },
-          "userIds": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "ruleType": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateCircuitDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "descriptif": {
-            "type": "string",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateDocumentRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "content": {
-            "type": "string",
-            "nullable": true
-          },
-          "typeId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "subTypeId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "documentAlias": {
-            "type": "string",
-            "nullable": true
-          },
-          "documentExterne": {
-            "type": "string",
-            "nullable": true
-          },
-          "docDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "comptableDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateStatusDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "isRequired": {
-            "type": "boolean"
-          },
-          "isInitial": {
-            "type": "boolean"
-          },
-          "isFinal": {
-            "type": "boolean"
-          },
-          "isFlexible": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateStepDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "descriptif": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "nextStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "requiresApproval": {
-            "type": "boolean"
-          },
-          "approvatorId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "approvatorsGroupId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreateSubTypeDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "subTypeKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "documentTypeId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "isActive": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentCurrentStatusDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusText": {
-            "type": "string",
-            "nullable": true
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "circuitTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "currentStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStepId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "currentStepTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCircuitCompleted": {
-            "type": "boolean"
-          },
-          "lastUpdated": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "documentAlias": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "content": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "docDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "comptableDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "documentExterne": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "typeId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentType": {
-            "$ref": "#/components/schemas/DocumentTypeDto"
-          },
-          "subTypeId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "subType": {
-            "$ref": "#/components/schemas/SubTypeDto"
-          },
-          "createdByUserId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "createdBy": {
-            "$ref": "#/components/schemas/DocumentUserDto"
-          },
-          "lignesCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sousLignesCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "currentStepId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "currentStepTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "currentStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCircuitCompleted": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentHistoryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stepTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "actionTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "statusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "processedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "processedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          },
-          "isApproved": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentStatusDto": {
-        "type": "object",
-        "properties": {
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "isRequired": {
-            "type": "boolean"
-          },
-          "isComplete": {
-            "type": "boolean"
-          },
-          "completedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "completedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "isInitial": {
-            "type": "boolean"
-          },
-          "isFinal": {
-            "type": "boolean"
-          },
-          "isFlexible": {
-            "type": "boolean"
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "transitionInfo": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentStatusItemDto": {
-        "type": "object",
-        "properties": {
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "isRequired": {
-            "type": "boolean"
-          },
-          "isComplete": {
-            "type": "boolean"
-          },
-          "completedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "completedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentStepHistoryItemDto": {
-        "type": "object",
-        "properties": {
-          "stepId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "transitionDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "userId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "username": {
-            "type": "string",
-            "nullable": true
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentStepStatusDto": {
-        "type": "object",
-        "properties": {
-          "stepId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stepKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "currentStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "nextStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "nextStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCurrentStep": {
-            "type": "boolean"
-          },
-          "isCompleted": {
-            "type": "boolean"
-          },
-          "completedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "completedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "requiresApproval": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentToApproveDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "approvalId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "documentType": {
-            "type": "string",
-            "nullable": true
-          },
-          "subType": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "currentStep": {
-            "type": "string",
-            "nullable": true
-          },
-          "approvalType": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestDate": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "typeKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "typeName": {
-            "type": "string",
-            "nullable": true
-          },
-          "typeAttr": {
-            "type": "string",
-            "nullable": true
-          },
-          "documentCounter": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "docCounter": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentTypeDto": {
-        "type": "object",
-        "properties": {
-          "typeAlias": {
-            "type": "string",
-            "nullable": true
-          },
-          "typeKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "typeName": {
-            "type": "string",
-            "nullable": true
-          },
-          "typeAttr": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentUserDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "username": {
-            "type": "string",
-            "nullable": true
-          },
-          "firstName": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastName": {
-            "type": "string",
-            "nullable": true
-          },
-          "role": {
-            "type": "string",
-            "nullable": true
-          },
-          "userType": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DocumentWorkflowStatusDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "documentTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "circuitTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "currentStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStepId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "currentStepTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusText": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCircuitCompleted": {
-            "type": "boolean"
-          },
-          "progressPercentage": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statuses": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DocumentStatusItemDto"
-            },
-            "nullable": true
-          },
-          "stepHistory": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DocumentStepHistoryItemDto"
-            },
-            "nullable": true
-          },
-          "availableStatusTransitions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StatusDto"
-            },
-            "nullable": true
-          },
-          "availableActions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ActionDto"
-            },
-            "nullable": true
-          },
-          "canAdvanceToNextStep": {
-            "type": "boolean"
-          },
-          "canReturnToPreviousStep": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ForgotPasswordRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "newPassword": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "GoogleLoginRequest": {
-        "type": "object",
-        "properties": {
-          "idToken": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Ligne": {
-        "required": [
-          "documentId"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "ligneKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "article": {
-            "type": "string",
-            "nullable": true
-          },
-          "prix": {
-            "type": "number",
-            "format": "float"
-          },
-          "sousLigneCounter": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "LigneDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "lingeKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "article": {
-            "type": "string",
-            "nullable": true
-          },
-          "prix": {
-            "type": "number",
-            "format": "float"
-          },
-          "sousLignesCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "document": {
-            "$ref": "#/components/schemas/DocumentDto"
-          }
-        },
-        "additionalProperties": false
-      },
-      "LoginRequest": {
-        "type": "object",
-        "properties": {
-          "emailOrUsername": {
-            "type": "string",
-            "nullable": true
-          },
-          "password": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "LogoutRequest": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "MoveToStatusDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "targetStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "PendingApprovalDto": {
-        "type": "object",
-        "properties": {
-          "approvalId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "documentTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "stepTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          },
-          "approvalType": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "PendingDocumentDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "documentKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "circuitTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "currentStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "daysInCurrentStatus": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "PerformActionDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "actionId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          },
-          "isApproved": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ReinitializeWorkflowDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ReturnToPreviousStatusDto": {
-        "type": "object",
-        "properties": {
-          "documentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "comments": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "SousLigne": {
-        "required": [
-          "ligneId"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "ligneId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sousLigneKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "attribute": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "StatusDto": {
-        "type": "object",
-        "properties": {
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "isRequired": {
-            "type": "boolean"
-          },
-          "isInitial": {
-            "type": "boolean"
-          },
-          "isFinal": {
-            "type": "boolean"
-          },
-          "isFlexible": {
-            "type": "boolean"
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "transitionInfo": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "StatusEffectDto": {
-        "type": "object",
-        "properties": {
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "setsComplete": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "StepApprovalConfigDetailDto": {
-        "type": "object",
-        "properties": {
-          "stepId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stepKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "circuitTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "descriptif": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "currentStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "nextStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "nextStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "requiresApproval": {
-            "type": "boolean"
-          },
-          "approvalType": {
-            "type": "string",
-            "nullable": true
-          },
-          "singleApproverId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "singleApproverName": {
-            "type": "string",
-            "nullable": true
-          },
-          "groupApprovers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApproverInfoDto"
-            },
-            "nullable": true
-          },
-          "groupName": {
-            "type": "string",
-            "nullable": true
-          },
-          "ruleType": {
-            "type": "string",
-            "nullable": true
-          },
-          "comment": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "StepApprovalConfigDto": {
-        "type": "object",
-        "properties": {
-          "requiresApproval": {
-            "type": "boolean"
-          },
-          "approvalType": {
-            "type": "string",
-            "nullable": true
-          },
-          "singleApproverId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "groupApproverIds": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "groupName": {
-            "type": "string",
-            "nullable": true
-          },
-          "ruleType": {
-            "type": "string",
-            "nullable": true
-          },
-          "comment": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "StepDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stepKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "descriptif": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "currentStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "nextStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "nextStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "requiresApproval": {
-            "type": "boolean"
-          },
-          "approvatorId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "approvatorUsername": {
-            "type": "string",
-            "nullable": true
-          },
-          "approvatorsGroupId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "approvatorsGroupName": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "StepWithApprovalDto": {
-        "type": "object",
-        "properties": {
-          "stepId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stepKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "circuitTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "descriptif": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "currentStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "nextStatusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "nextStatusTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "requiresApproval": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "SubTypeDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "subTypeKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "documentTypeId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "documentType": {
-            "$ref": "#/components/schemas/DocumentTypeDto"
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateDocumentRequest": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "content": {
-            "type": "string",
-            "nullable": true
-          },
-          "typeId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "subTypeId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "documentAlias": {
-            "type": "string",
-            "nullable": true
-          },
-          "documentExterne": {
-            "type": "string",
-            "nullable": true
-          },
-          "docDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "circuitId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateEmailRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateProfileRequest": {
-        "type": "object",
-        "properties": {
-          "firstName": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastName": {
-            "type": "string",
-            "nullable": true
-          },
-          "username": {
-            "type": "string",
-            "nullable": true
-          },
-          "profilePicture": {
-            "type": "string",
-            "nullable": true
-          },
-          "country": {
-            "type": "string",
-            "nullable": true
-          },
-          "city": {
-            "type": "string",
-            "nullable": true
-          },
-          "phoneNumber": {
-            "type": "string",
-            "nullable": true
-          },
-          "address": {
-            "type": "string",
-            "nullable": true
-          },
-          "backgroundPicture": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentPassword": {
-            "type": "string",
-            "nullable": true
-          },
-          "newPassword": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateStatusDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "isRequired": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "isInitial": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "isFinal": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "isFlexible": {
-            "type": "boolean",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateStepDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "descriptif": {
-            "type": "string",
-            "nullable": true
-          },
-          "currentStatusId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "nextStatusId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "requiresApproval": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "approvatorId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "approvatorsGroupId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateSubTypeDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "User": {
-        "required": [
-          "email",
-          "passwordHash",
-          "username"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "email": {
-            "minLength": 1,
-            "type": "string",
-            "format": "email"
-          },
-          "username": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "passwordHash": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "firstName": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastName": {
-            "type": "string",
-            "nullable": true
-          },
-          "userType": {
-            "type": "string",
-            "nullable": true
-          },
-          "city": {
-            "type": "string",
-            "nullable": true
-          },
-          "address": {
-            "type": "string",
-            "nullable": true
-          },
-          "phoneNumber": {
-            "type": "string",
-            "nullable": true
-          },
-          "country": {
-            "type": "string",
-            "nullable": true
-          },
-          "webSite": {
-            "type": "string",
-            "nullable": true
-          },
-          "identity": {
-            "type": "string",
-            "nullable": true
-          },
-          "isEmailConfirmed": {
-            "type": "boolean"
-          },
-          "emailVerificationCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "isPhoneVerified": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "isOnline": {
-            "type": "boolean"
-          },
-          "lastLogin": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "profilePicture": {
-            "type": "string",
-            "nullable": true
-          },
-          "backgroundPicture": {
-            "type": "string",
-            "nullable": true
-          },
-          "refreshToken": {
-            "type": "string",
-            "nullable": true
-          },
-          "refreshTokenExpiry": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "roleId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ValideUsernameRequest": {
-        "type": "object",
-        "properties": {
-          "username": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "VerifyEmailRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "verificationCode": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      }
-    },
-    "securitySchemes": {
-      "Bearer": {
-        "type": "apiKey",
-        "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        "name": "Authorization",
-        "in": "header"
-      }
-    }
-  },
-  "security": [
-    {
-      "Bearer": [ ]
-    }
-  ]
+  }
+  
 }

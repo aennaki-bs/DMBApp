@@ -165,10 +165,10 @@ export const DateSelectionStep = ({
               About Date Selection
             </h4>
             <p className="text-sm text-gray-300 mt-1">
-              <strong>Important:</strong> Only document types with active stumps
-              valid for this date will be shown in the next step. If you don't
-              see a document type, it means there are no active stumps for that
-              type on this date.
+              <strong>Important:</strong> Only document types with active series
+              will be available for selection. If you don't see a document type,
+              it means there are no active series for that type on the selected
+              date.
             </p>
           </div>
         </div>

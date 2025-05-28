@@ -168,12 +168,11 @@ const DocumentDetailsTab = ({
             </p>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-blue-300 mb-1">Stump</h3>
+            <h3 className="text-sm font-medium text-blue-300 mb-1">Series</h3>
             <p className="font-medium flex items-center gap-1">
               <Tag className="h-4 w-4 text-blue-400" />
-              abc
+              AVAB26
             </p>
-            <p className="text-sm text-blue-300/70 mt-1">Key: AVAB26</p>
             <p className="text-sm text-blue-300/70">
               Valid: 19/05/2025 - 19/05/2026
             </p>

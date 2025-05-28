@@ -120,7 +120,7 @@ export const TypeSelectionWithDateFilterStep = ({
 
         console.log(`Filtering document types for date: ${formattedDate}`);
 
-        // For each document type, check if there are active stumps for this date
+        // For each document type, check if there are active series for this date
         const validTypes: DocumentType[] = [];
 
         for (const docType of documentTypes) {
@@ -128,39 +128,39 @@ export const TypeSelectionWithDateFilterStep = ({
 
           try {
             console.log(
-              `Checking active stumps for document type ${docType.id} (${docType.typeName})`
+              `Checking active series for document type ${docType.id} (${docType.typeName})`
             );
 
-            // Direct API call to get stumps for this type and date
-            const response = await api.get(
-              `/Stump/for-date/${docType.id}/${formattedDate}`
+            // Check for valid subtypes for this date
+            const subtypesResponse = await api.get(
+              `/Series/for-date/${docType.id}/${formattedDate}`
             );
 
-            if (response.data && Array.isArray(response.data)) {
-              // Filter for active stumps only
-              const activeStumps = response.data.filter(
-                (stump) => stump.isActive
+            if (subtypesResponse.data && Array.isArray(subtypesResponse.data)) {
+              // Filter for active series only
+              const activeSeries = subtypesResponse.data.filter(
+                (series) => series.isActive
               );
 
               console.log(
-                `Found ${response.data.length} stumps, ${activeStumps.length} active for type ${docType.id}`
+                `Found ${subtypesResponse.data.length} series, ${activeSeries.length} active for type ${docType.id}`
               );
 
-              // Only include document types that have at least one active stump
-              if (activeStumps.length > 0) {
+              // Only include document types that have at least one active series
+              if (activeSeries.length > 0) {
                 validTypes.push(docType);
                 console.log(
                   `Adding document type ${docType.id} to valid types`
                 );
               } else {
                 console.log(
-                  `Document type ${docType.id} has no active stumps - excluding`
+                  `Document type ${docType.id} has no active series - excluding`
                 );
               }
             }
           } catch (error) {
             console.error(
-              `Error checking stumps for document type ${docType.id}:`,
+              `Error checking series for document type ${docType.id}:`,
               error
             );
           }
@@ -176,10 +176,10 @@ export const TypeSelectionWithDateFilterStep = ({
           // If no valid types found, show empty state
           setAvailableTypes([]);
           toast.warning(
-            "No document types have active stumps for the selected date",
+            "No document types have active series for the selected date",
             {
               description:
-                "Please select a different date or create new stumps with valid date ranges.",
+                "Please select a different date or create new series with valid date ranges.",
               duration: 5000,
               icon: <FileWarning className="h-5 w-5 text-amber-400" />,
             }
@@ -237,32 +237,32 @@ export const TypeSelectionWithDateFilterStep = ({
           const formattedDate = dateObj.toISOString();
 
           console.log(
-            `Fetching stumps for document type ${selectedTypeId} with date ${formattedDate}`
+            `Fetching series for document type ${selectedTypeId} with date ${formattedDate}`
           );
 
-          // Direct API call to get stumps
+          // Get subtypes for the selected document type and date
           const response = await api.get(
-            `/Stump/for-date/${selectedTypeId}/${formattedDate}`
+            `/Series/for-date/${selectedTypeId}/${formattedDate}`
           );
 
           if (response.data && Array.isArray(response.data)) {
-            // Filter for active stumps only
-            const activeStumps = response.data.filter(
-              (stump) => stump.isActive
+            // Filter for active series only
+            const activeSeries = response.data.filter(
+              (series) => series.isActive
             );
 
             console.log(
-              `Found ${response.data.length} stumps, ${activeStumps.length} active`
+              `Found ${response.data.length} series, ${activeSeries.length} active`
             );
 
-            if (activeStumps.length > 0) {
-              setFilteredSubTypes(activeStumps);
+            if (activeSeries.length > 0) {
+              setFilteredSubTypes(activeSeries);
               setNoSubTypesAvailable(false);
             } else {
               setFilteredSubTypes([]);
               setNoSubTypesAvailable(true);
               toast.warning(
-                "No active stumps available for this document type on the selected date",
+                "No active series available for this document type on the selected date",
                 {
                   description:
                     "Please select a different document type or date.",
@@ -271,15 +271,15 @@ export const TypeSelectionWithDateFilterStep = ({
               );
             }
 
-            // If the currently selected stump is not valid for this date, clear it
+            // If the currently selected series is not valid for this date, clear it
             if (
               selectedSubTypeId &&
-              !activeStumps.find((st) => st.id === selectedSubTypeId)
+              !activeSeries.find((st) => st.id === selectedSubTypeId)
             ) {
               onSubTypeChange("");
-              toast.info("Selected stump is not valid for the chosen date", {
+              toast.info("Selected series is not valid for the chosen date", {
                 description:
-                  "Your selection has been reset. Please choose from available stumps.",
+                  "Your selection has been reset. Please choose from available series.",
                 duration: 3000,
               });
             }
@@ -289,10 +289,10 @@ export const TypeSelectionWithDateFilterStep = ({
             setNoSubTypesAvailable(true);
           }
         } catch (error) {
-          console.error("Failed to load stumps for date:", error);
-          toast.error("Failed to load stumps", {
+          console.error("Failed to load series for date:", error);
+          toast.error("Failed to load series", {
             description:
-              "There was a problem loading stumps for the selected document type and date.",
+              "There was a problem loading series for the selected document type and date.",
             duration: 4000,
           });
 
@@ -333,7 +333,7 @@ export const TypeSelectionWithDateFilterStep = ({
               </h4>
               <p className="text-sm text-gray-300 mt-1">
                 <strong>Important:</strong> Only showing document types and
-                stumps that are
+                series that are
                 <span className="text-green-400"> active</span> and valid for:{" "}
                 <span className="font-medium text-white">
                   {format(new Date(documentDate), "MMMM d, yyyy")}
@@ -369,7 +369,7 @@ export const TypeSelectionWithDateFilterStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div className="space-y-2">
                   <p className="text-sm">
-                    No document types have valid stumps for the selected date (
+                    No document types have valid series for the selected date (
                     {format(new Date(documentDate), "MMM d, yyyy")}).
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 mt-3">
@@ -384,7 +384,7 @@ export const TypeSelectionWithDateFilterStep = ({
                         } else {
                           toast.info("Please select a different date", {
                             description:
-                              "Try choosing another date that has valid document types and stumps.",
+                              "Try choosing another date that has valid document types and series.",
                             duration: 3000,
                           });
                         }
@@ -472,12 +472,12 @@ export const TypeSelectionWithDateFilterStep = ({
         )}
         <p className="text-sm text-gray-400">
           Only showing document types with{" "}
-          <span className="text-green-400 font-medium">active</span> stumps for
+          <span className="text-green-400 font-medium">active</span> series for
           the selected date
         </p>
       </div>
 
-      {/* Stump Selection */}
+      {/* Series Selection */}
       {selectedTypeId && (
         <div className="space-y-3 mt-4 pt-4 border-t border-gray-800/50">
           <Label
@@ -485,14 +485,14 @@ export const TypeSelectionWithDateFilterStep = ({
             className="text-sm font-medium text-gray-200 flex items-center gap-2"
           >
             <Layers className="h-4 w-4 text-blue-400" />
-            Stump*
+            Series*
           </Label>
           {isLoadingSubTypes ? (
             <div className="space-y-3">
               <Skeleton className="h-10 w-full bg-gray-800/50" />
               <div className="flex items-center gap-2 text-sm text-blue-400">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Loading stumps for selected document type...</span>
+                <span>Loading series for selected document type...</span>
               </div>
             </div>
           ) : noSubTypesAvailable ? (
@@ -502,7 +502,7 @@ export const TypeSelectionWithDateFilterStep = ({
                   <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                   <div className="space-y-2">
                     <p className="text-sm">
-                      No stumps available for{" "}
+                      No series available for{" "}
                       <strong>{selectedType?.typeName}</strong> on{" "}
                       {format(new Date(documentDate), "MMMM d, yyyy")}.
                     </p>
@@ -517,7 +517,7 @@ export const TypeSelectionWithDateFilterStep = ({
                             "Please select a different document type",
                             {
                               description:
-                                "Try choosing another document type that has valid stumps.",
+                                "Try choosing another document type that has valid series.",
                               duration: 3000,
                             }
                           );
@@ -535,7 +535,7 @@ export const TypeSelectionWithDateFilterStep = ({
                       >
                         <Link to={`/document-types/${selectedTypeId}/subtypes`}>
                           <PlusCircle className="mr-2 h-4 w-4" />
-                          Create Stump
+                          Create Series
                         </Link>
                       </Button>
                     </div>
@@ -545,7 +545,7 @@ export const TypeSelectionWithDateFilterStep = ({
             </Card>
           ) : (
             <>
-              {/* Custom Stump Select */}
+              {/* Custom Series Select */}
               <div className="relative" ref={subtypeDropdownRef}>
                 <button
                   type="button"
@@ -566,7 +566,7 @@ export const TypeSelectionWithDateFilterStep = ({
                   >
                     {selectedSubType
                       ? selectedSubType.subTypeKey
-                      : "Select stump"}
+                      : "Select series"}
                   </span>
                   <ChevronDown
                     className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
@@ -617,13 +617,13 @@ export const TypeSelectionWithDateFilterStep = ({
           )}
           <p className="text-sm text-gray-400">
             Only showing{" "}
-            <span className="text-green-400 font-medium">active</span> stumps
+            <span className="text-green-400 font-medium">active</span> series
             valid for the selected date
           </p>
         </div>
       )}
 
-      {/* Show selected stump details */}
+      {/* Show selected series details */}
       {selectedSubType && (
         <Card className="bg-blue-900/20 border-blue-800/40 mt-4">
           <CardContent className="p-4">

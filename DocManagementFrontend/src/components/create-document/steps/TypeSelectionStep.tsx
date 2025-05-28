@@ -106,7 +106,7 @@ export const TypeSelectionStep = ({
           .getSubTypesByDocType(selectedTypeId)
           .then((data) => {
             // Filter only active subtypes
-            const activeSubTypes = data.filter(subType => subType.isActive);
+            const activeSubTypes = data.filter((subType) => subType.isActive);
             setFilteredSubTypes(activeSubTypes);
             if (activeSubTypes.length === 0) {
               setNoSubTypesAvailable(true);
@@ -154,7 +154,7 @@ export const TypeSelectionStep = ({
         {isLoadingTypes ? (
           <div className="flex items-center space-x-3 text-blue-400 text-sm py-4 px-3">
             <div className="animate-spin h-5 w-5 border-2 border-blue-400 rounded-full border-t-transparent"></div>
-            <span>Loading document types with active stumps...</span>
+            <span>Loading document types with active series...</span>
           </div>
         ) : documentTypes.length === 0 ? (
           <Card className="bg-gray-800/50 border-amber-700/30">
@@ -163,7 +163,8 @@ export const TypeSelectionStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div className="space-y-2">
                   <p className="text-sm">
-                    No document types with active stumps available for the selected date. Please select a different date.
+                    No document types with active series available for the
+                    selected date. Please select a different date.
                   </p>
                 </div>
               </div>
@@ -242,12 +243,12 @@ export const TypeSelectionStep = ({
             className="text-sm font-medium text-gray-200 flex items-center gap-2"
           >
             <Layers className="h-4 w-4 text-blue-400" />
-            Stump*
+            Series*
           </Label>
           {isLoadingSubTypes || localIsLoadingSubTypes ? (
             <div className="flex items-center space-x-3 text-blue-400 text-sm py-2 px-3">
               <div className="animate-spin h-4 w-4 border-2 border-blue-400 rounded-full border-t-transparent"></div>
-              <span>Loading stumps...</span>
+              <span>Loading series...</span>
             </div>
           ) : noSubTypesAvailable ? (
             <Card className="bg-gray-800/50 border-gray-700">
@@ -256,7 +257,7 @@ export const TypeSelectionStep = ({
                   <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                   <div className="space-y-2">
                     <p className="text-sm">
-                      No active stumps available for this document type.
+                      No active series available for this document type.
                     </p>
                     <Button
                       variant="outline"
@@ -266,7 +267,7 @@ export const TypeSelectionStep = ({
                     >
                       <Link to={`/document-types/${selectedTypeId}/subtypes`}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Create Stumps
+                        Create Series
                       </Link>
                     </Button>
                   </div>
@@ -275,7 +276,7 @@ export const TypeSelectionStep = ({
             </Card>
           ) : (
             <>
-              {/* Custom Stump Select */}
+              {/* Custom Series Select */}
               <div className="relative" ref={subtypeDropdownRef}>
                 <button
                   type="button"
@@ -297,8 +298,8 @@ export const TypeSelectionStep = ({
                     {selectedSubTypeId
                       ? filteredSubTypes.find(
                           (st) => st.id === selectedSubTypeId
-                        )?.name || "Select stump"
-                      : "Select stump"}
+                        )?.name || "Select series"
+                      : "Select series"}
                   </span>
                   <ChevronDown
                     className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
@@ -339,13 +340,14 @@ export const TypeSelectionStep = ({
                 <div className="bg-gray-800/40 border border-gray-700 rounded-md p-3 mt-3">
                   <div className="flex items-center gap-2 text-sm text-blue-400 mb-2">
                     <Info className="h-4 w-4" />
-                    <span className="font-medium">Selected Stump Information</span>
+                    <span className="font-medium">
+                      Selected Series Information
+                    </span>
                   </div>
                   <p className="text-sm text-gray-300">
                     <span className="font-medium">Code: </span>
-                    {filteredSubTypes.find(
-                      (st) => st.id === selectedSubTypeId
-                    )?.subTypeKey || ""}
+                    {filteredSubTypes.find((st) => st.id === selectedSubTypeId)
+                      ?.subTypeKey || ""}
                   </p>
                   <p className="text-sm text-gray-300 mt-1">
                     <span className="font-medium">Valid period: </span>

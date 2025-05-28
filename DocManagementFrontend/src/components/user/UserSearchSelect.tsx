@@ -22,38 +22,58 @@ export interface UserOption {
   username: string;
   email?: string;
   role?: string;
+  id: number;
 }
 
 interface UserSearchSelectProps {
-  users: UserOption[];
+  options?: UserOption[];
+  value?: UserOption | null;
+  onChange?: (user: UserOption | null) => void;
+
+  users?: UserOption[];
   selectedUserId?: number;
-  onSelect: (userId: number | undefined) => void;
+  onSelect?: (userId: number | undefined) => void;
+
   isLoading?: boolean;
   placeholder?: string;
   emptyMessage?: string;
+  className?: string;
 }
 
 export function UserSearchSelect({
+  options,
+  value,
+  onChange,
+
   users,
   selectedUserId,
   onSelect,
+
   isLoading = false,
   placeholder = "Select a user",
   emptyMessage = "No users found",
+  className,
 }: UserSearchSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState<UserOption[]>(users);
 
-  // Update filtered users when search query changes or users list changes
+  const usersList = options || users || [];
+  const [filteredUsers, setFilteredUsers] = useState<UserOption[]>(usersList);
+
+  const selectedUser =
+    value ||
+    (selectedUserId
+      ? usersList.find((user) => user.userId === selectedUserId)
+      : null);
+
   useEffect(() => {
     if (!searchQuery) {
-      setFilteredUsers(users);
+      setFilteredUsers(usersList);
       return;
     }
 
     const query = searchQuery.toLowerCase();
-    const filtered = users.filter(
+    const filtered = usersList.filter(
       (user) =>
         user.username.toLowerCase().includes(query) ||
         user.email?.toLowerCase().includes(query) ||
@@ -61,10 +81,16 @@ export function UserSearchSelect({
     );
 
     setFilteredUsers(filtered);
-  }, [searchQuery, users]);
+  }, [searchQuery, usersList]);
 
-  // Get the selected user
-  const selectedUser = users.find((user) => user.userId === selectedUserId);
+  const handleSelect = (user: UserOption) => {
+    if (onChange) {
+      onChange(user);
+    } else if (onSelect) {
+      onSelect(user.userId);
+    }
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -73,7 +99,10 @@ export function UserSearchSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white hover:bg-[#182047]/90 transition-colors"
+          className={cn(
+            "w-full justify-between bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white hover:bg-[#182047]/90 transition-colors",
+            className
+          )}
           disabled={isLoading}
         >
           {isLoading ? (
@@ -113,10 +142,7 @@ export function UserSearchSelect({
               <CommandItem
                 key={user.userId}
                 value={user.userId.toString()}
-                onSelect={(value) => {
-                  onSelect(parseInt(value, 10));
-                  setOpen(false);
-                }}
+                onSelect={() => handleSelect(user)}
                 className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-blue-800/30 text-blue-100"
               >
                 <div className="flex items-center gap-2 flex-1">
@@ -138,7 +164,9 @@ export function UserSearchSelect({
                 <Check
                   className={cn(
                     "ml-auto h-4 w-4 text-blue-400",
-                    selectedUserId === user.userId ? "opacity-100" : "opacity-0"
+                    selectedUser?.userId === user.userId
+                      ? "opacity-100"
+                      : "opacity-0"
                   )}
                 />
               </CommandItem>

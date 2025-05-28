@@ -10,7 +10,14 @@ import { Label } from "@/components/ui/label";
 import { DocumentType } from "@/models/document";
 import { SubType } from "@/models/subtype";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, ChevronDown, Loader2, Tag, Layers, Info } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronDown,
+  Loader2,
+  Tag,
+  Layers,
+  Info,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface TypeSubTypeSelectionStepProps {
@@ -108,7 +115,8 @@ export const TypeSubTypeSelectionStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm">
-                    No document types with active stumps available for the selected date. Please select a different date.
+                    No document types with active series available for the
+                    selected date. Please select a different date.
                   </p>
                 </div>
               </div>
@@ -179,7 +187,7 @@ export const TypeSubTypeSelectionStep = ({
           className="text-sm font-medium text-gray-200 flex items-center gap-2"
         >
           <Layers className="h-4 w-4 text-purple-400" />
-          Document Stump
+          Document Series
         </Label>
 
         {!selectedTypeId ? (
@@ -187,7 +195,7 @@ export const TypeSubTypeSelectionStep = ({
         ) : isLoadingSubTypes ? (
           <div className="flex items-center text-gray-400 space-x-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading stumps...</span>
+            <span>Loading series...</span>
           </div>
         ) : selectedTypeId && !isLoadingSubTypes && subTypes.length === 0 ? (
           <Card className="bg-gray-800/50 border-gray-700">
@@ -196,7 +204,8 @@ export const TypeSubTypeSelectionStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm">
-                    No active stumps available for this document type on the selected date.
+                    No active series available for this document type on the
+                    selected date.
                   </p>
                 </div>
               </div>
@@ -209,7 +218,7 @@ export const TypeSubTypeSelectionStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm">
-                    No stumps available for this document type.
+                    No series available for this document type.
                   </p>
                 </div>
               </div>
@@ -234,7 +243,7 @@ export const TypeSubTypeSelectionStep = ({
               >
                 {selectedSubType
                   ? selectedSubType.subTypeKey
-                  : "Select document stump"}
+                  : "Select document series"}
               </span>
               <ChevronDown
                 className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
@@ -273,7 +282,8 @@ export const TypeSubTypeSelectionStep = ({
         {subTypes.length > 0 && (
           <p className="text-xs text-gray-400 mt-2">
             <Info className="h-3.5 w-3.5 inline mr-1" />
-            Only showing active stumps that are valid for the selected document date.
+            Only showing active series that are valid for the selected document
+            date.
           </p>
         )}
 
@@ -287,7 +297,7 @@ export const TypeSubTypeSelectionStep = ({
           </h4>
           <p className="text-sm text-gray-300 mt-1">
             The document type defines the category of the document, while the
-            stump provides more specific classification within that category.
+            series provides more specific classification within that category.
           </p>
         </CardContent>
       </Card>

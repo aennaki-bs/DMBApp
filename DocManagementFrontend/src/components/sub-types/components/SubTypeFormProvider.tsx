@@ -86,28 +86,30 @@ export const SubTypeFormProvider = ({
         if (isValid && formData.documentTypeId) {
           setIsLoading(true);
           try {
-            const { overlapping, overlappingWith } = await subTypeService.checkOverlappingDateIntervals(
-              formData.documentTypeId,
-              formData.startDate,
-              formData.endDate,
-              formData.id // Pass ID for edit cases
-            );
+            const { overlapping, overlappingWith } =
+              await subTypeService.checkOverlappingDateIntervals(
+                formData.documentTypeId,
+                formData.startDate,
+                formData.endDate,
+                formData.id // Pass ID for edit cases
+              );
 
             if (overlapping && overlappingWith) {
-              newErrors.startDate = `Date range overlaps with existing stump: ${overlappingWith.name}`;
+              newErrors.startDate = `Date range overlaps with existing series: ${overlappingWith.name}`;
               isValid = false;
               toast.toast({
                 title: "Date Overlap Detected",
-                description: `Your selected date range overlaps with an existing stump: ${overlappingWith.name}`,
-                variant: "destructive"
+                description: `Your selected date range overlaps with an existing series: ${overlappingWith.name}`,
+                variant: "destructive",
               });
             }
           } catch (error) {
             console.error("Error checking date overlaps:", error);
             toast.toast({
               title: "Warning",
-              description: "Could not verify date range overlap. You may proceed, but be cautious.",
-              variant: "warning"
+              description:
+                "Could not verify date range overlap. You may proceed, but be cautious.",
+              variant: "warning",
             });
           } finally {
             setIsLoading(false);
@@ -117,16 +119,19 @@ export const SubTypeFormProvider = ({
     } else if (currentStep === 2) {
       // Basic info validation - name field is now optional
       // No validation needed for name since it's optional
-      
+
       // Apply defaults for dates if they're still not set
       if (!formData.startDate) {
-        updateForm({ startDate: new Date().toISOString().split('T')[0] });
+        updateForm({ startDate: new Date().toISOString().split("T")[0] });
       }
-      
+
       if (!formData.endDate) {
-        updateForm({ 
-          endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-            .toISOString().split('T')[0] 
+        updateForm({
+          endDate: new Date(
+            new Date().setFullYear(new Date().getFullYear() + 1)
+          )
+            .toISOString()
+            .split("T")[0],
         });
       }
     }
@@ -139,7 +144,7 @@ export const SubTypeFormProvider = ({
     setIsLoading(true);
     const isValid = await validateCurrentStep();
     setIsLoading(false);
-    
+
     if (isValid) {
       setCurrentStep((prev) => Math.min(prev + 1, 3));
     }
@@ -154,20 +159,23 @@ export const SubTypeFormProvider = ({
     if (currentStep === 3) {
       // Apply defaults for any missing required fields
       const finalData = { ...formData };
-      
+
       if (!finalData.startDate) {
-        finalData.startDate = new Date().toISOString().split('T')[0];
+        finalData.startDate = new Date().toISOString().split("T")[0];
       }
-      
+
       if (!finalData.endDate) {
-        finalData.endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-          .toISOString().split('T')[0];
+        finalData.endDate = new Date(
+          new Date().setFullYear(new Date().getFullYear() + 1)
+        )
+          .toISOString()
+          .split("T")[0];
       }
-      
+
       if (finalData.isActive === undefined) {
         finalData.isActive = true;
       }
-      
+
       onSubmit(finalData);
     } else {
       submitHandler();
@@ -187,7 +195,7 @@ export const SubTypeFormProvider = ({
         handleSubmit,
         setHandleSubmit: setSubmitHandler,
         validateCurrentStep,
-        isLoading
+        isLoading,
       }}
     >
       {children}

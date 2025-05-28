@@ -24,6 +24,8 @@ import { ContentStep } from "@/components/create-document/steps/ContentStep";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import api from "@/services/api";
+import { formatDateForAPI } from "@/utils/formatDateForAPI";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const MotionDiv = motion.div;
 
@@ -31,12 +33,16 @@ export default function CreateDocument() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
-  const [filteredDocumentTypes, setFilteredDocumentTypes] = useState<DocumentType[]>([]);
+  const [filteredDocumentTypes, setFilteredDocumentTypes] = useState<
+    DocumentType[]
+  >([]);
   const [subTypes, setSubTypes] = useState<SubType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingStumps, setIsLoadingStumps] = useState(false);
+  const [isLoadingSeries, setIsLoadingSeries] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [documentTypesWithStumps, setDocumentTypesWithStumps] = useState<Set<number>>(new Set());
+  const [documentTypesWithSeries, setDocumentTypesWithSeries] = useState<
+    Set<number>
+  >(new Set());
 
   // Form data
   const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
@@ -66,7 +72,7 @@ export default function CreateDocument() {
     {
       id: 2,
       title: "Document Type",
-      description: "Select document type and stump",
+      description: "Select document type and series",
       icon: <Layers className="h-4 w-4" />,
       completed: step > 2,
     },
@@ -104,133 +110,135 @@ export default function CreateDocument() {
     fetchDocumentTypes();
   }, []);
 
-  // Check which document types have valid stumps for the selected date
-  useEffect(() => {
-    const checkDocumentTypesWithStumps = async () => {
-      if (!docDate || documentTypes.length === 0) return;
-      
-      setIsLoadingStumps(true);
-      setFilteredDocumentTypes([]); // Clear filtered types immediately
-      
-      try {
-        // Format date correctly for API - needs exact ISO format as per API docs
-        const dateObj = new Date(docDate);
-        const formattedDate = dateObj.toISOString(); // Send full ISO string including time
-        
-        console.log(`Checking active stumps for date ${formattedDate} across ${documentTypes.length} document types`);
-        
-        const validTypeIds = new Set<number>();
-        const validTypes: DocumentType[] = [];
-        
-        // Process each document type one by one
-        for (const docType of documentTypes) {
-          try {
-            // Direct API call as per documentation
-            const response = await api.get(`/Stump/for-date/${docType.id}/${formattedDate}`);
-            
-            // Check if there are any active stumps in the response
-            if (response.data && Array.isArray(response.data)) {
-              const activeStumps = response.data.filter(stump => stump.isActive);
-              
-              console.log(`Type ${docType.id} (${docType.typeName}): Found ${response.data.length} stumps, ${activeStumps.length} active`);
-              
-              // Only add document types with active stumps
-              if (activeStumps.length > 0) {
-                validTypeIds.add(docType.id);
-                validTypes.push(docType);
-                console.log(`Added type ${docType.id} to valid types`);
-              }
-            }
-          } catch (error) {
-            console.error(`Error checking stumps for type ${docType.id}:`, error);
-          }
-        }
-        
-        console.log(`Found ${validTypes.length} document types with active stumps out of ${documentTypes.length}`);
-        
-        // Update state with validated types
-        setDocumentTypesWithStumps(validTypeIds);
-        setFilteredDocumentTypes(validTypes);
-        
-        // Clear selection if selected type is no longer valid
-        if (selectedTypeId && !validTypeIds.has(selectedTypeId)) {
-          console.log(`Selected type ${selectedTypeId} no longer has valid stumps, clearing selection`);
-          setSelectedTypeId(null);
-          setSelectedSubTypeId(null);
-        }
-        
-        // Show warning if no valid types found
-        if (documentTypes.length > 0 && validTypes.length === 0) {
-          toast.warning(
-            "No document types with active stumps available for the selected date. Please select a different date."
-          );
-        }
-      } catch (error) {
-        console.error('Error filtering document types with active stumps:', error);
-        setFilteredDocumentTypes([]);
-        setDocumentTypesWithStumps(new Set());
-      } finally {
-        setIsLoadingStumps(false);
-      }
-    };
-    
-    checkDocumentTypesWithStumps();
-  }, [documentTypes, docDate]);
+  // Check which document types have valid series for the selected date
+  const checkDocumentTypesWithSeries = async () => {
+    try {
+      setIsLoadingSeries(true);
+      const validTypes: DocumentType[] = [];
+      const validTypeIds = new Set<number>();
 
-  // Fetch subtypes when document type is selected
-  useEffect(() => {
-    const fetchSubTypes = async () => {
-      if (selectedTypeId && documentTypesWithStumps.has(selectedTypeId)) {
+      // Format date correctly for API call
+      const formattedDate = formatDateForAPI(docDate);
+
+      console.log(
+        `Checking active series for date ${formattedDate} across ${documentTypes.length} document types`
+      );
+
+      // Check each document type for valid series
+      for (const docType of documentTypes) {
         try {
-          setIsLoading(true);
-          
-          // Format date correctly for API call - same as in checkDocumentTypesWithStumps
-          const dateObj = new Date(docDate);
-          const formattedDate = dateObj.toISOString();
-          
-          console.log(`Fetching subtypes for type ${selectedTypeId} with date ${formattedDate}`);
-          
-          // Direct API call as per documentation
-          const response = await api.get(`/Stump/for-date/${selectedTypeId}/${formattedDate}`);
-          
-          if (response.data && Array.isArray(response.data)) {
-            // Filter for active stumps only
-            const activeSubTypes = response.data.filter(subType => subType.isActive);
-            
-            console.log(`Fetched ${response.data.length} subtypes, ${activeSubTypes.length} are active`);
-            
-            setSubTypes(activeSubTypes);
-            
-            // Clear selection if no active subtypes or selection is no longer valid
-            if (activeSubTypes.length === 0) {
-              console.log(`No active subtypes found for type ${selectedTypeId}`);
-              setSelectedSubTypeId(null);
-              toast.warning("No active stumps available for this document type on the selected date.");
-            } else if (selectedSubTypeId && !activeSubTypes.some(st => st.id === selectedSubTypeId)) {
-              console.log(`Selected subtype ${selectedSubTypeId} is no longer valid, clearing selection`);
-              setSelectedSubTypeId(null);
-            }
-          } else {
-            console.error('Invalid response format:', response.data);
-            setSubTypes([]);
-            setSelectedSubTypeId(null);
+          const response = await api.get(
+            `/Series/for-date/${docType.id}/${formattedDate}`
+          );
+
+          // Check if there are any active series in the response
+          const activeSeries = response.data.filter(
+            (series) => series.isActive
+          );
+
+          console.log(
+            `Type ${docType.id} (${docType.typeName}): Found ${response.data.length} series, ${activeSeries.length} active`
+          );
+
+          // Only add document types with active series
+          if (activeSeries.length > 0) {
+            validTypes.push(docType);
+            validTypeIds.add(docType.id);
           }
         } catch (error) {
-          console.error(`Error fetching subtypes for type ${selectedTypeId}:`, error);
-          toast.error("Failed to load stumps");
+          console.error(`Error checking series for type ${docType.id}:`, error);
+        }
+      }
+
+      console.log(
+        `Found ${validTypes.length} document types with active series out of ${documentTypes.length}`
+      );
+
+      // Update state with the filtered document types
+      setDocumentTypesWithSeries(validTypeIds);
+
+      // If the currently selected type no longer has valid series, clear the selection
+      if (selectedTypeId && !validTypeIds.has(selectedTypeId)) {
+        console.log(
+          `Selected type ${selectedTypeId} no longer has valid series, clearing selection`
+        );
+        setSelectedTypeId(null);
+        setSelectedSubTypeId(null);
+      }
+
+      // Show toast if no valid document types found
+      if (validTypes.length === 0) {
+        toast.error(
+          "No document types with active series available for the selected date. Please select a different date."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error filtering document types with active series:",
+        error
+      );
+      toast.error("Failed to filter document types");
+      setDocumentTypesWithSeries(new Set());
+    } finally {
+      setIsLoadingSeries(false);
+    }
+  };
+
+  // When date changes, check which document types have valid series
+  useEffect(() => {
+    if (documentTypes.length > 0) {
+      checkDocumentTypesWithSeries();
+    }
+  }, [docDate, documentTypes]);
+
+  // When document type changes, load series
+  useEffect(() => {
+    if (selectedTypeId && documentTypesWithSeries.has(selectedTypeId)) {
+      const loadSubTypes = async () => {
+        try {
+          // Format date correctly for API call - same as in checkDocumentTypesWithSeries
+          const formattedDate = formatDateForAPI(docDate);
+
+          setIsLoading(true);
+
+          const response = await api.get(
+            `/Series/for-date/${selectedTypeId}/${formattedDate}`
+          );
+
+          // Filter for active series only
+          const activeSubTypes = response.data.filter(
+            (subType) => subType.isActive
+          );
+
+          if (activeSubTypes.length > 0) {
+            setSubTypes(activeSubTypes);
+            // If only one option, auto-select it
+            if (activeSubTypes.length === 1) {
+              setSelectedSubTypeId(activeSubTypes[0].id);
+            }
+          } else {
+            setSubTypes([]);
+            setSelectedSubTypeId(null);
+            toast.warning(
+              "No active series available for this document type on the selected date."
+            );
+          }
+        } catch (error) {
+          console.error("Error loading subtypes:", error);
           setSubTypes([]);
           setSelectedSubTypeId(null);
+          toast.error("Failed to load series");
         } finally {
           setIsLoading(false);
         }
-      } else {
-        setSubTypes([]);
-        setSelectedSubTypeId(null);
-      }
-    };
+      };
 
-    fetchSubTypes();
-  }, [selectedTypeId, docDate, documentTypesWithStumps, selectedSubTypeId]);
+      loadSubTypes();
+    } else {
+      setSubTypes([]);
+      setSelectedSubTypeId(null);
+    }
+  }, [selectedTypeId, docDate, documentTypesWithSeries, selectedSubTypeId]);
 
   const validateDate = (date: string, subType: SubType | null): boolean => {
     if (!subType) return true;
@@ -301,7 +309,9 @@ export default function CreateDocument() {
           return false;
         }
         if (filteredDocumentTypes.length === 0) {
-          toast.error("No document types with active stumps available for the selected date. Please select a different date.");
+          toast.error(
+            "No document types with active series available for the selected date. Please select a different date."
+          );
           return false;
         }
         return true;
@@ -311,7 +321,7 @@ export default function CreateDocument() {
           return false;
         }
         if (subTypes.length > 0 && !selectedSubTypeId) {
-          toast.error("Please select a stump");
+          toast.error("Please select a series");
           return false;
         }
         return true;
@@ -385,7 +395,7 @@ export default function CreateDocument() {
         );
       case 2:
         // Empty document types means we're still loading or there are no valid types
-        if (isLoadingStumps) {
+        if (isLoadingSeries) {
           return (
             <div className="flex flex-col items-center justify-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -393,24 +403,29 @@ export default function CreateDocument() {
             </div>
           );
         }
-        
-        // If no document types with active stumps for the date, show message
+
+        // If no document types with active series for the date, show message
         if (filteredDocumentTypes.length === 0) {
           return (
             <div className="p-4 bg-amber-900/20 border border-amber-800 rounded-md">
               <div className="flex items-start space-x-3">
                 <AlertCircle className="h-5 w-5 mt-0.5 text-amber-400 flex-shrink-0" />
                 <div>
-                  <h4 className="text-amber-400 font-medium">No Document Types Available</h4>
+                  <h4 className="text-amber-400 font-medium">
+                    No Document Types Available
+                  </h4>
                   <p className="text-gray-300 text-sm mt-1">
-                    There are no document types with active stumps available for the selected date ({new Date(docDate).toLocaleDateString()}).
+                    There are no document types with active series available for
+                    the selected date ({new Date(docDate).toLocaleDateString()}
+                    ).
                   </p>
                   <p className="text-gray-300 text-sm mt-2">
-                    Please select a different date or create stumps that are active for this date.
+                    Please select a different date or create series that are
+                    active for this date.
                   </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="mt-3 border-amber-500/50 text-amber-400 hover:bg-amber-800/20"
                     onClick={() => setStep(1)}
                   >
@@ -422,7 +437,7 @@ export default function CreateDocument() {
             </div>
           );
         }
-        
+
         // If there are valid document types, show the normal selection step
         return (
           <TypeSelectionStep
@@ -432,7 +447,7 @@ export default function CreateDocument() {
             selectedSubTypeId={selectedSubTypeId}
             onTypeChange={handleTypeChange}
             onSubTypeChange={handleSubTypeChange}
-            isLoadingTypes={isLoadingStumps}
+            isLoadingTypes={isLoadingSeries}
             isLoadingSubTypes={isLoading}
           />
         );

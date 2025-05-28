@@ -16,6 +16,7 @@ import {
   UsersRound,
   ClipboardCheck,
   Bell,
+  Building2,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -231,6 +232,21 @@ export function SidebarNav() {
                     </li>
                   </ul>
                 )}
+              </li>
+
+              {/* Responsibility Centres */}
+              <li>
+                <Link
+                  to="/responsibility-centres"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive("/responsibility-centres")
+                      ? "bg-blue-600/40 text-blue-200"
+                      : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                  }`}
+                >
+                  <Building2 className="h-5 w-5" />
+                  <span>Responsibility Centres</span>
+                </Link>
               </li>
             </>
           )}

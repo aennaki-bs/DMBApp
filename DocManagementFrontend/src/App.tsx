@@ -43,6 +43,7 @@ import DocumentTypeDetail from "./pages/DocumentTypeDetail";
 import ApprovalGroupsManagement from "./pages/ApprovalGroupsManagement";
 import ApproversManagement from "./pages/ApproversManagement";
 import ButtonShowcasePage from "./pages/ButtonShowcase";
+import ResponsibilityCentreManagement from "./pages/ResponsibilityCentreManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -278,6 +279,19 @@ const App = () => (
                         requiredRole={["Admin", "FullUser"]}
                       >
                         <ApproversManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Responsibility Centre Management route */}
+                  <Route
+                    path="/responsibility-centres"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <ResponsibilityCentreManagement />
                       </ProtectedRoute>
                     }
                   />
