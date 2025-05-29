@@ -209,9 +209,21 @@ export function MoveDocumentButton({
         toast.success(`Document moved to ${statusTitle}`);
       }
       
-      onStatusChange(result);
+      // Close dialog first
       setOpen(false);
       setSelectedStatusId(null);
+      
+      // Trigger immediate refresh
+      onStatusChange(result);
+      
+      // Add a small delay then trigger another refresh to ensure backend changes are reflected
+      setTimeout(() => {
+        onStatusChange({
+          success: true,
+          message: "Auto-refresh after move operation"
+        });
+      }, 1000); // 1 second delay for backend processing
+      
     } catch (error) {
       console.error('Error moving document:', error);
       toast.error('Failed to move document');

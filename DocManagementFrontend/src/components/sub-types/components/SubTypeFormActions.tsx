@@ -69,7 +69,7 @@ export const SubTypeFormActions = ({ onCancel }: SubTypeFormActionsProps) => {
             ) : (
               <Check className="h-4 w-4 mr-2" />
             )}
-            Create Stump
+            Create Series
           </Button>
         )}
       </div>

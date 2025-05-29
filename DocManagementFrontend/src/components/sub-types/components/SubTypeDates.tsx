@@ -322,8 +322,8 @@ export const SubTypeDates = () => {
                             </FormLabel>
                             <p className="text-xs text-gray-300">
                               {field.value
-                                ? "This stump will be available for selection"
-                                : "This stump will be hidden from selection"}
+                                ? "This series will be available for selection"
+                                : "This series will be hidden from selection"}
                             </p>
                           </div>
                           <FormControl>
@@ -359,7 +359,7 @@ export const SubTypeDates = () => {
       >
         <p className="text-xs text-amber-300/90 flex items-center">
           <Info className="h-3.5 w-3.5 mr-1.5 text-amber-400/80" />
-          Date ranges will be checked for overlaps with other stumps in the same
+          Date ranges will be checked for overlaps with other series in the same
           document type. Overlapping date ranges are not allowed.
         </p>
       </motion.div>

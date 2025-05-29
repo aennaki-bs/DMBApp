@@ -364,6 +364,19 @@ const approvalService = {
   },
 
   /**
+   * Get approval history for a user
+   */
+  getUserApprovalHistory: async (userId: number): Promise<any[]> => {
+    try {
+      const response = await api.get(`/Approval/history/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching approval history for user ${userId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
    * Get documents waiting for the current user's approval
    */
   getDocumentsToApprove: async (): Promise<ApprovalInfo[]> => {
@@ -468,6 +481,19 @@ const approvalService = {
   },
 
   /**
+   * Get general approval history for all users and documents
+   */
+  getGeneralApprovalHistory: async (): Promise<any[]> => {
+    try {
+      const response = await api.get('/Approval/history');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching general approval history:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Respond to an approval request
    */
   respondToApproval: async (
@@ -481,7 +507,40 @@ const approvalService = {
       console.error(`Error responding to approval ${approvalId}:`, error);
       throw error;
     }
-  }
+  },
+
+  // Get waiting approvals (status: Open or InProgress)
+  getWaitingApprovals: async (): Promise<any[]> => {
+    try {
+      const response = await api.get('/Approval/history/waiting');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching waiting approvals:', error);
+      throw error;
+    }
+  },
+
+  // Get accepted approvals (status: Accepted)
+  getAcceptedApprovals: async (): Promise<any[]> => {
+    try {
+      const response = await api.get('/Approval/history/accepted');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching accepted approvals:', error);
+      throw error;
+    }
+  },
+
+  // Get rejected approvals (status: Rejected)
+  getRejectedApprovals: async (): Promise<any[]> => {
+    try {
+      const response = await api.get('/Approval/history/rejected');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching rejected approvals:', error);
+      throw error;
+    }
+  },
 };
 
 export default approvalService; 

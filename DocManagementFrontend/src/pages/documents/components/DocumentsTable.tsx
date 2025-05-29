@@ -151,23 +151,16 @@ export default function DocumentsTable({
             </TableHeader>
             <TableBody>
               {documents.map((document, index) => (
-                <motion.tr
+                <DocumentsTableRow
                   key={document.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                  className="contents"
-                >
-                  <DocumentsTableRow
-                    document={document}
-                    index={index + (page - 1) * pageSize}
-                    isSelected={selectedDocuments.includes(document.id)}
-                    canManageDocuments={canManageDocuments}
-                    onSelect={() => handleSelectDocument(document.id)}
-                    onDelete={() => openDeleteDialog(document.id)}
-                    onAssignCircuit={() => openAssignCircuitDialog(document)}
-                  />
-                </motion.tr>
+                  document={document}
+                  index={index + (page - 1) * pageSize}
+                  isSelected={selectedDocuments.includes(document.id)}
+                  canManageDocuments={canManageDocuments}
+                  onSelect={() => handleSelectDocument(document.id)}
+                  onDelete={() => openDeleteDialog(document.id)}
+                  onAssignCircuit={() => openAssignCircuitDialog(document)}
+                />
               ))}
             </TableBody>
           </Table>

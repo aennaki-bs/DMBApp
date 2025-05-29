@@ -49,7 +49,7 @@ const SubTypeFilterBar = ({
         <div className="relative flex-grow">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 h-4 w-4" />
           <Input
-            placeholder="Search subtypes..."
+            placeholder="Search series..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 bg-[#0a1033] border-blue-900/50 text-white"

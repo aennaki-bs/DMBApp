@@ -111,7 +111,7 @@ const filterSubtypesByDate = async (
 const subTypeService = {
   getAllSubTypes: async (): Promise<SubType[]> => {
     try {
-      const response = await api.get('/Stump');
+      const response = await api.get('/Series');
       console.log('All subtypes response:', response.data);
       return response.data;
     } catch (error) {
@@ -129,7 +129,7 @@ const subTypeService = {
   getSubTypesByDocType: async (docTypeId: number): Promise<SubType[]> => {
     try {
       console.log(`Fetching subtypes for document type ID: ${docTypeId}`);
-      const response = await api.get(`/Stump/by-document-type/${docTypeId}`);
+      const response = await api.get(`/Series/by-document-type/${docTypeId}`);
       console.log(`Subtypes for document type ${docTypeId}:`, response.data);
       
       if (response.data && Array.isArray(response.data)) {
@@ -158,7 +158,7 @@ const subTypeService = {
 
   getSubType: async (id: number): Promise<SubType> => {
     try {
-      const response = await api.get(`/Stump/${id}`);
+      const response = await api.get(`/Series/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching subtype with ID ${id}:`, error);
@@ -179,7 +179,7 @@ const subTypeService = {
     console.log(`SubTypeService: Fetching subtypes for docType ${docTypeId} and date ${formattedDate}`);
     
     try {
-      const response = await api.get(`/Stump/for-date/${docTypeId}/${formattedDate}`);
+      const response = await api.get(`/Series/for-date/${docTypeId}/${formattedDate}`);
       
       if (response.data && Array.isArray(response.data)) {
         const activeSubTypes = response.data.filter(st => st.isActive);
@@ -207,7 +207,7 @@ const subTypeService = {
 
   createSubType: async (subType: Partial<SubType>): Promise<void> => {
     try {
-      await api.post('/Stump', subType);
+      await api.post('/Series', subType);
     } catch (error) {
       console.error('Error creating subtype:', error);
       throw error;
@@ -216,7 +216,7 @@ const subTypeService = {
 
   updateSubType: async (id: number, subType: Partial<SubType>): Promise<void> => {
     try {
-      await api.put(`/Stump/${id}`, subType);
+      await api.put(`/Series/${id}`, subType);
     } catch (error) {
       console.error(`Error updating subtype with ID ${id}:`, error);
       throw error;
@@ -225,7 +225,7 @@ const subTypeService = {
 
   deleteSubType: async (id: number): Promise<void> => {
     try {
-      await api.delete(`/Stump/${id}`);
+      await api.delete(`/Series/${id}`);
     } catch (error) {
       console.error(`Error deleting subtype with ID ${id}:`, error);
       throw error;
@@ -235,7 +235,7 @@ const subTypeService = {
   deleteMultipleSubTypes: async (ids: number[]): Promise<void> => {
     try {
       // Since the API doesn't support bulk deletion, we'll delete one by one
-      await Promise.all(ids.map(id => api.delete(`/Stump/${id}`)));
+      await Promise.all(ids.map(id => api.delete(`/Series/${id}`)));
     } catch (error) {
       console.error('Error deleting multiple subtypes:', error);
       throw error;

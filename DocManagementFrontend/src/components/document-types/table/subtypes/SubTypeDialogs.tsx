@@ -272,10 +272,10 @@ export default function SubTypeDialogs({
         <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[500px] p-3 overflow-hidden max-h-[85vh]">
           <DialogHeader className="mb-1 pb-1 border-b border-blue-900/30">
             <DialogTitle className="text-lg text-white">
-              Create New Stump
+              Create New Series
             </DialogTitle>
             <DialogDescription className="text-blue-300 text-xs">
-              Complete each step to create a new document stump
+              Complete each step to create a new document series
             </DialogDescription>
           </DialogHeader>
 
@@ -313,7 +313,7 @@ export default function SubTypeDialogs({
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </span>
-              Edit Stump
+              Edit Series
             </DialogTitle>
           </DialogHeader>
 
@@ -488,7 +488,7 @@ export default function SubTypeDialogs({
                 className={`h-9 w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
                   fieldErrors.subTypeKey ? 'border-red-500 focus:border-red-400' : ''
                 }`}
-                placeholder="Enter stump code"
+                placeholder="Enter series code"
               />
               {fieldErrors.subTypeKey && (
                 <p className="text-red-400 text-xs mt-1">{fieldErrors.subTypeKey}</p>
@@ -563,7 +563,7 @@ export default function SubTypeDialogs({
               Confirm Deletion
             </AlertDialogTitle>
             <AlertDialogDescription className="text-blue-300/90 mt-2">
-              Are you sure you want to delete the stump "
+              Are you sure you want to delete the series "
               <span className="text-white font-medium">
                 {selectedSubType?.name}
               </span>

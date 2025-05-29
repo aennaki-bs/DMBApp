@@ -5,6 +5,8 @@ import {
   UniteCode, 
   GeneralAccounts 
 } from './lineElements';
+import { SubType } from './subtype';
+import './circuit.d.ts';
 
 export interface Document {
   id: number;
@@ -17,15 +19,19 @@ export interface Document {
   createdAt: string;
   updatedAt: string;
   typeId: number;
+  subTypeId?: number;
   docDate: string;
   comptableDate: string;
   documentType: DocumentType;
+  subType?: SubType;
   circuitId?: number;
   circuit?: Circuit;
   currentCircuitDetailId?: number;
   currentCircuitDetail?: CircuitDetail;
   createdByUserId: number;
   createdBy: DocumentUser;
+  updatedByUserId?: number;
+  updatedBy?: DocumentUser;
   lignesCount?: number;
   sousLignesCount?: number;
   lignes?: Ligne[];

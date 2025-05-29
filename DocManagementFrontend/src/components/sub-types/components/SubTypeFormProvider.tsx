@@ -94,11 +94,11 @@ export const SubTypeFormProvider = ({
             );
 
             if (overlapping && overlappingWith) {
-              newErrors.startDate = `Date range overlaps with existing stump: ${overlappingWith.name}`;
+              newErrors.startDate = `Date range overlaps with existing series: ${overlappingWith.name}`;
               isValid = false;
               toast.toast({
                 title: "Date Overlap Detected",
-                description: `Your selected date range overlaps with an existing stump: ${overlappingWith.name}`,
+                description: `Your selected date range overlaps with an existing series: ${overlappingWith.name}`,
                 variant: "destructive"
               });
             }

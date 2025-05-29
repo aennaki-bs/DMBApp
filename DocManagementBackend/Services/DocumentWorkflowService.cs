@@ -823,7 +823,7 @@ namespace DocManagementBackend.Services
 
             if (documentStatus != null)
             {
-                documentStatus.IsComplete = false;
+                documentStatus.IsComplete = true;
                 documentStatus.CompletedByUserId = userId;
                 documentStatus.CompletedAt = DateTime.UtcNow;
             }

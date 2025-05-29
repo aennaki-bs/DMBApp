@@ -114,7 +114,13 @@ const DocumentDetailsTab = ({
           <div className="flex items-center gap-3">
             <p className="text-sm text-blue-300/80 flex items-center">
               <Clock className="h-4 w-4 mr-1" />
-              Last updated: {new Date(document.updatedAt).toLocaleDateString()}
+              Last updated: {new Date(document.updatedAt).toLocaleDateString()}{" "}
+              at {new Date(document.updatedAt).toLocaleTimeString()}
+              {document.updatedBy && (
+                <span className="ml-2">
+                  by {document.updatedBy.firstName} {document.updatedBy.lastName}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -168,15 +174,19 @@ const DocumentDetailsTab = ({
             </p>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-blue-300 mb-1">Stump</h3>
-            <p className="font-medium flex items-center gap-1">
+            <h3 className="text-sm font-medium text-blue-300 mb-1">Series</h3>
+            {/* <p className="font-medium flex items-center gap-1">
               <Tag className="h-4 w-4 text-blue-400" />
-              abc
-            </p>
-            <p className="text-sm text-blue-300/70 mt-1">Key: AVAB26</p>
-            <p className="text-sm text-blue-300/70">
-              Valid: 19/05/2025 - 19/05/2026
-            </p>
+              {document.subType?.name || "No series"}
+            </p> */}
+            {document.subType && (
+              <>
+                <p className="text-sm text-blue-300/70 mt-1">Key: {document.subType.subTypeKey}</p>
+                <p className="text-sm text-blue-300/70">
+                  Valid: {new Date(document.subType.startDate).toLocaleDateString()} - {new Date(document.subType.endDate).toLocaleDateString()}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Circuit section with workflow status data */}
@@ -211,17 +221,17 @@ const DocumentDetailsTab = ({
                     Current Status:{" "}
                     {workflowStatus.currentStatusTitle || "Processing"}
                   </p>
-                  <div className="mt-2">
-                    <div className="w-full bg-blue-950/40 rounded-full h-2">
+                  {/* <div className="mt-2"> */}
+                    {/* <div className="w-full bg-blue-950/40 rounded-full h-2"> */}
                       {/* <div 
                         className="bg-blue-500 h-2 rounded-full" 
                         style={{ width: progressDisplay }}
                       ></div> */}
-                    </div>
+                    {/* </div> */}
                     {/* <p className="text-xs text-blue-300/70 mt-1 text-right">
                       {progressDisplay}
                     </p> */}
-                  </div>
+                  {/* </div> */}
                 </>
               ) : (
                 <>
@@ -254,19 +264,19 @@ const DocumentDetailsTab = ({
             </h3>
             <p className="font-medium flex items-center gap-1">
               <User className="h-4 w-4 text-blue-400" />
-              {document.createdBy.firstName} {document.createdBy.lastName}
+              {document.createdBy.firstName} {document.createdBy.lastName} (#{document.createdBy.username})
             </p>
             <p className="text-sm text-blue-300/70">
-              ({document.createdBy.username})
+            ------------------------------------------
             </p>
-          </div>
-          <div>
+        
+            {/* <Separator className="my-2 bg-blue-400/20" /> */}
             <h3 className="text-sm font-medium text-blue-300 mb-1">
               Created At
             </h3>
-            <p className="font-medium flex items-center gap-1">
+            <p className="text-sm text-blue-300/70 mt-2 flex items-center gap-1">
               <Clock className="h-4 w-4 text-blue-400" />
-              {new Date(document.createdAt).toLocaleString()}
+              {new Date(document.createdAt).toLocaleDateString()} at {new Date(document.createdAt).toLocaleTimeString()}
             </p>
           </div>
         </div>

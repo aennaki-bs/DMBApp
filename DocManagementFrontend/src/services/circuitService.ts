@@ -395,9 +395,46 @@ const circuitService = {
         circuitService.getAvailableTransitions(documentId)
       ]);
       
-      // Find target status info
-      const targetStatus = availableTransitions.find(status => status.statusId === targetStatusId);
-      const targetStatusTitle = targetStatus?.title || `Status ID ${targetStatusId}`;
+      // Find target status info from available transitions
+      let targetStatus = availableTransitions.find(status => status.statusId === targetStatusId);
+      let targetStatusTitle = targetStatus?.title;
+      
+      // If not found in available transitions, try to get from circuit statuses
+      if (!targetStatusTitle && currentStatus?.circuitId) {
+        try {
+          const circuitStatuses = await circuitService.getCircuitStatuses(currentStatus.circuitId);
+          const circuitStatus = circuitStatuses.find(status => status.statusId === targetStatusId || status.id === targetStatusId);
+          targetStatusTitle = circuitStatus?.title || circuitStatus?.name;
+        } catch (error) {
+          console.error('Error fetching circuit statuses for title resolution:', error);
+        }
+      }
+      
+      // If still not found, try to get from workflow status statuses array
+      if (!targetStatusTitle && currentStatus?.statuses) {
+        const workflowStatus = currentStatus.statuses.find(status => status.statusId === targetStatusId);
+        targetStatusTitle = workflowStatus?.title;
+      }
+      
+      // Final attempt: Try to get the individual status by ID from the backend
+      if (!targetStatusTitle) {
+        try {
+          console.log(`Final attempt: fetching individual status ${targetStatusId} from backend`);
+          const statusResponse = await api.get(`/Status/${targetStatusId}`);
+          if (statusResponse.data && statusResponse.data.title) {
+            targetStatusTitle = statusResponse.data.title;
+            console.log(`Successfully resolved status title: ${targetStatusTitle}`);
+          }
+        } catch (error) {
+          console.error('Error fetching individual status for title resolution:', error);
+        }
+      }
+      
+      // Final fallback to a more descriptive message
+      if (!targetStatusTitle) {
+        targetStatusTitle = `Target Status (ID: ${targetStatusId})`;
+        console.warn(`Could not resolve status title for ID ${targetStatusId}, using fallback`);
+      }
       
       // Get current status title
       const currentStatusTitle = currentStatus?.currentStatusTitle || 'Unknown Status';

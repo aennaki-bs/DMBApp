@@ -134,7 +134,7 @@ const DocumentTypeGrid = ({
             <CardFooter className="pt-0 pb-3 opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="flex items-center text-blue-400 text-sm">
                 <Layers className="h-3.5 w-3.5 mr-1" />
-                <span>View Subtypes</span>
+                <span>View Series</span>
                 <ChevronRight className="h-3.5 w-3.5 ml-1" />
               </div>
             </CardFooter>

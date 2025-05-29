@@ -43,6 +43,22 @@ namespace DocManagementBackend.Models
         public string Comments { get; set; } = string.Empty;
     }
 
+    public class UserApprovalHistoryDto
+    {
+        public int ApprovalId { get; set; }
+        public int DocumentId { get; set; }
+        public string DocumentKey { get; set; } = string.Empty;
+        public string DocumentTitle { get; set; } = string.Empty;
+        public string StepTitle { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public bool? Approved { get; set; } // null if no response yet
+        public DateTime? RespondedAt { get; set; }
+        public string? ProcessedBy { get; set; }
+        public string Comments { get; set; } = string.Empty;
+        public string RequestedBy { get; set; } = string.Empty;
+        public DateTime RequestDate { get; set; }
+    }
+
     public class StepWithApprovalDto
     {
         public int StepId { get; set; }
@@ -208,5 +224,37 @@ namespace DocManagementBackend.Models
         public string GroupName { get; set; } = string.Empty;
         public bool IsAssociated { get; set; }
         public List<StepReferenceDto> AssociatedSteps { get; set; } = new List<StepReferenceDto>();
+    }
+
+    public class ApprovalHistoryDetailDto
+    {
+        public int ApprovalId { get; set; }
+        public int DocumentId { get; set; }
+        public string DocumentKey { get; set; } = string.Empty;
+        public string DocumentTitle { get; set; } = string.Empty;
+        public string StepTitle { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string RequestedBy { get; set; } = string.Empty;
+        public DateTime RequestDate { get; set; }
+        public string Comments { get; set; } = string.Empty;
+        public List<ApproverDetailDto> Approvers { get; set; } = new List<ApproverDetailDto>();
+        public List<ApprovalResponseDetailDto> Responses { get; set; } = new List<ApprovalResponseDetailDto>();
+    }
+
+    public class ApproverDetailDto
+    {
+        public int UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty; // "Individual" or "Group"
+        public int? OrderIndex { get; set; }
+    }
+
+    public class ApprovalResponseDetailDto
+    {
+        public int UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public bool IsApproved { get; set; }
+        public DateTime ResponseDate { get; set; }
+        public string Comments { get; set; } = string.Empty;
     }
 }

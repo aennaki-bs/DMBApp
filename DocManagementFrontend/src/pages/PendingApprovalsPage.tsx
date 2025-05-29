@@ -69,22 +69,60 @@ export default function PendingApprovalsPage() {
     enabled: !!userIdNum,
   });
 
-  // Fetch approval history
+  // Fetch waiting approvals (status: Open or InProgress)
   const {
-    data: approvalHistory = [],
-    isLoading: isHistoryLoading,
-    isError: isHistoryError,
-    refetch: refetchHistory,
+    data: waitingApprovalsData = [],
+    isLoading: isWaitingLoading,
+    isError: isWaitingError,
+    refetch: refetchWaiting,
   } = useQuery({
-    queryKey: ["approvalHistory", userIdNum],
+    queryKey: ["waitingApprovals"],
     queryFn: () => {
-      if (!userIdNum) return [];
-      return approvalService.getApprovalHistory(userIdNum);
+      return approvalService.getWaitingApprovals();
     },
-    enabled: !!userIdNum,
+    enabled: true,
   });
 
-  // Filter approvals based on search query
+  // Fetch accepted approvals (status: Accepted)
+  const {
+    data: acceptedApprovalsData = [],
+    isLoading: isAcceptedLoading,
+    isError: isAcceptedError,
+    refetch: refetchAccepted,
+  } = useQuery({
+    queryKey: ["acceptedApprovals"],
+    queryFn: () => {
+      return approvalService.getAcceptedApprovals();
+    },
+    enabled: true,
+  });
+
+  // Fetch rejected approvals (status: Rejected)
+  const {
+    data: rejectedApprovalsData = [],
+    isLoading: isRejectedLoading,
+    isError: isRejectedError,
+    refetch: refetchRejected,
+  } = useQuery({
+    queryKey: ["rejectedApprovals"],
+    queryFn: () => {
+      return approvalService.getRejectedApprovals();
+    },
+    enabled: true,
+  });
+
+  // Filter waiting approvals
+  const waitingApprovals = waitingApprovalsData.filter(
+    (approval: any) =>
+      approval.documentTitle
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  // Filter pending approvals
   const filteredPendingApprovals = pendingApprovals.filter(
     (approval: any) =>
       approval.documentTitle
@@ -94,14 +132,29 @@ export default function PendingApprovalsPage() {
       approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredApprovalHistory = approvalHistory.filter(
+  // Filter accepted approvals
+  const acceptedApprovals = acceptedApprovalsData.filter(
     (approval: any) =>
       approval.documentTitle
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase())
+      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Filter rejected approvals
+  const rejectedApprovals = rejectedApprovalsData.filter(
+    (approval: any) =>
+      approval.documentTitle
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const [historySubTab, setHistorySubTab] = useState("waiting");
 
   // Handle approval response
   const handleApprovalResponse = async () => {
@@ -136,7 +189,6 @@ export default function PendingApprovalsPage() {
 
       // Refetch data
       refetchPending();
-      refetchHistory();
     } catch (error) {
       console.error("Error responding to approval:", error);
       toast({
@@ -145,6 +197,12 @@ export default function PendingApprovalsPage() {
         variant: "destructive",
       });
     }
+
+    // Refetch data
+    refetchPending();
+    refetchWaiting();
+    refetchAccepted();
+    refetchRejected();
   };
 
   // Open dialog for approval or rejection
@@ -337,7 +395,7 @@ export default function PendingApprovalsPage() {
         {/* Approval History Tab */}
         <TabsContent value="history" className="mt-4">
           <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
-            {isHistoryLoading ? (
+            {(isWaitingLoading || isAcceptedLoading || isRejectedLoading) ? (
               <div className="p-6 space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center space-x-4">
@@ -349,7 +407,7 @@ export default function PendingApprovalsPage() {
                   </div>
                 ))}
               </div>
-            ) : isHistoryError ? (
+            ) : (isWaitingError || isAcceptedError || isRejectedError) ? (
               <div className="p-6 text-center">
                 <FileWarning className="h-16 w-16 mx-auto text-red-500 mb-2" />
                 <h3 className="text-xl font-medium text-red-400">
@@ -361,100 +419,305 @@ export default function PendingApprovalsPage() {
                 <Button
                   variant="destructive"
                   className="mt-4"
-                  onClick={() => refetchHistory()}
+                  onClick={() => {
+                    refetchWaiting();
+                    refetchAccepted();
+                    refetchRejected();
+                  }}
                 >
                   Try Again
                 </Button>
               </div>
-            ) : filteredApprovalHistory.length === 0 ? (
-              <div className="p-8 text-center">
-                <Clock className="h-16 w-16 mx-auto text-blue-400 mb-2" />
-                {searchQuery ? (
-                  <>
-                    <h3 className="text-xl font-medium text-blue-300">
-                      No matching history
-                    </h3>
-                    <p className="text-gray-400">
-                      No approval history matches your search criteria.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="text-xl font-medium text-blue-300">
-                      No approval history
-                    </h3>
-                    <p className="text-gray-400">
-                      You don't have any approval history yet.
-                    </p>
-                  </>
+            ) : (
+              <div>
+                {/* History Sub-tabs */}
+                <div className="border-b border-blue-900/30 bg-blue-950/30">
+                  <div className="flex space-x-0">
+                    <button
+                      onClick={() => setHistorySubTab("waiting")}
+                      className={`px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+                        historySubTab === "waiting"
+                          ? "border-amber-500 text-amber-400 bg-amber-500/10"
+                          : "border-transparent text-blue-300 hover:text-blue-200 hover:bg-blue-900/20"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Waiting
+                        {waitingApprovals.length > 0 && (
+                          <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 text-xs">
+                            {waitingApprovals.length}
+                          </Badge>
+                        )}
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setHistorySubTab("accepted")}
+                      className={`px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+                        historySubTab === "accepted"
+                          ? "border-green-500 text-green-400 bg-green-500/10"
+                          : "border-transparent text-blue-300 hover:text-blue-200 hover:bg-blue-900/20"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CircleCheck className="h-4 w-4" />
+                        Accepted
+                        {acceptedApprovals.length > 0 && (
+                          <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
+                            {acceptedApprovals.length}
+                          </Badge>
+                        )}
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setHistorySubTab("rejected")}
+                      className={`px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+                        historySubTab === "rejected"
+                          ? "border-red-500 text-red-400 bg-red-500/10"
+                          : "border-transparent text-blue-300 hover:text-blue-200 hover:bg-blue-900/20"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CircleX className="h-4 w-4" />
+                        Rejected
+                        {rejectedApprovals.length > 0 && (
+                          <Badge variant="secondary" className="bg-red-500/20 text-red-400 text-xs">
+                            {rejectedApprovals.length}
+                          </Badge>
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* History Content based on selected sub-tab */}
+                {historySubTab === "waiting" && (
+                  <div className="p-4">
+                    {waitingApprovals.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Clock className="h-12 w-12 mx-auto text-amber-400/50 mb-3" />
+                        <h3 className="text-lg font-medium text-amber-300">No waiting approvals</h3>
+                        <p className="text-gray-400 text-sm">No approvals are currently waiting for action.</p>
+                      </div>
+                    ) : (
+                      <ScrollArea className="h-[calc(100vh-400px)]">
+                        <div className="space-y-3">
+                          {waitingApprovals.map((approval: any, index: number) => (
+                            <div
+                              key={`waiting-${approval.id || approval.approvalId || approval.documentId}-${index}`}
+                              className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg hover:bg-amber-500/10 transition-colors"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <button
+                                    onClick={() => navigate(`/documents/${approval.documentId}`)}
+                                    className="flex items-center gap-2 text-left hover:text-amber-300 transition-colors group mb-2"
+                                  >
+                                    <FileText className="h-4 w-4 text-amber-400" />
+                                    <div>
+                                      <span className="font-mono text-amber-300 text-sm">
+                                        {approval.documentKey || "No Key"}
+                                      </span>
+                                      <span className="text-amber-100 ml-2">
+                                        {approval.documentTitle || "Untitled Document"}
+                                      </span>
+                                    </div>
+                                  </button>
+                                  <div className="text-sm text-amber-200/80">
+                                    Step: {approval.stepTitle || "Unknown Step"}
+                                  </div>
+                                  {approval.requestedBy && (
+                                    <div className="text-sm text-amber-200/60">
+                                      Requested by: {approval.requestedBy}
+                                    </div>
+                                  )}
+                                  {/* Display approvers */}
+                                  {approval.approvers && approval.approvers.length > 0 && (
+                                    <div className="text-sm text-amber-200/60 mt-1">
+                                      Approvers: {approval.approvers.map((approver: any) => approver.username).join(", ")}
+                                    </div>
+                                  )}
+                                  {/* Display current responses (for InProgress status) */}
+                                  {approval.responses && approval.responses.length > 0 && (
+                                    <div className="text-sm text-amber-200/60 mt-1">
+                                      Responses: {approval.responses.length} of {approval.approvers?.length || 0} completed
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                                    {approval.status === 'inprogress' ? 'In Progress' : 'Waiting'}
+                                  </Badge>
+                                  <div className="text-xs text-amber-200/60 mt-1">
+                                    {new Date(approval.requestDate || approval.createdAt || "").toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              {approval.comments && (
+                                <div className="mt-3 pt-2 border-t border-amber-500/20">
+                                  <p className="text-sm text-amber-200/80">{approval.comments}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    )}
+                  </div>
+                )}
+
+                {historySubTab === "accepted" && (
+                  <div className="p-4">
+                    {acceptedApprovals.length === 0 ? (
+                      <div className="text-center py-8">
+                        <CircleCheck className="h-12 w-12 mx-auto text-green-400/50 mb-3" />
+                        <h3 className="text-lg font-medium text-green-300">No accepted approvals</h3>
+                        <p className="text-gray-400 text-sm">No approvals have been accepted yet.</p>
+                      </div>
+                    ) : (
+                      <ScrollArea className="h-[calc(100vh-400px)]">
+                        <div className="space-y-3">
+                          {acceptedApprovals.map((approval: any, index: number) => (
+                            <div
+                              key={`accepted-${approval.id || approval.approvalId || approval.documentId}-${index}`}
+                              className="p-4 bg-green-500/5 border border-green-500/20 rounded-lg hover:bg-green-500/10 transition-colors"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <button
+                                    onClick={() => navigate(`/documents/${approval.documentId}`)}
+                                    className="flex items-center gap-2 text-left hover:text-green-300 transition-colors group mb-2"
+                                  >
+                                    <FileText className="h-4 w-4 text-green-400" />
+                                    <div>
+                                      <span className="font-mono text-green-300 text-sm">
+                                        {approval.documentKey || "No Key"}
+                                      </span>
+                                      <span className="text-green-100 ml-2">
+                                        {approval.documentTitle || "Untitled Document"}
+                                      </span>
+                                    </div>
+                                  </button>
+                                  <div className="text-sm text-green-200/80">
+                                    Step: {approval.stepTitle || "Unknown Step"}
+                                  </div>
+                                  {approval.processedBy && (
+                                    <div className="text-sm text-green-200/60">
+                                      Approved by: {approval.processedBy}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                                    Approved
+                                  </Badge>
+                                  <div className="text-xs text-green-200/60 mt-1">
+                                    {new Date(approval.respondedAt || approval.processedAt || "").toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              {approval.comments && (
+                                <div className="mt-3 pt-2 border-t border-green-500/20">
+                                  <p className="text-sm text-green-200/80">{approval.comments}</p>
+                                </div>
+                              )}
+                              {/* Display response details */}
+                              {approval.responses && approval.responses.length > 0 && (
+                                <div className="mt-3 pt-2 border-t border-green-500/20">
+                                  <div className="text-xs text-green-200/60 mb-2">Response Details:</div>
+                                  {approval.responses.map((response: any, idx: number) => (
+                                    <div key={idx} className="text-xs text-green-200/80 mb-1">
+                                      • {response.username}: {response.isApproved ? 'Approved' : 'Rejected'} 
+                                      {response.comments && ` - "${response.comments}"`}
+                                      <span className="text-green-200/60"> ({new Date(response.responseDate).toLocaleDateString()})</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    )}
+                  </div>
+                )}
+
+                {historySubTab === "rejected" && (
+                  <div className="p-4">
+                    {rejectedApprovals.length === 0 ? (
+                      <div className="text-center py-8">
+                        <CircleX className="h-12 w-12 mx-auto text-red-400/50 mb-3" />
+                        <h3 className="text-lg font-medium text-red-300">No rejected approvals</h3>
+                        <p className="text-gray-400 text-sm">No approvals have been rejected.</p>
+                      </div>
+                    ) : (
+                      <ScrollArea className="h-[calc(100vh-400px)]">
+                        <div className="space-y-3">
+                          {rejectedApprovals.map((approval: any, index: number) => (
+                            <div
+                              key={`rejected-${approval.id || approval.approvalId || approval.documentId}-${index}`}
+                              className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg hover:bg-red-500/10 transition-colors"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <button
+                                    onClick={() => navigate(`/documents/${approval.documentId}`)}
+                                    className="flex items-center gap-2 text-left hover:text-red-300 transition-colors group mb-2"
+                                  >
+                                    <FileText className="h-4 w-4 text-red-400" />
+                                    <div>
+                                      <span className="font-mono text-red-300 text-sm">
+                                        {approval.documentKey || "No Key"}
+                                      </span>
+                                      <span className="text-red-100 ml-2">
+                                        {approval.documentTitle || "Untitled Document"}
+                                      </span>
+                                    </div>
+                                  </button>
+                                  <div className="text-sm text-red-200/80">
+                                    Step: {approval.stepTitle || "Unknown Step"}
+                                  </div>
+                                  {approval.processedBy && (
+                                    <div className="text-sm text-red-200/60">
+                                      Rejected by: {approval.processedBy}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                                    Rejected
+                                  </Badge>
+                                  <div className="text-xs text-red-200/60 mt-1">
+                                    {new Date(approval.respondedAt || approval.processedAt || "").toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              {approval.comments && (
+                                <div className="mt-3 pt-2 border-t border-red-500/20">
+                                  <p className="text-sm text-red-200/80">{approval.comments}</p>
+                                </div>
+                              )}
+                              {/* Display response details */}
+                              {approval.responses && approval.responses.length > 0 && (
+                                <div className="mt-3 pt-2 border-t border-red-500/20">
+                                  <div className="text-xs text-red-200/60 mb-2">Response Details:</div>
+                                  {approval.responses.map((response: any, idx: number) => (
+                                    <div key={idx} className="text-xs text-red-200/80 mb-1">
+                                      • {response.username}: {response.isApproved ? 'Approved' : 'Rejected'} 
+                                      {response.comments && ` - "${response.comments}"`}
+                                      <span className="text-red-200/60"> ({new Date(response.responseDate).toLocaleDateString()})</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    )}
+                  </div>
                 )}
               </div>
-            ) : (
-              <ScrollArea className="h-[calc(100vh-300px)]">
-                <Table>
-                  <TableHeader className="bg-blue-900/20 sticky top-0 z-10">
-                    <TableRow className="border-blue-900/50 hover:bg-blue-900/30">
-                      <TableHead className="text-blue-300">Document</TableHead>
-                      <TableHead className="text-blue-300">Step</TableHead>
-                      <TableHead className="text-blue-300">Decision</TableHead>
-                      <TableHead className="text-blue-300">Date</TableHead>
-                      <TableHead className="text-blue-300">Comments</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredApprovalHistory.map((approval: any) => (
-                      <TableRow
-                        key={approval.id || approval.approvalId}
-                        className="border-blue-900/30 hover:bg-blue-900/20"
-                      >
-                        <TableCell className="font-medium text-blue-100">
-                          <div className="flex flex-col gap-1">
-                            <button
-                              onClick={() => navigate(`/documents/${approval.documentId}`)}
-                              className="flex items-center gap-2 text-left hover:text-blue-300 transition-colors cursor-pointer group"
-                            >
-                              <FileText className="h-4 w-4 text-blue-400 group-hover:text-blue-300" />
-                              <div className="flex flex-col">
-                                <span className="font-mono text-blue-300 text-sm group-hover:text-blue-200">
-                                  {approval.documentKey || "No Key"}
-                                </span>
-                                <span className="text-blue-100 group-hover:text-blue-300">
-                                  {approval.documentTitle || "Untitled Document"}
-                                </span>
-                              </div>
-                            </button>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-blue-200">
-                          {approval.stepTitle || "Unknown Step"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              approval.approved ? "default" : "destructive"
-                            }
-                            className={
-                              approval.approved
-                                ? "bg-green-600/20 text-green-500 hover:bg-green-600/30 border-green-500/30"
-                                : "bg-red-600/20 text-red-500 hover:bg-red-600/30 border-red-500/30"
-                            }
-                          >
-                            {approval.approved ? "Approved" : "Rejected"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-blue-200">
-                          {new Date(
-                            approval.respondedAt || approval.requestDate || ""
-                          ).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-blue-200 max-w-xs truncate">
-                          {approval.comments || "No comments"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
             )}
           </div>
         </TabsContent>

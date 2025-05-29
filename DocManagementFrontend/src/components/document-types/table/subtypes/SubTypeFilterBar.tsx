@@ -90,7 +90,7 @@ export function SubTypeFilterBar({
         <form onSubmit={handleSearchSubmit} className="flex-1 relative">
           <div className="relative group">
             <Input
-              placeholder="Search subtypes by name or description..."
+              placeholder="Search series by code..."
               value={localSearchQuery}
               onChange={(e) => setLocalSearchQuery(e.target.value)}
               className="pr-20 bg-[#0a1033]/80 border-blue-900/40 focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/50 text-white pl-10 h-10 rounded-lg shadow-inner transition-all duration-200"
