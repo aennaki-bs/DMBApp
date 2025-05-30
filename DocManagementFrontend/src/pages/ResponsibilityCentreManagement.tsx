@@ -22,6 +22,7 @@ import {
   User as UserIcon,
   ShieldCheck,
   Shield,
+  RefreshCw,
 } from "lucide-react";
 import {
   Dialog,
@@ -101,8 +102,6 @@ export default function ResponsibilityCentreManagement() {
   >([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchField, setSearchField] = useState("all");
-  const [isActiveFilter, setIsActiveFilter] = useState<boolean | null>(null);
-  const [filterOpen, setFilterOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -146,6 +145,9 @@ export default function ResponsibilityCentreManagement() {
   const [userIdsToRemove, setUserIdsToRemove] = useState<number[]>([]);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
+  // Add a tracking state for deleted users
+  const [hasDeletedUsers, setHasDeletedUsers] = useState(false);
+
   // Search fields
   const searchFields = [
     { id: "all", label: "All Fields" },
@@ -174,16 +176,9 @@ export default function ResponsibilityCentreManagement() {
     );
   }, [formCode, formDescr, isCodeValid]);
 
-  // Filter centres based on search criteria and active status
+  // Filter centres based on search criteria only (not active status)
   useEffect(() => {
     let filtered = [...centres];
-
-    // Apply active status filter
-    if (isActiveFilter !== null) {
-      filtered = filtered.filter(
-        (centre) => centre.isActive === isActiveFilter
-      );
-    }
 
     // Apply search
     if (searchQuery.trim() !== "") {
@@ -207,7 +202,7 @@ export default function ResponsibilityCentreManagement() {
     }
 
     setFilteredCentres(filtered);
-  }, [searchQuery, searchField, centres, isActiveFilter]);
+  }, [searchQuery, searchField, centres]);
 
   // Filter users based on search query and view mode
   useEffect(() => {
@@ -303,7 +298,6 @@ export default function ResponsibilityCentreManagement() {
       const updatedCentre: UpdateResponsibilityCentreRequest = {
         code: formCode,
         descr: formDescr,
-        isActive: centreToEdit.isActive,
       };
 
       await responsibilityCentreService.updateResponsibilityCentre(
@@ -345,38 +339,6 @@ export default function ResponsibilityCentreManagement() {
     } catch (error) {
       console.error("Failed to delete responsibility centre:", error);
       toast.error("Failed to delete responsibility centre");
-    }
-  };
-
-  const handleActivateCentre = async (centre: ResponsibilityCentre) => {
-    try {
-      await responsibilityCentreService.activateResponsibilityCentre(centre.id);
-      setCentres((prev) =>
-        prev.map((c) => (c.id === centre.id ? { ...c, isActive: true } : c))
-      );
-      toast.success(
-        `Responsibility Centre "${centre.descr}" activated successfully`
-      );
-    } catch (error) {
-      console.error("Failed to activate responsibility centre:", error);
-      toast.error("Failed to activate responsibility centre");
-    }
-  };
-
-  const handleDeactivateCentre = async (centre: ResponsibilityCentre) => {
-    try {
-      await responsibilityCentreService.deactivateResponsibilityCentre(
-        centre.id
-      );
-      setCentres((prev) =>
-        prev.map((c) => (c.id === centre.id ? { ...c, isActive: false } : c))
-      );
-      toast.success(
-        `Responsibility Centre "${centre.descr}" deactivated successfully`
-      );
-    } catch (error) {
-      console.error("Failed to deactivate responsibility centre:", error);
-      toast.error("Failed to deactivate responsibility centre");
     }
   };
 
@@ -436,13 +398,6 @@ export default function ResponsibilityCentreManagement() {
 
   const toggleSelectAll = () => {
     setSelectAll(!selectAll);
-  };
-
-  const clearFilters = () => {
-    setSearchQuery("");
-    setSearchField("all");
-    setIsActiveFilter(null);
-    setFilterOpen(false);
   };
 
   const toggleUserSelection = (userId: number) => {
@@ -561,22 +516,28 @@ export default function ResponsibilityCentreManagement() {
     }
   };
 
-  // Update the setUserViewMode function to handle only unassociated and currentCenter modes
+  // Update the setUserViewMode function to handle tab switching with deleted users tracking
   const setUserViewMode = (mode: "unassociated" | "currentCenter") => {
     setViewMode(mode);
     setSelectedUsers([]); // Clear selections when switching views
 
-    // Fetch the correct user data based on the mode
-    if (mode === "currentCenter") {
-      fetchUsers(true); // Pass true to get users associated with the center
-    } else {
-      fetchUsers(); // Get unassigned users
+    // If switching to unassigned users tab and users have been deleted, refresh that list
+    if (mode === "unassociated" && hasDeletedUsers) {
+      refreshUnassignedUsersList();
+      // Reset the tracking after refreshing
+      setHasDeletedUsers(false);
+    } else if (mode === "currentCenter") {
+      // Refresh current center users
+      refreshCurrentCenterUsersList();
     }
   };
 
-  // Update the function to open the association dialog
+  // Modify the openAssociateUsersDialog function to properly open the dialog and load data
   const openAssociateUsersDialog = async (centre: ResponsibilityCentre) => {
     try {
+      // Reset tracking state when opening dialog
+      setHasDeletedUsers(false);
+
       // Set states before fetching data
       setCentreToAssignUsers(centre);
       setSearchUserQuery("");
@@ -584,7 +545,10 @@ export default function ResponsibilityCentreManagement() {
       setViewMode("unassociated");
       setIsLoadingUsers(true);
 
-      // Fetch users first - BEFORE opening the dialog
+      // Open dialog first
+      setAssignUsersDialogOpen(true);
+
+      // Fetch unassigned users immediately
       const unassignedUsers =
         await responsibilityCentreService.getUnassignedUsers();
 
@@ -599,16 +563,153 @@ export default function ResponsibilityCentreManagement() {
         return user;
       });
 
-      // Set all the user state variables
-      setAvailableUsers(processedUsers);
+      // Set the unassigned users data
       setUnassociatedUsers(processedUsers);
-      setFilteredUsers(processedUsers);
 
-      // Only open dialog after data is loaded
-      setAssignUsersDialogOpen(true);
+      if (viewMode === "unassociated") {
+        setFilteredUsers(processedUsers);
+      }
+
+      // Also fetch users associated with this center
+      const centerDetails =
+        await responsibilityCentreService.getResponsibilityCentreById(
+          centre.id
+        );
+
+      // Process associated users
+      const associatedUsers = (centerDetails.users || []).map((user) => {
+        if (!user.fullName && (user.firstName || user.lastName)) {
+          return {
+            ...user,
+            fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          };
+        }
+        return user;
+      });
+
+      setAssociatedWithCurrentCenter(associatedUsers);
+
+      if (viewMode === "currentCenter") {
+        setFilteredUsers(associatedUsers);
+      }
     } catch (error) {
       console.error("Failed to load users:", error);
       toast.error("Failed to load users. Please try again.");
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Add a function to specifically refresh only unassigned users
+  const refreshUnassignedUsersList = async () => {
+    if (!centreToAssignUsers) return;
+
+    setIsLoadingUsers(true);
+    try {
+      const unassignedUsers =
+        await responsibilityCentreService.getUnassignedUsers();
+
+      // Process users to ensure they have fullName
+      const processedUsers = unassignedUsers.map((user) => {
+        if (!user.fullName && (user.firstName || user.lastName)) {
+          return {
+            ...user,
+            fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          };
+        }
+        return user;
+      });
+
+      setUnassociatedUsers(processedUsers);
+
+      if (viewMode === "unassociated") {
+        setFilteredUsers(processedUsers);
+      }
+    } catch (error) {
+      console.error("Failed to refresh unassigned users:", error);
+      toast.error("Failed to refresh unassigned users list");
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Add a function to specifically refresh only current center users
+  const refreshCurrentCenterUsersList = async () => {
+    if (!centreToAssignUsers) return;
+
+    setIsLoadingUsers(true);
+    try {
+      const centerDetails =
+        await responsibilityCentreService.getResponsibilityCentreById(
+          centreToAssignUsers.id
+        );
+
+      // Process users to ensure they have fullName
+      const processedUsers = (centerDetails.users || []).map((user) => {
+        if (!user.fullName && (user.firstName || user.lastName)) {
+          return {
+            ...user,
+            fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          };
+        }
+        return user;
+      });
+
+      setAssociatedWithCurrentCenter(processedUsers);
+
+      if (viewMode === "currentCenter") {
+        setFilteredUsers(processedUsers);
+      }
+    } catch (error) {
+      console.error("Failed to refresh current center users:", error);
+      toast.error("Failed to refresh current users list");
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Modify the handleRemoveUser function to stay in Current Users tab and track deletions
+  const handleRemoveUser = async (userId: number) => {
+    if (!centreToAssignUsers) return;
+
+    try {
+      setIsLoadingUsers(true);
+      const response = await responsibilityCentreService.removeUsers([userId]);
+
+      if (response.usersSuccessfullyAssociated > 0) {
+        // Update the users count in the centre
+        setCentres((prev) =>
+          prev.map((centre) =>
+            centre.id === centreToAssignUsers.id
+              ? {
+                  ...centre,
+                  usersCount: (centre.usersCount || 0) - 1,
+                }
+              : centre
+          )
+        );
+
+        toast.success("User successfully removed from this centre");
+
+        // Set the tracking flag to true - we've deleted a user
+        setHasDeletedUsers(true);
+
+        // Just update the current view without switching tabs
+        if (viewMode === "currentCenter") {
+          // Update the filtered users list by removing the user
+          setFilteredUsers((prev) => prev.filter((user) => user.id !== userId));
+
+          // Update the associated users list
+          setAssociatedWithCurrentCenter((prev) =>
+            prev.filter((user) => user.id !== userId)
+          );
+        }
+      } else if (response.errors && response.errors.length > 0) {
+        toast.error(`Failed to remove user: ${response.errors.join(", ")}`);
+      }
+    } catch (error) {
+      console.error("Failed to remove user:", error);
+      toast.error("Failed to remove user from responsibility centre");
     } finally {
       setIsLoadingUsers(false);
     }
@@ -769,44 +870,6 @@ export default function ResponsibilityCentreManagement() {
     return "User";
   };
 
-  // Add a new function to handle removing individual users
-  const handleRemoveUser = async (userId: number) => {
-    if (!centreToAssignUsers) return;
-
-    try {
-      const response = await responsibilityCentreService.removeUsers([userId]);
-
-      if (response.usersSuccessfullyAssociated > 0) {
-        // Update the users count in the centre
-        setCentres((prev) =>
-          prev.map((centre) =>
-            centre.id === centreToAssignUsers.id
-              ? {
-                  ...centre,
-                  usersCount: (centre.usersCount || 0) - 1,
-                }
-              : centre
-          )
-        );
-
-        // Update the filtered users list by removing the user
-        setFilteredUsers((prev) => prev.filter((user) => user.id !== userId));
-
-        // Update the associated users list
-        setAssociatedWithCurrentCenter((prev) =>
-          prev.filter((user) => user.id !== userId)
-        );
-
-        toast.success("User successfully removed from this centre");
-      } else if (response.errors && response.errors.length > 0) {
-        toast.error(`Failed to remove user: ${response.errors.join(", ")}`);
-      }
-    } catch (error) {
-      console.error("Failed to remove user:", error);
-      toast.error("Failed to remove user from responsibility centre");
-    }
-  };
-
   return (
     <div className="space-y-6 p-6">
       {/* Header Section */}
@@ -836,7 +899,7 @@ export default function ResponsibilityCentreManagement() {
         </div>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search and Filters - Simplified without filters */}
       <div className="flex flex-col md:flex-row justify-between gap-4 items-center mb-4">
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <Select value={searchField} onValueChange={setSearchField}>
@@ -874,73 +937,6 @@ export default function ResponsibilityCentreManagement() {
             )}
           </div>
         </div>
-
-        <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40"
-            >
-              <ListFilter className="h-4 w-4" />
-              Filters
-              {isActiveFilter !== null && (
-                <Badge
-                  variant="secondary"
-                  className="ml-2 bg-blue-500/20 text-blue-300"
-                >
-                  1
-                </Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-80 bg-[#22306e] text-blue-100 border border-blue-900/40"
-            align="end"
-          >
-            <div className="space-y-4">
-              <h4 className="font-medium leading-none mb-4 flex justify-between items-center">
-                Filters
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="h-8 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-800/40"
-                >
-                  Clear All
-                </Button>
-              </h4>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={
-                    isActiveFilter === null
-                      ? "any"
-                      : isActiveFilter
-                      ? "active"
-                      : "inactive"
-                  }
-                  onValueChange={(value) => {
-                    if (value === "any") setIsActiveFilter(null);
-                    else if (value === "active") setIsActiveFilter(true);
-                    else setIsActiveFilter(false);
-                  }}
-                >
-                  <SelectTrigger
-                    id="status"
-                    className="bg-[#192257] border-blue-900/40"
-                  >
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] border-blue-900/40">
-                    <SelectItem value="any">Any Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
       </div>
 
       {/* Data Table */}
@@ -1129,23 +1125,6 @@ export default function ResponsibilityCentreManagement() {
                   className="bg-[#192257] border-blue-900/40 text-white"
                 />
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isActive"
-                  checked={isActiveFilter === true}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setIsActiveFilter(true);
-                    } else {
-                      setIsActiveFilter(null);
-                    }
-                  }}
-                />
-                <Label htmlFor="isActive" className="text-blue-200">
-                  Active
-                </Label>
-              </div>
             </div>
           </div>
 
@@ -1250,7 +1229,7 @@ export default function ResponsibilityCentreManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog - Modified to hide delete button when users are associated */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="max-w-md bg-[#0a1033] text-white border border-blue-900/40 p-0">
           <div className="p-6">
@@ -1301,23 +1280,28 @@ export default function ResponsibilityCentreManagement() {
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleDeleteCentre}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                Delete Centre
-              </Button>
+
+              {/* Only show delete button if there are no associated users */}
+              {centreToDelete && centreToDelete.usersCount === 0 && (
+                <Button
+                  onClick={handleDeleteCentre}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete Centre
+                </Button>
+              )}
             </div>
           </div>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Associate Users Dialog - Professional UI */}
+      {/* Associate Users Dialog - Professional UI with improved layout */}
       <Dialog
         open={assignUsersDialogOpen}
         onOpenChange={setAssignUsersDialogOpen}
       >
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col bg-[#0a1033] text-white border border-blue-900/40 p-0">
+        <DialogContent className="sm:max-w-3xl flex flex-col bg-[#0a1033] text-white border border-blue-900/40 p-0 overflow-hidden max-h-[90vh]">
+          {/* Header Section */}
           <div className="p-6 pb-4 border-b border-blue-900/30">
             <DialogHeader className="mb-4">
               <DialogTitle className="text-xl text-white">
@@ -1337,9 +1321,17 @@ export default function ResponsibilityCentreManagement() {
                 placeholder="Search users..."
                 className="pl-9 bg-[#192257] border-blue-900/40 text-white w-full"
               />
+              {searchUserQuery && (
+                <button
+                  onClick={() => setSearchUserQuery("")}
+                  className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
-            <div className="mb-2">
+            <div className="flex justify-between items-center mb-2">
               <nav className="-mb-px flex space-x-8">
                 <button
                   onClick={() => setUserViewMode("unassociated")}
@@ -1362,10 +1354,32 @@ export default function ResponsibilityCentreManagement() {
                   Current Users
                 </button>
               </nav>
+
+              {/* Add refresh button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (viewMode === "unassociated") {
+                    refreshUnassignedUsersList();
+                  } else {
+                    refreshCurrentCenterUsersList();
+                  }
+                }}
+                disabled={isLoadingUsers}
+                className="h-8 px-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 flex items-center gap-1"
+                title="Refresh user list"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoadingUsers ? "animate-spin" : ""}`}
+                />
+                <span className="text-xs">Refresh</span>
+              </Button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden px-6 py-4">
+          {/* Users Content Area with fixed height */}
+          <div className="flex-1 flex flex-col mx-6 my-4 min-h-0">
             {/* Content area */}
             {isLoadingUsers ? (
               <div className="flex items-center justify-center py-8">
@@ -1373,8 +1387,8 @@ export default function ResponsibilityCentreManagement() {
                 <p className="text-blue-300 ml-3">Loading users...</p>
               </div>
             ) : (
-              <div className="flex-1 h-full flex flex-col border border-blue-900/30 rounded-md overflow-hidden">
-                {/* Table header - fixed position */}
+              <div className="border border-blue-900/30 rounded-md overflow-hidden flex flex-col flex-1">
+                {/* Fixed table header */}
                 <div className="bg-[#192257] border-b border-blue-900/30 p-2 flex justify-between items-center sticky top-0 z-10">
                   <div className="flex items-center">
                     <Checkbox
@@ -1401,108 +1415,111 @@ export default function ResponsibilityCentreManagement() {
                   </Badge>
                 </div>
 
-                {/* Users list - improve scrolling with explicit style overrides */}
-                <div className="flex-1 h-[350px] overflow-hidden">
-                  <ScrollArea className="h-full w-full">
-                    {filteredUsers.length === 0 ? (
-                      <div className="text-center py-10 text-blue-300">
-                        <UsersRound className="h-10 w-10 mx-auto text-blue-800/50 mb-3" />
-                        {viewMode === "unassociated"
-                          ? "No unassigned users found"
-                          : "No users are currently associated with this centre"}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1">
-                        {filteredUsers.map((user) => {
-                          // Display name fallbacks
-                          const displayName =
-                            user.fullName ||
-                            (user.firstName && user.lastName
-                              ? `${user.firstName} ${user.lastName}`
-                              : null) ||
-                            user.username ||
-                            user.email ||
-                            `User #${user.id}`;
+                {/* Users list with fixed height */}
+                <div
+                  className="overflow-y-auto flex-1"
+                  style={{
+                    height: "320px",
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "#2c3c8c #0f1642",
+                  }}
+                >
+                  {filteredUsers.length === 0 ? (
+                    <div className="text-center py-10 text-blue-300 flex flex-col items-center justify-center h-full">
+                      <UsersRound className="h-10 w-10 mx-auto text-blue-800/50 mb-3" />
+                      {viewMode === "unassociated"
+                        ? "No unassigned users found"
+                        : "No users are currently associated with this centre"}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1">
+                      {filteredUsers.map((user) => {
+                        // Display name fallbacks
+                        const displayName =
+                          user.fullName ||
+                          (user.firstName && user.lastName
+                            ? `${user.firstName} ${user.lastName}`
+                            : null) ||
+                          user.username ||
+                          user.email ||
+                          `User #${user.id}`;
 
-                          // User details
-                          const userName = user.username || "";
-                          const email = user.email || "";
+                        // User details
+                        const userName = user.username || "";
+                        const email = user.email || "";
 
-                          // Is user already associated with this center?
-                          const isAssociatedWithThisCenter =
-                            user.responsibilityCentre &&
-                            user.responsibilityCentre.id ===
-                              centreToAssignUsers?.id;
+                        // Is user already associated with this center?
+                        const isAssociatedWithThisCenter =
+                          user.responsibilityCentre &&
+                          user.responsibilityCentre.id ===
+                            centreToAssignUsers?.id;
 
-                          return (
-                            <div
-                              key={user.id}
-                              className={`border-b border-blue-900/10 last:border-b-0 ${
-                                isAssociatedWithThisCenter
-                                  ? "bg-blue-900/20"
-                                  : ""
-                              }`}
-                            >
-                              <div className="flex items-center p-2 hover:bg-[#192257]/60">
-                                {viewMode === "unassociated" ? (
-                                  <Checkbox
-                                    id={`user-${user.id}`}
-                                    checked={selectedUsers.includes(user.id)}
-                                    onCheckedChange={() =>
-                                      toggleUserSelection(user.id)
-                                    }
-                                    className="border-blue-600"
-                                  />
-                                ) : (
-                                  <div className="w-4 flex justify-center">
-                                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                  </div>
-                                )}
-                                <div className="ml-3 flex-1">
-                                  <div className="font-medium text-blue-100">
-                                    {displayName}
-                                  </div>
-                                  <div className="text-xs text-blue-300/70 flex items-center gap-2">
-                                    {userName && (
-                                      <span className="flex items-center">
-                                        <UserIcon className="h-3 w-3 mr-1 text-blue-400" />
-                                        {userName}
-                                      </span>
-                                    )}
-                                    {email && (
-                                      <span className="flex items-center">
-                                        <Mail className="h-3 w-3 mr-1 text-blue-400" />
-                                        {email}
-                                      </span>
-                                    )}
-                                  </div>
+                        return (
+                          <div
+                            key={user.id}
+                            className={`border-b border-blue-900/10 last:border-b-0 ${
+                              isAssociatedWithThisCenter ? "bg-blue-900/20" : ""
+                            }`}
+                          >
+                            <div className="flex items-center p-2 hover:bg-[#192257]/60">
+                              {viewMode === "unassociated" ? (
+                                <Checkbox
+                                  id={`user-${user.id}`}
+                                  checked={selectedUsers.includes(user.id)}
+                                  onCheckedChange={() =>
+                                    toggleUserSelection(user.id)
+                                  }
+                                  className="border-blue-600"
+                                />
+                              ) : (
+                                <div className="w-4 flex justify-center">
+                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
                                 </div>
-
-                                {viewMode === "currentCenter" && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleRemoveUser(user.id)}
-                                    className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                                  >
-                                    <UserMinus className="h-4 w-4 mr-1" />
-                                    Remove
-                                  </Button>
-                                )}
+                              )}
+                              <div className="ml-3 flex-1">
+                                <div className="font-medium text-blue-100">
+                                  {displayName}
+                                </div>
+                                <div className="text-xs text-blue-300/70 flex items-center gap-2">
+                                  {userName && (
+                                    <span className="flex items-center">
+                                      <UserIcon className="h-3 w-3 mr-1 text-blue-400" />
+                                      {userName}
+                                    </span>
+                                  )}
+                                  {email && (
+                                    <span className="flex items-center">
+                                      <Mail className="h-3 w-3 mr-1 text-blue-400" />
+                                      {email}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
+
+                              {viewMode === "currentCenter" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveUser(user.id)}
+                                  className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                >
+                                  <UserMinus className="h-4 w-4 mr-1" />
+                                  Remove
+                                </Button>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </ScrollArea>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Footer with buttons */}
-          <div className="p-4 border-t border-blue-900/30 bg-[#0f1642] flex justify-end space-x-3">
+          {/* Footer with buttons - fixed at bottom */}
+          <div className="p-4 border-t border-blue-900/30 bg-[#0f1642] flex justify-end space-x-3 mt-auto">
             <Button
               type="button"
               variant="outline"
@@ -1537,7 +1554,7 @@ export default function ResponsibilityCentreManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* View Details Dialog - Improved spacing and height */}
+      {/* View Details Dialog - Remove status display */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col bg-[#0a1033] text-white border border-blue-900/40 p-0">
           <div className="p-6">
@@ -1552,7 +1569,7 @@ export default function ResponsibilityCentreManagement() {
             </DialogHeader>
 
             <div className="flex flex-col space-y-6">
-              {/* Centre Information Card */}
+              {/* Centre Information Card - Without status */}
               <div className="bg-[#192257] p-4 rounded-md border border-blue-900/30">
                 <h3 className="text-lg font-medium text-white mb-4">
                   Centre Information
@@ -1573,26 +1590,17 @@ export default function ResponsibilityCentreManagement() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-sm text-blue-300">Status</div>
-                      <div className="flex items-center">
-                        <div
-                          className={`w-2 h-2 rounded-full mr-2 ${
-                            centreDetails.isActive
-                              ? "bg-green-500"
-                              : "bg-red-500"
-                          }`}
-                        ></div>
-                        <span className="text-white">
-                          {centreDetails.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
                       <div className="text-sm text-blue-300">
                         Associated Users
                       </div>
                       <div className="text-white font-medium">
                         {centreDetails.usersCount || 0}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-blue-300">Documents</div>
+                      <div className="text-white font-medium">
+                        {centreDetails.documentsCount || 0}
                       </div>
                     </div>
                   </div>

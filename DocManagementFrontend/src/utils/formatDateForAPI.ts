@@ -13,4 +13,4 @@ export const formatDateForAPI = (date: Date | string): string => {
     console.error('Error formatting date for API:', error);
     return '';
   }
-}; 
+};
