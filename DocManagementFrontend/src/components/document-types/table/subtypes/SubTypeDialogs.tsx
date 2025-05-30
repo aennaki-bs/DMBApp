@@ -509,7 +509,6 @@ export default function SubTypeDialogs({
                     ? "border-red-500 focus:border-red-400"
                     : ""
                 }`}
-                placeholder="Enter series code"
               />
               {fieldErrors.subTypeKey && (
                 <p className="text-red-400 text-xs mt-1">

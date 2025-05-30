@@ -17,6 +17,7 @@ import {
   ClipboardCheck,
   Bell,
   Building2,
+  Box,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -163,7 +164,7 @@ export function SidebarNav() {
                       : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                   }`}
                 >
-                  <Package className="h-5 w-5" />
+                  <Box className="h-5 w-5" />
                   <span>Line Elements</span>
                 </Link>
               </li>

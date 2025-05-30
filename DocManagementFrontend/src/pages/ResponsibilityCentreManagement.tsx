@@ -466,7 +466,11 @@ export default function ResponsibilityCentreManagement() {
 
   // Enhance the fetchUsers function to properly load users based on different contexts
   const fetchUsers = async (forRemovalOnly: boolean = false) => {
-    if (!centreToAssignUsers) return;
+    if (!centreToAssignUsers) {
+      setIsLoadingUsers(false);
+      toast.error("No centre selected");
+      return;
+    }
 
     setIsLoadingUsers(true);
     try {
@@ -483,6 +487,19 @@ export default function ResponsibilityCentreManagement() {
       } else {
         // For the associate dialog, get unassigned users
         fetchedUsers = await responsibilityCentreService.getUnassignedUsers();
+      }
+
+      // Check if no users were returned
+      if (!fetchedUsers || fetchedUsers.length === 0) {
+        setFilteredUsers([]);
+        setAvailableUsers([]);
+        if (viewMode === "currentCenter") {
+          setAssociatedWithCurrentCenter([]);
+        } else {
+          setUnassociatedUsers([]);
+        }
+        setIsLoadingUsers(false);
+        return;
       }
 
       // Process users to ensure they have fullName
@@ -533,6 +550,12 @@ export default function ResponsibilityCentreManagement() {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
       setFilteredUsers([]);
+      setAvailableUsers([]);
+      if (viewMode === "currentCenter") {
+        setAssociatedWithCurrentCenter([]);
+      } else {
+        setUnassociatedUsers([]);
+      }
     } finally {
       setIsLoadingUsers(false);
     }
@@ -552,13 +575,43 @@ export default function ResponsibilityCentreManagement() {
   };
 
   // Update the function to open the association dialog
-  const openAssociateUsersDialog = (centre: ResponsibilityCentre) => {
-    setCentreToAssignUsers(centre);
-    setSearchUserQuery("");
-    setSelectedUsers([]);
-    setUserViewMode("unassociated");
-    setAssignUsersDialogOpen(true);
-    fetchUsers();
+  const openAssociateUsersDialog = async (centre: ResponsibilityCentre) => {
+    try {
+      // Set states before fetching data
+      setCentreToAssignUsers(centre);
+      setSearchUserQuery("");
+      setSelectedUsers([]);
+      setViewMode("unassociated");
+      setIsLoadingUsers(true);
+
+      // Fetch users first - BEFORE opening the dialog
+      const unassignedUsers =
+        await responsibilityCentreService.getUnassignedUsers();
+
+      // Process users to ensure they have fullName
+      const processedUsers = unassignedUsers.map((user) => {
+        if (!user.fullName && (user.firstName || user.lastName)) {
+          return {
+            ...user,
+            fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          };
+        }
+        return user;
+      });
+
+      // Set all the user state variables
+      setAvailableUsers(processedUsers);
+      setUnassociatedUsers(processedUsers);
+      setFilteredUsers(processedUsers);
+
+      // Only open dialog after data is loaded
+      setAssignUsersDialogOpen(true);
+    } catch (error) {
+      console.error("Failed to load users:", error);
+      toast.error("Failed to load users. Please try again.");
+    } finally {
+      setIsLoadingUsers(false);
+    }
   };
 
   // Update the handleAssignUsers function to work with the new interface
@@ -1265,7 +1318,7 @@ export default function ResponsibilityCentreManagement() {
         onOpenChange={setAssignUsersDialogOpen}
       >
         <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col bg-[#0a1033] text-white border border-blue-900/40 p-0">
-          <div className="p-6 pb-0">
+          <div className="p-6 pb-4 border-b border-blue-900/30">
             <DialogHeader className="mb-4">
               <DialogTitle className="text-xl text-white">
                 Associate Users with Responsibility Centre
@@ -1286,7 +1339,7 @@ export default function ResponsibilityCentreManagement() {
               />
             </div>
 
-            <div className="border-b border-blue-900/40 mb-4">
+            <div className="mb-2">
               <nav className="-mb-px flex space-x-8">
                 <button
                   onClick={() => setUserViewMode("unassociated")}
@@ -1312,7 +1365,7 @@ export default function ResponsibilityCentreManagement() {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-hidden px-6">
+          <div className="flex-1 overflow-hidden px-6 py-4">
             {/* Content area */}
             {isLoadingUsers ? (
               <div className="flex items-center justify-center py-8">
@@ -1320,9 +1373,9 @@ export default function ResponsibilityCentreManagement() {
                 <p className="text-blue-300 ml-3">Loading users...</p>
               </div>
             ) : (
-              <div className="flex-1 overflow-hidden border border-blue-900/30 rounded-md flex flex-col">
-                {/* Table header */}
-                <div className="bg-[#192257] border-b border-blue-900/30 p-2 flex justify-between items-center">
+              <div className="flex-1 h-full flex flex-col border border-blue-900/30 rounded-md overflow-hidden">
+                {/* Table header - fixed position */}
+                <div className="bg-[#192257] border-b border-blue-900/30 p-2 flex justify-between items-center sticky top-0 z-10">
                   <div className="flex items-center">
                     <Checkbox
                       id="selectAllUsers"
@@ -1348,155 +1401,138 @@ export default function ResponsibilityCentreManagement() {
                   </Badge>
                 </div>
 
-                {/* Users list */}
-                <ScrollArea
-                  className="flex-1"
-                  style={{ height: "calc(100vh - 400px)", minHeight: "250px" }}
-                  scrollHideDelay={0}
-                >
-                  {filteredUsers.length === 0 ? (
-                    <div className="text-center py-10 text-blue-300">
-                      <UsersRound className="h-10 w-10 mx-auto text-blue-800/50 mb-3" />
-                      {viewMode === "unassociated"
-                        ? "No unassigned users found"
-                        : "No users are currently associated with this centre"}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1">
-                      {/* Only render visible items - we can display max 100 at a time for performance */}
-                      {filteredUsers.slice(0, 100).map((user) => {
-                        // Display name fallbacks
-                        const displayName =
-                          user.fullName ||
-                          (user.firstName && user.lastName
-                            ? `${user.firstName} ${user.lastName}`
-                            : null) ||
-                          user.username ||
-                          user.email ||
-                          `User #${user.id}`;
+                {/* Users list - improve scrolling with explicit style overrides */}
+                <div className="flex-1 h-[350px] overflow-hidden">
+                  <ScrollArea className="h-full w-full">
+                    {filteredUsers.length === 0 ? (
+                      <div className="text-center py-10 text-blue-300">
+                        <UsersRound className="h-10 w-10 mx-auto text-blue-800/50 mb-3" />
+                        {viewMode === "unassociated"
+                          ? "No unassigned users found"
+                          : "No users are currently associated with this centre"}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1">
+                        {filteredUsers.map((user) => {
+                          // Display name fallbacks
+                          const displayName =
+                            user.fullName ||
+                            (user.firstName && user.lastName
+                              ? `${user.firstName} ${user.lastName}`
+                              : null) ||
+                            user.username ||
+                            user.email ||
+                            `User #${user.id}`;
 
-                        // User details
-                        const userName = user.username || "";
-                        const email = user.email || "";
+                          // User details
+                          const userName = user.username || "";
+                          const email = user.email || "";
 
-                        // Is user already associated with this center?
-                        const isAssociatedWithThisCenter =
-                          user.responsibilityCentre &&
-                          user.responsibilityCentre.id ===
-                            centreToAssignUsers?.id;
+                          // Is user already associated with this center?
+                          const isAssociatedWithThisCenter =
+                            user.responsibilityCentre &&
+                            user.responsibilityCentre.id ===
+                              centreToAssignUsers?.id;
 
-                        return (
-                          <div
-                            key={user.id}
-                            className={`border-b border-blue-900/10 last:border-b-0 ${
-                              isAssociatedWithThisCenter ? "bg-blue-900/20" : ""
-                            }`}
-                          >
-                            <div className="flex items-center p-2 hover:bg-[#192257]/60">
-                              {viewMode === "unassociated" ? (
-                                <Checkbox
-                                  id={`user-${user.id}`}
-                                  checked={selectedUsers.includes(user.id)}
-                                  onCheckedChange={() =>
-                                    toggleUserSelection(user.id)
-                                  }
-                                  className="border-blue-600"
-                                />
-                              ) : (
-                                <div className="w-4 flex justify-center">
-                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          return (
+                            <div
+                              key={user.id}
+                              className={`border-b border-blue-900/10 last:border-b-0 ${
+                                isAssociatedWithThisCenter
+                                  ? "bg-blue-900/20"
+                                  : ""
+                              }`}
+                            >
+                              <div className="flex items-center p-2 hover:bg-[#192257]/60">
+                                {viewMode === "unassociated" ? (
+                                  <Checkbox
+                                    id={`user-${user.id}`}
+                                    checked={selectedUsers.includes(user.id)}
+                                    onCheckedChange={() =>
+                                      toggleUserSelection(user.id)
+                                    }
+                                    className="border-blue-600"
+                                  />
+                                ) : (
+                                  <div className="w-4 flex justify-center">
+                                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                  </div>
+                                )}
+                                <div className="ml-3 flex-1">
+                                  <div className="font-medium text-blue-100">
+                                    {displayName}
+                                  </div>
+                                  <div className="text-xs text-blue-300/70 flex items-center gap-2">
+                                    {userName && (
+                                      <span className="flex items-center">
+                                        <UserIcon className="h-3 w-3 mr-1 text-blue-400" />
+                                        {userName}
+                                      </span>
+                                    )}
+                                    {email && (
+                                      <span className="flex items-center">
+                                        <Mail className="h-3 w-3 mr-1 text-blue-400" />
+                                        {email}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
-                              <div className="ml-3 flex-1">
-                                <div className="font-medium text-blue-100">
-                                  {displayName}
-                                </div>
-                                <div className="text-xs text-blue-300/70 flex items-center gap-2">
-                                  {userName && (
-                                    <span className="flex items-center">
-                                      <UserIcon className="h-3 w-3 mr-1 text-blue-400" />
-                                      {userName}
-                                    </span>
-                                  )}
-                                  {email && (
-                                    <span className="flex items-center">
-                                      <Mail className="h-3 w-3 mr-1 text-blue-400" />
-                                      {email}
-                                    </span>
-                                  )}
-                                </div>
+
+                                {viewMode === "currentCenter" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveUser(user.id)}
+                                    className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                  >
+                                    <UserMinus className="h-4 w-4 mr-1" />
+                                    Remove
+                                  </Button>
+                                )}
                               </div>
-
-                              {viewMode === "currentCenter" && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveUser(user.id)}
-                                  className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                                >
-                                  <UserMinus className="h-4 w-4 mr-1" />
-                                  Remove
-                                </Button>
-                              )}
                             </div>
-                          </div>
-                        );
-                      })}
-
-                      {filteredUsers.length > 100 && (
-                        <div className="text-center py-3 text-sm text-blue-400 bg-blue-900/20 border-t border-blue-900/30">
-                          {filteredUsers.length - 100} more users available.
-                          Please refine your search to see more.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </ScrollArea>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Clean, professional info section at bottom */}
-          <div className="bg-[#192257] p-4 mt-4 border-t border-blue-900/40">
-            <div className="px-2">
-              <h4 className="text-sm font-medium text-blue-300 mb-1">
-                Centre Information
-              </h4>
-              {centreToAssignUsers && (
-                <>
-                  <p className="text-white text-lg mb-1">
-                    {centreToAssignUsers.descr}
-                  </p>
-                  <p className="text-sm text-blue-300/70">
-                    Code: {centreToAssignUsers.code} • Current Users:{" "}
-                    {centreToAssignUsers.usersCount || 0}
-                  </p>
-                </>
-              )}
-            </div>
+          {/* Footer with buttons */}
+          <div className="p-4 border-t border-blue-900/30 bg-[#0f1642] flex justify-end space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAssignUsersDialogOpen(false)}
+              className="bg-transparent border-blue-800 text-blue-300 hover:bg-blue-900/30 hover:text-blue-200"
+            >
+              Cancel
+            </Button>
 
-            <div className="flex justify-end space-x-2 mt-6">
+            {viewMode === "unassociated" && (
               <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedUsers([]);
-                  setAssignUsersDialogOpen(false);
-                }}
-                className="bg-transparent border-blue-900/40 text-blue-300 hover:bg-blue-900/20"
-              >
-                Cancel
-              </Button>
-              <Button
+                type="button"
                 onClick={handleAssignUsers}
-                disabled={
-                  selectedUsers.length === 0 || viewMode !== "unassociated"
-                }
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={selectedUsers.length === 0 || isLoadingUsers}
+                className={`bg-blue-600 text-white hover:bg-blue-500 ${
+                  selectedUsers.length === 0 || isLoadingUsers
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
               >
-                Associate {selectedUsers.length} User
-                {selectedUsers.length !== 1 ? "s" : ""}
+                {isLoadingUsers ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>Associate {selectedUsers.length} Users</>
+                )}
               </Button>
-            </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

@@ -223,10 +223,6 @@ export default function CreateDocument() {
 
           setIsLoading(true);
 
-          // Format date correctly for API call - same as in checkDocumentTypesWithSeries
-          const dateObj = new Date(docDate);
-          const formattedDate = dateObj.toISOString();
-
           console.log(
             `Fetching subtypes for type ${selectedTypeId} with date ${formattedDate}`
           );

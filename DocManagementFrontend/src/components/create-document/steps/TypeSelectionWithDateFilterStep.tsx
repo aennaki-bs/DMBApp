@@ -60,6 +60,12 @@ export const TypeSelectionWithDateFilterStep = ({
   const [noSubTypesAvailable, setNoSubTypesAvailable] = useState(false);
   const [availableTypes, setAvailableTypes] = useState<DocumentType[]>([]);
 
+  // Helper function to format date for API
+  const formatDateForAPI = (date: string) => {
+    const dateObj = new Date(date);
+    return dateObj.toISOString();
+  };
+
   // Custom select state
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [subtypeDropdownOpen, setSubtypeDropdownOpen] = useState(false);
@@ -115,8 +121,7 @@ export const TypeSelectionWithDateFilterStep = ({
         setIsLoadingTypes(true);
 
         // Format date correctly for API - needs exact ISO format
-        const dateObj = new Date(documentDate);
-        const formattedDate = dateObj.toISOString();
+        const formattedDate = formatDateForAPI(documentDate);
 
         console.log(`Filtering document types for date: ${formattedDate}`);
 
@@ -233,8 +238,7 @@ export const TypeSelectionWithDateFilterStep = ({
       const fetchSubTypesForDate = async () => {
         try {
           // Format date correctly for API call
-          const dateObj = new Date(documentDate);
-          const formattedDate = dateObj.toISOString();
+          const formattedDate = formatDateForAPI(documentDate);
 
           console.log(
             `Fetching series for document type ${selectedTypeId} with date ${formattedDate}`
