@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
-using Microsoft.AspNetCore.Authorization;
 using DocManagementBackend.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DocManagementBackend.Controllers
 {
@@ -13,11 +13,16 @@ namespace DocManagementBackend.Controllers
     public class LignesElementTypeController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly LineElementService _lineElementService;
         private readonly UserAuthorizationService _authService;
 
-        public LignesElementTypeController(ApplicationDbContext context, UserAuthorizationService authService)
+        public LignesElementTypeController(
+            ApplicationDbContext context, 
+            LineElementService lineElementService,
+            UserAuthorizationService authService)
         {
             _context = context;
+            _lineElementService = lineElementService;
             _authService = authService;
         }
 
@@ -25,20 +30,26 @@ namespace DocManagementBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LignesElementTypeDto>>> GetLignesElementTypes()
         {
-            var elementTypes = await _context.LignesElementTypes
-                .Select(let => new LignesElementTypeDto
-                {
-                    Id = let.Id,
-                    TypeElement = let.TypeElement,
-                    Description = let.Description,
-                    TableName = let.TableName,
-                    CreatedAt = let.CreatedAt,
-                    UpdatedAt = let.UpdatedAt
-                })
-                .OrderBy(let => let.TypeElement)
-                .ToListAsync();
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
 
-            return Ok(elementTypes);
+            var elementTypes = await _lineElementService.GetAllElementTypesAsync();
+            
+            var dtos = elementTypes.Select(let => new LignesElementTypeDto
+            {
+                Id = let.Id,
+                Code = let.Code,
+                TypeElement = let.TypeElement,
+                Description = let.Description,
+                TableName = let.TableName,
+                ItemCode = let.ItemCode,
+                AccountCode = let.AccountCode,
+                CreatedAt = let.CreatedAt,
+                UpdatedAt = let.UpdatedAt
+            }).ToList();
+
+            return Ok(dtos);
         }
 
         // GET: api/LignesElementType/simple
@@ -50,36 +61,72 @@ namespace DocManagementBackend.Controllers
                 .Select(let => new LignesElementTypeSimpleDto
                 {
                     Id = let.Id,
+                    Code = let.Code,
                     TypeElement = let.TypeElement,
                     Description = let.Description
                 })
-                .OrderBy(let => let.TypeElement)
+                .OrderBy(let => let.Code)
                 .ToListAsync();
 
             return Ok(elementTypes);
+        }
+
+        // GET: api/LignesElementType/by-type/Item
+        [HttpGet("by-type/{typeElement}")]
+        public async Task<ActionResult<IEnumerable<LignesElementTypeDto>>> GetLignesElementTypesByType(string typeElement)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var elementTypes = await _lineElementService.GetElementTypesByTypeAsync(typeElement);
+            
+            var dtos = elementTypes.Select(let => new LignesElementTypeDto
+            {
+                Id = let.Id,
+                Code = let.Code,
+                TypeElement = let.TypeElement,
+                Description = let.Description,
+                TableName = let.TableName,
+                ItemCode = let.ItemCode,
+                AccountCode = let.AccountCode,
+                CreatedAt = let.CreatedAt,
+                UpdatedAt = let.UpdatedAt
+            }).ToList();
+
+            return Ok(dtos);
         }
 
         // GET: api/LignesElementType/5
         [HttpGet("{id}")]
         public async Task<ActionResult<LignesElementTypeDto>> GetLignesElementType(int id)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             var elementType = await _context.LignesElementTypes
-                .Where(let => let.Id == id)
-                .Select(let => new LignesElementTypeDto
-                {
-                    Id = let.Id,
-                    TypeElement = let.TypeElement,
-                    Description = let.Description,
-                    TableName = let.TableName,
-                    CreatedAt = let.CreatedAt,
-                    UpdatedAt = let.UpdatedAt
-                })
-                .FirstOrDefaultAsync();
+                .Include(let => let.Item).ThenInclude(i => i!.UniteCodeNavigation)
+                .Include(let => let.GeneralAccount)
+                .FirstOrDefaultAsync(let => let.Id == id);
 
             if (elementType == null)
-                return NotFound("Element type not found.");
+                return NotFound("Line element type not found.");
 
-            return Ok(elementType);
+            var dto = new LignesElementTypeDto
+            {
+                Id = elementType.Id,
+                Code = elementType.Code,
+                TypeElement = elementType.TypeElement,
+                Description = elementType.Description,
+                TableName = elementType.TableName,
+                ItemCode = elementType.ItemCode,
+                AccountCode = elementType.AccountCode,
+                CreatedAt = elementType.CreatedAt,
+                UpdatedAt = elementType.UpdatedAt
+            };
+
+            return Ok(dto);
         }
 
         // POST: api/LignesElementType
@@ -90,30 +137,37 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
+            if (string.IsNullOrWhiteSpace(request.Code))
+                return BadRequest("Code is required.");
+
             if (string.IsNullOrWhiteSpace(request.TypeElement))
                 return BadRequest("TypeElement is required.");
 
             if (string.IsNullOrWhiteSpace(request.Description))
                 return BadRequest("Description is required.");
 
-            if (string.IsNullOrWhiteSpace(request.TableName))
-                return BadRequest("TableName is required.");
+            // Check if code already exists
+            var existingCode = await _context.LignesElementTypes
+                .AnyAsync(let => let.Code.ToUpper() == request.Code.ToUpper());
 
-            // Check if TypeElement already exists
-            var existingType = await _context.LignesElementTypes
-                .AnyAsync(let => let.TypeElement.ToUpper() == request.TypeElement.ToUpper());
-
-            if (existingType)
-                return BadRequest("An element type with this name already exists.");
+            if (existingCode)
+                return BadRequest("A line element type with this code already exists.");
 
             var elementType = new LignesElementType
             {
+                Code = request.Code.ToUpper().Trim(),
                 TypeElement = request.TypeElement.Trim(),
                 Description = request.Description.Trim(),
-                TableName = request.TableName.Trim(),
+                TableName = request.TableName?.Trim() ?? string.Empty,
+                ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim(),
+                AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
+
+            // Validate the element type
+            if (!await _lineElementService.ValidateElementTypeAsync(elementType))
+                return BadRequest("Invalid line element type configuration. Please check the type and referenced codes.");
 
             _context.LignesElementTypes.Add(elementType);
 
@@ -124,9 +178,12 @@ namespace DocManagementBackend.Controllers
                 var createdDto = new LignesElementTypeDto
                 {
                     Id = elementType.Id,
+                    Code = elementType.Code,
                     TypeElement = elementType.TypeElement,
                     Description = elementType.Description,
                     TableName = elementType.TableName,
+                    ItemCode = elementType.ItemCode,
+                    AccountCode = elementType.AccountCode,
                     CreatedAt = elementType.CreatedAt,
                     UpdatedAt = elementType.UpdatedAt
                 };
@@ -136,9 +193,91 @@ namespace DocManagementBackend.Controllers
             catch (DbUpdateException ex)
             {
                 if (ex.InnerException != null && ex.InnerException.Message.Contains("UNIQUE"))
-                    return BadRequest("An element type with this name already exists.");
+                    return BadRequest("A line element type with this code already exists.");
                 
-                return StatusCode(500, $"An error occurred while creating the element type: {ex.Message}");
+                return StatusCode(500, $"An error occurred while creating the line element type: {ex.Message}");
+            }
+        }
+
+        // POST: api/LignesElementType/for-item/{itemCode}
+        [HttpPost("for-item/{itemCode}")]
+        public async Task<ActionResult<LignesElementTypeDto>> CreateElementTypeForItem(string itemCode)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var elementType = await _lineElementService.GetOrCreateItemElementTypeAsync(itemCode);
+
+                var dto = new LignesElementTypeDto
+                {
+                    Id = elementType.Id,
+                    Code = elementType.Code,
+                    TypeElement = elementType.TypeElement,
+                    Description = elementType.Description,
+                    TableName = elementType.TableName,
+                    ItemCode = elementType.ItemCode,
+                    AccountCode = elementType.AccountCode,
+                    CreatedAt = elementType.CreatedAt,
+                    UpdatedAt = elementType.UpdatedAt
+                };
+
+                return Ok(dto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        // POST: api/LignesElementType/for-account/{accountCode}
+        [HttpPost("for-account/{accountCode}")]
+        public async Task<ActionResult<LignesElementTypeDto>> CreateElementTypeForAccount(string accountCode)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var elementType = await _lineElementService.GetOrCreateGeneralAccountElementTypeAsync(accountCode);
+
+                var dto = new LignesElementTypeDto
+                {
+                    Id = elementType.Id,
+                    Code = elementType.Code,
+                    TypeElement = elementType.TypeElement,
+                    Description = elementType.Description,
+                    TableName = elementType.TableName,
+                    ItemCode = elementType.ItemCode,
+                    AccountCode = elementType.AccountCode,
+                    CreatedAt = elementType.CreatedAt,
+                    UpdatedAt = elementType.UpdatedAt
+                };
+
+                return Ok(dto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
 
@@ -152,34 +291,54 @@ namespace DocManagementBackend.Controllers
 
             var elementType = await _context.LignesElementTypes.FindAsync(id);
             if (elementType == null)
-                return NotFound("Element type not found.");
+                return NotFound("Line element type not found.");
 
-            // Update TypeElement if provided
+            // Update fields if provided
+            if (!string.IsNullOrWhiteSpace(request.Code))
+            {
+                // Check if new code already exists
+                var existingCode = await _context.LignesElementTypes
+                    .AnyAsync(let => let.Code.ToUpper() == request.Code.ToUpper() && let.Id != id);
+
+                if (existingCode)
+                    return BadRequest("A line element type with this code already exists.");
+
+                elementType.Code = request.Code.ToUpper().Trim();
+            }
+
             if (!string.IsNullOrWhiteSpace(request.TypeElement))
             {
-                var newTypeElement = request.TypeElement.Trim();
-                if (newTypeElement != elementType.TypeElement)
+                elementType.TypeElement = request.TypeElement.Trim();
+                
+                // Clear opposite foreign key fields based on new type
+                if (elementType.TypeElement == "Item")
                 {
-                    // Check if new TypeElement already exists
-                    var existingType = await _context.LignesElementTypes
-                        .AnyAsync(let => let.TypeElement.ToUpper() == newTypeElement.ToUpper() && let.Id != id);
-
-                    if (existingType)
-                        return BadRequest("An element type with this name already exists.");
-
-                    elementType.TypeElement = newTypeElement;
+                    elementType.AccountCode = null; // Clear account code when switching to Item
+                }
+                else if (elementType.TypeElement == "General Accounts")
+                {
+                    elementType.ItemCode = null; // Clear item code when switching to General Accounts
                 }
             }
 
-            // Update Description if provided
             if (!string.IsNullOrWhiteSpace(request.Description))
                 elementType.Description = request.Description.Trim();
 
-            // Update TableName if provided
             if (!string.IsNullOrWhiteSpace(request.TableName))
                 elementType.TableName = request.TableName.Trim();
 
+            // Update foreign key fields only if explicitly provided and matches the type
+            if (request.ItemCode != null && elementType.TypeElement == "Item")
+                elementType.ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim();
+
+            if (request.AccountCode != null && elementType.TypeElement == "General Accounts")
+                elementType.AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim();
+
             elementType.UpdatedAt = DateTime.UtcNow;
+
+            // Validate the updated element type
+            if (!await _lineElementService.ValidateElementTypeAsync(elementType))
+                return BadRequest("Invalid line element type configuration. Please check the type and referenced codes.");
 
             try
             {
@@ -189,9 +348,9 @@ namespace DocManagementBackend.Controllers
             catch (DbUpdateException ex)
             {
                 if (ex.InnerException != null && ex.InnerException.Message.Contains("UNIQUE"))
-                    return BadRequest("An element type with this name already exists.");
+                    return BadRequest("A line element type with this code already exists.");
                 
-                return StatusCode(500, $"An error occurred while updating the element type: {ex.Message}");
+                return StatusCode(500, $"An error occurred while updating the line element type: {ex.Message}");
             }
         }
 
@@ -203,28 +362,18 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var elementType = await _context.LignesElementTypes
-                .Include(let => let.Lignes)
-                .FirstOrDefaultAsync(let => let.Id == id);
-
-            if (elementType == null)
-                return NotFound("Element type not found.");
-
-            // Check if there are lines associated
-            if (elementType.Lignes.Any())
-                return BadRequest("Cannot delete element type. There are lines associated with it.");
-
-            _context.LignesElementTypes.Remove(elementType);
-
-            try
+            var success = await _lineElementService.DeleteElementTypeAsync(id);
+            
+            if (!success)
             {
-                await _context.SaveChangesAsync();
-                return NoContent();
+                var elementType = await _context.LignesElementTypes.FindAsync(id);
+                if (elementType == null)
+                    return NotFound("Line element type not found.");
+                
+                return BadRequest("Cannot delete line element type. There are lines associated with it.");
             }
-            catch (DbUpdateException ex)
-            {
-                return StatusCode(500, $"An error occurred while deleting the element type: {ex.Message}");
-            }
+
+            return NoContent();
         }
     }
 } 

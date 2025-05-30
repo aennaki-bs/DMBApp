@@ -19,11 +19,11 @@ namespace DocManagementBackend.Models
         
         public int SousLignesCount { get; set; }
         
-        // Type information
-        public int? TypeId { get; set; }
-        public LignesElementTypeDto? Type { get; set; }
+        // LignesElementType reference (new normalized structure)
+        public int? LignesElementTypeId { get; set; }
+        public LignesElementTypeDto? LignesElementType { get; set; }
         
-        // Element references
+        // Element references (computed properties from LignesElementType)
         public string? ItemCode { get; set; }
         public ItemDto? Item { get; set; }
         public string? GeneralAccountsCode { get; set; }

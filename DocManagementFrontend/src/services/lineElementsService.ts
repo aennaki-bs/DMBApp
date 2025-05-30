@@ -182,6 +182,19 @@ export const uniteCodeService = {
     }
   },
 
+  validateCode: async (code: string, excludeCode?: string): Promise<boolean> => {
+    try {
+      const response = await api.post('/UniteCode/validate-code', { 
+        code,
+        excludeCode 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error validating unite code:', error);
+      throw error;
+    }
+  },
+
   create: async (request: CreateUniteCodeRequest): Promise<UniteCode> => {
     try {
       const response = await api.post('/UniteCode', request);

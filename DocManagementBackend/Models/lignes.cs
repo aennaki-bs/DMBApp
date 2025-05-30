@@ -18,17 +18,12 @@ namespace DocManagementBackend.Models {
         [Obsolete("Use PriceHT instead")]
         public float Prix { get; set; }
         public int SousLigneCounter { get; set; } = 0;
-        public int? TypeId { get; set; }
-        [ForeignKey("TypeId")]
-        public LignesElementType? Type { get; set; }
-        [MaxLength(50)]
-        public string? ItemCode { get; set; }
-        [ForeignKey("ItemCode")]
-        public Item? Item { get; set; }
-        [MaxLength(50)]
-        public string? GeneralAccountsCode { get; set; }
-        [ForeignKey("GeneralAccountsCode")]
-        public GeneralAccounts? GeneralAccounts { get; set; }
+        
+        // Reference to line element via LignesElementType
+        public int? LignesElementTypeId { get; set; }
+        [ForeignKey("LignesElementTypeId")]
+        public LignesElementType? LignesElementType { get; set; }
+        
         [Column(TypeName = "decimal(18,4)")]
         public decimal Quantity { get; set; } = 1;
         [Column(TypeName = "decimal(18,4)")]
@@ -39,6 +34,17 @@ namespace DocManagementBackend.Models {
         public decimal? DiscountAmount { get; set; }
         [Column(TypeName = "decimal(5,4)")]
         public decimal VatPercentage { get; set; } = 0;
+        
+        // Computed properties for accessing element data through LignesElementType
+        [NotMapped]
+        public Item? Item => LignesElementType?.Item;
+        
+        [NotMapped]
+        public GeneralAccounts? GeneralAccount => LignesElementType?.GeneralAccount;
+        
+        [NotMapped]
+        public UniteCode? UniteCode => LignesElementType?.Item?.UniteCodeNavigation;
+        
         [NotMapped]
         public decimal AmountHT
         {

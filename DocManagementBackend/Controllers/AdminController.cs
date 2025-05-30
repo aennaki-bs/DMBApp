@@ -51,7 +51,7 @@ namespace DocManagementBackend.Controllers
             
             var unassignedUsers = await _context.Users
                 .Include(u => u.Role)
-                .Where(u => u.Id != userId && u.ResponsibilityCentreId == null)
+                .Where(u => u.ResponsibilityCentreId == null)
                 .Select(UserMappings.ToUserDto)
                 .OrderBy(u => u.Username)
                 .ToListAsync();

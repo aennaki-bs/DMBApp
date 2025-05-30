@@ -4,25 +4,34 @@ namespace DocManagementBackend.Models
     public class LignesElementTypeDto
     {
         public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
         public string TypeElement { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string TableName { get; set; } = string.Empty;
+        public string? ItemCode { get; set; }
+        public string? AccountCode { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
 
     public class CreateLignesElementTypeRequest
     {
+        public string Code { get; set; } = string.Empty;
         public string TypeElement { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string TableName { get; set; } = string.Empty;
+        public string? ItemCode { get; set; }
+        public string? AccountCode { get; set; }
     }
 
     public class UpdateLignesElementTypeRequest
     {
+        public string? Code { get; set; }
         public string? TypeElement { get; set; }
         public string? Description { get; set; }
         public string? TableName { get; set; }
+        public string? ItemCode { get; set; }
+        public string? AccountCode { get; set; }
     }
 
     // Item DTOs
@@ -34,7 +43,7 @@ namespace DocManagementBackend.Models
         public UniteCodeDto? UniteCodeNavigation { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public int LignesCount { get; set; }
+        public int ElementTypesCount { get; set; }
     }
 
     public class CreateItemRequest
@@ -68,7 +77,14 @@ namespace DocManagementBackend.Models
 
     public class UpdateUniteCodeRequest
     {
+        public string? Code { get; set; }
         public string? Description { get; set; }
+    }
+
+    public class ValidateUniteCodeRequest
+    {
+        public string Code { get; set; } = string.Empty;
+        public string? ExcludeCode { get; set; }
     }
 
     // GeneralAccounts DTOs
@@ -92,7 +108,7 @@ namespace DocManagementBackend.Models
         public string? Description { get; set; }
     }
 
-    // Enhanced Ligne request DTOs
+    // Enhanced Ligne request DTOs (updated for new structure)
     public class CreateLigneRequest
     {
         public int DocumentId { get; set; }
@@ -100,10 +116,8 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string Article { get; set; } = string.Empty;
         
-        // Type and element references
-        public int? TypeId { get; set; }
-        public string? ItemCode { get; set; }
-        public string? GeneralAccountsCode { get; set; }
+        // Reference to line element via LignesElementType
+        public int? LignesElementTypeId { get; set; }
         
         // Pricing fields
         public decimal Quantity { get; set; } = 1;
@@ -119,10 +133,8 @@ namespace DocManagementBackend.Models
         public string? Title { get; set; }
         public string? Article { get; set; }
         
-        // Type and element references
-        public int? TypeId { get; set; }
-        public string? ItemCode { get; set; }
-        public string? GeneralAccountsCode { get; set; }
+        // Reference to line element via LignesElementType
+        public int? LignesElementTypeId { get; set; }
         
         // Pricing fields
         public decimal? Quantity { get; set; }
@@ -136,6 +148,7 @@ namespace DocManagementBackend.Models
     public class LignesElementTypeSimpleDto
     {
         public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
         public string TypeElement { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
     }

@@ -18,10 +18,14 @@ import {
   Bell,
   Building2,
   Box,
+  Tag,
+  Package,
+  Hash,
+  Calculator,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import approvalService from "@/services/approvalService";
 
@@ -31,19 +35,20 @@ export function SidebarNav() {
   const isAdmin = user?.role === "Admin";
   const isSimpleUser = user?.role === "SimpleUser";
 
-  // State for the approval submenu
-  const [approvalMenuOpen, setApprovalMenuOpen] = useState(false);
-
-  // Fetch pending approvals count
-  const { data: pendingApprovals = [] } = useQuery({
-    queryKey: ["pendingApprovals"],
-    queryFn: () => approvalService.getPendingApprovals(),
-    enabled: !!user?.userId && !isSimpleUser,
-  });
-
   const isActive = (path: string) => {
     return (
       location.pathname === path || location.pathname.startsWith(path + "/")
+    );
+  };
+
+  // Check if any line elements-related route is active
+  const isLineElementsActive = () => {
+    return (
+      isActive("/line-elements-management") ||
+      isActive("/line-elements/element-types") ||
+      isActive("/line-elements/items") ||
+      isActive("/line-elements/unit-codes") ||
+      isActive("/line-elements/general-accounts")
     );
   };
 
@@ -55,6 +60,24 @@ export function SidebarNav() {
       isActive("/pending-approvals")
     );
   };
+
+  // State for the approval submenu
+  const [approvalMenuOpen, setApprovalMenuOpen] = useState(isApprovalActive());
+  // State for the line elements submenu - open by default if on a line elements page
+  const [lineElementsMenuOpen, setLineElementsMenuOpen] = useState(isLineElementsActive());
+
+  // Update submenu states when location changes
+  useEffect(() => {
+    setApprovalMenuOpen(isApprovalActive());
+    setLineElementsMenuOpen(isLineElementsActive());
+  }, [location.pathname]);
+
+  // Fetch pending approvals count
+  const { data: pendingApprovals = [] } = useQuery({
+    queryKey: ["pendingApprovals"],
+    queryFn: () => approvalService.getPendingApprovals(),
+    enabled: !!user?.userId && !isSimpleUser,
+  });
 
   return (
     <div className="h-full w-full bg-[#0a1033]/95 backdrop-blur-lg border-r border-blue-900/30 overflow-y-auto">
@@ -154,19 +177,84 @@ export function SidebarNav() {
                 </Link>
               </li>
 
-              {/* Line Elements Management */}
+              {/* Line Elements Section with submenu */}
               <li>
-                <Link
-                  to="/line-elements-management"
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/line-elements-management")
+                <button
+                  onClick={() => setLineElementsMenuOpen(!lineElementsMenuOpen)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isLineElementsActive()
                       ? "bg-blue-600/40 text-blue-200"
                       : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                   }`}
                 >
-                  <Box className="h-5 w-5" />
-                  <span>Line Elements</span>
-                </Link>
+                  <div className="flex items-center gap-2">
+                    <Box className="h-5 w-5" />
+                    <span>Line Elements</span>
+                  </div>
+                  {lineElementsMenuOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+
+                {/* Submenu for Line Elements section */}
+                {lineElementsMenuOpen && (
+                  <ul className="ml-6 mt-1 space-y-1 border-l-2 border-blue-900/30 pl-2">
+                    <li>
+                      <Link
+                        to="/line-elements-management?tab=elementtypes"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/line-elements-management") && new URLSearchParams(location.search).get('tab') === 'elementtypes'
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <Tag className="h-4 w-4" />
+                        <span>Element Types</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/line-elements-management?tab=items"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/line-elements-management") && new URLSearchParams(location.search).get('tab') === 'items'
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <Package className="h-4 w-4" />
+                        <span>Items</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/line-elements-management?tab=unitecodes"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/line-elements-management") && new URLSearchParams(location.search).get('tab') === 'unitecodes'
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <Hash className="h-4 w-4" />
+                        <span>Unit Codes</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/line-elements-management?tab=generalaccounts"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/line-elements-management") && new URLSearchParams(location.search).get('tab') === 'generalaccounts'
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <Calculator className="h-4 w-4" />
+                        <span>General Accounts</span>
+                      </Link>
+                    </li>
+                  </ul>
+                )}
               </li>
 
               {/* Circuits */}

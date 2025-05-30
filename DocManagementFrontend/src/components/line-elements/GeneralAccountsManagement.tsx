@@ -58,6 +58,7 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<GeneralAccounts | null>(null);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
 
@@ -214,7 +215,7 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
     try {
       await lineElementsService.generalAccounts.delete(selectedAccount.code);
       toast.success('General account deleted successfully');
-      setIsEditDialogOpen(false);
+      setIsDeleteDialogOpen(false);
       setSelectedAccount(null);
       fetchData();
     } catch (error: any) {
@@ -234,7 +235,7 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
 
   const openDeleteDialog = (account: GeneralAccounts) => {
     setSelectedAccount(account);
-    setIsEditDialogOpen(true);
+    setIsDeleteDialogOpen(true);
   };
 
   const handleSort = (field: keyof GeneralAccounts) => {

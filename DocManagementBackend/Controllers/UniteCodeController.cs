@@ -32,7 +32,7 @@ namespace DocManagementBackend.Controllers
                     Description = uc.Description,
                     CreatedAt = uc.CreatedAt,
                     UpdatedAt = uc.UpdatedAt,
-                    ItemsCount = uc.Items.Count()
+                    ItemsCount = uc.ItemsCount
                 })
                 .OrderBy(uc => uc.Code)
                 .ToListAsync();
@@ -69,7 +69,7 @@ namespace DocManagementBackend.Controllers
                     Description = uc.Description,
                     CreatedAt = uc.CreatedAt,
                     UpdatedAt = uc.UpdatedAt,
-                    ItemsCount = uc.Items.Count()
+                    ItemsCount = uc.ItemsCount
                 })
                 .FirstOrDefaultAsync();
 
@@ -77,6 +77,26 @@ namespace DocManagementBackend.Controllers
                 return NotFound("Unite code not found.");
 
             return Ok(uniteCode);
+        }
+
+        // POST: api/UniteCode/validate-code
+        [HttpPost("validate-code")]
+        public async Task<IActionResult> ValidateCode([FromBody] ValidateUniteCodeRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Code))
+                return BadRequest("Code is required.");
+
+            var query = _context.UniteCodes.AsQueryable();
+            
+            // Exclude the current code if provided (for edit scenarios)
+            if (!string.IsNullOrWhiteSpace(request.ExcludeCode))
+            {
+                query = query.Where(uc => uc.Code.ToUpper() != request.ExcludeCode.ToUpper());
+            }
+
+            var exists = await query.AnyAsync(uc => uc.Code.ToUpper() == request.Code.ToUpper());
+
+            return Ok(!exists);
         }
 
         // POST: api/UniteCode
@@ -142,11 +162,71 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var uniteCode = await _context.UniteCodes.FindAsync(code);
+            var uniteCode = await _context.UniteCodes
+                .Include(uc => uc.Items)
+                .FirstOrDefaultAsync(uc => uc.Code == code);
+                
             if (uniteCode == null)
                 return NotFound("Unite code not found.");
 
-            // Update Description if provided
+            // If changing the code, we need to create a new entity and update references
+            if (!string.IsNullOrWhiteSpace(request.Code) && 
+                request.Code.ToUpper() != uniteCode.Code.ToUpper())
+            {
+                var newCode = request.Code.ToUpper().Trim();
+                
+                // Check for uniqueness
+                var existingCode = await _context.UniteCodes
+                    .AnyAsync(uc => uc.Code.ToUpper() == newCode);
+
+                if (existingCode)
+                    return BadRequest("A unite code with this code already exists.");
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    // Create new UniteCode entity
+                    var newUniteCode = new UniteCode
+                    {
+                        Code = newCode,
+                        Description = !string.IsNullOrWhiteSpace(request.Description) 
+                            ? request.Description.Trim() 
+                            : uniteCode.Description,
+                        CreatedAt = uniteCode.CreatedAt,
+                        UpdatedAt = DateTime.UtcNow,
+                        ItemsCount = uniteCode.ItemsCount
+                    };
+
+                    _context.UniteCodes.Add(newUniteCode);
+                    await _context.SaveChangesAsync();
+
+                    // Update all Items that reference the old code
+                    var itemsToUpdate = await _context.Items
+                        .Where(i => i.Unite == uniteCode.Code)
+                        .ToListAsync();
+
+                    foreach (var item in itemsToUpdate)
+                    {
+                        item.Unite = newCode;
+                        item.UpdatedAt = DateTime.UtcNow;
+                    }
+
+                    // Remove the old UniteCode
+                    _context.UniteCodes.Remove(uniteCode);
+                    
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return NoContent();
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+
+            // If only updating description (no code change)
             if (!string.IsNullOrWhiteSpace(request.Description))
                 uniteCode.Description = request.Description.Trim();
 

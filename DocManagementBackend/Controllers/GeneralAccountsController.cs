@@ -32,7 +32,7 @@ namespace DocManagementBackend.Controllers
                     Description = ga.Description,
                     CreatedAt = ga.CreatedAt,
                     UpdatedAt = ga.UpdatedAt,
-                    LignesCount = ga.Lignes.Count()
+                    LignesCount = ga.LinesCount
                 })
                 .OrderBy(ga => ga.Code)
                 .ToListAsync();
@@ -69,7 +69,7 @@ namespace DocManagementBackend.Controllers
                     Description = ga.Description,
                     CreatedAt = ga.CreatedAt,
                     UpdatedAt = ga.UpdatedAt,
-                    LignesCount = ga.Lignes.Count()
+                    LignesCount = ga.LinesCount
                 })
                 .FirstOrDefaultAsync();
 
@@ -172,14 +172,14 @@ namespace DocManagementBackend.Controllers
                 return authResult.ErrorResponse!;
 
             var account = await _context.GeneralAccounts
-                .Include(ga => ga.Lignes)
+                .Include(ga => ga.LignesElementTypes)
                 .FirstOrDefaultAsync(ga => ga.Code == code);
 
             if (account == null)
                 return NotFound("General account not found.");
 
             // Check if there are lines associated
-            if (account.Lignes.Any())
+            if (account.LignesElementTypes.Any())
                 return BadRequest("Cannot delete general account. There are lines associated with it.");
 
             _context.GeneralAccounts.Remove(account);

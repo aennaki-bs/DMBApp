@@ -36,10 +36,13 @@ import * as z from 'zod';
 import lineElementsService from '@/services/lineElementsService';
 import { Item, UniteCode, LignesElementType, CreateItemRequest, UpdateItemRequest } from '@/models/lineElements';
 
-// Form validation schema
+// Import the new wizard component
+import CreateItemWizard from './CreateItemWizard';
+
+// Form validation schema for edit form
 const itemSchema = z.object({
   code: z.string().min(1, 'Code is required').max(50, 'Code must be 50 characters or less'),
-  description: z.string().min(1, 'Description is required').max(255, 'Description must be 255 characters or less'),
+  description: z.string().max(255, 'Description must be 255 characters or less').optional(),
   unite: z.string().min(1, 'Unit code is required'),
 });
 
@@ -64,16 +67,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   const [localSearchTerm, setLocalSearchTerm] = useState('');
   const [selectedUniteFilter, setSelectedUniteFilter] = useState<string>('all');
 
-  // Form state
-  const form = useForm<ItemFormData>({
-    resolver: zodResolver(itemSchema),
-    defaultValues: {
-      code: '',
-      description: '',
-      unite: '',
-    },
-  });
-
+  // Edit form state
   const editForm = useForm<ItemFormData>({
     resolver: zodResolver(itemSchema),
     defaultValues: {
@@ -151,25 +145,6 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
 
     return filtered;
   }, [items, searchTerm, localSearchTerm, selectedUniteFilter, sortField, sortDirection]);
-
-  const handleCreateItem = async (data: ItemFormData) => {
-    try {
-      const createRequest: CreateItemRequest = {
-        code: data.code.trim(),
-        description: data.description.trim(),
-        unite: data.unite,
-      };
-      
-      await lineElementsService.items.create(createRequest);
-      toast.success('Item created successfully');
-      setIsCreateDialogOpen(false);
-      form.reset();
-      fetchData();
-    } catch (error) {
-      console.error('Failed to create item:', error);
-      toast.error('Failed to create item');
-    }
-  };
 
   const handleEditItem = async (data: ItemFormData) => {
     if (!selectedItem) return;
@@ -293,104 +268,13 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
-              <DialogHeader>
-                <DialogTitle className="text-xl text-blue-100 flex items-center">
-                  <Package className="mr-2 h-5 w-5 text-blue-400" />
-                  Create New Item
-                </DialogTitle>
-                <DialogDescription className="text-blue-300">
-                  Add a new physical item or product to the system.
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleCreateItem)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="code"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-200">Code</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter item code" 
-                            {...field} 
-                            className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-200">Description</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter item description" 
-                            {...field} 
-                            className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="unite"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-200">Unit Code</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white focus:border-blue-500 focus:ring-blue-500">
-                              <SelectValue placeholder="Select a unit code" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
-                            <SelectItem value="">No unit</SelectItem>
-                            {uniteCodes.map((unit) => (
-                              <SelectItem key={unit.code} value={unit.code} className="text-white hover:bg-blue-900/30">
-                                {unit.code} - {unit.description}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsCreateDialogOpen(false)}
-                      className="border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200"
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Create Item
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Item
+          </Button>
         </div>
       </div>
 
@@ -519,7 +403,6 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                     </div>
                   </TableHead>
                   <TableHead className="text-blue-300">Unit</TableHead>
-                  <TableHead className="text-blue-300">Lines Count</TableHead>
                   <TableHead className="text-blue-300 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -571,24 +454,19 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                           <span className="text-blue-400 text-xs italic">No unit</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-blue-200">
-                        <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-900/20">
-                          {item.lignesCount || 0} lines
-                        </Badge>
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(item)}
-                            disabled={item.lignesCount > 0}
+                            disabled={item.elementTypesCount > 0}
                             className={`${
-                              item.lignesCount > 0 
+                              item.elementTypesCount > 0 
                                 ? 'opacity-50 cursor-not-allowed text-gray-400' 
                                 : 'hover:bg-blue-50 hover:text-blue-700'
                             }`}
-                            title={item.lignesCount > 0 ? 'Cannot edit: Item is used in document lines' : 'Edit item'}
+                            title={item.elementTypesCount > 0 ? 'Cannot edit: Item is referenced by element types' : 'Edit item'}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -596,13 +474,13 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => openDeleteDialog(item)}
-                            disabled={item.lignesCount > 0}
+                            disabled={item.elementTypesCount > 0}
                             className={`${
-                              item.lignesCount > 0 
+                              item.elementTypesCount > 0 
                                 ? 'opacity-50 cursor-not-allowed text-gray-400' 
                                 : 'text-red-600 hover:text-red-700 hover:bg-red-50'
                             }`}
-                            title={item.lignesCount > 0 ? 'Cannot delete: Item is used in document lines' : 'Delete item'}
+                            title={item.elementTypesCount > 0 ? 'Cannot delete: Item is referenced by element types' : 'Delete item'}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -654,10 +532,10 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Description</FormLabel>
+                    <FormLabel className="text-blue-200">Description (Optional)</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Enter item description" 
+                        placeholder="Enter item description (optional)" 
                         {...field} 
                         className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
                       />
@@ -671,7 +549,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 name="unite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Unit Code</FormLabel>
+                    <FormLabel className="text-blue-200">Unit Code *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white focus:border-blue-500 focus:ring-blue-500">
@@ -731,10 +609,10 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               <p className="text-blue-200">
                 <strong>Description:</strong> {selectedItem.description}
               </p>
-              {selectedItem.lignesCount > 0 && (
+              {selectedItem.elementTypesCount > 0 && (
                 <p className="text-red-400 mt-2 flex items-center">
                   <AlertTriangle className="mr-1 h-4 w-4" />
-                  This item is used in {selectedItem.lignesCount} document lines and cannot be deleted.
+                  This item is referenced by {selectedItem.elementTypesCount} element types and cannot be deleted.
                 </p>
               )}
             </div>
@@ -750,7 +628,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
             <Button 
               variant="destructive" 
               onClick={handleDeleteItem}
-              disabled={selectedItem?.lignesCount > 0}
+              disabled={selectedItem?.elementTypesCount > 0}
               className="bg-red-900/30 text-red-300 hover:bg-red-900/50 hover:text-red-200 border border-red-500/30 hover:border-red-400/50"
             >
               Delete Item
@@ -758,6 +636,17 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Create Item Wizard */}
+      <CreateItemWizard
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSuccess={() => {
+          setIsCreateDialogOpen(false);
+          fetchData();
+        }}
+        uniteCodes={uniteCodes}
+      />
     </div>
   );
 };

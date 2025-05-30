@@ -25,7 +25,10 @@ namespace DocManagementBackend.Controllers
             if (!int.TryParse(userIdClaim, out var userId))
                 return BadRequest("Invalid user ID.");
 
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.ResponsibilityCentre)
+                .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return NotFound("User not found.");
             if (!user.IsActive)
@@ -39,7 +42,12 @@ namespace DocManagementBackend.Controllers
                 firstName = user.FirstName, lastName = user.LastName,
                 profilePicture = picture, isActive = user.IsActive,
                 address = user.Address, city = user.City, country = user.Country,
-                phoneNumber = user.PhoneNumber, isOnline = user.IsOnline, //isBlocked = user.IsBlocked,
+                phoneNumber = user.PhoneNumber, isOnline = user.IsOnline,
+                responsibilityCenter = user.ResponsibilityCentre != null ? new {
+                    id = user.ResponsibilityCentre.Id,
+                    code = user.ResponsibilityCentre.Code,
+                    descr = user.ResponsibilityCentre.Descr
+                } : null,
             };
 
             return Ok(userInfo);

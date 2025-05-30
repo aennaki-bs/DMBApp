@@ -35,9 +35,8 @@ namespace DocManagementBackend.Controllers
             var lignes = await _context.Lignes
                 .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Include(l => l.Type)
-                .Include(l => l.Item).ThenInclude(i => i!.UniteCodeNavigation)
-                .Include(l => l.GeneralAccounts)
+                .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
+                .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
                 .Select(LigneMappings.ToLigneDto).ToListAsync();
             return Ok(lignes);
         }
@@ -52,9 +51,8 @@ namespace DocManagementBackend.Controllers
             var ligneDto = await _context.Lignes
                 .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Include(l => l.Type)
-                .Include(l => l.Item).ThenInclude(i => i!.UniteCodeNavigation)
-                .Include(l => l.GeneralAccounts)
+                .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
+                .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
                 .Where(l => l.Id == id).Select(LigneMappings.ToLigneDto).FirstOrDefaultAsync();
             if (ligneDto == null)
                 return NotFound("Ligne not found.");
@@ -72,9 +70,8 @@ namespace DocManagementBackend.Controllers
                 .Where(l => l.DocumentId == documentId)
                 .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Include(l => l.Type)
-                .Include(l => l.Item).ThenInclude(i => i!.UniteCodeNavigation)
-                .Include(l => l.GeneralAccounts)
+                .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
+                .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
                 .Select(LigneMappings.ToLigneDto).ToListAsync();
             return Ok(lignes);
         }
@@ -104,37 +101,20 @@ namespace DocManagementBackend.Controllers
             if (document == null)
                 return BadRequest("Invalid DocumentId. Document not found.");
 
-            // Validate element type and references
-            if (request.TypeId.HasValue)
+            // Validate LignesElementType if provided
+            if (request.LignesElementTypeId.HasValue)
             {
-                var elementType = await _context.LignesElementTypes.FindAsync(request.TypeId.Value);
+                var elementType = await _context.LignesElementTypes
+                    .Include(let => let.Item)
+                    .Include(let => let.GeneralAccount)
+                    .FirstOrDefaultAsync(let => let.Id == request.LignesElementTypeId.Value);
+                
                 if (elementType == null)
-                    return BadRequest("Invalid TypeId. Element type not found.");
+                    return BadRequest("Invalid LignesElementTypeId. Element type not found.");
 
-                // Validate element references based on type
-                switch (elementType.TypeElement)
-                {
-                    case "Item":
-                        if (string.IsNullOrWhiteSpace(request.ItemCode))
-                            return BadRequest("ItemCode is required for Item element type.");
-                        
-                        var itemExists = await _context.Items.AnyAsync(i => i.Code == request.ItemCode);
-                        if (!itemExists)
-                            return BadRequest("Invalid ItemCode. Item not found.");
-                        break;
-
-                    case "General Accounts":
-                        if (string.IsNullOrWhiteSpace(request.GeneralAccountsCode))
-                            return BadRequest("GeneralAccountsCode is required for General Accounts element type.");
-                        
-                        var accountExists = await _context.GeneralAccounts.AnyAsync(ga => ga.Code == request.GeneralAccountsCode);
-                        if (!accountExists)
-                            return BadRequest("Invalid GeneralAccountsCode. General account not found.");
-                        break;
-
-                    default:
-                        return BadRequest($"Unsupported element type: {elementType.TypeElement}");
-                }
+                // Validate that the element type is properly configured
+                if (!elementType.IsValid())
+                    return BadRequest("The specified element type is not properly configured.");
             }
 
             // Create the ligne entity
@@ -146,9 +126,7 @@ namespace DocManagementBackend.Controllers
                     : request.LigneKey,
                 Title = request.Title.Trim(),
                 Article = request.Article.Trim(),
-                TypeId = request.TypeId,
-                ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim(),
-                GeneralAccountsCode = string.IsNullOrWhiteSpace(request.GeneralAccountsCode) ? null : request.GeneralAccountsCode.Trim(),
+                LignesElementTypeId = request.LignesElementTypeId,
                 Quantity = request.Quantity,
                 PriceHT = request.PriceHT,
                 DiscountPercentage = request.DiscountPercentage,
@@ -167,15 +145,27 @@ namespace DocManagementBackend.Controllers
 
             try
             {
+                // If the ligne has a LignesElementType that references a GeneralAccount, increment the count
+                if (request.LignesElementTypeId.HasValue)
+                {
+                    var elementType = await _context.LignesElementTypes
+                        .Include(let => let.GeneralAccount)
+                        .FirstOrDefaultAsync(let => let.Id == request.LignesElementTypeId.Value);
+                    
+                    if (elementType?.GeneralAccount != null && elementType.TypeElement == "General Accounts")
+                    {
+                        elementType.GeneralAccount.LinesCount++;
+                    }
+                }
+
                 await _context.SaveChangesAsync();
 
                 // Return the created ligne with all includes
                 var ligneDto = await _context.Lignes
                     .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                     .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
-                    .Include(l => l.Type)
-                    .Include(l => l.Item).ThenInclude(i => i!.UniteCodeNavigation)
-                    .Include(l => l.GeneralAccounts)
+                    .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
+                    .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
                     .Where(l => l.Id == ligne.Id)
                     .Select(LigneMappings.ToLigneDto)
                     .FirstOrDefaultAsync();
@@ -195,9 +185,20 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var ligne = await _context.Lignes.FindAsync(id);
+            var ligne = await _context.Lignes
+                .Include(l => l.LignesElementType)
+                    .ThenInclude(let => let!.GeneralAccount)
+                .FirstOrDefaultAsync(l => l.Id == id);
+                
             if (ligne == null)
                 return NotFound("Ligne not found.");
+
+            // Track the old GeneralAccount for count management
+            GeneralAccounts? oldGeneralAccount = null;
+            if (ligne.LignesElementType?.TypeElement == "General Accounts")
+            {
+                oldGeneralAccount = ligne.LignesElementType.GeneralAccount;
+            }
 
             // Update fields if provided
             if (!string.IsNullOrWhiteSpace(request.LigneKey))
@@ -210,41 +211,23 @@ namespace DocManagementBackend.Controllers
                 ligne.Article = request.Article.Trim();
 
             // Update element type and references
-            if (request.TypeId.HasValue)
+            GeneralAccounts? newGeneralAccount = null;
+            if (request.LignesElementTypeId.HasValue)
             {
-                var elementType = await _context.LignesElementTypes.FindAsync(request.TypeId.Value);
+                var elementType = await _context.LignesElementTypes
+                    .Include(let => let.Item)
+                    .Include(let => let.GeneralAccount)
+                    .FirstOrDefaultAsync(let => let.Id == request.LignesElementTypeId.Value);
+                
                 if (elementType == null)
-                    return BadRequest("Invalid TypeId. Element type not found.");
+                    return BadRequest("Invalid LignesElementTypeId. Element type not found.");
 
-                ligne.TypeId = request.TypeId.Value;
-
-                // Validate and update element references based on type
-                switch (elementType.TypeElement)
+                ligne.LignesElementTypeId = request.LignesElementTypeId.Value;
+                
+                // Track the new GeneralAccount
+                if (elementType.TypeElement == "General Accounts")
                 {
-                    case "Item":
-                        if (!string.IsNullOrWhiteSpace(request.ItemCode))
-                        {
-                            var itemExists = await _context.Items.AnyAsync(i => i.Code == request.ItemCode);
-                            if (!itemExists)
-                                return BadRequest("Invalid ItemCode. Item not found.");
-                            ligne.ItemCode = request.ItemCode.Trim();
-                        }
-                        ligne.GeneralAccountsCode = null; // Clear other reference
-                        break;
-
-                    case "General Accounts":
-                        if (!string.IsNullOrWhiteSpace(request.GeneralAccountsCode))
-                        {
-                            var accountExists = await _context.GeneralAccounts.AnyAsync(ga => ga.Code == request.GeneralAccountsCode);
-                            if (!accountExists)
-                                return BadRequest("Invalid GeneralAccountsCode. General account not found.");
-                            ligne.GeneralAccountsCode = request.GeneralAccountsCode.Trim();
-                        }
-                        ligne.ItemCode = null; // Clear other reference
-                        break;
-
-                    default:
-                        return BadRequest($"Unsupported element type: {elementType.TypeElement}");
+                    newGeneralAccount = elementType.GeneralAccount;
                 }
             }
 
@@ -293,6 +276,22 @@ namespace DocManagementBackend.Controllers
 
             try
             {
+                // Manage GeneralAccount counts if there's a change
+                if (oldGeneralAccount != newGeneralAccount)
+                {
+                    // Decrement old account count
+                    if (oldGeneralAccount != null)
+                    {
+                        oldGeneralAccount.LinesCount = Math.Max(0, oldGeneralAccount.LinesCount - 1);
+                    }
+                    
+                    // Increment new account count
+                    if (newGeneralAccount != null)
+                    {
+                        newGeneralAccount.LinesCount++;
+                    }
+                }
+
                 await _context.SaveChangesAsync();
                 return NoContent();
             }
@@ -311,6 +310,8 @@ namespace DocManagementBackend.Controllers
 
             var ligne = await _context.Lignes
                 .Include(l => l.SousLignes)
+                .Include(l => l.LignesElementType)
+                    .ThenInclude(let => let!.GeneralAccount)
                 .FirstOrDefaultAsync(l => l.Id == id);
 
             if (ligne == null)
@@ -324,6 +325,12 @@ namespace DocManagementBackend.Controllers
 
             try
             {
+                // If the ligne has a LignesElementType that references a GeneralAccount, decrement the count
+                if (ligne.LignesElementType?.TypeElement == "General Accounts" && ligne.LignesElementType.GeneralAccount != null)
+                {
+                    ligne.LignesElementType.GeneralAccount.LinesCount = Math.Max(0, ligne.LignesElementType.GeneralAccount.LinesCount - 1);
+                }
+
                 await _context.SaveChangesAsync();
                 return NoContent();
             }
