@@ -163,8 +163,7 @@ export const TypeSelectionStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div className="space-y-2">
                   <p className="text-sm">
-                    No document types with active series available for the
-                    selected date. Please select a different date.
+                    No document types with active series available for the selected date. Please select a different date.
                   </p>
                 </div>
               </div>
@@ -340,9 +339,7 @@ export const TypeSelectionStep = ({
                 <div className="bg-gray-800/40 border border-gray-700 rounded-md p-3 mt-3">
                   <div className="flex items-center gap-2 text-sm text-blue-400 mb-2">
                     <Info className="h-4 w-4" />
-                    <span className="font-medium">
-                      Selected Series Information
-                    </span>
+                    <span className="font-medium">Selected Series Information</span>
                   </div>
                   <p className="text-sm text-gray-300">
                     <span className="font-medium">Code: </span>

@@ -104,7 +104,7 @@ export const DocumentTypeTableRow = ({
               navigate(`/document-types/${type.id}/subtypes`);
             }}
           >
-            View Subtypes
+            View Series
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
 

@@ -23,6 +23,7 @@ interface DocumentFlowMindMapProps {
   onStatusComplete: () => void;
   onMoveToStatus: (statusId: number) => void;
   hasPendingApprovals?: boolean;
+  refreshTrigger?: number;
 }
 
 export function DocumentFlowMindMap({
@@ -31,6 +32,7 @@ export function DocumentFlowMindMap({
   onStatusComplete,
   onMoveToStatus,
   hasPendingApprovals = false,
+  refreshTrigger = 0,
 }: DocumentFlowMindMapProps) {
   const { completeStatus } = useWorkflowStepStatuses(documentId);
   const [nextStatuses, setNextStatuses] = useState<any[]>([]);
@@ -81,7 +83,7 @@ export function DocumentFlowMindMap({
     } else {
       setNextStatuses([]);
     }
-  }, [currentStatus?.isComplete, documentId]);
+  }, [currentStatus?.isComplete, documentId, workflowStatus?.currentStatusId, refreshTrigger]);
 
   const handleMarkComplete = async () => {
     if (!currentStatus) return;

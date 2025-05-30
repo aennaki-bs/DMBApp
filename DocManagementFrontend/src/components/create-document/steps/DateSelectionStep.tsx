@@ -166,9 +166,9 @@ export const DateSelectionStep = ({
             </h4>
             <p className="text-sm text-gray-300 mt-1">
               <strong>Important:</strong> Only document types with active series
-              will be available for selection. If you don't see a document type,
-              it means there are no active series for that type on the selected
-              date.
+              for the selected date will be available. If you don't
+              see a document type, it means there are no active series for that
+              type on this date.
             </p>
           </div>
         </div>

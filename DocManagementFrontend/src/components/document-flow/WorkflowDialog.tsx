@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import documentService from "@/services/documentService";
 import circuitService from "@/services/circuitService";
@@ -40,8 +40,10 @@ export function WorkflowDialog({
   documentId,
 }: WorkflowDialogProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isSimpleUser = user?.role === "SimpleUser";
   const [approvalRefreshTrigger, setApprovalRefreshTrigger] = useState(0);
+  const [mindMapRefreshTrigger, setMindMapRefreshTrigger] = useState(0);
   const [showApprovalHistory, setShowApprovalHistory] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const approvalHistoryRef = useRef<HTMLDivElement>(null);
@@ -76,10 +78,23 @@ export function WorkflowDialog({
   const handleMoveToStatus = (statusId: number) => {
     if (workflowStatus && statusId) {
       // Find the status title from available transitions
-      const targetStatus = workflowStatus.availableStatusTransitions?.find(
+      let targetStatus = workflowStatus.availableStatusTransitions?.find(
         s => s.statusId === statusId
       );
-      const targetStatusTitle = targetStatus?.title || `Status ID ${statusId}`;
+      let targetStatusTitle = targetStatus?.title;
+      
+      // If not found in available transitions, try to get from workflow statuses
+      if (!targetStatusTitle && workflowStatus.statuses) {
+        const workflowStatusInfo = workflowStatus.statuses.find(s => s.statusId === statusId);
+        targetStatusTitle = workflowStatusInfo?.title;
+      }
+      
+      // Final fallback to a more descriptive message
+      if (!targetStatusTitle) {
+        targetStatusTitle = `Target Status (ID: ${statusId})`;
+        console.warn(`Could not resolve status title for ID ${statusId} in WorkflowDialog, using fallback`);
+      }
+      
       const currentStatusTitle = workflowStatus.currentStatusTitle || 'Unknown Status';
       
       circuitService
@@ -159,7 +174,24 @@ export function WorkflowDialog({
       // Trigger refresh of DocumentApprovalStatus
       setApprovalRefreshTrigger(prev => prev + 1);
     }
+    
+    // Refresh all workflow data
     refreshAllData();
+    
+    // Trigger refresh of the mind map (including next steps)
+    setMindMapRefreshTrigger(prev => prev + 1);
+    
+    // Also refresh the document data to ensure we have the latest information
+    // This is particularly important after a move operation
+    if (result?.success || result?.message) {
+      // Force refetch of document data
+      setTimeout(() => {
+        // Invalidate and refetch the document query
+        queryClient.invalidateQueries({ queryKey: ["document", documentId] });
+        // Trigger another mind map refresh after a delay to ensure backend is updated
+        setMindMapRefreshTrigger(prev => prev + 1);
+      }, 500);
+    }
   };
 
   // Collect all errors
@@ -193,7 +225,7 @@ export function WorkflowDialog({
                 Document Workflow
               </DialogTitle>
               <DialogDescription className="text-blue-300/70">
-                {document?.title || "Document workflow status"}
+                Document Code: {document?.documentKey || "Document workflow status"}
               </DialogDescription>
             </div>
           </div>
@@ -327,6 +359,7 @@ export function WorkflowDialog({
                   onStatusComplete={refreshAllData}
                   onMoveToStatus={handleMoveToStatus}
                   hasPendingApprovals={hasPendingApprovals}
+                  refreshTrigger={mindMapRefreshTrigger}
                 />
               </div>
             </div>

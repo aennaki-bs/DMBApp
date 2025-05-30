@@ -375,6 +375,501 @@ namespace DocManagementBackend.Controllers
             return Ok(approvalHistory);
         }
 
+        [HttpGet("history/user/{userId}")]
+        public async Task<ActionResult<IEnumerable<UserApprovalHistoryDto>>> GetUserApprovalHistory(int userId)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Verify the specified user exists
+            var targetUser = await _context.Users.FindAsync(userId);
+            if (targetUser == null)
+                return NotFound($"User with ID {userId} not found.");
+
+            var userApprovalHistory = new List<UserApprovalHistoryDto>();
+
+            // Get all approval responses by this user
+            var responses = await _context.ApprovalResponses
+                .Include(r => r.ApprovalWriting)
+                    .ThenInclude(aw => aw.Document)
+                .Include(r => r.ApprovalWriting)
+                    .ThenInclude(aw => aw.Step)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.ResponseDate)
+                .ToListAsync();
+
+            foreach (var response in responses)
+            {
+                if (response.ApprovalWriting?.Document != null)
+                {
+                    userApprovalHistory.Add(new UserApprovalHistoryDto
+                    {
+                        ApprovalId = response.ApprovalWritingId,
+                        DocumentId = response.ApprovalWriting.DocumentId,
+                        DocumentKey = response.ApprovalWriting.Document.DocumentKey,
+                        DocumentTitle = response.ApprovalWriting.Document.Title,
+                        StepTitle = response.ApprovalWriting.Step?.Title ?? string.Empty,
+                        Status = response.ApprovalWriting.Status.ToString(),
+                        Approved = response.IsApproved,
+                        RespondedAt = response.ResponseDate,
+                        ProcessedBy = targetUser.Username,
+                        Comments = response.Comments,
+                        RequestedBy = response.ApprovalWriting.ProcessedBy?.Username ?? string.Empty,
+                        RequestDate = response.ApprovalWriting.CreatedAt
+                    });
+                }
+            }
+
+            // Also get all approvals assigned to this user (including pending ones)
+            var assignedApprovals = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Where(aw => 
+                    (aw.ApprovatorId.HasValue && 
+                     _context.Approvators.Any(a => a.Id == aw.ApprovatorId && a.UserId == userId)) ||
+                    (aw.ApprovatorsGroupId.HasValue && 
+                     _context.ApprovatorsGroupUsers.Any(gu => gu.GroupId == aw.ApprovatorsGroupId && gu.UserId == userId)))
+                .OrderByDescending(aw => aw.CreatedAt)
+                .ToListAsync();
+
+            foreach (var approval in assignedApprovals)
+            {
+                // Skip if we already have a response from this user for this approval
+                if (userApprovalHistory.Any(h => h.ApprovalId == approval.Id))
+                    continue;
+
+                if (approval.Document != null)
+                {
+                    userApprovalHistory.Add(new UserApprovalHistoryDto
+                    {
+                        ApprovalId = approval.Id,
+                        DocumentId = approval.DocumentId,
+                        DocumentKey = approval.Document.DocumentKey,
+                        DocumentTitle = approval.Document.Title,
+                        StepTitle = approval.Step?.Title ?? string.Empty,
+                        Status = approval.Status.ToString(),
+                        Approved = null, // No response yet
+                        RespondedAt = null,
+                        ProcessedBy = null,
+                        Comments = approval.Comments,
+                        RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                        RequestDate = approval.CreatedAt
+                    });
+                }
+            }
+
+            // Sort by date descending
+            userApprovalHistory = userApprovalHistory
+                .OrderByDescending(h => h.RespondedAt ?? h.RequestDate)
+                .ToList();
+
+            return Ok(userApprovalHistory);
+        }
+
+        [HttpGet("history")]
+        public async Task<ActionResult<IEnumerable<UserApprovalHistoryDto>>> GetGeneralApprovalHistory()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var generalApprovalHistory = new List<UserApprovalHistoryDto>();
+
+            // Get all approval writings (all documents, all users)
+            var allApprovalWritings = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Include(aw => aw.Approvator)
+                    .ThenInclude(a => a.User)
+                .Include(aw => aw.ApprovatorsGroup)
+                .OrderByDescending(aw => aw.CreatedAt)
+                .ToListAsync();
+
+            foreach (var approval in allApprovalWritings)
+            {
+                // For individual approvals
+                if (approval.ApprovatorId.HasValue && approval.Approvator != null)
+                {
+                    // Check for responses
+                    var response = await _context.ApprovalResponses
+                        .Include(ar => ar.User)
+                        .FirstOrDefaultAsync(ar => ar.ApprovalWritingId == approval.Id);
+
+                    generalApprovalHistory.Add(new UserApprovalHistoryDto
+                    {
+                        ApprovalId = approval.Id,
+                        DocumentId = approval.DocumentId,
+                        DocumentKey = approval.Document?.DocumentKey ?? string.Empty,
+                        DocumentTitle = approval.Document?.Title ?? string.Empty,
+                        StepTitle = approval.Step?.Title ?? string.Empty,
+                        Status = approval.Status.ToString(),
+                        Approved = response?.IsApproved,
+                        RespondedAt = response?.ResponseDate,
+                        ProcessedBy = response?.User?.Username,
+                        Comments = response?.Comments ?? approval.Comments,
+                        RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                        RequestDate = approval.CreatedAt
+                    });
+                }
+                // For group approvals
+                else if (approval.ApprovatorsGroupId.HasValue)
+                {
+                    // Get all responses for this group approval
+                    var responses = await _context.ApprovalResponses
+                        .Include(ar => ar.User)
+                        .Where(ar => ar.ApprovalWritingId == approval.Id)
+                        .ToListAsync();
+
+                    if (responses.Any())
+                    {
+                        // Create entries for each responder
+                        foreach (var response in responses)
+                        {
+                            generalApprovalHistory.Add(new UserApprovalHistoryDto
+                            {
+                                ApprovalId = approval.Id,
+                                DocumentId = approval.DocumentId,
+                                DocumentKey = approval.Document?.DocumentKey ?? string.Empty,
+                                DocumentTitle = approval.Document?.Title ?? string.Empty,
+                                StepTitle = approval.Step?.Title ?? string.Empty,
+                                Status = approval.Status.ToString(),
+                                Approved = response.IsApproved,
+                                RespondedAt = response.ResponseDate,
+                                ProcessedBy = response.User?.Username,
+                                Comments = response.Comments,
+                                RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                                RequestDate = approval.CreatedAt
+                            });
+                        }
+                    }
+                    else
+                    {
+                        // No responses yet for group approval
+                        generalApprovalHistory.Add(new UserApprovalHistoryDto
+                        {
+                            ApprovalId = approval.Id,
+                            DocumentId = approval.DocumentId,
+                            DocumentKey = approval.Document?.DocumentKey ?? string.Empty,
+                            DocumentTitle = approval.Document?.Title ?? string.Empty,
+                            StepTitle = approval.Step?.Title ?? string.Empty,
+                            Status = approval.Status.ToString(),
+                            Approved = null,
+                            RespondedAt = null,
+                            ProcessedBy = null,
+                            Comments = approval.Comments,
+                            RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                            RequestDate = approval.CreatedAt
+                        });
+                    }
+                }
+            }
+
+            return Ok(generalApprovalHistory);
+        }
+
+        [HttpGet("history/waiting")]
+        public async Task<ActionResult<IEnumerable<ApprovalHistoryDetailDto>>> GetWaitingApprovals()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var waitingApprovals = new List<ApprovalHistoryDetailDto>();
+
+            // Get all approval writings with status Open or InProgress
+            var approvalWritings = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Include(aw => aw.Approvator)
+                    .ThenInclude(a => a.User)
+                .Include(aw => aw.ApprovatorsGroup)
+                .Where(aw => aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress)
+                .OrderByDescending(aw => aw.CreatedAt)
+                .ToListAsync();
+
+            foreach (var approval in approvalWritings)
+            {
+                var approvalDetail = new ApprovalHistoryDetailDto
+                {
+                    ApprovalId = approval.Id,
+                    DocumentId = approval.DocumentId,
+                    DocumentKey = approval.Document?.DocumentKey ?? string.Empty,
+                    DocumentTitle = approval.Document?.Title ?? string.Empty,
+                    StepTitle = approval.Step?.Title ?? string.Empty,
+                    Status = approval.Status.ToString(),
+                    RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = approval.CreatedAt,
+                    Comments = approval.Comments,
+                    Approvers = new List<ApproverDetailDto>(),
+                    Responses = new List<ApprovalResponseDetailDto>()
+                };
+
+                // Add approver information
+                if (approval.ApprovatorId.HasValue && approval.Approvator?.User != null)
+                {
+                    approvalDetail.Approvers.Add(new ApproverDetailDto
+                    {
+                        UserId = approval.Approvator.User.Id,
+                        Username = approval.Approvator.User.Username,
+                        Type = "Individual"
+                    });
+                }
+                else if (approval.ApprovatorsGroupId.HasValue)
+                {
+                    var groupUsers = await _context.ApprovatorsGroupUsers
+                        .Include(gu => gu.User)
+                        .Where(gu => gu.GroupId == approval.ApprovatorsGroupId)
+                        .OrderBy(gu => gu.OrderIndex ?? 0)
+                        .ToListAsync();
+
+                    foreach (var groupUser in groupUsers)
+                    {
+                        if (groupUser.User != null)
+                        {
+                            approvalDetail.Approvers.Add(new ApproverDetailDto
+                            {
+                                UserId = groupUser.User.Id,
+                                Username = groupUser.User.Username,
+                                Type = "Group",
+                                OrderIndex = groupUser.OrderIndex
+                            });
+                        }
+                    }
+                }
+
+                // Add response information (for InProgress status)
+                if (approval.Status == ApprovalStatus.InProgress)
+                {
+                    var responses = await _context.ApprovalResponses
+                        .Include(ar => ar.User)
+                        .Where(ar => ar.ApprovalWritingId == approval.Id)
+                        .OrderBy(ar => ar.ResponseDate)
+                        .ToListAsync();
+
+                    foreach (var response in responses)
+                    {
+                        if (response.User != null)
+                        {
+                            approvalDetail.Responses.Add(new ApprovalResponseDetailDto
+                            {
+                                UserId = response.User.Id,
+                                Username = response.User.Username,
+                                IsApproved = response.IsApproved,
+                                ResponseDate = response.ResponseDate,
+                                Comments = response.Comments
+                            });
+                        }
+                    }
+                }
+
+                waitingApprovals.Add(approvalDetail);
+            }
+
+            return Ok(waitingApprovals);
+        }
+
+        [HttpGet("history/accepted")]
+        public async Task<ActionResult<IEnumerable<ApprovalHistoryDetailDto>>> GetAcceptedApprovals()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var acceptedApprovals = new List<ApprovalHistoryDetailDto>();
+
+            // Get all approval writings with status Accepted
+            var approvalWritings = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Include(aw => aw.Approvator)
+                    .ThenInclude(a => a.User)
+                .Include(aw => aw.ApprovatorsGroup)
+                .Where(aw => aw.Status == ApprovalStatus.Accepted)
+                .OrderByDescending(aw => aw.CreatedAt)
+                .ToListAsync();
+
+            foreach (var approval in approvalWritings)
+            {
+                var approvalDetail = new ApprovalHistoryDetailDto
+                {
+                    ApprovalId = approval.Id,
+                    DocumentId = approval.DocumentId,
+                    DocumentKey = approval.Document?.DocumentKey ?? string.Empty,
+                    DocumentTitle = approval.Document?.Title ?? string.Empty,
+                    StepTitle = approval.Step?.Title ?? string.Empty,
+                    Status = approval.Status.ToString(),
+                    RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = approval.CreatedAt,
+                    Comments = approval.Comments,
+                    Approvers = new List<ApproverDetailDto>(),
+                    Responses = new List<ApprovalResponseDetailDto>()
+                };
+
+                // Add approver information
+                if (approval.ApprovatorId.HasValue && approval.Approvator?.User != null)
+                {
+                    approvalDetail.Approvers.Add(new ApproverDetailDto
+                    {
+                        UserId = approval.Approvator.User.Id,
+                        Username = approval.Approvator.User.Username,
+                        Type = "Individual"
+                    });
+                }
+                else if (approval.ApprovatorsGroupId.HasValue)
+                {
+                    var groupUsers = await _context.ApprovatorsGroupUsers
+                        .Include(gu => gu.User)
+                        .Where(gu => gu.GroupId == approval.ApprovatorsGroupId)
+                        .OrderBy(gu => gu.OrderIndex ?? 0)
+                        .ToListAsync();
+
+                    foreach (var groupUser in groupUsers)
+                    {
+                        if (groupUser.User != null)
+                        {
+                            approvalDetail.Approvers.Add(new ApproverDetailDto
+                            {
+                                UserId = groupUser.User.Id,
+                                Username = groupUser.User.Username,
+                                Type = "Group",
+                                OrderIndex = groupUser.OrderIndex
+                            });
+                        }
+                    }
+                }
+
+                // Add response information (who approved)
+                var responses = await _context.ApprovalResponses
+                    .Include(ar => ar.User)
+                    .Where(ar => ar.ApprovalWritingId == approval.Id)
+                    .OrderBy(ar => ar.ResponseDate)
+                    .ToListAsync();
+
+                foreach (var response in responses)
+                {
+                    if (response.User != null)
+                    {
+                        approvalDetail.Responses.Add(new ApprovalResponseDetailDto
+                        {
+                            UserId = response.User.Id,
+                            Username = response.User.Username,
+                            IsApproved = response.IsApproved,
+                            ResponseDate = response.ResponseDate,
+                            Comments = response.Comments
+                        });
+                    }
+                }
+
+                acceptedApprovals.Add(approvalDetail);
+            }
+
+            return Ok(acceptedApprovals);
+        }
+
+        [HttpGet("history/rejected")]
+        public async Task<ActionResult<IEnumerable<ApprovalHistoryDetailDto>>> GetRejectedApprovals()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var rejectedApprovals = new List<ApprovalHistoryDetailDto>();
+
+            // Get all approval writings with status Rejected
+            var approvalWritings = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Include(aw => aw.Approvator)
+                    .ThenInclude(a => a.User)
+                .Include(aw => aw.ApprovatorsGroup)
+                .Where(aw => aw.Status == ApprovalStatus.Rejected)
+                .OrderByDescending(aw => aw.CreatedAt)
+                .ToListAsync();
+
+            foreach (var approval in approvalWritings)
+            {
+                var approvalDetail = new ApprovalHistoryDetailDto
+                {
+                    ApprovalId = approval.Id,
+                    DocumentId = approval.DocumentId,
+                    DocumentKey = approval.Document?.DocumentKey ?? string.Empty,
+                    DocumentTitle = approval.Document?.Title ?? string.Empty,
+                    StepTitle = approval.Step?.Title ?? string.Empty,
+                    Status = approval.Status.ToString(),
+                    RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = approval.CreatedAt,
+                    Comments = approval.Comments,
+                    Approvers = new List<ApproverDetailDto>(),
+                    Responses = new List<ApprovalResponseDetailDto>()
+                };
+
+                // Add approver information
+                if (approval.ApprovatorId.HasValue && approval.Approvator?.User != null)
+                {
+                    approvalDetail.Approvers.Add(new ApproverDetailDto
+                    {
+                        UserId = approval.Approvator.User.Id,
+                        Username = approval.Approvator.User.Username,
+                        Type = "Individual"
+                    });
+                }
+                else if (approval.ApprovatorsGroupId.HasValue)
+                {
+                    var groupUsers = await _context.ApprovatorsGroupUsers
+                        .Include(gu => gu.User)
+                        .Where(gu => gu.GroupId == approval.ApprovatorsGroupId)
+                        .OrderBy(gu => gu.OrderIndex ?? 0)
+                        .ToListAsync();
+
+                    foreach (var groupUser in groupUsers)
+                    {
+                        if (groupUser.User != null)
+                        {
+                            approvalDetail.Approvers.Add(new ApproverDetailDto
+                            {
+                                UserId = groupUser.User.Id,
+                                Username = groupUser.User.Username,
+                                Type = "Group",
+                                OrderIndex = groupUser.OrderIndex
+                            });
+                        }
+                    }
+                }
+
+                // Add response information (both approved and rejected responses)
+                var responses = await _context.ApprovalResponses
+                    .Include(ar => ar.User)
+                    .Where(ar => ar.ApprovalWritingId == approval.Id)
+                    .OrderBy(ar => ar.ResponseDate)
+                    .ToListAsync();
+
+                foreach (var response in responses)
+                {
+                    if (response.User != null)
+                    {
+                        approvalDetail.Responses.Add(new ApprovalResponseDetailDto
+                        {
+                            UserId = response.User.Id,
+                            Username = response.User.Username,
+                            IsApproved = response.IsApproved,
+                            ResponseDate = response.ResponseDate,
+                            Comments = response.Comments
+                        });
+                    }
+                }
+
+                rejectedApprovals.Add(approvalDetail);
+            }
+
+            return Ok(rejectedApprovals);
+        }
+
         [HttpGet("documents-to-approve")]
         public async Task<ActionResult<IEnumerable<DocumentToApproveDto>>> GetDocumentsToApprove()
         {

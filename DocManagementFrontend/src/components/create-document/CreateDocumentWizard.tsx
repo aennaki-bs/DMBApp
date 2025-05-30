@@ -148,7 +148,7 @@ export default function CreateDocumentWizard({
     {
       id: 2,
       title: "Document Type",
-      description: "Select type and subtype",
+      description: "Select type and serie",
       icon: <Layers className="h-4 w-4" />,
       completed: currentStep > 2,
     },

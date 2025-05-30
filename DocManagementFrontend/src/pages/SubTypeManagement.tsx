@@ -58,7 +58,7 @@ const SubTypeManagement = () => {
         ) : subTypes.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-lg text-blue-300">No series found</p>
-            <p className="text-blue-400/70 mt-2">
+            <p className="text-sm text-blue-300/70 mt-2">
               Start by creating series in specific document types
             </p>
             <button

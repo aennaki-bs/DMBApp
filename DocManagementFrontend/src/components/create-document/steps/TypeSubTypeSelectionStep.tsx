@@ -115,8 +115,7 @@ export const TypeSubTypeSelectionStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm">
-                    No document types with active series available for the
-                    selected date. Please select a different date.
+                    No document types with active series available for the selected date. Please select a different date.
                   </p>
                 </div>
               </div>
@@ -204,8 +203,7 @@ export const TypeSubTypeSelectionStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm">
-                    No active series available for this document type on the
-                    selected date.
+                    No active series available for this document type on the selected date.
                   </p>
                 </div>
               </div>
@@ -282,8 +280,7 @@ export const TypeSubTypeSelectionStep = ({
         {subTypes.length > 0 && (
           <p className="text-xs text-gray-400 mt-2">
             <Info className="h-3.5 w-3.5 inline mr-1" />
-            Only showing active series that are valid for the selected document
-            date.
+            Only showing active series that are valid for the selected document date.
           </p>
         )}
 

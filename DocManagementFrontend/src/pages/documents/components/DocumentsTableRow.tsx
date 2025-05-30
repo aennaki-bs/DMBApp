@@ -152,7 +152,10 @@ export default function DocumentsTableRow({
   const isAssignedToCircuit = !!document.circuitId;
 
   return (
-    <TableRow
+    <motion.tr
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.02 }}
       className={`border-blue-900/30 hover:bg-blue-900/20 transition-all duration-200 ${
         isSelected ? "bg-blue-900/30 border-l-4 border-l-blue-500" : ""
       }`}
@@ -224,7 +227,7 @@ export default function DocumentsTableRow({
           </Tooltip>
         </TooltipProvider>
       </TableCell>
-    </TableRow>
+    </motion.tr>
   );
 }
 

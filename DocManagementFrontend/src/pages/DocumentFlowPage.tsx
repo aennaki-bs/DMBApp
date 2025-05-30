@@ -38,6 +38,7 @@ const DocumentFlowPage = () => {
   const navigate = useNavigate();
   const isSimpleUser = user?.role === "SimpleUser";
   const [approvalRefreshTrigger, setApprovalRefreshTrigger] = useState(0);
+  const [mindMapRefreshTrigger, setMindMapRefreshTrigger] = useState(0);
 
   // Use the document flow hook to manage all workflow-related state and operations
   const {
@@ -81,10 +82,23 @@ const DocumentFlowPage = () => {
   const handleMoveToStatus = (statusId: number) => {
     if (workflowStatus && statusId) {
       // Find the status title from available transitions
-      const targetStatus = workflowStatus.availableStatusTransitions?.find(
+      let targetStatus = workflowStatus.availableStatusTransitions?.find(
         s => s.statusId === statusId
       );
-      const targetStatusTitle = targetStatus?.title || `Status ID ${statusId}`;
+      let targetStatusTitle = targetStatus?.title;
+      
+      // If not found in available transitions, try to get from workflow statuses
+      if (!targetStatusTitle && workflowStatus.statuses) {
+        const workflowStatusInfo = workflowStatus.statuses.find(s => s.statusId === statusId);
+        targetStatusTitle = workflowStatusInfo?.title;
+      }
+      
+      // Final fallback to a more descriptive message
+      if (!targetStatusTitle) {
+        targetStatusTitle = `Target Status (ID: ${statusId})`;
+        console.warn(`Could not resolve status title for ID ${statusId} in DocumentFlowPage, using fallback`);
+      }
+      
       const currentStatusTitle = workflowStatus.currentStatusTitle || 'Unknown Status';
       
       circuitService
@@ -122,7 +136,24 @@ const DocumentFlowPage = () => {
       // Trigger refresh of DocumentApprovalStatus
       setApprovalRefreshTrigger(prev => prev + 1);
     }
+    
+    // Refresh all workflow data
     refreshAllData();
+    
+    // Trigger refresh of the mind map (including next steps)
+    setMindMapRefreshTrigger(prev => prev + 1);
+    
+    // Also refresh the document data to ensure we have the latest information
+    // This is particularly important after a move operation
+    if (result?.success || result?.message) {
+      // Force refetch of document data with a small delay
+      setTimeout(() => {
+        // Re-trigger all data refresh to ensure consistency
+        refreshAllData();
+        // Trigger another mind map refresh after a delay to ensure backend is updated
+        setMindMapRefreshTrigger(prev => prev + 1);
+      }, 500);
+    }
   };
 
   // Collect all errors
@@ -298,6 +329,7 @@ const DocumentFlowPage = () => {
                   onStatusComplete={refreshAllData}
                   onMoveToStatus={handleMoveToStatus}
                   hasPendingApprovals={hasPendingApprovals}
+                  refreshTrigger={mindMapRefreshTrigger}
                 />
               </TabsContent>
 

@@ -80,6 +80,7 @@ export const SubTypeFormActions = ({ onCancel }: SubTypeFormActionsProps) => {
                 Create Series
               </>
             )}
+            Create Series
           </Button>
         )}
       </div>

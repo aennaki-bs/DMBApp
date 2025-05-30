@@ -127,7 +127,8 @@ export function SubTypesTable({
         </TableBody>
       </Table>
       <div className="p-2 text-xs text-gray-500 bg-[#0a1033]/70 border-t border-blue-900/30">
-        Showing {subTypes.length} {subTypes.length === 1 ? "series" : "series"}
+        Showing {subTypes.length}{" "}
+        {subTypes.length === 1 ? "series" : "series"}
       </div>
     </div>
   );

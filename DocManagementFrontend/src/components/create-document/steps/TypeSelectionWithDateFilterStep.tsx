@@ -131,19 +131,19 @@ export const TypeSelectionWithDateFilterStep = ({
               `Checking active series for document type ${docType.id} (${docType.typeName})`
             );
 
-            // Check for valid subtypes for this date
-            const subtypesResponse = await api.get(
+            // Direct API call to get series for this type and date
+            const response = await api.get(
               `/Series/for-date/${docType.id}/${formattedDate}`
             );
 
-            if (subtypesResponse.data && Array.isArray(subtypesResponse.data)) {
+            if (response.data && Array.isArray(response.data)) {
               // Filter for active series only
-              const activeSeries = subtypesResponse.data.filter(
+              const activeSeries = response.data.filter(
                 (series) => series.isActive
               );
 
               console.log(
-                `Found ${subtypesResponse.data.length} series, ${activeSeries.length} active for type ${docType.id}`
+                `Found ${response.data.length} series, ${activeSeries.length} active for type ${docType.id}`
               );
 
               // Only include document types that have at least one active series
@@ -240,7 +240,7 @@ export const TypeSelectionWithDateFilterStep = ({
             `Fetching series for document type ${selectedTypeId} with date ${formattedDate}`
           );
 
-          // Get subtypes for the selected document type and date
+          // Direct API call to get series
           const response = await api.get(
             `/Series/for-date/${selectedTypeId}/${formattedDate}`
           );
@@ -274,7 +274,7 @@ export const TypeSelectionWithDateFilterStep = ({
             // If the currently selected series is not valid for this date, clear it
             if (
               selectedSubTypeId &&
-              !activeSeries.find((st) => st.id === selectedSubTypeId)
+              !activeSeries.find((s) => s.id === selectedSubTypeId)
             ) {
               onSubTypeChange("");
               toast.info("Selected series is not valid for the chosen date", {

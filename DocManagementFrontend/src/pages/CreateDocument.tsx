@@ -58,7 +58,9 @@ export default function CreateDocument() {
   );
   const [content, setContent] = useState("");
   const [dateError, setDateError] = useState<string | null>(null);
-  const [selectedCentreId, setSelectedCentreId] = useState<number | undefined>(undefined);
+  const [selectedCentreId, setSelectedCentreId] = useState<number | undefined>(
+    undefined
+  );
 
   // Total number of steps
   const TOTAL_STEPS = 5;
@@ -121,110 +123,148 @@ export default function CreateDocument() {
   }, []);
 
   // Check which document types have valid series for the selected date
-  const checkDocumentTypesWithSeries = async () => {
-    try {
-      setIsLoadingSeries(true);
-      const validTypes: DocumentType[] = [];
-      const validTypeIds = new Set<number>();
-
-      // Format date correctly for API call
-      const formattedDate = formatDateForAPI(docDate);
-
-      console.log(
-        `Checking active series for date ${formattedDate} across ${documentTypes.length} document types`
-      );
-
-      // Check each document type for valid series
-      for (const docType of documentTypes) {
-        try {
-          const response = await api.get(
-            `/Series/for-date/${docType.id}/${formattedDate}`
-          );
-
-          // Check if there are any active series in the response
-          const activeSeries = response.data.filter(
-            (series) => series.isActive
-          );
-
-          console.log(
-            `Type ${docType.id} (${docType.typeName}): Found ${response.data.length} series, ${activeSeries.length} active`
-          );
-
-          // Only add document types with active series
-          if (activeSeries.length > 0) {
-            validTypes.push(docType);
-            validTypeIds.add(docType.id);
-          }
-        } catch (error) {
-          console.error(`Error checking series for type ${docType.id}:`, error);
-        }
-      }
-
-      console.log(
-        `Found ${validTypes.length} document types with active series out of ${documentTypes.length}`
-      );
-
-      // Update state with the filtered document types
-      setDocumentTypesWithSeries(validTypeIds);
-
-      // If the currently selected type no longer has valid series, clear the selection
-      if (selectedTypeId && !validTypeIds.has(selectedTypeId)) {
-        console.log(
-          `Selected type ${selectedTypeId} no longer has valid series, clearing selection`
-        );
-        setSelectedTypeId(null);
-        setSelectedSubTypeId(null);
-      }
-
-      // Show toast if no valid document types found
-      if (validTypes.length === 0) {
-        toast.error(
-          "No document types with active series available for the selected date. Please select a different date."
-        );
-      }
-    } catch (error) {
-      console.error(
-        "Error filtering document types with active series:",
-        error
-      );
-      toast.error("Failed to filter document types");
-      setDocumentTypesWithSeries(new Set());
-    } finally {
-      setIsLoadingSeries(false);
-    }
-  };
-
-  // When date changes, check which document types have valid series
   useEffect(() => {
-    if (documentTypes.length > 0) {
-      checkDocumentTypesWithSeries();
-    }
-  }, [docDate, documentTypes]);
+    const checkDocumentTypesWithSeries = async () => {
+      if (!docDate || documentTypes.length === 0) return;
+
+      setIsLoadingSeries(true);
+      setFilteredDocumentTypes([]); // Clear filtered types immediately
+
+      try {
+        // Format date correctly for API - needs exact ISO format as per API docs
+        const dateObj = new Date(docDate);
+        const formattedDate = dateObj.toISOString(); // Send full ISO string including time
+
+        console.log(
+          `Checking active series for date ${formattedDate} across ${documentTypes.length} document types`
+        );
+
+        const validTypeIds = new Set<number>();
+        const validTypes: DocumentType[] = [];
+
+        // Process each document type one by one
+        for (const docType of documentTypes) {
+          try {
+            // Direct API call as per documentation
+            const response = await api.get(
+              `/Series/for-date/${docType.id}/${formattedDate}`
+            );
+
+            // Check if there are any active series in the response
+            if (response.data && Array.isArray(response.data)) {
+              const activeSeries = response.data.filter(
+                (series) => series.isActive
+              );
+
+              console.log(
+                `Type ${docType.id} (${docType.typeName}): Found ${response.data.length} series, ${activeSeries.length} active`
+              );
+
+              // Only add document types with active series
+              if (activeSeries.length > 0) {
+                validTypeIds.add(docType.id);
+                validTypes.push(docType);
+                console.log(`Added type ${docType.id} to valid types`);
+              }
+            }
+          } catch (error) {
+            console.error(
+              `Error checking series for type ${docType.id}:`,
+              error
+            );
+          }
+        }
+
+        console.log(
+          `Found ${validTypes.length} document types with active series out of ${documentTypes.length}`
+        );
+
+        // Update state with validated types
+        setDocumentTypesWithSeries(validTypeIds);
+        setFilteredDocumentTypes(validTypes);
+
+        // Clear selection if selected type is no longer valid
+        if (selectedTypeId && !validTypeIds.has(selectedTypeId)) {
+          console.log(
+            `Selected type ${selectedTypeId} no longer has valid series, clearing selection`
+          );
+          setSelectedTypeId(null);
+          setSelectedSubTypeId(null);
+        }
+
+        // Show warning if no valid types found
+        if (documentTypes.length > 0 && validTypes.length === 0) {
+          toast.warning(
+            "No document types with active series available for the selected date. Please select a different date."
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Error filtering document types with active series:",
+          error
+        );
+        setFilteredDocumentTypes([]);
+        setDocumentTypesWithSeries(new Set());
+      } finally {
+        setIsLoadingSeries(false);
+      }
+    };
+
+    checkDocumentTypesWithSeries();
+  }, [documentTypes, docDate]);
 
   // When document type changes, load series
   useEffect(() => {
-    if (selectedTypeId && documentTypesWithSeries.has(selectedTypeId)) {
-      const loadSubTypes = async () => {
+    const fetchSubTypes = async () => {
+      if (selectedTypeId && documentTypesWithSeries.has(selectedTypeId)) {
         try {
           // Format date correctly for API call - same as in checkDocumentTypesWithSeries
           const formattedDate = formatDateForAPI(docDate);
 
           setIsLoading(true);
 
+          // Format date correctly for API call - same as in checkDocumentTypesWithSeries
+          const dateObj = new Date(docDate);
+          const formattedDate = dateObj.toISOString();
+
+          console.log(
+            `Fetching subtypes for type ${selectedTypeId} with date ${formattedDate}`
+          );
+
+          // Direct API call as per documentation
           const response = await api.get(
             `/Series/for-date/${selectedTypeId}/${formattedDate}`
           );
 
-          // Filter for active series only
-          const activeSubTypes = response.data.filter(
-            (subType) => subType.isActive
-          );
+          if (response.data && Array.isArray(response.data)) {
+            // Filter for active series only
+            const activeSubTypes = response.data.filter(
+              (subType) => subType.isActive
+            );
 
-          if (activeSubTypes.length > 0) {
+            console.log(
+              `Fetched ${response.data.length} subtypes, ${activeSubTypes.length} are active`
+            );
+
             setSubTypes(activeSubTypes);
-            // If only one option, auto-select it
-            if (activeSubTypes.length === 1) {
-              setSelectedSubTypeId(activeSubTypes[0].id);
+
+            // Clear selection if no active subtypes or selection is no longer valid
+            if (activeSubTypes.length === 0) {
+              console.log(
+                `No active subtypes found for type ${selectedTypeId}`
+              );
+              setSelectedSubTypeId(null);
+              toast.warning(
+                "No active series available for this document type on the selected date."
+              );
+            } else if (
+              selectedSubTypeId &&
+              !activeSubTypes.some((st) => st.id === selectedSubTypeId)
+            ) {
+              console.log(
+                `Selected subtype ${selectedSubTypeId} is no longer valid, clearing selection`
+              );
+              setSelectedSubTypeId(null);
             }
           } else {
             setSubTypes([]);
@@ -234,20 +274,24 @@ export default function CreateDocument() {
             );
           }
         } catch (error) {
-          console.error("Error loading subtypes:", error);
+          console.error(
+            `Error fetching subtypes for type ${selectedTypeId}:`,
+            error
+          );
+          toast.error("Failed to load series");
           setSubTypes([]);
           setSelectedSubTypeId(null);
           toast.error("Failed to load series");
         } finally {
           setIsLoading(false);
         }
-      };
+      } else {
+        setSubTypes([]);
+        setSelectedSubTypeId(null);
+      }
+    };
 
-      loadSubTypes();
-    } else {
-      setSubTypes([]);
-      setSelectedSubTypeId(null);
-    }
+    fetchSubTypes();
   }, [selectedTypeId, docDate, documentTypesWithSeries, selectedSubTypeId]);
 
   const validateDate = (date: string, subType: SubType | null): boolean => {

@@ -19,7 +19,7 @@ interface BlockUserDialogProps {
   isBlocked: boolean;
 }
 
-const MotionAlertDialogContent = motion(AlertDialogContent);
+const MotionAlertDialogContent = motion.create(AlertDialogContent);
 
 export function BlockUserDialog({
   isOpen,
