@@ -74,7 +74,7 @@ const Login = () => {
     emailOrUsername?: string;
     password?: string;
     general?: string;
-    type?: "auth" | "connection" | "validation" | "server";
+    type?: "auth" | "connection" | "validation" | "server" | "verification" | "deactivated";
   }>({});
   const [isTouched, setIsTouched] = useState<{
     emailOrUsername: boolean;
@@ -169,14 +169,34 @@ const Login = () => {
             "SSL connection error. Contact your administrator to configure correct API settings.",
           type: "connection",
         });
-      } else if (
-        error.response?.status === 401 ||
-        error.response?.status === 403
-      ) {
-        // Authentication errors
+      } else if (error.response?.status === 401 || error.response?.status === 403) {
+        // Authentication errors - use specific backend message
+        const backendMessage = error.response?.data || error.response?.data?.message || error.message;
+        
+        // Determine the specific error type based on the backend message
+        let errorMessage = backendMessage;
+        let errorType = "auth";
+        
+        if (typeof backendMessage === 'string') {
+          if (backendMessage.includes("Invalid email or username")) {
+            errorMessage = "The email or username you entered doesn't exist. Please check and try again.";
+          } else if (backendMessage.includes("Invalid password")) {
+            errorMessage = "The password you entered is incorrect. Please try again.";
+          } else if (backendMessage.includes("not activated yet") || backendMessage.includes("email for verification")) {
+            errorMessage = "Your account is not activated yet. Please check your email for verification before logging in.";
+            errorType = "verification";
+          } else if (backendMessage.includes("Desactivated") || backendMessage.includes("contact an admin")) {
+            errorMessage = "Your account has been deactivated. Please contact an administrator for assistance.";
+            errorType = "deactivated";
+          } else {
+            // Use the exact backend message if it's a string
+            errorMessage = backendMessage;
+          }
+        }
+        
         setErrors({
-          general: "Invalid email/username or password. Please try again.",
-          type: "auth",
+          general: errorMessage,
+          type: errorType,
         });
       } else if (error.response?.status === 429) {
         // Rate limiting
@@ -195,10 +215,10 @@ const Login = () => {
       } else {
         // Extract the specific error message from the API response
         const errorMessage =
-          error.response?.data?.message ||
           error.response?.data ||
+          error.response?.data?.message ||
           error.message ||
-          "Invalid password or username";
+          "An unexpected error occurred. Please try again.";
 
         setErrors({
           general: errorMessage,
@@ -248,6 +268,10 @@ const Login = () => {
     switch (errors.type) {
       case "auth":
         return <ShieldAlert className="h-4 w-4 text-red-400" />;
+      case "verification":
+        return <Mail className="h-4 w-4 text-amber-400" />;
+      case "deactivated":
+        return <Lock className="h-4 w-4 text-red-400" />;
       case "connection":
         return <WifiOff className="h-4 w-4 text-red-400" />;
       case "server":
@@ -262,6 +286,10 @@ const Login = () => {
     switch (errors.type) {
       case "auth":
         return "Authentication Error";
+      case "verification":
+        return "Account Not Verified";
+      case "deactivated":
+        return "Account Deactivated";
       case "connection":
         return "Connection Error";
       case "server":
@@ -312,6 +340,10 @@ const Login = () => {
                 className={`mb-6 p-4 rounded-lg border ${
                   errors.type === "auth"
                     ? "bg-red-900/20 border-red-800/30"
+                    : errors.type === "verification"
+                    ? "bg-amber-900/20 border-amber-800/30"
+                    : errors.type === "deactivated"
+                    ? "bg-red-900/20 border-red-800/30"
                     : errors.type === "connection"
                     ? "bg-amber-900/20 border-amber-800/30"
                     : errors.type === "server"
@@ -323,6 +355,10 @@ const Login = () => {
                   <div
                     className={`p-1.5 rounded-full ${
                       errors.type === "auth"
+                        ? "bg-red-800/50"
+                        : errors.type === "verification"
+                        ? "bg-amber-800/50"
+                        : errors.type === "deactivated"
                         ? "bg-red-800/50"
                         : errors.type === "connection"
                         ? "bg-amber-800/50"
@@ -341,6 +377,10 @@ const Login = () => {
                     <h3
                       className={`text-sm font-medium mb-1 ${
                         errors.type === "auth"
+                          ? "text-red-200"
+                          : errors.type === "verification"
+                          ? "text-amber-200"
+                          : errors.type === "deactivated"
                           ? "text-red-200"
                           : errors.type === "connection"
                           ? "text-amber-200"
@@ -380,21 +420,53 @@ const Login = () => {
                       )}
 
                       {errors.type === "auth" && (
+                        <>
+                          {errors.general?.includes("doesn't exist") ? (
+                            <Link
+                              to="/register"
+                              className="text-xs py-1 px-2 bg-blue-800/40 hover:bg-blue-800/60 rounded border border-blue-700/40 transition-colors text-blue-200 flex items-center gap-1"
+                            >
+                              <User className="w-3 h-3" />
+                              Create Account
+                            </Link>
+                          ) : (
+                            <Link
+                              to="/forgot-password"
+                              className="text-xs py-1 px-2 bg-red-800/40 hover:bg-red-800/60 rounded border border-red-700/40 transition-colors text-red-200 flex items-center gap-1"
+                            >
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z" />
+                              </svg>
+                              Reset Password
+                            </Link>
+                          )}
+                        </>
+                      )}
+
+                      {errors.type === "verification" && (
                         <Link
-                          to="/forgot-password"
+                          to="/verify"
+                          className="text-xs py-1 px-2 bg-amber-800/40 hover:bg-amber-800/60 rounded border border-amber-700/40 transition-colors text-amber-200 flex items-center gap-1"
+                        >
+                          <Mail className="w-3 h-3" />
+                          Verify Email
+                        </Link>
+                      )}
+
+                      {errors.type === "deactivated" && (
+                        <a
+                          href="mailto:support@docuverse.com"
                           className="text-xs py-1 px-2 bg-red-800/40 hover:bg-red-800/60 rounded border border-red-700/40 transition-colors text-red-200 flex items-center gap-1"
                         >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                          Reset Password
-                        </Link>
+                          <HelpCircle className="w-3 h-3" />
+                          Contact Support
+                        </a>
                       )}
 
                       {errors.type === "server" && (
@@ -422,6 +494,10 @@ const Login = () => {
                 <motion.div
                   className={`absolute inset-0 opacity-10 ${
                     errors.type === "auth"
+                      ? "bg-red-500"
+                      : errors.type === "verification"
+                      ? "bg-amber-500"
+                      : errors.type === "deactivated"
                       ? "bg-red-500"
                       : errors.type === "connection"
                       ? "bg-amber-500"

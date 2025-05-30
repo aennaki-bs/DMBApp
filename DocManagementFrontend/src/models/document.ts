@@ -1,3 +1,11 @@
+import { ResponsibilityCentreSimple } from './responsibilityCentre';
+import { 
+  LignesElementType, 
+  Item, 
+  UniteCode, 
+  GeneralAccounts 
+} from './lineElements';
+
 export interface Document {
   id: number;
   title: string;
@@ -21,6 +29,8 @@ export interface Document {
   lignesCount?: number;
   sousLignesCount?: number;
   lignes?: Ligne[];
+  responsibilityCentreId?: number;
+  responsibilityCentre?: ResponsibilityCentreSimple;
 }
 
 export interface DocumentType {
@@ -51,6 +61,7 @@ export interface CreateDocumentRequest {
   subTypeId?: number | null;
   docDate?: string;
   circuitId?: number;
+  responsibilityCentreId?: number;
 }
 
 export interface UpdateDocumentRequest {
@@ -70,25 +81,75 @@ export interface Ligne {
   ligneKey: string;
   title: string;
   article: string;
+  
+  // Legacy field
   prix: number;
+  
+  sousLignesCount: number;
+  
+  // Type information
+  typeId?: number;
+  type?: LignesElementType;
+  
+  // Element references
+  itemCode?: string;
+  item?: Item;
+  generalAccountsCode?: string;
+  generalAccounts?: GeneralAccounts;
+  
+  // Pricing fields
+  quantity: number;
+  priceHT: number;
+  discountPercentage: number;
+  discountAmount?: number;
+  vatPercentage: number;
+  
+  // Calculated fields
+  amountHT: number;
+  amountVAT: number;
+  amountTTC: number;
+  
   createdAt: string;
   updatedAt: string;
   document?: Document;
   sousLignes?: SousLigne[];
-  sousLignesCount?: number;
 }
 
 export interface CreateLigneRequest {
   documentId: number;
+  ligneKey: string;
   title: string;
   article: string;
-  prix: number;
+  
+  // Type and element references
+  typeId?: number;
+  itemCode?: string;
+  generalAccountsCode?: string;
+  
+  // Pricing fields
+  quantity: number;
+  priceHT: number;
+  discountPercentage: number;
+  discountAmount?: number;
+  vatPercentage: number;
 }
 
 export interface UpdateLigneRequest {
+  ligneKey?: string;
   title?: string;
   article?: string;
-  prix?: number;
+  
+  // Type and element references
+  typeId?: number;
+  itemCode?: string;
+  generalAccountsCode?: string;
+  
+  // Pricing fields
+  quantity?: number;
+  priceHT?: number;
+  discountPercentage?: number;
+  discountAmount?: number;
+  vatPercentage?: number;
 }
 
 export interface SousLigne {

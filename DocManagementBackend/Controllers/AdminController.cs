@@ -40,6 +40,25 @@ namespace DocManagementBackend.Controllers
             return Ok(users);
         }
 
+        [HttpGet("users/unassigned")]
+        public async Task<IActionResult> GetUnassignedUsers()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            
+            var unassignedUsers = await _context.Users
+                .Include(u => u.Role)
+                .Where(u => u.Id != userId && u.ResponsibilityCentreId == null)
+                .Select(UserMappings.ToUserDto)
+                .OrderBy(u => u.Username)
+                .ToListAsync();
+            
+            return Ok(unassignedUsers);
+        }
+
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUser(int id)
         {

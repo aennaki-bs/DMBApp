@@ -21,7 +21,7 @@ interface DeleteConfirmDialogProps {
   count?: number;
 }
 
-const MotionAlertDialogContent = motion(AlertDialogContent);
+const MotionAlertDialogContent = motion.create(AlertDialogContent);
 
 const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
   open,

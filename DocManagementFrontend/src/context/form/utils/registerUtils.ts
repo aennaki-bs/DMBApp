@@ -3,43 +3,48 @@ import { toast } from 'sonner';
 import { FormData, SetStepValidation } from '../types';
 
 export const prepareUserData = (formData: FormData) => {
-  // Create the base user data
+  // Create the base user data with correct field names to match backend RegisterRequest exactly
   const userData = {
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    email: formData.email,
-    passwordHash: formData.password,
-    confirmPassword: formData.confirmPassword,
-    username: formData.username,
-    adminSecretKey: formData.adminSecretKey || '',
+    Email: formData.email || '',
+    Username: formData.username || '',
+    PasswordHash: formData.password || '',
+    FirstName: formData.firstName || '',
+    LastName: formData.lastName || '',
+    UserType: formData.userType || 'personal',
+    // Include responsibility centre data
+    ResponsibilityCentreId: formData.responsibilityCentreId || null,
+    NewResponsibilityCentre: formData.newResponsibilityCentre || null,
+    // Include admin secret key for header processing
+    adminSecretKey: formData.requestAdminAccess ? (formData.adminSecretKey || '') : undefined,
   };
   
-  // Add user type specific data
+  // Add user type specific data with exact backend field names
   if (formData.userType === 'personal') {
     return {
       ...userData,
-      userType: 'personal' as const, // Type assertion to narrow the type
-      Identity: formData.cin || '',
-      Address: formData.personalAddress || '',
-      city: formData.city || '',
-      country: formData.country || '',
-      phoneNumber: formData.personalPhone || '',
+      // Personal user specific fields - using exact backend field names
+      Identity: formData.cin || '', // Map CIN to Identity field
+      Address: formData.personalAddress || formData.address || '', // Handle both personal and generic address fields
+      City: formData.city || '', // Backend expects 'City' with capital C
+      Country: formData.country || '', // Backend expects 'Country' with capital C
+      PhoneNumber: formData.personalPhone || formData.phoneNumber || '', // Handle both personal and generic phone fields
+      WebSite: '', // Personal users don't have website - backend expects 'WebSite'
     };
   } else {
-    // Map company fields to the backend field names
+    // Company account - map company fields correctly
     return {
       ...userData,
-      userType: 'company' as const, // Type assertion to narrow the type
-      firstName: formData.companyName || '', // Map company name to firstName
-      Identity: formData.companyRC || '', // Map company RC to Identity
-      phoneNumber: formData.companyPhone || '', // Map company phone to phoneNumber
-      webSite: formData.companyWebsite || '', // Map company website to webSite
-      Address: formData.companyAddress || '', // Map company address to Address
-      city: formData.companyCity || '', // Map company city to city
-      country: formData.companyCountry || '', // Map company country to country
-      email: formData.companyEmail || formData.email || '', // Map company email to email
-      username: formData.username || '', // username remains the same
-      passwordHash: formData.password, // password remains the same but field renamed to passwordHash
+      // For company accounts, map company name to firstName as per backend logic
+      FirstName: formData.companyName || '',
+      LastName: formData.lastName || '', // Keep lastName for company contact person
+      Identity: formData.companyRC || '', // Map company RC to Identity field - backend expects 'Identity'
+      Address: formData.companyAddress || formData.address || '', // Handle both company and generic address fields
+      City: formData.companyCity || formData.city || '', // Handle both company and generic city fields
+      Country: formData.companyCountry || formData.country || '', // Handle both company and generic country fields
+      PhoneNumber: formData.companyPhone || formData.phoneNumber || '', // Handle both company and generic phone fields
+      WebSite: formData.companyWebsite || formData.website || '', // Handle both company and generic website fields
+      // Override email if company has specific email
+      Email: formData.companyEmail || formData.email || '',
     };
   }
 };

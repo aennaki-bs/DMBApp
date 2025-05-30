@@ -152,19 +152,22 @@ export function SidebarNav() {
                   <span>Document Types</span>
                 </Link>
               </li>
-              {/* <li>
-                <Link 
-                  to="/subtype-management"
+
+              {/* Line Elements Management */}
+              <li>
+                <Link
+                  to="/line-elements-management"
                   className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/subtype-management') 
-                      ? 'bg-blue-600/40 text-blue-200' 
-                      : 'text-blue-100 hover:bg-blue-800/30 hover:text-blue-50'
+                    isActive("/line-elements-management")
+                      ? "bg-blue-600/40 text-blue-200"
+                      : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                   }`}
                 >
-                  <CalendarRange className="h-5 w-5" />
-                  <span>Subtypes</span>
+                  <Package className="h-5 w-5" />
+                  <span>Line Elements</span>
                 </Link>
-              </li> */}
+              </li>
+
               {/* Circuits */}
               <li>
                 <Link

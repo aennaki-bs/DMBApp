@@ -89,10 +89,10 @@ export const MultiStepFormProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
     setFormData({ validationError: undefined });
 
-    // Both flows now have 7 steps (including type selection)
-    // Personal flow: 0. Type Selection, 1. Info, 2. Address, 3. Username/Email, 4. Password, 5. Admin Key, 6. Summary
-    // Company flow: 0. Type Selection, 1. Info, 2. Address, 3. Username/Email, 4. Password, 5. Admin Key, 6. Summary
-    if (currentStep < 6) setCurrentStep(currentStep + 1);
+    // Both flows now have 8 steps (including type selection)
+    // Personal flow: 0. Type Selection, 1. Info, 2. Address, 3. Username/Email, 4. Password, 5. Admin Key, 6. Responsibility Centre, 7. Summary
+    // Company flow: 0. Type Selection, 1. Info, 2. Address, 3. Username/Email, 4. Password, 5. Admin Key, 6. Responsibility Centre, 7. Summary
+    if (currentStep < 7) setCurrentStep(currentStep + 1);
   };
 
   // Previous step logic
@@ -109,7 +109,7 @@ export const MultiStepFormProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Go to a specific step
   const goToStep = (step: number) => {
-    if (step >= 0 && step <= 6) {
+    if (step >= 0 && step <= 7) {
       setCurrentStep(step);
 
       // Clear any validation errors when jumping to a step
@@ -210,10 +210,17 @@ export const MultiStepFormProvider: React.FC<{ children: React.ReactNode }> = ({
 
           return true;
 
-        case 5: // Admin access - No required fields
+        case 5: // Admin access - Validate admin key if admin access is requested
+          if (formData.requestAdminAccess && !formData.adminSecretKey) {
+            setFormData({ validationError: "Admin key is required when requesting admin access" });
+            return false;
+          }
           return true;
 
-        case 6: // Review - No validation needed
+        case 6: // Responsibility Centre - Optional step
+          return true;
+
+        case 7: // Review - No validation needed
           return true;
 
         default:

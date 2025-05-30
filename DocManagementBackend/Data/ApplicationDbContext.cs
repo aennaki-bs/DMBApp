@@ -12,6 +12,7 @@ namespace DocManagementBackend.Data
         public DbSet<User> Users { get; set; }
         public DbSet<LogHistory> LogHistories { get; set; }
         public DbSet<Document> Documents { get; set; }
+        public DbSet<ResponsibilityCentre> ResponsibilityCentres { get; set; }
         public DbSet<Ligne> Lignes { get; set; }
         public DbSet<SousLigne> SousLignes { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -21,6 +22,12 @@ namespace DocManagementBackend.Data
         public DbSet<Circuit> Circuits { get; set; }
         public DbSet<DocumentCircuitHistory> DocumentCircuitHistory { get; set; }
         public DbSet<DocumentStepHistory> DocumentStepHistory { get; set; }
+
+        // Line element reference tables
+        public DbSet<LignesElementType> LignesElementTypes { get; set; }
+        public DbSet<Item> Items { get; set; }
+        public DbSet<UniteCode> UniteCodes { get; set; }
+        public DbSet<GeneralAccounts> GeneralAccounts { get; set; }
 
         // Workflow entities
         public DbSet<Status> Status { get; set; }
@@ -41,6 +48,27 @@ namespace DocManagementBackend.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // ResponsibilityCentre unique constraint on Code
+            modelBuilder.Entity<ResponsibilityCentre>()
+                .HasIndex(rc => rc.Code)
+                .IsUnique();
+
+            // User -> ResponsibilityCentre relationship
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.ResponsibilityCentre)
+                .WithMany(rc => rc.Users)
+                .HasForeignKey(u => u.ResponsibilityCentreId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Document -> ResponsibilityCentre relationship
+            modelBuilder.Entity<Document>()
+                .HasOne(d => d.ResponsibilityCentre)
+                .WithMany(rc => rc.Documents)
+                .HasForeignKey(d => d.ResponsibilityCentreId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
             // SubType relationship with Document
             modelBuilder.Entity<Document>()
                 .HasOne(d => d.SubType)
@@ -272,11 +300,86 @@ namespace DocManagementBackend.Data
                 .HasForeignKey(ar => ar.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // Line element relationships
+            // LignesElementType unique constraint on TypeElement
+            modelBuilder.Entity<LignesElementType>()
+                .HasIndex(let => let.TypeElement)
+                .IsUnique();
+
+            // Item unique constraint on Code
+            modelBuilder.Entity<Item>()
+                .HasIndex(i => i.Code)
+                .IsUnique();
+
+            // Item -> UniteCode relationship
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.UniteCodeNavigation)
+                .WithMany(uc => uc.Items)
+                .HasForeignKey(i => i.Unite)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // UniteCode unique constraint on Code
+            modelBuilder.Entity<UniteCode>()
+                .HasIndex(uc => uc.Code)
+                .IsUnique();
+
+            // GeneralAccounts unique constraint on Code
+            modelBuilder.Entity<GeneralAccounts>()
+                .HasIndex(ga => ga.Code)
+                .IsUnique();
+
+            // Ligne -> LignesElementType relationship
+            modelBuilder.Entity<Ligne>()
+                .HasOne(l => l.Type)
+                .WithMany(let => let.Lignes)
+                .HasForeignKey(l => l.TypeId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Ligne -> Item relationship
+            modelBuilder.Entity<Ligne>()
+                .HasOne(l => l.Item)
+                .WithMany(i => i.Lignes)
+                .HasForeignKey(l => l.ItemCode)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Ligne -> GeneralAccounts relationship
+            modelBuilder.Entity<Ligne>()
+                .HasOne(l => l.GeneralAccounts)
+                .WithMany(ga => ga.Lignes)
+                .HasForeignKey(l => l.GeneralAccountsCode)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
             // Seed data
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, RoleName = "Admin", IsAdmin = true, IsSimpleUser = false, IsFullUser = false },
                 new Role { Id = 2, RoleName = "SimpleUser", IsAdmin = false, IsSimpleUser = true, IsFullUser = false },
                 new Role { Id = 3, RoleName = "FullUser", IsAdmin = false, IsSimpleUser = false, IsFullUser = true }
+            );
+
+            // Seed data for LignesElementType
+            modelBuilder.Entity<LignesElementType>().HasData(
+                new LignesElementType 
+                { 
+                    Id = 1, 
+                    TypeElement = "Item", 
+                    Description = "Product or service items", 
+                    TableName = "Item",
+                    CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc)
+                },
+                new LignesElementType 
+                { 
+                    Id = 2, 
+                    TypeElement = "General Accounts", 
+                    Description = "General accounting codes", 
+                    TableName = "GeneralAccounts",
+                    CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc)
+                }
             );
         }
     }

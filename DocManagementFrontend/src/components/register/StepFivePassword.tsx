@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMultiStepForm } from "@/context/form";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
@@ -17,6 +17,14 @@ const PasswordForm: React.FC = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Initialize password strength when component mounts or password exists
+  useEffect(() => {
+    if (formData.password) {
+      const strength = calculatePasswordStrength(formData.password);
+      setPasswordStrength(strength);
+    }
+  }, [formData.password]);
 
   // Password requirements
   const passwordRequirements = [
@@ -63,8 +71,8 @@ const PasswordForm: React.FC = () => {
 
   // Get strength color
   const getStrengthColor = (strength: number): string => {
-    if (strength < 40) return "bg-red-500";
-    if (strength < 80) return "bg-amber-500";
+    if (strength < 60) return "bg-red-500";
+    if (strength < 100) return "bg-amber-500";
     return "bg-green-500";
   };
 
@@ -72,8 +80,8 @@ const PasswordForm: React.FC = () => {
   const getStrengthText = (
     strength: number
   ): { text: string; color: string } => {
-    if (strength < 40) return { text: "Weak", color: "text-red-400" };
-    if (strength < 80) return { text: "Good", color: "text-amber-400" };
+    if (strength < 60) return { text: "Weak", color: "text-red-400" };
+    if (strength < 100) return { text: "Good", color: "text-amber-400" };
     return { text: "Strong", color: "text-green-400" };
   };
 
@@ -84,7 +92,8 @@ const PasswordForm: React.FC = () => {
 
     // Update password strength when password changes
     if (name === "password") {
-      setPasswordStrength(calculatePasswordStrength(value));
+      const strength = calculatePasswordStrength(value);
+      setPasswordStrength(strength);
     }
 
     // Clear error when user types
@@ -133,8 +142,8 @@ const PasswordForm: React.FC = () => {
         error = "Password is required";
       } else if (value.length < 8) {
         error = "Password must be at least 8 characters";
-      } else if (calculatePasswordStrength(value) < 60) {
-        error = "Password is too weak";
+      } else if (calculatePasswordStrength(value) < 100) {
+        error = "Password must meet all 5 requirements to be strong";
       }
     } else if (name === "confirmPassword") {
       if (!value) {
@@ -160,8 +169,8 @@ const PasswordForm: React.FC = () => {
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
       isValid = false;
-    } else if (calculatePasswordStrength(formData.password) < 60) {
-      newErrors.password = "Password is too weak";
+    } else if (calculatePasswordStrength(formData.password) < 100) {
+      newErrors.password = "Password must meet all 5 requirements to be strong";
       isValid = false;
     }
 

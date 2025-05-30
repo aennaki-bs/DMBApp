@@ -37,6 +37,11 @@ namespace DocManagementBackend.Models {
         [ForeignKey("RoleId")]
         [JsonIgnore]
         public Role? Role { get; set; }
+        
+        public int? ResponsibilityCentreId { get; set; }
+        [ForeignKey("ResponsibilityCentreId")]
+        [JsonIgnore]
+        public ResponsibilityCentre? ResponsibilityCentre { get; set; }
         [JsonIgnore]
         public ICollection<LogHistory> LogHistories { get; set; } = new List<LogHistory>();
         [JsonIgnore]
