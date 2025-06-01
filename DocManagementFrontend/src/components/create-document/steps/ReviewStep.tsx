@@ -21,6 +21,9 @@ import {
   Calculator,
   Share2,
   ExternalLink,
+  CheckCircle,
+  Building2,
+  Info,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -36,11 +39,14 @@ interface ReviewStepProps {
   circuitName: string;
   isExternal?: boolean;
   externalReference?: string;
+  responsibilityCentreName?: string;
+  userHasAssignedCentre?: boolean;
   onEditTypeClick: () => void;
   onEditDetailsClick: () => void;
   onEditDateClick: () => void;
   onEditContentClick: () => void;
   onEditCircuitClick: () => void;
+  onEditResponsibilityCentreClick?: () => void;
 }
 
 export const ReviewStep = ({
@@ -54,11 +60,14 @@ export const ReviewStep = ({
   circuitName,
   isExternal = false,
   externalReference = "",
+  responsibilityCentreName,
+  userHasAssignedCentre = false,
   onEditTypeClick,
   onEditDetailsClick,
   onEditDateClick,
   onEditContentClick,
   onEditCircuitClick,
+  onEditResponsibilityCentreClick,
 }: ReviewStepProps) => {
   return (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -122,6 +131,58 @@ export const ReviewStep = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Responsibility Centre */}
+      {responsibilityCentreName && (
+        <Card className="bg-[#0a1033]/80 border-gray-800">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-md text-white flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-blue-400" />
+                Responsibility Centre
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                {userHasAssignedCentre
+                  ? "Automatically assigned from your profile"
+                  : "Selected for this document"}
+              </CardDescription>
+            </div>
+            {!userHasAssignedCentre && onEditResponsibilityCentreClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-400 hover:bg-blue-900/20"
+                onClick={onEditResponsibilityCentreClick}
+              >
+                <Edit className="h-4 w-4 mr-1" /> Edit
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Centre:</span>
+              <span className="font-medium">{responsibilityCentreName}</span>
+            </div>
+            {userHasAssignedCentre === true ? (
+              <div className="flex items-center space-x-2 mt-2 bg-blue-900/20 p-2 rounded">
+                <CheckCircle className="h-4 w-4 text-green-400" />
+                <span className="text-xs text-blue-300">
+                  This document is automatically assigned to your responsibility
+                  centre.
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 mt-2 bg-blue-900/20 p-2 rounded">
+                <Info className="h-4 w-4 text-blue-400" />
+                <span className="text-xs text-blue-300">
+                  You selected this responsibility centre during document
+                  creation.
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Document Details */}
       <Card className="bg-[#0a1033]/80 border-gray-800">

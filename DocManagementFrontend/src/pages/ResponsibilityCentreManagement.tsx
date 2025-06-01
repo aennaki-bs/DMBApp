@@ -668,7 +668,7 @@ export default function ResponsibilityCentreManagement() {
     }
   };
 
-  // Modify the handleRemoveUser function to stay in Current Users tab and track deletions
+  // Modify the handleRemoveUser function to properly update the user list in details view
   const handleRemoveUser = async (userId: number) => {
     if (!centreToAssignUsers) return;
 
@@ -677,13 +677,13 @@ export default function ResponsibilityCentreManagement() {
       const response = await responsibilityCentreService.removeUsers([userId]);
 
       if (response.usersSuccessfullyAssociated > 0) {
-        // Update the users count in the centre
+        // Update the users count in the centre - ensure it never goes below 0
         setCentres((prev) =>
           prev.map((centre) =>
             centre.id === centreToAssignUsers.id
               ? {
                   ...centre,
-                  usersCount: (centre.usersCount || 0) - 1,
+                  usersCount: Math.max(0, (centre.usersCount || 0) - 1),
                 }
               : centre
           )
@@ -703,6 +703,17 @@ export default function ResponsibilityCentreManagement() {
           setAssociatedWithCurrentCenter((prev) =>
             prev.filter((user) => user.id !== userId)
           );
+        }
+
+        // If this is from the details view, also update the centreUsers list
+        if (showDetailsDialog && centreDetails) {
+          setCentreUsers((prev) => prev.filter((user) => user.id !== userId));
+
+          // Update the centreDetails object
+          setCentreDetails({
+            ...centreDetails,
+            usersCount: Math.max(0, (centreDetails.usersCount || 0) - 1),
+          });
         }
       } else if (response.errors && response.errors.length > 0) {
         toast.error(`Failed to remove user: ${response.errors.join(", ")}`);
@@ -770,6 +781,12 @@ export default function ResponsibilityCentreManagement() {
         await responsibilityCentreService.getResponsibilityCentreById(
           centre.id
         );
+
+      // Ensure usersCount is at least 0 (never negative)
+      if (details.usersCount < 0) {
+        details.usersCount = 0;
+      }
+
       setCentreDetails(details);
 
       // Process users to ensure they have fullName
@@ -868,6 +885,45 @@ export default function ResponsibilityCentreManagement() {
       return user.userType;
     }
     return "User";
+  };
+
+  // Add function to force refresh details view
+  const refreshDetailsView = async () => {
+    if (!centreDetails) return;
+
+    setIsLoadingDetails(true);
+    try {
+      // Fetch latest centre details
+      const details =
+        await responsibilityCentreService.getResponsibilityCentreById(
+          centreDetails.id
+        );
+
+      // Ensure usersCount is at least 0 (never negative)
+      if (details.usersCount < 0) {
+        details.usersCount = 0;
+      }
+
+      setCentreDetails(details);
+
+      // Process users to ensure they have fullName
+      const processedUsers = (details.users || []).map((user) => {
+        if (!user.fullName && (user.firstName || user.lastName)) {
+          return {
+            ...user,
+            fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          };
+        }
+        return user;
+      });
+
+      setCentreUsers(processedUsers);
+    } catch (error) {
+      console.error("Error refreshing responsibility centre details:", error);
+      toast.error("Failed to refresh details");
+    } finally {
+      setIsLoadingDetails(false);
+    }
   };
 
   return (
@@ -1017,7 +1073,7 @@ export default function ResponsibilityCentreManagement() {
                           variant="outline"
                           className="bg-blue-900/20 text-blue-300 border-blue-900/40"
                         >
-                          {centre.usersCount || 0}
+                          {Math.max(0, centre.usersCount || 0)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-blue-100 text-center">
@@ -1153,7 +1209,16 @@ export default function ResponsibilityCentreManagement() {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            // Just close without validation if we're exiting
+            resetForm();
+          }
+          setEditDialogOpen(open);
+        }}
+      >
         <DialogContent className="sm:max-w-md bg-[#0f1642] border-blue-900/30 text-blue-100">
           <DialogHeader>
             <DialogTitle className="text-xl text-white">
@@ -1173,9 +1238,15 @@ export default function ResponsibilityCentreManagement() {
                 value={formCode}
                 onChange={(e) => {
                   setFormCode(e.target.value);
-                  setIsCodeValid(true); // Reset validation state on change
+                  // Only validate if the code actually changed from the original
+                  if (e.target.value !== centreToEdit?.code) {
+                    setIsCodeValid(true); // Reset validation state on change
+                    debouncedValidateCode(e.target.value, centreToEdit?.id);
+                  } else {
+                    // If returning to original value, it's valid
+                    setIsCodeValid(true);
+                  }
                 }}
-                onBlur={() => validateCode(formCode, centreToEdit?.id)}
                 placeholder="Enter code (e.g. RC001)"
                 className={`bg-[#192257] border-blue-900/40 text-white ${
                   !isCodeValid ? "border-red-500 focus:border-red-500" : ""
@@ -1614,29 +1685,26 @@ export default function ResponsibilityCentreManagement() {
                     Associated Users
                   </h3>
 
-                  {centreUsers.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (centreDetails) {
-                          setUserIdsToRemove(
-                            centreUsers.map((user) => user.id)
-                          );
-                          setShowDetailsDialog(false);
-                        }
-                      }}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                      disabled={centreUsers.length === 0}
-                    >
-                      <UserMinus className="h-4 w-4 mr-2" />
-                      Remove All Users
-                    </Button>
-                  )}
+                  {/* Only keep the refresh button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshDetailsView}
+                    disabled={isLoadingDetails}
+                    className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 flex items-center gap-1"
+                    title="Refresh user list"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${
+                        isLoadingDetails ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span className="text-xs">Refresh</span>
+                  </Button>
                 </div>
 
                 <div className="border border-blue-900/30 rounded-md bg-[#121c3e]">
-                  {isLoadingUsers ? (
+                  {isLoadingDetails ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
                       <p className="text-blue-300 ml-3">Loading users...</p>

@@ -21,6 +21,7 @@ import {
   Save,
   CheckCircle,
   Share2,
+  Building2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,11 @@ import { SubType } from "@/models/subtype";
 import documentService from "@/services/documentService";
 import subTypeService from "@/services/subTypeService";
 import documentTypeService from "@/services/documentTypeService";
+import responsibilityCentreService from "@/services/responsibilityCentreService";
+import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
 import api from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
+import { checkApiConnection } from "@/services/api";
 
 // Import step components
 import { DateSelectionStep } from "./steps/DateSelectionStep";
@@ -37,6 +42,7 @@ import { TypeSelectionWithDateFilterStep } from "./steps/TypeSelectionWithDateFi
 import { ContentStep } from "./steps/ContentStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { CircuitAssignmentStep } from "./steps/CircuitAssignmentStep";
+import { ResponsibilityCentreStep } from "./steps/ResponsibilityCentreStep";
 
 interface CreateDocumentWizardProps {
   open: boolean;
@@ -66,6 +72,7 @@ interface FormData {
   circuitName: string;
   isExternal: boolean;
   externalReference: string;
+  responsibilityCentreId: number | null;
 }
 
 const MotionDiv = motion.div;
@@ -77,6 +84,12 @@ export default function CreateDocumentWizard({
 }: CreateDocumentWizardProps) {
   // Add navigate function
   const navigate = useNavigate();
+  // Get user auth context
+  const { user } = useAuth();
+
+  // Check if user has a responsibility centre
+  const userHasResponsibilityCentre =
+    user?.responsibilityCentre?.id !== undefined;
 
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
@@ -95,12 +108,18 @@ export default function CreateDocumentWizard({
     circuitName: "",
     isExternal: false,
     externalReference: "",
+    responsibilityCentreId: userHasResponsibilityCentre
+      ? user?.responsibilityCentre?.id || null
+      : null,
   });
 
   // Data fetching states
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [subTypes, setSubTypes] = useState<SubType[]>([]);
   const [circuits, setCircuits] = useState<any[]>([]);
+  const [responsibilityCentres, setResponsibilityCentres] = useState<
+    ResponsibilityCentreSimple[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Validation errors
@@ -113,12 +132,20 @@ export default function CreateDocumentWizard({
   const [titleError, setTitleError] = useState<string | null>(null);
   const [contentError, setContentError] = useState<string | null>(null);
   const [circuitError, setCircuitError] = useState<string | null>(null);
+  const [responsibilityCentreError, setResponsibilityCentreError] = useState<
+    string | null
+  >(null);
+
+  // Define if we need to show responsibility centre step (now always true as it's the first step)
+  const shouldShowResponsibilityCentreStep = true;
 
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setCurrentStep(1);
-      setFormData({
+
+      // Start with no responsibility center
+      const initialFormData = {
         docDate: new Date().toISOString().split("T")[0],
         comptableDate: null,
         selectedTypeId: null,
@@ -130,50 +157,98 @@ export default function CreateDocumentWizard({
         circuitName: "",
         isExternal: false,
         externalReference: "",
-      });
+        responsibilityCentreId: null,
+      };
+
+      setFormData(initialFormData);
+      setIsLoading(true);
+
+      // Check if user has a responsibility center
+      api
+        .get("/Account/user-info")
+        .then((response) => {
+          console.log("User info from API:", response.data);
+          // API uses "responsibilityCenter" (with "Center")
+          if (response.data?.responsibilityCenter?.id) {
+            console.log(
+              "Found responsibility center in user data:",
+              response.data.responsibilityCenter
+            );
+            // User has a responsibility center, use it
+            setFormData((prev) => ({
+              ...prev,
+              responsibilityCentreId: response.data.responsibilityCenter.id,
+            }));
+            setIsLoading(false);
+          } else {
+            // User doesn't have an assigned center, fetch available centers
+            fetchResponsibilityCentres();
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch user info:", error);
+          // Try to fetch responsibility centres anyway
+          fetchResponsibilityCentres();
+        });
+
+      // Fetch other required data
       fetchDocumentTypes();
       fetchCircuits();
     }
   }, [open]);
 
   // Step definitions
-  const steps: Step[] = [
+  // Responsibility Centre is now the first step for all users
+  const baseSteps: Step[] = [
     {
       id: 1,
-      title: "Document Date",
-      description: "Select the document date",
-      icon: <Calendar className="h-4 w-4" />,
+      title: "Responsibility Centre",
+      description: "Select a responsibility centre",
+      icon: <Building2 className="h-4 w-4" />,
       completed: currentStep > 1,
     },
     {
       id: 2,
-      title: "Document Type",
-      description: "Select type and serie",
-      icon: <Layers className="h-4 w-4" />,
+      title: "Document Date",
+      description: "Select the document date",
+      icon: <Calendar className="h-4 w-4" />,
       completed: currentStep > 2,
     },
     {
       id: 3,
-      title: "Content",
-      description: "Add document content",
-      icon: <FileText className="h-4 w-4" />,
+      title: "Document Type",
+      description: "Select type and serie",
+      icon: <Layers className="h-4 w-4" />,
       completed: currentStep > 3,
     },
     {
       id: 4,
-      title: "Circuit (Optional)",
-      description: "Assign to workflow or skip",
-      icon: <Share2 className="h-4 w-4" />,
+      title: "Content",
+      description: "Add document content",
+      icon: <FileText className="h-4 w-4" />,
       completed: currentStep > 4,
     },
-    {
-      id: 5,
-      title: "Review",
-      description: "Confirm document details",
-      icon: <CheckCircle className="h-4 w-4" />,
-      completed: false,
-    },
   ];
+
+  // Circuit step and review step
+  const circuitStep: Step = {
+    id: 5,
+    title: "Circuit (Optional)",
+    description: "Assign to workflow or skip",
+    icon: <Share2 className="h-4 w-4" />,
+    completed: currentStep > 5,
+  };
+
+  const reviewStep: Step = {
+    id: 6,
+    title: "Review",
+    description: "Confirm document details",
+    icon: <CheckCircle className="h-4 w-4" />,
+    completed: false,
+  };
+
+  // Create final steps array
+  const steps: Step[] = [...baseSteps, circuitStep, reviewStep];
 
   const TOTAL_STEPS = steps.length;
 
@@ -429,144 +504,162 @@ export default function CreateDocumentWizard({
     }
   };
 
+  const validateDateStep = () => {
+    if (!formData.docDate) {
+      setDateError("Document date is required");
+      toast.error("Document date is required", {
+        description: "Please select a valid date to continue.",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    try {
+      // Validate date format
+      const dateObj = new Date(formData.docDate);
+      if (isNaN(dateObj.getTime())) {
+        setDateError("Invalid date format");
+        toast.error("Invalid date format", {
+          description: "Please select a valid date to continue.",
+          duration: 3000,
+        });
+        return false;
+      }
+    } catch (error) {
+      setDateError("Invalid date");
+      toast.error("Invalid date", {
+        description: "Please select a valid date to continue.",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateTypeStep = () => {
+    if (!formData.selectedTypeId) {
+      setTypeError("Document type is required");
+      toast.error("Document type is required", {
+        description: "Please select a document type to continue.",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    if (!formData.selectedSubTypeId) {
+      setSubTypeError("Subtype is required");
+      toast.error("Subtype is required", {
+        description: "Please select a subtype to continue.",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    // Validate that the selected subtype is valid for the selected date
+    const selectedSubType = subTypes.find(
+      (st) => st.id === formData.selectedSubTypeId
+    );
+    if (!selectedSubType) {
+      setSubTypeError("Invalid subtype selection");
+      toast.error("Invalid subtype selection", {
+        description:
+          "The selected subtype is not valid. Please select a valid subtype.",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    // Additional validation to ensure the subtype is valid for the selected date
+    try {
+      const docDate = new Date(formData.docDate);
+      const startDate = new Date(selectedSubType.startDate);
+      const endDate = new Date(selectedSubType.endDate);
+
+      if (docDate < startDate || docDate > endDate) {
+        setSubTypeError("Subtype not valid for selected date");
+        toast.error("Subtype not valid for selected date", {
+          description: `The selected subtype is only valid from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}.`,
+          duration: 4000,
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("Error validating subtype date range:", error);
+    }
+
+    return true;
+  };
+
+  const validateContentStep = () => {
+    if (!formData.content.trim()) {
+      setContentError("Document content is required");
+      toast.error("Document content is required", {
+        description: "Please enter content for your document to continue.",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    // If we haven't set a title yet, derive it from the content
+    if (!formData.title.trim()) {
+      // Get the first line or first few words as the title
+      const firstLine = formData.content.split("\n")[0].trim();
+      const title =
+        firstLine.length > 50 ? firstLine.substring(0, 50) + "..." : firstLine;
+      handleUpdateFormData("title", title);
+    }
+
+    return true;
+  };
+
+  const validateCircuitStep = () => {
+    // Circuit selection is optional
+    // Just check if there are active circuits available to show, but don't require selection
+    const activeCircuits = circuits.filter((c) => c.isActive);
+    if (activeCircuits.length === 0) {
+      setCircuitError("No active circuits available for assignment");
+      toast.error("No active circuits available", {
+        description:
+          "There are no active circuits available. You can continue without assigning a circuit or create active circuits first.",
+        duration: 5000,
+      });
+      // Still return true since circuit assignment is optional
+      return true;
+    }
+    return true;
+  };
+
+  const validateResponsibilityCentreStep = (): boolean => {
+    // Clear previous error
+    setResponsibilityCentreError(null);
+
+    // Auto-pass for users with assigned centers
+    if (formData.responsibilityCentreId) {
+      return true;
+    }
+
+    // Require a responsibility centre selection for users without an assigned center
+    setResponsibilityCentreError("Please select a responsibility centre");
+    toast.error("Responsibility centre is required", {
+      description: "Please select a responsibility centre to continue.",
+      duration: 3000,
+    });
+    return false;
+  };
+
   const validateCurrentStep = () => {
     switch (currentStep) {
-      case 1: // Document Date
-        if (!formData.docDate) {
-          setDateError("Document date is required");
-          toast.error("Document date is required", {
-            description: "Please select a valid date to continue.",
-            duration: 3000,
-          });
-          return false;
-        }
-
-        try {
-          // Validate date format
-          const dateObj = new Date(formData.docDate);
-          if (isNaN(dateObj.getTime())) {
-            setDateError("Invalid date format");
-            toast.error("Invalid date format", {
-              description: "Please select a valid date to continue.",
-              duration: 3000,
-            });
-            return false;
-          }
-        } catch (error) {
-          setDateError("Invalid date");
-          toast.error("Invalid date", {
-            description: "Please select a valid date to continue.",
-            duration: 3000,
-          });
-          return false;
-        }
-
-        return true;
-
-      case 2: // Document Type & Subtype
-        if (!formData.selectedTypeId) {
-          setTypeError("Document type is required");
-          toast.error("Document type is required", {
-            description: "Please select a document type to continue.",
-            duration: 3000,
-          });
-          return false;
-        }
-
-        if (!formData.selectedSubTypeId) {
-          setSubTypeError("Subtype is required");
-          toast.error("Subtype is required", {
-            description: "Please select a subtype to continue.",
-            duration: 3000,
-          });
-          return false;
-        }
-
-        // Validate that the selected subtype is valid for the selected date
-        const selectedSubType = subTypes.find(
-          (st) => st.id === formData.selectedSubTypeId
-        );
-        if (!selectedSubType) {
-          setSubTypeError("Invalid subtype selection");
-          toast.error("Invalid subtype selection", {
-            description:
-              "The selected subtype is not valid. Please select a valid subtype.",
-            duration: 3000,
-          });
-          return false;
-        }
-
-        // Additional validation to ensure the subtype is valid for the selected date
-        try {
-          const docDate = new Date(formData.docDate);
-          const startDate = new Date(selectedSubType.startDate);
-          const endDate = new Date(selectedSubType.endDate);
-
-          if (docDate < startDate || docDate > endDate) {
-            setSubTypeError("Subtype not valid for selected date");
-            toast.error("Subtype not valid for selected date", {
-              description: `The selected subtype is only valid from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}.`,
-              duration: 4000,
-            });
-            return false;
-          }
-        } catch (error) {
-          console.error("Error validating subtype date range:", error);
-        }
-
-        return true;
-
-      case 3: // Content
-        if (!formData.content.trim()) {
-          setContentError("Document content is required");
-          toast.error("Document content is required", {
-            description: "Please enter content for your document to continue.",
-            duration: 3000,
-          });
-          return false;
-        }
-
-        // If we haven't set a title yet, derive it from the content
-        if (!formData.title.trim()) {
-          // Get the first line or first few words as the title
-          const firstLine = formData.content.split("\n")[0].trim();
-          const title =
-            firstLine.length > 50
-              ? firstLine.substring(0, 50) + "..."
-              : firstLine;
-          handleUpdateFormData("title", title);
-        }
-
-        return true;
-
-      case 4: // Circuit
-        // Circuit selection is optional
-        // Just check if there are active circuits available to show, but don't require selection
-        const activeCircuits = circuits.filter((c) => c.isActive);
-        if (activeCircuits.length === 0) {
-          setCircuitError("No active circuits available for assignment");
-          toast.error("No active circuits available", {
-            description:
-              "There are no active circuits available. You can continue without assigning a circuit or create active circuits first.",
-            duration: 5000,
-          });
-          // Still return true since circuit assignment is optional
-          return true;
-        }
-        return true;
-
-      case 5: // Review
-        // Final validation before submission
-        if (!formData.title.trim()) {
-          toast.error("Document title is required", {
-            description: "Please provide a title for your document.",
-            duration: 3000,
-          });
-          return false;
-        }
-
-        return true;
-
+      case 1: // Responsibility Centre
+        return validateResponsibilityCentreStep();
+      case 2: // Document Date
+        return validateDateStep();
+      case 3: // Document Type
+        return validateTypeStep();
+      case 4: // Content
+        return validateContentStep();
+      case 5: // Circuit
+        return validateCircuitStep();
       default:
         return true;
     }
@@ -617,6 +710,7 @@ export default function CreateDocumentWizard({
         content: formData.content,
         circuitId: formData.circuitId,
         circuitName: formData.circuitName,
+        responsibilityCentreId: formData.responsibilityCentreId,
         ...(formData.isExternal && {
           documentExterne: formData.externalReference,
         }),
@@ -702,8 +796,120 @@ export default function CreateDocumentWizard({
     handleUpdateFormData("externalReference", value);
   };
 
+  const handleResponsibilityCentreChange = (centreId: number | undefined) => {
+    // Only allow changing if user doesn't have an assigned center
+    if (!userHasResponsibilityCentre) {
+      handleUpdateFormData("responsibilityCentreId", centreId);
+    }
+    // If user has a responsibility centre, their centre is already set in formData
+    // and cannot be changed
+  };
+
   const jumpToStep = (step: number) => {
     setCurrentStep(step);
+  };
+
+  // Fetch responsibility centers with better error handling
+  const fetchResponsibilityCentres = async () => {
+    try {
+      console.log("CreateDocumentWizard: Fetching responsibility centres");
+      setIsLoading(true);
+
+      // Check API connectivity first
+      const isApiConnected = await checkApiConnection();
+      if (!isApiConnected) {
+        console.error(
+          "API is not connected - cannot fetch responsibility centres"
+        );
+        toast.error("Cannot connect to server", {
+          description: "Please check your internet connection and try again.",
+          duration: 4000,
+        });
+        setResponsibilityCentres([]);
+        return;
+      }
+
+      // Try to fetch from the API directly first for more reliable results
+      try {
+        const response = await api.get("/ResponsibilityCentre/simple");
+        const centres = response.data;
+
+        console.log("CreateDocumentWizard: Fetched centres:", centres);
+
+        if (centres && centres.length > 0) {
+          setResponsibilityCentres(centres);
+        } else {
+          console.warn(
+            "CreateDocumentWizard: No responsibility centres returned from API"
+          );
+          toast.error("No responsibility centres available", {
+            description:
+              "Please contact your administrator to set up responsibility centres.",
+            duration: 4000,
+          });
+          setResponsibilityCentres([]);
+        }
+      } catch (directApiError) {
+        console.error(
+          "Direct API call failed, trying service:",
+          directApiError
+        );
+
+        // Fallback to the service method
+        const centres =
+          await responsibilityCentreService.getSimpleResponsibilityCentres();
+        if (centres && centres.length > 0) {
+          setResponsibilityCentres(centres);
+        } else {
+          setResponsibilityCentres([]);
+          toast.error("No responsibility centres available", {
+            description:
+              "Please contact your administrator to set up responsibility centres.",
+            duration: 4000,
+          });
+        }
+      }
+    } catch (error) {
+      console.error(
+        "CreateDocumentWizard: Failed to fetch responsibility centres:",
+        error
+      );
+      toast.error("Failed to load responsibility centres", {
+        description:
+          "There was a problem loading responsibility centres. Please try again or contact your administrator.",
+        duration: 5000,
+      });
+      setResponsibilityCentres([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Retry fetching responsibility centers
+  const retryFetchResponsibilityCentres = () => {
+    console.log("Retrying to fetch responsibility centres");
+    fetchResponsibilityCentres();
+  };
+
+  // Get the name of the selected responsibility centre
+  const getSelectedResponsibilityCentreName = (): string | undefined => {
+    if (formData.responsibilityCentreId) {
+      // First try to find it in the list of responsibility centers
+      const selectedCentre = responsibilityCentres.find(
+        (centre) => centre.id === formData.responsibilityCentreId
+      );
+
+      if (selectedCentre) {
+        return `${selectedCentre.code} - ${selectedCentre.descr}`;
+      }
+
+      // If not found in the list but user has one (from API)
+      if (user?.responsibilityCenter) {
+        return `${user.responsibilityCenter.code} - ${user.responsibilityCenter.descr}`;
+      }
+    }
+
+    return undefined;
   };
 
   const renderStepContent = () => {
@@ -714,10 +920,34 @@ export default function CreateDocumentWizard({
     };
 
     switch (currentStep) {
-      case 1: // Document Date
+      case 1: // Responsibility Centre
         return (
           <MotionDiv
-            key="step1"
+            key="step1-rc"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-4 py-4">
+              <ResponsibilityCentreStep
+                selectedCentreId={formData.responsibilityCentreId || undefined}
+                onCentreChange={handleResponsibilityCentreChange}
+                userHasCentre={!!formData.responsibilityCentreId}
+                userCentreName={getSelectedResponsibilityCentreName()}
+                isLoading={isLoading}
+                responsibilityCentres={responsibilityCentres}
+                onRetryFetch={retryFetchResponsibilityCentres}
+              />
+            </div>
+          </MotionDiv>
+        );
+
+      case 2: // Document Date
+        return (
+          <MotionDiv
+            key="step2-date"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -740,10 +970,10 @@ export default function CreateDocumentWizard({
           </MotionDiv>
         );
 
-      case 2: // Document Type & Subtype
+      case 3: // Document Type & Subtype
         return (
           <MotionDiv
-            key="step2"
+            key="step3-type"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -760,16 +990,16 @@ export default function CreateDocumentWizard({
                 typeError={typeError}
                 subTypeError={subTypeError}
                 documentDate={formData.docDate}
-                jumpToDateStep={() => setCurrentStep(1)}
+                jumpToDateStep={() => setCurrentStep(2)}
               />
             </div>
           </MotionDiv>
         );
 
-      case 3: // Content
+      case 4: // Content
         return (
           <MotionDiv
-            key="step3"
+            key="step4-content"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -790,10 +1020,10 @@ export default function CreateDocumentWizard({
           </MotionDiv>
         );
 
-      case 4: // Circuit
+      case 5: // Circuit
         return (
           <MotionDiv
-            key="step4"
+            key="step5-circuit"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -803,7 +1033,7 @@ export default function CreateDocumentWizard({
             <div className="space-y-4 py-4">
               <CircuitAssignmentStep
                 circuits={circuits
-                  .filter((circuit) => circuit.isActive === true) // Only show circuits where isActive is strictly true
+                  .filter((circuit) => circuit.isActive === true)
                   .map((circuit) => ({
                     ...circuit,
                   }))}
@@ -816,10 +1046,10 @@ export default function CreateDocumentWizard({
           </MotionDiv>
         );
 
-      case 5: // Review
+      case 6: // Review
         return (
           <MotionDiv
-            key="step5"
+            key="step6-review"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -842,11 +1072,16 @@ export default function CreateDocumentWizard({
                 circuitName={formData.circuitName}
                 isExternal={formData.isExternal}
                 externalReference={formData.externalReference}
-                onEditTypeClick={() => jumpToStep(2)}
-                onEditDetailsClick={() => jumpToStep(3)}
-                onEditDateClick={() => jumpToStep(1)}
-                onEditContentClick={() => jumpToStep(3)}
-                onEditCircuitClick={() => jumpToStep(4)}
+                responsibilityCentreName={getSelectedResponsibilityCentreName()}
+                userHasAssignedCentre={userHasResponsibilityCentre}
+                onEditTypeClick={() => jumpToStep(3)}
+                onEditDetailsClick={() => jumpToStep(4)}
+                onEditDateClick={() => jumpToStep(2)}
+                onEditContentClick={() => jumpToStep(4)}
+                onEditCircuitClick={() => jumpToStep(5)}
+                onEditResponsibilityCentreClick={
+                  userHasResponsibilityCentre ? undefined : () => jumpToStep(1)
+                }
               />
             </div>
           </MotionDiv>
@@ -862,14 +1097,32 @@ export default function CreateDocumentWizard({
       <DialogContent className="sm:max-w-[650px] bg-[#0a1033] border border-blue-900/30 flex flex-col max-h-[90vh]">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl text-blue-100">
-            {currentStep === 4
+            {currentStep === 1
+              ? "Responsibility Centre"
+              : currentStep === 2
+              ? "Document Date"
+              : currentStep === 3
+              ? "Document Type"
+              : currentStep === 4
+              ? "Document Content"
+              : currentStep === 5
               ? "Circuit Assignment (Optional)"
-              : "Create Document"}
+              : "Review Document"}
           </DialogTitle>
           <DialogDescription className="text-blue-300">
-            {currentStep === 4
+            {currentStep === 1
+              ? userHasResponsibilityCentre
+                ? "Your document will be assigned to your responsibility centre"
+                : "Select a responsibility centre for this document"
+              : currentStep === 2
+              ? "Select the document date"
+              : currentStep === 3
+              ? "Select document type and subtype"
+              : currentStep === 4
+              ? "Add content for your document"
+              : currentStep === 5
               ? "Assign a circuit or skip this step to create a static document"
-              : "Create a new document with the selected type and date"}
+              : "Confirm document details before creation"}
           </DialogDescription>
         </DialogHeader>
 

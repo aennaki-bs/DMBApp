@@ -53,6 +53,13 @@ export interface UserInfo {
   companyPhone?: string;
   companyEmail?: string;
   companyWebsite?: string;
+  // Responsibility centre information
+  responsibilityCentre?: {
+    id: number;
+    code: string;
+    descr: string;
+    isActive: boolean;
+  } | null;
 }
 
 export interface UpdateProfileRequest {

@@ -33,6 +33,16 @@ interface AssociateUsersToResponsibilityCentreResponse {
   results?: UserAssociationResult[];
 }
 
+// Add this helper function to detect token issues
+const getResponseAuthToken = () => {
+  try {
+    const token = localStorage.getItem('token');
+    return token ? `${token.substring(0, 10)}...` : 'No token';
+  } catch (e) {
+    return 'Error getting token';
+  }
+};
+
 /**
  * Service for managing responsibility centres
  */
@@ -45,8 +55,50 @@ const responsibilityCentreService = {
 
   // Get simplified list of responsibility centres (for dropdowns, etc.)
   getSimpleResponsibilityCentres: async (): Promise<ResponsibilityCentreSimple[]> => {
-    const response = await api.get('/ResponsibilityCentre/simple');
-    return response.data;
+    try {
+      console.log('Calling ResponsibilityCentre/simple API with auth token:', getResponseAuthToken());
+      const response = await api.get('/ResponsibilityCentre/simple');
+      console.log('Received response from ResponsibilityCentre/simple:', response.data);
+      
+      // Check if the response is valid (array)
+      if (Array.isArray(response.data)) {
+        return response.data;
+      } else {
+        console.error('Invalid response format from ResponsibilityCentre/simple - expected array:', response.data);
+        return [];
+      }
+    } catch (error: any) {
+      console.error('Error fetching simple responsibility centres:', error);
+      
+      // Log more details about the error
+      if (error.response) {
+        console.error('Response error details:', {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+      } else if (error.request) {
+        console.error('Request error (no response received):', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      
+      // Return empty array instead of throwing error to avoid breaking UI
+      return [];
+    }
+  },
+
+  // Get simplified list - alias method to ensure compatibility
+  getSimple: async (): Promise<ResponsibilityCentreSimple[]> => {
+    try {
+      console.log('Calling getSimple() method');
+      const result = await responsibilityCentreService.getSimpleResponsibilityCentres();
+      console.log('getSimple() received result with length:', result.length);
+      return result;
+    } catch (error) {
+      console.error('Error in getSimple:', error);
+      return [];
+    }
   },
 
   // Get a specific responsibility centre by ID
