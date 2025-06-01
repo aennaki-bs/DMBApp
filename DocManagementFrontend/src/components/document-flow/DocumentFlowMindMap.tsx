@@ -1,4 +1,5 @@
 import { useWorkflowStepStatuses } from "@/hooks/useWorkflowStepStatuses";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -34,10 +35,14 @@ export function DocumentFlowMindMap({
   hasPendingApprovals = false,
   refreshTrigger = 0,
 }: DocumentFlowMindMapProps) {
+  const { user } = useAuth();
   const { completeStatus } = useWorkflowStepStatuses(documentId);
   const [nextStatuses, setNextStatuses] = useState<any[]>([]);
   const [completedStatuses, setCompletedStatuses] = useState<any[]>([]);
   const [requiresApproval, setRequiresApproval] = useState(false);
+
+  // Check if user is SimpleUser (read-only access)
+  const isSimpleUser = user?.role === "SimpleUser";
 
   const currentStatusId = workflowStatus?.currentStatusId;
   const currentStatus = workflowStatus?.statuses?.find(
@@ -87,6 +92,13 @@ export function DocumentFlowMindMap({
 
   const handleMarkComplete = async () => {
     if (!currentStatus) return;
+    
+    // Prevent SimpleUser from modifying status
+    if (isSimpleUser) {
+      toast.error("You don't have permission to modify document status. You can only view the workflow.");
+      return;
+    }
+    
     try {
       await completeStatus({
         statusId: currentStatus.statusId,
@@ -110,6 +122,12 @@ export function DocumentFlowMindMap({
 
   // Handle clicking on a next status
   const handleNextStatusClick = async (statusId: number) => {
+    // Prevent SimpleUser from moving documents
+    if (isSimpleUser) {
+      toast.error("You don't have permission to move documents. You can only view the workflow status.");
+      return;
+    }
+    
     try {
       // Check if the target status requires approval
       const statusInfo = workflowStatus.availableStatusTransitions?.find(
@@ -300,24 +318,27 @@ export function DocumentFlowMindMap({
                   <Button
                     variant={currentStatus.isComplete ? "outline" : "default"}
                     onClick={handleMarkComplete}
+                    disabled={isSimpleUser}
+                    title={isSimpleUser ? "Read-only access: You can view but cannot modify workflow status" : undefined}
                     className={cn(
                       "w-full",
                       currentStatus.isComplete && !requiresApproval
                         ? "border-green-500/50 text-green-300 hover:bg-green-900/20"
                         : requiresApproval
                         ? "border-amber-500/50 text-amber-300 hover:bg-amber-900/20"
-                        : "bg-blue-600 hover:bg-blue-700"
+                        : "bg-blue-600 hover:bg-blue-700",
+                      isSimpleUser && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     {currentStatus.isComplete ? (
                       <>
                         <Circle className="mr-2 h-4 w-4" />
-                        Mark as Incomplete
+                        {isSimpleUser ? "Status: Incomplete" : "Mark as Incomplete"}
                       </>
                     ) : (
                       <>
                         <CheckCircle className="mr-2 h-4 w-4" />
-                        Mark as Complete
+                        {isSimpleUser ? "Status: In Progress" : "Mark as Complete"}
                       </>
                     )}
                   </Button>
@@ -352,10 +373,10 @@ export function DocumentFlowMindMap({
                   className={cn(
                     "border border-blue-500/30 bg-gradient-to-r from-blue-900/20 to-indigo-900/10 overflow-hidden",
                     "transform hover:-translate-y-1 hover:border-blue-400/50 transition-all duration-200",
-                    hasPendingApprovals ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                    hasPendingApprovals || isSimpleUser ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                   )}
                   onClick={() => {
-                    if (!hasPendingApprovals) {
+                    if (!hasPendingApprovals && !isSimpleUser) {
                       handleNextStatusClick(status.statusId);
                     }
                   }}
@@ -370,21 +391,27 @@ export function DocumentFlowMindMap({
                       </div>
                       <Button
                         size="sm"
-                        disabled={hasPendingApprovals}
+                        disabled={hasPendingApprovals || isSimpleUser}
                         className={cn(
                           "bg-blue-600 hover:bg-blue-700",
                           status.requiresApproval && "bg-amber-600 hover:bg-amber-700",
-                          hasPendingApprovals && "opacity-50 cursor-not-allowed"
+                          (hasPendingApprovals || isSimpleUser) && "opacity-50 cursor-not-allowed"
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!hasPendingApprovals) {
+                          if (!hasPendingApprovals && !isSimpleUser) {
                             handleNextStatusClick(status.statusId);
                           }
                         }}
-                        title={hasPendingApprovals ? "Document cannot be moved while approval is pending" : undefined}
+                        title={
+                          isSimpleUser 
+                            ? "Read-only access: You can view but cannot move documents" 
+                            : hasPendingApprovals 
+                            ? "Document cannot be moved while approval is pending" 
+                            : undefined
+                        }
                       >
-                        Move
+                        {isSimpleUser ? "View" : "Move"}
                       </Button>
                     </div>
 

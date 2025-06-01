@@ -35,6 +35,7 @@ namespace DocManagementBackend.Controllers
                 return authResult.ErrorResponse!;
 
             var circuits = await _context.Circuits
+                .Include(c => c.DocumentType)
                 .Include(c => c.Statuses)
                 .Include(c => c.Steps)
                 .ThenInclude(s => s.Approvator)
@@ -50,6 +51,13 @@ namespace DocManagementBackend.Controllers
                 Title = c.Title,
                 Descriptif = c.Descriptif,
                 IsActive = c.IsActive,
+                DocumentTypeId = c.DocumentTypeId ?? 0,
+                DocumentType = c.DocumentType != null ? new DocumentTypeDto
+                {
+                    TypeKey = c.DocumentType.TypeKey,
+                    TypeName = c.DocumentType.TypeName,
+                    TypeAttr = c.DocumentType.TypeAttr
+                } : null,
                 Statuses = c.Statuses.Select(s => new StatusDto
                 {
                     StatusId = s.Id,
@@ -92,12 +100,15 @@ namespace DocManagementBackend.Controllers
                 return authResult.ErrorResponse!;
 
             var activeCircuits = await _context.Circuits
+                .Include(c => c.DocumentType)
                 .Where(c => c.IsActive)
                 .Select(c => new ActiveCircuitDto
                 {
                     CircuitId = c.Id,
                     CircuitKey = c.CircuitKey,
-                    CircuitTitle = c.Title
+                    CircuitTitle = c.Title,
+                    DocumentTypeId = c.DocumentTypeId ?? 0,
+                    DocumentTypeName = c.DocumentType != null ? c.DocumentType.TypeName : "Unknown"
                 })
                 .ToListAsync();
 
@@ -112,6 +123,7 @@ namespace DocManagementBackend.Controllers
                 return authResult.ErrorResponse!;
 
             var circuit = await _context.Circuits
+                .Include(c => c.DocumentType)
                 .Include(c => c.Statuses)
                 .Include(c => c.Steps)
                 .ThenInclude(s => s.Approvator)
@@ -130,6 +142,13 @@ namespace DocManagementBackend.Controllers
                 Title = circuit.Title,
                 Descriptif = circuit.Descriptif,
                 IsActive = circuit.IsActive,
+                DocumentTypeId = circuit.DocumentTypeId ?? 0,
+                DocumentType = circuit.DocumentType != null ? new DocumentTypeDto
+                {
+                    TypeKey = circuit.DocumentType.TypeKey,
+                    TypeName = circuit.DocumentType.TypeName,
+                    TypeAttr = circuit.DocumentType.TypeAttr
+                } : null,
                 Statuses = circuit.Statuses.Select(s => new StatusDto
                 {
                     StatusId = s.Id,
@@ -195,11 +214,20 @@ namespace DocManagementBackend.Controllers
 
             var userId = authResult.UserId;
 
+            // Validate document type
+            if (createCircuitDto.DocumentTypeId <= 0)
+                return BadRequest("Document type is required.");
+
+            var documentType = await _context.DocumentTypes.FindAsync(createCircuitDto.DocumentTypeId);
+            if (documentType == null)
+                return BadRequest($"Document type with ID {createCircuitDto.DocumentTypeId} not found.");
+
             var circuit = new Circuit
             {
                 Title = createCircuitDto.Title,
                 Descriptif = createCircuitDto.Descriptif,
-                IsActive = createCircuitDto.IsActive
+                IsActive = createCircuitDto.IsActive,
+                DocumentTypeId = createCircuitDto.DocumentTypeId
             };
 
             try
@@ -213,6 +241,13 @@ namespace DocManagementBackend.Controllers
                     Title = createdCircuit.Title,
                     Descriptif = createdCircuit.Descriptif,
                     IsActive = createdCircuit.IsActive,
+                    DocumentTypeId = createdCircuit.DocumentTypeId ?? 0,
+                    DocumentType = new DocumentTypeDto
+                    {
+                        TypeKey = documentType.TypeKey,
+                        TypeName = documentType.TypeName,
+                        TypeAttr = documentType.TypeAttr
+                    },
                     Statuses = new List<StatusDto>(),
                     Steps = new List<StepDto>()
                 });
@@ -374,6 +409,16 @@ namespace DocManagementBackend.Controllers
             var circuit = await _context.Circuits.FindAsync(id);
             if (circuit == null)
                 return NotFound("Circuit not found.");
+
+            // Validate document type if provided
+            if (updateCircuitDto.DocumentTypeId > 0)
+            {
+                var documentType = await _context.DocumentTypes.FindAsync(updateCircuitDto.DocumentTypeId);
+                if (documentType == null)
+                    return BadRequest($"Document type with ID {updateCircuitDto.DocumentTypeId} not found.");
+                
+                circuit.DocumentTypeId = updateCircuitDto.DocumentTypeId;
+            }
 
             circuit.Title = updateCircuitDto.Title;
             circuit.Descriptif = updateCircuitDto.Descriptif;

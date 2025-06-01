@@ -1,4 +1,3 @@
-
 interface Circuit {
   id: number;
   circuitKey: string;
@@ -8,6 +7,13 @@ interface Circuit {
   isActive: boolean;
   hasOrderedFlow: boolean;
   allowBacktrack?: boolean;
+  documentTypeId?: number;
+  documentType?: {
+    id: number;
+    typeName: string;
+    typeKey?: string;
+    typeAttr?: string;
+  };
   createdAt?: string;
   updatedAt?: string;
   steps?: CircuitDetail[];

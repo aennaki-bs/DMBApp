@@ -5,6 +5,7 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string Descriptif { get; set; } = string.Empty;
         public bool IsActive { get; set; } = false;
+        public int DocumentTypeId { get; set; }
     }
 
     public class CircuitDto
@@ -14,6 +15,8 @@ namespace DocManagementBackend.Models
         public string Title { get; set; } = string.Empty;
         public string Descriptif { get; set; } = string.Empty;
         public bool IsActive { get; set; }
+        public int DocumentTypeId { get; set; }
+        public DocumentTypeDto? DocumentType { get; set; }
         public List<StatusDto> Statuses { get; set; } = new();
         public List<StepDto> Steps { get; set; } = new();
     }
@@ -23,6 +26,8 @@ namespace DocManagementBackend.Models
         public int CircuitId { get; set; }
         public string CircuitKey { get; set; } = string.Empty;
         public string CircuitTitle { get; set; } = string.Empty;
+        public int DocumentTypeId { get; set; }
+        public string DocumentTypeName { get; set; } = string.Empty;
     }
 
     public class CreateStepDto

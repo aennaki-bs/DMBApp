@@ -227,6 +227,13 @@ export function CircuitsTable({
             </TableHead>
             <TableHead className="text-blue-300">
               {renderSortableHeader(
+                "Type",
+                "documentType.typeName",
+                <FileText className="h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead className="text-blue-300">
+              {renderSortableHeader(
                 "Status",
                 "isActive",
                 <ToggleLeft className="h-4 w-4" />
@@ -274,6 +281,21 @@ export function CircuitsTable({
                 onClick={() => handleCircuitClick(circuit.id)}
               >
                 {circuit.descriptif || "No description"}
+              </TableCell>
+              <TableCell
+                className="text-blue-200/70"
+                onClick={() => handleCircuitClick(circuit.id)}
+              >
+                {circuit.documentType ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-blue-800/40 text-blue-200 text-xs">
+                      {circuit.documentType.typeKey || "N/A"}
+                    </Badge>
+                    <span className="text-sm">{circuit.documentType.typeName}</span>
+                  </div>
+                ) : (
+                  <span className="text-gray-400 italic">No document type</span>
+                )}
               </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center gap-2">

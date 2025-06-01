@@ -20,7 +20,7 @@ namespace DocManagementBackend.Services
             string[]? allowedRoles = null)
         {
             // Default to Admin and FullUser if no roles specified
-            allowedRoles ??= new[] { "Admin", "FullUser" };
+            allowedRoles ??= new[] { "Admin", "FullUser", "SimpleUser" };
 
             var userIdClaim = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             

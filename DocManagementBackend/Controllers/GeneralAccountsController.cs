@@ -25,6 +25,10 @@ namespace DocManagementBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GeneralAccountsDto>>> GetGeneralAccounts()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+                
             var accounts = await _context.GeneralAccounts
                 .Select(ga => new GeneralAccountsDto
                 {
@@ -42,9 +46,13 @@ namespace DocManagementBackend.Controllers
 
         // GET: api/GeneralAccounts/simple
         [HttpGet("simple")]
-        [AllowAnonymous]
+        // [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<GeneralAccountsSimpleDto>>> GetGeneralAccountsSimple()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+            
             var accounts = await _context.GeneralAccounts
                 .Select(ga => new GeneralAccountsSimpleDto
                 {
@@ -61,6 +69,10 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{code}")]
         public async Task<ActionResult<GeneralAccountsDto>> GetGeneralAccount(string code)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             var account = await _context.GeneralAccounts
                 .Where(ga => ga.Code == code)
                 .Select(ga => new GeneralAccountsDto
@@ -79,11 +91,28 @@ namespace DocManagementBackend.Controllers
             return Ok(account);
         }
 
+        // POST: api/GeneralAccounts/validate-code
+        [HttpPost("validate-code")]
+        public async Task<IActionResult> ValidateCode([FromBody] CreateGeneralAccountsRequest request)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+            
+            if (string.IsNullOrWhiteSpace(request.Code))
+                return BadRequest("Code is required.");
+
+            var exists = await _context.GeneralAccounts
+                .AnyAsync(ga => ga.Code.ToUpper() == request.Code.ToUpper());
+
+            return Ok(!exists);
+        }
+
         // POST: api/GeneralAccounts
         [HttpPost]
         public async Task<ActionResult<GeneralAccountsDto>> CreateGeneralAccount([FromBody] CreateGeneralAccountsRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -138,19 +167,59 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{code}")]
         public async Task<IActionResult> UpdateGeneralAccount(string code, [FromBody] UpdateGeneralAccountsRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var account = await _context.GeneralAccounts.FindAsync(code);
+            // Validate that at least one field is provided
+            if (string.IsNullOrWhiteSpace(request.Code) && string.IsNullOrWhiteSpace(request.Description))
+                return BadRequest("At least one field (Code or Description) must be provided.");
+
+            var account = await _context.GeneralAccounts
+                .Include(ga => ga.LignesElementTypes)
+                .FirstOrDefaultAsync(ga => ga.Code == code);
+                
             if (account == null)
                 return NotFound("General account not found.");
 
-            // Update Description if provided
-            if (!string.IsNullOrWhiteSpace(request.Description))
-                account.Description = request.Description.Trim();
+            // Check if code is being updated
+            bool isCodeChanging = !string.IsNullOrWhiteSpace(request.Code) && 
+                                 request.Code.ToUpper().Trim() != account.Code.ToUpper();
 
-            account.UpdatedAt = DateTime.UtcNow;
+            if (isCodeChanging)
+            {
+                // Check if there are dependent records
+                if (account.LignesElementTypes.Any())
+                    return BadRequest("Cannot update code: This general account is referenced by line element types. Please remove all references first.");
+
+                // Check if new code already exists
+                var existingCode = await _context.GeneralAccounts
+                    .AnyAsync(ga => ga.Code.ToUpper() == request.Code.ToUpper().Trim());
+
+                if (existingCode)
+                    return BadRequest("A general account with this code already exists.");
+
+                // Since we can't modify primary key, we need to create new and delete old
+                var newAccount = new GeneralAccounts
+                {
+                    Code = request.Code.ToUpper().Trim(),
+                    Description = !string.IsNullOrWhiteSpace(request.Description) ? request.Description.Trim() : account.Description,
+                    CreatedAt = account.CreatedAt, // Preserve original creation date
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                // Remove old account and add new one
+                _context.GeneralAccounts.Remove(account);
+                _context.GeneralAccounts.Add(newAccount);
+            }
+            else
+            {
+                // Only updating description, no primary key change
+                if (!string.IsNullOrWhiteSpace(request.Description))
+                    account.Description = request.Description.Trim();
+
+                account.UpdatedAt = DateTime.UtcNow;
+            }
 
             try
             {
@@ -159,6 +228,9 @@ namespace DocManagementBackend.Controllers
             }
             catch (DbUpdateException ex)
             {
+                if (ex.InnerException != null && ex.InnerException.Message.Contains("UNIQUE"))
+                    return BadRequest("A general account with this code already exists.");
+                
                 return StatusCode(500, $"An error occurred while updating the general account: {ex.Message}");
             }
         }
@@ -167,7 +239,7 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{code}")]
         public async Task<IActionResult> DeleteGeneralAccount(string code)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 

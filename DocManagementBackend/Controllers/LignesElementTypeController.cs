@@ -54,9 +54,13 @@ namespace DocManagementBackend.Controllers
 
         // GET: api/LignesElementType/simple
         [HttpGet("simple")]
-        [AllowAnonymous]
+        // [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<LignesElementTypeSimpleDto>>> GetLignesElementTypesSimple()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+            
             var elementTypes = await _context.LignesElementTypes
                 .Select(let => new LignesElementTypeSimpleDto
                 {
@@ -133,7 +137,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<LignesElementTypeDto>> CreateLignesElementType([FromBody] CreateLignesElementTypeRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -285,7 +289,7 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLignesElementType(int id, [FromBody] UpdateLignesElementTypeRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -358,7 +362,7 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLignesElementType(int id)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 

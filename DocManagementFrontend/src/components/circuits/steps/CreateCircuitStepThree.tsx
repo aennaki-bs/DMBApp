@@ -1,12 +1,14 @@
-
 import { Button } from '@/components/ui/button';
 import { Edit, Check, ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import documentTypeService from '@/services/documents/documentTypeService';
 
 interface CreateCircuitStepThreeProps {
   title: string;
   descriptif: string;
+  documentTypeId?: number;
   disabled?: boolean;
-  onEdit: (step: 1 | 2) => void;
+  onEdit: (step: 1 | 2 | 3) => void;
   onBack: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
@@ -15,12 +17,21 @@ interface CreateCircuitStepThreeProps {
 export default function CreateCircuitStepThree({
   title,
   descriptif,
+  documentTypeId,
   disabled,
   onEdit,
   onBack,
   onSubmit,
   isSubmitting,
 }: CreateCircuitStepThreeProps) {
+  // Fetch document types to get the selected document type name
+  const { data: documentTypes } = useQuery({
+    queryKey: ["documentTypes"],
+    queryFn: () => documentTypeService.getAllDocumentTypes(),
+  });
+
+  const selectedDocumentType = documentTypes?.find(dt => dt.id === documentTypeId);
+
   return (
     <>
       <div className="mb-4">
@@ -62,6 +73,23 @@ export default function CreateCircuitStepThree({
               Edit Description
             </Button>
           </div>
+          <div>
+            <span className="font-semibold">Document Type:</span>
+            <span className="ml-2 text-blue-100">
+              {selectedDocumentType?.typeName || 'Unknown Document Type'}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              className="ml-3 text-gray-400 hover:text-blue-400 pl-1 pr-1 py-0.5 rounded border border-transparent hover:border-blue-400 transition"
+              onClick={() => onEdit(3)}
+              disabled={disabled || isSubmitting}
+            >
+              <Edit className="w-4 h-4 mr-0.5" />
+              Edit Type
+            </Button>
+          </div>
         </div>
       </div>
       <div className="flex justify-between gap-2 pt-1">
@@ -77,7 +105,7 @@ export default function CreateCircuitStepThree({
         <Button
           type="button"
           onClick={onSubmit}
-          disabled={isSubmitting || !title}
+          disabled={isSubmitting || !title || !documentTypeId}
           className="bg-blue-700 text-white min-w-[130px] flex items-center justify-center"
         >
           {isSubmitting ? (

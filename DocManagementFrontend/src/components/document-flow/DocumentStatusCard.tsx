@@ -1,4 +1,5 @@
 import { DocumentWorkflowStatus } from "@/models/documentCircuit";
+import { useAuth } from "@/context/AuthContext";
 import {
   Card,
   CardContent,
@@ -36,6 +37,7 @@ export function DocumentStatusCard({
   workflowStatus,
   onStatusChange,
 }: DocumentStatusCardProps) {
+  const { user } = useAuth();
   const {
     status,
     statusText,
@@ -44,6 +46,9 @@ export function DocumentStatusCard({
     isCircuitCompleted,
   } = workflowStatus;
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Check if user is SimpleUser (read-only access)
+  const isSimpleUser = user?.role === "SimpleUser";
 
   // Get the current status full details
   const currentStatusDetails = (workflowStatus.statuses || []).find(
@@ -104,7 +109,7 @@ export function DocumentStatusCard({
 
   // Handle status completion toggle
   const handleStatusToggle = async (statusId: number, isComplete: boolean) => {
-    if (!workflowStatus || isUpdating) return;
+    if (!workflowStatus || isUpdating || isSimpleUser) return;
 
     setIsUpdating(true);
     try {
@@ -203,30 +208,39 @@ export function DocumentStatusCard({
                         <Checkbox
                           id={`status-${currentStatusDetails.statusId}`}
                           checked={currentStatusDetails.isComplete}
-                          onCheckedChange={(checked) => {
-                            handleStatusToggle(
-                              currentStatusDetails.statusId,
-                              !!checked
-                            );
-                          }}
-                          disabled={isUpdating}
+                          onCheckedChange={
+                            isSimpleUser 
+                              ? undefined 
+                              : (checked) => {
+                                  handleStatusToggle(
+                                    currentStatusDetails.statusId,
+                                    !!checked
+                                  );
+                                }
+                          }
+                          disabled={isUpdating || isSimpleUser}
                         />
                         <label
                           htmlFor={`status-${currentStatusDetails.statusId}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-white"
+                          className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white ${
+                            isSimpleUser ? "cursor-default" : "cursor-pointer"
+                          }`}
                         >
-                          Mark as{" "}
-                          {currentStatusDetails.isComplete
-                            ? "incomplete"
-                            : "complete"}
+                          {isSimpleUser 
+                            ? `Status: ${currentStatusDetails.isComplete ? "Complete" : "In Progress"}`
+                            : `Mark as ${currentStatusDetails.isComplete ? "incomplete" : "complete"}`
+                          }
                         </label>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
-                        {currentStatusDetails.isComplete
+                        {isSimpleUser
+                          ? "Read-only access: You can view but cannot change the status"
+                          : currentStatusDetails.isComplete
                           ? "Mark this status as incomplete"
-                          : "Mark this status as complete"}
+                          : "Mark this status as complete"
+                        }
                       </p>
                     </TooltipContent>
                   </Tooltip>

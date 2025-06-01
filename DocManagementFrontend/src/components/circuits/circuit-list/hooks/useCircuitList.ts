@@ -73,6 +73,10 @@ export function useCircuitList({ onApiError, searchQuery, statusFilter = 'any' }
             aValue = a.descriptif || '';
             bValue = b.descriptif || '';
             break;
+          case "documentType.typeName":
+            aValue = a.documentType?.typeName || '';
+            bValue = b.documentType?.typeName || '';
+            break;
           case "isActive":
             aValue = a.isActive ? 1 : 0;
             bValue = b.isActive ? 1 : 0;
@@ -103,7 +107,9 @@ export function useCircuitList({ onApiError, searchQuery, statusFilter = 'any' }
       const matchesSearch = !searchQuery || 
         circuit.circuitKey?.toLowerCase().includes(searchQuery.toLowerCase()) || 
         circuit.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        (circuit.descriptif && circuit.descriptif.toLowerCase().includes(searchQuery.toLowerCase()));
+        (circuit.descriptif && circuit.descriptif.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (circuit.documentType?.typeName && circuit.documentType.typeName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (circuit.documentType?.typeKey && circuit.documentType.typeKey.toLowerCase().includes(searchQuery.toLowerCase()));
       
       // Status filter
       const matchesStatus = statusFilter === 'any' || 

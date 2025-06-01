@@ -17,6 +17,11 @@ namespace DocManagementBackend.Models
         public bool HasOrderedFlow { get; set; } = false;
         public bool AllowBacktrack { get; set; } = false;
 
+        // DocumentType relationship - each circuit belongs to a specific document type
+        public int? DocumentTypeId { get; set; }
+        [ForeignKey("DocumentTypeId")]
+        public DocumentType? DocumentType { get; set; }
+
         [JsonIgnore]
         public ICollection<Status> Statuses { get; set; } = new List<Status>();
 

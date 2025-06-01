@@ -26,7 +26,7 @@ const circuitService = {
     return response.data;
   },
 
-  createCircuit: async (circuit: Omit<Circuit, 'id' | 'circuitKey' | 'crdCounter'>): Promise<Circuit> => {
+  createCircuit: async (circuit: Omit<Circuit, 'id' | 'circuitKey' | 'crdCounter'> & { documentTypeId: number }): Promise<Circuit> => {
     const response = await api.post('/Circuit', circuit);
     return response.data;
   },

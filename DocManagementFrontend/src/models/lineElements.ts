@@ -110,5 +110,6 @@ export interface CreateGeneralAccountsRequest {
 }
 
 export interface UpdateGeneralAccountsRequest {
+  code?: string;
   description?: string;
 } 
