@@ -1,29 +1,41 @@
 // Line Element Type models
 export interface LignesElementType {
   id: number;
+  code: string;
   typeElement: string;
   description: string;
   tableName: string;
+  itemCode?: string;
+  accountCode?: string;
+  item?: Item;
+  generalAccount?: GeneralAccounts;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface LignesElementTypeSimple {
   id: number;
+  code: string;
   typeElement: string;
   description: string;
 }
 
 export interface CreateLignesElementTypeRequest {
+  code: string;
   typeElement: string;
   description: string;
   tableName: string;
+  itemCode?: string;
+  accountCode?: string;
 }
 
 export interface UpdateLignesElementTypeRequest {
+  code?: string;
   typeElement?: string;
   description?: string;
   tableName?: string;
+  itemCode?: string;
+  accountCode?: string;
 }
 
 // Item models
@@ -34,7 +46,7 @@ export interface Item {
   uniteCodeNavigation?: UniteCode;
   createdAt: string;
   updatedAt: string;
-  lignesCount: number;
+  elementTypesCount: number;
 }
 
 export interface ItemSimple {
@@ -74,6 +86,7 @@ export interface CreateUniteCodeRequest {
 }
 
 export interface UpdateUniteCodeRequest {
+  code?: string;
   description?: string;
 }
 

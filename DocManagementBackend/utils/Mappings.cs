@@ -17,45 +17,48 @@ namespace DocManagementBackend.Mappings
             Prix = l.Prix,
             SousLignesCount = l.SousLignes.Count,
             
-            // Type information
-            TypeId = l.TypeId,
-            Type = l.Type == null ? null : new LignesElementTypeDto
+            // LignesElementType information (new normalized structure)
+            LignesElementTypeId = l.LignesElementTypeId,
+            LignesElementType = l.LignesElementType == null ? null : new LignesElementTypeDto
             {
-                Id = l.Type.Id,
-                TypeElement = l.Type.TypeElement,
-                Description = l.Type.Description,
-                TableName = l.Type.TableName,
-                CreatedAt = l.Type.CreatedAt,
-                UpdatedAt = l.Type.UpdatedAt
+                Id = l.LignesElementType.Id,
+                Code = l.LignesElementType.Code,
+                TypeElement = l.LignesElementType.TypeElement,
+                Description = l.LignesElementType.Description,
+                TableName = l.LignesElementType.TableName,
+                ItemCode = l.LignesElementType.ItemCode,
+                AccountCode = l.LignesElementType.AccountCode,
+                CreatedAt = l.LignesElementType.CreatedAt,
+                UpdatedAt = l.LignesElementType.UpdatedAt
             },
             
-            // Element references
-            ItemCode = l.ItemCode,
-            Item = l.Item == null ? null : new ItemDto
+            // Element references (computed properties from LignesElementType)
+            ItemCode = l.LignesElementType != null ? l.LignesElementType.ItemCode : null,
+            Item = l.LignesElementType == null || l.LignesElementType.Item == null ? null : new ItemDto
             {
-                Code = l.Item.Code,
-                Description = l.Item.Description,
-                Unite = l.Item.Unite,
-                UniteCodeNavigation = l.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
+                Code = l.LignesElementType.Item.Code,
+                Description = l.LignesElementType.Item.Description,
+                Unite = l.LignesElementType.Item.Unite,
+                UniteCodeNavigation = l.LignesElementType.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
                 {
-                    Code = l.Item.UniteCodeNavigation.Code,
-                    Description = l.Item.UniteCodeNavigation.Description,
-                    CreatedAt = l.Item.UniteCodeNavigation.CreatedAt,
-                    UpdatedAt = l.Item.UniteCodeNavigation.UpdatedAt,
-                    ItemsCount = l.Item.UniteCodeNavigation.Items.Count()
+                    Code = l.LignesElementType.Item.UniteCodeNavigation.Code,
+                    Description = l.LignesElementType.Item.UniteCodeNavigation.Description,
+                    CreatedAt = l.LignesElementType.Item.UniteCodeNavigation.CreatedAt,
+                    UpdatedAt = l.LignesElementType.Item.UniteCodeNavigation.UpdatedAt,
+                    ItemsCount = l.LignesElementType.Item.UniteCodeNavigation.Items.Count()
                 },
-                CreatedAt = l.Item.CreatedAt,
-                UpdatedAt = l.Item.UpdatedAt,
-                LignesCount = l.Item.Lignes.Count()
+                CreatedAt = l.LignesElementType.Item.CreatedAt,
+                UpdatedAt = l.LignesElementType.Item.UpdatedAt,
+                ElementTypesCount = l.LignesElementType.Item.LignesElementTypes.Count()
             },
-            GeneralAccountsCode = l.GeneralAccountsCode,
-            GeneralAccounts = l.GeneralAccounts == null ? null : new GeneralAccountsDto
+            GeneralAccountsCode = l.LignesElementType != null ? l.LignesElementType.AccountCode : null,
+            GeneralAccounts = l.LignesElementType == null || l.LignesElementType.GeneralAccount == null ? null : new GeneralAccountsDto
             {
-                Code = l.GeneralAccounts.Code,
-                Description = l.GeneralAccounts.Description,
-                CreatedAt = l.GeneralAccounts.CreatedAt,
-                UpdatedAt = l.GeneralAccounts.UpdatedAt,
-                LignesCount = l.GeneralAccounts.Lignes.Count()
+                Code = l.LignesElementType.GeneralAccount.Code,
+                Description = l.LignesElementType.GeneralAccount.Description,
+                CreatedAt = l.LignesElementType.GeneralAccount.CreatedAt,
+                UpdatedAt = l.LignesElementType.GeneralAccount.UpdatedAt,
+                LignesCount = l.LignesElementType.GeneralAccount.LignesElementTypes.Count()
             },
             
             // Pricing fields
@@ -133,45 +136,48 @@ namespace DocManagementBackend.Mappings
                 Prix = s.Ligne.Prix,
                 SousLignesCount = s.Ligne.SousLignes.Count,
                 
-                // Type information
-                TypeId = s.Ligne.TypeId,
-                Type = s.Ligne.Type == null ? null : new LignesElementTypeDto
+                // LignesElementType information (new normalized structure)
+                LignesElementTypeId = s.Ligne.LignesElementTypeId,
+                LignesElementType = s.Ligne.LignesElementType == null ? null : new LignesElementTypeDto
                 {
-                    Id = s.Ligne.Type.Id,
-                    TypeElement = s.Ligne.Type.TypeElement,
-                    Description = s.Ligne.Type.Description,
-                    TableName = s.Ligne.Type.TableName,
-                    CreatedAt = s.Ligne.Type.CreatedAt,
-                    UpdatedAt = s.Ligne.Type.UpdatedAt
+                    Id = s.Ligne.LignesElementType.Id,
+                    Code = s.Ligne.LignesElementType.Code,
+                    TypeElement = s.Ligne.LignesElementType.TypeElement,
+                    Description = s.Ligne.LignesElementType.Description,
+                    TableName = s.Ligne.LignesElementType.TableName,
+                    ItemCode = s.Ligne.LignesElementType.ItemCode,
+                    AccountCode = s.Ligne.LignesElementType.AccountCode,
+                    CreatedAt = s.Ligne.LignesElementType.CreatedAt,
+                    UpdatedAt = s.Ligne.LignesElementType.UpdatedAt
                 },
                 
-                // Element references
-                ItemCode = s.Ligne.ItemCode,
-                Item = s.Ligne.Item == null ? null : new ItemDto
+                // Element references (computed properties from LignesElementType)
+                ItemCode = s.Ligne.LignesElementType != null ? s.Ligne.LignesElementType.ItemCode : null,
+                Item = s.Ligne.LignesElementType == null || s.Ligne.LignesElementType.Item == null ? null : new ItemDto
                 {
-                    Code = s.Ligne.Item.Code,
-                    Description = s.Ligne.Item.Description,
-                    Unite = s.Ligne.Item.Unite,
-                    UniteCodeNavigation = s.Ligne.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
+                    Code = s.Ligne.LignesElementType.Item.Code,
+                    Description = s.Ligne.LignesElementType.Item.Description,
+                    Unite = s.Ligne.LignesElementType.Item.Unite,
+                    UniteCodeNavigation = s.Ligne.LignesElementType.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
                     {
-                        Code = s.Ligne.Item.UniteCodeNavigation.Code,
-                        Description = s.Ligne.Item.UniteCodeNavigation.Description,
-                        CreatedAt = s.Ligne.Item.UniteCodeNavigation.CreatedAt,
-                        UpdatedAt = s.Ligne.Item.UniteCodeNavigation.UpdatedAt,
-                        ItemsCount = s.Ligne.Item.UniteCodeNavigation.Items.Count()
+                        Code = s.Ligne.LignesElementType.Item.UniteCodeNavigation.Code,
+                        Description = s.Ligne.LignesElementType.Item.UniteCodeNavigation.Description,
+                        CreatedAt = s.Ligne.LignesElementType.Item.UniteCodeNavigation.CreatedAt,
+                        UpdatedAt = s.Ligne.LignesElementType.Item.UniteCodeNavigation.UpdatedAt,
+                        ItemsCount = s.Ligne.LignesElementType.Item.UniteCodeNavigation.Items.Count()
                     },
-                    CreatedAt = s.Ligne.Item.CreatedAt,
-                    UpdatedAt = s.Ligne.Item.UpdatedAt,
-                    LignesCount = s.Ligne.Item.Lignes.Count()
+                    CreatedAt = s.Ligne.LignesElementType.Item.CreatedAt,
+                    UpdatedAt = s.Ligne.LignesElementType.Item.UpdatedAt,
+                    ElementTypesCount = s.Ligne.LignesElementType.Item.LignesElementTypes.Count()
                 },
-                GeneralAccountsCode = s.Ligne.GeneralAccountsCode,
-                GeneralAccounts = s.Ligne.GeneralAccounts == null ? null : new GeneralAccountsDto
+                GeneralAccountsCode = s.Ligne.LignesElementType != null ? s.Ligne.LignesElementType.AccountCode : null,
+                GeneralAccounts = s.Ligne.LignesElementType == null || s.Ligne.LignesElementType.GeneralAccount == null ? null : new GeneralAccountsDto
                 {
-                    Code = s.Ligne.GeneralAccounts.Code,
-                    Description = s.Ligne.GeneralAccounts.Description,
-                    CreatedAt = s.Ligne.GeneralAccounts.CreatedAt,
-                    UpdatedAt = s.Ligne.GeneralAccounts.UpdatedAt,
-                    LignesCount = s.Ligne.GeneralAccounts.Lignes.Count()
+                    Code = s.Ligne.LignesElementType.GeneralAccount.Code,
+                    Description = s.Ligne.LignesElementType.GeneralAccount.Description,
+                    CreatedAt = s.Ligne.LignesElementType.GeneralAccount.CreatedAt,
+                    UpdatedAt = s.Ligne.LignesElementType.GeneralAccount.UpdatedAt,
+                    LignesCount = s.Ligne.LignesElementType.GeneralAccount.LignesElementTypes.Count()
                 },
                 
                 // Pricing fields

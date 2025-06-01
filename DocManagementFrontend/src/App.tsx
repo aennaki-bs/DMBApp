@@ -44,6 +44,7 @@ import ApprovalGroupsManagement from "./pages/ApprovalGroupsManagement";
 import ApproversManagement from "./pages/ApproversManagement";
 import ButtonShowcasePage from "./pages/ButtonShowcase";
 import ResponsibilityCentreManagement from "./pages/ResponsibilityCentreManagement";
+import LineElementsManagement from "./pages/LineElementsManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -137,6 +138,19 @@ const App = () => (
                         requiredRole={["Admin", "FullUser"]}
                       >
                         <DocumentTypeDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Line Elements Management route */}
+                  <Route
+                    path="/line-elements-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <LineElementsManagement />
                       </ProtectedRoute>
                     }
                   />

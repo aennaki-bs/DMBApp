@@ -38,11 +38,11 @@ namespace DocManagementBackend.Controllers
                         Description = i.UniteCodeNavigation.Description,
                         CreatedAt = i.UniteCodeNavigation.CreatedAt,
                         UpdatedAt = i.UniteCodeNavigation.UpdatedAt,
-                        ItemsCount = i.UniteCodeNavigation.Items.Count()
+                        ItemsCount = i.UniteCodeNavigation.ItemsCount
                     } : null,
                     CreatedAt = i.CreatedAt,
                     UpdatedAt = i.UpdatedAt,
-                    LignesCount = i.Lignes.Count()
+                    ElementTypesCount = i.LignesElementTypes.Count()
                 })
                 .OrderBy(i => i.Code)
                 .ToListAsync();
@@ -86,11 +86,11 @@ namespace DocManagementBackend.Controllers
                         Description = i.UniteCodeNavigation.Description,
                         CreatedAt = i.UniteCodeNavigation.CreatedAt,
                         UpdatedAt = i.UniteCodeNavigation.UpdatedAt,
-                        ItemsCount = i.UniteCodeNavigation.Items.Count()
+                        ItemsCount = i.UniteCodeNavigation.ItemsCount
                     } : null,
                     CreatedAt = i.CreatedAt,
                     UpdatedAt = i.UpdatedAt,
-                    LignesCount = i.Lignes.Count()
+                    ElementTypesCount = i.LignesElementTypes.Count()
                 })
                 .FirstOrDefaultAsync();
 
@@ -124,8 +124,8 @@ namespace DocManagementBackend.Controllers
             if (string.IsNullOrWhiteSpace(request.Code))
                 return BadRequest("Code is required.");
 
-            if (string.IsNullOrWhiteSpace(request.Description))
-                return BadRequest("Description is required.");
+            if (string.IsNullOrWhiteSpace(request.Unite))
+                return BadRequest("Unit code is required.");
 
             // Check if code already exists
             var existingCode = await _context.Items
@@ -134,21 +134,18 @@ namespace DocManagementBackend.Controllers
             if (existingCode)
                 return BadRequest("An item with this code already exists.");
 
-            // Validate Unite code if provided
-            if (!string.IsNullOrWhiteSpace(request.Unite))
-            {
-                var uniteExists = await _context.UniteCodes
-                    .AnyAsync(uc => uc.Code == request.Unite);
-                
-                if (!uniteExists)
-                    return BadRequest("The specified unit code does not exist.");
-            }
+            // Validate Unite code exists
+            var uniteExists = await _context.UniteCodes
+                .AnyAsync(uc => uc.Code == request.Unite);
+            
+            if (!uniteExists)
+                return BadRequest("The specified unit code does not exist.");
 
             var item = new Item
             {
                 Code = request.Code.ToUpper().Trim(),
-                Description = request.Description.Trim(),
-                Unite = string.IsNullOrWhiteSpace(request.Unite) ? null : request.Unite.Trim(),
+                Description = string.IsNullOrWhiteSpace(request.Description) ? string.Empty : request.Description.Trim(),
+                Unite = request.Unite.Trim(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -159,6 +156,15 @@ namespace DocManagementBackend.Controllers
             {
                 await _context.SaveChangesAsync();
 
+                // Increment the ItemsCount for the associated UniteCode
+                var uniteCode = await _context.UniteCodes.FindAsync(request.Unite.Trim());
+                if (uniteCode != null)
+                {
+                    uniteCode.ItemsCount++;
+                    uniteCode.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
+
                 var createdDto = new ItemDto
                 {
                     Code = item.Code,
@@ -167,7 +173,7 @@ namespace DocManagementBackend.Controllers
                     UniteCodeNavigation = null,
                     CreatedAt = item.CreatedAt,
                     UpdatedAt = item.UpdatedAt,
-                    LignesCount = 0
+                    ElementTypesCount = 0
                 };
 
                 return CreatedAtAction(nameof(GetItem), new { code = item.Code }, createdDto);
@@ -193,16 +199,19 @@ namespace DocManagementBackend.Controllers
             if (item == null)
                 return NotFound("Item not found.");
 
-            // Update Description if provided
-            if (!string.IsNullOrWhiteSpace(request.Description))
+            // Track original unit for count updates
+            var originalUnite = item.Unite;
+
+            // Update Description if provided (can be empty)
+            if (request.Description != null)
                 item.Description = request.Description.Trim();
 
-            // Update Unite if provided
+            // Update Unite if provided (required - cannot be null or empty)
             if (request.Unite != null)
             {
                 if (string.IsNullOrWhiteSpace(request.Unite))
                 {
-                    item.Unite = null;
+                    return BadRequest("Unit code is required and cannot be empty.");
                 }
                 else
                 {
@@ -222,6 +231,32 @@ namespace DocManagementBackend.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+
+                // Update ItemsCount for UniteCodes if unit changed
+                if (request.Unite != null && originalUnite != item.Unite)
+                {
+                    // Decrement count for old unit
+                    if (!string.IsNullOrEmpty(originalUnite))
+                    {
+                        var oldUniteCode = await _context.UniteCodes.FindAsync(originalUnite);
+                        if (oldUniteCode != null)
+                        {
+                            oldUniteCode.ItemsCount = Math.Max(0, oldUniteCode.ItemsCount - 1);
+                            oldUniteCode.UpdatedAt = DateTime.UtcNow;
+                        }
+                    }
+
+                    // Increment count for new unit
+                    var newUniteCode = await _context.UniteCodes.FindAsync(item.Unite);
+                    if (newUniteCode != null)
+                    {
+                        newUniteCode.ItemsCount++;
+                        newUniteCode.UpdatedAt = DateTime.UtcNow;
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
                 return NoContent();
             }
             catch (DbUpdateException ex)
@@ -239,21 +274,37 @@ namespace DocManagementBackend.Controllers
                 return authResult.ErrorResponse!;
 
             var item = await _context.Items
-                .Include(i => i.Lignes)
+                .Include(i => i.LignesElementTypes)
                 .FirstOrDefaultAsync(i => i.Code == code);
 
             if (item == null)
                 return NotFound("Item not found.");
 
             // Check if there are lines associated
-            if (item.Lignes.Any())
+            if (item.LignesElementTypes.Any())
                 return BadRequest("Cannot delete item. There are lines associated with it.");
+
+            // Track unit for count update
+            var itemUnite = item.Unite;
 
             _context.Items.Remove(item);
 
             try
             {
                 await _context.SaveChangesAsync();
+
+                // Decrement ItemsCount for the associated UniteCode
+                if (!string.IsNullOrEmpty(itemUnite))
+                {
+                    var uniteCode = await _context.UniteCodes.FindAsync(itemUnite);
+                    if (uniteCode != null)
+                    {
+                        uniteCode.ItemsCount = Math.Max(0, uniteCode.ItemsCount - 1);
+                        uniteCode.UpdatedAt = DateTime.UtcNow;
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
                 return NoContent();
             }
             catch (DbUpdateException ex)

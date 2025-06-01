@@ -109,6 +109,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<CircuitManagementService>();
 builder.Services.AddScoped<DocumentWorkflowService>();
 builder.Services.AddScoped<UserAuthorizationService>();
+builder.Services.AddScoped<LineElementService>();
 builder.Services.AddAuthorization();
 // builder.Services.AddScoped<CircuitProcessingService>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

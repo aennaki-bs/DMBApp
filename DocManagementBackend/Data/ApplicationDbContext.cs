@@ -301,10 +301,26 @@ namespace DocManagementBackend.Data
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Line element relationships
-            // LignesElementType unique constraint on TypeElement
+            // LignesElementType unique constraint on Code
             modelBuilder.Entity<LignesElementType>()
-                .HasIndex(let => let.TypeElement)
+                .HasIndex(let => let.Code)
                 .IsUnique();
+
+            // LignesElementType -> Item relationship (conditional)
+            modelBuilder.Entity<LignesElementType>()
+                .HasOne(let => let.Item)
+                .WithMany(i => i.LignesElementTypes)
+                .HasForeignKey(let => let.ItemCode)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // LignesElementType -> GeneralAccounts relationship (conditional)
+            modelBuilder.Entity<LignesElementType>()
+                .HasOne(let => let.GeneralAccount)
+                .WithMany(ga => ga.LignesElementTypes)
+                .HasForeignKey(let => let.AccountCode)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
 
             // Item unique constraint on Code
             modelBuilder.Entity<Item>()
@@ -329,27 +345,11 @@ namespace DocManagementBackend.Data
                 .HasIndex(ga => ga.Code)
                 .IsUnique();
 
-            // Ligne -> LignesElementType relationship
+            // Ligne -> LignesElementType relationship (new normalized relationship)
             modelBuilder.Entity<Ligne>()
-                .HasOne(l => l.Type)
+                .HasOne(l => l.LignesElementType)
                 .WithMany(let => let.Lignes)
-                .HasForeignKey(l => l.TypeId)
-                .OnDelete(DeleteBehavior.Restrict)
-                .IsRequired(false);
-
-            // Ligne -> Item relationship
-            modelBuilder.Entity<Ligne>()
-                .HasOne(l => l.Item)
-                .WithMany(i => i.Lignes)
-                .HasForeignKey(l => l.ItemCode)
-                .OnDelete(DeleteBehavior.Restrict)
-                .IsRequired(false);
-
-            // Ligne -> GeneralAccounts relationship
-            modelBuilder.Entity<Ligne>()
-                .HasOne(l => l.GeneralAccounts)
-                .WithMany(ga => ga.Lignes)
-                .HasForeignKey(l => l.GeneralAccountsCode)
+                .HasForeignKey(l => l.LignesElementTypeId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
@@ -360,27 +360,7 @@ namespace DocManagementBackend.Data
                 new Role { Id = 3, RoleName = "FullUser", IsAdmin = false, IsSimpleUser = false, IsFullUser = true }
             );
 
-            // Seed data for LignesElementType
-            modelBuilder.Entity<LignesElementType>().HasData(
-                new LignesElementType 
-                { 
-                    Id = 1, 
-                    TypeElement = "Item", 
-                    Description = "Product or service items", 
-                    TableName = "Item",
-                    CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc),
-                    UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc)
-                },
-                new LignesElementType 
-                { 
-                    Id = 2, 
-                    TypeElement = "General Accounts", 
-                    Description = "General accounting codes", 
-                    TableName = "GeneralAccounts",
-                    CreatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc),
-                    UpdatedAt = new DateTime(2025, 5, 28, 11, 55, 57, DateTimeKind.Utc)
-                }
-            );
+            // Note: LignesElementType seed data removed - now dynamically created for each Item and GeneralAccount
         }
     }
 }

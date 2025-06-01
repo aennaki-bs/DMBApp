@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Hash, Calculator, Plus, Search, Filter, TrendingUp, Database } from 'lucide-react';
+import { Package, Hash, Calculator, Plus, Search, Filter, TrendingUp, Database, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-// Import the management components we'll create
+// Import the management components
+import LineElementTypeManagement from '@/components/line-elements/LineElementTypeManagement';
 import ItemsManagement from '@/components/line-elements/ItemsManagement';
 import UniteCodesManagement from '@/components/line-elements/UniteCodesManagement';
 import GeneralAccountsManagement from '@/components/line-elements/GeneralAccountsManagement';
@@ -17,15 +19,36 @@ import lineElementsService from '@/services/lineElementsService';
 import { LignesElementType } from '@/models/lineElements';
 
 const LineElementsManagement = () => {
-  const [activeTab, setActiveTab] = useState('items');
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Get tab from URL parameters, default to 'elementtypes'
+  const urlParams = new URLSearchParams(location.search);
+  const tabFromUrl = urlParams.get('tab') || 'elementtypes';
+  
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
   const [elementTypes, setElementTypes] = useState<LignesElementType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [counts, setCounts] = useState({
+    elementTypes: 0,
     items: 0,
     uniteCodes: 0,
     generalAccounts: 0
   });
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    const newTab = new URLSearchParams(location.search).get('tab') || 'elementtypes';
+    setActiveTab(newTab);
+  }, [location.search]);
+
+  // Update URL when tab changes
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    const newUrl = `${location.pathname}?tab=${newTab}`;
+    navigate(newUrl, { replace: true });
+  };
 
   useEffect(() => {
     const fetchElementTypes = async () => {
@@ -39,6 +62,7 @@ const LineElementsManagement = () => {
         ]);
         setElementTypes(types);
         setCounts({
+          elementTypes: types.length,
           items: items.length,
           uniteCodes: uniteCodes.length,
           generalAccounts: generalAccounts.length
@@ -82,7 +106,7 @@ const LineElementsManagement = () => {
               Line Elements Management
             </h1>
             <p className="text-sm md:text-base text-blue-300">
-              Manage items, unit codes, and general accounts used in document lines
+              Manage element types, items, unit codes, and general accounts used in document lines
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -100,7 +124,25 @@ const LineElementsManagement = () => {
       </div>
 
       {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-[#0f1642] border-blue-900/30 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-blue-300">Element Types</CardTitle>
+            <div className="p-2 bg-blue-900/30 rounded-lg">
+              <Tag className="h-4 w-4 text-blue-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white mb-1">
+              {isLoading ? '-' : counts.elementTypes.toLocaleString()}
+            </div>
+            <p className="text-xs text-blue-400 flex items-center">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              Line element type definitions
+            </p>
+          </CardContent>
+        </Card>
+
         <Card className="bg-[#0f1642] border-blue-900/30 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-blue-300">Items</CardTitle>
@@ -158,7 +200,7 @@ const LineElementsManagement = () => {
 
       {/* Main Content */}
       <Card className="bg-[#0a1033] border-blue-900/30 shadow-lg">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <CardHeader className="border-b border-blue-900/30 pb-0">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -168,16 +210,31 @@ const LineElementsManagement = () => {
                 </CardDescription>
               </div>
               <div className="flex items-center space-x-2">
-                {elementTypes.map((type) => (
+                {elementTypes.slice(0, 3).map((type) => (
                   <Badge key={type.id} variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-900/20">
                     {type.typeElement}
                   </Badge>
                 ))}
+                {elementTypes.length > 3 && (
+                  <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-900/20">
+                    +{elementTypes.length - 3} more
+                  </Badge>
+                )}
               </div>
             </div>
             
             {/* Tab Navigation */}
-            <TabsList className="grid w-full grid-cols-3 bg-[#111633] p-1 rounded-lg border border-blue-900/30 h-12">
+            <TabsList className="grid w-full grid-cols-4 bg-[#111633] p-1 rounded-lg border border-blue-900/30 h-12">
+              <TabsTrigger 
+                value="elementtypes" 
+                className="flex items-center justify-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 h-10 rounded-md"
+              >
+                <Tag className="h-4 w-4" />
+                <span className="font-medium">Element Types</span>
+                <Badge variant="secondary" className="ml-1 text-xs bg-blue-900/30 text-blue-300 border-blue-500/30">
+                  {counts.elementTypes}
+                </Badge>
+              </TabsTrigger>
               <TabsTrigger 
                 value="items" 
                 className="flex items-center justify-center space-x-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 h-10 rounded-md"
@@ -213,6 +270,12 @@ const LineElementsManagement = () => {
           
           <CardContent className="p-0">
             <div className="p-6">
+              <TabsContent value="elementtypes" className="mt-0">
+                <LineElementTypeManagement 
+                  searchTerm={searchTerm}
+                />
+              </TabsContent>
+
               <TabsContent value="items" className="mt-0">
                 <ItemsManagement 
                   searchTerm={searchTerm}
