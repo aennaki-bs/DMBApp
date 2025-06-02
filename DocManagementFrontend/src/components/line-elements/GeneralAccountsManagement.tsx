@@ -1,75 +1,144 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
+import { useState, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
   Calculator,
-  FileText,
-  Calendar,
-  MoreHorizontal,
   Filter,
-  Download,
-  Upload,
-  SortAsc,
-  SortDesc,
+  ArrowUp,
+  ArrowDown,
   AlertTriangle,
   Loader2,
-  CreditCard
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 // Import services and types
-import lineElementsService from '@/services/lineElementsService';
-import { GeneralAccounts, LignesElementType, CreateGeneralAccountsRequest, UpdateGeneralAccountsRequest } from '@/models/lineElements';
+import lineElementsService from "@/services/lineElementsService";
+import {
+  GeneralAccounts,
+  LignesElementType,
+  CreateGeneralAccountsRequest,
+  UpdateGeneralAccountsRequest,
+} from "@/models/lineElements";
 
 // Import the new wizard component
-import CreateGeneralAccountWizard from './CreateGeneralAccountWizard';
+import CreateGeneralAccountWizard from "./CreateGeneralAccountWizard";
 
 // Form validation schema
 const generalAccountSchema = z.object({
-  code: z.string().min(1, 'Code is required').max(20, 'Code must be 20 characters or less'),
-  description: z.string().min(1, 'Description is required').max(255, 'Description must be 255 characters or less'),
+  code: z
+    .string()
+    .min(1, "Code is required")
+    .max(20, "Code must be 20 characters or less"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .max(255, "Description must be 255 characters or less"),
 });
 
 type GeneralAccountFormData = z.infer<typeof generalAccountSchema>;
+
+// Search field options
+const GENERAL_ACCOUNT_SEARCH_FIELDS = [
+  { id: "all", label: "All fields" },
+  { id: "code", label: "Code" },
+  { id: "description", label: "Description" },
+];
 
 interface GeneralAccountsManagementProps {
   searchTerm: string;
   elementType?: LignesElementType;
 }
 
-const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsManagementProps) => {
+const GeneralAccountsManagement = ({
+  searchTerm,
+  elementType,
+}: GeneralAccountsManagementProps) => {
   const [accounts, setAccounts] = useState<GeneralAccounts[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortField, setSortField] = useState<keyof GeneralAccounts>('code');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<keyof GeneralAccounts>("code");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<GeneralAccounts | null>(null);
-  const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] =
+    useState<GeneralAccounts | null>(null);
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchField, setSearchField] = useState("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const editForm = useForm<GeneralAccountFormData>({
     resolver: zodResolver(generalAccountSchema),
     defaultValues: {
-      code: '',
-      description: '',
+      code: "",
+      description: "",
     },
   });
 
@@ -83,21 +152,43 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
       const data = await lineElementsService.generalAccounts.getAll();
       setAccounts(data);
     } catch (error) {
-      console.error('Failed to fetch general accounts:', error);
-      toast.error('Failed to load general accounts data');
+      console.error("Failed to fetch general accounts:", error);
+      toast.error("Failed to load general accounts data");
     } finally {
       setLoading(false);
     }
   };
 
   const filteredAndSortedAccounts = useMemo(() => {
-    let filtered = accounts.filter(account => {
-      const matchesSearch = 
-        account.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        account.code.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
-        account.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        account.description.toLowerCase().includes(localSearchTerm.toLowerCase());
-      
+    let filtered = accounts.filter((account) => {
+      // Search filter
+      const searchValue = searchQuery.toLowerCase();
+      let matchesSearch = true;
+
+      if (searchValue) {
+        switch (searchField) {
+          case "code":
+            matchesSearch = account.code.toLowerCase().includes(searchValue);
+            break;
+          case "description":
+            matchesSearch = account.description
+              .toLowerCase()
+              .includes(searchValue);
+            break;
+          default: // 'all'
+            matchesSearch =
+              account.code.toLowerCase().includes(searchValue) ||
+              account.description.toLowerCase().includes(searchValue);
+        }
+      }
+
+      // Global search term from parent
+      if (searchTerm && !searchValue) {
+        matchesSearch =
+          account.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          account.description.toLowerCase().includes(searchTerm.toLowerCase());
+      }
+
       return matchesSearch;
     });
 
@@ -107,15 +198,15 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
       let bValue: string | number;
 
       switch (sortField) {
-        case 'code':
+        case "code":
           aValue = a.code;
           bValue = b.code;
           break;
-        case 'description':
+        case "description":
           aValue = a.description;
           bValue = b.description;
           break;
-        case 'createdAt':
+        case "createdAt":
           aValue = new Date(a.createdAt).getTime();
           bValue = new Date(b.createdAt).getTime();
           break;
@@ -124,7 +215,7 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
           bValue = b.code;
       }
 
-      if (sortDirection === 'asc') {
+      if (sortDirection === "asc") {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
@@ -132,57 +223,96 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
     });
 
     return filtered;
-  }, [accounts, searchTerm, localSearchTerm, sortField, sortDirection]);
+  }, [
+    accounts,
+    searchQuery,
+    searchField,
+    searchTerm,
+    sortField,
+    sortDirection,
+  ]);
+
+  const handleSort = (field: keyof GeneralAccounts) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const renderSortIcon = (field: keyof GeneralAccounts) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-400" />
+    ) : (
+      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-400" />
+    );
+  };
+
+  const headerClass = (field: keyof GeneralAccounts) => `
+    text-blue-200 font-medium cursor-pointer select-none
+    hover:text-blue-100 transition-colors duration-150
+    ${sortField === field ? "text-blue-100" : ""}
+  `;
 
   // Checkbox selection handlers
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedAccounts(filteredAndSortedAccounts.map(account => account.code));
-    } else {
+  const handleSelectAll = () => {
+    if (selectedAccounts.length === filteredAndSortedAccounts.length) {
       setSelectedAccounts([]);
-    }
-  };
-
-  const handleSelectAccount = (accountCode: string, checked: boolean) => {
-    if (checked) {
-      setSelectedAccounts(prev => [...prev, accountCode]);
     } else {
-      setSelectedAccounts(prev => prev.filter(code => code !== accountCode));
+      setSelectedAccounts(
+        filteredAndSortedAccounts.map((account) => account.code)
+      );
     }
   };
 
-  const isAllSelected = filteredAndSortedAccounts.length > 0 && selectedAccounts.length === filteredAndSortedAccounts.length;
+  const handleSelectAccount = (accountCode: string) => {
+    setSelectedAccounts((prev) =>
+      prev.includes(accountCode)
+        ? prev.filter((code) => code !== accountCode)
+        : [...prev, accountCode]
+    );
+  };
 
   const handleBulkDelete = async () => {
     try {
-      await Promise.all(selectedAccounts.map(code => lineElementsService.generalAccounts.delete(code)));
+      await Promise.all(
+        selectedAccounts.map((code) =>
+          lineElementsService.generalAccounts.delete(code)
+        )
+      );
       toast.success(`${selectedAccounts.length} accounts deleted successfully`);
       setSelectedAccounts([]);
+      setIsBulkDeleteDialogOpen(false);
       fetchData();
     } catch (error) {
-      console.error('Failed to delete accounts:', error);
-      toast.error('Failed to delete some accounts');
+      console.error("Failed to delete accounts:", error);
+      toast.error("Failed to delete some accounts");
     }
   };
 
   const handleEditAccount = async (data: GeneralAccountFormData) => {
     if (!selectedAccount) return;
-    
+
     try {
       // Only validate code format if it has changed and account is not in use
-      if (selectedAccount.lignesCount === 0 && data.code.trim() !== selectedAccount.code) {
+      if (
+        selectedAccount.lignesCount === 0 &&
+        data.code.trim() !== selectedAccount.code
+      ) {
         const codeValue = data.code.trim();
-        
+
         // Check alphanumeric format
         const alphanumericRegex = /^[a-zA-Z0-9]+$/;
         if (!alphanumericRegex.test(codeValue)) {
-          toast.error('Code must be alphanumeric (letters and numbers only)');
+          toast.error("Code must be alphanumeric (letters and numbers only)");
           return;
         }
-        
+
         // Check length
         if (codeValue.length < 1 || codeValue.length > 20) {
-          toast.error('Code must be between 1 and 20 characters');
+          toast.error("Code must be between 1 and 20 characters");
           return;
         }
       }
@@ -192,31 +322,38 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
         ...(selectedAccount.lignesCount === 0 && { code: data.code.trim() }),
         description: data.description.trim(),
       };
-      
-      await lineElementsService.generalAccounts.update(selectedAccount.code, updateRequest);
-      toast.success('General account updated successfully');
+
+      await lineElementsService.generalAccounts.update(
+        selectedAccount.code,
+        updateRequest
+      );
+      toast.success("General account updated successfully");
       setIsEditDialogOpen(false);
       setSelectedAccount(null);
       editForm.reset();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to update general account:', error);
-      toast.error(error.response?.data?.message || 'Failed to update general account');
+      console.error("Failed to update general account:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to update general account"
+      );
     }
   };
 
   const handleDeleteAccount = async () => {
     if (!selectedAccount) return;
-    
+
     try {
       await lineElementsService.generalAccounts.delete(selectedAccount.code);
-      toast.success('General account deleted successfully');
+      toast.success("General account deleted successfully");
       setIsDeleteDialogOpen(false);
       setSelectedAccount(null);
       fetchData();
     } catch (error: any) {
-      console.error('Failed to delete general account:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete general account');
+      console.error("Failed to delete general account:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to delete general account"
+      );
     }
   };
 
@@ -234,237 +371,174 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSort = (field: keyof GeneralAccounts) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setFilterOpen(false);
   };
 
-  const getSortIcon = (field: keyof GeneralAccounts) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />;
-  };
+  // Filter card class
+  const filterCardClass =
+    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40";
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex justify-center py-10">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-blue-300 font-medium">Loading general accounts...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="text-blue-300 font-medium">
+            Loading general accounts...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-white flex items-center">
-            <Calculator className="mr-2 h-5 w-5 text-blue-400" />
-            General Accounts Management
-          </h2>
-          <p className="text-sm text-blue-300 mt-1">
-            Manage accounting codes and general accounts ({filteredAndSortedAccounts.length} accounts)
-          </p>
+    <div className="space-y-4">
+      {/* Search and Filter Bar */}
+      <div className={filterCardClass}>
+        {/* Search and field select */}
+        <div className="flex-1 flex items-center gap-2 min-w-0">
+          <Select value={searchField} onValueChange={setSearchField}>
+            <SelectTrigger className="w-[120px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+              <SelectValue>
+                {GENERAL_ACCOUNT_SEARCH_FIELDS.find(
+                  (opt) => opt.id === searchField
+                )?.label || "All fields"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+              {GENERAL_ACCOUNT_SEARCH_FIELDS.map((opt) => (
+                <SelectItem
+                  key={opt.id}
+                  value={opt.id}
+                  className="hover:bg-blue-800/40"
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search general accounts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+          </div>
         </div>
-        
+
+        {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button 
+          {/* Create button */}
+          <Button
             onClick={() => setIsCreateDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add General Account
+            <Plus className="h-4 w-4" />
+            Create General Account
           </Button>
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <Card className="bg-[#0f1642] border-blue-900/30">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 h-4 w-4" />
-                <Input
-                  placeholder="Search general accounts..."
-                  value={localSearchTerm}
-                  onChange={(e) => setLocalSearchTerm(e.target.value)}
-                  className="pl-10 bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Select value={`${sortField}-${sortDirection}`} onValueChange={(value) => {
-                const [field, direction] = value.split('-');
-                setSortField(field as keyof GeneralAccounts);
-                setSortDirection(direction as 'asc' | 'desc');
-              }}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="code-asc">Code (A-Z)</SelectItem>
-                  <SelectItem value="code-desc">Code (Z-A)</SelectItem>
-                  <SelectItem value="description-asc">Description (A-Z)</SelectItem>
-                  <SelectItem value="description-desc">Description (Z-A)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Bulk Actions */}
-      {selectedAccounts.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-purple-900/30 border border-purple-500/30 rounded-lg mb-4">
-          <span className="text-purple-200">
-            {selectedAccounts.length} account{selectedAccounts.length > 1 ? 's' : ''} selected
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedAccounts([])}
-              className="border-purple-500/30 text-purple-300 hover:bg-purple-900/30"
-            >
-              Clear Selection
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Selected
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-purple-500/30">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-purple-100">Delete Selected Accounts</AlertDialogTitle>
-                  <AlertDialogDescription className="text-purple-300">
-                    Are you sure you want to delete {selectedAccounts.length} selected account{selectedAccounts.length > 1 ? 's' : ''}? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="border-purple-500/30 text-purple-300 hover:bg-purple-900/30">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleBulkDelete}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </div>
-      )}
-
-      {/* General Accounts Table */}
-      <Card className="bg-[#0f1642] border-blue-900/30">
-        <CardHeader>
-          <CardTitle className="text-lg text-white">General Accounts List</CardTitle>
-          <CardDescription className="text-blue-300">
-            {filteredAndSortedAccounts.length} of {accounts.length} accounts
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-blue-900/20">
-                <TableRow className="border-blue-900/50">
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={isAllSelected}
-                      onCheckedChange={handleSelectAll}
-                      className="border-purple-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                    />
-                  </TableHead>
-                  <TableHead 
-                    className="text-blue-300 cursor-pointer hover:text-blue-200 transition-colors"
-                    onClick={() => handleSort('code')}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Code</span>
-                      {getSortIcon('code')}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="text-blue-300 cursor-pointer hover:text-blue-200 transition-colors"
-                    onClick={() => handleSort('description')}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Description</span>
-                      {getSortIcon('description')}
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-blue-300">Lines Count</TableHead>
-                  <TableHead className="text-blue-300 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSortedAccounts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      <div className="flex flex-col items-center space-y-2">
-                        <CreditCard className="h-8 w-8 text-blue-400/50" />
-                        <p className="text-blue-300">No general accounts found</p>
-                        <p className="text-sm text-blue-400">
-                          {accounts.length === 0 ? 'Create your first account to get started' : 'Try adjusting your search criteria'}
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredAndSortedAccounts.map((account) => (
-                    <TableRow key={account.code} className="border-blue-900/30 hover:bg-blue-900/20 transition-colors">
-                      <TableCell>
+      {/* Table */}
+      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+        {filteredAndSortedAccounts.length > 0 ? (
+          <ScrollArea className="h-[calc(100vh-400px)] min-h-[400px]">
+            <div className="min-w-[800px]">
+              <Table>
+                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033] sticky top-0 z-10">
+                  <TableRow className="border-blue-900/30 hover:bg-transparent">
+                    <TableHead className="w-12">
+                      <div className="flex items-center justify-center">
                         <Checkbox
-                          checked={selectedAccounts.includes(account.code)}
-                          onCheckedChange={(checked) => handleSelectAccount(account.code, checked as boolean)}
-                          className="border-purple-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                          checked={
+                            selectedAccounts.length > 0 &&
+                            selectedAccounts.length ===
+                              filteredAndSortedAccounts.length
+                          }
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all"
+                          className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
                         />
-                      </TableCell>
-                      <TableCell className="font-medium text-blue-100">
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-900/20">
-                            {account.code}
-                          </Badge>
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("code")}
+                      onClick={() => handleSort("code")}
+                    >
+                      <div className="flex items-center">
+                        Code {renderSortIcon("code")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("description")}
+                      onClick={() => handleSort("description")}
+                    >
+                      <div className="flex items-center">
+                        Description {renderSortIcon("description")}
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-blue-200 font-medium">
+                      Lines Count
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("createdAt")}
+                      onClick={() => handleSort("createdAt")}
+                    >
+                      <div className="flex items-center">
+                        Created {renderSortIcon("createdAt")}
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedAccounts.map((account) => (
+                    <TableRow
+                      key={account.code}
+                      className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
+                    >
+                      <TableCell>
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            checked={selectedAccounts.includes(account.code)}
+                            onCheckedChange={() =>
+                              handleSelectAccount(account.code)
+                            }
+                            aria-label={`Select ${account.code}`}
+                            className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+                          />
                         </div>
                       </TableCell>
-                      <TableCell className="text-blue-200 max-w-xs">
-                        <div className="truncate" title={account.description}>
-                          {account.description}
-                        </div>
+                      <TableCell className="font-mono text-blue-100 font-semibold">
+                        {account.code}
                       </TableCell>
-                      <TableCell className="text-blue-200">
-                        <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-900/20">
+                      <TableCell className="text-blue-200 max-w-xs truncate">
+                        {account.description}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className="bg-violet-500/10 text-violet-400 border-violet-500/30"
+                        >
                           {account.lignesCount || 0} lines
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-blue-300 text-sm">
+                        {new Date(account.createdAt).toLocaleDateString()}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(account)}
-                            disabled={account.lignesCount > 0}
-                            className={`${
-                              account.lignesCount > 0 
-                                ? 'opacity-50 cursor-not-allowed text-gray-400' 
-                                : 'hover:bg-blue-50 hover:text-blue-700'
-                            }`}
-                            title={account.lignesCount > 0 ? 'Cannot edit: Account is used in document lines' : 'Edit account'}
+                            className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -473,47 +547,128 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
                             size="sm"
                             onClick={() => openDeleteDialog(account)}
                             disabled={account.lignesCount > 0}
-                            className={`${
-                              account.lignesCount > 0 
-                                ? 'opacity-50 cursor-not-allowed text-gray-400' 
-                                : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                            className={`h-8 w-8 p-0 ${
+                              account.lignesCount > 0
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
                             }`}
-                            title={account.lignesCount > 0 ? 'Cannot delete: Account is used in document lines' : 'Delete account'}
+                            title={
+                              account.lignesCount > 0
+                                ? "Cannot delete: Account is referenced by line elements"
+                                : "Delete general account"
+                            }
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-blue-300">
+            <Calculator className="h-12 w-12 mb-4 text-blue-400/50" />
+            <h3 className="text-lg font-semibold mb-2">
+              No general accounts found
+            </h3>
+            <p className="text-sm text-blue-400/70 text-center">
+              {searchQuery
+                ? "Try adjusting your search terms."
+                : "Get started by creating your first general account."}
+            </p>
+            {searchQuery && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 text-blue-300 border-blue-500/30 hover:bg-blue-800/30"
+                onClick={clearAllFilters}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear Search
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      {/* Bulk Actions Bar - rendered via portal to document body */}
+      {createPortal(
+        <AnimatePresence>
+          {selectedAccounts.length > 0 && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed bottom-6 right-16 transform -translate-x-1/2 z-[9999] w-[calc(100vw-4rem)] max-w-4xl mx-auto"
+            >
+              <div className="bg-gradient-to-r from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-lg shadow-[0_8px_32px_rgba(59,130,246,0.7)] rounded-2xl border border-blue-400/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-blue-400/40">
+                <div className="flex items-center text-blue-200 font-medium">
+                  <div className="bg-blue-500/30 p-1.5 rounded-xl mr-3 flex-shrink-0">
+                    <Calculator className="w-5 h-5 text-blue-300" />
+                  </div>
+                  <span className="text-sm sm:text-base text-center sm:text-left">
+                    <span className="font-bold text-blue-100">
+                      {selectedAccounts.length}
+                    </span>{" "}
+                    general account{selectedAccounts.length !== 1 ? "s" : ""}{" "}
+                    selected
+                  </span>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                    onClick={() => setIsBulkDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1.5" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Create General Account Wizard */}
+      <CreateGeneralAccountWizard
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSuccess={() => {
+          fetchData();
+          setIsCreateDialogOpen(false);
+        }}
+      />
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
+        <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
           <DialogHeader>
-            <DialogTitle className="text-xl text-blue-100 flex items-center">
-              <Edit className="mr-2 h-5 w-5 text-blue-400" />
+            <DialogTitle className="text-xl text-blue-100">
               Edit General Account
             </DialogTitle>
             <DialogDescription className="text-blue-300">
-              Update general account information. The code cannot be changed.
+              Update general account information
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleEditAccount)} className="space-y-4">
+            <form
+              onSubmit={editForm.handleSubmit(handleEditAccount)}
+              className="space-y-4"
+            >
               <FormField
                 control={editForm.control}
                 name="code"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-blue-200">
-                      Code * 
+                      Code
                       {selectedAccount?.lignesCount > 0 && (
                         <span className="text-amber-400 text-xs ml-2">
                           (Cannot edit: Account is in use)
@@ -521,21 +676,23 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
                       )}
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Enter account code" 
-                        {...field} 
+                      <Input
+                        placeholder="Enter account code"
+                        {...field}
                         disabled={selectedAccount?.lignesCount > 0}
-                        className={`bg-[#111633] border-blue-900/50 placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500 ${
-                          selectedAccount?.lignesCount > 0 
-                            ? 'text-gray-400 cursor-not-allowed' 
-                            : 'text-white'
+                        className={`bg-blue-950/30 border-blue-800/30 ${
+                          selectedAccount?.lignesCount > 0
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-blue-100"
                         }`}
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage />
                     {selectedAccount?.lignesCount > 0 && (
                       <p className="text-amber-400 text-xs mt-1">
-                        Code cannot be changed because this account is referenced by {selectedAccount.lignesCount} line element types.
+                        Code cannot be changed because this account is
+                        referenced by {selectedAccount.lignesCount} line element
+                        types.
                       </p>
                     )}
                   </FormItem>
@@ -546,98 +703,105 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Description *</FormLabel>
+                    <FormLabel className="text-blue-200">Description</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter account description"
                         {...field}
-                        className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                        className="bg-blue-950/30 border-blue-800/30 text-blue-100"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => { setIsEditDialogOpen(false); editForm.reset(); }}
-                  className="border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200"
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20"
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Update General Account
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                  Update Account
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-blue-100 flex items-center">
-              <AlertTriangle className="mr-2 h-5 w-5 text-red-400" />
+      {/* Delete Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl text-blue-100">
               Delete General Account
-            </DialogTitle>
-            <DialogDescription className="text-blue-300">
-              Are you sure you want to delete this general account? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedAccount && (
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-blue-300">
+              Are you sure you want to delete general account "
+              {selectedAccount?.code}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {selectedAccount && selectedAccount.lignesCount > 0 && (
             <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
-              <p className="text-blue-200">
-                <strong>Code:</strong> {selectedAccount.code}
+              <p className="text-red-400 flex items-center">
+                <AlertTriangle className="mr-1 h-4 w-4" />
+                This account is used in {selectedAccount.lignesCount} document
+                lines and cannot be deleted.
               </p>
-              <p className="text-blue-200">
-                <strong>Description:</strong> {selectedAccount.description}
-              </p>
-              {selectedAccount.lignesCount > 0 && (
-                <p className="text-red-400 mt-2 flex items-center">
-                  <AlertTriangle className="mr-1 h-4 w-4" />
-                  This account is used in {selectedAccount.lignesCount} document lines and cannot be deleted.
-                </p>
-              )}
             </div>
           )}
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200"
-            >
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20">
               Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleDeleteAccount}
               disabled={selectedAccount?.lignesCount > 0}
-              className="bg-red-900/30 text-red-300 hover:bg-red-900/50 hover:text-red-200 border border-red-500/30 hover:border-red-400/50"
+              className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Delete Account
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      {/* Create General Account Wizard */}
-      <CreateGeneralAccountWizard
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSuccess={() => {
-          setIsCreateDialogOpen(false);
-          fetchData();
-        }}
-      />
+      {/* Bulk Delete Dialog */}
+      <AlertDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl text-blue-100">
+              Delete General Accounts
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-blue-300">
+              Are you sure you want to delete {selectedAccounts.length} general
+              accounts? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
-export default GeneralAccountsManagement; 
+export default GeneralAccountsManagement;
