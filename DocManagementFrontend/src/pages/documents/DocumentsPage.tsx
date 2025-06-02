@@ -127,7 +127,7 @@ const DocumentsPage = () => {
         // Multiple documents delete with improved error handling
         try {
           const results = await deleteMultipleDocuments(selectedDocuments);
-          
+
           // All deletions were successful
           if (results.successful.length === selectedDocuments.length) {
             toast.success(
@@ -138,7 +138,7 @@ const DocumentsPage = () => {
           // Handle partial success/failure
           if (error.results) {
             const { successful, failed } = error.results;
-            
+
             if (successful.length > 0 && failed.length > 0) {
               // Partial success
               toast.success(
@@ -157,7 +157,7 @@ const DocumentsPage = () => {
             // Generic error
             toast.error("Failed to delete documents. Please try again.");
           }
-          
+
           // Don't return early - we still want to clean up the UI state
         }
       }
@@ -166,14 +166,13 @@ const DocumentsPage = () => {
       setSelectedDocuments([]);
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
-      
+
       // Fetch documents to refresh the list (this will show what was actually deleted)
       fetchDocuments();
-      
     } catch (error) {
       console.error("Error deleting document(s):", error);
       toast.error("Failed to delete document(s). Please try again.");
-      
+
       // Still clean up UI state on error
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
@@ -356,6 +355,7 @@ const DocumentsPage = () => {
           onOpenChange={setAssignCircuitDialogOpen}
           documentId={documentToAssign.id}
           documentTitle={documentToAssign.title}
+          documentTypeId={documentToAssign.typeId}
           onSuccess={handleAssignCircuitSuccess}
         />
       )}

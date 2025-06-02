@@ -35,6 +35,7 @@ import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { checkApiConnection } from "@/services/api";
+import circuitService from "@/services/circuitService";
 
 // Import step components
 import { DateSelectionStep } from "./steps/DateSelectionStep";
@@ -290,21 +291,24 @@ export default function CreateDocumentWizard({
     try {
       setIsLoading(true);
 
-      // Use the API service to get active circuits
-      const response = await api.get("/Circuit/active");
+      // Use the circuit service to get all circuits with document type information
+      const allCircuits = await circuitService.getAllCircuits();
 
-      // Transform the API response to match our interface
-      const activeCircuits = response.data;
-      const mappedCircuits = activeCircuits.map((circuit) => ({
-        id: circuit.circuitId,
-        name: circuit.circuitTitle,
-        code: circuit.circuitKey,
-        description: circuit.circuitTitle, // Use title as description if no description available
-        isActive: true, // All circuits from this endpoint are active
-      }));
+      // Transform the API response to match our interface and filter by active status
+      const activeCircuits = allCircuits
+        .filter((circuit) => circuit.isActive)
+        .map((circuit) => ({
+          id: circuit.id,
+          name: circuit.title,
+          code: circuit.circuitKey,
+          description: circuit.descriptif || circuit.title,
+          isActive: circuit.isActive,
+          documentTypeId: circuit.documentTypeId, // Add document type ID for filtering
+          documentType: circuit.documentType, // Add document type info for reference
+        }));
 
-      console.log("Active circuits from API:", mappedCircuits);
-      setCircuits(mappedCircuits);
+      console.log("Active circuits from API:", activeCircuits);
+      setCircuits(activeCircuits);
     } catch (error) {
       console.error("Failed to fetch active circuits:", error);
       toast.error("Failed to load circuits", {
@@ -893,23 +897,12 @@ export default function CreateDocumentWizard({
 
   // Get the name of the selected responsibility centre
   const getSelectedResponsibilityCentreName = (): string | undefined => {
-    if (formData.responsibilityCentreId) {
-      // First try to find it in the list of responsibility centers
-      const selectedCentre = responsibilityCentres.find(
-        (centre) => centre.id === formData.responsibilityCentreId
-      );
-
-      if (selectedCentre) {
-        return `${selectedCentre.code} - ${selectedCentre.descr}`;
-      }
-
-      // If not found in the list but user has one (from API)
-      if (user?.responsibilityCenter) {
-        return `${user.responsibilityCenter.code} - ${user.responsibilityCenter.descr}`;
-      }
+    if (user?.responsibilityCentre) {
+      return `${user.responsibilityCentre.code} - ${user.responsibilityCentre.descr}`;
     }
-
-    return undefined;
+    return responsibilityCentres.find(
+      (centre) => centre.id === formData.responsibilityCentreId
+    )?.descr;
   };
 
   const renderStepContent = () => {
@@ -1033,7 +1026,20 @@ export default function CreateDocumentWizard({
             <div className="space-y-4 py-4">
               <CircuitAssignmentStep
                 circuits={circuits
-                  .filter((circuit) => circuit.isActive === true)
+                  .filter((circuit) => {
+                    // Filter by active status
+                    if (!circuit.isActive) return false;
+
+                    // Filter by document type - only show circuits that match the selected document type
+                    // If circuit has no documentTypeId, it can be used with any document type (for backward compatibility)
+                    // If formData.selectedTypeId is null, don't filter by type yet
+                    if (formData.selectedTypeId && circuit.documentTypeId) {
+                      return circuit.documentTypeId === formData.selectedTypeId;
+                    }
+
+                    // If circuit has no specific document type, allow it for any document type
+                    return !circuit.documentTypeId;
+                  })
                   .map((circuit) => ({
                     ...circuit,
                   }))}

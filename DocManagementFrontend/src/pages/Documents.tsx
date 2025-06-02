@@ -230,8 +230,11 @@ const Documents = () => {
   const [typeFilter, setTypeFilter] = useState("any");
   const [statusFilter, setStatusFilter] = useState("any");
   const [createdByFilter, setCreatedByFilter] = useState("any");
-  const [responsibilityCentreFilter, setResponsibilityCentreFilter] = useState("any");
-  const [responsibilityCentres, setResponsibilityCentres] = useState<ResponsibilityCentreSimple[]>([]);
+  const [responsibilityCentreFilter, setResponsibilityCentreFilter] =
+    useState("any");
+  const [responsibilityCentres, setResponsibilityCentres] = useState<
+    ResponsibilityCentreSimple[]
+  >([]);
 
   const canManageDocuments =
     user && (user.role === "Admin" || user.role === "FullUser");
@@ -496,7 +499,8 @@ const Documents = () => {
         if (responsibilityCentreFilter === "none") {
           matchesResponsibilityCentre = !doc.responsibilityCentreId;
         } else {
-          matchesResponsibilityCentre = doc.responsibilityCentreId === parseInt(responsibilityCentreFilter);
+          matchesResponsibilityCentre =
+            doc.responsibilityCentreId === parseInt(responsibilityCentreFilter);
         }
       }
 
@@ -650,9 +654,11 @@ const Documents = () => {
       const selectedCentre = responsibilityCentres.find(
         (centre) => centre.id.toString() === responsibilityCentreFilter
       );
-      value = selectedCentre ? `${selectedCentre.code} - ${selectedCentre.descr}` : "Unknown";
+      value = selectedCentre
+        ? `${selectedCentre.code} - ${selectedCentre.descr}`
+        : "Unknown";
     }
-    
+
     filterBadges.push({
       id: "responsibilityCentre",
       label: "Responsibility Centre",
@@ -826,7 +832,10 @@ const Documents = () => {
                 <label className="block text-sm text-blue-300 mb-1">
                   Responsibility Centre
                 </label>
-                <Select value={responsibilityCentreFilter} onValueChange={setResponsibilityCentreFilter}>
+                <Select
+                  value={responsibilityCentreFilter}
+                  onValueChange={setResponsibilityCentreFilter}
+                >
                   <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
                     <SelectValue placeholder="Select centre" />
                   </SelectTrigger>
@@ -838,9 +847,9 @@ const Documents = () => {
                       No Centre Assigned
                     </SelectItem>
                     {responsibilityCentres.map((centre) => (
-                      <SelectItem 
-                        key={centre.id} 
-                        value={centre.id.toString()} 
+                      <SelectItem
+                        key={centre.id}
+                        value={centre.id.toString()}
                         className="hover:bg-blue-800/40"
                       >
                         {centre.code} - {centre.descr}
@@ -1224,6 +1233,7 @@ const Documents = () => {
           onOpenChange={setAssignCircuitDialogOpen}
           documentId={selectedDocumentForCircuit.id}
           documentTitle={selectedDocumentForCircuit.title || ""}
+          documentTypeId={selectedDocumentForCircuit.typeId}
           onSuccess={handleAssignCircuitSuccess}
         />
       )}

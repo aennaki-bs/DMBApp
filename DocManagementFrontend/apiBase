@@ -1,4 +1,5 @@
 {
+  "openapi": "3.0.1",
   "paths": {
     "/api/Account/user-info": {
       "get": {
@@ -3338,6 +3339,37 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/GeneralAccounts/validate-code": {
+      "post": {
+        "tags": [
+          "GeneralAccounts"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGeneralAccountsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGeneralAccountsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGeneralAccountsRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"

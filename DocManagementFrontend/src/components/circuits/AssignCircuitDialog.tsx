@@ -71,6 +71,7 @@ interface CircuitValidation {
 interface AssignCircuitDialogProps {
   documentId: number;
   documentTitle: string;
+  documentTypeId?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
@@ -79,6 +80,7 @@ interface AssignCircuitDialogProps {
 export default function AssignCircuitDialog({
   documentId,
   documentTitle,
+  documentTypeId,
   open,
   onOpenChange,
   onSuccess,
@@ -92,14 +94,35 @@ export default function AssignCircuitDialog({
     useState<ExtendedCircuit | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Fetch active circuits from API
-  const { data: activeCircuits, isLoading: isCircuitsLoading } = useQuery<
-    ActiveCircuit[]
+  // Fetch all circuits with document type information
+  const { data: allCircuits, isLoading: isCircuitsLoading } = useQuery<
+    Circuit[]
   >({
-    queryKey: ["active-circuits"],
-    queryFn: circuitService.getActiveCircuits,
+    queryKey: ["all-circuits"],
+    queryFn: circuitService.getAllCircuits,
     enabled: open,
   });
+
+  // Filter circuits based on active status and document type
+  const activeCircuits = allCircuits
+    ?.filter((circuit) => {
+      // Filter by active status
+      if (!circuit.isActive) return false;
+
+      // Filter by document type - only show circuits that match the document type
+      // If circuit has no documentTypeId, it can be used with any document type (for backward compatibility)
+      if (documentTypeId && circuit.documentTypeId) {
+        return circuit.documentTypeId === documentTypeId;
+      }
+
+      // If circuit has no specific document type, allow it for any document type
+      return !circuit.documentTypeId;
+    })
+    .map((circuit) => ({
+      circuitId: circuit.id,
+      circuitKey: circuit.circuitKey,
+      circuitTitle: circuit.title,
+    }));
 
   // Fetch detailed circuit information when a circuit is selected
   const { data: selectedCircuitDetails, isLoading: isCircuitDetailsLoading } =
@@ -390,6 +413,23 @@ export default function AssignCircuitDialog({
             Select a circuit for document: {documentTitle}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Circuit Filtering Information */}
+        {documentTypeId && (
+          <div className="rounded-md bg-green-900/20 p-3 border border-green-800/40 mb-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-4 w-4 text-green-400" />
+              </div>
+              <div className="ml-2">
+                <p className="text-sm text-green-300">
+                  Circuits are filtered to show only those compatible with this
+                  document type
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <Form {...form}>
           <form

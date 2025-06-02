@@ -1,4 +1,3 @@
-
 export const translations = {
   en: {
     settings: {
@@ -9,7 +8,28 @@ export const translations = {
       darkMode: 'Dark Mode',
       selectLanguage: 'Select Language',
       useCustomBg: 'Use Custom Background Image',
-      uploadBg: 'Click to upload background image'
+      uploadBg: 'Click to upload background image',
+      appearance: 'Appearance',
+      notifications: 'Notifications',
+      privacy: 'Privacy & Security',
+      advanced: 'Advanced',
+      autoTheme: 'Auto Theme',
+      accessibility: 'Accessibility',
+      highContrast: 'High Contrast',
+      reduceMotion: 'Reduce Motion',
+      enhancedAnimations: 'Enhanced Animations',
+      pushNotifications: 'Push Notifications',
+      emailNotifications: 'Email Notifications',
+      soundAlerts: 'Sound Alerts',
+      securitySettings: 'Security Settings',
+      autoLogout: 'Auto Logout',
+      sessionTimeout: 'Session Timeout',
+      dataPrivacy: 'Data & Privacy',
+      performanceDebug: 'Performance & Debug',
+      systemInfo: 'System Information',
+      exportSettings: 'Export Settings',
+      resetAll: 'Reset All Settings',
+      backToDashboard: 'Back to Dashboard'
     }
   },
   fr: {
@@ -21,7 +41,28 @@ export const translations = {
       darkMode: 'Mode sombre',
       selectLanguage: 'Sélectionner la langue',
       useCustomBg: 'Utiliser une image d\'arrière-plan personnalisée',
-      uploadBg: 'Cliquez pour télécharger une image d\'arrière-plan'
+      uploadBg: 'Cliquez pour télécharger une image d\'arrière-plan',
+      appearance: 'Apparence',
+      notifications: 'Notifications',
+      privacy: 'Confidentialité et sécurité',
+      advanced: 'Avancé',
+      autoTheme: 'Thème automatique',
+      accessibility: 'Accessibilité',
+      highContrast: 'Contraste élevé',
+      reduceMotion: 'Réduire les animations',
+      enhancedAnimations: 'Animations améliorées',
+      pushNotifications: 'Notifications push',
+      emailNotifications: 'Notifications par e-mail',
+      soundAlerts: 'Alertes sonores',
+      securitySettings: 'Paramètres de sécurité',
+      autoLogout: 'Déconnexion automatique',
+      sessionTimeout: 'Délai d\'expiration de session',
+      dataPrivacy: 'Données et confidentialité',
+      performanceDebug: 'Performance et débogage',
+      systemInfo: 'Informations système',
+      exportSettings: 'Exporter les paramètres',
+      resetAll: 'Réinitialiser tous les paramètres',
+      backToDashboard: 'Retour au tableau de bord'
     }
   },
   es: {
@@ -33,7 +74,28 @@ export const translations = {
       darkMode: 'Modo oscuro',
       selectLanguage: 'Seleccionar idioma',
       useCustomBg: 'Usar imagen de fondo personalizada',
-      uploadBg: 'Haga clic para cargar imagen de fondo'
+      uploadBg: 'Haga clic para cargar imagen de fondo',
+      appearance: 'Apariencia',
+      notifications: 'Notificaciones',
+      privacy: 'Privacidad y seguridad',
+      advanced: 'Avanzado',
+      autoTheme: 'Tema automático',
+      accessibility: 'Accesibilidad',
+      highContrast: 'Alto contraste',
+      reduceMotion: 'Reducir animaciones',
+      enhancedAnimations: 'Animaciones mejoradas',
+      pushNotifications: 'Notificaciones push',
+      emailNotifications: 'Notificaciones por correo',
+      soundAlerts: 'Alertas de sonido',
+      securitySettings: 'Configuración de seguridad',
+      autoLogout: 'Cierre automático',
+      sessionTimeout: 'Tiempo de espera de sesión',
+      dataPrivacy: 'Datos y privacidad',
+      performanceDebug: 'Rendimiento y depuración',
+      systemInfo: 'Información del sistema',
+      exportSettings: 'Exportar configuración',
+      resetAll: 'Restablecer toda la configuración',
+      backToDashboard: 'Volver al panel'
     }
   }
 };

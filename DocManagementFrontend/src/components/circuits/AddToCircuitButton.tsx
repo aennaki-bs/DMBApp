@@ -1,14 +1,20 @@
-
-import { useState } from 'react';
-import { GitBranch, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import AssignCircuitDialog from './AssignCircuitDialog';
+import { useState } from "react";
+import { GitBranch, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import AssignCircuitDialog from "./AssignCircuitDialog";
 
 interface AddToCircuitButtonProps {
   documentId: number;
   documentTitle: string;
+  documentTypeId?: number;
   onSuccess?: () => void;
-  variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
+  variant?:
+    | "default"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link"
+    | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
 }
@@ -16,10 +22,11 @@ interface AddToCircuitButtonProps {
 export default function AddToCircuitButton({
   documentId,
   documentTitle,
+  documentTypeId,
   onSuccess,
   variant = "default",
   size = "default",
-  className
+  className,
 }: AddToCircuitButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -31,8 +38,8 @@ export default function AddToCircuitButton({
 
   return (
     <>
-      <Button 
-        variant={variant} 
+      <Button
+        variant={variant}
         size={size}
         className={className}
         onClick={() => setIsDialogOpen(true)}
@@ -44,6 +51,7 @@ export default function AddToCircuitButton({
       <AssignCircuitDialog
         documentId={documentId}
         documentTitle={documentTitle}
+        documentTypeId={documentTypeId}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onSuccess={handleSuccess}

@@ -102,6 +102,7 @@ const DocumentActions = ({
       <AssignCircuitDialog
         documentId={document.id}
         documentTitle={document.title}
+        documentTypeId={document.typeId}
         open={isAssignCircuitOpen}
         onOpenChange={setIsAssignCircuitOpen}
         onSuccess={handleCircuitAssigned}

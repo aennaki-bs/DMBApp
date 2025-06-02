@@ -28,6 +28,13 @@ interface Circuit {
   icon?: React.ReactNode;
   code?: string;
   isActive?: boolean;
+  documentTypeId?: number;
+  documentType?: {
+    id: number;
+    typeName: string;
+    typeKey?: string;
+    typeAttr?: string;
+  };
 }
 
 interface CircuitAssignmentStepProps {
@@ -162,6 +169,16 @@ export const CircuitAssignmentStep = ({
                 <span>
                   Only <span className="font-bold">active circuits</span> are
                   displayed and available for selection
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-green-900/20 border border-green-800/40 rounded-md mb-6 p-3 mx-2">
+              <div className="flex items-center gap-2 text-xs text-green-300">
+                <Info className="h-3.5 w-3.5 text-green-400" />
+                <span>
+                  Circuits are filtered to show only those compatible with your
+                  selected document type
                 </span>
               </div>
             </div>

@@ -120,6 +120,14 @@ export default {
 					"0%": { transform: "translateX(100%)" },
 					"100%": { transform: "translateX(-100%)" }
 				},
+				shimmer: {
+					"0%": { transform: "translateX(-100%)" },
+					"100%": { transform: "translateX(100%)" }
+				},
+				pulsate: {
+					"0%, 100%": { transform: "scale(1)", opacity: "1" },
+					"50%": { transform: "scale(1.05)", opacity: "0.8" }
+				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -127,6 +135,8 @@ export default {
 				'fade-in': 'fadeIn 0.3s ease-out',
 				'slide-up': 'slideUp 0.4s ease-out',
 				"pulse-slow": "pulse 3s ease-in-out infinite",
+				'shimmer': 'shimmer 2s infinite',
+				'pulsate': 'pulsate 1.5s ease-in-out infinite'
 			}
 		}
 	},
