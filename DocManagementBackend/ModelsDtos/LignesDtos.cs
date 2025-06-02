@@ -10,7 +10,7 @@ namespace DocManagementBackend.Models
     {
         public int Id { get; set; }
         public int DocumentId { get; set; }
-        public string LingeKey { get; set; } = string.Empty;
+        public string LigneKey { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Article { get; set; } = string.Empty;
         

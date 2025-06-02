@@ -54,7 +54,7 @@ interface FormValues {
   ligneKey: string;
   title: string;
   article: string;
-  typeId?: number;
+  lignesElementTypeId?: number;
   quantity: number;
   priceHT: number;
   discountPercentage: number;
@@ -107,12 +107,14 @@ const CreateLigneDialog = ({
     }
   }, [isOpen]);
 
-  // Generate ligne key based on document
+  // Backend handles unique line key generation using document key
   useEffect(() => {
     if (isOpen && document) {
-      const ligneCount = (document.lignesCount || 0) + 1;
-      const ligneKey = `${document.documentKey}-L${ligneCount.toString().padStart(3, '0')}`;
-      setFormValues(prev => ({ ...prev, ligneKey }));
+      // Reset form when dialog opens, but don't generate ligne key
+      setFormValues(prev => ({ 
+        ...prev, 
+        ligneKey: '' // Backend generates unique key using document key (e.g., AV2506-4-L1)
+      }));
     }
   }, [isOpen, document]);
 
@@ -166,7 +168,7 @@ const CreateLigneDialog = ({
       case 1:
         return !!(formValues.title && formValues.title.trim());
       case 2:
-        return !!(formValues.typeId);
+        return !!(formValues.lignesElementTypeId);
       case 3:
         return !!(
           formValues.quantity && 
@@ -198,10 +200,9 @@ const CreateLigneDialog = ({
       setIsSubmitting(true);
       const newLigne: CreateLigneRequest = {
         documentId: document.id,
-        ligneKey: formValues.ligneKey,
         title: formValues.title,
         article: formValues.article,
-        typeId: formValues.typeId,
+        lignesElementTypeId: formValues.lignesElementTypeId,
         quantity: formValues.quantity,
         priceHT: formValues.priceHT,
         discountPercentage: formValues.discountPercentage,
@@ -374,14 +375,14 @@ const CreateLigneDialog = ({
               {step === 2 && (
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <Label htmlFor="typeId" className="text-blue-200 text-base font-medium">
+                    <Label htmlFor="lignesElementTypeId" className="text-blue-200 text-base font-medium">
                       Element Type
                     </Label>
                     <Select
-                      value={formValues.typeId?.toString()}
+                      value={formValues.lignesElementTypeId?.toString()}
                       onValueChange={(value) => {
-                        const typeId = value ? parseInt(value) : undefined;
-                        handleFieldChange("typeId", typeId);
+                        const lignesElementTypeId = value ? parseInt(value) : undefined;
+                        handleFieldChange("lignesElementTypeId", lignesElementTypeId);
                       }}
                     >
                       <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
@@ -408,7 +409,7 @@ const CreateLigneDialog = ({
                   </div>
 
                   {/* Information card about the selected element type */}
-                  {formValues.typeId && (
+                  {formValues.lignesElementTypeId && (
                     <div className="space-y-4">
                       <div className="p-4 bg-blue-950/30 rounded-lg border border-blue-400/20">
                         <div className="flex items-start gap-3">
@@ -417,13 +418,13 @@ const CreateLigneDialog = ({
                           </div>
                           <div>
                             <h4 className="text-blue-200 font-medium mb-1">
-                              {elementTypes.find(t => t.id === formValues.typeId)?.code} - {elementTypes.find(t => t.id === formValues.typeId)?.typeElement}
+                              {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.code} - {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.typeElement}
                             </h4>
                             <p className="text-blue-300/70 text-sm">
-                              {elementTypes.find(t => t.id === formValues.typeId)?.description}
+                              {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.description}
                             </p>
                             <p className="text-blue-400/60 text-xs mt-2">
-                              This element type is automatically linked to its associated {elementTypes.find(t => t.id === formValues.typeId)?.typeElement.toLowerCase()}.
+                              This element type is automatically linked to its associated {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.typeElement.toLowerCase()}.
                             </p>
                           </div>
                         </div>
@@ -432,7 +433,7 @@ const CreateLigneDialog = ({
                   )}
 
                   {/* Help text when no element type is selected */}
-                  {!formValues.typeId && (
+                  {!formValues.lignesElementTypeId && (
                     <div className="p-6 bg-gray-950/30 rounded-lg border border-gray-500/20 text-center">
                       <div className="bg-gray-500/20 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                         <Package className="h-8 w-8 text-gray-400" />

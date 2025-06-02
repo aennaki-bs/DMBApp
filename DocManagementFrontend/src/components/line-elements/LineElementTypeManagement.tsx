@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Plus, 
   Search, 
@@ -69,6 +70,7 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
   const [selectedElementType, setSelectedElementType] = useState<LignesElementType | null>(null);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('all');
+  const [elementTypesInUse, setElementTypesInUse] = useState<Set<number>>(new Set());
 
   // Form state
   const editForm = useForm<ElementTypeFormData>({
@@ -98,6 +100,22 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
       setElementTypes(elementTypesData);
       setItems(itemsData);
       setGeneralAccounts(generalAccountsData);
+
+      // Check which element types are in use
+      const inUseSet = new Set<number>();
+      await Promise.all(
+        elementTypesData.map(async (elementType) => {
+          try {
+            const isInUse = await lineElementsService.elementTypes.isInUse(elementType.id);
+            if (isInUse) {
+              inUseSet.add(elementType.id);
+            }
+          } catch (error) {
+            console.error(`Failed to check if element type ${elementType.id} is in use:`, error);
+          }
+        })
+      );
+      setElementTypesInUse(inUseSet);
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast.error('Failed to load element types data');
@@ -469,7 +487,14 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
                       />
                     </TableCell>
                     <TableCell className="font-medium text-white">
-                      {elementType.code}
+                      <div className="flex items-center gap-2">
+                        {elementType.code}
+                        {elementTypesInUse.has(elementType.id) && (
+                          <Badge variant="outline" className="text-orange-300 border-orange-500/30 text-xs">
+                            In Use
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge className={`${getTypeBadgeColor(elementType.typeElement)} flex items-center w-fit`}>
@@ -497,22 +522,57 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditDialog(elementType)}
-                          className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openDeleteDialog(elementType)}
-                          className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditDialog(elementType)}
+                                disabled={elementTypesInUse.has(elementType.id)}
+                                className={`h-8 w-8 p-0 ${
+                                  elementTypesInUse.has(elementType.id)
+                                    ? 'text-gray-500 hover:text-gray-500 cursor-not-allowed'
+                                    : 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/20'
+                                }`}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {elementTypesInUse.has(elementType.id)
+                                ? 'Cannot edit - this element type is used by lines'
+                                : 'Edit element type'
+                              }
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openDeleteDialog(elementType)}
+                                disabled={elementTypesInUse.has(elementType.id)}
+                                className={`h-8 w-8 p-0 ${
+                                  elementTypesInUse.has(elementType.id)
+                                    ? 'text-gray-500 hover:text-gray-500 cursor-not-allowed'
+                                    : 'text-red-400 hover:text-red-300 hover:bg-red-900/20'
+                                }`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {elementTypesInUse.has(elementType.id)
+                                ? 'Cannot delete - this element type is used by lines'
+                                : 'Delete element type'
+                              }
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </TableCell>
                   </TableRow>

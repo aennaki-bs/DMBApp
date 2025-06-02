@@ -51,6 +51,7 @@ namespace DocManagementBackend.Services
             document.UpdatedAt = DateTime.UtcNow;
 
             // Create DocumentStatus records for all statuses in the circuit
+            // The initial status is automatically marked as complete upon assignment
             var statuses = await _context.Status
                 .Where(s => s.CircuitId == circuitId)
                 .ToListAsync();
@@ -61,21 +62,12 @@ namespace DocManagementBackend.Services
                 {
                     DocumentId = documentId,
                     StatusId = status.Id,
-                    IsComplete = false // Will be set to true as the document progresses
+                    IsComplete = status.IsInitial, // Mark initial status as complete immediately
+                    CompletedByUserId = status.IsInitial ? userId : (int?)null,
+                    CompletedAt = status.IsInitial ? DateTime.UtcNow : (DateTime?)null
                 };
 
                 _context.DocumentStatus.Add(documentStatus);
-            }
-
-            // Mark the initial status as complete
-            var initialDocumentStatus = await _context.DocumentStatus
-                .FirstOrDefaultAsync(ds => ds.DocumentId == documentId && ds.StatusId == initialStatus.Id);
-
-            if (initialDocumentStatus != null)
-            {
-                initialDocumentStatus.IsComplete = true;
-                initialDocumentStatus.CompletedByUserId = userId;
-                initialDocumentStatus.CompletedAt = DateTime.UtcNow;
             }
 
             // Create a circuit history entry

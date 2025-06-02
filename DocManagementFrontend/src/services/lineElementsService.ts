@@ -77,6 +77,16 @@ export const lignesElementTypeService = {
       throw error;
     }
   },
+
+  isInUse: async (id: number): Promise<boolean> => {
+    try {
+      const response = await api.get(`/LignesElementType/${id}/in-use`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error checking if element type with ID ${id} is in use:`, error);
+      throw error;
+    }
+  },
 };
 
 // Item Service

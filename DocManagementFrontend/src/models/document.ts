@@ -93,9 +93,9 @@ export interface Ligne {
   
   sousLignesCount: number;
   
-  // Type information
-  typeId?: number;
-  type?: LignesElementType;
+  // Type information - FIXED field names to match backend
+  lignesElementTypeId?: number;
+  lignesElementType?: LignesElementType;
   
   // Element references
   itemCode?: string;
@@ -123,12 +123,12 @@ export interface Ligne {
 
 export interface CreateLigneRequest {
   documentId: number;
-  ligneKey: string;
+  ligneKey?: string;
   title: string;
   article: string;
   
-  // Type and element references
-  typeId?: number;
+  // Type and element references - FIXED field names
+  lignesElementTypeId?: number;
   itemCode?: string;
   generalAccountsCode?: string;
   
@@ -145,8 +145,8 @@ export interface UpdateLigneRequest {
   title?: string;
   article?: string;
   
-  // Type and element references
-  typeId?: number;
+  // Type and element references - FIXED field names
+  lignesElementTypeId?: number;
   itemCode?: string;
   generalAccountsCode?: string;
   

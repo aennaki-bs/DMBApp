@@ -11,7 +11,7 @@ namespace DocManagementBackend.Mappings
         {
             Id = l.Id,
             DocumentId = l.DocumentId,
-            LingeKey = l.LigneKey,
+            LigneKey = l.LigneKey,
             Title = l.Title,
             Article = l.Article,
             Prix = l.Prix,
@@ -130,7 +130,7 @@ namespace DocManagementBackend.Mappings
             {
                 Id = s.Ligne!.Id,
                 DocumentId = s.Ligne.DocumentId,
-                LingeKey = s.Ligne.LigneKey,
+                LigneKey = s.Ligne.LigneKey,
                 Title = s.Ligne.Title,
                 Article = s.Ligne.Article,
                 Prix = s.Ligne.Prix,
