@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { CheckIcon } from "lucide-react";
 
 export const SubTypeFormProgress = () => {
-  const { currentStep, totalSteps, goToStep } = useSubTypeForm();
+  const { currentStep } = useSubTypeForm();
 
   const steps = [
     {
@@ -11,7 +11,7 @@ export const SubTypeFormProgress = () => {
       title: "Dates",
       description: "Set date range and status",
     },
-    { number: 2, title: "Enter Code", description: "Enter strain code" },
+    { number: 2, title: "Enter Code", description: "Enter series code" },
     { number: 3, title: "Review", description: "Review and submit" },
   ];
 
@@ -22,14 +22,14 @@ export const SubTypeFormProgress = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-lg font-semibold text-white mb-1"
       >
-        Create New Strain
+        Create New Series
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, transition: { delay: 0.1 } }}
         className="text-xs text-blue-300/90 mb-3"
       >
-        Step {currentStep} of {totalSteps}
+        Step {currentStep} of {steps.length}
       </motion.p>
 
       <div className="flex items-center justify-center gap-1 px-2 mb-2">
@@ -37,16 +37,11 @@ export const SubTypeFormProgress = () => {
           <div key={step.number} className="flex items-center">
             <div className="flex flex-col items-center">
               <motion.button
-                onClick={() =>
-                  step.number < currentStep && goToStep(step.number)
-                }
-                whileHover={step.number < currentStep ? { scale: 1.05 } : {}}
-                whileTap={step.number < currentStep ? { scale: 0.95 } : {}}
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all ${
                   currentStep === step.number
                     ? "bg-blue-500 text-white ring-1 ring-blue-400/30 shadow-sm"
                     : currentStep > step.number
-                    ? "bg-blue-500/20 text-blue-300 cursor-pointer hover:bg-blue-500/30"
+                    ? "bg-blue-500/20 text-blue-300"
                     : "bg-blue-900/30 text-blue-300/50"
                 }`}
               >

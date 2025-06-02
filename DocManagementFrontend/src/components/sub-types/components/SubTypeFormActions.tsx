@@ -67,6 +67,7 @@ export const SubTypeFormActions = ({ onCancel }: SubTypeFormActionsProps) => {
         ) : (
           <Button
             type="submit"
+            onClick={handleSubmit}
             className="min-w-[120px] h-9 bg-blue-600 hover:bg-blue-500 transition-colors"
           >
             {isLoading ? (
@@ -80,7 +81,6 @@ export const SubTypeFormActions = ({ onCancel }: SubTypeFormActionsProps) => {
                 Create Series
               </>
             )}
-            Create Series
           </Button>
         )}
       </div>

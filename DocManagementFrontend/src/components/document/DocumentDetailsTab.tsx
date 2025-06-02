@@ -100,12 +100,8 @@ const DocumentDetailsTab = ({
   }, [document.id]);
 
   return (
-    <div
-      className={`overflow-hidden border-l-4 bg-gradient-to-br ${getStatusClass(
-        document.status
-      )} shadow-xl rounded-lg`}
-    >
-      <div className="bg-gradient-to-r from-blue-800/30 to-indigo-800/20 border-b border-white/5 px-6 py-4">
+    <div className="overflow-hidden bg-[#0f1642]/95 shadow-lg rounded-lg border border-blue-900/20">
+      <div className="bg-[#131f4f]/60 border-b border-blue-900/20 px-6 py-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl text-white flex items-center gap-2">
             <FileText className="h-5 w-5 text-blue-300" />
@@ -114,17 +110,47 @@ const DocumentDetailsTab = ({
           <div className="flex items-center gap-3">
             <p className="text-sm text-blue-300/80 flex items-center">
               <Clock className="h-4 w-4 mr-1" />
-              Last updated: {new Date(document.updatedAt).toLocaleDateString()}{" "}
+              Last updated: {new Date(
+                document.updatedAt
+              ).toLocaleDateString()}{" "}
               at {new Date(document.updatedAt).toLocaleTimeString()}
-              {document.updatedBy && (
-                <span className="ml-2">
-                  by {document.updatedBy.firstName} {document.updatedBy.lastName}
-                </span>
-              )}
             </p>
           </div>
         </div>
       </div>
+
+      {/* Responsibility Center Banner */}
+      {document.responsibilityCentre && (
+        <div className="bg-[#131f4f]/30 py-4 px-6 text-center border-b border-blue-900/20">
+          <div className="flex flex-col items-center justify-center">
+            <h3 className="text-sm font-medium text-blue-300 mb-1">
+              Responsibility Centre
+            </h3>
+            <p className="font-semibold text-lg text-white flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-blue-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
+                <path d="M12 10v4"></path>
+                <path d="M12 14h4"></path>
+              </svg>
+              {document.responsibilityCentre.descr || "No Centre Assigned"}
+            </p>
+            {document.responsibilityCentre.code && (
+              <div className="mt-1 py-1 px-3 bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-full text-sm">
+                Code: {document.responsibilityCentre.code}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="p-6 text-blue-100">
         {/* Approval Details Component */}
@@ -134,65 +160,79 @@ const DocumentDetailsTab = ({
           isLoadingApproval={isLoadingApproval}
         />
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <h3 className="text-sm font-medium text-blue-300 mb-1">
+        <div className="grid md:grid-cols-3 gap-5 mb-6">
+          <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
+            <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
+              <Tag className="h-4 w-4 mr-2 text-blue-400" />
               Document Type
             </h3>
-            <p className="font-medium">{document.documentType.typeName}</p>
+            <p className="font-medium text-white">
+              {document.documentType.typeName}
+            </p>
+          </div>
+
+          <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
+            <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-blue-400" />
+              Document Date
+            </h3>
+            <p className="font-medium text-white">
+              {new Date(document.docDate).toLocaleDateString()}
+            </p>
+          </div>
+
+          <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
+            <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-blue-400" />
+              Accounting Date
+            </h3>
+            <p className="font-medium text-white">
+              {new Date(document.comptableDate).toLocaleDateString()}
+            </p>
           </div>
 
           {/* External Document field */}
           {document.documentExterne && (
-            <div>
-              <h3 className="text-sm font-medium text-blue-300 mb-1">
+            <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
+              <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
+                <FileText className="h-4 w-4 mr-2 text-blue-400" />
                 External Document
               </h3>
-              <p className="font-medium flex items-center gap-1">
-                <FileText className="h-4 w-4 text-blue-400" />
+              <p className="font-medium text-white">
                 {document.documentExterne}
               </p>
             </div>
           )}
 
-          <div>
-            <h3 className="text-sm font-medium text-blue-300 mb-1">
-              Document Date
+          <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
+            <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
+              <Tag className="h-4 w-4 mr-2 text-blue-400" />
+              Series
             </h3>
-            <p className="font-medium flex items-center gap-1">
-              <Calendar className="h-4 w-4 text-blue-400" />
-              {new Date(document.docDate).toLocaleDateString()}
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-blue-300 mb-1">
-              Accounting Date
-            </h3>
-            <p className="font-medium flex items-center gap-1">
-              <Calendar className="h-4 w-4 text-blue-400" />
-              {new Date(document.comptableDate).toLocaleDateString()}
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-blue-300 mb-1">Series</h3>
-            {/* <p className="font-medium flex items-center gap-1">
-              <Tag className="h-4 w-4 text-blue-400" />
-              {document.subType?.name || "No series"}
-            </p> */}
-            {document.subType && (
-              <>
-                <p className="text-sm text-blue-300/70 mt-1">Key: {document.subType.subTypeKey}</p>
-                <p className="text-sm text-blue-300/70">
-                  Valid: {new Date(document.subType.startDate).toLocaleDateString()} - {new Date(document.subType.endDate).toLocaleDateString()}
+            {document.subType ? (
+              <div>
+                <p className="font-medium text-white">
+                  {document.subType.name || document.subType.subTypeKey}
                 </p>
-              </>
+                <p className="text-xs text-blue-300/70 mt-1">
+                  Key: {document.subType.subTypeKey}
+                </p>
+                <p className="text-xs text-blue-300/70">
+                  Valid:{" "}
+                  {new Date(document.subType.startDate).toLocaleDateString()} -{" "}
+                  {new Date(document.subType.endDate).toLocaleDateString()}
+                </p>
+              </div>
+            ) : (
+              <p className="text-blue-300/70">No series assigned</p>
             )}
           </div>
 
           {/* Circuit section with workflow status data */}
           {(document.circuitId || workflowStatus) && (
-            <div>
-              <h3 className="text-sm font-medium text-blue-300 mb-1">
+            <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
+              <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
+                <GitBranch className="h-4 w-4 mr-2 text-blue-400" />
                 Circuit
               </h3>
               {isLoadingWorkflow ? (
@@ -202,11 +242,10 @@ const DocumentDetailsTab = ({
                 </div>
               ) : workflowStatus ? (
                 <>
-                  <p className="font-medium flex items-center gap-1">
-                    <GitBranch className="h-4 w-4 text-blue-400" />
+                  <p className="font-medium text-white">
                     {workflowStatus.circuitTitle}
                   </p>
-                  <p className="text-sm text-blue-300/70 mt-1">
+                  <p className="text-xs text-blue-300/70 mt-1">
                     Code:{" "}
                     {isLoadingCircuitKey ? (
                       <span className="flex items-center gap-1">
@@ -217,29 +256,19 @@ const DocumentDetailsTab = ({
                       circuitKey || workflowStatus.circuitId
                     )}
                   </p>
-                  <p className="text-sm text-blue-300/70">
+                  <p className="text-xs text-blue-300/70">
                     Current Status:{" "}
-                    {workflowStatus.currentStatusTitle || "Processing"}
+                    <span className="text-white font-medium">
+                      {workflowStatus.currentStatusTitle || "Processing"}
+                    </span>
                   </p>
-                  {/* <div className="mt-2"> */}
-                    {/* <div className="w-full bg-blue-950/40 rounded-full h-2"> */}
-                      {/* <div 
-                        className="bg-blue-500 h-2 rounded-full" 
-                        style={{ width: progressDisplay }}
-                      ></div> */}
-                    {/* </div> */}
-                    {/* <p className="text-xs text-blue-300/70 mt-1 text-right">
-                      {progressDisplay}
-                    </p> */}
-                  {/* </div> */}
                 </>
               ) : (
                 <>
-                  <p className="font-medium flex items-center gap-1">
-                    <GitBranch className="h-4 w-4 text-blue-400" />
+                  <p className="font-medium text-white">
                     {document.circuit?.title || "Unknown Circuit"}
                   </p>
-                  <p className="text-sm text-blue-300/70 mt-1">
+                  <p className="text-xs text-blue-300/70 mt-1">
                     Code:{" "}
                     {isLoadingCircuitKey ? (
                       <span className="flex items-center gap-1">
@@ -250,43 +279,56 @@ const DocumentDetailsTab = ({
                       circuitKey || "N/A"
                     )}
                   </p>
-                  <p className="text-sm text-blue-300/70">
-                    Current Status: Processing
+                  <p className="text-xs text-blue-300/70">
+                    Current Status:{" "}
+                    <span className="text-white font-medium">Processing</span>
                   </p>
                 </>
               )}
             </div>
           )}
 
-          <div>
-            <h3 className="text-sm font-medium text-blue-300 mb-1">
+          <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
+            <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
+              <User className="h-4 w-4 mr-2 text-blue-400" />
               Created By
             </h3>
-            <p className="font-medium flex items-center gap-1">
-              <User className="h-4 w-4 text-blue-400" />
-              {document.createdBy.firstName} {document.createdBy.lastName} (#{document.createdBy.username})
+            <p className="font-medium text-white">
+              {document.createdBy.firstName} {document.createdBy.lastName}
             </p>
-            <p className="text-sm text-blue-300/70">
-            ------------------------------------------
+            <p className="text-xs text-blue-300/70 mt-1">
+              Username: {document.createdBy.username}
             </p>
-        
-            {/* <Separator className="my-2 bg-blue-400/20" /> */}
-            <h3 className="text-sm font-medium text-blue-300 mb-1">
-              Created At
-            </h3>
-            <p className="text-sm text-blue-300/70 mt-2 flex items-center gap-1">
-              <Clock className="h-4 w-4 text-blue-400" />
-              {new Date(document.createdAt).toLocaleDateString()} at {new Date(document.createdAt).toLocaleTimeString()}
+            <p className="text-xs text-blue-300/70">
+              {new Date(document.createdAt).toLocaleDateString()} at{" "}
+              {new Date(document.createdAt).toLocaleTimeString()}
             </p>
           </div>
         </div>
 
-        <Separator className="my-6 bg-blue-400/20" />
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-blue-900/30 to-transparent my-6"></div>
 
         <div>
-          <h3 className="text-sm font-medium text-blue-300 mb-3">Content</h3>
-          <div className="p-4 bg-blue-950/40 rounded-md min-h-[200px] whitespace-pre-wrap border border-blue-400/20">
-            {document.content || "No content available."}
+          <h3 className="text-sm font-medium text-blue-300 mb-3 flex items-center justify-between">
+            <div className="flex items-center">
+              <FileText className="h-4 w-4 mr-2 text-blue-400" />
+              Content
+            </div>
+            {document.content && document.content.length > 150 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-blue-400 hover:text-blue-300 px-2 py-0 h-6"
+                onClick={() => setHistoryDialogOpen(true)}
+              >
+                Show more
+              </Button>
+            )}
+          </h3>
+          <div className="p-3 bg-[#131f4f]/30 rounded-md border border-blue-900/20">
+            <p className="text-white/90 text-sm line-clamp-3 whitespace-pre-line">
+              {document.content || "No content available."}
+            </p>
           </div>
         </div>
 

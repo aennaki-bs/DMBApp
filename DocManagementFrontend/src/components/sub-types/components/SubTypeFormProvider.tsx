@@ -25,7 +25,7 @@ interface SubTypeFormContextType {
   setErrors: (errors: Record<string, string>) => void;
   handleSubmit: () => void;
   setHandleSubmit: (cb: () => void) => void;
-  validateCurrentStep: () => boolean;
+  validateCurrentStep: () => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -38,6 +38,7 @@ interface SubTypeFormProviderProps {
   onClose: () => void;
   children: React.ReactNode;
   initialData?: SubTypeFormData;
+  documentTypes?: DocumentType[];
 }
 
 export const SubTypeFormProvider = ({
@@ -45,6 +46,7 @@ export const SubTypeFormProvider = ({
   onClose,
   children,
   initialData = {},
+  documentTypes = [],
 }: SubTypeFormProviderProps) => {
   const [formData, setFormData] = useState<SubTypeFormData>(initialData);
   const [currentStep, setCurrentStep] = useState(1);
@@ -109,7 +111,7 @@ export const SubTypeFormProvider = ({
               title: "Warning",
               description:
                 "Could not verify date range overlap. You may proceed, but be cautious.",
-              variant: "warning",
+              variant: "destructive",
             });
           } finally {
             setIsLoading(false);

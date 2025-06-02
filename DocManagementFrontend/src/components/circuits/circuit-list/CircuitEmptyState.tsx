@@ -39,9 +39,7 @@ export function CircuitEmptyState({
             ? "Try adjusting your search or filters"
             : "Create your first circuit to get started"
         }
-        actionLabel={
-          !isSimpleUser && !hasFilters ? "Create Circuit" : undefined
-        }
+        actionLabel={!isSimpleUser && !hasFilters ? "New Circuit" : undefined}
         actionIcon={
           !isSimpleUser && !hasFilters ? (
             <Plus className="h-4 w-4" />
