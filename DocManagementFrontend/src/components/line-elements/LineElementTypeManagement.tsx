@@ -28,60 +28,96 @@ import {
   AlertTriangle,
   Loader2,
   Package,
-  Calculator
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+  Calculator,
+  ArrowUp,
+  ArrowDown,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 // Import services and types
-import lineElementsService from '@/services/lineElementsService';
-import { LignesElementType, Item, GeneralAccounts, CreateLignesElementTypeRequest, UpdateLignesElementTypeRequest } from '@/models/lineElements';
-import CreateElementTypeWizard from './CreateElementTypeWizard';
+import lineElementsService from "@/services/lineElementsService";
+import {
+  LignesElementType,
+  Item,
+  GeneralAccounts,
+  CreateLignesElementTypeRequest,
+  UpdateLignesElementTypeRequest,
+} from "@/models/lineElements";
+import CreateElementTypeWizard from "./CreateElementTypeWizard";
 
 // Form validation schema
 const elementTypeSchema = z.object({
-  code: z.string().min(1, 'Code is required').max(50, 'Code must be 50 characters or less'),
-  typeElement: z.string().min(1, 'Type element is required'),
-  description: z.string().min(1, 'Description is required').max(255, 'Description must be 255 characters or less'),
-  tableName: z.string().min(1, 'Table name is required'),
+  code: z
+    .string()
+    .min(1, "Code is required")
+    .max(50, "Code must be 50 characters or less"),
+  typeElement: z.string().min(1, "Type element is required"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .max(255, "Description must be 255 characters or less"),
+  tableName: z.string().min(1, "Table name is required"),
   itemCode: z.string().optional(),
   accountCode: z.string().optional(),
 });
 
 type ElementTypeFormData = z.infer<typeof elementTypeSchema>;
 
+// Search field options
+const ELEMENT_TYPE_SEARCH_FIELDS = [
+  { id: "all", label: "All fields" },
+  { id: "code", label: "Code" },
+  { id: "typeElement", label: "Type Element" },
+  { id: "description", label: "Description" },
+  { id: "tableName", label: "Table Name" },
+];
+
 interface LineElementTypeManagementProps {
   searchTerm: string;
 }
 
-const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProps) => {
+const LineElementTypeManagement = ({
+  searchTerm,
+}: LineElementTypeManagementProps) => {
   const [elementTypes, setElementTypes] = useState<LignesElementType[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [generalAccounts, setGeneralAccounts] = useState<GeneralAccounts[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortField, setSortField] = useState<keyof LignesElementType>('code');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [selectedElementTypes, setSelectedElementTypes] = useState<number[]>([]);
+  const [sortField, setSortField] = useState<keyof LignesElementType>("code");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [selectedElementTypes, setSelectedElementTypes] = useState<number[]>(
+    []
+  );
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedElementType, setSelectedElementType] = useState<LignesElementType | null>(null);
-  const [localSearchTerm, setLocalSearchTerm] = useState('');
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('all');
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [selectedElementType, setSelectedElementType] =
+    useState<LignesElementType | null>(null);
   const [elementTypesInUse, setElementTypesInUse] = useState<Set<number>>(new Set());
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchField, setSearchField] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("any");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // Form state
   const editForm = useForm<ElementTypeFormData>({
     resolver: zodResolver(elementTypeSchema),
     defaultValues: {
-      code: '',
-      typeElement: '',
-      description: '',
-      tableName: '',
-      itemCode: '',
-      accountCode: '',
+      code: "",
+      typeElement: "",
+      description: "",
+      tableName: "",
+      itemCode: "",
+      accountCode: "",
     },
   });
 
@@ -92,11 +128,12 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [elementTypesData, itemsData, generalAccountsData] = await Promise.all([
-        lineElementsService.elementTypes.getAll(),
-        lineElementsService.items.getAll(),
-        lineElementsService.generalAccounts.getAll()
-      ]);
+      const [elementTypesData, itemsData, generalAccountsData] =
+        await Promise.all([
+          lineElementsService.elementTypes.getAll(),
+          lineElementsService.items.getAll(),
+          lineElementsService.generalAccounts.getAll(),
+        ]);
       setElementTypes(elementTypesData);
       setItems(itemsData);
       setGeneralAccounts(generalAccountsData);
@@ -117,25 +154,68 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
       );
       setElementTypesInUse(inUseSet);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
-      toast.error('Failed to load element types data');
+      console.error("Failed to fetch data:", error);
+      toast.error("Failed to load element types data");
     } finally {
       setLoading(false);
     }
   };
 
   const filteredAndSortedElementTypes = useMemo(() => {
-    let filtered = elementTypes.filter(elementType => {
-      const matchesSearch = 
-        elementType.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        elementType.code.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
-        elementType.typeElement.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        elementType.typeElement.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
-        elementType.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        elementType.description.toLowerCase().includes(localSearchTerm.toLowerCase());
-      
-      const matchesType = selectedTypeFilter === 'all' || 
-        elementType.typeElement === selectedTypeFilter;
+    let filtered = elementTypes.filter((elementType) => {
+      // Search filter
+      const searchValue = searchQuery.toLowerCase();
+      let matchesSearch = true;
+
+      if (searchValue) {
+        switch (searchField) {
+          case "code":
+            matchesSearch = elementType.code
+              .toLowerCase()
+              .includes(searchValue);
+            break;
+          case "typeElement":
+            matchesSearch = elementType.typeElement
+              .toLowerCase()
+              .includes(searchValue);
+            break;
+          case "description":
+            matchesSearch = elementType.description
+              .toLowerCase()
+              .includes(searchValue);
+            break;
+          case "tableName":
+            matchesSearch = elementType.tableName
+              .toLowerCase()
+              .includes(searchValue);
+            break;
+          default: // 'all'
+            matchesSearch =
+              elementType.code.toLowerCase().includes(searchValue) ||
+              elementType.typeElement.toLowerCase().includes(searchValue) ||
+              elementType.description.toLowerCase().includes(searchValue) ||
+              elementType.tableName.toLowerCase().includes(searchValue);
+        }
+      }
+
+      // Global search term from parent
+      if (searchTerm && !searchValue) {
+        matchesSearch =
+          elementType.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          elementType.typeElement
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          elementType.description
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          elementType.tableName
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase());
+      }
+
+      // Type filter
+      const matchesType =
+        typeFilter === "any" || elementType.typeElement === typeFilter;
 
       return matchesSearch && matchesType;
     });
@@ -146,19 +226,23 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
       let bValue: string | number;
 
       switch (sortField) {
-        case 'code':
+        case "code":
           aValue = a.code;
           bValue = b.code;
           break;
-        case 'typeElement':
+        case "typeElement":
           aValue = a.typeElement;
           bValue = b.typeElement;
           break;
-        case 'description':
+        case "description":
           aValue = a.description;
           bValue = b.description;
           break;
-        case 'createdAt':
+        case "tableName":
+          aValue = a.tableName;
+          bValue = b.tableName;
+          break;
+        case "createdAt":
           aValue = new Date(a.createdAt).getTime();
           bValue = new Date(b.createdAt).getTime();
           break;
@@ -167,7 +251,7 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
           bValue = b.code;
       }
 
-      if (sortDirection === 'asc') {
+      if (sortDirection === "asc") {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
@@ -175,96 +259,115 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
     });
 
     return filtered;
-  }, [elementTypes, searchTerm, localSearchTerm, selectedTypeFilter, sortField, sortDirection]);
+  }, [
+    elementTypes,
+    searchQuery,
+    searchField,
+    searchTerm,
+    typeFilter,
+    sortField,
+    sortDirection,
+  ]);
+
+  const handleSort = (field: keyof LignesElementType) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const renderSortIcon = (field: keyof LignesElementType) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-400" />
+    ) : (
+      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-400" />
+    );
+  };
+
+  const headerClass = (field: keyof LignesElementType) => `
+    text-blue-200 font-medium cursor-pointer select-none
+    hover:text-blue-100 transition-colors duration-150
+    ${sortField === field ? "text-blue-100" : ""}
+  `;
+
+  const handleSelectAll = () => {
+    if (selectedElementTypes.length === filteredAndSortedElementTypes.length) {
+      setSelectedElementTypes([]);
+    } else {
+      setSelectedElementTypes(filteredAndSortedElementTypes.map((et) => et.id));
+    }
+  };
+
+  const handleSelectElementType = (id: number) => {
+    setSelectedElementTypes((prev) =>
+      prev.includes(id) ? prev.filter((etId) => etId !== id) : [...prev, id]
+    );
+  };
 
   const handleEditElementType = async (data: ElementTypeFormData) => {
     if (!selectedElementType) return;
-    
-    try {
-      // Clean the data - treat empty strings as undefined
-      const cleanItemCode = data.itemCode?.trim() || undefined;
-      const cleanAccountCode = data.accountCode?.trim() || undefined;
-      
-      // Validate that only one foreign key is provided based on typeElement
-      if (data.typeElement === 'Item' && !cleanItemCode) {
-        toast.error('Item code is required when type element is Item');
-        return;
-      }
-      if (data.typeElement === 'General Accounts' && !cleanAccountCode) {
-        toast.error('Account code is required when type element is General Accounts');
-        return;
-      }
-      if (data.typeElement === 'Item' && cleanAccountCode) {
-        toast.error('Account code should not be provided when type element is Item');
-        return;
-      }
-      if (data.typeElement === 'General Accounts' && cleanItemCode) {
-        toast.error('Item code should not be provided when type element is General Accounts');
-        return;
-      }
 
-      const updateRequest: UpdateLignesElementTypeRequest = {
-        code: data.code.trim(),
+    try {
+      const updateData: UpdateLignesElementTypeRequest = {
+        id: selectedElementType.id,
+        code: data.code,
         typeElement: data.typeElement,
-        description: data.description && data.description.trim() && 
-          !data.description.includes('Item element type') && 
-          !data.description.includes('General Accounts element type')
-          ? data.description.trim() 
-          : `${data.typeElement} element type for ${data.tableName}`,
-        tableName: data.tableName.trim(),
-        itemCode: data.typeElement === 'Item' ? cleanItemCode : undefined,
-        accountCode: data.typeElement === 'General Accounts' ? cleanAccountCode : undefined,
+        description: data.description,
+        tableName: data.tableName,
+        itemId: data.itemCode
+          ? items.find((item) => item.code === data.itemCode)?.id
+          : undefined,
+        generalAccountsId: data.accountCode
+          ? generalAccounts.find((acc) => acc.code === data.accountCode)?.id
+          : undefined,
       };
-      
-      await lineElementsService.elementTypes.update(selectedElementType.id, updateRequest);
-      toast.success('Element type updated successfully');
+
+      await lineElementsService.elementTypes.update(updateData);
+      toast.success("Element type updated successfully");
       setIsEditDialogOpen(false);
-      setSelectedElementType(null);
       editForm.reset();
+      setSelectedElementType(null);
       fetchData();
     } catch (error) {
-      console.error('Failed to update element type:', error);
-      toast.error('Failed to update element type');
+      console.error("Failed to update element type:", error);
+      toast.error("Failed to update element type");
     }
   };
 
   const handleDeleteElementType = async () => {
     if (!selectedElementType) return;
-    
+
     try {
       await lineElementsService.elementTypes.delete(selectedElementType.id);
-      toast.success('Element type deleted successfully');
+      toast.success("Element type deleted successfully");
       setIsDeleteDialogOpen(false);
       setSelectedElementType(null);
       fetchData();
     } catch (error) {
-      console.error('Failed to delete element type:', error);
-      toast.error('Failed to delete element type');
+      console.error("Failed to delete element type:", error);
+      toast.error("Failed to delete element type");
     }
   };
 
-  const handleSort = (field: keyof LignesElementType) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const handleSelectElementType = (id: number) => {
-    setSelectedElementTypes(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
-  };
-
-  const handleSelectAllElementTypes = () => {
-    if (selectedElementTypes.length === filteredAndSortedElementTypes.length) {
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all(
+        selectedElementTypes.map((id) =>
+          lineElementsService.elementTypes.delete(id)
+        )
+      );
+      toast.success(
+        `${selectedElementTypes.length} element types deleted successfully`
+      );
+      setIsBulkDeleteDialogOpen(false);
       setSelectedElementTypes([]);
-    } else {
-      setSelectedElementTypes(filteredAndSortedElementTypes.map(et => et.id));
+      fetchData();
+    } catch (error) {
+      console.error("Failed to delete element types:", error);
+      toast.error("Failed to delete element types");
     }
   };
 
@@ -275,8 +378,8 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
       typeElement: elementType.typeElement,
       description: elementType.description,
       tableName: elementType.tableName,
-      itemCode: elementType.itemCode || '',
-      accountCode: elementType.accountCode || '',
+      itemCode: elementType.item?.code || "",
+      accountCode: elementType.generalAccounts?.code || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -286,363 +389,547 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
     setIsDeleteDialogOpen(true);
   };
 
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSearchField("all");
+    setTypeFilter("any");
+  };
+
   const getTypeIcon = (typeElement: string) => {
-    switch (typeElement) {
-      case 'Item':
-        return <Package className="h-4 w-4" />;
-      case 'General Accounts':
-        return <Calculator className="h-4 w-4" />;
-      default:
-        return <Tag className="h-4 w-4" />;
-    }
+    const type = typeElement.toLowerCase();
+    if (type.includes("account") || type.includes("budget"))
+      return <Calculator className="h-4 w-4" />;
+    if (type.includes("item") || type.includes("product"))
+      return <Package className="h-4 w-4" />;
+    if (type.includes("database") || type.includes("data"))
+      return <Database className="h-4 w-4" />;
+    return <Tag className="h-4 w-4" />;
   };
 
   const getTypeBadgeColor = (typeElement: string) => {
-    switch (typeElement) {
-      case 'Item':
-        return 'bg-emerald-900/30 text-emerald-300 border-emerald-500/30';
-      case 'General Accounts':
-        return 'bg-violet-900/30 text-violet-300 border-violet-500/30';
-      default:
-        return 'bg-blue-900/30 text-blue-300 border-blue-500/30';
-    }
+    const type = typeElement.toLowerCase();
+    if (type.includes("account") || type.includes("budget"))
+      return "bg-green-500/20 text-green-300 border-green-500/30";
+    if (type.includes("item") || type.includes("product"))
+      return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+    if (type.includes("database") || type.includes("data"))
+      return "bg-purple-500/20 text-purple-300 border-purple-500/30";
+    return "bg-gray-500/20 text-gray-300 border-gray-500/30";
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
-          <p className="text-blue-300 font-medium">Loading element types...</p>
-        </div>
-      </div>
+  // Get unique types for filter dropdown
+  const availableTypes = useMemo(() => {
+    const types = [...new Set(elementTypes.map((et) => et.typeElement))];
+    return types.sort();
+  }, [elementTypes]);
+
+  // BulkActionsBar component
+  const BulkActionsBar = () => {
+    if (selectedElementTypes.length === 0) return null;
+
+    const selectedInUse = selectedElementTypes.some(id => elementTypesInUse.has(id));
+
+    return createPortal(
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50"
+      >
+        <Card className="bg-blue-900/90 backdrop-blur-sm border-blue-700/50 shadow-xl">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex items-center gap-2 text-blue-100">
+              <span className="font-medium">{selectedElementTypes.length}</span>
+              <span>selected</span>
+            </div>
+
+            <div className="h-4 w-px bg-blue-700/50" />
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedElementTypes([])}
+                className="bg-transparent border-blue-600/50 text-blue-200 hover:bg-blue-800/50"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+
+              <AlertDialog
+                open={isBulkDeleteDialogOpen}
+                onOpenChange={setIsBulkDeleteDialogOpen}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={selectedInUse}
+                    className="bg-red-600/20 border border-red-500/30 text-red-300 hover:bg-red-600/30"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete ({selectedElementTypes.length})
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-gray-900/95 backdrop-blur-sm border-red-500/20">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-red-400">
+                      Delete Element Types
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-300">
+                      Are you sure you want to delete {selectedElementTypes.length} element types?
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleBulkDelete}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Delete All
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+
+            {selectedInUse && (
+              <div className="flex items-center gap-1 text-amber-400 text-sm">
+                <AlertTriangle className="h-4 w-4" />
+                <span>Some items are in use</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>,
+      document.body
     );
-  }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white flex items-center">
-            <Database className="mr-2 h-5 w-5 text-blue-400" />
-            Element Type Management
-          </h2>
-          <p className="text-sm text-blue-300 mt-1">
-            Manage line element types and their associations
+          <h2 className="text-2xl font-bold text-white">Element Types</h2>
+          <p className="text-gray-400">
+            Manage line element types, items, and general accounts
           </p>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          <Button 
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Element Type
-          </Button>
-        </div>
+
+        <CreateElementTypeWizard
+          onSuccess={fetchData}
+          trigger={
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Element Type
+            </Button>
+          }
+        />
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 h-4 w-4" />
-            <Input
-              placeholder="Search element types..."
-              value={localSearchTerm}
-              onChange={(e) => setLocalSearchTerm(e.target.value)}
-              className="pl-10 bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400"
-            />
-          </div>
-        </div>
-        
-        <div className="flex gap-2">
-          <Select value={selectedTypeFilter} onValueChange={setSelectedTypeFilter}>
-            <SelectTrigger className="w-48 bg-[#111633] border-blue-900/50 text-white">
-              <SelectValue placeholder="Filter by type" />
-            </SelectTrigger>
-            <SelectContent className="bg-[#111633] border-blue-900/50">
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="Item">Items</SelectItem>
-              <SelectItem value="General Accounts">General Accounts</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {/* Search and Filters */}
+      <Card className="bg-gray-900/50 border-gray-700/50">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search element types..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-gray-800/50 border-gray-600/50 text-white"
+              />
+            </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-[#0f1642] border-blue-900/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-300">Total Types</p>
-                <p className="text-2xl font-bold text-white">{elementTypes.length}</p>
-              </div>
-              <Database className="h-8 w-8 text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-[#0f1642] border-blue-900/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-300">Item Types</p>
-                <p className="text-2xl font-bold text-white">
-                  {elementTypes.filter(et => et.typeElement === 'Item').length}
-                </p>
-              </div>
-              <Package className="h-8 w-8 text-emerald-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-[#0f1642] border-blue-900/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-300">Account Types</p>
-                <p className="text-2xl font-bold text-white">
-                  {elementTypes.filter(et => et.typeElement === 'General Accounts').length}
-                </p>
-              </div>
-              <Calculator className="h-8 w-8 text-violet-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-center gap-2">
+              <Select value={searchField} onValueChange={setSearchField}>
+                <SelectTrigger className="w-40 bg-gray-800/50 border-gray-600/50 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-600">
+                  {ELEMENT_TYPE_SEARCH_FIELDS.map((field) => (
+                    <SelectItem key={field.id} value={field.id}>
+                      {field.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-      {/* Data Table */}
-      <Card className="bg-[#0f1642] border-blue-900/30">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-white">Element Types</CardTitle>
-              <CardDescription className="text-blue-300">
-                {filteredAndSortedElementTypes.length} of {elementTypes.length} element types
-              </CardDescription>
-            </div>
-            {selectedElementTypes.length > 0 && (
-              <Badge variant="outline" className="text-blue-400 border-blue-500/30">
-                {selectedElementTypes.length} selected
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-blue-900/30 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-blue-900/30 hover:bg-blue-900/10">
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedElementTypes.length === filteredAndSortedElementTypes.length && filteredAndSortedElementTypes.length > 0}
-                      onCheckedChange={handleSelectAllElementTypes}
-                      className="border-blue-500/30"
-                    />
-                  </TableHead>
-                  <TableHead className="text-blue-300">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSort('code')}
-                      className="hover:bg-blue-900/20 text-blue-300 hover:text-white p-0 h-auto font-medium"
-                    >
-                      Code
-                      {sortField === 'code' && (
-                        sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3" /> : <SortDesc className="ml-1 h-3 w-3" />
-                      )}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-blue-300">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSort('typeElement')}
-                      className="hover:bg-blue-900/20 text-blue-300 hover:text-white p-0 h-auto font-medium"
-                    >
-                      Type Element
-                      {sortField === 'typeElement' && (
-                        sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3" /> : <SortDesc className="ml-1 h-3 w-3" />
-                      )}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-blue-300">Description</TableHead>
-                  <TableHead className="text-blue-300">Association</TableHead>
-                  <TableHead className="text-blue-300">Table Name</TableHead>
-                  <TableHead className="text-blue-300 w-20">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSortedElementTypes.map((elementType) => (
-                  <TableRow key={elementType.id} className="border-blue-900/30 hover:bg-blue-900/10">
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedElementTypes.includes(elementType.id)}
-                        onCheckedChange={() => handleSelectElementType(elementType.id)}
-                        className="border-blue-500/30"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium text-white">
-                      <div className="flex items-center gap-2">
-                        {elementType.code}
-                        {elementTypesInUse.has(elementType.id) && (
-                          <Badge variant="outline" className="text-orange-300 border-orange-500/30 text-xs">
-                            In Use
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={`${getTypeBadgeColor(elementType.typeElement)} flex items-center w-fit`}>
-                        {getTypeIcon(elementType.typeElement)}
-                        <span className="ml-1">{elementType.typeElement}</span>
+              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="bg-gray-800/50 border-gray-600/50 text-white hover:bg-gray-700/50"
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                    {(typeFilter !== "any") && (
+                      <Badge className="ml-2 bg-blue-500/20 text-blue-300 text-xs">
+                        1
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-blue-100">
-                      {elementType.description}
-                    </TableCell>
-                    <TableCell className="text-blue-100">
-                      {elementType.itemCode && (
-                        <Badge variant="outline" className="text-emerald-300 border-emerald-500/30">
-                          Item: {elementType.itemCode}
-                        </Badge>
-                      )}
-                      {elementType.accountCode && (
-                        <Badge variant="outline" className="text-violet-300 border-violet-500/30">
-                          Account: {elementType.accountCode}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-blue-100">
-                      {elementType.tableName}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openEditDialog(elementType)}
-                                disabled={elementTypesInUse.has(elementType.id)}
-                                className={`h-8 w-8 p-0 ${
-                                  elementTypesInUse.has(elementType.id)
-                                    ? 'text-gray-500 hover:text-gray-500 cursor-not-allowed'
-                                    : 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/20'
-                                }`}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {elementTypesInUse.has(elementType.id)
-                                ? 'Cannot edit - this element type is used by lines'
-                                : 'Edit element type'
-                              }
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openDeleteDialog(elementType)}
-                                disabled={elementTypesInUse.has(elementType.id)}
-                                className={`h-8 w-8 p-0 ${
-                                  elementTypesInUse.has(elementType.id)
-                                    ? 'text-gray-500 hover:text-gray-500 cursor-not-allowed'
-                                    : 'text-red-400 hover:text-red-300 hover:bg-red-900/20'
-                                }`}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {elementTypesInUse.has(elementType.id)
-                                ? 'Cannot delete - this element type is used by lines'
-                                : 'Delete element type'
-                              }
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-64 bg-gray-800 border-gray-600"
+                  align="end"
+                >
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-200">
+                        Type Element
+                      </Label>
+                      <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger className="mt-1 bg-gray-700/50 border-gray-600/50 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-700 border-gray-600">
+                          <SelectItem value="any">Any Type</SelectItem>
+                          {availableTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearAllFilters}
+                        className="bg-gray-700/50 border-gray-600/50 text-gray-300 hover:bg-gray-600/50"
+                      >
+                        Clear All
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setFilterOpen(false)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Results Summary */}
+      <div className="flex items-center justify-between text-sm text-gray-400">
+        <div>
+          Showing {filteredAndSortedElementTypes.length} of {elementTypes.length} element types
+          {(searchQuery || typeFilter !== "any") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className="ml-2 h-auto p-1 text-blue-400 hover:text-blue-300"
+            >
+              Clear filters
+            </Button>
+          )}
+        </div>
+        {selectedElementTypes.length > 0 && (
+          <div className="text-blue-400">
+            {selectedElementTypes.length} selected
+          </div>
+        )}
+      </div>
+
+      {/* Element Types Table */}
+      <Card className="bg-gray-900/50 border-gray-700/50">
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+          ) : filteredAndSortedElementTypes.length === 0 ? (
+            <div className="text-center py-12">
+              <Database className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-300 mb-2">
+                No element types found
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {searchQuery || typeFilter !== "any"
+                  ? "No element types match your current filters."
+                  : "Get started by creating your first element type."}
+              </p>
+              {!(searchQuery || typeFilter !== "any") && (
+                <CreateElementTypeWizard
+                  onSuccess={fetchData}
+                  trigger={
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Element Type
+                    </Button>
+                  }
+                />
+              )}
+            </div>
+          ) : (
+            <ScrollArea className="h-[600px]">
+              <Table>
+                <TableHeader className="sticky top-0 bg-gray-800/80 backdrop-blur-sm z-10">
+                  <TableRow className="border-gray-700/50">
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={
+                          selectedElementTypes.length ===
+                          filteredAndSortedElementTypes.length
+                        }
+                        onCheckedChange={handleSelectAll}
+                        className="border-gray-500"
+                      />
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("code")}
+                      onClick={() => handleSort("code")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Code
+                        {renderSortIcon("code")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("typeElement")}
+                      onClick={() => handleSort("typeElement")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Type Element
+                        {renderSortIcon("typeElement")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("description")}
+                      onClick={() => handleSort("description")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Description
+                        {renderSortIcon("description")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("tableName")}
+                      onClick={() => handleSort("tableName")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Table Name
+                        {renderSortIcon("tableName")}
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-gray-300">Associations</TableHead>
+                    <TableHead
+                      className={headerClass("createdAt")}
+                      onClick={() => handleSort("createdAt")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Created
+                        {renderSortIcon("createdAt")}
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-gray-300 w-20">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedElementTypes.map((elementType) => {
+                    const isInUse = elementTypesInUse.has(elementType.id);
+                    return (
+                      <TableRow
+                        key={elementType.id}
+                        className="border-gray-700/50 hover:bg-gray-800/30"
+                      >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedElementTypes.includes(
+                              elementType.id
+                            )}
+                            onCheckedChange={() =>
+                              handleSelectElementType(elementType.id)
+                            }
+                            className="border-gray-500"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-mono text-blue-300">
+                            {elementType.code}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getTypeIcon(elementType.typeElement)}
+                            <Badge
+                              className={getTypeBadgeColor(
+                                elementType.typeElement
+                              )}
+                            >
+                              {elementType.typeElement}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-gray-200 max-w-xs truncate">
+                            {elementType.description}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-mono text-gray-300">
+                            {elementType.tableName}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {elementType.item && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-blue-500/10 text-blue-300 border-blue-500/30"
+                              >
+                                Item: {elementType.item.code}
+                              </Badge>
+                            )}
+                            {elementType.generalAccounts && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-green-500/10 text-green-300 border-green-500/30"
+                              >
+                                Account: {elementType.generalAccounts.code}
+                              </Badge>
+                            )}
+                            {!elementType.item && !elementType.generalAccounts && (
+                              <span className="text-gray-500 text-xs">None</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-gray-400 text-sm">
+                            {new Date(elementType.createdAt).toLocaleDateString()}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(elementType)}
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            
+                            <AlertDialog
+                              open={isDeleteDialogOpen && selectedElementType?.id === elementType.id}
+                              onOpenChange={(open) => {
+                                if (!open) {
+                                  setIsDeleteDialogOpen(false);
+                                  setSelectedElementType(null);
+                                }
+                              }}
+                            >
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openDeleteDialog(elementType)}
+                                  disabled={isInUse}
+                                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-gray-900/95 backdrop-blur-sm border-red-500/20">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-red-400">
+                                    Delete Element Type
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription className="text-gray-300">
+                                    Are you sure you want to delete the element type "{elementType.code}"?
+                                    This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600">
+                                    Cancel
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={handleDeleteElementType}
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+
+                            {isInUse && (
+                              <div className="ml-1">
+                                <AlertTriangle className="h-4 w-4 text-amber-400" />
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          )}
         </CardContent>
       </Card>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-[#0a1033] border-blue-900/30 text-white max-w-2xl">
+        <DialogContent className="bg-gray-900/95 backdrop-blur-sm border-gray-700/50 text-white max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-white">Edit Element Type</DialogTitle>
-            <DialogDescription className="text-blue-300">
-              Update the element type information
+            <DialogTitle>Edit Element Type</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Update the element type details below.
             </DialogDescription>
           </DialogHeader>
-          
+
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleEditElementType)} className="space-y-4">
+            <form
+              onSubmit={editForm.handleSubmit(handleEditElementType)}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={editForm.control}
                   name="code"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-blue-300">Code *</FormLabel>
+                      <FormLabel>Code</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter unique code"
                           {...field}
-                          className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400"
+                          className="bg-gray-800/50 border-gray-600/50 text-white"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={editForm.control}
                   name="typeElement"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-blue-300">Type Element *</FormLabel>
+                      <FormLabel>Type Element</FormLabel>
                       <FormControl>
-                        <Select 
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            // Clear the opposite field when type changes
-                            if (value === 'Item') {
-                              editForm.setValue('accountCode', '');
-                            } else if (value === 'General Accounts') {
-                              editForm.setValue('itemCode', '');
-                            }
-                          }} 
-                          value={field.value}
-                        >
-                          <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white">
-                            <SelectValue placeholder="Select type element" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-[#111633] border-blue-900/50">
-                            <SelectItem value="Item">Item</SelectItem>
-                            <SelectItem value="General Accounts">General Accounts</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          {...field}
+                          className="bg-gray-800/50 border-gray-600/50 text-white"
+                        />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -653,15 +940,14 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-300">Description *</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter description"
                         {...field}
-                        className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400"
+                        className="bg-gray-800/50 border-gray-600/50 text-white"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -671,78 +957,85 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
                 name="tableName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-300">Table Name *</FormLabel>
+                    <FormLabel>Table Name</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter table name"
                         {...field}
-                        className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400"
+                        className="bg-gray-800/50 border-gray-600/50 text-white"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {editForm.watch('typeElement') === 'Item' && (
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={editForm.control}
                   name="itemCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-blue-300">Item Code *</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white">
-                            <SelectValue placeholder="Select item" />
+                      <FormLabel>Item Code (Optional)</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="bg-gray-800/50 border-gray-600/50 text-white">
+                            <SelectValue placeholder="Select item..." />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#111633] border-blue-900/50">
-                            {items.map(item => (
-                              <SelectItem key={item.code} value={item.code}>
-                                {item.code} - {item.description}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-red-400" />
+                        </FormControl>
+                        <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectItem value="">None</SelectItem>
+                          {items.map((item) => (
+                            <SelectItem key={item.id} value={item.code}>
+                              {item.code} - {item.designation}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
 
-              {editForm.watch('typeElement') === 'General Accounts' && (
                 <FormField
                   control={editForm.control}
                   name="accountCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-blue-300">Account Code *</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white">
-                            <SelectValue placeholder="Select account" />
+                      <FormLabel>Account Code (Optional)</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="bg-gray-800/50 border-gray-600/50 text-white">
+                            <SelectValue placeholder="Select account..." />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#111633] border-blue-900/50">
-                            {generalAccounts.map(account => (
-                              <SelectItem key={account.code} value={account.code}>
-                                {account.code} - {account.description}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage className="text-red-400" />
+                        </FormControl>
+                        <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectItem value="">None</SelectItem>
+                          {generalAccounts.map((account) => (
+                            <SelectItem key={account.id} value={account.code}>
+                              {account.code} - {account.designation}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
+              </div>
 
-              <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                <Button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
                   Update Element Type
                 </Button>
               </DialogFooter>
@@ -751,43 +1044,12 @@ const LineElementTypeManagement = ({ searchTerm }: LineElementTypeManagementProp
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#0a1033] border-red-900/30 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white flex items-center">
-              <AlertTriangle className="mr-2 h-5 w-5 text-red-400" />
-              Delete Element Type
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-blue-300">
-              Are you sure you want to delete the element type "{selectedElementType?.code}"? 
-              This action cannot be undone and may affect associated line items.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-[#111633] border-blue-900/50 text-white hover:bg-blue-900/20">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteElementType}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Delete Element Type
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Create Element Type Wizard */}
-      <CreateElementTypeWizard
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSuccess={fetchData}
-        items={items}
-        generalAccounts={generalAccounts}
-      />
+      {/* Bulk Actions Bar */}
+      <AnimatePresence>
+        <BulkActionsBar />
+      </AnimatePresence>
     </div>
   );
 };
 
-export default LineElementTypeManagement; 
+export default LineElementTypeManagement;

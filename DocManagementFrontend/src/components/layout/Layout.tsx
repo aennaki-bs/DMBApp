@@ -67,8 +67,25 @@ export function Layout() {
       }
     };
 
+    // Also listen for manual updates (same-window changes)
+    const handleCustomEvent = () => {
+      const selectedBackgroundId =
+        localStorage.getItem("selectedBackground") || "default";
+      const selectedBackground = backgroundOptions.find(
+        (bg) => bg.id === selectedBackgroundId
+      );
+      if (selectedBackground) {
+        setBackgroundUrl(selectedBackground.url);
+      }
+    };
+
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener("backgroundChanged", handleCustomEvent);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("backgroundChanged", handleCustomEvent);
+    };
   }, []);
 
   return (
@@ -84,10 +101,10 @@ export function Layout() {
           backgroundAttachment: "fixed",
         }}
       >
-        {/* Dark overlay for background */}
+        {/* Lighter overlay for background - more transparent to show background */}
         <div
           className={`absolute inset-0 ${
-            theme === "dark" ? "bg-[#070b28]/95" : "bg-slate-100/85"
+            theme === "dark" ? "bg-[#070b28]/60" : "bg-slate-100/50"
           } z-0`}
         ></div>
 
@@ -107,7 +124,7 @@ export function Layout() {
             {/* Top navbar */}
             <header
               className={`${
-                isMobile ? "bg-[#0a1033]" : "bg-[#0a1033]/90"
+                isMobile ? "bg-[#0a1033]/90" : "bg-[#0a1033]/80"
               } backdrop-blur-lg border-b border-blue-900/30 z-30`}
             >
               <div className="flex items-center">
@@ -125,8 +142,8 @@ export function Layout() {
             <main className="flex-1 overflow-auto p-4">
               <div
                 className={`${
-                  theme === "dark" ? "bg-[#0f1642]/95" : "bg-white/95"
-                } h-full rounded-xl border border-blue-900/30 shadow-lg overflow-auto`}
+                  theme === "dark" ? "bg-[#0f1642]/85" : "bg-white/85"
+                } h-full rounded-xl border border-blue-900/30 shadow-lg overflow-auto backdrop-blur-sm`}
               >
                 <Outlet />
               </div>

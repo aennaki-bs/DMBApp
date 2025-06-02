@@ -1,52 +1,113 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Package, 
-  Hash,
-  Calendar,
-  MoreHorizontal,
+import { useState, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Package,
   Filter,
   Download,
   Upload,
-  SortAsc,
-  SortDesc,
+  ArrowUp,
+  ArrowDown,
   AlertTriangle,
-  Loader2
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+  Loader2,
+  MoreHorizontal,
+  X,
+  Users,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 // Import services and types
-import lineElementsService from '@/services/lineElementsService';
-import { Item, UniteCode, LignesElementType, CreateItemRequest, UpdateItemRequest } from '@/models/lineElements';
-
-// Import the new wizard component
-import CreateItemWizard from './CreateItemWizard';
+import lineElementsService from "@/services/lineElementsService";
+import {
+  Item,
+  UniteCode,
+  LignesElementType,
+  CreateItemRequest,
+  UpdateItemRequest,
+} from "@/models/lineElements";
+import CreateItemWizard from "./CreateItemWizard";
 
 // Form validation schema for edit form
 const itemSchema = z.object({
-  code: z.string().min(1, 'Code is required').max(50, 'Code must be 50 characters or less'),
-  description: z.string().max(255, 'Description must be 255 characters or less').optional(),
-  unite: z.string().min(1, 'Unit code is required'),
+  code: z
+    .string()
+    .min(1, "Code is required")
+    .max(50, "Code must be 50 characters or less"),
+  description: z
+    .string()
+    .max(255, "Description must be 255 characters or less")
+    .optional(),
+  unite: z.string().min(1, "Unit code is required"),
 });
 
 type ItemFormData = z.infer<typeof itemSchema>;
+
+// Search field options
+const ITEM_SEARCH_FIELDS = [
+  { id: "all", label: "All fields" },
+  { id: "code", label: "Code" },
+  { id: "description", label: "Description" },
+  { id: "unite", label: "Unit Code" },
+];
 
 interface ItemsManagementProps {
   searchTerm: string;
@@ -57,23 +118,28 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   const [items, setItems] = useState<Item[]>([]);
   const [uniteCodes, setUniteCodes] = useState<UniteCode[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortField, setSortField] = useState<keyof Item>('code');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<keyof Item>("code");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [localSearchTerm, setLocalSearchTerm] = useState('');
-  const [selectedUniteFilter, setSelectedUniteFilter] = useState<string>('all');
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchField, setSearchField] = useState("all");
+  const [uniteFilter, setUniteFilter] = useState("any");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // Edit form state
   const editForm = useForm<ItemFormData>({
     resolver: zodResolver(itemSchema),
     defaultValues: {
-      code: '',
-      description: '',
-      unite: '',
+      code: "",
+      description: "",
+      unite: "",
     },
   });
 
@@ -86,29 +152,61 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
       setLoading(true);
       const [itemsData, uniteCodesData] = await Promise.all([
         lineElementsService.items.getAll(),
-        lineElementsService.uniteCodes.getAll()
+        lineElementsService.uniteCodes.getAll(),
       ]);
       setItems(itemsData);
       setUniteCodes(uniteCodesData);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
-      toast.error('Failed to load items data');
+      console.error("Failed to fetch data:", error);
+      toast.error("Failed to load items data");
     } finally {
       setLoading(false);
     }
   };
 
   const filteredAndSortedItems = useMemo(() => {
-    let filtered = items.filter(item => {
-      const matchesSearch = 
-        item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.code.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(localSearchTerm.toLowerCase());
-      
-      const matchesUnite = selectedUniteFilter === 'all' || 
-        (selectedUniteFilter === 'no-unit' && !item.unite) ||
-        item.unite === selectedUniteFilter;
+    let filtered = items.filter((item) => {
+      // Search filter
+      const searchValue = searchQuery.toLowerCase();
+      let matchesSearch = true;
+
+      if (searchValue) {
+        switch (searchField) {
+          case "code":
+            matchesSearch = item.code.toLowerCase().includes(searchValue);
+            break;
+          case "description":
+            matchesSearch = item.description
+              .toLowerCase()
+              .includes(searchValue);
+            break;
+          case "unite":
+            matchesSearch =
+              item.unite?.toLowerCase().includes(searchValue) || false;
+            break;
+          default: // 'all'
+            matchesSearch =
+              item.code.toLowerCase().includes(searchValue) ||
+              item.description.toLowerCase().includes(searchValue) ||
+              item.unite?.toLowerCase().includes(searchValue) ||
+              false;
+        }
+      }
+
+      // Global search term from parent
+      if (searchTerm && !searchValue) {
+        matchesSearch =
+          item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.unite?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          false;
+      }
+
+      // Unite filter
+      const matchesUnite =
+        uniteFilter === "any" ||
+        (uniteFilter === "no-unit" && !item.unite) ||
+        item.unite === uniteFilter;
 
       return matchesSearch && matchesUnite;
     });
@@ -119,15 +217,19 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
       let bValue: string | number;
 
       switch (sortField) {
-        case 'code':
+        case "code":
           aValue = a.code;
           bValue = b.code;
           break;
-        case 'description':
+        case "description":
           aValue = a.description;
           bValue = b.description;
           break;
-        case 'createdAt':
+        case "unite":
+          aValue = a.unite || "";
+          bValue = b.unite || "";
+          break;
+        case "createdAt":
           aValue = new Date(a.createdAt).getTime();
           bValue = new Date(b.createdAt).getTime();
           break;
@@ -136,7 +238,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
           bValue = b.code;
       }
 
-      if (sortDirection === 'asc') {
+      if (sortDirection === "asc") {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
@@ -144,41 +246,104 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
     });
 
     return filtered;
-  }, [items, searchTerm, localSearchTerm, selectedUniteFilter, sortField, sortDirection]);
+  }, [
+    items,
+    searchQuery,
+    searchField,
+    searchTerm,
+    uniteFilter,
+    sortField,
+    sortDirection,
+  ]);
+
+  const handleSort = (field: keyof Item) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const renderSortIcon = (field: keyof Item) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-400" />
+    ) : (
+      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-400" />
+    );
+  };
+
+  const headerClass = (field: keyof Item) => `
+    text-blue-200 font-medium cursor-pointer select-none
+    hover:text-blue-100 transition-colors duration-150
+    ${sortField === field ? "text-blue-100" : ""}
+  `;
+
+  const handleSelectAll = () => {
+    if (selectedItems.length === filteredAndSortedItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(filteredAndSortedItems.map((item) => item.code));
+    }
+  };
+
+  const handleSelectItem = (itemCode: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemCode)
+        ? prev.filter((code) => code !== itemCode)
+        : [...prev, itemCode]
+    );
+  };
 
   const handleEditItem = async (data: ItemFormData) => {
     if (!selectedItem) return;
-    
+
     try {
       const updateRequest: UpdateItemRequest = {
-        description: data.description.trim(),
+        description: data.description?.trim() || "",
         unite: data.unite,
       };
-      
+
       await lineElementsService.items.update(selectedItem.code, updateRequest);
-      toast.success('Item updated successfully');
+      toast.success("Item updated successfully");
       setIsEditDialogOpen(false);
       setSelectedItem(null);
       editForm.reset();
       fetchData();
     } catch (error) {
-      console.error('Failed to update item:', error);
-      toast.error('Failed to update item');
+      console.error("Failed to update item:", error);
+      toast.error("Failed to update item");
     }
   };
 
   const handleDeleteItem = async () => {
     if (!selectedItem) return;
-    
+
     try {
       await lineElementsService.items.delete(selectedItem.code);
-      toast.success('Item deleted successfully');
+      toast.success("Item deleted successfully");
       setIsDeleteDialogOpen(false);
       setSelectedItem(null);
       fetchData();
     } catch (error) {
-      console.error('Failed to delete item:', error);
-      toast.error('Failed to delete item');
+      console.error("Failed to delete item:", error);
+      toast.error("Failed to delete item");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all(
+        selectedItems.map((code) => lineElementsService.items.delete(code))
+      );
+      toast.success(`${selectedItems.length} items deleted successfully`);
+      setSelectedItems([]);
+      setIsBulkDeleteDialogOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error("Failed to delete items:", error);
+      toast.error("Failed to delete items");
     }
   };
 
@@ -187,7 +352,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
     editForm.reset({
       code: item.code,
       description: item.description,
-      unite: item.unite,
+      unite: item.unite || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -197,56 +362,32 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSort = (field: keyof Item) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
+  const clearAllFilters = () => {
+    setUniteFilter("any");
+    setSearchQuery("");
+    setFilterOpen(false);
   };
 
-  const getSortIcon = (field: keyof Item) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />;
-  };
+  // Filter card class
+  const filterCardClass =
+    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40";
 
-  // Checkbox selection handlers
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedItems(filteredAndSortedItems.map(item => item.code));
-    } else {
-      setSelectedItems([]);
-    }
-  };
-
-  const handleSelectItem = (itemCode: string, checked: boolean) => {
-    if (checked) {
-      setSelectedItems(prev => [...prev, itemCode]);
-    } else {
-      setSelectedItems(prev => prev.filter(code => code !== itemCode));
-    }
-  };
-
-  const isAllSelected = filteredAndSortedItems.length > 0 && selectedItems.length === filteredAndSortedItems.length;
-
-  const handleBulkDelete = async () => {
-    try {
-      await Promise.all(selectedItems.map(code => lineElementsService.items.delete(code)));
-      toast.success(`${selectedItems.length} items deleted successfully`);
-      setSelectedItems([]);
-      fetchData();
-    } catch (error) {
-      console.error('Failed to delete items:', error);
-      toast.error('Failed to delete some items');
-    }
-  };
+  // Unite filter options
+  const uniteOptions = [
+    { id: "any", label: "Any Unit", value: "any" },
+    { id: "no-unit", label: "No Unit", value: "no-unit" },
+    ...uniteCodes.map((unite) => ({
+      id: unite.code,
+      label: unite.code,
+      value: unite.code,
+    })),
+  ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex justify-center py-10">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
           <p className="text-blue-300 font-medium">Loading items...</p>
         </div>
       </div>
@@ -254,219 +395,213 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-white flex items-center">
-            <Package className="mr-2 h-5 w-5 text-blue-400" />
-            Items Management
-          </h2>
-          <p className="text-sm text-blue-300 mt-1">
-            Manage physical items and products ({filteredAndSortedItems.length} items)
-          </p>
+    <div className="space-y-4">
+      {/* Search and Filter Bar */}
+      <div className={filterCardClass}>
+        {/* Search and field select */}
+        <div className="flex-1 flex items-center gap-2 min-w-0">
+          <Select value={searchField} onValueChange={setSearchField}>
+            <SelectTrigger className="w-[120px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+              <SelectValue>
+                {ITEM_SEARCH_FIELDS.find((opt) => opt.id === searchField)
+                  ?.label || "All fields"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+              {ITEM_SEARCH_FIELDS.map((opt) => (
+                <SelectItem
+                  key={opt.id}
+                  value={opt.id}
+                  className="hover:bg-blue-800/40"
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+          </div>
         </div>
-        
+
+        {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button 
+          {/* Filter popover */}
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4 text-blue-400" />
+                Filter
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-4">
+              <div className="mb-2 text-blue-200 font-semibold">
+                Advanced Filters
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm text-blue-200">Unit Code</span>
+                  <Select value={uniteFilter} onValueChange={setUniteFilter}>
+                    <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40">
+                      <SelectValue>
+                        {
+                          uniteOptions.find((opt) => opt.value === uniteFilter)
+                            ?.label
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                      {uniteOptions.map((opt) => (
+                        <SelectItem
+                          key={opt.id}
+                          value={opt.value}
+                          className="hover:bg-blue-800/40"
+                        >
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end mt-4">
+                {uniteFilter !== "any" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-300 hover:text-white flex items-center gap-1"
+                    onClick={clearAllFilters}
+                  >
+                    <X className="h-3 w-3" /> Clear All
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Create button */}
+          <Button
             onClick={() => setIsCreateDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Item
+            <Plus className="h-4 w-4" />
+            Create Item
           </Button>
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <Card className="bg-[#0f1642] border-blue-900/30">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 h-4 w-4" />
-                <Input
-                  placeholder="Search items by code, description, or unit..."
-                  value={localSearchTerm}
-                  onChange={(e) => setLocalSearchTerm(e.target.value)}
-                  className="pl-10 bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-blue-400" />
-              <Select value={selectedUniteFilter} onValueChange={setSelectedUniteFilter}>
-                <SelectTrigger className="w-48 bg-[#111633] border-blue-900/50 text-white focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Filter by unit" />
-                </SelectTrigger>
-                <SelectContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
-                  <SelectItem value="all">All units</SelectItem>
-                  <SelectItem value="no-unit">No unit assigned</SelectItem>
-                  {uniteCodes.map((unit) => (
-                    <SelectItem key={unit.code} value={unit.code} className="text-white hover:bg-blue-900/30">
-                      {unit.code} - {unit.description}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Bulk Actions */}
-      {selectedItems.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg mb-4">
-          <span className="text-blue-200">
-            {selectedItems.length} item{selectedItems.length > 1 ? 's' : ''} selected
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedItems([])}
-              className="border-blue-500/30 text-blue-300 hover:bg-blue-900/30"
-            >
-              Clear Selection
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Selected
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-blue-100">Delete Selected Items</AlertDialogTitle>
-                  <AlertDialogDescription className="text-blue-300">
-                    Are you sure you want to delete {selectedItems.length} selected item{selectedItems.length > 1 ? 's' : ''}? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="border-blue-500/30 text-blue-300 hover:bg-blue-900/30">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleBulkDelete}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </div>
-      )}
-
-      {/* Items Table */}
-      <Card className="bg-[#0f1642] border-blue-900/30">
-        <CardHeader>
-          <CardTitle className="text-lg text-white">Items List</CardTitle>
-          <CardDescription className="text-blue-300">
-            {filteredAndSortedItems.length} of {items.length} items
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-blue-900/20">
-                <TableRow className="border-blue-900/50">
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={isAllSelected}
-                      onCheckedChange={handleSelectAll}
-                      className="border-blue-500 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                    />
-                  </TableHead>
-                  <TableHead 
-                    className="text-blue-300 cursor-pointer hover:text-blue-200 transition-colors"
-                    onClick={() => handleSort('code')}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Code</span>
-                      {getSortIcon('code')}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="text-blue-300 cursor-pointer hover:text-blue-200 transition-colors"
-                    onClick={() => handleSort('description')}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Description</span>
-                      {getSortIcon('description')}
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-blue-300">Unit</TableHead>
-                  <TableHead className="text-blue-300 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSortedItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Package className="h-8 w-8 text-blue-400/50" />
-                        <p className="text-blue-300">No items found</p>
-                        <p className="text-sm text-blue-400">
-                          {items.length === 0 ? 'Create your first item to get started' : 'Try adjusting your search or filter criteria'}
-                        </p>
+      {/* Table */}
+      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+        {filteredAndSortedItems.length > 0 ? (
+          <ScrollArea className="h-[calc(100vh-400px)] min-h-[400px]">
+            <div className="min-w-[800px]">
+              <Table>
+                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033] sticky top-0 z-10">
+                  <TableRow className="border-blue-900/30 hover:bg-transparent">
+                    <TableHead className="w-12">
+                      <div className="flex items-center justify-center">
+                        <Checkbox
+                          checked={
+                            selectedItems.length > 0 &&
+                            selectedItems.length ===
+                              filteredAndSortedItems.length
+                          }
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all"
+                          className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+                        />
                       </div>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("code")}
+                      onClick={() => handleSort("code")}
+                    >
+                      <div className="flex items-center">
+                        Code {renderSortIcon("code")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("description")}
+                      onClick={() => handleSort("description")}
+                    >
+                      <div className="flex items-center">
+                        Description {renderSortIcon("description")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("unite")}
+                      onClick={() => handleSort("unite")}
+                    >
+                      <div className="flex items-center">
+                        Unit Code {renderSortIcon("unite")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={headerClass("createdAt")}
+                      onClick={() => handleSort("createdAt")}
+                    >
+                      <div className="flex items-center">
+                        Created {renderSortIcon("createdAt")}
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ) : (
-                  filteredAndSortedItems.map((item) => (
-                    <TableRow 
-                      key={item.code} 
-                      className="border-blue-900/30 hover:bg-blue-900/20 transition-colors"
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedItems.map((item) => (
+                    <TableRow
+                      key={item.code}
+                      className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
                     >
                       <TableCell>
-                        <Checkbox
-                          checked={selectedItems.includes(item.code)}
-                          onCheckedChange={(checked) => handleSelectItem(item.code, checked as boolean)}
-                          className="border-blue-500 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                        />
-                      </TableCell>
-                      <TableCell className="font-mono text-blue-200">{item.code}</TableCell>
-                      <TableCell className="text-blue-200 max-w-xs">
-                        <div className="truncate" title={item.description}>
-                          {item.description}
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            checked={selectedItems.includes(item.code)}
+                            onCheckedChange={() => handleSelectItem(item.code)}
+                            aria-label={`Select ${item.code}`}
+                            className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+                          />
                         </div>
                       </TableCell>
-                      <TableCell className="text-blue-200">
+                      <TableCell className="font-mono text-blue-100 font-semibold">
+                        {item.code}
+                      </TableCell>
+                      <TableCell className="text-blue-200 max-w-xs truncate">
+                        {item.description}
+                      </TableCell>
+                      <TableCell>
                         {item.unite ? (
-                          <div className="flex items-center space-x-2">
-                            <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-400 bg-amber-900/20">
-                              {item.unite}
-                            </Badge>
-                            {item.uniteCodeNavigation && (
-                              <span className="text-xs text-blue-400" title={item.uniteCodeNavigation.description}>
-                                {item.uniteCodeNavigation.description}
-                              </span>
-                            )}
-                          </div>
+                          <Badge
+                            variant="outline"
+                            className="bg-amber-500/10 text-amber-400 border-amber-500/30"
+                          >
+                            {item.unite}
+                          </Badge>
                         ) : (
-                          <span className="text-blue-400 text-xs italic">No unit</span>
+                          <span className="text-blue-400/60">No unit</span>
                         )}
                       </TableCell>
+                      <TableCell className="text-blue-300 text-sm">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(item)}
-                            disabled={item.elementTypesCount > 0}
-                            className={`${
-                              item.elementTypesCount > 0 
-                                ? 'opacity-50 cursor-not-allowed text-gray-400' 
-                                : 'hover:bg-blue-50 hover:text-blue-700'
-                            }`}
-                            title={item.elementTypesCount > 0 ? 'Cannot edit: Item is referenced by element types' : 'Edit item'}
+                            className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -474,41 +609,110 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => openDeleteDialog(item)}
-                            disabled={item.elementTypesCount > 0}
-                            className={`${
-                              item.elementTypesCount > 0 
-                                ? 'opacity-50 cursor-not-allowed text-gray-400' 
-                                : 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                            }`}
-                            title={item.elementTypesCount > 0 ? 'Cannot delete: Item is referenced by element types' : 'Delete item'}
+                            className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-blue-300">
+            <Package className="h-12 w-12 mb-4 text-blue-400/50" />
+            <h3 className="text-lg font-semibold mb-2">No items found</h3>
+            <p className="text-sm text-blue-400/70 text-center">
+              {searchQuery || uniteFilter !== "any"
+                ? "Try adjusting your filters or search terms."
+                : "Get started by creating your first item."}
+            </p>
+            {(searchQuery || uniteFilter !== "any") && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 text-blue-300 border-blue-500/30 hover:bg-blue-800/30"
+                onClick={clearAllFilters}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear Filters
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      {/* Bulk Actions Bar - rendered via portal to document body */}
+      {createPortal(
+        <AnimatePresence>
+          {selectedItems.length > 0 && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed bottom-6 right-16 transform -translate-x-1/2 z-[9999] w-[calc(100vw-4rem)] max-w-4xl mx-auto"
+            >
+              <div className="bg-gradient-to-r from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-lg shadow-[0_8px_32px_rgba(59,130,246,0.7)] rounded-2xl border border-blue-400/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-blue-400/40">
+                <div className="flex items-center text-blue-200 font-medium">
+                  <div className="bg-blue-500/30 p-1.5 rounded-xl mr-3 flex-shrink-0">
+                    <Package className="w-5 h-5 text-blue-300" />
+                  </div>
+                  <span className="text-sm sm:text-base text-center sm:text-left">
+                    <span className="font-bold text-blue-100">
+                      {selectedItems.length}
+                    </span>{" "}
+                    item{selectedItems.length !== 1 ? "s" : ""} selected
+                  </span>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                    onClick={() => setIsBulkDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1.5" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Create Item Wizard */}
+      <CreateItemWizard
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={() => {
+          fetchData();
+          setIsCreateDialogOpen(false);
+        }}
+        availableUniteCodes={uniteCodes}
+      />
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
+        <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
           <DialogHeader>
-            <DialogTitle className="text-xl text-blue-100 flex items-center">
-              <Edit className="mr-2 h-5 w-5 text-blue-400" />
+            <DialogTitle className="text-xl text-blue-100">
               Edit Item
             </DialogTitle>
             <DialogDescription className="text-blue-300">
-              Update the item information. The code cannot be changed.
+              Update item information
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleEditItem)} className="space-y-4">
+            <form
+              onSubmit={editForm.handleSubmit(handleEditItem)}
+              className="space-y-4"
+            >
               <FormField
                 control={editForm.control}
                 name="code"
@@ -516,14 +720,13 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                   <FormItem>
                     <FormLabel className="text-blue-200">Code</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Enter item code" 
-                        {...field} 
-                        readOnly
-                        className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500 opacity-60 cursor-not-allowed"
+                      <Input
+                        {...field}
+                        disabled
+                        className="bg-blue-950/30 border-blue-800/30 text-blue-300"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -532,15 +735,14 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Description (Optional)</FormLabel>
+                    <FormLabel className="text-blue-200">Description</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Enter item description (optional)" 
-                        {...field} 
-                        className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                      <Input
+                        {...field}
+                        className="bg-blue-950/30 border-blue-800/30 text-blue-100"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -549,106 +751,106 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 name="unite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Unit Code *</FormLabel>
+                    <FormLabel className="text-blue-200">Unit Code</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white focus:border-blue-500 focus:ring-blue-500">
-                          <SelectValue placeholder="Select a unit code" />
+                        <SelectTrigger className="bg-blue-950/30 border-blue-800/30 text-blue-100">
+                          <SelectValue placeholder="Select unit code" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
-                        {uniteCodes.map((unit) => (
-                          <SelectItem key={unit.code} value={unit.code} className="text-white hover:bg-blue-900/30">
-                            {unit.code} - {unit.description}
+                      <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                        {uniteCodes.map((unite) => (
+                          <SelectItem
+                            key={unite.code}
+                            value={unite.code}
+                            className="hover:bg-blue-800/40"
+                          >
+                            {unite.code} - {unite.description}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setIsEditDialogOpen(false)}
-                  className="border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200"
+                  className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20"
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                   Update Item
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-blue-100 flex items-center">
-              <AlertTriangle className="mr-2 h-5 w-5 text-red-400" />
+      {/* Delete Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl text-blue-100">
               Delete Item
-            </DialogTitle>
-            <DialogDescription className="text-blue-300">
-              Are you sure you want to delete this item? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedItem && (
-            <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
-              <p className="text-blue-200">
-                <strong>Code:</strong> {selectedItem.code}
-              </p>
-              <p className="text-blue-200">
-                <strong>Description:</strong> {selectedItem.description}
-              </p>
-              {selectedItem.elementTypesCount > 0 && (
-                <p className="text-red-400 mt-2 flex items-center">
-                  <AlertTriangle className="mr-1 h-4 w-4" />
-                  This item is referenced by {selectedItem.elementTypesCount} element types and cannot be deleted.
-                </p>
-              )}
-            </div>
-          )}
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200"
-            >
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-blue-300">
+              Are you sure you want to delete item "{selectedItem?.code}"? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20">
               Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleDeleteItem}
-              disabled={selectedItem?.elementTypesCount > 0}
-              className="bg-red-900/30 text-red-300 hover:bg-red-900/50 hover:text-red-200 border border-red-500/30 hover:border-red-400/50"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Delete Item
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      {/* Create Item Wizard */}
-      <CreateItemWizard
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSuccess={() => {
-          setIsCreateDialogOpen(false);
-          fetchData();
-        }}
-        uniteCodes={uniteCodes}
-      />
+      {/* Bulk Delete Dialog */}
+      <AlertDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl text-blue-100">
+              Delete Items
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-blue-300">
+              Are you sure you want to delete {selectedItems.length} items? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
-export default ItemsManagement; 
+export default ItemsManagement;
