@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import stepService from "@/services/stepService";
@@ -151,12 +151,12 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
   };
 
   // Register a form component for a specific step
-  const registerStepForm = (stepNumber: number, form: StepFormRegistration) => {
+  const registerStepForm = useCallback((stepNumber: number, form: StepFormRegistration) => {
     setRegisteredForms((prev) => ({
       ...prev,
       [stepNumber]: form,
     }));
-  };
+  }, []);
 
   const nextStep = async () => {
     // Validate the current step using the registered form if available

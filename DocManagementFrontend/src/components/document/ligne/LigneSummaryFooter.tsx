@@ -1,4 +1,4 @@
-import { FileText, BarChart2, TrendingUp, Calculator, Percent } from "lucide-react";
+import { Minus, Calculator, Percent } from "lucide-react";
 import { Ligne } from "@/models/document";
 import { motion } from "framer-motion";
 
@@ -22,11 +22,16 @@ const LigneSummaryFooter = ({ lignes }: LigneSummaryFooterProps) => {
   const totalAmountVAT = lignes.reduce((sum, ligne) => sum + ligne.amountVAT, 0);
   const totalAmountTTC = lignes.reduce((sum, ligne) => sum + ligne.amountTTC, 0);
   
-  const averageAmountTTC = totalAmountTTC / lignes.length;
-  const maxAmountTTC = Math.max(...lignes.map((ligne) => ligne.amountTTC));
-  
-  // Calculate total quantity
-  const totalQuantity = lignes.reduce((sum, ligne) => sum + ligne.quantity, 0);
+  // Calculate total discount
+  const totalDiscount = lignes.reduce((sum, ligne) => {
+    // If discount amount is specified, use it; otherwise calculate from percentage
+    if (ligne.discountAmount && ligne.discountAmount > 0) {
+      return sum + ligne.discountAmount;
+    } else if (ligne.discountPercentage && ligne.discountPercentage > 0) {
+      return sum + (ligne.priceHT * ligne.quantity * ligne.discountPercentage);
+    }
+    return sum;
+  }, 0);
 
   return (
     <motion.div
@@ -88,52 +93,20 @@ const LigneSummaryFooter = ({ lignes }: LigneSummaryFooterProps) => {
         </div>
       </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-gray-900/30 to-slate-900/30 rounded-lg border border-gray-500/20 p-4">
+      {/* Total Discount */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <div className="bg-gradient-to-br from-red-900/30 to-rose-900/30 rounded-lg border border-red-500/20 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-300/60 text-sm font-medium mb-1">
-                Total Items
+              <p className="text-red-300/60 text-sm font-medium mb-1">
+                Total Discount
               </p>
               <p className="text-2xl font-bold text-white">
-                {lignes.length}
+                {formatPrice(totalDiscount)}
               </p>
             </div>
-            <div className="bg-gray-500/10 p-2 rounded-lg">
-              <FileText className="h-6 w-6 text-gray-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-900/30 to-amber-900/30 rounded-lg border border-orange-500/20 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-orange-300/60 text-sm font-medium mb-1">
-                Total Quantity
-              </p>
-              <p className="text-2xl font-bold text-white">
-                {totalQuantity.toLocaleString()}
-              </p>
-            </div>
-            <div className="bg-orange-500/10 p-2 rounded-lg">
-              <BarChart2 className="h-6 w-6 text-orange-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-cyan-900/30 to-teal-900/30 rounded-lg border border-cyan-500/20 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-cyan-300/60 text-sm font-medium mb-1">
-                Average Amount
-              </p>
-              <p className="text-2xl font-bold text-white">
-                {formatPrice(averageAmountTTC)}
-              </p>
-            </div>
-            <div className="bg-cyan-500/10 p-2 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-cyan-400" />
+            <div className="bg-red-500/10 p-2 rounded-lg">
+              <Minus className="h-6 w-6 text-red-400" />
             </div>
           </div>
         </div>

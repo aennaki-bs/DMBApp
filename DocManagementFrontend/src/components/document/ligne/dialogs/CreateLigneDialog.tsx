@@ -55,8 +55,6 @@ interface FormValues {
   title: string;
   article: string;
   typeId?: number;
-  itemCode?: string;
-  generalAccountsCode?: string;
   quantity: number;
   priceHT: number;
   discountPercentage: number;
@@ -95,15 +93,9 @@ const CreateLigneDialog = ({
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [typesData, itemsData, accountsData] = await Promise.all([
-          lineElementsService.elementTypes.getSimple(),
-          lineElementsService.items.getSimple(),
-          lineElementsService.generalAccounts.getSimple(),
-        ]);
+        const typesData = await lineElementsService.elementTypes.getSimple();
         
         setElementTypes(typesData);
-        setItems(itemsData);
-        setGeneralAccountsSimple(accountsData);
       } catch (error) {
         console.error("Failed to load dropdown data:", error);
         toast.error("Failed to load form data");
@@ -174,21 +166,7 @@ const CreateLigneDialog = ({
       case 1:
         return !!(formValues.title && formValues.title.trim());
       case 2:
-        if (!formValues.typeId) return false;
-        
-        // Get the selected element type
-        const selectedElementType = elementTypes.find(t => t.id === formValues.typeId);
-        if (!selectedElementType) return false;
-        
-        // Validate based on element type
-        switch (selectedElementType.typeElement) {
-          case 'Item':
-            return !!(formValues.itemCode && formValues.itemCode.trim());
-          case 'General Accounts':
-            return !!(formValues.generalAccountsCode && formValues.generalAccountsCode.trim());
-          default:
-            return false;
-        }
+        return !!(formValues.typeId);
       case 3:
         return !!(
           formValues.quantity && 
@@ -224,8 +202,6 @@ const CreateLigneDialog = ({
         title: formValues.title,
         article: formValues.article,
         typeId: formValues.typeId,
-        itemCode: formValues.itemCode,
-        generalAccountsCode: formValues.generalAccountsCode,
         quantity: formValues.quantity,
         priceHT: formValues.priceHT,
         discountPercentage: formValues.discountPercentage,
@@ -360,19 +336,6 @@ const CreateLigneDialog = ({
               {step === 1 && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="ligneKey" className="text-blue-200">
-                      Line Key
-                    </Label>
-                    <Input
-                      id="ligneKey"
-                      value={formValues.ligneKey}
-                      onChange={(e) => handleFieldChange("ligneKey", e.target.value)}
-                      placeholder="Auto-generated"
-                      className="bg-blue-950/40 border-blue-400/20 text-white placeholder:text-blue-400/50 focus:border-blue-400"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
                     <Label htmlFor="title" className="text-blue-200">
                       Title<span className="text-red-400">*</span>
                     </Label>
@@ -419,9 +382,6 @@ const CreateLigneDialog = ({
                       onValueChange={(value) => {
                         const typeId = value ? parseInt(value) : undefined;
                         handleFieldChange("typeId", typeId);
-                        // Reset related fields when element type changes
-                        handleFieldChange("itemCode", undefined);
-                        handleFieldChange("generalAccountsCode", undefined);
                       }}
                     >
                       <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
@@ -437,7 +397,7 @@ const CreateLigneDialog = ({
                                 'bg-purple-400'
                               }`}></div>
                               <div>
-                                <div className="font-medium">{type.typeElement}</div>
+                                <div className="font-medium">{type.code} - {type.typeElement}</div>
                                 <div className="text-sm text-gray-400">{type.description}</div>
                               </div>
                             </div>
@@ -447,70 +407,9 @@ const CreateLigneDialog = ({
                     </Select>
                   </div>
 
-                  {/* Conditional rendering based on selected element type */}
+                  {/* Information card about the selected element type */}
                   {formValues.typeId && (
                     <div className="space-y-4">
-                      {/* Show Items dropdown only if Item type is selected */}
-                      {elementTypes.find(t => t.id === formValues.typeId)?.typeElement === 'Item' && (
-                        <div className="space-y-3 p-4 bg-green-950/20 rounded-lg border border-green-500/20">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                            <Label htmlFor="itemCode" className="text-green-200 text-base font-medium">
-                              Select Item
-                            </Label>
-                          </div>
-                          <Select
-                            value={formValues.itemCode || ""}
-                            onValueChange={(value) => handleFieldChange("itemCode", value || undefined)}
-                          >
-                            <SelectTrigger className="bg-green-950/40 border-green-400/20 text-white h-12 text-base">
-                              <SelectValue placeholder="Choose an item" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-green-950 border-green-400/20">
-                              {items.map((item) => (
-                                <SelectItem key={item.code} value={item.code} className="text-white hover:bg-green-800">
-                                  <div>
-                                    <div className="font-medium">{item.code}</div>
-                                    <div className="text-sm text-green-300">{item.description}</div>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      {/* Show General Accounts dropdown only if General Accounts type is selected */}
-                      {elementTypes.find(t => t.id === formValues.typeId)?.typeElement === 'General Accounts' && (
-                        <div className="space-y-3 p-4 bg-purple-950/20 rounded-lg border border-purple-500/20">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-3 h-3 rounded-full bg-purple-400"></div>
-                            <Label htmlFor="generalAccountsCode" className="text-purple-200 text-base font-medium">
-                              Select General Account
-                            </Label>
-                          </div>
-                          <Select
-                            value={formValues.generalAccountsCode || ""}
-                            onValueChange={(value) => handleFieldChange("generalAccountsCode", value || undefined)}
-                          >
-                            <SelectTrigger className="bg-purple-950/40 border-purple-400/20 text-white h-12 text-base">
-                              <SelectValue placeholder="Choose a general account" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-purple-950 border-purple-400/20">
-                              {generalAccounts.map((account) => (
-                                <SelectItem key={account.code} value={account.code} className="text-white hover:bg-purple-800">
-                                  <div>
-                                    <div className="font-medium">{account.code}</div>
-                                    <div className="text-sm text-purple-300">{account.description}</div>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      {/* Information card about the selected element type */}
                       <div className="p-4 bg-blue-950/30 rounded-lg border border-blue-400/20">
                         <div className="flex items-start gap-3">
                           <div className="bg-blue-500/20 p-2 rounded-lg">
@@ -518,14 +417,13 @@ const CreateLigneDialog = ({
                           </div>
                           <div>
                             <h4 className="text-blue-200 font-medium mb-1">
-                              {elementTypes.find(t => t.id === formValues.typeId)?.typeElement}
+                              {elementTypes.find(t => t.id === formValues.typeId)?.code} - {elementTypes.find(t => t.id === formValues.typeId)?.typeElement}
                             </h4>
                             <p className="text-blue-300/70 text-sm">
                               {elementTypes.find(t => t.id === formValues.typeId)?.description}
                             </p>
                             <p className="text-blue-400/60 text-xs mt-2">
-                              Select the specific {elementTypes.find(t => t.id === formValues.typeId)?.typeElement.toLowerCase()} 
-                              that this line item will reference.
+                              This element type is automatically linked to its associated {elementTypes.find(t => t.id === formValues.typeId)?.typeElement.toLowerCase()}.
                             </p>
                           </div>
                         </div>
@@ -541,8 +439,7 @@ const CreateLigneDialog = ({
                       </div>
                       <h4 className="text-gray-300 font-medium mb-2">Choose an Element Type</h4>
                       <p className="text-gray-400 text-sm">
-                        Select an element type above to see the available options for linking this line item 
-                        to specific items or general accounts.
+                        Select an element type above. The type is automatically linked to its associated items or general accounts.
                       </p>
                     </div>
                   )}
@@ -565,9 +462,9 @@ const CreateLigneDialog = ({
                         id="quantity"
                         type="number"
                         min="0"
-                        step="0.01"
-                        value={formValues.quantity}
-                        onChange={(e) => handleFieldChange("quantity", parseFloat(e.target.value) || 0)}
+                        step="1"
+                        value={formValues.quantity || ""}
+                        onChange={(e) => handleFieldChange("quantity", parseInt(e.target.value) || 0)}
                         className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base"
                         placeholder="Enter quantity"
                       />
@@ -585,10 +482,10 @@ const CreateLigneDialog = ({
                         type="number"
                         min="0"
                         step="0.01"
-                        value={formValues.priceHT}
+                        value={formValues.priceHT === 0 ? "" : formValues.priceHT}
                         onChange={(e) => handleFieldChange("priceHT", parseFloat(e.target.value) || 0)}
-                        className="bg-green-950/40 border-green-400/20 text-white h-12 text-base"
-                        placeholder="Enter unit price"
+                        className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base"
+                        placeholder="Enter price"
                       />
                     </div>
                   </div>
@@ -630,7 +527,7 @@ const CreateLigneDialog = ({
                             min="0"
                             max="100"
                             step="0.01"
-                            value={formValues.discountPercentage * 100}
+                            value={formValues.discountPercentage === 0 ? "" : (formValues.discountPercentage * 100)}
                             onChange={(e) => handleFieldChange("discountPercentage", (parseFloat(e.target.value) || 0) / 100)}
                             className="bg-orange-950/40 border-orange-400/20 text-white"
                             placeholder="0"
@@ -646,7 +543,7 @@ const CreateLigneDialog = ({
                             type="number"
                             min="0"
                             step="0.01"
-                            value={formValues.discountAmount || 0}
+                            value={formValues.discountAmount === 0 ? "" : (formValues.discountAmount || "")}
                             onChange={(e) => handleFieldChange("discountAmount", parseFloat(e.target.value) || 0)}
                             className="bg-orange-950/40 border-orange-400/20 text-white"
                             placeholder="0.00"
@@ -715,10 +612,6 @@ const CreateLigneDialog = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="space-y-2">
                       <div>
-                        <span className="text-blue-400">Line Key:</span>
-                        <div className="text-white">{formValues.ligneKey}</div>
-                      </div>
-                      <div>
                         <span className="text-blue-400">Title:</span>
                         <div className="text-white">{formValues.title}</div>
                       </div>
@@ -748,42 +641,21 @@ const CreateLigneDialog = ({
                     </div>
                   </div>
 
-                  {/* Element references */}
-                  {(formValues.itemCode || formValues.generalAccountsCode) && (
-                    <div className="p-4 bg-blue-950/30 rounded-lg border border-blue-400/20">
-                      <h4 className="text-blue-200 font-medium mb-2">Element References</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        {formValues.itemCode && (
-                          <div>
-                            <span className="text-green-400">Item:</span>
-                            <div className="text-white">{formValues.itemCode}</div>
-                          </div>
-                        )}
-                        {formValues.generalAccountsCode && (
-                          <div>
-                            <span className="text-indigo-400">Account:</span>
-                            <div className="text-white">{formValues.generalAccountsCode}</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Final calculation */}
                   <div className="p-4 bg-green-950/30 rounded-lg border border-green-400/20">
                     <h4 className="text-green-200 font-medium mb-2">Final Calculation</h4>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="text-center">
                         <div className="text-green-400 text-sm">Amount HT</div>
-                        <div className="text-white font-bold text-lg">{formatPrice(amountHT)}</div>
+                        <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().amountHT)}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-green-400 text-sm">VAT Amount</div>
-                        <div className="text-white font-bold text-lg">{formatPrice(amountVAT)}</div>
+                        <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().amountVAT)}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-green-400 text-sm">Total TTC</div>
-                        <div className="text-white font-bold text-xl">{formatPrice(amountTTC)}</div>
+                        <div className="text-white font-bold text-xl">{formatPrice(calculateAmounts().amountTTC)}</div>
                       </div>
                     </div>
                   </div>
