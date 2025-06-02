@@ -124,20 +124,59 @@ const DocumentsPage = () => {
         await deleteDocument(documentToDelete);
         toast.success("Document deleted successfully");
       } else if (selectedDocuments.length > 0) {
-        // Multiple documents delete
-        await deleteMultipleDocuments(selectedDocuments);
-        toast.success(
-          `${selectedDocuments.length} documents deleted successfully`
-        );
+        // Multiple documents delete with improved error handling
+        try {
+          const results = await deleteMultipleDocuments(selectedDocuments);
+          
+          // All deletions were successful
+          if (results.successful.length === selectedDocuments.length) {
+            toast.success(
+              `${results.successful.length} documents deleted successfully`
+            );
+          }
+        } catch (error: any) {
+          // Handle partial success/failure
+          if (error.results) {
+            const { successful, failed } = error.results;
+            
+            if (successful.length > 0 && failed.length > 0) {
+              // Partial success
+              toast.success(
+                `${successful.length} documents deleted successfully`
+              );
+              toast.error(
+                `Failed to delete ${failed.length} documents. Some may be referenced by other data.`
+              );
+            } else if (successful.length === 0) {
+              // Complete failure
+              toast.error(
+                `Failed to delete ${failed.length} documents. They may be referenced by other data or there's a server issue.`
+              );
+            }
+          } else {
+            // Generic error
+            toast.error("Failed to delete documents. Please try again.");
+          }
+          
+          // Don't return early - we still want to clean up the UI state
+        }
       }
 
+      // Clean up UI state regardless of success/failure
       setSelectedDocuments([]);
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
+      
+      // Fetch documents to refresh the list (this will show what was actually deleted)
       fetchDocuments();
+      
     } catch (error) {
       console.error("Error deleting document(s):", error);
-      toast.error("Failed to delete document(s)");
+      toast.error("Failed to delete document(s). Please try again.");
+      
+      // Still clean up UI state on error
+      setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
     }
   };
 

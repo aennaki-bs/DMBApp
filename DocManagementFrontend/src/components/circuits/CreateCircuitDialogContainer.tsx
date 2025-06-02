@@ -10,14 +10,16 @@ import {
 } from "@/components/ui/dialog";
 import CreateCircuitStepOne from "./steps/CreateCircuitStepOne";
 import CreateCircuitStepTwo from "./steps/CreateCircuitStepTwo";
+import CreateCircuitStepDocumentType from "./steps/CreateCircuitStepDocumentType";
 import CreateCircuitStepThree from "./steps/CreateCircuitStepThree";
 import { GitBranch } from "lucide-react";
 
-export type Step = 1 | 2 | 3;
+export type Step = 1 | 2 | 3 | 4;
 
 export interface FormValues {
   title: string;
   descriptif?: string;
+  documentTypeId?: number;
 }
 
 interface CreateCircuitDialogContainerProps {
@@ -36,8 +38,9 @@ export default function CreateCircuitDialogContainer({
   const [formValues, setFormValues] = useState<FormValues>({
     title: "",
     descriptif: "",
+    documentTypeId: undefined,
   });
-  const [errors, setErrors] = useState<{ title?: string }>({});
+  const [errors, setErrors] = useState<{ title?: string; documentTypeId?: string }>({});
 
   const handleNext = () => {
     if (step === 1) {
@@ -49,6 +52,13 @@ export default function CreateCircuitDialogContainer({
       setStep(2);
     } else if (step === 2) {
       setStep(3);
+    } else if (step === 3) {
+      if (!formValues.documentTypeId) {
+        setErrors({ documentTypeId: "Document type is required" });
+        return;
+      }
+      setErrors({});
+      setStep(4);
     }
   };
 
@@ -57,7 +67,7 @@ export default function CreateCircuitDialogContainer({
 
   const handleClose = () => {
     setStep(1);
-    setFormValues({ title: "", descriptif: "" });
+    setFormValues({ title: "", descriptif: "", documentTypeId: undefined });
     setErrors({});
     onOpenChange(false);
   };
@@ -67,10 +77,20 @@ export default function CreateCircuitDialogContainer({
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
+  const handleDocumentTypeChange = (documentTypeId: number) => {
+    setFormValues((prev) => ({ ...prev, documentTypeId }));
+    setErrors((prev) => ({ ...prev, documentTypeId: undefined }));
+  };
+
   const handleSubmit = async () => {
     if (!formValues.title || formValues.title.trim().length < 3) {
       setErrors({ title: "Title must be at least 3 characters" });
       setStep(1);
+      return;
+    }
+    if (!formValues.documentTypeId) {
+      setErrors({ documentTypeId: "Document type is required" });
+      setStep(2);
       return;
     }
     setIsSubmitting(true);
@@ -78,13 +98,14 @@ export default function CreateCircuitDialogContainer({
       await circuitService.createCircuit({
         title: formValues.title,
         descriptif: formValues.descriptif || "",
+        documentTypeId: formValues.documentTypeId,
         isActive: false,
         hasOrderedFlow: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
       toast.success("Circuit created successfully");
-      setFormValues({ title: "", descriptif: "" });
+      setFormValues({ title: "", descriptif: "", documentTypeId: undefined });
       setStep(1);
       onOpenChange(false);
       onSuccess();
@@ -169,6 +190,27 @@ export default function CreateCircuitDialogContainer({
                 3
               </div>
               <span className={step >= 3 ? "text-blue-100" : "text-blue-400"}>
+                Type
+              </span>
+            </div>
+            <div className="flex-1 mx-2 mt-4">
+              <div
+                className={`h-0.5 ${
+                  step >= 4 ? "bg-blue-600" : "bg-blue-900/50"
+                }`}
+              ></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 4
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                }`}
+              >
+                4
+              </div>
+              <span className={step >= 4 ? "text-blue-100" : "text-blue-400"}>
                 Review
               </span>
             </div>
@@ -199,9 +241,19 @@ export default function CreateCircuitDialogContainer({
               />
             )}
             {step === 3 && (
+              <CreateCircuitStepDocumentType
+                value={formValues.documentTypeId}
+                onChange={handleDocumentTypeChange}
+                disabled={isSubmitting}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
+            {step === 4 && (
               <CreateCircuitStepThree
                 title={formValues.title}
                 descriptif={formValues.descriptif || ""}
+                documentTypeId={formValues.documentTypeId}
                 disabled={isSubmitting}
                 onEdit={handleEdit}
                 onBack={handleBack}

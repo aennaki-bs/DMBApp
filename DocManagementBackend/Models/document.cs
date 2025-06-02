@@ -66,6 +66,8 @@ namespace DocManagementBackend.Models
         public int DocCounter { get; set; } = 0;
         [JsonIgnore]
         public ICollection<Document> Documents { get; set; } = new List<Document>();
+        [JsonIgnore]
+        public ICollection<Circuit> Circuits { get; set; } = new List<Circuit>();
     }
     public class SubType
     {

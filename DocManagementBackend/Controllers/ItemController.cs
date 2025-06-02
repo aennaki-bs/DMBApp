@@ -25,6 +25,10 @@ namespace DocManagementBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ItemDto>>> GetItems()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             var items = await _context.Items
                 .Include(i => i.UniteCodeNavigation)
                 .Select(i => new ItemDto
@@ -55,6 +59,10 @@ namespace DocManagementBackend.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<ItemSimpleDto>>> GetItemsSimple()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             var items = await _context.Items
                 .Select(i => new ItemSimpleDto
                 {
@@ -72,6 +80,10 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{code}")]
         public async Task<ActionResult<ItemDto>> GetItem(string code)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             var item = await _context.Items
                 .Include(i => i.UniteCodeNavigation)
                 .Where(i => i.Code == code)
@@ -104,6 +116,10 @@ namespace DocManagementBackend.Controllers
         [HttpPost("validate-code")]
         public async Task<IActionResult> ValidateCode([FromBody] CreateItemRequest request)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             if (string.IsNullOrWhiteSpace(request.Code))
                 return BadRequest("Code is required.");
 
@@ -117,7 +133,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<ItemDto>> CreateItem([FromBody] CreateItemRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -191,7 +207,7 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{code}")]
         public async Task<IActionResult> UpdateItem(string code, [FromBody] UpdateItemRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -269,7 +285,7 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{code}")]
         public async Task<IActionResult> DeleteItem(string code)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 

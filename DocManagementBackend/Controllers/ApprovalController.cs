@@ -284,7 +284,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost("{approvalId}/respond")]
         public async Task<IActionResult> RespondToApproval(int approvalId, [FromBody] ApprovalResponseDto response)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User);
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 

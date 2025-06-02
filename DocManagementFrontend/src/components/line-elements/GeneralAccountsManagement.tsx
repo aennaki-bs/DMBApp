@@ -37,6 +37,9 @@ import * as z from 'zod';
 import lineElementsService from '@/services/lineElementsService';
 import { GeneralAccounts, LignesElementType, CreateGeneralAccountsRequest, UpdateGeneralAccountsRequest } from '@/models/lineElements';
 
+// Import the new wizard component
+import CreateGeneralAccountWizard from './CreateGeneralAccountWizard';
+
 // Form validation schema
 const generalAccountSchema = z.object({
   code: z.string().min(1, 'Code is required').max(20, 'Code must be 20 characters or less'),
@@ -61,14 +64,6 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<GeneralAccounts | null>(null);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
-
-  const form = useForm<GeneralAccountFormData>({
-    resolver: zodResolver(generalAccountSchema),
-    defaultValues: {
-      code: '',
-      description: '',
-    },
-  });
 
   const editForm = useForm<GeneralAccountFormData>({
     resolver: zodResolver(generalAccountSchema),
@@ -170,30 +165,31 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
     }
   };
 
-  const handleCreateAccount = async (data: GeneralAccountFormData) => {
-    try {
-      const createRequest: CreateGeneralAccountsRequest = {
-        code: data.code.trim(),
-        description: data.description.trim(),
-      };
-      
-      await lineElementsService.generalAccounts.create(createRequest);
-      toast.success('General account created successfully');
-      setIsCreateDialogOpen(false);
-      form.reset();
-      fetchData();
-    } catch (error: any) {
-      console.error('Failed to create general account:', error);
-      toast.error(error.response?.data?.message || 'Failed to create general account');
-    }
-  };
-
   const handleEditAccount = async (data: GeneralAccountFormData) => {
     if (!selectedAccount) return;
     
     try {
+      // Only validate code format if it has changed and account is not in use
+      if (selectedAccount.lignesCount === 0 && data.code.trim() !== selectedAccount.code) {
+        const codeValue = data.code.trim();
+        
+        // Check alphanumeric format
+        const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+        if (!alphanumericRegex.test(codeValue)) {
+          toast.error('Code must be alphanumeric (letters and numbers only)');
+          return;
+        }
+        
+        // Check length
+        if (codeValue.length < 1 || codeValue.length > 20) {
+          toast.error('Code must be between 1 and 20 characters');
+          return;
+        }
+      }
+
       const updateRequest: UpdateGeneralAccountsRequest = {
-        code: data.code.trim(),
+        // Only send code if account is not in use
+        ...(selectedAccount.lignesCount === 0 && { code: data.code.trim() }),
         description: data.description.trim(),
       };
       
@@ -278,79 +274,13 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
         </div>
         
         <div className="flex items-center gap-2">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Add General Account
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
-              <DialogHeader>
-                <DialogTitle className="text-xl text-blue-100 flex items-center">
-                  <Calculator className="mr-2 h-5 w-5 text-blue-400" />
-                  Create New General Account
-                </DialogTitle>
-                <DialogDescription className="text-blue-300">
-                  Add a new general account to the system. General accounts are used for accounting purposes in document lines.
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleCreateAccount)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="code"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-200">Code *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter account code (e.g., 6061, 7001)" 
-                            {...field} 
-                            className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-200">Description *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter account description"
-                            {...field}
-                            className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => { setIsCreateDialogOpen(false); form.reset(); }}
-                      className="border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200"
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Create General Account
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add General Account
+          </Button>
         </div>
       </div>
 
@@ -582,15 +512,32 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
                 name="code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Code</FormLabel>
+                    <FormLabel className="text-blue-200">
+                      Code * 
+                      {selectedAccount?.lignesCount > 0 && (
+                        <span className="text-amber-400 text-xs ml-2">
+                          (Cannot edit: Account is in use)
+                        </span>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="Enter account code" 
                         {...field} 
-                        className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                        disabled={selectedAccount?.lignesCount > 0}
+                        className={`bg-[#111633] border-blue-900/50 placeholder:text-blue-400 focus:border-blue-500 focus:ring-blue-500 ${
+                          selectedAccount?.lignesCount > 0 
+                            ? 'text-gray-400 cursor-not-allowed' 
+                            : 'text-white'
+                        }`}
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
+                    {selectedAccount?.lignesCount > 0 && (
+                      <p className="text-amber-400 text-xs mt-1">
+                        Code cannot be changed because this account is referenced by {selectedAccount.lignesCount} line element types.
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -679,6 +626,16 @@ const GeneralAccountsManagement = ({ searchTerm, elementType }: GeneralAccountsM
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Create General Account Wizard */}
+      <CreateGeneralAccountWizard
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSuccess={() => {
+          setIsCreateDialogOpen(false);
+          fetchData();
+        }}
+      />
     </div>
   );
 };

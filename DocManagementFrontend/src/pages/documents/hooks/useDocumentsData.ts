@@ -53,9 +53,33 @@ export function useDocumentsData() {
   const deleteMultipleDocuments = useCallback(async (ids: number[]) => {
     if (useFakeData) {
       setDocuments(prev => prev.filter(doc => !ids.includes(doc.id)));
+      return { successful: ids, failed: [] };
     } else {
-      await documentService.deleteMultipleDocuments(ids);
-      fetchDocuments();
+      try {
+        const results = await documentService.deleteMultipleDocuments(ids);
+        
+        // If we get here, either all succeeded or some failed but we have detailed results
+        if (results.successful.length > 0) {
+          fetchDocuments(); // Refresh the document list
+        }
+        
+        return results;
+      } catch (error: any) {
+        // Handle the error with detailed results if available
+        if (error.results) {
+          const { successful, failed } = error.results;
+          
+          if (successful.length > 0) {
+            fetchDocuments(); // Refresh the document list for successful deletions
+          }
+          
+          // Re-throw with the structured results
+          throw error;
+        }
+        
+        // If no structured results, throw the original error
+        throw error;
+      }
     }
   }, [useFakeData, fetchDocuments]);
 

@@ -97,6 +97,13 @@ namespace DocManagementBackend.Data
                 .HasForeignKey(s => s.CircuitId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Circuit -> DocumentType relationship
+            modelBuilder.Entity<Circuit>()
+                .HasOne(c => c.DocumentType)
+                .WithMany(dt => dt.Circuits)
+                .HasForeignKey(c => c.DocumentTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // FIX: Use NoAction for Status-related FKs to avoid multiple cascade paths
             modelBuilder.Entity<Step>()
                 .HasOne(s => s.CurrentStatus)

@@ -36,7 +36,6 @@ import AddressStep from "@/components/register/StepThreeAddressInfo";
 import UsernameEmailForm from "@/components/register/StepFourCredentials";
 import PasswordForm from "@/components/register/StepFivePassword";
 import AdminAccessForm from "@/components/register/StepSixAdminAccess";
-import StepResponsibilityCentre from "@/components/register/StepResponsibilityCentre";
 import ReviewStep from "@/components/register/StepSevenSummary";
 
 // Define our StepInfo interface
@@ -231,12 +230,6 @@ const RegisterForm: React.FC = () => {
     },
     {
       id: 6,
-      title: "Responsibility Centre",
-      description: "Select or create a responsibility centre",
-      icon: <Building2 className="h-5 w-5" />,
-    },
-    {
-      id: 7,
       title: "Review",
       description: "Review and confirm your information",
       icon: <CircleCheck className="h-5 w-5" />,
@@ -289,7 +282,7 @@ const RegisterForm: React.FC = () => {
     }
 
     // For the review step, don't show the next button
-    if (currentStep === 7) return true;
+    if (currentStep === 6) return true;
 
     // For required info steps, check if essential fields are filled
     if (currentStep === 1) {
@@ -329,11 +322,6 @@ const RegisterForm: React.FC = () => {
       return false; // Allow proceeding if admin access is not requested or admin key is provided
     }
 
-    // For responsibility centre step (optional), allow proceeding regardless
-    if (currentStep === 6) {
-      return false; // Never disable the next button for responsibility centre step
-    }
-
     // Default case for other steps - disable if validation errors exist
     return !!(
       stepValidation.errors && Object.keys(stepValidation.errors).length > 0
@@ -356,8 +344,6 @@ const RegisterForm: React.FC = () => {
       case 5:
         return <AdminAccessForm />;
       case 6:
-        return <StepResponsibilityCentre />;
-      case 7:
         return <ReviewStep />;
       default:
         return <UserTypeSelection />;
@@ -664,7 +650,7 @@ const RegisterForm: React.FC = () => {
               Back
             </Button>
 
-            {currentStep < 7 && (
+            {currentStep < 6 && (
               <Button
                 type="button"
                 onClick={handleNext}

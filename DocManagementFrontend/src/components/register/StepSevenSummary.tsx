@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useMultiStepForm } from "@/context/form";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -9,13 +9,12 @@ import {
   Key,
   Shield,
   Check,
-  PenLine,
+  Loader2,
+  Edit2,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import responsibilityCentreService from "@/services/responsibilityCentreService";
-import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
 
 // Form data interface to provide proper typing
 interface FormData {
@@ -39,7 +38,6 @@ interface FormData {
   confirmPassword?: string;
   roleName?: string;
   requestAdminAccess?: boolean;
-  responsibilityCentreId?: number;
   [key: string]: any;
 }
 
@@ -63,37 +61,11 @@ const ReviewStep: React.FC = () => {
   const { formData, submitForm, goToStep, stepValidation } = useMultiStepForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedSection, setExpandedSection] = useState<number | null>(0);
-  const [responsibilityCentre, setResponsibilityCentre] = useState<ResponsibilityCentreSimple | null>(null);
-  const [isLoadingCentre, setIsLoadingCentre] = useState(false);
 
   // Typed formData for better TypeScript support
   const typedFormData = formData as FormData;
 
   const isPersonal = typedFormData.userType === "personal";
-
-  // Fetch responsibility centre details if ID is provided
-  useEffect(() => {
-    const fetchResponsibilityCentre = async () => {
-      if (typedFormData.responsibilityCentreId) {
-        try {
-          setIsLoadingCentre(true);
-          // Get all simple centres and find the matching one
-          const centres = await responsibilityCentreService.getSimple();
-          const selectedCentre = centres.find(c => c.id === typedFormData.responsibilityCentreId);
-          setResponsibilityCentre(selectedCentre || null);
-        } catch (error) {
-          console.error('Failed to fetch responsibility centre:', error);
-          setResponsibilityCentre(null);
-        } finally {
-          setIsLoadingCentre(false);
-        }
-      } else {
-        setResponsibilityCentre(null);
-      }
-    };
-
-    fetchResponsibilityCentre();
-  }, [typedFormData.responsibilityCentreId]);
 
   // Function to handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,24 +124,6 @@ const ReviewStep: React.FC = () => {
       return <span className="text-amber-300">Admin Access Requested</span>;
     }
     return <span className="text-blue-300">Standard User</span>;
-  };
-
-  // Format responsibility centre
-  const formatResponsibilityCentre = () => {
-    if (isLoadingCentre) {
-      return <span className="text-blue-400">Loading...</span>;
-    }
-    
-    if (responsibilityCentre) {
-      return (
-        <div className="space-y-1">
-          <div className="text-blue-100">{responsibilityCentre.code} - {responsibilityCentre.descr}</div>
-          <div className="text-xs text-blue-400">ID: {responsibilityCentre.id}</div>
-        </div>
-      );
-    }
-    
-    return <span className="text-gray-400">Not selected</span>;
   };
 
   // Define review sections
@@ -252,25 +206,6 @@ const ReviewStep: React.FC = () => {
         ] : [])
       ],
       stepIndex: 5,
-    },
-    {
-      title: "Responsibility Centre",
-      icon: <Building2 className="h-5 w-5" />,
-      items: [
-        {
-          label: "Selected Centre",
-          value: formatResponsibilityCentre(),
-        },
-        {
-          label: "Status",
-          value: typedFormData.responsibilityCentreId ? (
-            <span className="text-green-300">Assigned</span>
-          ) : (
-            <span className="text-gray-400">Optional - Not selected</span>
-          ),
-        },
-      ],
-      stepIndex: 6,
     },
   ];
 
@@ -543,7 +478,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
             variant="ghost"
             className="h-8 px-2 text-xs text-blue-300 hover:text-blue-100 hover:bg-blue-800/30"
           >
-            <PenLine className="h-3.5 w-3.5 mr-1" />
+            <Edit2 className="h-3.5 w-3.5 mr-1" />
             Edit
           </Button>
 

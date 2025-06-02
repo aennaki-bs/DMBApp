@@ -61,9 +61,13 @@ namespace DocManagementBackend.Controllers
 
         // GET: api/ResponsibilityCentre/simple
         [HttpGet("simple")]
-        [AllowAnonymous]
+        // [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<ResponsibilityCentreSimpleDto>>> GetResponsibilityCentresSimple()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+            
             var responsibilityCentres = await _context.ResponsibilityCentres
                 .Select(rc => new ResponsibilityCentreSimpleDto
                 {
@@ -81,6 +85,10 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ResponsibilityCentreDto>> GetResponsibilityCentre(int id)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+            
             var responsibilityCentre = await _context.ResponsibilityCentres
                 .Where(rc => rc.Id == id)
                 .Select(rc => new ResponsibilityCentreDto
@@ -123,6 +131,10 @@ namespace DocManagementBackend.Controllers
         [HttpPost("validate-code")]
         public async Task<IActionResult> ValidateCode([FromBody] CreateResponsibilityCentreRequest request)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             if (string.IsNullOrWhiteSpace(request.Code))
                 return BadRequest("Code is required.");
 

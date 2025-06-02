@@ -25,6 +25,10 @@ namespace DocManagementBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UniteCodeDto>>> GetUniteCodes()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             var uniteCodes = await _context.UniteCodes
                 .Select(uc => new UniteCodeDto
                 {
@@ -42,9 +46,13 @@ namespace DocManagementBackend.Controllers
 
         // GET: api/UniteCode/simple
         [HttpGet("simple")]
-        [AllowAnonymous]
+        // [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<UniteCodeSimpleDto>>> GetUniteCodesSimple()
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+            
             var uniteCodes = await _context.UniteCodes
                 .Select(uc => new UniteCodeSimpleDto
                 {
@@ -61,6 +69,10 @@ namespace DocManagementBackend.Controllers
         [HttpGet("{code}")]
         public async Task<ActionResult<UniteCodeDto>> GetUniteCode(string code)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+            
             var uniteCode = await _context.UniteCodes
                 .Where(uc => uc.Code == code)
                 .Select(uc => new UniteCodeDto
@@ -83,6 +95,10 @@ namespace DocManagementBackend.Controllers
         [HttpPost("validate-code")]
         public async Task<IActionResult> ValidateCode([FromBody] ValidateUniteCodeRequest request)
         {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
             if (string.IsNullOrWhiteSpace(request.Code))
                 return BadRequest("Code is required.");
 
@@ -103,7 +119,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<UniteCodeDto>> CreateUniteCode([FromBody] CreateUniteCodeRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -158,7 +174,7 @@ namespace DocManagementBackend.Controllers
         [HttpPut("{code}")]
         public async Task<IActionResult> UpdateUniteCode(string code, [FromBody] UpdateUniteCodeRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
@@ -247,7 +263,7 @@ namespace DocManagementBackend.Controllers
         [HttpDelete("{code}")]
         public async Task<IActionResult> DeleteUniteCode(string code)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 

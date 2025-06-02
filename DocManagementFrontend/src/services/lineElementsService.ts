@@ -256,6 +256,16 @@ export const generalAccountsService = {
     }
   },
 
+  validateCode: async (code: string): Promise<boolean> => {
+    try {
+      const response = await api.post('/GeneralAccounts/validate-code', { code });
+      return response.data;
+    } catch (error) {
+      console.error('Error validating general account code:', error);
+      throw error;
+    }
+  },
+
   create: async (request: CreateGeneralAccountsRequest): Promise<GeneralAccounts> => {
     try {
       const response = await api.post('/GeneralAccounts', request);
