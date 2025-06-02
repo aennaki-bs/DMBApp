@@ -69,6 +69,21 @@ namespace DocManagementBackend.Data
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
+            // Document -> User relationships (CreatedBy and UpdatedBy)
+            modelBuilder.Entity<Document>()
+                .HasOne(d => d.CreatedBy)
+                .WithMany()
+                .HasForeignKey(d => d.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+
+            modelBuilder.Entity<Document>()
+                .HasOne(d => d.UpdatedBy)
+                .WithMany()
+                .HasForeignKey(d => d.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
             // SubType relationship with Document
             modelBuilder.Entity<Document>()
                 .HasOne(d => d.SubType)

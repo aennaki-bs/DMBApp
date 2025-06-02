@@ -38,6 +38,7 @@ namespace DocManagementBackend.Controllers
             var user = authResult.User!;
             var documents = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
@@ -60,6 +61,7 @@ namespace DocManagementBackend.Controllers
             var user = authResult.User!;
             var documentDto = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
@@ -91,6 +93,7 @@ namespace DocManagementBackend.Controllers
 
             var recentDocuments = await _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
@@ -429,6 +432,7 @@ namespace DocManagementBackend.Controllers
             }
 
             document.UpdatedAt = DateTime.UtcNow;
+            document.UpdatedByUserId = userId;
             _context.Entry(document).State = EntityState.Modified;
 
             try

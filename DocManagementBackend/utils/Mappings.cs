@@ -277,6 +277,16 @@ namespace DocManagementBackend.Mappings
                 UserType = d.CreatedBy.UserType,
                 Role = d.CreatedBy.Role != null ? d.CreatedBy.Role.RoleName : string.Empty
             },
+            UpdatedByUserId = d.UpdatedByUserId,
+            UpdatedBy = d.UpdatedBy == null ? null : new DocumentUserDto
+            {
+                Email = d.UpdatedBy.Email,
+                Username = d.UpdatedBy.Username,
+                FirstName = d.UpdatedBy.FirstName,
+                LastName = d.UpdatedBy.LastName,
+                UserType = d.UpdatedBy.UserType,
+                Role = d.UpdatedBy.Role != null ? d.UpdatedBy.Role.RoleName : string.Empty
+            },
             LignesCount = d.Lignes.Count,
             SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count),
             CircuitId = d.CircuitId,

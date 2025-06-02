@@ -49,6 +49,7 @@ namespace DocManagementBackend.Services
             document.Status = 1; // In Progress
             document.IsCircuitCompleted = false;
             document.UpdatedAt = DateTime.UtcNow;
+            document.UpdatedByUserId = userId; // Track who assigned the circuit
 
             // Create DocumentStatus records for all statuses in the circuit
             // The initial status is automatically marked as complete upon assignment
@@ -143,6 +144,7 @@ namespace DocManagementBackend.Services
                     ase.StepId == document.CurrentStepId)
                 .ToListAsync();
 
+            bool documentModified = false;
             foreach (var effect in statusEffects)
             {
                 // Update document status if the action sets it complete
@@ -158,8 +160,16 @@ namespace DocManagementBackend.Services
                         documentStatus.IsComplete = true;
                         documentStatus.CompletedByUserId = userId;
                         documentStatus.CompletedAt = DateTime.UtcNow;
+                        documentModified = true;
                     }
                 }
+            }
+
+            // Update document if it was modified through status effects
+            if (documentModified)
+            {
+                document.UpdatedAt = DateTime.UtcNow;
+                document.UpdatedByUserId = userId; // Track who performed the action that modified the document
             }
 
             await _context.SaveChangesAsync();
@@ -808,6 +818,7 @@ namespace DocManagementBackend.Services
             document.CurrentStatusId = targetStatusId;
             document.CurrentStepId = isSpecialTransition ? null : step?.Id;
             document.UpdatedAt = DateTime.UtcNow;
+            document.UpdatedByUserId = userId; // Track who moved the document to the next status
 
             // Mark the status as complete in DocumentStatus
             var documentStatus = await _context.DocumentStatus
@@ -892,6 +903,7 @@ namespace DocManagementBackend.Services
             document.CurrentStatusId = targetStatusId;
             document.CurrentStepId = null; // Reset step when backtracking
             document.UpdatedAt = DateTime.UtcNow;
+            document.UpdatedByUserId = userId; // Track who returned the document to previous status
             document.IsCircuitCompleted = false; // Reopen the document if it was completed
             document.Status = 1; // In Progress
 
@@ -981,6 +993,8 @@ namespace DocManagementBackend.Services
                 {
                     document.IsCircuitCompleted = true;
                     document.Status = 2; // Completed status
+                    document.UpdatedAt = DateTime.UtcNow;
+                    document.UpdatedByUserId = userId; // Track who completed the circuit
                 }
             }
             else
@@ -993,6 +1007,8 @@ namespace DocManagementBackend.Services
                 {
                     document.IsCircuitCompleted = false;
                     document.Status = 1; // In Progress
+                    document.UpdatedAt = DateTime.UtcNow;
+                    document.UpdatedByUserId = userId; // Track who reopened the circuit
                 }
             }
 
@@ -1219,6 +1235,7 @@ namespace DocManagementBackend.Services
             document.IsCircuitCompleted = false;
             document.Status = 1; // In Progress
             document.UpdatedAt = DateTime.UtcNow;
+            document.UpdatedByUserId = userId; // Track who reinitialized the workflow
 
             // Reset all status completions
             var documentStatuses = await _context.DocumentStatus

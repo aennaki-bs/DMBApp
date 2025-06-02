@@ -162,6 +162,10 @@ namespace DocManagementBackend.Controllers
                     }
                 }
 
+                // Update document to track that a ligne was added
+                document.UpdatedAt = DateTime.UtcNow;
+                document.UpdatedByUserId = authResult.UserId; // Track who added the ligne
+
                 await _context.SaveChangesAsync();
 
                 // Return the created ligne with all includes
@@ -296,6 +300,14 @@ namespace DocManagementBackend.Controllers
                     }
                 }
 
+                // Update document to track that a ligne was modified
+                var document = await _context.Documents.FindAsync(ligne.DocumentId);
+                if (document != null)
+                {
+                    document.UpdatedAt = DateTime.UtcNow;
+                    document.UpdatedByUserId = authResult.UserId; // Track who modified the ligne
+                }
+
                 await _context.SaveChangesAsync();
                 return NoContent();
             }
@@ -333,6 +345,14 @@ namespace DocManagementBackend.Controllers
                 if (ligne.LignesElementType?.TypeElement == "General Accounts" && ligne.LignesElementType.GeneralAccount != null)
                 {
                     ligne.LignesElementType.GeneralAccount.LinesCount = Math.Max(0, ligne.LignesElementType.GeneralAccount.LinesCount - 1);
+                }
+
+                // Update document to track that a ligne was deleted
+                var document = await _context.Documents.FindAsync(ligne.DocumentId);
+                if (document != null)
+                {
+                    document.UpdatedAt = DateTime.UtcNow;
+                    document.UpdatedByUserId = authResult.UserId; // Track who deleted the ligne
                 }
 
                 await _context.SaveChangesAsync();

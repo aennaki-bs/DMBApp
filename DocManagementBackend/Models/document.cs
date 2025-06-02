@@ -12,6 +12,9 @@ namespace DocManagementBackend.Models
         public int CreatedByUserId { get; set; }
         [ForeignKey("CreatedByUserId")]
         public required User CreatedBy { get; set; }
+        public int? UpdatedByUserId { get; set; }
+        [ForeignKey("UpdatedByUserId")]
+        public User? UpdatedBy { get; set; }
         public int TypeId { get; set; }
         [ForeignKey("TypeId")]
         public DocumentType? DocumentType { get; set; }

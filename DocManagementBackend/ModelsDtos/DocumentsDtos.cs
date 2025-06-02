@@ -46,6 +46,8 @@ namespace DocManagementBackend.Models
         public SubTypeDto? SubType { get; set; }
         public int CreatedByUserId { get; set; }
         public DocumentUserDto? CreatedBy { get; set; }
+        public int? UpdatedByUserId { get; set; }
+        public DocumentUserDto? UpdatedBy { get; set; }
         public int LignesCount { get; set; }
         public int SousLignesCount { get; set; }
         public int? CircuitId { get; set; }
