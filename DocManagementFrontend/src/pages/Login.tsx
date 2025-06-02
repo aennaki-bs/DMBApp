@@ -23,6 +23,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { checkApiConnection } from "@/services/api/connectionCheck";
 import ConnectionErrorFallback from "@/components/shared/ConnectionErrorFallback";
 import { useApiConnection } from "@/hooks/useApiConnection";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Animation variants
 const containerVariants = {
@@ -74,7 +75,13 @@ const Login = () => {
     emailOrUsername?: string;
     password?: string;
     general?: string;
-    type?: "auth" | "connection" | "validation" | "server" | "verification" | "deactivated";
+    type?:
+      | "auth"
+      | "connection"
+      | "validation"
+      | "server"
+      | "verification"
+      | "deactivated";
   }>({});
   const [isTouched, setIsTouched] = useState<{
     emailOrUsername: boolean;
@@ -86,6 +93,7 @@ const Login = () => {
 
   // Use the custom hook instead of manual checks
   const { isAvailable, isChecking, checkConnection } = useApiConnection();
+  const { t } = useTranslation();
 
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -102,12 +110,12 @@ const Login = () => {
     } = {};
 
     if (!emailOrUsername) {
-      newErrors.emailOrUsername = "Email or username is required";
+      newErrors.emailOrUsername = t("auth.requiredField");
       newErrors.type = "validation";
     }
 
     if (!password) {
-      newErrors.password = "Password is required";
+      newErrors.password = t("auth.requiredField");
       newErrors.type = "validation";
     }
 
@@ -169,31 +177,47 @@ const Login = () => {
             "SSL connection error. Contact your administrator to configure correct API settings.",
           type: "connection",
         });
-      } else if (error.response?.status === 401 || error.response?.status === 403) {
+      } else if (
+        error.response?.status === 401 ||
+        error.response?.status === 403
+      ) {
         // Authentication errors - use specific backend message
-        const backendMessage = error.response?.data || error.response?.data?.message || error.message;
-        
+        const backendMessage =
+          error.response?.data ||
+          error.response?.data?.message ||
+          error.message;
+
         // Determine the specific error type based on the backend message
         let errorMessage = backendMessage;
-        let errorType = "auth";
-        
-        if (typeof backendMessage === 'string') {
+        let errorType: "auth" | "verification" | "deactivated" = "auth";
+
+        if (typeof backendMessage === "string") {
           if (backendMessage.includes("Invalid email or username")) {
-            errorMessage = "The email or username you entered doesn't exist. Please check and try again.";
+            errorMessage =
+              "The email or username you entered doesn't exist. Please check and try again.";
           } else if (backendMessage.includes("Invalid password")) {
-            errorMessage = "The password you entered is incorrect. Please try again.";
-          } else if (backendMessage.includes("not activated yet") || backendMessage.includes("email for verification")) {
-            errorMessage = "Your account is not activated yet. Please check your email for verification before logging in.";
+            errorMessage =
+              "The password you entered is incorrect. Please try again.";
+          } else if (
+            backendMessage.includes("not activated yet") ||
+            backendMessage.includes("email for verification")
+          ) {
+            errorMessage =
+              "Your account is not activated yet. Please check your email for verification before logging in.";
             errorType = "verification";
-          } else if (backendMessage.includes("Desactivated") || backendMessage.includes("contact an admin")) {
-            errorMessage = "Your account has been deactivated. Please contact an administrator for assistance.";
+          } else if (
+            backendMessage.includes("Desactivated") ||
+            backendMessage.includes("contact an admin")
+          ) {
+            errorMessage =
+              "Your account has been deactivated. Please contact an administrator for assistance.";
             errorType = "deactivated";
           } else {
             // Use the exact backend message if it's a string
             errorMessage = backendMessage;
           }
         }
-        
+
         setErrors({
           general: errorMessage,
           type: errorType,

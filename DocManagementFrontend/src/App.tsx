@@ -301,10 +301,7 @@ const App = () => (
                   <Route
                     path="/responsibility-centres"
                     element={
-                      <ProtectedRoute
-                        requiresManagement
-                        requiredRole={["Admin", "FullUser"]}
-                      >
+                      <ProtectedRoute requiresManagement requiredRole="Admin">
                         <ResponsibilityCentreManagement />
                       </ProtectedRoute>
                     }

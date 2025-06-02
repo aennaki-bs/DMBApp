@@ -152,12 +152,12 @@ export default function Dashboard() {
       {recentDocuments && recentDocuments.length > 0 && (
         <DashboardCard
           title="Recent Documents"
-          headerAction={
-            <Button variant="outline" size="sm" className="border-blue-900/30">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-          }
+          // headerAction={
+          //   <Button variant="outline" size="sm" className="border-blue-900/30">
+          //     <Filter className="h-4 w-4 mr-2" />
+          //     Filter
+          //   </Button>
+          // }
         >
           <RecentDocumentsCard documents={recentDocuments} />
         </DashboardCard>

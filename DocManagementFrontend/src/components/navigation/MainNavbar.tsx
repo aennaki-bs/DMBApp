@@ -114,7 +114,7 @@ export function MainNavbar() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-300 group-hover:text-blue-200 transition-colors duration-200" />
             <Input
               className="pl-9 pr-10 bg-blue-950/40 border-blue-800/30 text-white placeholder:text-blue-300/50 w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md transition-all duration-200 group-hover:border-blue-700/50 group-hover:bg-blue-900/40 backdrop-blur-sm shadow-inner"
-              placeholder="Search pages, documents, workflows..."
+              placeholder="Search pages, navigation, documents..."
               value={searchQuery}
               onChange={handleInputChange}
               onFocus={handleInputFocus}

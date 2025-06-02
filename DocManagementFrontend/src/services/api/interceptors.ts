@@ -47,7 +47,7 @@ const setupResponseInterceptor = () => {
         status: response.status,
         data: response.data
       });
-      
+
       // Dismiss loading toast if it exists
       // @ts-ignore - Access the custom property from the config
       if (response.config.requestId) {
@@ -89,7 +89,7 @@ const setupResponseInterceptor = () => {
         
         return Promise.reject(error);
       }
-      
+
       // Handle SSL errors
       if (error.message?.includes('SSL') || error.code === 'ERR_SSL_PROTOCOL_ERROR') {
         console.error('SSL error detected:', error);

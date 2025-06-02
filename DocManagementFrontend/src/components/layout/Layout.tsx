@@ -10,6 +10,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSettings } from "@/context/SettingsContext";
 import ConnectionStatusIndicator from "@/components/shared/ConnectionStatusIndicator";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 // Predefined background options (same as in Settings)
 const backgroundOptions = [
@@ -131,8 +132,12 @@ export function Layout() {
                 {isMobile && <SidebarTrigger className="p-2" />}
                 <MainNavbar />
 
-                {/* Connection status indicator */}
-                <div className="ml-auto mr-4">
+                {/* Right side items */}
+                <div className="ml-auto flex items-center gap-3">
+                  {/* Language switcher */}
+                  <LanguageSwitcher />
+
+                  {/* Connection status indicator */}
                   <ConnectionStatusIndicator showRetryButton />
                 </div>
               </div>
@@ -142,7 +147,7 @@ export function Layout() {
             <main className="flex-1 overflow-auto p-4">
               <div
                 className={`${
-                  theme === "dark" ? "bg-[#0f1642]/85" : "bg-white/85"
+                  theme === "dark" ? "bg-[#0f1642]/50" : "bg-white/85"
                 } h-full rounded-xl border border-blue-900/30 shadow-lg overflow-auto backdrop-blur-sm`}
               >
                 <Outlet />

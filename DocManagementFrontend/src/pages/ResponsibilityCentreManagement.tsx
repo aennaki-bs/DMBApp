@@ -85,6 +85,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { FixedSizeList as List } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Simple debounce utility
 const debounce = <F extends (...args: any[]) => any>(fn: F, delay: number) => {
@@ -96,6 +99,23 @@ const debounce = <F extends (...args: any[]) => any>(fn: F, delay: number) => {
 };
 
 export default function ResponsibilityCentreManagement() {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  // Check if user is authenticated and has admin role
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (user?.role !== "Admin") {
+      toast.error(t("errors.noPermission"));
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, user, navigate, t]);
+
   const [centres, setCentres] = useState<ResponsibilityCentre[]>([]);
   const [filteredCentres, setFilteredCentres] = useState<
     ResponsibilityCentre[]
@@ -150,9 +170,9 @@ export default function ResponsibilityCentreManagement() {
 
   // Search fields
   const searchFields = [
-    { id: "all", label: "All Fields" },
-    { id: "code", label: "Code" },
-    { id: "descr", label: "Description" },
+    { id: "all", label: t("common.all") + " Fields" },
+    { id: "code", label: t("common.code") },
+    { id: "descr", label: t("common.description") },
   ];
 
   // Fetch responsibility centres on component mount
@@ -934,10 +954,10 @@ export default function ResponsibilityCentreManagement() {
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-white flex items-center">
               <Building2 className="mr-3 h-6 w-6 text-blue-400" />{" "}
-              Responsibility Centres
+              {t("responsibilityCentres.title")}
             </h1>
             <p className="text-sm md:text-base text-gray-400">
-              Manage responsibility centres for your organization
+              {t("responsibilityCentres.subtitle")}
             </p>
           </div>
           <div className="flex gap-2">
@@ -949,7 +969,7 @@ export default function ResponsibilityCentreManagement() {
               className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
             >
               <Plus className="h-4 w-4 mr-1" />
-              New Centre
+              {t("responsibilityCentres.createCentre")}
             </Button>
           </div>
         </div>
@@ -978,7 +998,7 @@ export default function ResponsibilityCentreManagement() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-blue-400" />
             <Input
               type="search"
-              placeholder="Search responsibility centres..."
+              placeholder={t("responsibilityCentres.searchCentres")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500"
@@ -999,31 +1019,30 @@ export default function ResponsibilityCentreManagement() {
       <Card className="bg-[#0f1642] border-blue-900/30 shadow-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl text-white">
-            Responsibility Centres
+            {t("responsibilityCentres.title")}
           </CardTitle>
           <p className="text-sm text-blue-300/70">
             {filteredCentres.length}{" "}
-            {filteredCentres.length === 1 ? "centre" : "centres"}{" "}
-            {searchQuery ? "found" : "total"}
+            {filteredCentres.length === 1
+              ? t("responsibilityCentres.centreCode").toLowerCase()
+              : t("responsibilityCentres.title").toLowerCase()}{" "}
+            {searchQuery ? "found" : t("common.total").toLowerCase()}
           </p>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-10">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="text-blue-300 mt-4">
-                Loading responsibility centres...
-              </p>
+              <p className="text-blue-300 mt-4">{t("common.loading")}</p>
             </div>
           ) : centres.length === 0 ? (
             <div className="text-center py-10 border border-dashed border-blue-900/50 rounded-lg bg-[#182052]/50">
               <Building2 className="h-16 w-16 mx-auto text-blue-800/50 mb-4" />
               <h3 className="text-xl font-medium text-blue-300 mb-2">
-                No Responsibility Centres
+                {t("responsibilityCentres.noCentres")}
               </h3>
               <p className="text-blue-400/70 max-w-md mx-auto mb-6">
-                You haven't created any responsibility centres yet. Create one
-                to get started.
+                {t("responsibilityCentres.createFirstCentre")}
               </p>
               <Button
                 onClick={() => {
@@ -1033,7 +1052,7 @@ export default function ResponsibilityCentreManagement() {
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Create Responsibility Centre
+                {t("responsibilityCentres.createCentre")}
               </Button>
             </div>
           ) : (
@@ -1042,17 +1061,19 @@ export default function ResponsibilityCentreManagement() {
                 <TableHeader>
                   <TableRow className="bg-[#192254] hover:bg-[#192254]">
                     <TableHead className="w-[100px] text-blue-300">
-                      Code
+                      {t("common.code")}
                     </TableHead>
-                    <TableHead className="text-blue-300">Description</TableHead>
-                    <TableHead className="text-blue-300 w-[100px] text-center">
-                      Users
+                    <TableHead className="text-blue-300">
+                      {t("common.description")}
                     </TableHead>
                     <TableHead className="text-blue-300 w-[100px] text-center">
-                      Documents
+                      {t("responsibilityCentres.usersCount")}
+                    </TableHead>
+                    <TableHead className="text-blue-300 w-[100px] text-center">
+                      {t("responsibilityCentres.documentsCount")}
                     </TableHead>
                     <TableHead className="text-blue-300 text-right w-[150px]">
-                      Actions
+                      {t("common.actions")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>

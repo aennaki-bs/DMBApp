@@ -28,9 +28,11 @@ import { UserProfileSection } from "./UserProfileSection";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import approvalService from "@/services/approvalService";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function SidebarNav() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const location = useLocation();
   const isAdmin = user?.role === "Admin";
   const isSimpleUser = user?.role === "SimpleUser";
@@ -64,7 +66,9 @@ export function SidebarNav() {
   // State for the approval submenu
   const [approvalMenuOpen, setApprovalMenuOpen] = useState(isApprovalActive());
   // State for the line elements submenu - open by default if on a line elements page
-  const [lineElementsMenuOpen, setLineElementsMenuOpen] = useState(isLineElementsActive());
+  const [lineElementsMenuOpen, setLineElementsMenuOpen] = useState(
+    isLineElementsActive()
+  );
 
   // Update submenu states when location changes
   useEffect(() => {
@@ -100,7 +104,7 @@ export function SidebarNav() {
               }`}
             >
               <LayoutDashboard className="h-5 w-5" />
-              <span>Dashboard</span>
+              <span>{t("nav.dashboard")}</span>
             </Link>
           </li>
 
@@ -117,7 +121,7 @@ export function SidebarNav() {
               >
                 <div className="flex items-center gap-2">
                   <ClipboardCheck className="h-5 w-5" />
-                  <span>My Approvals</span>
+                  <span>{t("nav.myApprovals")}</span>
                 </div>
                 {pendingApprovals.length > 0 && (
                   <div className="flex items-center justify-center h-5 w-5 text-xs bg-red-500 text-white rounded-full">
@@ -140,7 +144,7 @@ export function SidebarNav() {
                 }`}
               >
                 <Users className="h-5 w-5" />
-                <span>User Management</span>
+                <span>{t("nav.userManagement")}</span>
               </Link>
             </li>
           )}
@@ -156,7 +160,7 @@ export function SidebarNav() {
               }`}
             >
               <FileText className="h-5 w-5" />
-              <span>Documents</span>
+              <span>{t("nav.documents")}</span>
             </Link>
           </li>
 
@@ -173,7 +177,7 @@ export function SidebarNav() {
                   }`}
                 >
                   <Layers className="h-5 w-5" />
-                  <span>Document Types</span>
+                  <span>{t("nav.documentTypes")}</span>
                 </Link>
               </li>
 
@@ -189,7 +193,7 @@ export function SidebarNav() {
                 >
                   <div className="flex items-center gap-2">
                     <Box className="h-5 w-5" />
-                    <span>Line Elements</span>
+                    <span>{t("nav.lineElements")}</span>
                   </div>
                   {lineElementsMenuOpen ? (
                     <ChevronDown className="h-4 w-4" />
@@ -205,7 +209,9 @@ export function SidebarNav() {
                       <Link
                         to="/line-elements-management?tab=elementtypes"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive("/line-elements-management") && new URLSearchParams(location.search).get('tab') === 'elementtypes'
+                          isActive("/line-elements-management") &&
+                          new URLSearchParams(location.search).get("tab") ===
+                            "elementtypes"
                             ? "bg-blue-700/40 text-blue-200"
                             : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                         }`}
@@ -218,7 +224,9 @@ export function SidebarNav() {
                       <Link
                         to="/line-elements-management?tab=items"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive("/line-elements-management") && new URLSearchParams(location.search).get('tab') === 'items'
+                          isActive("/line-elements-management") &&
+                          new URLSearchParams(location.search).get("tab") ===
+                            "items"
                             ? "bg-blue-700/40 text-blue-200"
                             : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                         }`}
@@ -231,7 +239,9 @@ export function SidebarNav() {
                       <Link
                         to="/line-elements-management?tab=unitecodes"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive("/line-elements-management") && new URLSearchParams(location.search).get('tab') === 'unitecodes'
+                          isActive("/line-elements-management") &&
+                          new URLSearchParams(location.search).get("tab") ===
+                            "unitecodes"
                             ? "bg-blue-700/40 text-blue-200"
                             : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                         }`}
@@ -244,7 +254,9 @@ export function SidebarNav() {
                       <Link
                         to="/line-elements-management?tab=generalaccounts"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive("/line-elements-management") && new URLSearchParams(location.search).get('tab') === 'generalaccounts'
+                          isActive("/line-elements-management") &&
+                          new URLSearchParams(location.search).get("tab") ===
+                            "generalaccounts"
                             ? "bg-blue-700/40 text-blue-200"
                             : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                         }`}
@@ -268,7 +280,7 @@ export function SidebarNav() {
                   }`}
                 >
                   <GitBranch className="h-5 w-5" />
-                  <span>Circuits</span>
+                  <span>{t("nav.circuits")}</span>
                 </Link>
               </li>
 
@@ -284,7 +296,7 @@ export function SidebarNav() {
                 >
                   <div className="flex items-center gap-2">
                     <UserCheck className="h-5 w-5" />
-                    <span>Approval</span>
+                    <span>{t("nav.approval")}</span>
                   </div>
                   {approvalMenuOpen ? (
                     <ChevronDown className="h-4 w-4" />
@@ -327,19 +339,21 @@ export function SidebarNav() {
               </li>
 
               {/* Responsibility Centres */}
-              <li>
-                <Link
-                  to="/responsibility-centres"
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/responsibility-centres")
-                      ? "bg-blue-600/40 text-blue-200"
-                      : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
-                  }`}
-                >
-                  <Building2 className="h-5 w-5" />
-                  <span>Responsibility Centres</span>
-                </Link>
-              </li>
+              {isAdmin && (
+                <li>
+                  <Link
+                    to="/responsibility-centres"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive("/responsibility-centres")
+                        ? "bg-blue-600/40 text-blue-200"
+                        : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                    }`}
+                  >
+                    <Building2 className="h-5 w-5" />
+                    <span>{t("nav.responsibilityCentres")}</span>
+                  </Link>
+                </li>
+              )}
             </>
           )}
         </ul>
