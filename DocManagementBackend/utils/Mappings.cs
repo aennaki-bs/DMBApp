@@ -11,7 +11,7 @@ namespace DocManagementBackend.Mappings
         {
             Id = l.Id,
             DocumentId = l.DocumentId,
-            LingeKey = l.LigneKey,
+            LigneKey = l.LigneKey,
             Title = l.Title,
             Article = l.Article,
             Prix = l.Prix,
@@ -130,7 +130,7 @@ namespace DocManagementBackend.Mappings
             {
                 Id = s.Ligne!.Id,
                 DocumentId = s.Ligne.DocumentId,
-                LingeKey = s.Ligne.LigneKey,
+                LigneKey = s.Ligne.LigneKey,
                 Title = s.Ligne.Title,
                 Article = s.Ligne.Article,
                 Prix = s.Ligne.Prix,
@@ -276,6 +276,16 @@ namespace DocManagementBackend.Mappings
                 LastName = d.CreatedBy.LastName,
                 UserType = d.CreatedBy.UserType,
                 Role = d.CreatedBy.Role != null ? d.CreatedBy.Role.RoleName : string.Empty
+            },
+            UpdatedByUserId = d.UpdatedByUserId,
+            UpdatedBy = d.UpdatedBy == null ? null : new DocumentUserDto
+            {
+                Email = d.UpdatedBy.Email,
+                Username = d.UpdatedBy.Username,
+                FirstName = d.UpdatedBy.FirstName,
+                LastName = d.UpdatedBy.LastName,
+                UserType = d.UpdatedBy.UserType,
+                Role = d.UpdatedBy.Role != null ? d.UpdatedBy.Role.RoleName : string.Empty
             },
             LignesCount = d.Lignes.Count,
             SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count),

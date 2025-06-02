@@ -6,6 +6,7 @@ using DocManagementBackend.Models;
 using DocManagementBackend.Mappings;
 using DocManagementBackend.Services;
 using System.Security.Claims;
+using System.Linq;
 
 namespace DocManagementBackend.Controllers
 {
@@ -97,7 +98,10 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("Price HT cannot be negative.");
 
             // Validate document exists
-            var document = await _context.Documents.FindAsync(request.DocumentId);
+            var document = await _context.Documents
+                .Include(d => d.SubType)
+                .Include(d => d.Lignes)
+                .FirstOrDefaultAsync(d => d.Id == request.DocumentId);
             if (document == null)
                 return BadRequest("Invalid DocumentId. Document not found.");
 
@@ -122,7 +126,7 @@ namespace DocManagementBackend.Controllers
             {
                 DocumentId = request.DocumentId,
                 LigneKey = string.IsNullOrWhiteSpace(request.LigneKey) 
-                    ? $"{document.DocumentKey}-L{document.Lignes.Count + 1:000}" 
+                    ? await GenerateUniqueLigneKeyAsync(document)
                     : request.LigneKey,
                 Title = request.Title.Trim(),
                 Article = request.Article.Trim(),
@@ -157,6 +161,10 @@ namespace DocManagementBackend.Controllers
                         elementType.GeneralAccount.LinesCount++;
                     }
                 }
+
+                // Update document to track that a ligne was added
+                document.UpdatedAt = DateTime.UtcNow;
+                document.UpdatedByUserId = authResult.UserId; // Track who added the ligne
 
                 await _context.SaveChangesAsync();
 
@@ -292,6 +300,14 @@ namespace DocManagementBackend.Controllers
                     }
                 }
 
+                // Update document to track that a ligne was modified
+                var document = await _context.Documents.FindAsync(ligne.DocumentId);
+                if (document != null)
+                {
+                    document.UpdatedAt = DateTime.UtcNow;
+                    document.UpdatedByUserId = authResult.UserId; // Track who modified the ligne
+                }
+
                 await _context.SaveChangesAsync();
                 return NoContent();
             }
@@ -331,6 +347,14 @@ namespace DocManagementBackend.Controllers
                     ligne.LignesElementType.GeneralAccount.LinesCount = Math.Max(0, ligne.LignesElementType.GeneralAccount.LinesCount - 1);
                 }
 
+                // Update document to track that a ligne was deleted
+                var document = await _context.Documents.FindAsync(ligne.DocumentId);
+                if (document != null)
+                {
+                    document.UpdatedAt = DateTime.UtcNow;
+                    document.UpdatedByUserId = authResult.UserId; // Track who deleted the ligne
+                }
+
                 await _context.SaveChangesAsync();
                 return NoContent();
             }
@@ -338,6 +362,59 @@ namespace DocManagementBackend.Controllers
             {
                 return StatusCode(500, $"An error occurred while deleting the ligne: {ex.Message}");
             }
+        }
+
+        private async Task<string> GenerateUniqueLigneKeyAsync(Document document)
+        {
+            // Use the document's specific key but remove zero padding from numeric parts
+            var documentKey = document.DocumentKey;
+            
+            // Remove zero padding from document key (e.g., AV2506-0004 becomes AV2506-4)
+            var cleanDocumentKey = RemoveZeroPadding(documentKey);
+            
+            var keyPrefix = $"{cleanDocumentKey}-L";
+            
+            // Find all existing ligne keys for this document that follow the pattern
+            var existingKeys = await _context.Lignes
+                .Where(l => l.DocumentId == document.Id && l.LigneKey.StartsWith(keyPrefix))
+                .Select(l => l.LigneKey)
+                .ToListAsync();
+            
+            // Extract sequence numbers from existing keys
+            var existingSequences = new HashSet<int>();
+            foreach (var key in existingKeys)
+            {
+                var sequencePart = key.Substring(keyPrefix.Length);
+                if (int.TryParse(sequencePart, out int sequence))
+                {
+                    existingSequences.Add(sequence);
+                }
+            }
+            
+            // Find the next available sequence number starting from 1
+            int nextSequence = 1;
+            while (existingSequences.Contains(nextSequence))
+            {
+                nextSequence++;
+            }
+            
+            // Return the unique ligne key without zero padding (e.g., AV2506-4-L1)
+            return $"{keyPrefix}{nextSequence}";
+        }
+
+        private static string RemoveZeroPadding(string documentKey)
+        {
+            // Handle cases like AV2506-0004 -> AV2506-4
+            var parts = documentKey.Split('-');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                // If the part is all digits and starts with 0, remove leading zeros
+                if (parts[i].All(char.IsDigit) && parts[i].Length > 1 && parts[i].StartsWith('0'))
+                {
+                    parts[i] = int.Parse(parts[i]).ToString();
+                }
+            }
+            return string.Join("-", parts);
         }
     }
 }

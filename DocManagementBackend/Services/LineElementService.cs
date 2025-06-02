@@ -197,5 +197,59 @@ namespace DocManagementBackend.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        /// <summary>
+        /// Checks if an element type is currently being used by any lines
+        /// </summary>
+        public async Task<bool> IsElementTypeInUseAsync(int elementTypeId)
+        {
+            return await _context.Lignes
+                .AnyAsync(l => l.LignesElementTypeId == elementTypeId);
+        }
+
+        /// <summary>
+        /// Validates if an element type can be safely updated (doesn't break existing lines)
+        /// </summary>
+        public async Task<(bool CanUpdate, string? ErrorMessage)> CanUpdateElementTypeAsync(int elementTypeId, LignesElementType updatedElementType)
+        {
+            var isInUse = await IsElementTypeInUseAsync(elementTypeId);
+            
+            if (!isInUse)
+            {
+                // If not in use, allow any update
+                return (true, null);
+            }
+
+            var existingElementType = await _context.LignesElementTypes.FindAsync(elementTypeId);
+            if (existingElementType == null)
+            {
+                return (false, "Element type not found");
+            }
+
+            // If in use, only allow safe updates (description, table name)
+            // Prevent changes to critical fields that would break line references
+            if (existingElementType.Code != updatedElementType.Code)
+            {
+                return (false, "Cannot change the code of an element type that is being used by lines");
+            }
+
+            if (existingElementType.TypeElement != updatedElementType.TypeElement)
+            {
+                return (false, "Cannot change the type element of an element type that is being used by lines");
+            }
+
+            if (existingElementType.ItemCode != updatedElementType.ItemCode)
+            {
+                return (false, "Cannot change the item code of an element type that is being used by lines");
+            }
+
+            if (existingElementType.AccountCode != updatedElementType.AccountCode)
+            {
+                return (false, "Cannot change the account code of an element type that is being used by lines");
+            }
+
+            // Only description and table name changes are allowed when in use
+            return (true, null);
+        }
     }
 } 

@@ -107,6 +107,15 @@ namespace DocManagementBackend.Controllers
             sousLigne.SousLigneKey = $"{ligne.LigneKey}SL{ligne.SousLigneCounter++}";
             
             _context.SousLignes.Add(sousLigne);
+
+            // Update document to track that a sous-ligne was added
+            var document = await _context.Documents.FindAsync(ligne.DocumentId);
+            if (document != null)
+            {
+                document.UpdatedAt = DateTime.UtcNow;
+                document.UpdatedByUserId = authResult.UserId; // Track who added the sous-ligne
+            }
+
             await _context.SaveChangesAsync();
             
             var sousLigneDto = await _context.SousLignes
@@ -125,7 +134,9 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var sousLigne = await _context.SousLignes.FindAsync(id);
+            var sousLigne = await _context.SousLignes
+                .Include(s => s.Ligne)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (sousLigne == null)
                 return NotFound("SousLigne not found.");
                 
@@ -136,6 +147,18 @@ namespace DocManagementBackend.Controllers
                 sousLigne.Attribute = updatedSousLigne.Attribute;
                 
             sousLigne.UpdatedAt = DateTime.UtcNow;
+
+            // Update document to track that a sous-ligne was modified
+            if (sousLigne.Ligne != null)
+            {
+                var document = await _context.Documents.FindAsync(sousLigne.Ligne.DocumentId);
+                if (document != null)
+                {
+                    document.UpdatedAt = DateTime.UtcNow;
+                    document.UpdatedByUserId = authResult.UserId; // Track who modified the sous-ligne
+                }
+            }
+
             await _context.SaveChangesAsync();
             
             return Ok("SousLigne updated!");
@@ -148,11 +171,25 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var sousLigne = await _context.SousLignes.FindAsync(id);
+            var sousLigne = await _context.SousLignes
+                .Include(s => s.Ligne)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (sousLigne == null)
                 return NotFound("SousLigne not found.");
                 
             _context.SousLignes.Remove(sousLigne);
+
+            // Update document to track that a sous-ligne was deleted
+            if (sousLigne.Ligne != null)
+            {
+                var document = await _context.Documents.FindAsync(sousLigne.Ligne.DocumentId);
+                if (document != null)
+                {
+                    document.UpdatedAt = DateTime.UtcNow;
+                    document.UpdatedByUserId = authResult.UserId; // Track who deleted the sous-ligne
+                }
+            }
+
             await _context.SaveChangesAsync();
             
             return Ok("SousLigne deleted!");

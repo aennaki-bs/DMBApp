@@ -50,6 +50,20 @@ export default function PendingApprovalsPage() {
   const [comments, setComments] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
 
+  // Helper function to safely format dates
+  const formatDate = (dateValue: string | null | undefined): string => {
+    if (!dateValue || dateValue.trim() === "") return "";
+    
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "";
+    
+    try {
+      return date.toLocaleString();
+    } catch (error) {
+      return "";
+    }
+  };
+
   // Convert userId to number to ensure compatibility with API
   const userIdStr = user?.userId || "0";
   const userIdNum = parseInt(userIdStr, 10);
@@ -325,9 +339,9 @@ export default function PendingApprovalsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredPendingApprovals.map((approval: any) => (
+                    {filteredPendingApprovals.map((approval: any, index: number) => (
                       <TableRow
-                        key={approval.id}
+                        key={`pending-${approval.id || approval.approvalId || approval.documentId}-${index}`}
                         className="border-blue-900/30 hover:bg-blue-900/20"
                       >
                         <TableCell className="font-medium text-blue-100">
@@ -355,9 +369,7 @@ export default function PendingApprovalsPage() {
                           {approval.requestedBy || "Unknown User"}
                         </TableCell>
                         <TableCell className="text-blue-200">
-                          {new Date(
-                            approval.requestDate || approval.requestedAt || ""
-                          ).toLocaleDateString()}
+                          {formatDate(approval.requestDate || approval.requestedAt || "")}
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
@@ -549,7 +561,7 @@ export default function PendingApprovalsPage() {
                                     {approval.status === 'inprogress' ? 'In Progress' : 'Waiting'}
                                   </Badge>
                                   <div className="text-xs text-amber-200/60 mt-1">
-                                    {new Date(approval.requestDate || approval.createdAt || "").toLocaleDateString()}
+                                    {formatDate(approval.requestDate || approval.createdAt || "")}
                                   </div>
                                 </div>
                               </div>
@@ -612,7 +624,7 @@ export default function PendingApprovalsPage() {
                                     Approved
                                   </Badge>
                                   <div className="text-xs text-green-200/60 mt-1">
-                                    {new Date(approval.respondedAt || approval.processedAt || "").toLocaleDateString()}
+                                    {formatDate(approval.respondedAt || approval.processedAt || "")}
                                   </div>
                                 </div>
                               </div>
@@ -626,10 +638,10 @@ export default function PendingApprovalsPage() {
                                 <div className="mt-3 pt-2 border-t border-green-500/20">
                                   <div className="text-xs text-green-200/60 mb-2">Response Details:</div>
                                   {approval.responses.map((response: any, idx: number) => (
-                                    <div key={idx} className="text-xs text-green-200/80 mb-1">
+                                    <div key={`response-${approval.id || approval.approvalId}-${response.userId || response.username}-${idx}`} className="text-xs text-green-200/80 mb-1">
                                       • {response.username}: {response.isApproved ? 'Approved' : 'Rejected'} 
                                       {response.comments && ` - "${response.comments}"`}
-                                      <span className="text-green-200/60"> ({new Date(response.responseDate).toLocaleDateString()})</span>
+                                      <span className="text-green-200/60"> ({formatDate(response.responseDate)})</span>
                                     </div>
                                   ))}
                                 </div>
@@ -688,7 +700,7 @@ export default function PendingApprovalsPage() {
                                     Rejected
                                   </Badge>
                                   <div className="text-xs text-red-200/60 mt-1">
-                                    {new Date(approval.respondedAt || approval.processedAt || "").toLocaleDateString()}
+                                    {formatDate(approval.respondedAt || approval.processedAt || "")}
                                   </div>
                                 </div>
                               </div>
@@ -702,10 +714,10 @@ export default function PendingApprovalsPage() {
                                 <div className="mt-3 pt-2 border-t border-red-500/20">
                                   <div className="text-xs text-red-200/60 mb-2">Response Details:</div>
                                   {approval.responses.map((response: any, idx: number) => (
-                                    <div key={idx} className="text-xs text-red-200/80 mb-1">
+                                    <div key={`response-${approval.id || approval.approvalId}-${response.userId || response.username}-${idx}`} className="text-xs text-red-200/80 mb-1">
                                       • {response.username}: {response.isApproved ? 'Approved' : 'Rejected'} 
                                       {response.comments && ` - "${response.comments}"`}
-                                      <span className="text-red-200/60"> ({new Date(response.responseDate).toLocaleDateString()})</span>
+                                      <span className="text-red-200/60"> ({formatDate(response.responseDate)})</span>
                                     </div>
                                   ))}
                                 </div>

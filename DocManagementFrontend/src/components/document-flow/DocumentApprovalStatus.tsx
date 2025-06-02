@@ -20,22 +20,10 @@ import {
   History,
   ChevronDown,
   ChevronUp,
-  CircleCheck,
-  CircleX
 } from "lucide-react";
 import { ApproverInfo, StepApprovalConfigDetailDto, ApprovalHistory, PendingApproval } from "@/models/approval";
 import approvalService from "@/services/approvalService";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 interface DocumentApprovalStatusProps {
   documentId: number;
@@ -53,10 +41,6 @@ export function DocumentApprovalStatus({
   onToggleApprovalHistory,
 }: DocumentApprovalStatusProps) {
   const { user } = useAuth();
-  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
-  const [responseType, setResponseType] = useState<"approve" | "reject" | null>(null);
-  const [comments, setComments] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     approvalHistory,
@@ -66,7 +50,6 @@ export function DocumentApprovalStatus({
     latestApprovalStatus,
     wasRejected,
     refetchHistory,
-    respondToApproval,
   } = useDocumentApproval(documentId);
 
   // Also fetch pending approvals for this document to get assignment info
@@ -96,93 +79,6 @@ export function DocumentApprovalStatus({
     queryFn: () => approvalService.getStepApprovalConfig(stepIdForConfig!),
     enabled: !!stepIdForConfig,
   });
-
-  // Check if current user can approve this document
-  const canCurrentUserApprove = () => {
-    console.log('=== Checking approval permissions ===');
-    console.log('user:', user?.username);
-    console.log('latestPendingAssignment:', latestPendingAssignment);
-    console.log('stepConfig:', stepConfig);
-    
-    if (!user || !latestPendingAssignment || !stepConfig) {
-      console.log('Missing required data for approval check');
-      return false;
-    }
-
-    // Check if it's a single approver and current user is the approver
-    if (stepConfig.approvalType === "Single" && stepConfig.singleApproverName) {
-      const canApprove = stepConfig.singleApproverName === user.username;
-      console.log('Single approver check - stepConfig.singleApproverName:', stepConfig.singleApproverName, 'user.username:', user.username, 'canApprove:', canApprove);
-      return canApprove;
-    }
-
-    // Check if it's a group approval and current user is in the group
-    if (stepConfig.approvalType === "Group" && stepConfig.groupApprovers) {
-      const userInGroup = stepConfig.groupApprovers.some(
-        approver => approver.username === user.username
-      );
-      
-      if (!userInGroup) return false;
-
-      // Check if user has already responded
-      const userResponse = getUserApprovalStatus(user.username);
-      if (userResponse) return false; // User already responded
-
-      // For sequential approval, check if it's user's turn
-      if (stepConfig.ruleType?.toLowerCase() === 'sequential') {
-        const userIndex = stepConfig.groupApprovers.findIndex(
-          approver => approver.username === user.username
-        );
-        
-        // Count how many users have responded
-        const respondedCount = stepConfig.groupApprovers.filter(
-          approver => getUserApprovalStatus(approver.username)
-        ).length;
-        
-        // User can approve if it's their turn (their index equals responded count)
-        return userIndex === respondedCount;
-      }
-
-      // For "All" or "Any" rules, user can approve if they haven't responded yet
-      return true;
-    }
-
-    return false;
-  };
-
-  // Handle approval response
-  const handleApprovalResponse = async () => {
-    if (!latestPendingAssignment || !responseType) return;
-
-    setIsSubmitting(true);
-    try {
-      const success = await respondToApproval(
-        latestPendingAssignment.approvalId,
-        responseType === "approve",
-        comments
-      );
-
-      if (success) {
-        setIsApprovalDialogOpen(false);
-        setResponseType(null);
-        setComments("");
-        if (onApprovalUpdate) {
-          onApprovalUpdate();
-        }
-      }
-    } catch (error) {
-      console.error("Error responding to approval:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Open approval dialog
-  const openApprovalDialog = (type: "approve" | "reject") => {
-    setResponseType(type);
-    setComments("");
-    setIsApprovalDialogOpen(true);
-  };
 
   // Helper function to get approval status for a specific user
   const getUserApprovalStatus = (username: string) => {
@@ -503,29 +399,6 @@ export function DocumentApprovalStatus({
                     </div>
                   )}
                 </div>
-
-                {/* Approval Action Buttons - Show only if current user can approve */}
-                {canCurrentUserApprove() && (
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-amber-500/20">
-                    <Button
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700 text-white flex-1"
-                      onClick={() => openApprovalDialog("approve")}
-                    >
-                      <CircleCheck className="h-4 w-4 mr-2" />
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="bg-red-900/30 border-red-500/30 text-red-400 hover:bg-red-800/50 hover:text-red-300 flex-1"
-                      onClick={() => openApprovalDialog("reject")}
-                    >
-                      <CircleX className="h-4 w-4 mr-2" />
-                      Reject
-                    </Button>
-                  </div>
-                )}
               </div>
             )}
 
@@ -540,93 +413,6 @@ export function DocumentApprovalStatus({
           </div>
         </CardContent>
       </Card>
-
-      {/* Approval Response Dialog */}
-      <Dialog open={isApprovalDialogOpen} onOpenChange={setIsApprovalDialogOpen}>
-        <DialogContent className="bg-[#0a1033] border-blue-900/50 text-white sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {responseType === "approve" ? "Approve Document" : "Reject Document"}
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              {responseType === "approve"
-                ? "You're about to approve this document. Please provide any comments if needed."
-                : "You're about to reject this document. Please provide a reason for rejection."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            {latestPendingAssignment && (
-              <div className="bg-blue-950/50 p-3 rounded-md border border-blue-900/30">
-                <p className="text-sm text-gray-400">Step</p>
-                <p className="font-medium text-blue-300">
-                  {latestPendingAssignment.stepTitle || "Unknown Step"}
-                </p>
-                <p className="text-sm text-gray-400 mt-2">Requested by</p>
-                <p className="font-medium text-blue-300">
-                  {latestPendingAssignment.requestedBy || "Unknown User"}
-                </p>
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="comments" className="text-sm font-medium text-gray-400">
-                Comments
-              </label>
-              <Textarea
-                id="comments"
-                placeholder={
-                  responseType === "approve"
-                    ? "Optional comments..."
-                    : "Reason for rejection..."
-                }
-                className="mt-1 bg-blue-950/40 border-blue-900/30 text-white"
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                required={responseType === "reject"}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsApprovalDialogOpen(false)}
-              className="bg-transparent border-blue-900/50 text-gray-300 hover:bg-blue-900/20"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              className={
-                responseType === "approve"
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "bg-red-600 hover:bg-red-700 text-white"
-              }
-              onClick={handleApprovalResponse}
-              disabled={isSubmitting || (responseType === "reject" && !comments.trim())}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {responseType === "approve" ? "Approving..." : "Rejecting..."}
-                </>
-              ) : (
-                <>
-                  {responseType === "approve" ? (
-                    <CircleCheck className="mr-2 h-4 w-4" />
-                  ) : (
-                    <CircleX className="mr-2 h-4 w-4" />
-                  )}
-                  {responseType === "approve" ? "Approve" : "Reject"}
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

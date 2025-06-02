@@ -133,6 +133,22 @@ namespace DocManagementBackend.Controllers
             return Ok(dto);
         }
 
+        // GET: api/LignesElementType/5/in-use
+        [HttpGet("{id}/in-use")]
+        public async Task<ActionResult<bool>> IsLignesElementTypeInUse(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var elementType = await _context.LignesElementTypes.FindAsync(id);
+            if (elementType == null)
+                return NotFound("Line element type not found.");
+
+            var isInUse = await _lineElementService.IsElementTypeInUseAsync(id);
+            return Ok(isInUse);
+        }
+
         // POST: api/LignesElementType
         [HttpPost]
         public async Task<ActionResult<LignesElementTypeDto>> CreateLignesElementType([FromBody] CreateLignesElementTypeRequest request)
@@ -296,6 +312,27 @@ namespace DocManagementBackend.Controllers
             var elementType = await _context.LignesElementTypes.FindAsync(id);
             if (elementType == null)
                 return NotFound("Line element type not found.");
+
+            // Create a copy of the element type with proposed changes to validate
+            var proposedElementType = new LignesElementType
+            {
+                Id = elementType.Id,
+                Code = !string.IsNullOrWhiteSpace(request.Code) ? request.Code.ToUpper().Trim() : elementType.Code,
+                TypeElement = !string.IsNullOrWhiteSpace(request.TypeElement) ? request.TypeElement.Trim() : elementType.TypeElement,
+                Description = !string.IsNullOrWhiteSpace(request.Description) ? request.Description.Trim() : elementType.Description,
+                TableName = !string.IsNullOrWhiteSpace(request.TableName) ? request.TableName.Trim() : elementType.TableName,
+                ItemCode = request.ItemCode != null ? (string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim()) : elementType.ItemCode,
+                AccountCode = request.AccountCode != null ? (string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim()) : elementType.AccountCode,
+                CreatedAt = elementType.CreatedAt,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            // Validate if the update can be safely performed
+            var (canUpdate, errorMessage) = await _lineElementService.CanUpdateElementTypeAsync(id, proposedElementType);
+            if (!canUpdate)
+            {
+                return BadRequest(errorMessage);
+            }
 
             // Update fields if provided
             if (!string.IsNullOrWhiteSpace(request.Code))
