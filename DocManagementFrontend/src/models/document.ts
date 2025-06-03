@@ -127,10 +127,8 @@ export interface CreateLigneRequest {
   title: string;
   article: string;
   
-  // Type and element references - FIXED field names
+  // Type reference - backend determines item/account automatically based on this
   lignesElementTypeId?: number;
-  itemCode?: string;
-  generalAccountsCode?: string;
   
   // Pricing fields
   quantity: number;
@@ -145,10 +143,8 @@ export interface UpdateLigneRequest {
   title?: string;
   article?: string;
   
-  // Type and element references - FIXED field names
+  // Type reference - backend determines item/account automatically based on this
   lignesElementTypeId?: number;
-  itemCode?: string;
-  generalAccountsCode?: string;
   
   // Pricing fields
   quantity?: number;

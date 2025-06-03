@@ -274,6 +274,75 @@ const LigneItem = ({
                           </div>
                         )}
                       </div>
+
+                      {/* Associated Item or General Account Details */}
+                      {(ligne.item || ligne.generalAccounts) && (
+                        <div className="mt-4 pt-4 border-t border-purple-500/20">
+                          <h5 className="text-purple-200 font-medium mb-3 flex items-center gap-2">
+                            {ligne.item ? (
+                              <>
+                                <Package className="h-4 w-4 text-emerald-400" />
+                                Associated Item
+                              </>
+                            ) : (
+                              <>
+                                <Calculator className="h-4 w-4 text-violet-400" />
+                                Associated General Account
+                              </>
+                            )}
+                          </h5>
+                          
+                          {ligne.item && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <div className="text-xs text-emerald-400 mb-1">Item Code</div>
+                                <div className="text-sm font-medium text-emerald-300">
+                                  {ligne.item.code}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-emerald-400 mb-1">Description</div>
+                                <div className="text-sm font-medium text-emerald-300">
+                                  {ligne.item.description}
+                                </div>
+                              </div>
+                              {ligne.item.unite && (
+                                <div>
+                                  <div className="text-xs text-emerald-400 mb-1">Unit</div>
+                                  <div className="text-sm font-medium text-emerald-300">
+                                    {ligne.item.unite}
+                                  </div>
+                                </div>
+                              )}
+                              {ligne.item.uniteCodeNavigation && (
+                                <div>
+                                  <div className="text-xs text-emerald-400 mb-1">Unit Description</div>
+                                  <div className="text-sm font-medium text-emerald-300">
+                                    {ligne.item.uniteCodeNavigation.description}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {ligne.generalAccounts && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <div className="text-xs text-violet-400 mb-1">Account Code</div>
+                                <div className="text-sm font-medium text-violet-300">
+                                  {ligne.generalAccounts.code}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-violet-400 mb-1">Description</div>
+                                <div className="text-sm font-medium text-violet-300">
+                                  {ligne.generalAccounts.description}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

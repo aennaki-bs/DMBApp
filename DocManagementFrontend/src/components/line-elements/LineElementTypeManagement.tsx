@@ -377,20 +377,19 @@ const LineElementTypeManagement = ({
 
     try {
       const updateData: UpdateLignesElementTypeRequest = {
-        id: selectedElementType.id,
         code: data.code,
         typeElement: data.typeElement,
         description: data.description,
         tableName: data.tableName,
-        itemId: data.itemCode
-          ? items.find((item) => item.code === data.itemCode)?.id
+        itemCode: data.itemCode
+          ? data.itemCode
           : undefined,
-        generalAccountsId: data.accountCode
-          ? generalAccounts.find((acc) => acc.code === data.accountCode)?.id
+        accountCode: data.accountCode
+          ? data.accountCode
           : undefined,
       };
 
-      await lineElementsService.elementTypes.update(updateData);
+      await lineElementsService.elementTypes.update(selectedElementType.id, updateData);
       toast.success("Element type updated successfully");
       setIsEditDialogOpen(false);
       editForm.reset();
@@ -1048,9 +1047,9 @@ const LineElementTypeManagement = ({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-gray-800 border-gray-600">
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem key="none-item" value="">None</SelectItem>
                             {items.map((item) => (
-                              <SelectItem key={item.id} value={item.code}>
+                              <SelectItem key={`item-${item.id}`} value={item.code}>
                                 {item.code} - {item.designation}
                               </SelectItem>
                             ))}
@@ -1077,9 +1076,9 @@ const LineElementTypeManagement = ({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-gray-800 border-gray-600">
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem key="none-account" value="">None</SelectItem>
                             {generalAccounts.map((account) => (
-                              <SelectItem key={account.id} value={account.code}>
+                              <SelectItem key={`account-${account.id}`} value={account.code}>
                                 {account.code} - {account.designation}
                               </SelectItem>
                             ))}

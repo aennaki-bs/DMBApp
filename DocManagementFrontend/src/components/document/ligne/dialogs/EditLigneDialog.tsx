@@ -42,9 +42,7 @@ interface FormValues {
   ligneKey: string;
   title: string;
   article: string;
-  typeId?: number;
-  itemCode?: string;
-  generalAccountsCode?: string;
+  lignesElementTypeId?: number;
   quantity: number;
   priceHT: number;
   discountPercentage: number;
@@ -109,9 +107,7 @@ const EditLigneDialog = ({
         ligneKey: ligne.ligneKey,
         title: ligne.title,
         article: ligne.article,
-        typeId: ligne.typeId,
-        itemCode: ligne.itemCode,
-        generalAccountsCode: ligne.generalAccountsCode,
+        lignesElementTypeId: ligne.lignesElementTypeId,
         quantity: ligne.quantity,
         priceHT: ligne.priceHT,
         discountPercentage: ligne.discountPercentage,
@@ -153,9 +149,7 @@ const EditLigneDialog = ({
         ligneKey: formValues.ligneKey,
         title: formValues.title,
         article: formValues.article,
-        typeId: formValues.typeId,
-        itemCode: formValues.itemCode,
-        generalAccountsCode: formValues.generalAccountsCode,
+        lignesElementTypeId: formValues.lignesElementTypeId,
         quantity: formValues.quantity,
         priceHT: formValues.priceHT,
         discountPercentage: formValues.discountPercentage,
@@ -261,13 +255,10 @@ const EditLigneDialog = ({
                   Element Type
                 </Label>
                 <Select
-                  value={formValues.typeId?.toString()}
+                  value={formValues.lignesElementTypeId?.toString()}
                   onValueChange={(value) => {
                     const typeId = value ? parseInt(value) : undefined;
-                    handleFieldChange("typeId", typeId);
-                    // Reset related fields when element type changes
-                    handleFieldChange("itemCode", undefined);
-                    handleFieldChange("generalAccountsCode", undefined);
+                    handleFieldChange("lignesElementTypeId", typeId);
                   }}
                 >
                   <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
@@ -283,7 +274,7 @@ const EditLigneDialog = ({
                             'bg-purple-400'
                           }`}></div>
                           <div>
-                            <div className="font-medium">{type.typeElement}</div>
+                            <div className="font-medium">{type.code} - {type.typeElement}</div>
                             <div className="text-sm text-gray-400">{type.description}</div>
                           </div>
                         </div>
@@ -293,102 +284,37 @@ const EditLigneDialog = ({
                 </Select>
               </div>
 
-              {/* Conditional rendering based on selected element type */}
-              {formValues.typeId && (
-                <div className="space-y-4">
-                  {/* Show Items dropdown only if Item type is selected */}
-                  {elementTypes.find(t => t.id === formValues.typeId)?.typeElement === 'Item' && (
-                    <div className="space-y-3 p-4 bg-green-950/20 rounded-lg border border-green-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                        <Label htmlFor="itemCode" className="text-green-200 text-base font-medium">
-                          Select Item
-                        </Label>
-                      </div>
-                      <Select
-                        value={formValues.itemCode || ""}
-                        onValueChange={(value) => handleFieldChange("itemCode", value || undefined)}
-                      >
-                        <SelectTrigger className="bg-green-950/40 border-green-400/20 text-white h-12 text-base">
-                          <SelectValue placeholder="Choose an item" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-green-950 border-green-400/20">
-                          {items.map((item) => (
-                            <SelectItem key={item.code} value={item.code} className="text-white hover:bg-green-800">
-                              <div>
-                                <div className="font-medium">{item.code}</div>
-                                <div className="text-sm text-green-300">{item.description}</div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+              {/* Information card about the selected element type */}
+              {formValues.lignesElementTypeId && (
+                <div className="p-4 bg-blue-950/30 rounded-lg border border-blue-400/20">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-500/20 p-2 rounded-lg">
+                      <Package className="h-5 w-5 text-blue-400" />
                     </div>
-                  )}
-
-                  {/* Show General Accounts dropdown only if General Accounts type is selected */}
-                  {elementTypes.find(t => t.id === formValues.typeId)?.typeElement === 'General Accounts' && (
-                    <div className="space-y-3 p-4 bg-purple-950/20 rounded-lg border border-purple-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-purple-400"></div>
-                        <Label htmlFor="generalAccountsCode" className="text-purple-200 text-base font-medium">
-                          Select General Account
-                        </Label>
-                      </div>
-                      <Select
-                        value={formValues.generalAccountsCode || ""}
-                        onValueChange={(value) => handleFieldChange("generalAccountsCode", value || undefined)}
-                      >
-                        <SelectTrigger className="bg-purple-950/40 border-purple-400/20 text-white h-12 text-base">
-                          <SelectValue placeholder="Choose a general account" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-purple-950 border-purple-400/20">
-                          {generalAccounts.map((account) => (
-                            <SelectItem key={account.code} value={account.code} className="text-white hover:bg-purple-800">
-                              <div>
-                                <div className="font-medium">{account.code}</div>
-                                <div className="text-sm text-purple-300">{account.description}</div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {/* Information card about the selected element type */}
-                  <div className="p-4 bg-blue-950/30 rounded-lg border border-blue-400/20">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-blue-500/20 p-2 rounded-lg">
-                        <Package className="h-5 w-5 text-blue-400" />
-                      </div>
-                      <div>
-                        <h4 className="text-blue-200 font-medium mb-1">
-                          {elementTypes.find(t => t.id === formValues.typeId)?.typeElement}
-                        </h4>
-                        <p className="text-blue-300/70 text-sm">
-                          {elementTypes.find(t => t.id === formValues.typeId)?.description}
-                        </p>
-                        <p className="text-blue-400/60 text-xs mt-2">
-                          Select the specific {elementTypes.find(t => t.id === formValues.typeId)?.typeElement.toLowerCase()} 
-                          that this line item will reference.
-                        </p>
-                      </div>
+                    <div>
+                      <h4 className="text-blue-200 font-medium mb-1">
+                        {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.code} - {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.typeElement}
+                      </h4>
+                      <p className="text-blue-300/70 text-sm">
+                        {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.description}
+                      </p>
+                      <p className="text-blue-400/60 text-xs mt-2">
+                        This element type is automatically linked to its associated {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.typeElement.toLowerCase()}.
+                      </p>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Help text when no element type is selected */}
-              {!formValues.typeId && (
+              {!formValues.lignesElementTypeId && (
                 <div className="p-6 bg-gray-950/30 rounded-lg border border-gray-500/20 text-center">
                   <div className="bg-gray-500/20 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                     <Package className="h-8 w-8 text-gray-400" />
                   </div>
                   <h4 className="text-gray-300 font-medium mb-2">Choose an Element Type</h4>
                   <p className="text-gray-400 text-sm">
-                    Select an element type above to see the available options for linking this line item 
-                    to specific items or general accounts.
+                    Select an element type above. The element type is automatically linked to its associated items or general accounts.
                   </p>
                 </div>
               )}

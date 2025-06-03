@@ -681,7 +681,7 @@ const CreateElementTypeWizard = ({
                               {wizardData.typeElement === "Item"
                                 ? availableItems.map((item) => (
                                     <SelectItem
-                                      key={item.code}
+                                      key={`wizard-item-${item.id}`}
                                       value={item.code}
                                     >
                                       <div className="flex items-center">
@@ -694,7 +694,7 @@ const CreateElementTypeWizard = ({
                                   ))
                                 : availableGeneralAccounts.map((account) => (
                                     <SelectItem
-                                      key={account.code}
+                                      key={`wizard-account-${account.id}`}
                                       value={account.code}
                                     >
                                       <div className="flex items-center">
