@@ -67,6 +67,9 @@ import {
   MoreHorizontal,
   X,
   Users,
+  Eye,
+  Calendar,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -125,6 +128,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
   // Search and filter state
@@ -362,6 +366,11 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
     setIsDeleteDialogOpen(true);
   };
 
+  const openViewDialog = (item: Item) => {
+    setSelectedItem(item);
+    setIsViewDialogOpen(true);
+  };
+
   const clearAllFilters = () => {
     setUniteFilter("any");
     setSearchQuery("");
@@ -589,16 +598,26 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => openViewDialog(item)}
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-green-400 hover:bg-green-500/10"
+                            title="View item details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => openEditDialog(item)}
-                            disabled={!!item.unite}
+                            disabled={item.elementTypesCount > 0}
                             className={`h-8 w-8 p-0 ${
-                              item.unite
+                              item.elementTypesCount > 0
                                 ? "opacity-50 cursor-not-allowed text-gray-400"
                                 : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
                             }`}
                             title={
-                              item.unite
-                                ? "Cannot edit: Item has assigned unit code"
+                              item.elementTypesCount > 0
+                                ? "Cannot edit: Item is associated with element types"
                                 : "Edit item"
                             }
                           >
@@ -608,15 +627,15 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => openDeleteDialog(item)}
-                            disabled={!!item.unite}
+                            disabled={item.elementTypesCount > 0}
                             className={`h-8 w-8 p-0 ${
-                              item.unite
+                              item.elementTypesCount > 0
                                 ? "opacity-50 cursor-not-allowed text-gray-400"
                                 : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
                             }`}
                             title={
-                              item.unite
-                                ? "Cannot delete: Item has assigned unit code"
+                              item.elementTypesCount > 0
+                                ? "Cannot delete: Item is associated with element types"
                                 : "Delete item"
                             }
                           >
@@ -798,6 +817,124 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Details Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-blue-400" />
+              Item Details
+            </DialogTitle>
+            <DialogDescription className="text-blue-300">
+              Complete information about the selected item
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedItem && (
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-blue-300">Code</Label>
+                  <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
+                    <span className="font-mono text-blue-300">{selectedItem.code}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-blue-300">Description</Label>
+                  <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
+                    <span className="text-blue-100">{selectedItem.description}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Unit Information */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-blue-300">Unit Code</Label>
+                <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
+                  {selectedItem.unite ? (
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">
+                        {selectedItem.unite}
+                      </Badge>
+                      {selectedItem.uniteCodeNavigation && (
+                        <span className="text-blue-200 text-sm">
+                          - {selectedItem.uniteCodeNavigation.description}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-blue-400/60">No unit assigned</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Element Types Association */}
+              {selectedItem.elementTypesCount > 0 && (
+                <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Tag className="h-4 w-4 text-amber-400" />
+                    <Label className="text-sm font-medium text-amber-300">Element Types Association</Label>
+                  </div>
+                  <div className="text-sm text-amber-200">
+                    This item is associated with{' '}
+                    <span className="font-bold text-amber-100">
+                      {selectedItem.elementTypesCount}
+                    </span>
+                    {' '}element type{selectedItem.elementTypesCount !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata */}
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <h4 className="text-blue-200 font-medium mb-3 flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Metadata
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-blue-400">Created At</Label>
+                    <div className="text-blue-200">
+                      {new Date(selectedItem.createdAt).toLocaleDateString('fr-FR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-blue-400">Updated At</Label>
+                    <div className="text-blue-200">
+                      {new Date(selectedItem.updatedAt).toLocaleDateString('fr-FR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={() => setIsViewDialogOpen(false)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

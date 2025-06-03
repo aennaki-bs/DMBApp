@@ -479,18 +479,12 @@ namespace DocManagementBackend.Controllers
 
             try
             {
+                // Get document for logging before deletion
                 var document = await _context.Documents.FindAsync(id);
                 if (document == null)
                     return NotFound("Document not found!");
 
-                // Update the document type counter
-                var type = await _context.DocumentTypes.FindAsync(document.TypeId);
-                if (type == null)
-                    return BadRequest("Missing DocumentType");
-                if (type.DocumentCounter > 0)
-                    type.DocumentCounter--;
-
-                // Log the deletion
+                // Log the deletion before actually deleting
                 var logEntry = new LogHistory
                 {
                     UserId = userId,
@@ -503,6 +497,7 @@ namespace DocManagementBackend.Controllers
                 await _context.SaveChangesAsync();
 
                 // Use the workflow service to delete the document and all related records
+                // The workflow service now handles the counter decrement within its transaction
                 bool success = await _workflowService.DeleteDocumentAsync(id);
                 if (!success)
                     return NotFound("Document not found or could not be deleted");
@@ -643,15 +638,53 @@ namespace DocManagementBackend.Controllers
 
             var userId = authResult.UserId;
             var user = authResult.User!;
-            var type = await _context.DocumentTypes.FindAsync(id);
-            if (type == null)
-                return NotFound("No type with this id!");
-            if (type.DocumentCounter > 0)
-                return BadRequest("This type can't be deleted. There are documents registered with!");
-            _context.DocumentTypes.Remove(type);
-            await _context.SaveChangesAsync();
+            
+            try
+            {
+                var type = await _context.DocumentTypes.FindAsync(id);
+                if (type == null)
+                    return NotFound("No document type found with this ID!");
 
-            return Ok("Type deleted!");
+                // Check if there are documents using this type
+                var documentCount = await _context.Documents.CountAsync(d => d.TypeId == id);
+                if (documentCount > 0)
+                    return BadRequest($"This document type cannot be deleted. There are {documentCount} document(s) using this type.");
+
+                // Check if there are subtypes using this document type
+                var subTypeCount = await _context.SubTypes.CountAsync(st => st.DocumentTypeId == id);
+                if (subTypeCount > 0)
+                    return BadRequest($"This document type cannot be deleted. There are {subTypeCount} serie(s) associated with this type.");
+
+                // Check if there are circuits using this document type
+                var circuitCount = await _context.Circuits.CountAsync(c => c.DocumentTypeId == id);
+                if (circuitCount > 0)
+                    return BadRequest($"This document type cannot be deleted. There are {circuitCount} circuit(s) associated with this type.");
+
+                // Update the document counter to match actual count (for data consistency)
+                type.DocumentCounter = documentCount;
+
+                // Safe to delete
+                _context.DocumentTypes.Remove(type);
+                await _context.SaveChangesAsync();
+
+                return Ok("Document type deleted successfully!");
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle any unexpected database constraint violations
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                
+                if (innerMessage.Contains("REFERENCE constraint") || innerMessage.Contains("FOREIGN KEY"))
+                {
+                    return BadRequest("Cannot delete this document type because it is referenced by other records in the system.");
+                }
+                
+                return StatusCode(500, $"Database error occurred while deleting document type: {innerMessage}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An unexpected error occurred while deleting document type: {ex.Message}");
+            }
         }
     }
 }

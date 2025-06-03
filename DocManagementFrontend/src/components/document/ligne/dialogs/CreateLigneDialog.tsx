@@ -10,8 +10,12 @@ import {
   Calculator,
   Percent,
   DollarSign,
+  Hash,
+  Loader2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
-import { Document, CreateLigneRequest } from "@/models/document";
+import { Document, CreateLigneRequest, Ligne } from "@/models/document";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import documentService from "@/services/documentService";
@@ -52,7 +56,7 @@ type Step = 1 | 2 | 3 | 4;
 
 interface FormValues {
   ligneKey: string;
-  title: string;
+  code: string;
   article: string;
   lignesElementTypeId?: number;
   quantity: number;
@@ -61,6 +65,12 @@ interface FormValues {
   discountAmount?: number;
   vatPercentage: number;
   useFixedDiscount: boolean;
+}
+
+interface CodeValidation {
+  isValidating: boolean;
+  isValid: boolean | null;
+  message: string;
 }
 
 const CreateLigneDialog = ({
@@ -72,7 +82,7 @@ const CreateLigneDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formValues, setFormValues] = useState<FormValues>({
     ligneKey: "",
-    title: "",
+    code: "",
     article: "",
     quantity: 1,
     priceHT: 0,
@@ -81,6 +91,12 @@ const CreateLigneDialog = ({
     useFixedDiscount: false,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
+  const [codeValidation, setCodeValidation] = useState<CodeValidation>({
+    isValidating: false,
+    isValid: null,
+    message: "",
+  });
+  const [existingLignes, setExistingLignes] = useState<Ligne[]>([]);
 
   // Dropdown data
   const [elementTypes, setElementTypes] = useState<LignesElementTypeSimple[]>([]);
@@ -89,34 +105,110 @@ const CreateLigneDialog = ({
 
   const queryClient = useQueryClient();
 
-  // Load dropdown data
+  // Load dropdown data and existing lignes
   useEffect(() => {
-    const loadDropdownData = async () => {
+    const loadData = async () => {
       try {
-        const typesData = await lineElementsService.elementTypes.getSimple();
+        const [typesData, lignesData] = await Promise.all([
+          lineElementsService.elementTypes.getSimple(),
+          documentService.getLignesByDocumentId(document.id)
+        ]);
         
         setElementTypes(typesData);
+        setExistingLignes(lignesData);
       } catch (error) {
-        console.error("Failed to load dropdown data:", error);
+        console.error("Failed to load form data:", error);
         toast.error("Failed to load form data");
       }
     };
 
     if (isOpen) {
-      loadDropdownData();
+      loadData();
     }
-  }, [isOpen]);
+  }, [isOpen, document.id]);
 
-  // Backend handles unique line key generation using document key
+  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen && document) {
-      // Reset form when dialog opens, but don't generate ligne key
       setFormValues(prev => ({ 
         ...prev, 
-        ligneKey: '' // Backend generates unique key using document key (e.g., AV2506-4-L1)
+        ligneKey: '', // Backend generates unique key using document key (e.g., AV2506-4-L1)
+        code: '',
       }));
+      setCodeValidation({
+        isValidating: false,
+        isValid: null,
+        message: "",
+      });
     }
   }, [isOpen, document]);
+
+  // Validate code with debouncing (client-side validation)
+  useEffect(() => {
+    const validateCode = async () => {
+      if (!formValues.code.trim()) {
+        setCodeValidation({
+          isValidating: false,
+          isValid: null,
+          message: "",
+        });
+        return;
+      }
+
+      setCodeValidation(prev => ({
+        ...prev,
+        isValidating: true,
+      }));
+
+      // Simulate async validation with a small delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Basic format validation
+      if (formValues.code.length < 2) {
+        setCodeValidation({
+          isValidating: false,
+          isValid: false,
+          message: "Code must be at least 2 characters long",
+        });
+        return;
+      }
+
+      // Check for invalid characters
+      if (!/^[A-Za-z0-9-_]+$/.test(formValues.code)) {
+        setCodeValidation({
+          isValidating: false,
+          isValid: false,
+          message: "Code can only contain letters, numbers, hyphens, and underscores",
+        });
+        return;
+      }
+
+      // Check for uniqueness against existing lignes
+      const isDuplicate = existingLignes.some(ligne => 
+        ligne.ligneKey?.toLowerCase() === formValues.code.toLowerCase() ||
+        ligne.title?.toLowerCase() === formValues.code.toLowerCase()
+      );
+
+      if (isDuplicate) {
+        setCodeValidation({
+          isValidating: false,
+          isValid: false,
+          message: "This code is already used in this document",
+        });
+        return;
+      }
+
+      // Code is valid
+      setCodeValidation({
+        isValidating: false,
+        isValid: true,
+        message: "Code is available",
+      });
+    };
+
+    const timeoutId = setTimeout(validateCode, 500);
+    return () => clearTimeout(timeoutId);
+  }, [formValues.code, existingLignes]);
 
   // Calculate amounts
   const calculateAmounts = () => {
@@ -138,7 +230,7 @@ const CreateLigneDialog = ({
   const resetForm = () => {
     setFormValues({
       ligneKey: "",
-      title: "",
+      code: "",
       article: "",
       quantity: 1,
       priceHT: 0,
@@ -148,6 +240,11 @@ const CreateLigneDialog = ({
     });
     setErrors({});
     setStep(1);
+    setCodeValidation({
+      isValidating: false,
+      isValid: null,
+      message: "",
+    });
   };
 
   const handleClose = () => {
@@ -166,7 +263,13 @@ const CreateLigneDialog = ({
   const validateStep = (stepNumber: number): boolean => {
     switch (stepNumber) {
       case 1:
-        return !!(formValues.title && formValues.title.trim());
+        return !!(
+          formValues.code && 
+          formValues.code.trim() &&
+          codeValidation.isValid === true &&
+          formValues.article &&
+          formValues.article.trim()
+        );
       case 2:
         return !!(formValues.lignesElementTypeId);
       case 3:
@@ -184,6 +287,11 @@ const CreateLigneDialog = ({
   };
 
   const handleNext = () => {
+    if (step === 1 && (!formValues.code.trim() || codeValidation.isValid !== true)) {
+      toast.error("Please enter a valid, unique code before proceeding");
+      return;
+    }
+    
     if (validateStep(step)) {
       setStep((prev) => (prev + 1) as Step);
     }
@@ -200,7 +308,7 @@ const CreateLigneDialog = ({
       setIsSubmitting(true);
       const newLigne: CreateLigneRequest = {
         documentId: document.id,
-        title: formValues.title,
+        title: formValues.code, // Use code as title
         article: formValues.article,
         lignesElementTypeId: formValues.lignesElementTypeId,
         quantity: formValues.quantity,
@@ -208,6 +316,7 @@ const CreateLigneDialog = ({
         discountPercentage: formValues.discountPercentage,
         discountAmount: formValues.useFixedDiscount ? formValues.discountAmount : undefined,
         vatPercentage: formValues.vatPercentage,
+        ligneKey: formValues.code, // Set the code as ligneKey
       };
 
       await documentService.createLigne(newLigne);
@@ -246,7 +355,7 @@ const CreateLigneDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-0 bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border border-blue-500/30 shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto p-0 bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border border-blue-500/30 shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#1e3a8a]/50 to-[#0f172a]/50 border-b border-blue-500/20 py-5 px-6">
           <div className="flex items-center gap-3 mb-1.5">
@@ -263,64 +372,43 @@ const CreateLigneDialog = ({
         </div>
 
         {/* Step Indicators */}
-        <div className="flex items-center justify-between mb-8">
-          {[
-            { number: 1, title: "Basic Info", icon: "📝", description: "Title & Description" },
-            { number: 2, title: "Elements", icon: "🔗", description: "Type & References" },
-            { number: 3, title: "Pricing", icon: "💰", description: "Costs & Discounts" },
-            { number: 4, title: "Review", icon: "✅", description: "Final Check" },
-          ].map((stepInfo, index) => (
-            <div key={stepInfo.number} className="flex items-center">
-              <div className="flex flex-col items-center">
+        <div className="px-6 py-4 border-b border-blue-500/20">
+          <div className="flex items-center justify-between overflow-x-auto">
+            {[
+              { number: 1, title: "Code & Description", icon: Hash },
+              { number: 2, title: "Element Type", icon: Package },
+              { number: 3, title: "Pricing", icon: Calculator },
+              { number: 4, title: "Review", icon: Check },
+            ].map((stepData, index) => (
+              <div key={stepData.number} className="flex items-center flex-shrink-0">
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-all duration-300 ${
-                    step === stepInfo.number
-                      ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-110"
-                      : step > stepInfo.number
-                      ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
-                      : "bg-gray-700 text-gray-400 border-2 border-gray-600"
+                  className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                    step >= stepData.number
+                      ? "bg-blue-500 border-blue-500 text-white"
+                      : "border-blue-400/30 text-blue-400"
                   }`}
                 >
-                  {step > stepInfo.number ? "✓" : stepInfo.icon}
+                  <stepData.icon className="h-4 w-4" />
                 </div>
-                <div className="mt-2 text-center">
-                  <div
-                    className={`text-sm font-medium transition-colors duration-300 ${
-                      step === stepInfo.number
-                        ? "text-blue-300"
-                        : step > stepInfo.number
-                        ? "text-green-300"
-                        : "text-gray-400"
+                <div className="ml-2 min-w-0">
+                  <p
+                    className={`text-xs font-medium whitespace-nowrap ${
+                      step >= stepData.number ? "text-blue-300" : "text-blue-400/70"
                     }`}
                   >
-                    {stepInfo.title}
-                  </div>
-                  <div
-                    className={`text-xs transition-colors duration-300 ${
-                      step === stepInfo.number
-                        ? "text-blue-400/70"
-                        : step > stepInfo.number
-                        ? "text-green-400/70"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {stepInfo.description}
-                  </div>
+                    {stepData.title}
+                  </p>
                 </div>
+                {index < 3 && (
+                  <div
+                    className={`w-8 lg:w-16 h-0.5 mx-2 flex-shrink-0 ${
+                      step > stepData.number ? "bg-blue-500" : "bg-blue-400/30"
+                    }`}
+                  />
+                )}
               </div>
-              {index < 3 && (
-                <div
-                  className={`w-16 h-1 mx-4 rounded-full transition-all duration-500 ${
-                    step > stepInfo.number
-                      ? "bg-green-500 shadow-sm shadow-green-500/30"
-                      : step === stepInfo.number
-                      ? "bg-blue-500/50"
-                      : "bg-gray-600"
-                  }`}
-                />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Form content */}
@@ -333,22 +421,44 @@ const CreateLigneDialog = ({
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {/* Step 1: Basic Information */}
+              {/* Step 1: Code & Description */}
               {step === 1 && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-blue-200">
-                      Title<span className="text-red-400">*</span>
+                    <Label htmlFor="code" className="text-blue-200">
+                      Code<span className="text-red-400">*</span>
                     </Label>
-                    <Input
-                      id="title"
-                      value={formValues.title}
-                      onChange={(e) => handleFieldChange("title", e.target.value)}
-                      placeholder="Enter line title"
-                      className="bg-blue-950/40 border-blue-400/20 text-white placeholder:text-blue-400/50 focus:border-blue-400"
-                    />
-                    {errors.title && (
-                      <p className="text-red-400 text-sm mt-1">{errors.title}</p>
+                    <div className="relative">
+                      <Input
+                        id="code"
+                        value={formValues.code}
+                        onChange={(e) => handleFieldChange("code", e.target.value)}
+                        placeholder="Enter unique line code"
+                        className="bg-blue-950/40 border-blue-400/20 text-white placeholder:text-blue-400/50 focus:border-blue-400 pr-10"
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {codeValidation.isValidating && (
+                          <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />
+                        )}
+                        {!codeValidation.isValidating && codeValidation.isValid === true && (
+                          <CheckCircle className="h-4 w-4 text-green-400" />
+                        )}
+                        {!codeValidation.isValidating && codeValidation.isValid === false && (
+                          <XCircle className="h-4 w-4 text-red-400" />
+                        )}
+                      </div>
+                    </div>
+                    {codeValidation.message && (
+                      <p className={`text-sm mt-1 ${
+                        codeValidation.isValid === true 
+                          ? "text-green-400" 
+                          : "text-red-400"
+                      }`}>
+                        {codeValidation.message}
+                      </p>
+                    )}
+                    {errors.code && (
+                      <p className="text-red-400 text-sm mt-1">{errors.code}</p>
                     )}
                   </div>
                   
@@ -451,7 +561,7 @@ const CreateLigneDialog = ({
               {step === 3 && (
                 <div className="space-y-6">
                   {/* Quantity and Unit Price */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-3 p-4 bg-blue-950/20 rounded-lg border border-blue-500/20">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-3 h-3 rounded-full bg-blue-400"></div>
@@ -516,7 +626,7 @@ const CreateLigneDialog = ({
                       </Label>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {!formValues.useFixedDiscount ? (
                         <div className="space-y-2">
                           <Label htmlFor="discountPercentage" className="text-orange-200">
@@ -581,7 +691,7 @@ const CreateLigneDialog = ({
                       <Calculator className="h-5 w-5 text-gray-400" />
                       Calculation Preview
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                       <div className="text-center p-3 bg-blue-950/30 rounded-lg border border-blue-500/20">
                         <div className="text-blue-300 text-sm font-medium">Amount HT</div>
                         <div className="text-blue-100 text-xl font-bold">
@@ -610,11 +720,11 @@ const CreateLigneDialog = ({
                 <div className="space-y-4">
                   <h3 className="text-blue-200 font-medium mb-4">Review Line Details</h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
                     <div className="space-y-2">
                       <div>
-                        <span className="text-blue-400">Title:</span>
-                        <div className="text-white">{formValues.title}</div>
+                        <span className="text-blue-400">Code:</span>
+                        <div className="text-white">{formValues.code}</div>
                       </div>
                       <div>
                         <span className="text-blue-400">Description:</span>
@@ -645,7 +755,7 @@ const CreateLigneDialog = ({
                   {/* Final calculation */}
                   <div className="p-4 bg-green-950/30 rounded-lg border border-green-400/20">
                     <h4 className="text-green-200 font-medium mb-2">Final Calculation</h4>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="text-center">
                         <div className="text-green-400 text-sm">Amount HT</div>
                         <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().amountHT)}</div>
@@ -690,7 +800,8 @@ const CreateLigneDialog = ({
               {step < 4 ? (
                 <Button
                   onClick={handleNext}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  disabled={step === 1 && (codeValidation.isValidating || codeValidation.isValid !== true)}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>

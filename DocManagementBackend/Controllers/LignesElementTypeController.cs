@@ -45,6 +45,31 @@ namespace DocManagementBackend.Controllers
                 TableName = let.TableName,
                 ItemCode = let.ItemCode,
                 AccountCode = let.AccountCode,
+                Item = let.Item == null ? null : new ItemDto
+                {
+                    Code = let.Item.Code,
+                    Description = let.Item.Description,
+                    Unite = let.Item.Unite,
+                    UniteCodeNavigation = let.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
+                    {
+                        Code = let.Item.UniteCodeNavigation.Code,
+                        Description = let.Item.UniteCodeNavigation.Description,
+                        CreatedAt = let.Item.UniteCodeNavigation.CreatedAt,
+                        UpdatedAt = let.Item.UniteCodeNavigation.UpdatedAt,
+                        ItemsCount = let.Item.UniteCodeNavigation.Items.Count()
+                    },
+                    CreatedAt = let.Item.CreatedAt,
+                    UpdatedAt = let.Item.UpdatedAt,
+                    ElementTypesCount = let.Item.LignesElementTypes.Count()
+                },
+                GeneralAccount = let.GeneralAccount == null ? null : new GeneralAccountsDto
+                {
+                    Code = let.GeneralAccount.Code,
+                    Description = let.GeneralAccount.Description,
+                    CreatedAt = let.GeneralAccount.CreatedAt,
+                    UpdatedAt = let.GeneralAccount.UpdatedAt,
+                    LignesCount = let.GeneralAccount.LignesElementTypes.Count()
+                },
                 CreatedAt = let.CreatedAt,
                 UpdatedAt = let.UpdatedAt
             }).ToList();
@@ -126,6 +151,31 @@ namespace DocManagementBackend.Controllers
                 TableName = elementType.TableName,
                 ItemCode = elementType.ItemCode,
                 AccountCode = elementType.AccountCode,
+                Item = elementType.Item == null ? null : new ItemDto
+                {
+                    Code = elementType.Item.Code,
+                    Description = elementType.Item.Description,
+                    Unite = elementType.Item.Unite,
+                    UniteCodeNavigation = elementType.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
+                    {
+                        Code = elementType.Item.UniteCodeNavigation.Code,
+                        Description = elementType.Item.UniteCodeNavigation.Description,
+                        CreatedAt = elementType.Item.UniteCodeNavigation.CreatedAt,
+                        UpdatedAt = elementType.Item.UniteCodeNavigation.UpdatedAt,
+                        ItemsCount = elementType.Item.UniteCodeNavigation.Items.Count()
+                    },
+                    CreatedAt = elementType.Item.CreatedAt,
+                    UpdatedAt = elementType.Item.UpdatedAt,
+                    ElementTypesCount = elementType.Item.LignesElementTypes.Count()
+                },
+                GeneralAccount = elementType.GeneralAccount == null ? null : new GeneralAccountsDto
+                {
+                    Code = elementType.GeneralAccount.Code,
+                    Description = elementType.GeneralAccount.Description,
+                    CreatedAt = elementType.GeneralAccount.CreatedAt,
+                    UpdatedAt = elementType.GeneralAccount.UpdatedAt,
+                    LignesCount = elementType.GeneralAccount.LignesElementTypes.Count()
+                },
                 CreatedAt = elementType.CreatedAt,
                 UpdatedAt = elementType.UpdatedAt
             };

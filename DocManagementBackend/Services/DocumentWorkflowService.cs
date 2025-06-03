@@ -1287,6 +1287,18 @@ namespace DocManagementBackend.Services
             
             try
             {
+                // Get the document first to access its TypeId for counter decrement
+                var document = await _context.Documents.FindAsync(documentId);
+                if (document == null)
+                    return false; // Document not found
+                
+                // Update the document type counter first (within transaction)
+                var type = await _context.DocumentTypes.FindAsync(document.TypeId);
+                if (type != null && type.DocumentCounter > 0)
+                {
+                    type.DocumentCounter--;
+                }
+
                 // Delete document status records
                 var documentStatuses = await _context.DocumentStatus
                     .Where(ds => ds.DocumentId == documentId)
@@ -1336,11 +1348,7 @@ namespace DocManagementBackend.Services
                 _context.Lignes.RemoveRange(lignes);
 
                 // Delete the document
-                var document = await _context.Documents.FindAsync(documentId);
-                if (document != null)
-                {
-                    _context.Documents.Remove(document);
-                }
+                _context.Documents.Remove(document);
                 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();

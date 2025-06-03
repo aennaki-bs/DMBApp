@@ -110,9 +110,7 @@ const DocumentDetailsTab = ({
           <div className="flex flex-col items-end gap-1">
             <p className="text-sm text-blue-300/80 flex items-center">
               <Clock className="h-4 w-4 mr-1" />
-              Last updated: {new Date(
-                document.updatedAt
-              ).toLocaleDateString()}{" "}
+              Last updated: {new Date(document.updatedAt).toLocaleDateString()}{" "}
               at {new Date(document.updatedAt).toLocaleTimeString()}
             </p>
             {document.updatedBy && (

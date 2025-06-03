@@ -103,28 +103,26 @@ export const SubTypeBasicInfo = () => {
                 name="name"
                 render={({ field }) => (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="flex-shrink-0"
                   >
-                    <FormItem className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <FormLabel className="text-blue-300 text-xs font-medium flex items-center">
-                          Prefix
-                        </FormLabel>
+                    <FormItem>
+                      <FormLabel className="text-sm text-blue-300 font-medium">
+                        Series Prefix
                         <Badge
                           variant="outline"
-                          className="text-[9px] px-1 py-0 h-4 font-normal text-blue-300/70 border-blue-900/50"
+                          className="ml-2 text-[9px] px-1 py-0 h-4 font-normal text-blue-300/70 border-blue-900/50"
                         >
                           Optional
                         </Badge>
-                      </div>
+                      </FormLabel>
+
                       <div className="flex items-center gap-2">
                         <div className="relative group flex-1">
                           <FormControl>
                             <Input
-                              placeholder="Enter series prefix"
+                              placeholder="Enter custom prefix (or leave empty for auto-generation)"
                               {...field}
                               onChange={(e) =>
                                 handleChange("name", e.target.value)
@@ -152,33 +150,40 @@ export const SubTypeBasicInfo = () => {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="bg-blue-900/30 rounded-md p-2 border border-blue-900/40 mt-2"
+                            transition={{ duration: 0.2 }}
+                            className="mt-2 overflow-hidden"
                           >
-                            <div className="text-xs text-blue-300 mb-2 flex items-center">
-                              <Lightbulb className="h-3.5 w-3.5 mr-1.5 text-amber-400/80" />
-                              <span>
-                                Suggested prefixes based on selected dates:
-                              </span>
-                            </div>
-                            <ScrollArea className="h-[200px] pr-2">
-                              <div className="space-y-2">
-                                {suggestions.map((suggestion, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center justify-between bg-blue-900/40 p-2 rounded-md hover:bg-blue-800/40 transition-colors cursor-pointer"
-                                    onClick={() => applySuggestion(suggestion)}
+                            <div className="bg-blue-950/40 border border-blue-900/30 rounded-md p-2">
+                              <p className="text-[10px] text-blue-400/70 mb-2 font-medium">
+                                Popular prefix suggestions:
+                              </p>
+                              <div className="grid grid-cols-3 gap-1 text-[10px]">
+                                {[
+                                  "INV",
+                                  "PO",
+                                  "REQ",
+                                  "REC",
+                                  "PAY",
+                                  "ADJ",
+                                  "TRF",
+                                  "ADJ",
+                                  "RPT",
+                                ].map((suggestion) => (
+                                  <button
+                                    key={suggestion}
+                                    type="button"
+                                    onClick={() => {
+                                      handleChange("name", suggestion);
+                                      setShowSuggestions(false);
+                                    }}
+                                    className="text-blue-300/80 hover:text-blue-200 hover:bg-blue-900/30 px-1 py-0.5 rounded transition-colors text-left"
                                   >
-                                    <span className="text-sm text-white font-medium">
-                                      {suggestion}
-                                    </span>
-                                    <div className="flex items-center text-blue-400 text-xs">
-                                      <Copy className="h-3 w-3 mr-1" />
-                                      Apply
-                                    </div>
-                                  </div>
+                                    {suggestion}
+                                  </button>
                                 ))}
                               </div>
-                            </ScrollArea>
+                            </div>
+
                             <p className="text-[10px] text-blue-400/70 mt-2">
                               Choose a prefix that is meaningful and relates to
                               your document series's purpose and date range.
@@ -208,9 +213,7 @@ export const SubTypeBasicInfo = () => {
               <div className="mt-2 bg-blue-900/20 p-2 rounded-md border border-blue-900/30">
                 <p className="text-xs text-blue-300/90">
                   <Info className="h-3.5 w-3.5 inline-block mr-1 text-blue-400/80" />
-                  Enter an optional prefix that identifies this series. Consider
-                  using a format that includes information about the document
-                  type and date range (e.g., TYN-23 for Type Year Number).
+                  Enter an optional custom prefix to identify this series. If provided, it must be at least 2 characters long and unique within this document type. If left empty, a prefix will be automatically generated based on the document type and dates.
                 </p>
               </div>
             </form>

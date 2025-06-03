@@ -573,9 +573,9 @@ export default function SubTypeDialogs({
                 {selectedSubType?.name}
               </span>
               "?
-              <p className="mt-2 text-red-300/90">
+              <div className="mt-2 text-red-300/90">
                 This action cannot be undone.
-              </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="border-t border-blue-900/30 mt-4 pt-4 flex space-x-2">

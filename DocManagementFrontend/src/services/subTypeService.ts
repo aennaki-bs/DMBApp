@@ -276,6 +276,33 @@ const subTypeService = {
       // UI will show a warning that verification couldn't be completed
       return { overlapping: false };
     }
+  },
+
+  validatePrefix: async (prefix: string, documentTypeId: number, excludeId?: number): Promise<boolean> => {
+    try {
+      // If prefix is empty or null, it's valid (will be auto-generated)
+      if (!prefix || prefix.trim().length === 0) {
+        return true;
+      }
+      
+      // If prefix is too short, it's invalid
+      if (prefix.trim().length < 2) {
+        return false;
+      }
+      
+      const cleanPrefix = prefix.trim();
+      const queryParams = new URLSearchParams({
+        documentTypeId: documentTypeId.toString(),
+        ...(excludeId && { excludeId: excludeId.toString() })
+      });
+      
+      const response = await api.get(`/Series/validate-prefix/${encodeURIComponent(cleanPrefix)}?${queryParams}`);
+      return response.data; // Returns true if unique (valid), false if already exists
+    } catch (error) {
+      console.error(`Error validating prefix "${prefix}" for document type ${documentTypeId}:`, error);
+      // Return false to be safe - don't allow proceeding if validation fails
+      return false;
+    }
   }
 };
 

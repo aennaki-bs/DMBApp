@@ -36,7 +36,7 @@ namespace DocManagementBackend.Controllers
                     Description = ga.Description,
                     CreatedAt = ga.CreatedAt,
                     UpdatedAt = ga.UpdatedAt,
-                    LignesCount = ga.LinesCount
+                    LignesCount = ga.LignesElementTypes.Count()
                 })
                 .OrderBy(ga => ga.Code)
                 .ToListAsync();
@@ -81,7 +81,7 @@ namespace DocManagementBackend.Controllers
                     Description = ga.Description,
                     CreatedAt = ga.CreatedAt,
                     UpdatedAt = ga.UpdatedAt,
-                    LignesCount = ga.LinesCount
+                    LignesCount = ga.LignesElementTypes.Count()
                 })
                 .FirstOrDefaultAsync();
 

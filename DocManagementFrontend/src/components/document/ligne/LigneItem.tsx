@@ -85,14 +85,16 @@ const LigneItem = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="text-lg font-semibold text-white truncate">
-                  {ligne.title}
+                  {ligne.ligneKey || ligne.title}
                 </h3>
-                <Badge
-                  variant="outline"
-                  className="bg-blue-900/30 border-blue-500/30 text-blue-300 font-mono"
-                >
-                  {ligne.ligneKey}
-                </Badge>
+                {ligne.lignesElementType && (
+                  <Badge
+                    variant="outline"
+                    className="bg-purple-900/30 border-purple-500/30 text-purple-300 font-mono text-xs"
+                  >
+                    {ligne.lignesElementType.code}
+                  </Badge>
+                )}
               </div>
 
               <p className="text-sm text-blue-200/80 line-clamp-2 mb-3">

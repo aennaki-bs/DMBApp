@@ -10,6 +10,8 @@ namespace DocManagementBackend.Models
         public string TableName { get; set; } = string.Empty;
         public string? ItemCode { get; set; }
         public string? AccountCode { get; set; }
+        public ItemDto? Item { get; set; }
+        public GeneralAccountsDto? GeneralAccount { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

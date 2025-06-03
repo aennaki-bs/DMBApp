@@ -200,14 +200,14 @@ namespace DocManagementBackend.Controllers
                                   $"It overlaps with '{overlappingSubType.Name}' ({overlappingSubType.StartDate:yyyy-MM-dd} to {overlappingSubType.EndDate:yyyy-MM-dd}).");
 
             // Generate the SubTypeKey
-            // Format example: {TypeKey}{FirstLettersOfName}{YearEnd} = "FAAB25"
             string subTypeKey;
-            if (createSubTypeDto.SubTypeKey != null) {
-                subTypeKey = createSubTypeDto.SubTypeKey;
+            if (!string.IsNullOrWhiteSpace(createSubTypeDto.Name)) {
+                // Use the exact name as SubTypeKey if provided
+                subTypeKey = createSubTypeDto.Name;
             } else {
-                string namePrefix = ""; //string.Join("", createSubTypeDto.Name.Take(2)).ToUpper();
+                // Auto-generate key if no prefix is provided
                 string yearSuffix = createSubTypeDto.EndDate.ToString("yy"); // 2-digit year
-                subTypeKey = $"{documentType.TypeKey}{namePrefix}{yearSuffix}";
+                subTypeKey = $"{documentType.TypeKey}S{yearSuffix}"; // S for Series
             }
 
             // Check if this key already exists, if so, make it unique
@@ -340,39 +340,29 @@ namespace DocManagementBackend.Controllers
                 
                 subType.SubTypeKey = updateSubTypeDto.SubTypeKey;
             }
-            else if (updateSubTypeDto.Name != null || updateSubTypeDto.EndDate.HasValue)
+            else if (updateSubTypeDto.Name != null)
             {
-                // If the name or dates changed but no explicit SubTypeKey provided, auto-generate it
-                var documentType = await _context.DocumentTypes.FindAsync(subType.DocumentTypeId);
-                if (documentType != null)
-                {
-                    string namePrefix = string.Join("", subType.Name.Take(2)).ToUpper();
-                    string yearSuffix = subType.EndDate.ToString("yy"); // 2-digit year
-                    string newSubTypeKey = $"{documentType.TypeKey}{namePrefix}{yearSuffix}";
+                // If name changed but no explicit SubTypeKey provided, use the name as the new key
+                string newSubTypeKey = updateSubTypeDto.Name;
 
-                    // Check if this key already exists, if so, make it unique
-                    bool keyExists = await _context.SubTypes.AnyAsync(st => st.SubTypeKey == newSubTypeKey && st.Id != id);
-                    if (keyExists)
+                // Check if this key already exists, if so, make it unique
+                bool keyExists = await _context.SubTypes.AnyAsync(st => st.SubTypeKey == newSubTypeKey && st.Id != id);
+                if (keyExists)
+                {
+                    // Add a numeric suffix until we find a unique key
+                    int counter = 1;
+                    string tempKey;
+                    do
                     {
-                        // Add a numeric suffix until we find a unique key
-                        int counter = 1;
-                        string tempKey;
-                        do
-                        {
-                            tempKey = $"{newSubTypeKey}{counter}";
-                            keyExists = await _context.SubTypes.AnyAsync(st => st.SubTypeKey == tempKey && st.Id != id);
-                            counter++;
-                        } while (keyExists && counter < 100);
+                        tempKey = $"{newSubTypeKey}-{counter}";
+                        keyExists = await _context.SubTypes.AnyAsync(st => st.SubTypeKey == tempKey && st.Id != id);
+                        counter++;
+                    } while (keyExists && counter < 100);
 
-                        newSubTypeKey = tempKey;
-                    }
+                    newSubTypeKey = tempKey;
+                }
 
-                    subType.SubTypeKey = newSubTypeKey;
-                }
-                else
-                {
-                    return BadRequest("Document type not found.");
-                }
+                subType.SubTypeKey = newSubTypeKey;
             }
 
             try
@@ -410,6 +400,52 @@ namespace DocManagementBackend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("SubType deleted successfully.");
+        }
+
+        // GET: api/Series/validate-prefix/{prefix}?documentTypeId={documentTypeId}&excludeId={excludeId}
+        [HttpGet("validate-prefix/{prefix}")]
+        public async Task<ActionResult<bool>> ValidatePrefix(string prefix, [FromQuery] int documentTypeId, [FromQuery] int? excludeId = null)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                // If prefix is empty or null, it's valid (will be auto-generated)
+                if (string.IsNullOrWhiteSpace(prefix))
+                {
+                    return Ok(true);
+                }
+
+                // If prefix is too short, it's invalid
+                if (prefix.Trim().Length < 2)
+                {
+                    return Ok(false);
+                }
+
+                // Check if any SubType with this document type has a name (prefix) that matches
+                // We'll check both exact match and as part of the generated SubTypeKey
+                var query = _context.SubTypes
+                    .Where(st => st.DocumentTypeId == documentTypeId && 
+                                (st.Name.ToLower() == prefix.ToLower() || 
+                                 st.SubTypeKey.ToLower().StartsWith(prefix.ToLower())));
+
+                // Exclude current subtype if editing
+                if (excludeId.HasValue)
+                {
+                    query = query.Where(st => st.Id != excludeId.Value);
+                }
+
+                var exists = await query.AnyAsync();
+                
+                // Return true if unique (valid), false if already exists
+                return Ok(!exists);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error validating prefix: {ex.Message}");
+            }
         }
     }
 }

@@ -67,6 +67,9 @@ import {
   AlertTriangle,
   Loader2,
   X,
+  Eye,
+  Calendar,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -126,6 +129,7 @@ const GeneralAccountsManagement = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] =
     useState<GeneralAccounts | null>(null);
 
@@ -276,19 +280,38 @@ const GeneralAccountsManagement = ({
   };
 
   const handleBulkDelete = async () => {
+    const results: { code: string; success: boolean; error?: string }[] = [];
+    
     try {
-      await Promise.all(
-        selectedAccounts.map((code) =>
-          lineElementsService.generalAccounts.delete(code)
-        )
-      );
-      toast.success(`${selectedAccounts.length} accounts deleted successfully`);
+      // Process deletions individually to track success/failure
+      for (const code of selectedAccounts) {
+        try {
+          await lineElementsService.generalAccounts.delete(code);
+          results.push({ code, success: true });
+        } catch (error: any) {
+          const errorMessage = error.response?.data || error.message || "Unknown error";
+          results.push({ code, success: false, error: errorMessage });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      const failureCount = results.filter(r => !r.success).length;
+
+      if (successCount > 0 && failureCount === 0) {
+        toast.success(`${successCount} account(s) deleted successfully`);
+      } else if (successCount > 0 && failureCount > 0) {
+        toast.warning(`${successCount} account(s) deleted, ${failureCount} failed. Some accounts may not exist or are in use.`);
+      } else {
+        toast.error(`Failed to delete all ${failureCount} account(s). They may not exist or are in use.`);
+      }
+
+      // Clear selection and refresh data regardless of partial failures
       setSelectedAccounts([]);
       setIsBulkDeleteDialogOpen(false);
       fetchData();
     } catch (error) {
       console.error("Failed to delete accounts:", error);
-      toast.error("Failed to delete some accounts");
+      toast.error("An unexpected error occurred during bulk deletion");
     }
   };
 
@@ -369,6 +392,11 @@ const GeneralAccountsManagement = ({
   const openDeleteDialog = (account: GeneralAccounts) => {
     setSelectedAccount(account);
     setIsDeleteDialogOpen(true);
+  };
+
+  const openViewDialog = (account: GeneralAccounts) => {
+    setSelectedAccount(account);
+    setIsViewDialogOpen(true);
   };
 
   const clearAllFilters = () => {
@@ -481,9 +509,6 @@ const GeneralAccountsManagement = ({
                         Description {renderSortIcon("description")}
                       </div>
                     </TableHead>
-                    <TableHead className="text-blue-200 font-medium">
-                      Lines Count
-                    </TableHead>
                     <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
@@ -513,21 +538,33 @@ const GeneralAccountsManagement = ({
                       <TableCell className="text-blue-200 max-w-xs truncate">
                         {account.description}
                       </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className="bg-violet-500/10 text-violet-400 border-violet-500/30"
-                        >
-                          {account.lignesCount || 0} lines
-                        </Badge>
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => openViewDialog(account)}
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-green-400 hover:bg-green-500/10"
+                            title="View general account details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => openEditDialog(account)}
-                            className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                            disabled={account.lignesCount > 0}
+                            className={`h-8 w-8 p-0 ${
+                              account.lignesCount > 0
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                            }`}
+                            title={
+                              account.lignesCount > 0
+                                ? "Cannot edit: Account is associated with element types"
+                                : "Edit general account"
+                            }
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -543,7 +580,7 @@ const GeneralAccountsManagement = ({
                             }`}
                             title={
                               account.lignesCount > 0
-                                ? "Cannot delete: Account is referenced by line elements"
+                                ? "Cannot delete: Account is associated with element types"
                                 : "Delete general account"
                             }
                           >
@@ -722,6 +759,103 @@ const GeneralAccountsManagement = ({
         </DialogContent>
       </Dialog>
 
+      {/* View Details Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-blue-400" />
+              General Account Details
+            </DialogTitle>
+            <DialogDescription className="text-blue-300">
+              Complete information about the selected general account
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedAccount && (
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-blue-300">Code</Label>
+                  <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
+                    <span className="font-mono text-blue-300">{selectedAccount.code}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-blue-300">Description</Label>
+                  <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
+                    <span className="text-blue-100">{selectedAccount.description}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Element Types Association */}
+              {selectedAccount.lignesCount > 0 && (
+                <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Tag className="h-4 w-4 text-amber-400" />
+                    <Label className="text-sm font-medium text-amber-300">Element Types Association</Label>
+                  </div>
+                  <div className="text-sm text-amber-200">
+                    This account is associated with{' '}
+                    <span className="font-bold text-amber-100">
+                      {selectedAccount.lignesCount}
+                    </span>
+                    {' '}element type{selectedAccount.lignesCount !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata */}
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <h4 className="text-blue-200 font-medium mb-3 flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Metadata
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-blue-400">Created At</Label>
+                    <div className="text-blue-200">
+                      {new Date(selectedAccount.createdAt).toLocaleDateString('fr-FR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-blue-400">Updated At</Label>
+                    <div className="text-blue-200">
+                      {new Date(selectedAccount.updatedAt).toLocaleDateString('fr-FR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={() => setIsViewDialogOpen(false)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Dialog */}
       <AlertDialog
         open={isDeleteDialogOpen}
@@ -741,8 +875,7 @@ const GeneralAccountsManagement = ({
             <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
               <p className="text-red-400 flex items-center">
                 <AlertTriangle className="mr-1 h-4 w-4" />
-                This account is used in {selectedAccount.lignesCount} document
-                lines and cannot be deleted.
+                This account is used in {selectedAccount.lignesCount} element type{selectedAccount.lignesCount !== 1 ? 's' : ''} and cannot be deleted.
               </p>
             </div>
           )}

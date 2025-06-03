@@ -135,17 +135,24 @@ export default function CreateCircuitStepDocumentType({
                     )}
                   </div>
                   {!disabled && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 hover:bg-blue-800/40"
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className="h-6 w-6 p-0 hover:bg-blue-800/40 rounded-sm flex items-center justify-center cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleClearSelection();
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleClearSelection();
+                        }
+                      }}
                     >
                       <X className="h-3 w-3 text-blue-300" />
-                    </Button>
+                    </div>
                   )}
                 </div>
               ) : (

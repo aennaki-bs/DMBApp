@@ -719,7 +719,17 @@ const UniteCodesManagement = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(uniteCode)}
-                            className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                            disabled={uniteCode.itemsCount > 0}
+                            className={`h-8 w-8 p-0 ${
+                              uniteCode.itemsCount > 0
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                            }`}
+                            title={
+                              uniteCode.itemsCount > 0
+                                ? "Cannot edit: Unit is used by items"
+                                : "Edit unit code"
+                            }
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -801,13 +811,34 @@ const UniteCodesManagement = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                    disabled={selectedUniteCodes.some((code) => {
+                      const uniteCode = filteredAndSortedUniteCodes.find(uc => uc.code === code);
+                      return uniteCode && uniteCode.itemsCount > 0;
+                    })}
+                    className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => setIsBulkDeleteDialogOpen(true)}
+                    title={
+                      selectedUniteCodes.some((code) => {
+                        const uniteCode = filteredAndSortedUniteCodes.find(uc => uc.code === code);
+                        return uniteCode && uniteCode.itemsCount > 0;
+                      })
+                        ? "Some selected unit codes are used by items"
+                        : "Delete selected unit codes"
+                    }
                   >
                     <Trash2 className="w-4 h-4 mr-1.5" />
                     Delete
                   </Button>
                 </div>
+                {selectedUniteCodes.some((code) => {
+                  const uniteCode = filteredAndSortedUniteCodes.find(uc => uc.code === code);
+                  return uniteCode && uniteCode.itemsCount > 0;
+                }) && (
+                  <div className="flex items-center gap-1 text-amber-400 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Some unit codes are used by items</span>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

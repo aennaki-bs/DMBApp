@@ -87,6 +87,7 @@ import {
   ArrowUp,
   ArrowDown,
   X,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -153,6 +154,8 @@ const LineElementTypeManagement = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
   const [selectedElementType, setSelectedElementType] =
     useState<LignesElementType | null>(null);
   const [elementTypesInUse, setElementTypesInUse] = useState<Set<number>>(
@@ -451,6 +454,11 @@ const LineElementTypeManagement = ({
     setIsDeleteDialogOpen(true);
   };
 
+  const openViewDialog = (elementType: LignesElementType) => {
+    setSelectedElementType(elementType);
+    setIsViewDialogOpen(true);
+  };
+
   const clearAllFilters = () => {
     setSearchQuery("");
     setSearchField("all");
@@ -490,11 +498,8 @@ const LineElementTypeManagement = ({
     if (selectedElementTypes.length === 0) return null;
 
     const selectedInUse = selectedElementTypes.some((id) => {
-      const elementType = elementTypes.find((et) => et.id === id);
-      return (
-        elementTypesInUse.has(id) ||
-        (elementType && (elementType.item || elementType.generalAccount))
-      );
+      // Only check if element type is actually used by lines
+      return elementTypesInUse.has(id);
     });
 
     return createPortal(
@@ -568,7 +573,7 @@ const LineElementTypeManagement = ({
             {selectedInUse && (
               <div className="flex items-center gap-1 text-amber-400 text-sm">
                 <AlertTriangle className="h-4 w-4" />
-                <span>Some items are in use</span>
+                <span>Some items are used by lines</span>
               </div>
             )}
           </CardContent>
@@ -579,535 +584,782 @@ const LineElementTypeManagement = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Element Types</h2>
-          <p className="text-gray-400">
-            Manage line element types, items, and general accounts
-          </p>
-        </div>
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Element Types</h2>
+            <p className="text-gray-400">
+              Manage line element types, items, and general accounts
+            </p>
+          </div>
 
-        <CreateElementTypeWizard
-          onSuccess={fetchData}
-          trigger={
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setIsCreateWizardOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg border border-blue-500"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Element Type
             </Button>
-          }
-        />
-      </div>
+          </div>
+        </div>
 
-      {/* Search and Filters */}
-      <Card className="bg-gray-900/50 border-gray-700/50">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search element types..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-800/50 border-gray-600/50 text-white"
-              />
-            </div>
+        {/* Search and Filters */}
+        <Card className="bg-gray-900/50 border-gray-700/50">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search element types..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-gray-800/50 border-gray-600/50 text-white"
+                />
+              </div>
 
-            <div className="flex items-center gap-2">
-              <Select value={searchField} onValueChange={setSearchField}>
-                <SelectTrigger className="w-40 bg-gray-800/50 border-gray-600/50 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-600">
-                  {ELEMENT_TYPE_SEARCH_FIELDS.map((field) => (
-                    <SelectItem key={field.id} value={field.id}>
-                      {field.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select value={searchField} onValueChange={setSearchField}>
+                  <SelectTrigger className="w-40 bg-gray-800/50 border-gray-600/50 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-600">
+                    {ELEMENT_TYPE_SEARCH_FIELDS.map((field) => (
+                      <SelectItem key={field.id} value={field.id}>
+                        {field.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="bg-gray-800/50 border-gray-600/50 text-white hover:bg-gray-700/50"
+                <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="bg-gray-800/50 border-gray-600/50 text-white hover:bg-gray-700/50"
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filters
+                      {typeFilter !== "any" && (
+                        <Badge className="ml-2 bg-blue-500/20 text-blue-300 text-xs">
+                          1
+                        </Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-64 bg-gray-800 border-gray-600"
+                    align="end"
                   >
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filters
-                    {typeFilter !== "any" && (
-                      <Badge className="ml-2 bg-blue-500/20 text-blue-300 text-xs">
-                        1
-                      </Badge>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-64 bg-gray-800 border-gray-600"
-                  align="end"
-                >
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-200">
-                        Type Element
-                      </Label>
-                      <Select value={typeFilter} onValueChange={setTypeFilter}>
-                        <SelectTrigger className="mt-1 bg-gray-700/50 border-gray-600/50 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-700 border-gray-600">
-                          <SelectItem value="any">Any Type</SelectItem>
-                          {availableTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-200">
+                          Type Element
+                        </Label>
+                        <Select value={typeFilter} onValueChange={setTypeFilter}>
+                          <SelectTrigger className="mt-1 bg-gray-700/50 border-gray-600/50 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-700 border-gray-600">
+                            <SelectItem value="any">Any Type</SelectItem>
+                            {availableTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <div className="flex justify-between">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={clearAllFilters}
-                        className="bg-gray-700/50 border-gray-600/50 text-gray-300 hover:bg-gray-600/50"
+                      <div className="flex justify-between">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearAllFilters}
+                          className="bg-gray-700/50 border-gray-600/50 text-gray-300 hover:bg-gray-600/50"
+                        >
+                          Clear All
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => setFilterOpen(false)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Results Summary */}
+        <div className="flex items-center justify-between text-sm text-gray-400">
+          <div>
+            Showing {filteredAndSortedElementTypes.length} of{" "}
+            {elementTypes.length} element types
+            {(searchQuery || typeFilter !== "any") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="ml-2 h-auto p-1 text-blue-400 hover:text-blue-300"
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-4">
+            {selectedElementTypes.length > 0 && (
+              <div className="text-blue-400">
+                {selectedElementTypes.length} selected
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Element Types Table */}
+        <Card className="bg-gray-900/50 border-gray-700/50">
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              </div>
+            ) : filteredAndSortedElementTypes.length === 0 ? (
+              <div className="text-center py-12">
+                <Database className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-300 mb-2">
+                  No element types found
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  {searchQuery || typeFilter !== "any"
+                    ? "No element types match your current filters."
+                    : "Get started by creating your first element type."}
+                </p>
+                {!(searchQuery || typeFilter !== "any") && (
+                  <Button 
+                    onClick={() => setIsCreateWizardOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Element Type
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <ScrollArea className="h-[600px]">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-gray-800/80 backdrop-blur-sm z-10">
+                    <TableRow className="border-gray-700/50">
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={
+                            selectedElementTypes.length ===
+                            filteredAndSortedElementTypes.length
+                          }
+                          onCheckedChange={handleSelectAll}
+                          className="border-gray-500"
+                        />
+                      </TableHead>
+                      <TableHead
+                        className={headerClass("code")}
+                        onClick={() => handleSort("code")}
                       >
-                        Clear All
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => setFilterOpen(false)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        <div className="flex items-center gap-2">
+                          Code
+                          {renderSortIcon("code")}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className={headerClass("typeElement")}
+                        onClick={() => handleSort("typeElement")}
                       >
-                        Apply
-                      </Button>
+                        <div className="flex items-center gap-2">
+                          Type Element
+                          {renderSortIcon("typeElement")}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className={headerClass("description")}
+                        onClick={() => handleSort("description")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Description
+                          {renderSortIcon("description")}
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className={headerClass("tableName")}
+                        onClick={() => handleSort("tableName")}
+                      >
+                        <div className="flex items-center gap-2">
+                          Table Name
+                          {renderSortIcon("tableName")}
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-gray-300 w-20">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAndSortedElementTypes.map((elementType) => {
+                      const isInUse = elementTypesInUse.has(elementType.id);
+                      // Only disable if actually used by lines, not if it has assigned items/accounts
+                      const shouldDisable = isInUse;
+
+                      return (
+                        <TableRow
+                          key={elementType.id}
+                          className="border-gray-700/50 hover:bg-gray-800/30"
+                        >
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedElementTypes.includes(
+                                elementType.id
+                              )}
+                              onCheckedChange={() =>
+                                handleSelectElementType(elementType.id)
+                              }
+                              className="border-gray-500"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-mono text-blue-300">
+                              {elementType.code}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {getTypeIcon(elementType.typeElement)}
+                              <Badge
+                                className={getTypeBadgeColor(
+                                  elementType.typeElement
+                                )}
+                              >
+                                {elementType.typeElement}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-gray-200 max-w-xs truncate">
+                              {elementType.description}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-mono text-gray-300">
+                              {elementType.tableName}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openViewDialog(elementType)}
+                                className="h-8 w-8 p-0 text-gray-400 hover:text-green-400 hover:bg-green-500/10"
+                                title="View element type details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditDialog(elementType)}
+                                disabled={shouldDisable}
+                                className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={
+                                  shouldDisable
+                                    ? "Cannot edit: Element type is used by lines"
+                                    : "Edit element type"
+                                }
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+
+                              <AlertDialog
+                                open={
+                                  isDeleteDialogOpen &&
+                                  selectedElementType?.id === elementType.id
+                                }
+                                onOpenChange={(open) => {
+                                  if (!open) {
+                                    setIsDeleteDialogOpen(false);
+                                    setSelectedElementType(null);
+                                  }
+                                }}
+                              >
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDeleteDialog(elementType)}
+                                    disabled={shouldDisable}
+                                    className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={
+                                      shouldDisable
+                                        ? "Cannot delete: Element type is used by lines"
+                                        : "Delete element type"
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="bg-gray-900/95 backdrop-blur-sm border-red-500/20">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-red-400">
+                                      Delete Element Type
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription className="text-gray-300">
+                                      Are you sure you want to delete the element
+                                      type "{elementType.code}"? This action
+                                      cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600">
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={handleDeleteElementType}
+                                      className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="bg-gray-900/95 backdrop-blur-sm border-gray-700/50 text-white max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Element Type</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Update the element type details below.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...editForm}>
+              <form
+                onSubmit={editForm.handleSubmit(handleEditElementType)}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Code</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            className="bg-gray-800/50 border-gray-600/50 text-white"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="typeElement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type Element</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            className="bg-gray-800/50 border-gray-600/50 text-white"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={editForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="bg-gray-800/50 border-gray-600/50 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="tableName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Table Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="bg-gray-800/50 border-gray-600/50 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="itemCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Item Code (Optional)</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="bg-gray-800/50 border-gray-600/50 text-white">
+                              <SelectValue placeholder="Select item..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-gray-800 border-gray-600">
+                            <SelectItem value="">None</SelectItem>
+                            {items.map((item) => (
+                              <SelectItem key={item.id} value={item.code}>
+                                {item.code} - {item.designation}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="accountCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Code (Optional)</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="bg-gray-800/50 border-gray-600/50 text-white">
+                              <SelectValue placeholder="Select account..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-gray-800 border-gray-600">
+                            <SelectItem value="">None</SelectItem>
+                            {generalAccounts.map((account) => (
+                              <SelectItem key={account.id} value={account.code}>
+                                {account.code} - {account.designation}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditDialogOpen(false)}
+                    className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Update Element Type
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Details Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="bg-gray-900/95 backdrop-blur-sm border-gray-700/50 text-white max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-blue-400" />
+                Element Type Details
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Complete information about the selected element type
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedElementType && (
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-blue-300">Code</Label>
+                    <div className="bg-gray-800/50 border border-gray-600/50 rounded-md p-3">
+                      <span className="font-mono text-blue-300">{selectedElementType.code}</span>
                     </div>
                   </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Results Summary */}
-      <div className="flex items-center justify-between text-sm text-gray-400">
-        <div>
-          Showing {filteredAndSortedElementTypes.length} of{" "}
-          {elementTypes.length} element types
-          {(searchQuery || typeFilter !== "any") && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAllFilters}
-              className="ml-2 h-auto p-1 text-blue-400 hover:text-blue-300"
-            >
-              Clear filters
-            </Button>
-          )}
-        </div>
-        {selectedElementTypes.length > 0 && (
-          <div className="text-blue-400">
-            {selectedElementTypes.length} selected
-          </div>
-        )}
-      </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-blue-300">Type Element</Label>
+                    <div className="bg-gray-800/50 border border-gray-600/50 rounded-md p-3 flex items-center gap-2">
+                      {getTypeIcon(selectedElementType.typeElement)}
+                      <Badge className={getTypeBadgeColor(selectedElementType.typeElement)}>
+                        {selectedElementType.typeElement}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Element Types Table */}
-      <Card className="bg-gray-900/50 border-gray-700/50">
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-            </div>
-          ) : filteredAndSortedElementTypes.length === 0 ? (
-            <div className="text-center py-12">
-              <Database className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-300 mb-2">
-                No element types found
-              </h3>
-              <p className="text-gray-500 mb-4">
-                {searchQuery || typeFilter !== "any"
-                  ? "No element types match your current filters."
-                  : "Get started by creating your first element type."}
-              </p>
-              {!(searchQuery || typeFilter !== "any") && (
-                <CreateElementTypeWizard
-                  onSuccess={fetchData}
-                  trigger={
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Element Type
-                    </Button>
-                  }
-                />
-              )}
-            </div>
-          ) : (
-            <ScrollArea className="h-[600px]">
-              <Table>
-                <TableHeader className="sticky top-0 bg-gray-800/80 backdrop-blur-sm z-10">
-                  <TableRow className="border-gray-700/50">
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={
-                          selectedElementTypes.length ===
-                          filteredAndSortedElementTypes.length
-                        }
-                        onCheckedChange={handleSelectAll}
-                        className="border-gray-500"
-                      />
-                    </TableHead>
-                    <TableHead
-                      className={headerClass("code")}
-                      onClick={() => handleSort("code")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Code
-                        {renderSortIcon("code")}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className={headerClass("typeElement")}
-                      onClick={() => handleSort("typeElement")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Type Element
-                        {renderSortIcon("typeElement")}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className={headerClass("description")}
-                      onClick={() => handleSort("description")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Description
-                        {renderSortIcon("description")}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className={headerClass("tableName")}
-                      onClick={() => handleSort("tableName")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Table Name
-                        {renderSortIcon("tableName")}
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-gray-300 w-20">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedElementTypes.map((elementType) => {
-                    const isInUse = elementTypesInUse.has(elementType.id);
-                    const hasAssignedItemOrAccount =
-                      elementType.item || elementType.generalAccount;
-                    const shouldDisable = isInUse || hasAssignedItemOrAccount;
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-blue-300">Description</Label>
+                  <div className="bg-gray-800/50 border border-gray-600/50 rounded-md p-3">
+                    <span className="text-gray-200">{selectedElementType.description}</span>
+                  </div>
+                </div>
 
-                    return (
-                      <TableRow
-                        key={elementType.id}
-                        className="border-gray-700/50 hover:bg-gray-800/30"
-                      >
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedElementTypes.includes(
-                              elementType.id
-                            )}
-                            onCheckedChange={() =>
-                              handleSelectElementType(elementType.id)
-                            }
-                            className="border-gray-500"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-mono text-blue-300">
-                            {elementType.code}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-blue-300">Table Name</Label>
+                  <div className="bg-gray-800/50 border border-gray-600/50 rounded-md p-3">
+                    <span className="font-mono text-gray-200">{selectedElementType.tableName}</span>
+                  </div>
+                </div>
+
+                {/* Associated Item or Account */}
+                {(selectedElementType.item || selectedElementType.generalAccount) && (
+                  <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                    <h4 className="text-blue-200 font-medium mb-3 flex items-center gap-2">
+                      <Tag className="h-4 w-4" />
+                      Associated {selectedElementType.item ? 'Item' : 'General Account'}
+                    </h4>
+                    
+                    {selectedElementType.item && (
+                      <div className="space-y-4">
+                        {/* Item Basic Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-blue-400">Item Code</Label>
+                            <div className="bg-blue-950/30 border border-blue-500/20 rounded-md p-2">
+                              <span className="text-sm font-mono font-medium text-blue-300">
+                                {selectedElementType.item.code}
+                              </span>
+                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getTypeIcon(elementType.typeElement)}
-                            <Badge
-                              className={getTypeBadgeColor(
-                                elementType.typeElement
-                              )}
-                            >
-                              {elementType.typeElement}
-                            </Badge>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-blue-400">Description</Label>
+                            <div className="bg-blue-950/30 border border-blue-500/20 rounded-md p-2">
+                              <span className="text-sm font-medium text-blue-300">
+                                {selectedElementType.item.description}
+                              </span>
+                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-gray-200 max-w-xs truncate">
-                            {elementType.description}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-mono text-gray-300">
-                            {elementType.tableName}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditDialog(elementType)}
-                              disabled={shouldDisable}
-                              className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                              title={
-                                shouldDisable
-                                  ? "Cannot edit: Element type is in use or has assigned items/accounts"
-                                  : "Edit element type"
-                              }
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                        </div>
 
-                            <AlertDialog
-                              open={
-                                isDeleteDialogOpen &&
-                                selectedElementType?.id === elementType.id
-                              }
-                              onOpenChange={(open) => {
-                                if (!open) {
-                                  setIsDeleteDialogOpen(false);
-                                  setSelectedElementType(null);
-                                }
-                              }}
-                            >
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openDeleteDialog(elementType)}
-                                  disabled={shouldDisable}
-                                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title={
-                                    shouldDisable
-                                      ? "Cannot delete: Element type is in use or has assigned items/accounts"
-                                      : "Delete element type"
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-gray-900/95 backdrop-blur-sm border-red-500/20">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle className="text-red-400">
-                                    Delete Element Type
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription className="text-gray-300">
-                                    Are you sure you want to delete the element
-                                    type "{elementType.code}"? This action
-                                    cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600">
-                                    Cancel
-                                  </AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={handleDeleteElementType}
-                                    className="bg-red-600 hover:bg-red-700 text-white"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-
-                            {shouldDisable && (
-                              <div className="ml-1">
-                                <AlertTriangle className="h-4 w-4 text-amber-400" />
+                        {/* Unit Info */}
+                        {selectedElementType.item.uniteCodeNavigation && (
+                          <div className="space-y-2">
+                            <Label className="text-xs text-blue-400">Unit of Measure</Label>
+                            <div className="bg-purple-950/30 border border-purple-500/20 rounded-md p-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-mono font-medium text-purple-300">
+                                  {selectedElementType.item.uniteCodeNavigation.code}
+                                </span>
+                                <span className="text-xs text-purple-400">-</span>
+                                <span className="text-sm text-purple-300">
+                                  {selectedElementType.item.uniteCodeNavigation.description}
+                                </span>
                               </div>
-                            )}
+                            </div>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          )}
-        </CardContent>
-      </Card>
+                        )}
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gray-900/95 backdrop-blur-sm border-gray-700/50 text-white max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Element Type</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Update the element type details below.
-            </DialogDescription>
-          </DialogHeader>
+                        {/* Item Status & Metadata */}
+                        <div className="border-t border-blue-500/20 pt-3">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                            <div className="space-y-1">
+                              <Label className="text-gray-400">Element Types Count</Label>
+                              <div className="text-blue-300 font-mono">{selectedElementType.item.elementTypesCount}</div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-gray-400">Created</Label>
+                              <div className="text-gray-300">
+                                {new Date(selectedElementType.item.createdAt).toLocaleDateString('fr-FR')}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-gray-400">Updated</Label>
+                              <div className="text-gray-300">
+                                {new Date(selectedElementType.item.updatedAt).toLocaleDateString('fr-FR')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-          <Form {...editForm}>
-            <form
-              onSubmit={editForm.handleSubmit(handleEditElementType)}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Code</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-gray-800/50 border-gray-600/50 text-white"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    {selectedElementType.generalAccount && (
+                      <div className="space-y-4">
+                        {/* General Account Basic Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-blue-400">Account Code</Label>
+                            <div className="bg-blue-950/30 border border-blue-500/20 rounded-md p-2">
+                              <span className="text-sm font-mono font-medium text-blue-300">
+                                {selectedElementType.generalAccount.code}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-blue-400">Description</Label>
+                            <div className="bg-blue-950/30 border border-blue-500/20 rounded-md p-2">
+                              <span className="text-sm font-medium text-blue-300">
+                                {selectedElementType.generalAccount.description}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
 
-                <FormField
-                  control={editForm.control}
-                  name="typeElement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type Element</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-gray-800/50 border-gray-600/50 text-white"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                        {/* Account Usage Statistics */}
+                        {selectedElementType.generalAccount.lignesCount !== undefined && (
+                          <div className="bg-orange-950/30 border border-orange-500/20 rounded-md p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Calculator className="h-4 w-4 text-orange-400" />
+                              <Label className="text-sm font-medium text-orange-300">Usage Statistics</Label>
+                            </div>
+                            <div className="text-sm text-orange-200">
+                              This account is referenced by{' '}
+                              <span className="font-bold text-orange-100">
+                                {selectedElementType.generalAccount.lignesCount}
+                              </span>
+                              {' '}element type{selectedElementType.generalAccount.lignesCount !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        )}
 
-              <FormField
-                control={editForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="bg-gray-800/50 border-gray-600/50 text-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                        {/* General Account Status & Metadata */}
+                        <div className="border-t border-blue-500/20 pt-3">
+                          <div className="grid grid-cols-2 md:grid-cols-2 gap-3 text-xs">
+                            <div className="space-y-1">
+                              <Label className="text-gray-400">Created</Label>
+                              <div className="text-gray-300">
+                                {new Date(selectedElementType.generalAccount.createdAt).toLocaleDateString('fr-FR')}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-gray-400">Updated</Label>
+                              <div className="text-gray-300">
+                                {new Date(selectedElementType.generalAccount.updatedAt).toLocaleDateString('fr-FR')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
-              />
 
-              <FormField
-                control={editForm.control}
-                name="tableName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Table Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="bg-gray-800/50 border-gray-600/50 text-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="itemCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Item Code (Optional)</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="bg-gray-800/50 border-gray-600/50 text-white">
-                            <SelectValue placeholder="Select item..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-gray-800 border-gray-600">
-                          <SelectItem value="">None</SelectItem>
-                          {items.map((item) => (
-                            <SelectItem key={item.id} value={item.code}>
-                              {item.code} - {item.designation}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={editForm.control}
-                  name="accountCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Account Code (Optional)</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="bg-gray-800/50 border-gray-600/50 text-white">
-                            <SelectValue placeholder="Select account..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-gray-800 border-gray-600">
-                          <SelectItem value="">None</SelectItem>
-                          {generalAccounts.map((account) => (
-                            <SelectItem key={account.id} value={account.code}>
-                              {account.code} - {account.designation}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Metadata */}
+                <div className="bg-gray-800/30 border border-gray-600/30 rounded-lg p-4">
+                  <h4 className="text-gray-300 font-medium mb-3 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Metadata
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-400">Created At</Label>
+                      <div className="text-gray-300">
+                        {new Date(selectedElementType.createdAt).toLocaleDateString('fr-FR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-400">Updated At</Label>
+                      <div className="text-gray-300">
+                        {new Date(selectedElementType.updatedAt).toLocaleDateString('fr-FR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+            )}
 
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
-                  className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Update Element Type
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button
+                type="button"
+                onClick={() => setIsViewDialogOpen(false)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* Bulk Actions Bar */}
-      <AnimatePresence>
-        <BulkActionsBar />
-      </AnimatePresence>
-    </div>
+        {/* Create Element Type Wizard */}
+        <CreateElementTypeWizard
+          open={isCreateWizardOpen}
+          onOpenChange={setIsCreateWizardOpen}
+          onSuccess={() => {
+            fetchData();
+            setIsCreateWizardOpen(false);
+          }}
+          availableItems={items}
+          availableGeneralAccounts={generalAccounts}
+        />
+
+        {/* Bulk Actions Bar */}
+        <AnimatePresence>
+          <BulkActionsBar />
+        </AnimatePresence>
+      </div>
+    </>
   );
 };
 
