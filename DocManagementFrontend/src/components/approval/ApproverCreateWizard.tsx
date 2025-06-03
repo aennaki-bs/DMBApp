@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ArrowLeft,
   Loader2,
+  Users,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import approvalService from "@/services/approvalService";
@@ -55,7 +56,7 @@ export default function ApproverCreateWizard({
   onOpenChange,
   onSuccess,
 }: ApproverCreateWizardProps) {
-  const [selectedUser, setSelectedUser] = useState<ApproverInfo | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<ApproverInfo[]>([]);
   const [availableUsers, setAvailableUsers] = useState<ApproverInfo[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<ApproverInfo[]>([]);
   const [existingApprovers, setExistingApprovers] = useState<ApproverInfo[]>(
@@ -73,10 +74,10 @@ export default function ApproverCreateWizard({
   const steps: Step[] = [
     {
       id: 1,
-      title: "Select User",
-      description: "Choose a user to make an approver",
-      icon: <User className="h-5 w-5" />,
-      completed: !!selectedUser,
+      title: "Select Users",
+      description: "Choose users to make approvers",
+      icon: <Users className="h-5 w-5" />,
+      completed: selectedUsers.length > 0,
     },
     {
       id: 2,
@@ -97,7 +98,7 @@ export default function ApproverCreateWizard({
   // Reset form when dialog is opened
   useEffect(() => {
     if (open) {
-      setSelectedUser(null);
+      setSelectedUsers([]);
       setComment("");
       setSearchQuery("");
       setCurrentStep(1);
@@ -150,36 +151,52 @@ export default function ApproverCreateWizard({
   };
 
   const handleSubmit = async () => {
-    if (!selectedUser) {
-      toast.error("Please select a user");
+    if (selectedUsers.length === 0) {
+      toast.error("Please select at least one user");
       return;
     }
 
     try {
       setIsLoading(true);
 
-      const requestData = {
-        userId: selectedUser.userId,
-        comment: comment.trim() || undefined,
-      };
+      // Create approvers one by one
+      const promises = selectedUsers.map(user => {
+        const requestData = {
+          userId: user.userId,
+          comment: comment.trim() || undefined,
+        };
+        return approvalService.createApprovator(requestData);
+      });
 
-      await approvalService.createApprovator(requestData);
+      await Promise.all(promises);
 
       onSuccess();
-      toast.success(`${selectedUser.username} was added as an approver`);
+      const successMessage = selectedUsers.length === 1 
+        ? `${selectedUsers[0].username} was added as an approver`
+        : `${selectedUsers.length} users were added as approvers`;
+      toast.success(successMessage);
       onOpenChange(false);
     } catch (error) {
-      console.error("Failed to create approver:", error);
-      toast.error("Failed to create approver");
+      console.error("Failed to create approvers:", error);
+      toast.error("Failed to create approvers");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSelectUser = (user: ApproverInfo) => {
-    setSelectedUser((prevSelected) =>
-      prevSelected?.userId === user.userId ? null : user
-    );
+    setSelectedUsers((prevSelected) => {
+      const isAlreadySelected = prevSelected.some(u => u.userId === user.userId);
+      if (isAlreadySelected) {
+        return prevSelected.filter(u => u.userId !== user.userId);
+      } else {
+        return [...prevSelected, user];
+      }
+    });
+  };
+
+  const handleRemoveUser = (userId: number) => {
+    setSelectedUsers(prev => prev.filter(user => user.userId !== userId));
   };
 
   const getUserInitials = (name: string) => {
@@ -208,8 +225,8 @@ export default function ApproverCreateWizard({
 
   // Navigation functions
   const nextStep = () => {
-    if (currentStep === 1 && !selectedUser) {
-      toast.error("Please select a user first");
+    if (currentStep === 1 && selectedUsers.length === 0) {
+      toast.error("Please select at least one user first");
       return;
     }
 
@@ -225,7 +242,7 @@ export default function ApproverCreateWizard({
     }
   };
 
-  // Step 1: Select User
+  // Step 1: Select Users
   const renderSelectUserStep = () => (
     <MotionDiv
       initial={{ opacity: 0 }}
@@ -237,7 +254,7 @@ export default function ApproverCreateWizard({
       <div className="mb-2">
         <h3 className="text-lg font-medium text-white">Select Users</h3>
         <p className="text-blue-300 text-sm">
-          Choose users who will be part of this approval group
+          Choose users who will be added as approvers
         </p>
       </div>
 
@@ -283,7 +300,7 @@ export default function ApproverCreateWizard({
                 >
                   <Checkbox
                     id={`user-${user.userId}`}
-                    checked={selectedUser?.userId === user.userId}
+                    checked={selectedUsers.some(u => u.userId === user.userId)}
                     onCheckedChange={() => handleSelectUser(user)}
                     className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
                   />
@@ -327,32 +344,36 @@ export default function ApproverCreateWizard({
         <div className="flex items-center">
           <UserCheck className="h-4 w-4 text-blue-400 mr-2" />
           <h4 className="text-sm font-medium text-blue-200">
-            Selected Users ({selectedUser ? 1 : 0})
+            Selected Users ({selectedUsers.length})
           </h4>
         </div>
 
-        <div className="border border-blue-900/40 rounded-md bg-blue-950/30 p-2 min-h-[40px]">
-          {selectedUser ? (
-            <div className="flex items-center gap-2">
-              <div className="font-medium text-blue-100 text-sm">
-                {selectedUser.username}
-              </div>
-              {selectedUser.role && (
-                <Badge className="ml-auto bg-blue-900/70 text-blue-300 px-2 py-0.5 text-xs">
-                  {selectedUser.role}
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-0 h-6 w-6 ml-1"
-                onClick={() => setSelectedUser(null)}
-              >
-                <X className="h-3 w-3 text-blue-400" />
-              </Button>
+        <div className="border border-blue-900/40 rounded-md bg-blue-950/30 p-2 min-h-[80px] max-h-[120px] overflow-y-auto">
+          {selectedUsers.length > 0 ? (
+            <div className="space-y-1">
+              {selectedUsers.map((user) => (
+                <div key={user.userId} className="flex items-center gap-2 bg-blue-900/30 p-2 rounded">
+                  <div className="font-medium text-blue-100 text-sm flex-1">
+                    {user.username}
+                  </div>
+                  {user.role && (
+                    <Badge className="bg-blue-900/70 text-blue-300 px-2 py-0.5 text-xs">
+                      {user.role}
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-0 h-6 w-6 ml-1"
+                    onClick={() => handleRemoveUser(user.userId)}
+                  >
+                    <X className="h-3 w-3 text-blue-400" />
+                  </Button>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="text-blue-400/50 text-xs italic text-center py-1.5">
+            <div className="text-blue-400/50 text-xs italic text-center py-3">
               No users selected yet
             </div>
           )}
@@ -373,21 +394,20 @@ export default function ApproverCreateWizard({
       <div className="mb-2">
         <h3 className="text-lg font-medium text-white">Add Comment</h3>
         <p className="text-blue-300 text-sm">
-          Provide additional information about this approver
+          Provide additional information about these approvers
         </p>
       </div>
 
       <div className="space-y-3">
         <div className="bg-blue-950/30 p-3 rounded-md border border-blue-900/40">
-          <div className="flex items-center gap-2">
-            <div className="font-medium text-blue-100">
-              {selectedUser?.username}
-            </div>
-            {selectedUser?.role && (
-              <Badge className="bg-blue-900/60 text-blue-300 text-xs">
-                {selectedUser.role}
+          <div className="text-sm text-blue-200 mb-2">Selected Users:</div>
+          <div className="flex flex-wrap gap-1">
+            {selectedUsers.map((user) => (
+              <Badge key={user.userId} className="bg-blue-900/60 text-blue-300 text-xs">
+                {user.username}
+                {user.role && ` (${user.role})`}
               </Badge>
-            )}
+            ))}
           </div>
         </div>
 
@@ -397,14 +417,14 @@ export default function ApproverCreateWizard({
           </Label>
           <Textarea
             id="description"
-            placeholder="Add additional details about this approver..."
+            placeholder="Add additional details about these approvers..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             className="bg-blue-950/60 border-blue-900/40 text-blue-100 min-h-[120px] resize-none focus:border-blue-500 focus:ring-blue-500"
           />
           <p className="text-xs text-blue-400/70">
-            Provide any additional information about the purpose of this
-            approver
+            Provide any additional information about the purpose of these
+            approvers
           </p>
         </div>
       </div>
@@ -427,18 +447,28 @@ export default function ApproverCreateWizard({
 
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <h4 className="text-sm text-blue-400">User</h4>
-          <div className="bg-blue-950/60 p-2.5 rounded-md border border-blue-900/50">
-            <div className="flex items-center gap-2">
-              <div className="font-medium text-blue-100">
-                {selectedUser?.username}
+          <h4 className="text-sm text-blue-400">Selected Users ({selectedUsers.length})</h4>
+          <div className="bg-blue-950/60 p-2.5 rounded-md border border-blue-900/50 max-h-[100px] overflow-y-auto">
+            {selectedUsers.length > 0 ? (
+              <div className="space-y-1">
+                {selectedUsers.map((user) => (
+                  <div key={user.userId} className="flex items-center gap-2">
+                    <div className="font-medium text-blue-100 text-sm">
+                      {user.username}
+                    </div>
+                    {user.role && (
+                      <Badge className="bg-blue-900/60 text-blue-300 text-xs">
+                        {user.role}
+                      </Badge>
+                    )}
+                  </div>
+                ))}
               </div>
-              {selectedUser?.role && (
-                <Badge className="bg-blue-900/60 text-blue-300 text-xs">
-                  {selectedUser.role}
-                </Badge>
-              )}
-            </div>
+            ) : (
+              <p className="text-blue-400/50 italic text-sm">
+                No users selected
+              </p>
+            )}
           </div>
         </div>
 
@@ -459,8 +489,10 @@ export default function ApproverCreateWizard({
       <div className="bg-blue-900/20 p-2.5 rounded-md border border-blue-800/30 flex items-start">
         <Check className="h-4 w-4 text-green-400 mr-2 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-blue-300">
-          The user will be able to approve documents once added to the approvers
-          list.
+          {selectedUsers.length === 1 
+            ? "The user will be able to approve documents once added to the approvers list."
+            : `These ${selectedUsers.length} users will be able to approve documents once added to the approvers list.`
+          }
         </p>
       </div>
     </MotionDiv>
@@ -489,11 +521,11 @@ export default function ApproverCreateWizard({
             <div className="flex items-center gap-2">
               <UserCheck className="h-5 w-5 text-blue-400" />
               <DialogTitle className="text-xl text-blue-100">
-                Create New Approver
+                Create New Approvers
               </DialogTitle>
             </div>
             <DialogDescription className="text-blue-300 text-sm">
-              Add a new user to the approvers list
+              Add multiple users to the approvers list
             </DialogDescription>
           </DialogHeader>
 
@@ -581,11 +613,11 @@ export default function ApproverCreateWizard({
               {currentStep < steps.length ? (
                 <Button
                   onClick={nextStep}
-                  disabled={currentStep === 1 && !selectedUser}
+                  disabled={currentStep === 1 && selectedUsers.length === 0}
                   className={cn(
                     "bg-blue-600 hover:bg-blue-700 transition-colors h-8 px-3 text-sm",
                     currentStep === 1 &&
-                      !selectedUser &&
+                      selectedUsers.length === 0 &&
                       "opacity-50 cursor-not-allowed"
                   )}
                 >
@@ -595,7 +627,7 @@ export default function ApproverCreateWizard({
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={isLoading || !selectedUser}
+                  disabled={isLoading || selectedUsers.length === 0}
                   className="bg-blue-600 hover:bg-blue-700 transition-colors h-8 px-3 text-sm"
                 >
                   {isLoading ? (
@@ -606,7 +638,7 @@ export default function ApproverCreateWizard({
                   ) : (
                     <>
                       <Check className="w-3.5 h-3.5 mr-1.5" />
-                      Create Approver
+                      {selectedUsers.length === 1 ? "Create Approver" : `Create ${selectedUsers.length} Approvers`}
                     </>
                   )}
                 </Button>

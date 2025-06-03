@@ -107,7 +107,7 @@ const DocumentDetailsTab = ({
             <FileText className="h-5 w-5 text-blue-300" />
             Document Details
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end gap-1">
             <p className="text-sm text-blue-300/80 flex items-center">
               <Clock className="h-4 w-4 mr-1" />
               Last updated: {new Date(
@@ -115,6 +115,12 @@ const DocumentDetailsTab = ({
               ).toLocaleDateString()}{" "}
               at {new Date(document.updatedAt).toLocaleTimeString()}
             </p>
+            {document.updatedBy && (
+              <p className="text-sm text-blue-300/70 flex items-center">
+                <User className="h-4 w-4 mr-1" />
+                Updated by: {document.updatedBy.username}
+              </p>
+            )}
           </div>
         </div>
       </div>

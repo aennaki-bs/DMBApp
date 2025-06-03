@@ -90,6 +90,7 @@ interface Approver {
   comment?: string;
   stepId?: number;
   stepTitle?: string;
+  allAssociations?: { stepId: number; stepTitle: string }[];
 }
 
 interface CreateApproverRequest {
@@ -151,13 +152,23 @@ export default function ApproversManagement() {
       header: "Actions",
       accessorKey: "id",
       isAction: true,
-      cell: (item) => (
-        <ApprovalActionsDropdown
-          item={item}
-          onEdit={() => handleEditApprover(item)}
-          onDelete={() => openDeleteDialog(item)}
-        />
-      ),
+      cell: (item) => {
+        const isAssociated = !!item.stepId;
+        const disabledTooltip = isAssociated 
+          ? `This approver is currently associated with step: ${item.stepTitle}`
+          : "";
+        
+        return (
+          <ApprovalActionsDropdown
+            item={item}
+            onEdit={() => handleEditApprover(item)}
+            onDelete={() => openDeleteDialog(item)}
+            isEditDisabled={isAssociated}
+            isDeleteDisabled={isAssociated}
+            disabledTooltip={disabledTooltip}
+          />
+        );
+      },
     },
   ];
 
@@ -224,9 +235,86 @@ export default function ApproversManagement() {
   const fetchApprovers = async () => {
     try {
       setIsLoading(true);
-      const response = await approvalService.getAllApprovators();
-      setApprovers(response);
-      setFilteredApprovers(response);
+      
+      // Fetch both approvers and step configurations
+      const [approversResponse, stepsWithApprovalResponse] = await Promise.all([
+        approvalService.getAllApprovators(),
+        approvalService.getStepsWithApproval()
+      ]);
+      
+      // Create a map of approvator ID to step associations
+      const userStepAssociations = new Map();
+      
+      // Fetch detailed approval configuration for each step
+      const stepConfigPromises = stepsWithApprovalResponse
+        .filter((step: any) => step.requiresApproval) // Only check steps that require approval
+        .map(async (step: any) => {
+          try {
+            const stepConfig = await approvalService.getStepApprovalConfig(step.stepId);
+            return { step, config: stepConfig };
+          } catch (error) {
+            return { step, config: null };
+          }
+        });
+      
+      const stepConfigs = await Promise.all(stepConfigPromises);
+      
+      // Process each step configuration to find approver associations
+      stepConfigs.forEach(({ step, config }) => {
+        if (!config) return;
+        
+        // Check if step has single approver configuration
+        if (config.singleApproverId) {
+          const existingSteps = userStepAssociations.get(config.singleApproverId) || [];
+          userStepAssociations.set(config.singleApproverId, [
+            ...existingSteps,
+            { stepId: step.stepId, stepTitle: step.title }
+          ]);
+        }
+        
+        // Check if step has approval groups with individual approvers
+        if (config.approvers && Array.isArray(config.approvers)) {
+          config.approvers.forEach((approver: any) => {
+            const approvatorId = approver.id; // Use approvator ID
+            if (approvatorId) {
+              const existingSteps = userStepAssociations.get(approvatorId) || [];
+              userStepAssociations.set(approvatorId, [
+                ...existingSteps,
+                { stepId: step.stepId, stepTitle: step.title }
+              ]);
+            }
+          });
+        }
+        
+        // Check for other possible approver fields
+        if (config.approverId) {
+          const existingSteps = userStepAssociations.get(config.approverId) || [];
+          userStepAssociations.set(config.approverId, [
+            ...existingSteps,
+            { stepId: step.stepId, stepTitle: step.title }
+          ]);
+        }
+      });
+      
+      // Merge association data with approvers
+      const enrichedApprovers = approversResponse.map((approver: any) => {
+        // Use approver.id (approvator ID) instead of approver.userId for lookup
+        const associations = userStepAssociations.get(approver.id);
+        if (associations && associations.length > 0) {
+          // For simplicity, use the first association for stepId and stepTitle
+          // In reality, an approver might be associated with multiple steps
+          return {
+            ...approver,
+            stepId: associations[0].stepId,
+            stepTitle: associations[0].stepTitle,
+            allAssociations: associations // Keep all associations for future use
+          };
+        }
+        return approver;
+      });
+      
+      setApprovers(enrichedApprovers);
+      setFilteredApprovers(enrichedApprovers);
     } catch (error) {
       console.error("Failed to fetch approvers:", error);
       toast.error("Failed to load approvers");
