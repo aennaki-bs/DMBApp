@@ -1,22 +1,77 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Database, 
+import { useState, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Database,
   Tag,
   Calendar,
   MoreHorizontal,
@@ -100,7 +155,9 @@ const LineElementTypeManagement = ({
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [selectedElementType, setSelectedElementType] =
     useState<LignesElementType | null>(null);
-  const [elementTypesInUse, setElementTypesInUse] = useState<Set<number>>(new Set());
+  const [elementTypesInUse, setElementTypesInUse] = useState<Set<number>>(
+    new Set()
+  );
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -143,12 +200,17 @@ const LineElementTypeManagement = ({
       await Promise.all(
         elementTypesData.map(async (elementType) => {
           try {
-            const isInUse = await lineElementsService.elementTypes.isInUse(elementType.id);
+            const isInUse = await lineElementsService.elementTypes.isInUse(
+              elementType.id
+            );
             if (isInUse) {
               inUseSet.add(elementType.id);
             }
           } catch (error) {
-            console.error(`Failed to check if element type ${elementType.id} is in use:`, error);
+            console.error(
+              `Failed to check if element type ${elementType.id} is in use:`,
+              error
+            );
           }
         })
       );
@@ -379,7 +441,7 @@ const LineElementTypeManagement = ({
       description: elementType.description,
       tableName: elementType.tableName,
       itemCode: elementType.item?.code || "",
-      accountCode: elementType.generalAccounts?.code || "",
+      accountCode: elementType.generalAccount?.code || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -427,7 +489,13 @@ const LineElementTypeManagement = ({
   const BulkActionsBar = () => {
     if (selectedElementTypes.length === 0) return null;
 
-    const selectedInUse = selectedElementTypes.some(id => elementTypesInUse.has(id));
+    const selectedInUse = selectedElementTypes.some((id) => {
+      const elementType = elementTypes.find((et) => et.id === id);
+      return (
+        elementTypesInUse.has(id) ||
+        (elementType && (elementType.item || elementType.generalAccount))
+      );
+    });
 
     return createPortal(
       <motion.div
@@ -477,8 +545,9 @@ const LineElementTypeManagement = ({
                       Delete Element Types
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-gray-300">
-                      Are you sure you want to delete {selectedElementTypes.length} element types?
-                      This action cannot be undone.
+                      Are you sure you want to delete{" "}
+                      {selectedElementTypes.length} element types? This action
+                      cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -566,7 +635,7 @@ const LineElementTypeManagement = ({
                   >
                     <Filter className="h-4 w-4 mr-2" />
                     Filters
-                    {(typeFilter !== "any") && (
+                    {typeFilter !== "any" && (
                       <Badge className="ml-2 bg-blue-500/20 text-blue-300 text-xs">
                         1
                       </Badge>
@@ -625,7 +694,8 @@ const LineElementTypeManagement = ({
       {/* Results Summary */}
       <div className="flex items-center justify-between text-sm text-gray-400">
         <div>
-          Showing {filteredAndSortedElementTypes.length} of {elementTypes.length} element types
+          Showing {filteredAndSortedElementTypes.length} of{" "}
+          {elementTypes.length} element types
           {(searchQuery || typeFilter !== "any") && (
             <Button
               variant="ghost"
@@ -725,22 +795,18 @@ const LineElementTypeManagement = ({
                         {renderSortIcon("tableName")}
                       </div>
                     </TableHead>
-                    <TableHead className="text-gray-300">Associations</TableHead>
-                    <TableHead
-                      className={headerClass("createdAt")}
-                      onClick={() => handleSort("createdAt")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Created
-                        {renderSortIcon("createdAt")}
-                      </div>
+                    <TableHead className="text-gray-300 w-20">
+                      Actions
                     </TableHead>
-                    <TableHead className="text-gray-300 w-20">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredAndSortedElementTypes.map((elementType) => {
                     const isInUse = elementTypesInUse.has(elementType.id);
+                    const hasAssignedItemOrAccount =
+                      elementType.item || elementType.generalAccount;
+                    const shouldDisable = isInUse || hasAssignedItemOrAccount;
+
                     return (
                       <TableRow
                         key={elementType.id}
@@ -785,46 +851,27 @@ const LineElementTypeManagement = ({
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col gap-1">
-                            {elementType.item && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs bg-blue-500/10 text-blue-300 border-blue-500/30"
-                              >
-                                Item: {elementType.item.code}
-                              </Badge>
-                            )}
-                            {elementType.generalAccounts && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs bg-green-500/10 text-green-300 border-green-500/30"
-                              >
-                                Account: {elementType.generalAccounts.code}
-                              </Badge>
-                            )}
-                            {!elementType.item && !elementType.generalAccounts && (
-                              <span className="text-gray-500 text-xs">None</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-gray-400 text-sm">
-                            {new Date(elementType.createdAt).toLocaleDateString()}
-                          </div>
-                        </TableCell>
-                        <TableCell>
                           <div className="flex items-center gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => openEditDialog(elementType)}
-                              className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10"
+                              disabled={shouldDisable}
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={
+                                shouldDisable
+                                  ? "Cannot edit: Element type is in use or has assigned items/accounts"
+                                  : "Edit element type"
+                              }
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            
+
                             <AlertDialog
-                              open={isDeleteDialogOpen && selectedElementType?.id === elementType.id}
+                              open={
+                                isDeleteDialogOpen &&
+                                selectedElementType?.id === elementType.id
+                              }
                               onOpenChange={(open) => {
                                 if (!open) {
                                   setIsDeleteDialogOpen(false);
@@ -837,8 +884,13 @@ const LineElementTypeManagement = ({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => openDeleteDialog(elementType)}
-                                  disabled={isInUse}
+                                  disabled={shouldDisable}
                                   className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title={
+                                    shouldDisable
+                                      ? "Cannot delete: Element type is in use or has assigned items/accounts"
+                                      : "Delete element type"
+                                  }
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -849,8 +901,9 @@ const LineElementTypeManagement = ({
                                     Delete Element Type
                                   </AlertDialogTitle>
                                   <AlertDialogDescription className="text-gray-300">
-                                    Are you sure you want to delete the element type "{elementType.code}"?
-                                    This action cannot be undone.
+                                    Are you sure you want to delete the element
+                                    type "{elementType.code}"? This action
+                                    cannot be undone.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -867,7 +920,7 @@ const LineElementTypeManagement = ({
                               </AlertDialogContent>
                             </AlertDialog>
 
-                            {isInUse && (
+                            {shouldDisable && (
                               <div className="ml-1">
                                 <AlertTriangle className="h-4 w-4 text-amber-400" />
                               </div>
@@ -976,7 +1029,10 @@ const LineElementTypeManagement = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Item Code (Optional)</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger className="bg-gray-800/50 border-gray-600/50 text-white">
                             <SelectValue placeholder="Select item..." />
@@ -1002,7 +1058,10 @@ const LineElementTypeManagement = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Account Code (Optional)</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger className="bg-gray-800/50 border-gray-600/50 text-white">
                             <SelectValue placeholder="Select account..." />

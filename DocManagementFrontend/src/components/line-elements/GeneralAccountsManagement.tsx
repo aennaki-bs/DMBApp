@@ -484,14 +484,6 @@ const GeneralAccountsManagement = ({
                     <TableHead className="text-blue-200 font-medium">
                       Lines Count
                     </TableHead>
-                    <TableHead
-                      className={headerClass("createdAt")}
-                      onClick={() => handleSort("createdAt")}
-                    >
-                      <div className="flex items-center">
-                        Created {renderSortIcon("createdAt")}
-                      </div>
-                    </TableHead>
                     <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
@@ -528,9 +520,6 @@ const GeneralAccountsManagement = ({
                         >
                           {account.lignesCount || 0} lines
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-blue-300 text-sm">
-                        {new Date(account.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">

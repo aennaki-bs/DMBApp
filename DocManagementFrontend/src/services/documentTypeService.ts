@@ -35,7 +35,7 @@ const documentTypeService = {
               typeName: type.typeName || 'Unnamed Type',
               typeKey: type.typeKey || ''
             }));
-            
+
             console.log('Extracted document types from object:', types);
             return types;
           }

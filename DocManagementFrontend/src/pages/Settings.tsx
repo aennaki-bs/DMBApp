@@ -51,9 +51,9 @@ const backgroundOptions = [
   {
     id: "tech-abstract",
     name: "Tech Abstract",
-    url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920&h=1080&fit=crop",
+    url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&h=1080&fit=crop",
     preview:
-      "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop",
     description: "Futuristic technology vibes",
   },
   {

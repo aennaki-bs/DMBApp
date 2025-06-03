@@ -545,14 +545,6 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                         Unit Code {renderSortIcon("unite")}
                       </div>
                     </TableHead>
-                    <TableHead
-                      className={headerClass("createdAt")}
-                      onClick={() => handleSort("createdAt")}
-                    >
-                      <div className="flex items-center">
-                        Created {renderSortIcon("createdAt")}
-                      </div>
-                    </TableHead>
                     <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
@@ -592,16 +584,23 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                           <span className="text-blue-400/60">No unit</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-blue-300 text-sm">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(item)}
-                            className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                            disabled={!!item.unite}
+                            className={`h-8 w-8 p-0 ${
+                              item.unite
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                            }`}
+                            title={
+                              item.unite
+                                ? "Cannot edit: Item has assigned unit code"
+                                : "Edit item"
+                            }
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -609,7 +608,17 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => openDeleteDialog(item)}
-                            className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                            disabled={!!item.unite}
+                            className={`h-8 w-8 p-0 ${
+                              item.unite
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                            }`}
+                            title={
+                              item.unite
+                                ? "Cannot delete: Item has assigned unit code"
+                                : "Delete item"
+                            }
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
