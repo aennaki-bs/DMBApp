@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import documentService from "@/services/documentService";
@@ -36,6 +36,7 @@ const DocumentFlowPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isSimpleUser = user?.role === "SimpleUser";
   const [approvalRefreshTrigger, setApprovalRefreshTrigger] = useState(0);
   const [mindMapRefreshTrigger, setMindMapRefreshTrigger] = useState(0);
@@ -104,14 +105,22 @@ const DocumentFlowPage = () => {
       circuitService
         .moveToStatus(Number(id), statusId, `Moving from ${currentStatusTitle} to ${targetStatusTitle}`)
         .then((result) => {
+          // Only show one message based on the actual outcome
           if (result.requiresApproval) {
+            // Only show approval message if approval is actually pending
             toast.info("This step requires approval. An approval request has been initiated.");
             // Trigger refresh of DocumentApprovalStatus
             setApprovalRefreshTrigger(prev => prev + 1);
           } else {
-            toast.success("Document status updated successfully");
+            // Show success message if the move completed (including auto-approvals)
+            toast.success(result.message || "Document status updated successfully");
           }
+          
           refreshAllData();
+          
+          // Invalidate documents list cache to refresh the main document view
+          queryClient.invalidateQueries({ queryKey: ["documents"] });
+          queryClient.invalidateQueries({ queryKey: ["document", Number(id)] });
         })
         .catch((error) => {
           console.error("Error moving document to status:", error);
@@ -329,7 +338,9 @@ const DocumentFlowPage = () => {
                   onStatusComplete={refreshAllData}
                   onMoveToStatus={handleMoveToStatus}
                   hasPendingApprovals={hasPendingApprovals}
+                  wasRejected={wasRejected}
                   refreshTrigger={mindMapRefreshTrigger}
+                  onCloseWorkflow={() => navigate("/documents")}
                 />
               </TabsContent>
 

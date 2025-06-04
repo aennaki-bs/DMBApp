@@ -551,6 +551,78 @@ namespace DocManagementBackend.Services
             
             await _context.SaveChangesAsync();
 
+            // For sequential approval, check if we need to auto-approve the next user (if they are the original requester)
+            if (approvalWriting.ApprovatorsGroupId.HasValue && isApproved && !approvalCompleted)
+            {
+                var group = await _context.ApprovatorsGroups
+                    .Include(g => g.ApprovatorsGroupUsers)
+                    .FirstOrDefaultAsync(g => g.Id == approvalWriting.ApprovatorsGroupId.Value);
+                    
+                if (group != null)
+                {
+                    var rule = await _context.ApprovatorsGroupRules
+                        .FirstOrDefaultAsync(r => r.GroupId == group.Id);
+                        
+                    if (rule != null && rule.RuleType == RuleType.Sequential)
+                    {
+                        // Get all current responses
+                        var allResponses = await _context.ApprovalResponses
+                            .Where(r => r.ApprovalWritingId == approvalWritingId)
+                            .ToListAsync();
+                            
+                        var respondedUserIds = allResponses.Select(r => r.UserId).ToList();
+                        
+                        // Get ordered users in the group
+                        var orderedUsers = group.ApprovatorsGroupUsers
+                            .OrderBy(gu => gu.OrderIndex ?? 0)
+                            .ToList();
+                            
+                        // Find the next user in sequence who hasn't responded
+                        var nextUser = orderedUsers
+                            .FirstOrDefault(gu => !respondedUserIds.Contains(gu.UserId));
+                            
+                        if (nextUser != null)
+                        {
+                            // Check if the next user is the original requester (ProcessedByUserId)
+                            if (nextUser.UserId == approvalWriting.ProcessedByUserId)
+                            {
+                                Console.WriteLine($"Auto-approving original requester {nextUser.UserId} as it's their turn in sequence");
+                                
+                                // Auto-approve the original requester
+                                var autoApprovalResponse = new ApprovalResponse
+                                {
+                                    ApprovalWritingId = approvalWritingId,
+                                    UserId = nextUser.UserId,
+                                    IsApproved = true,
+                                    Comments = "Auto-approved as original requester when their turn arrived in sequence",
+                                    ResponseDate = DateTime.UtcNow
+                                };
+                                
+                                _context.ApprovalResponses.Add(autoApprovalResponse);
+                                
+                                // Check if this completes all approvals
+                                var updatedResponses = allResponses.ToList();
+                                updatedResponses.Add(autoApprovalResponse);
+                                
+                                var approvedUserIds = updatedResponses
+                                    .Where(r => r.IsApproved)
+                                    .Select(r => r.UserId)
+                                    .ToList();
+                                    
+                                if (approvedUserIds.Count == orderedUsers.Count)
+                                {
+                                    approvalWriting.Status = ApprovalStatus.Accepted;
+                                    approvalCompleted = true;
+                                    Console.WriteLine($"Sequential approval completed after auto-approving requester");
+                                }
+                                
+                                await _context.SaveChangesAsync();
+                            }
+                        }
+                    }
+                }
+            }
+
             // If approval is completed and approved, move the document to the next status
             if (approvalCompleted && approvalWriting.Status == ApprovalStatus.Accepted && 
                 approvalWriting.Document != null && approvalWriting.Step != null)

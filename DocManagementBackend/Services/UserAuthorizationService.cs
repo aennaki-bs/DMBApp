@@ -32,6 +32,7 @@ namespace DocManagementBackend.Services
 
             var user = await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.ResponsibilityCentre)
                 .FirstOrDefaultAsync(u => u.Id == userId);
             
             if (user == null)

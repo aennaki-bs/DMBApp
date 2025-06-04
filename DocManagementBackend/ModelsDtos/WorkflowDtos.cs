@@ -87,4 +87,11 @@ namespace DocManagementBackend.Models
         public string Comments { get; set; } = string.Empty;
     }
 
+    public class ConfigureStepApprovalDto
+    {
+        public string StepKey { get; set; } = string.Empty;
+        public bool RequiresApproval { get; set; }
+        public int? ApprovatorId { get; set; }
+        public int? ApproversGroupId { get; set; }
+    }
 }

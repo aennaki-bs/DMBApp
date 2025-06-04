@@ -256,7 +256,7 @@ const Documents = () => {
   const fetchDocuments = async () => {
     try {
       setIsLoading(true);
-      const data = await documentService.getAllDocuments();
+      const data = await documentService.getMyDocuments();
       setDocuments(data);
       setTotalPages(Math.ceil(data.length / pageSize));
       setUseFakeData(false);
@@ -539,19 +539,13 @@ const Documents = () => {
       case 0:
         return (
           <Badge className="bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 border-amber-500/30">
-            hello
+            Draft
           </Badge>
         );
       case 1:
         return (
           <Badge className="bg-green-600/20 text-green-500 hover:bg-green-600/30 border-green-500/30">
             In Progress
-          </Badge>
-        );
-      case 2:
-        return (
-          <Badge className="bg-red-600/20 text-red-500 hover:bg-red-600/30 border-red-500/30">
-            Rejected
           </Badge>
         );
       default:
@@ -622,7 +616,9 @@ const Documents = () => {
           ? "Draft"
           : statusFilter === "1"
           ? "In Progress"
-          : "Completed",
+          : statusFilter === "2"
+          ? "Completed"
+          : "Unknown",
       onRemove: () => setStatusFilter("any"),
     });
   }

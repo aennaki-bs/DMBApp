@@ -17,6 +17,7 @@ interface DocumentActionsProps {
   canManageDocuments: boolean;
   onDelete: () => void;
   onDocumentFlow: () => void;
+  onWorkflowUpdate?: () => void;
 }
 
 const DocumentActions = ({
@@ -24,6 +25,7 @@ const DocumentActions = ({
   canManageDocuments,
   onDelete,
   onDocumentFlow,
+  onWorkflowUpdate,
 }: DocumentActionsProps) => {
   const [isAssignCircuitOpen, setIsAssignCircuitOpen] = useState(false);
 
@@ -41,6 +43,7 @@ const DocumentActions = ({
             hasCircuit={!!document.circuitId}
             buttonClassName="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50"
             title="Document Flow"
+            onWorkflowUpdate={onWorkflowUpdate}
           />
         )}
 

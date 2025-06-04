@@ -253,7 +253,7 @@ function getStatusBadge(status: number) {
       );
     default:
       return (
-        <Badge className="bg-gray-600/20 text-gray-400 hover:bg-gray-600/30 border-gray-500/30 px-3 py-1 text-xs font-medium">
+        <Badge variant="outline" className="px-3 py-1 text-xs font-medium">
           Unknown
         </Badge>
       );

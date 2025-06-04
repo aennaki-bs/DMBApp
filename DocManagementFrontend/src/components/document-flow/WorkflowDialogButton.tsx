@@ -16,6 +16,7 @@ interface WorkflowDialogButtonProps {
   showLabel?: boolean;
   iconOnly?: boolean;
   title?: string;
+  onWorkflowUpdate?: () => void;
 }
 
 export function WorkflowDialogButton({
@@ -25,6 +26,7 @@ export function WorkflowDialogButton({
   showLabel = true,
   iconOnly = false,
   title = "View Workflow",
+  onWorkflowUpdate,
 }: WorkflowDialogButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -79,6 +81,7 @@ export function WorkflowDialogButton({
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         documentId={documentId}
+        onWorkflowUpdate={onWorkflowUpdate}
       />
     </>
   );

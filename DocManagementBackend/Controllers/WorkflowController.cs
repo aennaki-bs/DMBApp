@@ -264,6 +264,219 @@ namespace DocManagementBackend.Controllers
                                         isAutoApproved = true;
                                         Console.WriteLine($"Created auto-approved record with ID {approvalWriting.Id}");
                                     }
+                                    else if (rule != null && (rule.RuleType == RuleType.All || rule.RuleType == RuleType.Sequential))
+                                    {
+                                        Console.WriteLine($"Group has '{rule.RuleType}' rule - creating approval request");
+                                        
+                                        // For Sequential rule, we need to respect the order
+                                        if (rule.RuleType == RuleType.Sequential)
+                                        {
+                                            var orderedUsers = group.ApprovatorsGroupUsers
+                                                .OrderBy(gu => gu.OrderIndex ?? 0)
+                                                .ToList();
+                                                
+                                            var currentUserIndex = orderedUsers.FindIndex(gu => gu.UserId == userId);
+                                            
+                                            Console.WriteLine($"Sequential approval: User {user.Username} is at position {currentUserIndex + 1}/{orderedUsers.Count}");
+                                            
+                                            // Check if all previous users in sequence have already approved for this step
+                                            var previousUserIds = orderedUsers
+                                                .Take(currentUserIndex)
+                                                .Select(gu => gu.UserId)
+                                                .ToList();
+                                                
+                                            // Check if there's an existing approval for this step
+                                            var existingApproval = await _context.ApprovalWritings
+                                                .FirstOrDefaultAsync(aw => aw.DocumentId == moveToStatusDto.DocumentId && 
+                                                                          aw.StepId == step.Id &&
+                                                                          aw.Status == ApprovalStatus.InProgress);
+                                            
+                                            if (existingApproval != null)
+                                            {
+                                                // Check how many previous users have approved
+                                                var previousApprovalsCount = await _context.ApprovalResponses
+                                                    .Where(ar => ar.ApprovalWritingId == existingApproval.Id && 
+                                                                previousUserIds.Contains(ar.UserId) && 
+                                                                ar.IsApproved)
+                                                    .CountAsync();
+                                                    
+                                                Console.WriteLine($"Existing approval found. {previousApprovalsCount}/{previousUserIds.Count} previous users have approved");
+                                                
+                                                // Only auto-approve if all previous users have approved
+                                                if (previousApprovalsCount == previousUserIds.Count)
+                                                {
+                                                    Console.WriteLine($"All previous users approved - auto-approving current user {user.Username}");
+                                                    
+                                                    // Auto-approve current user
+                                                    var approvalResponse = new ApprovalResponse
+                                                    {
+                                                        ApprovalWritingId = existingApproval.Id,
+                                                        UserId = userId,
+                                                        IsApproved = true,
+                                                        Comments = $"Auto-approved as user initiated the movement and it's their turn in sequence",
+                                                        ResponseDate = DateTime.UtcNow
+                                                    };
+                                                    
+                                                    _context.ApprovalResponses.Add(approvalResponse);
+                                                    await _context.SaveChangesAsync();
+                                                    
+                                                    // Check if this completes all approvals
+                                                    var totalApprovalsCount = await _context.ApprovalResponses
+                                                        .Where(ar => ar.ApprovalWritingId == existingApproval.Id && ar.IsApproved)
+                                                        .CountAsync();
+                                                        
+                                                    if (totalApprovalsCount == orderedUsers.Count)
+                                                    {
+                                                        existingApproval.Status = ApprovalStatus.Accepted;
+                                                        await _context.SaveChangesAsync();
+                                                        isAutoApproved = true;
+                                                        Console.WriteLine($"All sequential approvals complete - marked as accepted");
+                                                    }
+                                                    else
+                                                    {
+                                                        Console.WriteLine($"Sequential approval continues - {totalApprovalsCount}/{orderedUsers.Count} users approved");
+                                                        // Return to wait for remaining approvals
+                                                        return Ok(new { 
+                                                            message = "This step requires approval. Approval request updated and proceeding to next approver.",
+                                                            requiresApproval = true,
+                                                            approvalId = existingApproval.Id
+                                                        });
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    Console.WriteLine($"Not all previous users have approved yet - waiting for sequence");
+                                                    // Return to wait for previous approvals
+                                                    return Ok(new { 
+                                                        message = "This step requires approval. Waiting for previous approvers in sequence.",
+                                                        requiresApproval = true,
+                                                        approvalId = existingApproval.Id
+                                                    });
+                                                }
+                                            }
+                                            else
+                                            {
+                                                // No existing approval - create new one
+                                                Console.WriteLine($"Creating new sequential approval request");
+                                                
+                                                var approvalWriting = new ApprovalWriting
+                                                {
+                                                    DocumentId = moveToStatusDto.DocumentId,
+                                                    StepId = step.Id,
+                                                    ProcessedByUserId = userId,
+                                                    ApprovatorsGroupId = step.ApprovatorsGroupId,
+                                                    Status = ApprovalStatus.InProgress,
+                                                    Comments = $"Sequential approval initiated by {user.Username}: {moveToStatusDto.Comments}",
+                                                    CreatedAt = DateTime.UtcNow
+                                                };
+                                                
+                                                _context.ApprovalWritings.Add(approvalWriting);
+                                                await _context.SaveChangesAsync();
+                                                
+                                                // Only auto-approve if user is first in sequence OR all previous have approved
+                                                if (currentUserIndex == 0)
+                                                {
+                                                    Console.WriteLine($"User is first in sequence - auto-approving");
+                                                    
+                                                    var approvalResponse = new ApprovalResponse
+                                                    {
+                                                        ApprovalWritingId = approvalWriting.Id,
+                                                        UserId = userId,
+                                                        IsApproved = true,
+                                                        Comments = $"Auto-approved as first user in sequence who initiated the movement",
+                                                        ResponseDate = DateTime.UtcNow
+                                                    };
+                                                    
+                                                    _context.ApprovalResponses.Add(approvalResponse);
+                                                    await _context.SaveChangesAsync();
+                                                    
+                                                    // Check if user is the only one in the group
+                                                    if (orderedUsers.Count == 1)
+                                                    {
+                                                        approvalWriting.Status = ApprovalStatus.Accepted;
+                                                        await _context.SaveChangesAsync();
+                                                        isAutoApproved = true;
+                                                        Console.WriteLine($"Only user in group - approval complete");
+                                                    }
+                                                    else
+                                                    {
+                                                        Console.WriteLine($"First user approved - waiting for remaining {orderedUsers.Count - 1} users");
+                                                        return Ok(new { 
+                                                            message = "This step requires approval. Your approval has been recorded, waiting for other approvers.",
+                                                            requiresApproval = true,
+                                                            approvalId = approvalWriting.Id
+                                                        });
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    Console.WriteLine($"User is not first in sequence - will wait for previous approvers");
+                                                    return Ok(new { 
+                                                        message = "This step requires approval. Approval request created, waiting for previous approvers in sequence.",
+                                                        requiresApproval = true,
+                                                        approvalId = approvalWriting.Id
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        else // RuleType.All
+                                        {
+                                            Console.WriteLine($"Group has 'All' rule - creating approval request with auto-approval for initiator");
+                                            
+                                            // For 'All' rule, create approval and auto-approve the initiator
+                                            var approvalWriting = new ApprovalWriting
+                                            {
+                                                DocumentId = moveToStatusDto.DocumentId,
+                                                StepId = step.Id,
+                                                ProcessedByUserId = userId,
+                                                ApprovatorsGroupId = step.ApprovatorsGroupId,
+                                                Status = ApprovalStatus.InProgress,
+                                                Comments = $"Group approval initiated by {user.Username}: {moveToStatusDto.Comments}",
+                                                CreatedAt = DateTime.UtcNow
+                                            };
+                                            
+                                            _context.ApprovalWritings.Add(approvalWriting);
+                                            await _context.SaveChangesAsync();
+                                            
+                                            // Auto-approve the initiator
+                                            var approvalResponse = new ApprovalResponse
+                                            {
+                                                ApprovalWritingId = approvalWriting.Id,
+                                                UserId = userId,
+                                                IsApproved = true,
+                                                Comments = $"Auto-approved as user initiated the movement (Rule: All)",
+                                                ResponseDate = DateTime.UtcNow
+                                            };
+                                            
+                                            _context.ApprovalResponses.Add(approvalResponse);
+                                            await _context.SaveChangesAsync();
+                                            
+                                            // Check if all users have approved
+                                            var totalGroupMembers = group.ApprovatorsGroupUsers.Count;
+                                            var approvedCount = await _context.ApprovalResponses
+                                                .Where(ar => ar.ApprovalWritingId == approvalWriting.Id && ar.IsApproved)
+                                                .CountAsync();
+                                                
+                                            Console.WriteLine($"All rule: {approvedCount}/{totalGroupMembers} members have approved");
+                                            
+                                            if (approvedCount == totalGroupMembers)
+                                            {
+                                                approvalWriting.Status = ApprovalStatus.Accepted;
+                                                await _context.SaveChangesAsync();
+                                                isAutoApproved = true;
+                                                Console.WriteLine($"All required approvals complete - marked as auto-approved");
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine($"Additional approvals required from other group members");
+                                                return Ok(new { 
+                                                    message = "This step requires approval. Your approval has been recorded, waiting for other group members.",
+                                                    requiresApproval = true,
+                                                    approvalId = approvalWriting.Id
+                                                });
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -273,25 +486,53 @@ namespace DocManagementBackend.Controllers
                         {
                             Console.WriteLine($"User {userId} cannot auto-approve - initiating normal approval process");
                             
-                            // Initiate approval process
-                            var (requiresApproval, approvalWritingId) = await _workflowService.InitiateApprovalIfRequiredAsync(
-                                moveToStatusDto.DocumentId, step.Id, userId, moveToStatusDto.Comments);
-                                
-                            if (requiresApproval)
+                            // Check if an approval writing already exists for this step (from group approval above)
+                            var existingApproval = await _context.ApprovalWritings
+                                .FirstOrDefaultAsync(aw => aw.DocumentId == moveToStatusDto.DocumentId && 
+                                                          aw.StepId == step.Id &&
+                                                          aw.Status == ApprovalStatus.InProgress);
+                            
+                            if (existingApproval != null)
                             {
-                                var approvalWriting = await _context.ApprovalWritings.FindAsync(approvalWritingId);
-                                if (approvalWriting == null || approvalWriting.Status != ApprovalStatus.Accepted)
+                                Console.WriteLine($"Found existing approval writing ID {existingApproval.Id} in progress - checking if complete");
+                                
+                                // Check if the existing approval is now complete
+                                if (existingApproval.Status == ApprovalStatus.Accepted)
                                 {
-                                    // Approval needed but not yet granted - return here and don't proceed with the status transition
+                                    Console.WriteLine($"Existing approval is accepted - proceeding with status transition");
+                                }
+                                else
+                                {
+                                    // Approval still in progress - return and wait for other approvers
                                     return Ok(new { 
-                                        message = "This step requires approval. An approval request has been initiated.",
+                                        message = "This step requires approval. An approval request is in progress.",
                                         requiresApproval = true,
-                                        approvalId = approvalWritingId
+                                        approvalId = existingApproval.Id
                                     });
                                 }
-                                
-                                // At this point, approval has been granted, so we can proceed
-                                Console.WriteLine($"Approval has been granted for document {moveToStatusDto.DocumentId}, proceeding with status transition");
+                            }
+                            else
+                            {
+                                // No existing approval, initiate normal approval process
+                                var (requiresApproval, approvalWritingId) = await _workflowService.InitiateApprovalIfRequiredAsync(
+                                    moveToStatusDto.DocumentId, step.Id, userId, moveToStatusDto.Comments);
+                                    
+                                if (requiresApproval)
+                                {
+                                    var approvalWriting = await _context.ApprovalWritings.FindAsync(approvalWritingId);
+                                    if (approvalWriting == null || approvalWriting.Status != ApprovalStatus.Accepted)
+                                    {
+                                        // Approval needed but not yet granted - return here and don't proceed with the status transition
+                                        return Ok(new { 
+                                            message = "This step requires approval. An approval request has been initiated.",
+                                            requiresApproval = true,
+                                            approvalId = approvalWritingId
+                                        });
+                                    }
+                                    
+                                    // At this point, approval has been granted, so we can proceed
+                                    Console.WriteLine($"Approval has been granted for document {moveToStatusDto.DocumentId}, proceeding with status transition");
+                                }
                             }
                         }
                         else
@@ -714,7 +955,8 @@ namespace DocManagementBackend.Controllers
                         IsCurrentStep = isCurrentStep,
                         IsCompleted = isCompleted,
                         CompletedAt = stepCompletion?.TransitionDate,
-                        CompletedBy = stepCompletion?.User?.Username
+                        CompletedBy = stepCompletion?.User?.Username,
+                        RequiresApproval = step.RequiresApproval
                     };
 
                     result.Add(stepStatus);
@@ -977,6 +1219,155 @@ namespace DocManagementBackend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        // Add this temporary debug endpoint
+        [HttpGet("debug/document/{documentId}/steps")]
+        public async Task<IActionResult> DebugDocumentSteps(int documentId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            try
+            {
+                // Get the document and its circuit
+                var document = await _context.Documents
+                    .Include(d => d.Circuit)
+                    .Include(d => d.CurrentStatus)
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null)
+                    return NotFound("Document not found.");
+
+                if (document.CircuitId == null)
+                    return BadRequest("Document is not assigned to any circuit.");
+
+                // Get all steps in the circuit with their approval configuration
+                var steps = await _context.Steps
+                    .Include(s => s.CurrentStatus)
+                    .Include(s => s.NextStatus)
+                    .Include(s => s.Approvator)
+                    .ThenInclude(a => a != null ? a.User : null)
+                    .Include(s => s.ApprovatorsGroup)
+                    .Where(s => s.CircuitId == document.CircuitId)
+                    .OrderBy(s => s.Id)
+                    .Select(s => new 
+                    {
+                        StepId = s.Id,
+                        StepKey = s.StepKey,
+                        Title = s.Title,
+                        CurrentStatusId = s.CurrentStatusId,
+                        CurrentStatusTitle = s.CurrentStatus!.Title,
+                        NextStatusId = s.NextStatusId,
+                        NextStatusTitle = s.NextStatus!.Title,
+                        RequiresApproval = s.RequiresApproval,
+                        HasApprovator = s.ApprovatorId.HasValue,
+                        ApprovatorUserId = s.Approvator != null ? s.Approvator.UserId : (int?)null,
+                        ApprovatorUsername = s.Approvator != null && s.Approvator.User != null ? s.Approvator.User.Username : null,
+                        HasApproversGroup = s.ApprovatorsGroupId.HasValue,
+                        ApproversGroupId = s.ApprovatorsGroupId,
+                        ApproversGroupName = s.ApprovatorsGroup != null ? s.ApprovatorsGroup.Name : null,
+                        IsCurrentDocumentStep = s.CurrentStatusId == document.CurrentStatusId
+                    })
+                    .ToListAsync();
+
+                var result = new 
+                {
+                    DocumentId = documentId,
+                    DocumentKey = document.DocumentKey,
+                    DocumentTitle = document.Title,
+                    CircuitId = document.CircuitId,
+                    CircuitTitle = document.Circuit?.Title,
+                    CurrentStatusId = document.CurrentStatusId,
+                    CurrentStatusTitle = document.CurrentStatus?.Title,
+                    Steps = steps
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Debug error: {ex.Message}");
+            }
+        }
+
+        // Add endpoint to enable approval for specific steps
+        [HttpPost("configure-step-approval")]
+        public async Task<IActionResult> ConfigureStepApproval([FromBody] ConfigureStepApprovalDto dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim is missing.");
+
+            int userId = int.Parse(userIdClaim);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return BadRequest("User not found.");
+
+            if (!user.IsActive)
+                return Unauthorized("User account is deactivated. Please contact an admin!");
+
+            // Only allow Admin or FullUser to configure approvals
+            if (user.Role.RoleName != "Admin" && user.Role.RoleName != "FullUser")
+                return Forbid("You don't have permission to configure step approvals.");
+
+            try
+            {
+                var step = await _context.Steps.FirstOrDefaultAsync(s => s.StepKey == dto.StepKey);
+                if (step == null)
+                    return NotFound($"Step with key '{dto.StepKey}' not found.");
+
+                step.RequiresApproval = dto.RequiresApproval;
+
+                if (dto.RequiresApproval)
+                {
+                    // If enabling approval, we need either an approver or a group
+                    if (dto.ApprovatorId.HasValue)
+                    {
+                        var approver = await _context.Approvators.FindAsync(dto.ApprovatorId.Value);
+                        if (approver == null)
+                            return BadRequest($"Approver with ID {dto.ApprovatorId.Value} not found.");
+                        
+                        step.ApprovatorId = dto.ApprovatorId.Value;
+                        step.ApprovatorsGroupId = null; // Clear group if setting individual approver
+                    }
+                    else if (dto.ApproversGroupId.HasValue)
+                    {
+                        var group = await _context.ApprovatorsGroups.FindAsync(dto.ApproversGroupId.Value);
+                        if (group == null)
+                            return BadRequest($"Approvers group with ID {dto.ApproversGroupId.Value} not found.");
+                        
+                        step.ApprovatorsGroupId = dto.ApproversGroupId.Value;
+                        step.ApprovatorId = null; // Clear individual approver if setting group
+                    }
+                    else
+                    {
+                        return BadRequest("When enabling approval, you must specify either an approver ID or an approvers group ID.");
+                    }
+                }
+                else
+                {
+                    // If disabling approval, clear approvers
+                    step.ApprovatorId = null;
+                    step.ApprovatorsGroupId = null;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { 
+                    message = $"Step '{step.StepKey}' approval configuration updated successfully.",
+                    stepKey = step.StepKey,
+                    requiresApproval = step.RequiresApproval,
+                    approvatorId = step.ApprovatorId,
+                    approversGroupId = step.ApprovatorsGroupId
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error configuring step approval: {ex.Message}");
             }
         }
 

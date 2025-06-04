@@ -15,7 +15,7 @@ export function useDocumentsData() {
   const fetchDocuments = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await documentService.getAllDocuments();
+      const data = await documentService.getMyDocuments();
       setDocuments(data);
       setUseFakeData(false);
     } catch (error) {
