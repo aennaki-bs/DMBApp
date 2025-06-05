@@ -617,7 +617,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                             }`}
                             title={
                               item.elementTypesCount > 0
-                                ? "Cannot edit: Item is associated with element types"
+                                ? "Cannot edit: Item is used in document lines"
                                 : "Edit item"
                             }
                           >
@@ -635,7 +635,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                             }`}
                             title={
                               item.elementTypesCount > 0
-                                ? "Cannot delete: Item is associated with element types"
+                                ? "Cannot delete: Item is used in document lines"
                                 : "Delete item"
                             }
                           >

@@ -9,3 +9,6 @@ circuit steps card => on click shoudn't redirect to another page...
     lines:
         - choose type -> choose table based on type
         - order the data and clarify it
+    devise:
+        - add table 
+        - 

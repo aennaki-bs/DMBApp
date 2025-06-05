@@ -45,6 +45,8 @@ import ApproversManagement from "./pages/ApproversManagement";
 import ButtonShowcasePage from "./pages/ButtonShowcase";
 import ResponsibilityCentreManagement from "./pages/ResponsibilityCentreManagement";
 import LineElementsManagement from "./pages/LineElementsManagement";
+import CustomerManagementPage from "./pages/CustomerManagement";
+import VendorManagementPage from "./pages/VendorManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -303,6 +305,32 @@ const App = () => (
                     element={
                       <ProtectedRoute requiresManagement requiredRole="Admin">
                         <ResponsibilityCentreManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Customer Management route */}
+                  <Route
+                    path="/customer-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <CustomerManagementPage />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Vendor Management route */}
+                  <Route
+                    path="/vendor-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <VendorManagementPage />
                       </ProtectedRoute>
                     }
                   />

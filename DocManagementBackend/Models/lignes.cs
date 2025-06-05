@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using DocManagementBackend.Data;
 
 namespace DocManagementBackend.Models {
     public class Ligne
@@ -19,10 +21,16 @@ namespace DocManagementBackend.Models {
         public float Prix { get; set; }
         public int SousLigneCounter { get; set; } = 0;
         
-        // Reference to line element via LignesElementType
+        // Backward compatibility: Keep old field name during transition
         public int? LignesElementTypeId { get; set; }
-        [ForeignKey("LignesElementTypeId")]
+        
+        // New dynamic foreign key system
+        public int? Type { get; set; } // Foreign key to LignesElementType(Id)
+        [ForeignKey("Type")]
         public LignesElementType? LignesElementType { get; set; }
+        
+        [MaxLength(50)]
+        public string? ElementId { get; set; } // Dynamic foreign key reference based on type
         
         [Column(TypeName = "decimal(18,4)")]
         public decimal Quantity { get; set; } = 1;
@@ -35,15 +43,15 @@ namespace DocManagementBackend.Models {
         [Column(TypeName = "decimal(5,4)")]
         public decimal VatPercentage { get; set; } = 0;
         
-        // Computed properties for accessing element data through LignesElementType
+        // Computed properties for accessing element data dynamically
         [NotMapped]
-        public Item? Item => LignesElementType?.Item;
+        public Item? Item { get; private set; }
         
         [NotMapped]
-        public GeneralAccounts? GeneralAccount => LignesElementType?.GeneralAccount;
+        public GeneralAccounts? GeneralAccount { get; private set; }
         
         [NotMapped]
-        public UniteCode? UniteCode => LignesElementType?.Item?.UniteCodeNavigation;
+        public UniteCode? UniteCode => Item?.UniteCodeNavigation;
         
         [NotMapped]
         public decimal AmountHT
@@ -80,11 +88,49 @@ namespace DocManagementBackend.Models {
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         [JsonIgnore]
         public ICollection<SousLigne> SousLignes { get; set; } = new List<SousLigne>();
+        
+        // Method to synchronize LignesElementTypeId with Type during migration
+        public void SynchronizeTypeFields()
+        {
+            if (Type.HasValue && !LignesElementTypeId.HasValue)
+            {
+                LignesElementTypeId = Type.Value;
+            }
+            else if (LignesElementTypeId.HasValue && !Type.HasValue)
+            {
+                Type = LignesElementTypeId.Value;
+            }
+        }
+        
+        // Method to load the appropriate element based on type
+        public async Task LoadElementAsync(ApplicationDbContext context)
+        {
+            // Ensure type fields are synchronized
+            SynchronizeTypeFields();
+            
+            if (LignesElementType == null || string.IsNullOrEmpty(ElementId))
+                return;
+                
+            switch (LignesElementType.TypeElement)
+            {
+                case ElementType.Item:
+                    Item = await context.Items
+                        .Include(i => i.UniteCodeNavigation)
+                        .FirstOrDefaultAsync(i => i.Code == ElementId);
+                    break;
+                case ElementType.GeneralAccounts:
+                    GeneralAccount = await context.GeneralAccounts
+                        .FirstOrDefaultAsync(ga => ga.Code == ElementId);
+                    break;
+            }
+        }
+        
         public void UpdateCalculatedFields()
         {
             // This method can be called before saving to update any stored calculated values
             // if you decide to store them in the database instead of computing them
         }
+        
         public bool IsValid()
         {
             if (Quantity <= 0) return false;
@@ -92,6 +138,15 @@ namespace DocManagementBackend.Models {
             if (DiscountPercentage < 0 || DiscountPercentage > 1) return false;
             if (VatPercentage < 0 || VatPercentage > 1) return false;
             if (DiscountAmount.HasValue && DiscountAmount.Value < 0) return false;
+            
+            // Validate that ElementId corresponds to the appropriate reference table
+            if (Type.HasValue && !string.IsNullOrEmpty(ElementId) && LignesElementType != null)
+            {
+                // Additional validation can be implemented here
+                // For now, we rely on the LoadElementAsync method to validate the reference
+                return true;
+            }
+            
             return true;
         }
     }

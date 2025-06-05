@@ -130,6 +130,9 @@ export interface CreateLigneRequest {
   // Type reference - backend determines item/account automatically based on this
   lignesElementTypeId?: number;
   
+  // Selected element code (Item.Code or GeneralAccounts.Code)
+  selectedElementCode?: string;
+  
   // Pricing fields
   quantity: number;
   priceHT: number;
@@ -145,6 +148,9 @@ export interface UpdateLigneRequest {
   
   // Type reference - backend determines item/account automatically based on this
   lignesElementTypeId?: number;
+  
+  // Selected element code (Item.Code or GeneralAccounts.Code)
+  selectedElementCode?: string;
   
   // Pricing fields
   quantity?: number;

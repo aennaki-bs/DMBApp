@@ -4,6 +4,7 @@ using DocManagementBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DocManagementBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250605101327_FixElementTypeEnumValues")]
+    partial class FixElementTypeEnumValues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -303,46 +306,6 @@ namespace DocManagementBackend.Migrations
                     b.ToTable("Circuits");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.Customer", b =>
-                {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Code");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("Customers");
-                });
-
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
                 {
                     b.Property<int>("Id")
@@ -371,10 +334,6 @@ namespace DocManagementBackend.Migrations
 
                     b.Property<int?>("CurrentStepId")
                         .HasColumnType("int");
-
-                    b.Property<string>("CustomerOrVendor")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("DocDate")
                         .HasColumnType("datetime2");
@@ -434,8 +393,6 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("CurrentStatusId");
 
                     b.HasIndex("CurrentStepId");
-
-                    b.HasIndex("CustomerOrVendor");
 
                     b.HasIndex("ResponsibilityCentreId");
 
@@ -580,10 +537,6 @@ namespace DocManagementBackend.Migrations
 
                     b.Property<int>("DocumentCounter")
                         .HasColumnType("int");
-
-                    b.Property<string>("TierType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TypeAttr")
                         .IsRequired()
@@ -785,31 +738,6 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("ItemCode");
 
                     b.ToTable("LignesElementTypes");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.Location", b =>
-                {
-                    b.Property<string>("LocationCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("LocationCode");
-
-                    b.HasIndex("LocationCode")
-                        .IsUnique();
-
-                    b.ToTable("Locations");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.LogHistory", b =>
@@ -1296,46 +1224,6 @@ namespace DocManagementBackend.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.Vendor", b =>
-                {
-                    b.Property<string>("VendorCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("VendorCode");
-
-                    b.HasIndex("VendorCode")
-                        .IsUnique();
-
-                    b.ToTable("Vendors");
-                });
-
             modelBuilder.Entity("DocManagementBackend.Models.ActionStatusEffect", b =>
                 {
                     b.HasOne("DocManagementBackend.Models.Action", "Action")
@@ -1510,14 +1398,6 @@ namespace DocManagementBackend.Migrations
                         .WithMany()
                         .HasForeignKey("CurrentStepId");
 
-                    b.HasOne("DocManagementBackend.Models.Customer", "Customer")
-                        .WithMany("Documents")
-                        .HasForeignKey("CustomerOrVendor");
-
-                    b.HasOne("DocManagementBackend.Models.Vendor", "Vendor")
-                        .WithMany("Documents")
-                        .HasForeignKey("CustomerOrVendor");
-
                     b.HasOne("DocManagementBackend.Models.ResponsibilityCentre", "ResponsibilityCentre")
                         .WithMany("Documents")
                         .HasForeignKey("ResponsibilityCentreId")
@@ -1551,8 +1431,6 @@ namespace DocManagementBackend.Migrations
 
                     b.Navigation("CurrentStep");
 
-                    b.Navigation("Customer");
-
                     b.Navigation("DocumentType");
 
                     b.Navigation("ResponsibilityCentre");
@@ -1560,8 +1438,6 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("SubType");
 
                     b.Navigation("UpdatedBy");
-
-                    b.Navigation("Vendor");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.DocumentCircuitHistory", b =>
@@ -1863,11 +1739,6 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Steps");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.Customer", b =>
-                {
-                    b.Navigation("Documents");
-                });
-
             modelBuilder.Entity("DocManagementBackend.Models.Document", b =>
                 {
                     b.Navigation("Lignes");
@@ -1927,11 +1798,6 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Documents");
 
                     b.Navigation("LogHistories");
-                });
-
-            modelBuilder.Entity("DocManagementBackend.Models.Vendor", b =>
-                {
-                    b.Navigation("Documents");
                 });
 #pragma warning restore 612, 618
         }

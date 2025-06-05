@@ -36,7 +36,7 @@ namespace DocManagementBackend.Controllers
                     Description = uc.Description,
                     CreatedAt = uc.CreatedAt,
                     UpdatedAt = uc.UpdatedAt,
-                    ItemsCount = uc.ItemsCount
+                    ItemsCount = _context.Items.Count(i => i.Unite == uc.Code)
                 })
                 .OrderBy(uc => uc.Code)
                 .ToListAsync();
@@ -81,7 +81,7 @@ namespace DocManagementBackend.Controllers
                     Description = uc.Description,
                     CreatedAt = uc.CreatedAt,
                     UpdatedAt = uc.UpdatedAt,
-                    ItemsCount = uc.ItemsCount
+                    ItemsCount = _context.Items.Count(i => i.Unite == uc.Code)
                 })
                 .FirstOrDefaultAsync();
 

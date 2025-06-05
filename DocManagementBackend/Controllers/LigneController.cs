@@ -38,8 +38,16 @@ namespace DocManagementBackend.Controllers
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
-                .Select(LigneMappings.ToLigneDto).ToListAsync();
-            return Ok(lignes);
+                .ToListAsync();
+
+            // Load selected elements dynamically for each ligne
+            foreach (var ligne in lignes)
+            {
+                await ligne.LoadElementAsync(_context);
+            }
+
+            var lignesDtos = lignes.Select(LigneMappings.ToLigneDto.Compile()).ToList();
+            return Ok(lignesDtos);
         }
 
         [HttpGet("{id}")]
@@ -49,14 +57,20 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var ligneDto = await _context.Lignes
+            var ligne = await _context.Lignes
                 .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
-                .Where(l => l.Id == id).Select(LigneMappings.ToLigneDto).FirstOrDefaultAsync();
-            if (ligneDto == null)
+                .FirstOrDefaultAsync(l => l.Id == id);
+                
+            if (ligne == null)
                 return NotFound("Ligne not found.");
+
+            // Load selected element dynamically
+            await ligne.LoadElementAsync(_context);
+
+            var ligneDto = LigneMappings.ToLigneDto.Compile()(ligne);
             return Ok(ligneDto);
         }
 
@@ -73,8 +87,16 @@ namespace DocManagementBackend.Controllers
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
-                .Select(LigneMappings.ToLigneDto).ToListAsync();
-            return Ok(lignes);
+                .ToListAsync();
+
+            // Load selected elements dynamically for each ligne
+            foreach (var ligne in lignes)
+            {
+                await ligne.LoadElementAsync(_context);
+            }
+
+            var lignesDtos = lignes.Select(LigneMappings.ToLigneDto.Compile()).ToList();
+            return Ok(lignesDtos);
         }
 
         [HttpPost]
@@ -131,6 +153,7 @@ namespace DocManagementBackend.Controllers
                 Title = request.Title.Trim(),
                 Article = request.Article.Trim(),
                 LignesElementTypeId = request.LignesElementTypeId,
+                ElementId = request.SelectedElementCode,
                 Quantity = request.Quantity,
                 PriceHT = request.PriceHT,
                 DiscountPercentage = request.DiscountPercentage,
@@ -156,7 +179,7 @@ namespace DocManagementBackend.Controllers
                         .Include(let => let.GeneralAccount)
                         .FirstOrDefaultAsync(let => let.Id == request.LignesElementTypeId.Value);
                     
-                    if (elementType?.GeneralAccount != null && elementType.TypeElement == "General Accounts")
+                    if (elementType?.GeneralAccount != null && elementType.TypeElement == ElementType.GeneralAccounts)
                     {
                         elementType.GeneralAccount.LinesCount++;
                     }
@@ -169,15 +192,21 @@ namespace DocManagementBackend.Controllers
                 await _context.SaveChangesAsync();
 
                 // Return the created ligne with all includes
-                var ligneDto = await _context.Lignes
+                var createdLigne = await _context.Lignes
                     .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
                     .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                     .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
                     .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
-                    .Where(l => l.Id == ligne.Id)
-                    .Select(LigneMappings.ToLigneDto)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(l => l.Id == ligne.Id);
 
+                if (createdLigne != null)
+                {
+                    // Load selected element dynamically
+                    await createdLigne.LoadElementAsync(_context);
+                }
+
+                var ligneDto = createdLigne != null ? LigneMappings.ToLigneDto.Compile()(createdLigne) : null;
+                
                 return CreatedAtAction(nameof(GetLigne), new { id = ligne.Id }, ligneDto);
             }
             catch (DbUpdateException ex)
@@ -203,7 +232,7 @@ namespace DocManagementBackend.Controllers
 
             // Track the old GeneralAccount for count management
             GeneralAccounts? oldGeneralAccount = null;
-            if (ligne.LignesElementType?.TypeElement == "General Accounts")
+            if (ligne.LignesElementType?.TypeElement == ElementType.GeneralAccounts)
             {
                 oldGeneralAccount = ligne.LignesElementType.GeneralAccount;
             }
@@ -233,10 +262,16 @@ namespace DocManagementBackend.Controllers
                 ligne.LignesElementTypeId = request.LignesElementTypeId.Value;
                 
                 // Track the new GeneralAccount
-                if (elementType.TypeElement == "General Accounts")
+                if (elementType.TypeElement == ElementType.GeneralAccounts)
                 {
                     newGeneralAccount = elementType.GeneralAccount;
                 }
+            }
+
+            // Update selected element code
+            if (!string.IsNullOrWhiteSpace(request.SelectedElementCode))
+            {
+                ligne.ElementId = request.SelectedElementCode.Trim();
             }
 
             // Update pricing fields
@@ -342,7 +377,7 @@ namespace DocManagementBackend.Controllers
             try
             {
                 // If the ligne has a LignesElementType that references a GeneralAccount, decrement the count
-                if (ligne.LignesElementType?.TypeElement == "General Accounts" && ligne.LignesElementType.GeneralAccount != null)
+                if (ligne.LignesElementType?.TypeElement == ElementType.GeneralAccounts && ligne.LignesElementType.GeneralAccount != null)
                 {
                     ligne.LignesElementType.GeneralAccount.LinesCount = Math.Max(0, ligne.LignesElementType.GeneralAccount.LinesCount - 1);
                 }

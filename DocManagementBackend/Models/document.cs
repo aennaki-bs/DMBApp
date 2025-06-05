@@ -54,6 +54,18 @@ namespace DocManagementBackend.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public int LigneCouter { get; set; } = 0;
         public bool IsDeleted { get; set; } = false;
+        
+        // New customer/vendor relationship
+        [MaxLength(50)]
+        public string? CustomerOrVendor { get; set; }
+        
+        // Navigation properties for Customer and Vendor (will be resolved based on DocumentType.TierType)
+        [ForeignKey("CustomerOrVendor")]
+        public Customer? Customer { get; set; }
+        
+        [ForeignKey("CustomerOrVendor")]  
+        public Vendor? Vendor { get; set; }
+        
         [JsonIgnore]
         public ICollection<Ligne> Lignes { get; set; } = new List<Ligne>();
     }
@@ -67,6 +79,10 @@ namespace DocManagementBackend.Models
         public string TypeAttr { get; set; } = string.Empty;
         public int DocumentCounter { get; set; } = 0;
         public int DocCounter { get; set; } = 0;
+        
+        // New tier type field
+        public TierType TierType { get; set; } = TierType.None;
+        
         [JsonIgnore]
         public ICollection<Document> Documents { get; set; } = new List<Document>();
         [JsonIgnore]

@@ -122,6 +122,14 @@ const EditLigneDialog = ({
   const calculateAmounts = () => {
     const { quantity, priceHT, discountPercentage, discountAmount, vatPercentage, useFixedDiscount } = formValues;
     
+    // Calculate discount amount based on the formula: Amount Discount = % Discount * (Price HT * Quantity)
+    let calculatedDiscountAmount: number;
+    if (useFixedDiscount && discountAmount) {
+      calculatedDiscountAmount = discountAmount;
+    } else {
+      calculatedDiscountAmount = discountPercentage * (priceHT * quantity);
+    }
+    
     let amountHT: number;
     if (useFixedDiscount && discountAmount) {
       amountHT = priceHT * quantity - discountAmount;
@@ -132,7 +140,7 @@ const EditLigneDialog = ({
     const amountVAT = amountHT * vatPercentage;
     const amountTTC = amountHT + amountVAT;
     
-    return { amountHT, amountVAT, amountTTC };
+    return { amountHT, amountVAT, amountTTC, discountAmount: calculatedDiscountAmount };
   };
 
   const handleFieldChange = (key: keyof FormValues, value: any) => {
@@ -150,6 +158,7 @@ const EditLigneDialog = ({
         title: formValues.title,
         article: formValues.article,
         lignesElementTypeId: formValues.lignesElementTypeId,
+        selectedElementCode: undefined,
         quantity: formValues.quantity,
         priceHT: formValues.priceHT,
         discountPercentage: formValues.discountPercentage,
@@ -188,7 +197,7 @@ const EditLigneDialog = ({
     return `${(value * 100).toFixed(1)}%`;
   };
 
-  const { amountHT, amountVAT, amountTTC } = calculateAmounts();
+  const { amountHT, amountVAT, amountTTC, discountAmount } = calculateAmounts();
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -445,17 +454,21 @@ const EditLigneDialog = ({
                 <Calculator className="h-4 w-4 text-green-400" />
                 <h4 className="text-green-200 font-medium">Calculation Preview</h4>
               </div>
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="text-green-400">Amount HT:</span>
+                  <span className="text-orange-400">Amount Discount:</span>
+                  <div className="text-white font-medium">{formatPrice(discountAmount)}</div>
+                </div>
+                <div>
+                  <span className="text-blue-400">Amount HT:</span>
                   <div className="text-white font-medium">{formatPrice(amountHT)}</div>
                 </div>
                 <div>
-                  <span className="text-green-400">VAT Amount:</span>
+                  <span className="text-purple-400">VAT:</span>
                   <div className="text-white font-medium">{formatPrice(amountVAT)}</div>
                 </div>
                 <div>
-                  <span className="text-green-400">Total TTC:</span>
+                  <span className="text-green-400">TTC:</span>
                   <div className="text-white font-medium">{formatPrice(amountTTC)}</div>
                 </div>
               </div>

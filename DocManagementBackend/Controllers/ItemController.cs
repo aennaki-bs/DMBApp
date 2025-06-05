@@ -46,7 +46,7 @@ namespace DocManagementBackend.Controllers
                     } : null,
                     CreatedAt = i.CreatedAt,
                     UpdatedAt = i.UpdatedAt,
-                    ElementTypesCount = i.LignesElementTypes.Count()
+                    ElementTypesCount = _context.Lignes.Count(l => l.ElementId == i.Code)
                 })
                 .OrderBy(i => i.Code)
                 .ToListAsync();
@@ -102,7 +102,7 @@ namespace DocManagementBackend.Controllers
                     } : null,
                     CreatedAt = i.CreatedAt,
                     UpdatedAt = i.UpdatedAt,
-                    ElementTypesCount = i.LignesElementTypes.Count()
+                    ElementTypesCount = _context.Lignes.Count(l => l.ElementId == i.Code)
                 })
                 .FirstOrDefaultAsync();
 
@@ -290,15 +290,15 @@ namespace DocManagementBackend.Controllers
                 return authResult.ErrorResponse!;
 
             var item = await _context.Items
-                .Include(i => i.LignesElementTypes)
                 .FirstOrDefaultAsync(i => i.Code == code);
 
             if (item == null)
                 return NotFound("Item not found.");
 
-            // Check if there are lines associated
-            if (item.LignesElementTypes.Any())
-                return BadRequest("Cannot delete item. There are lines associated with it.");
+            // Check if there are lines directly referencing this item
+            var lignesCount = await _context.Lignes.CountAsync(l => l.ElementId == code);
+            if (lignesCount > 0)
+                return BadRequest("Cannot delete item. There are document lines associated with it.");
 
             // Track unit for count update
             var itemUnite = item.Unite;

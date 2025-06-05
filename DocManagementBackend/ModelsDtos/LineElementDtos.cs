@@ -122,6 +122,9 @@ namespace DocManagementBackend.Models
         // Reference to line element via LignesElementType
         public int? LignesElementTypeId { get; set; }
         
+        // Selected element code (Item.Code or GeneralAccounts.Code)
+        public string? SelectedElementCode { get; set; }
+        
         // Pricing fields
         public decimal Quantity { get; set; } = 1;
         public decimal PriceHT { get; set; } = 0;
@@ -138,6 +141,9 @@ namespace DocManagementBackend.Models
         
         // Reference to line element via LignesElementType
         public int? LignesElementTypeId { get; set; }
+        
+        // Selected element code (Item.Code or GeneralAccounts.Code)
+        public string? SelectedElementCode { get; set; }
         
         // Pricing fields
         public decimal? Quantity { get; set; }

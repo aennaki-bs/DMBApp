@@ -246,33 +246,13 @@ const LigneItem = ({
                         <Package className="h-4 w-4" />
                         Element Type Details
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-xs text-purple-400 mb-1">Code</div>
-                          <div className="text-sm font-medium text-purple-300">
-                            {ligne.lignesElementType.code}
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-1 gap-4">
                         <div>
                           <div className="text-xs text-purple-400 mb-1">Type</div>
                           <div className="text-sm font-medium text-purple-300">
                             {ligne.lignesElementType.typeElement}
                           </div>
                         </div>
-                        <div className="col-span-1 md:col-span-2">
-                          <div className="text-xs text-purple-400 mb-1">Description</div>
-                          <div className="text-sm font-medium text-purple-300">
-                            {ligne.lignesElementType.description}
-                          </div>
-                        </div>
-                        {ligne.lignesElementType.tableName && (
-                          <div>
-                            <div className="text-xs text-purple-400 mb-1">Table</div>
-                            <div className="text-sm font-medium text-purple-300">
-                              {ligne.lignesElementType.tableName}
-                            </div>
-                          </div>
-                        )}
                       </div>
 
                       {/* Associated Item or General Account Details */}
@@ -281,13 +261,13 @@ const LigneItem = ({
                           <h5 className="text-purple-200 font-medium mb-3 flex items-center gap-2">
                             {ligne.item ? (
                               <>
-                                <Package className="h-4 w-4 text-emerald-400" />
-                                Associated Item
+                                {/* <Package className="h-4 w-4 text-emerald-400" /> */}
+                                {/* Associated Item */}
                               </>
                             ) : (
                               <>
-                                <Calculator className="h-4 w-4 text-violet-400" />
-                                Associated General Account
+                                {/* <Calculator className="h-4 w-4 text-violet-400" /> */}
+                                {/* Associated General Account */}
                               </>
                             )}
                           </h5>
