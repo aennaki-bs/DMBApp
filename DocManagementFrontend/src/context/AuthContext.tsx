@@ -1,14 +1,13 @@
-
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { NavigateFunction } from 'react-router-dom';
-import authService, { 
-  LoginCredentials, 
-  RegisterCredentials, 
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { NavigateFunction } from "react-router-dom";
+import authService, {
+  LoginCredentials,
+  RegisterCredentials,
   UserInfo,
-  UpdateProfileRequest
-} from '../services/authService';
-import { tokenManager } from '../services/tokenManager';
-import { toast } from 'sonner';
+  UpdateProfileRequest,
+} from "../services/authService";
+import { tokenManager } from "../services/tokenManager";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: UserInfo | null;
@@ -45,7 +44,9 @@ const AuthContext = createContext<AuthContextType>({
 // Export the hook through a direct import
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,48 +54,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Check if user is logged in on initial load
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      
-      if (storedToken && storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          
-          // Use tokenManager to ensure we have a valid token
-          const validToken = await tokenManager.ensureValidToken();
-          
-          if (validToken) {
-            setToken(validToken);
-            setUser(parsedUser);
-            
-            console.log('Stored user data:', parsedUser);
-            
-            // Verify token is still valid by fetching user info
-            try {
-              const userInfo = await authService.getUserInfo();
-              console.log('User info verified on init:', userInfo);
-              setUser(userInfo);
-              localStorage.setItem('user', JSON.stringify(userInfo));
-            } catch (error) {
-              console.error('Failed to get user info, but token is valid. Using stored user data.');
-              // If getUserInfo fails but token is valid, use stored user data
+      try {
+        const storedToken = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
+
+        if (storedToken && storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+
+            // Add timeout to prevent hanging
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Auth initialization timeout")),
+                5000
+              )
+            );
+
+            // Use tokenManager to ensure we have a valid token with timeout
+            const validToken = await Promise.race([
+              tokenManager.ensureValidToken(),
+              timeoutPromise,
+            ]);
+
+            if (validToken) {
+              setToken(validToken as string);
+              setUser(parsedUser);
+
+              console.log("Stored user data:", parsedUser);
+
+              // Verify token is still valid by fetching user info with timeout
+              try {
+                const userInfo = await Promise.race([
+                  authService.getUserInfo(),
+                  timeoutPromise,
+                ]);
+                console.log("User info verified on init:", userInfo);
+                setUser(userInfo as UserInfo);
+                localStorage.setItem("user", JSON.stringify(userInfo));
+              } catch (error) {
+                console.error(
+                  "Failed to get user info, but token is valid. Using stored user data."
+                );
+                // If getUserInfo fails but token is valid, use stored user data
+              }
+            } else {
+              // Token is invalid/expired and refresh failed
+              console.log(
+                "Token invalid and refresh failed, clearing auth state"
+              );
+              authService.clearTokens();
+              setUser(null);
+              setToken(null);
             }
-          } else {
-            // Token is invalid/expired and refresh failed
-            console.log('Token invalid and refresh failed, clearing auth state');
+          } catch (error) {
+            console.error("Session expired or invalid", error);
             authService.clearTokens();
             setUser(null);
             setToken(null);
           }
-        } catch (error) {
-          console.error('Session expired or invalid', error);
-          authService.clearTokens();
-          setUser(null);
-          setToken(null);
         }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        // Clear everything if there's an error
+        authService.clearTokens();
+        setUser(null);
+        setToken(null);
+      } finally {
+        // Always set loading to false, no matter what happens
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
     initAuth();
@@ -102,29 +130,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUserInfo = async () => {
     if (!token) return;
-    
+
     try {
       setIsLoading(true);
       const userInfo = await authService.getUserInfo();
       setUser(userInfo);
-      localStorage.setItem('user', JSON.stringify(userInfo));
-      console.log('User info refreshed:', userInfo);
+      localStorage.setItem("user", JSON.stringify(userInfo));
+      console.log("User info refreshed:", userInfo);
     } catch (error) {
-      console.error('Error refreshing user info', error);
+      console.error("Error refreshing user info", error);
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const updateUserProfile = async (data: UpdateProfileRequest) => {
     try {
       setIsLoading(true);
       await authService.updateProfile(data);
       await refreshUserInfo(); // Automatically refresh user info after updating profile
-      toast.success('Profile updated successfully');
+      toast.success("Profile updated successfully");
     } catch (error: any) {
-      console.error('Failed to update profile', error);
-      const errorMessage = error.response?.data || error.message || 'Failed to update profile';
+      console.error("Failed to update profile", error);
+      const errorMessage =
+        error.response?.data || error.message || "Failed to update profile";
       toast.error(errorMessage);
       throw error;
     } finally {
@@ -136,28 +165,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const response = await authService.login(credentials);
-      
+
       if (response && response.token && response.user) {
         // Store the user with userId explicitly in localStorage to ensure it's always available
         const userWithId = {
           ...response.user,
-          userId: response.user.userId // Ensure userId is explicitly set
+          userId: response.user.userId, // Ensure userId is explicitly set
         };
-        
+
         setToken(response.token);
         setUser(userWithId);
-        
+
         // Make sure we store the complete user object with userId
-        console.log('Storing user data on login:', userWithId);
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(userWithId));
-        
-        console.log('Login successful, user set:', userWithId);
+        console.log("Storing user data on login:", userWithId);
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(userWithId));
+
+        console.log("Login successful, user set:", userWithId);
         return true;
       }
       return false;
     } catch (error: any) {
-      console.error('Login failed', error);
+      console.error("Login failed", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -168,16 +197,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const response = await authService.register(credentials);
-      
+
       setToken(response.token);
       setUser(response.user);
-      
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      
-      toast.success('Registration successful!');
+
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+
+      toast.success("Registration successful!");
     } catch (error: any) {
-      console.error('Registration failed', error);
+      console.error("Registration failed", error);
       // Forward the error to be handled by the registration component
       throw error;
     } finally {
@@ -188,53 +217,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async (navigate?: NavigateFunction) => {
     try {
       let userId = user?.userId;
-      
+
       // Check if we have user ID in the current state
       if (!userId) {
         // Try to get user ID from localStorage as a backup
-        const storedUser = localStorage.getItem('user');
+        const storedUser = localStorage.getItem("user");
         if (storedUser) {
           try {
             const parsedUser = JSON.parse(storedUser);
             userId = parsedUser.userId;
-            console.log('Retrieved userId from localStorage:', userId);
+            console.log("Retrieved userId from localStorage:", userId);
           } catch (e) {
-            console.error('Failed to parse stored user data:', e);
+            console.error("Failed to parse stored user data:", e);
           }
         }
       }
-      
-      console.log('Attempting to logout user with ID:', userId);
-      
+
+      console.log("Attempting to logout user with ID:", userId);
+
       // Call the API logout endpoint with the user ID FIRST
       if (userId) {
         // Important: Call the API BEFORE clearing local state
-        console.log('Calling authService.logout with userId:', userId);
+        console.log("Calling authService.logout with userId:", userId);
         await authService.logout(userId);
       } else {
-        console.warn('Cannot logout: No user ID available');
+        console.warn("Cannot logout: No user ID available");
         // Clear tokens anyway
         authService.clearTokens();
       }
-      
+
       // AFTER API call, clear state
       setUser(null);
       setToken(null);
-      
-      toast.info('You have been logged out');
-      
+
+      toast.info("You have been logged out");
+
       if (navigate) {
-        navigate('/login');
+        navigate("/login");
       }
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error);
       // Even if there's an error, clear state and localStorage
       setUser(null);
       setToken(null);
       authService.clearTokens();
-      
+
       if (navigate) {
-        navigate('/login');
+        navigate("/login");
       }
     }
   };
@@ -242,16 +271,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Helper method to check if user has specified role(s)
   const hasRole = (roles: string | string[]): boolean => {
     if (!user || !user.role) return false;
-    
+
     // Handle the case where role might be a string or an object with roleName property
-    const userRole = typeof user.role === 'string' 
-      ? user.role 
-      : (user.role as unknown as RoleType)?.roleName || '';
-    
+    const userRole =
+      typeof user.role === "string"
+        ? user.role
+        : (user.role as unknown as RoleType)?.roleName || "";
+
     if (Array.isArray(roles)) {
       return roles.includes(userRole);
     }
-    
+
     return userRole === roles;
   };
 
@@ -268,15 +298,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     hasRole,
   };
 
-  console.log('Auth context current state:', { 
-    isAuthenticated: !!user && !!token, 
-    user, 
-    isLoading 
+  console.log("Auth context current state:", {
+    isAuthenticated: !!user && !!token,
+    user,
+    isLoading,
   });
 
   return (
-    <AuthContext.Provider value={authValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
   );
 };

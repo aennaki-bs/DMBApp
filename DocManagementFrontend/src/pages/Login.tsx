@@ -92,11 +92,26 @@ const Login = () => {
   });
 
   // Use the custom hook instead of manual checks
-  const { isAvailable, isChecking, checkConnection } = useApiConnection();
+  const { isAvailable, isChecking, checkConnection } = useApiConnection({
+    checkOnMount: false, // Don't auto-check on mount to prevent button from being disabled
+  });
   const { t } = useTranslation();
 
-  const { login, isLoading } = useAuth();
+  const { login, isLoading: authIsLoading } = useAuth();
+
+  // Override isLoading if it's been stuck for too long
+  const [localIsLoading, setLocalIsLoading] = useState(false);
+  const isLoading = localIsLoading;
   const navigate = useNavigate();
+
+  // Debug logging
+  console.log("Login component state:", {
+    authIsLoading,
+    localIsLoading,
+    isChecking,
+    isAvailable,
+    errors: errors.general,
+  });
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -137,6 +152,9 @@ const Login = () => {
 
     if (!validateForm()) return;
 
+    // Set local loading state
+    setLocalIsLoading(true);
+
     // Check connection before attempting login
     if (isAvailable === false) {
       setErrors({
@@ -145,6 +163,15 @@ const Login = () => {
         type: "connection",
       });
       return;
+    }
+
+    // If we haven't checked the connection yet, check it now
+    if (isAvailable === null) {
+      await checkConnection();
+      // If connection check fails, the error will be shown via the error state
+      if (isAvailable === false) {
+        return;
+      }
     }
 
     try {
@@ -249,6 +276,9 @@ const Login = () => {
           type: "auth",
         });
       }
+    } finally {
+      // Always reset local loading state
+      setLocalIsLoading(false);
     }
   };
 
@@ -349,10 +379,17 @@ const Login = () => {
             <p className="mt-2 text-blue-300">
               Sign in to access your documents and workspace
             </p>
+            {/* Debug info - remove in production */}
+            <div className="mt-2 text-xs text-blue-400/60 font-mono">
+              Debug: authLoading={authIsLoading.toString()}, localLoading=
+              {localIsLoading.toString()}, checking=
+              {isChecking.toString()}, available=
+              {isAvailable?.toString() || "null"}
+            </div>
           </motion.div>
 
           <motion.div
-            className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border border-blue-500/30 rounded-xl shadow-[0_0_25px_rgba(59,130,246,0.2)] p-6"
+            className="bg-gradient-to-b from-[#122259]/95 to-[#0a1033]/95 backdrop-blur-md border border-blue-900/30 rounded-xl shadow-[0_0_25px_rgba(59,130,246,0.2)] p-6"
             variants={itemVariants}
           >
             {/* Consolidated error display */}
@@ -555,7 +592,7 @@ const Login = () => {
                     id="emailOrUsername"
                     type="text"
                     placeholder="Enter your email or username"
-                    className={`pl-10 h-10 w-full rounded-md transition-all duration-200 bg-[#081029] ${getInputBorderClass(
+                    className={`pl-10 h-10 w-full rounded-md transition-all duration-200 bg-[#0f1642]/70 ${getInputBorderClass(
                       "emailOrUsername"
                     )} text-white placeholder:text-blue-300/50`}
                     value={emailOrUsername}
@@ -607,7 +644,7 @@ const Login = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`pl-10 h-10 w-full rounded-md transition-all duration-200 bg-[#081029] ${getInputBorderClass(
+                    className={`pl-10 h-10 w-full rounded-md transition-all duration-200 bg-[#0f1642]/70 ${getInputBorderClass(
                       "password"
                     )} text-white placeholder:text-blue-300/50`}
                     value={password}
@@ -654,10 +691,10 @@ const Login = () => {
                 type="submit"
                 className={`w-full ${
                   errors.general
-                    ? "bg-blue-600/60 border-blue-500/30"
-                    : "bg-blue-600/80 border-blue-500/50"
-                } hover:bg-blue-600 text-white hover:border-blue-400/70 transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]`}
-                disabled={isLoading || isChecking}
+                    ? "bg-blue-600/60 border-blue-900/30"
+                    : "bg-gradient-to-r from-blue-600 to-blue-700 border-blue-900/30"
+                } hover:from-blue-500 hover:to-blue-600 text-white transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]`}
+                disabled={isLoading}
               >
                 <span className="absolute inset-0 w-0 bg-white/10 transition-all duration-300 ease-out group-hover:w-full rounded-md"></span>
                 <LogIn className="h-4 w-4" />
@@ -705,7 +742,7 @@ const Login = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="h-full bg-gradient-to-br from-blue-600/20 to-purple-800/20 backdrop-blur-sm border border-blue-500/20 rounded-xl p-8 flex flex-col justify-between">
+          <div className="h-full bg-gradient-to-br from-[#122259]/20 to-[#0f1642]/20 backdrop-blur-sm border border-blue-900/20 rounded-xl p-8 flex flex-col justify-between">
             <div>
               <h2 className="text-2xl font-bold text-blue-100">DocuVerse</h2>
               <p className="text-blue-300 mt-2">

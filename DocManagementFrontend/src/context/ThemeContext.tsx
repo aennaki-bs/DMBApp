@@ -1,7 +1,7 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useTheme } from '@/hooks/useTheme';
+import React, { createContext, useContext, ReactNode } from "react";
+import { useTheme } from "@/hooks/useTheme";
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = "light" | "dark" | "system";
 
 interface ThemeContextType {
   theme: Theme;
@@ -16,18 +16,16 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const themeValue = useTheme();
-  
+
   return (
-    <ThemeContext.Provider value={themeValue}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={themeValue}>{children}</ThemeContext.Provider>
   );
 }
 
 export function useThemeContext() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useThemeContext must be used within a ThemeProvider');
+    throw new Error("useThemeContext must be used within a ThemeProvider");
   }
   return context;
 }
