@@ -24,7 +24,6 @@ import {
   Trash2,
   Search,
   Users,
-  FileText,
   AlertTriangle,
   ChevronUp,
   ChevronDown,
@@ -119,7 +118,8 @@ export default function CustomerManagement() {
         customer.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.country.toLowerCase().includes(searchTerm.toLowerCase())
+        customer.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.address.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return filtered.sort((a, b) => {
@@ -225,10 +225,7 @@ export default function CustomerManagement() {
     }
   };
 
-  const canDeleteSelected = selectedCustomers.every(code => {
-    const customer = customers.find(c => c.code === code);
-    return customer && customer.documentsCount === 0;
-  });
+  const canDeleteSelected = selectedCustomers.length > 0;
 
   const handleBulkDelete = async () => {
     try {
@@ -315,7 +312,7 @@ export default function CustomerManagement() {
                 <TooltipContent>
                   {canDeleteSelected
                     ? `Delete ${selectedCustomers.length} selected customers`
-                    : "Some customers have associated documents and cannot be deleted"
+                    : "Select customers to delete"
                   }
                 </TooltipContent>
               </Tooltip>
@@ -391,8 +388,13 @@ export default function CustomerManagement() {
                   Country {renderSortIcon("country")}
                 </div>
               </TableHead>
-              <TableHead className="w-16 text-blue-200 font-medium text-center">
-                Documents
+              <TableHead
+                className={headerClass("address")}
+                onClick={() => handleSort("address")}
+              >
+                <div className="flex items-center">
+                  Address {renderSortIcon("address")}
+                </div>
               </TableHead>
               <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
                 Actions
@@ -424,14 +426,8 @@ export default function CustomerManagement() {
                 <TableCell className="text-blue-200">
                   {customer.country || "-"}
                 </TableCell>
-                <TableCell className="text-center">
-                  <Badge
-                    variant={customer.documentsCount > 0 ? "secondary" : "outline"}
-                    className="text-xs"
-                  >
-                    <FileText className="h-3 w-3 mr-1" />
-                    {customer.documentsCount}
-                  </Badge>
+                <TableCell className="text-blue-200">
+                  {customer.address || "-"}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
@@ -442,21 +438,13 @@ export default function CustomerManagement() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(customer)}
-                            disabled={customer.documentsCount > 0}
-                            className={`h-8 w-8 p-0 ${
-                              customer.documentsCount > 0
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
-                            }`}
+                            className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          {customer.documentsCount > 0
-                            ? "Cannot edit: Customer is used in documents"
-                            : "Edit customer"
-                          }
+                          Edit customer
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -470,12 +458,7 @@ export default function CustomerManagement() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  disabled={customer.documentsCount > 0}
-                                  className={`h-8 w-8 p-0 ${
-                                    customer.documentsCount > 0
-                                      ? "opacity-50 cursor-not-allowed text-gray-400"
-                                      : "text-red-400 hover:text-red-300 hover:bg-red-800/30"
-                                  }`}
+                                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-800/30"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -507,10 +490,7 @@ export default function CustomerManagement() {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          {customer.documentsCount > 0
-                            ? "Cannot delete: Customer is used in documents"
-                            : "Delete customer"
-                          }
+                          Delete customer
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -537,12 +517,7 @@ export default function CustomerManagement() {
               Edit Customer: {editingCustomer?.code}
             </DialogTitle>
           </DialogHeader>
-          {editingCustomer && editingCustomer.documentsCount > 0 && (
-            <div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded text-yellow-300 text-sm">
-              <AlertTriangle className="h-4 w-4 inline mr-2" />
-              This customer is used in {editingCustomer.documentsCount} document(s). Exercise caution when making changes.
-            </div>
-          )}
+
           <div className="space-y-4">
             <div>
               <Label className="text-blue-200">Customer Code</Label>

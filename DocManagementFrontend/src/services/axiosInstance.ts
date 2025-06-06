@@ -1,35 +1,10 @@
-import axios from 'axios';
+// DEPRECATED: This file is deprecated in favor of the centralized API instance
+// Use './api' instead to avoid conflicts and ensure proper token refresh handling
 
-export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5204',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import { toast } from 'sonner';
 
-// Add request interceptor to include auth token
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Show deprecation warning for developers
+console.warn('DEPRECATED: axiosInstance.ts is deprecated. Use ./api instead for better token refresh handling.');
 
-// Add response interceptor to handle errors
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-); 
+// Re-export the main API instance to maintain backward compatibility
+export { default as axiosInstance } from './api'; 

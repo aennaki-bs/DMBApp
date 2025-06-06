@@ -125,6 +125,11 @@ const authService = {
         // Get user info with the token
         localStorage.setItem('token', response.data.accessToken);
         
+        // Store refresh token if available
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
+        
         // Fetch user info immediately
         try {
           const userInfoResponse = await api.get('/Account/user-info');
@@ -146,6 +151,11 @@ const authService = {
       } 
       // If API already returns both token and user
       else if (response.data.token && response.data.user) {
+        // Store refresh token if available
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
+        
         // Ensure we have a user ID
         if (!response.data.user.userId) {
           console.error('User data is missing userId:', response.data.user);
@@ -186,6 +196,33 @@ const authService = {
     }
   },
 
+  refreshToken: async (): Promise<string | null> => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        console.log('No refresh token available');
+        return null;
+      }
+
+      const response = await api.post('/Auth/refresh-token');
+      
+      if (response.data.accessToken) {
+        localStorage.setItem('token', response.data.accessToken);
+        console.log('Token refreshed successfully');
+        return response.data.accessToken;
+      }
+      
+      return null;
+    } catch (error: any) {
+      console.error('Token refresh failed:', error);
+      // If refresh fails, clear all tokens
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      return null;
+    }
+  },
+
   logout: async (userId: string): Promise<void> => {
     try {
       if (!userId) {
@@ -212,6 +249,11 @@ const authService = {
         console.error('Error response data:', error.response.data);
       }
       // Do not throw the error as we want to continue with the local logout
+    } finally {
+      // Always clear local storage
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
     }
   },
 
@@ -377,6 +419,12 @@ const authService = {
       console.error('Failed to update email:', error);
       throw error;
     }
+  },
+
+  clearTokens: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken'); 
+    localStorage.removeItem('user');
   }
 };
 

@@ -7,6 +7,7 @@ import authService, {
   UserInfo,
   UpdateProfileRequest
 } from '../services/authService';
+import { tokenManager } from '../services/tokenManager';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -57,21 +58,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (storedToken && storedUser) {
         try {
-          setToken(storedToken);
           const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
           
-          console.log('Stored user data:', parsedUser);
+          // Use tokenManager to ensure we have a valid token
+          const validToken = await tokenManager.ensureValidToken();
           
-          // Verify token is still valid by fetching user info
-          const userInfo = await authService.getUserInfo();
-          console.log('User info verified on init:', userInfo);
-          setUser(userInfo);
-          localStorage.setItem('user', JSON.stringify(userInfo));
+          if (validToken) {
+            setToken(validToken);
+            setUser(parsedUser);
+            
+            console.log('Stored user data:', parsedUser);
+            
+            // Verify token is still valid by fetching user info
+            try {
+              const userInfo = await authService.getUserInfo();
+              console.log('User info verified on init:', userInfo);
+              setUser(userInfo);
+              localStorage.setItem('user', JSON.stringify(userInfo));
+            } catch (error) {
+              console.error('Failed to get user info, but token is valid. Using stored user data.');
+              // If getUserInfo fails but token is valid, use stored user data
+            }
+          } else {
+            // Token is invalid/expired and refresh failed
+            console.log('Token invalid and refresh failed, clearing auth state');
+            authService.clearTokens();
+            setUser(null);
+            setToken(null);
+          }
         } catch (error) {
           console.error('Session expired or invalid', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+          authService.clearTokens();
           setUser(null);
           setToken(null);
         }
@@ -196,13 +213,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await authService.logout(userId);
       } else {
         console.warn('Cannot logout: No user ID available');
+        // Clear tokens anyway
+        authService.clearTokens();
       }
       
-      // AFTER API call, clear state and localStorage
+      // AFTER API call, clear state
       setUser(null);
       setToken(null);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
       
       toast.info('You have been logged out');
       
@@ -214,8 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Even if there's an error, clear state and localStorage
       setUser(null);
       setToken(null);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      authService.clearTokens();
       
       if (navigate) {
         navigate('/login');
