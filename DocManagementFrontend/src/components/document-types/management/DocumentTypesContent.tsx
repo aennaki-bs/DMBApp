@@ -61,7 +61,7 @@ const DocumentTypesContent = ({
   }
 
   return (
-    <div className="flex-1 overflow-hidden px-6 py-3">
+    <div className="flex-1 overflow-hidden">
       {viewMode === "table" ? (
         <div className="flex flex-col space-y-4">
           <DocumentTypeTable

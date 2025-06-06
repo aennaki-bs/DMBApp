@@ -30,7 +30,7 @@ export function useUserManagement() {
 
   const handleSelectUser = (userId: number) => {
     setSelectedUsers(prev => 
-      prev.includes(userId) 
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );

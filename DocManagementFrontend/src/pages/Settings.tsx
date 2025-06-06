@@ -49,14 +49,6 @@ const backgroundOptions = [
     description: "Clean workspace aesthetic",
   },
   {
-    id: "tech-abstract",
-    name: "Tech Abstract",
-    url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&h=1080&fit=crop",
-    preview:
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop",
-    description: "Futuristic technology vibes",
-  },
-  {
     id: "minimal-gradient",
     name: "Minimal Gradient",
     url: "https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&h=1080&fit=crop",
@@ -138,7 +130,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1c] via-[#0d1117] to-[#1a1625] relative">
+    <div className="min-h-screen bg-gradient-to-br relative">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl animate-pulse"></div>
@@ -154,7 +146,7 @@ const Settings = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
-              <EnhancedButton
+              {/* <EnhancedButton
                 variant="ghost"
                 size="lg"
                 onClick={() => navigate("/dashboard")}
@@ -162,20 +154,20 @@ const Settings = () => {
               >
                 <ArrowLeft className="h-5 w-5 mr-3" />
                 Back to Dashboard
-              </EnhancedButton>
+              </EnhancedButton> */}
               <Separator
                 orientation="vertical"
-                className="h-8 bg-blue-900/30"
+                className="h-4 bg-blue-900/30"
               />
               <div className="flex items-center space-x-4">
                 <div className="p-3 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30">
                   <SettingsIcon className="h-8 w-8 text-blue-400" />
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold text-white mb-1">
+                  <h1 className="text-lg font-bold text-white mb-1">
                     Application Settings
                   </h1>
-                  <p className="text-blue-300/80 text-lg">
+                  <p className="text-blue-300/80">
                     Customize your DocuVerse experience
                   </p>
                 </div>

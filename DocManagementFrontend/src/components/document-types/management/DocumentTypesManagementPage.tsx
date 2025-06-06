@@ -29,23 +29,15 @@ const DocumentTypesManagementPage = () => {
   const {
     types,
     isLoading,
-    filteredAndSortedTypes,
     searchQuery,
     setSearchQuery,
     selectedTypes,
     setSelectedTypes,
     viewMode,
     setViewMode,
-    sortField,
-    sortDirection,
-    handleSort,
     handleSelectType,
     handleSelectAll,
-    currentPage,
-    setCurrentPage,
-    totalPages,
     documentTypesProps,
-    filters,
     setFilters,
     appliedFilters,
     setAppliedFilters,
@@ -176,7 +168,7 @@ const DocumentTypesManagementPage = () => {
   ];
 
   return (
-    <div className="space-y-2 p-6 bg-[#070b28]">
+    <div className="space-y-2 p-6 ">
       <DocumentTypesHeaderSection
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}

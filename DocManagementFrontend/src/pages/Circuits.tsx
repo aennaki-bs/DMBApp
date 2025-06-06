@@ -120,7 +120,7 @@ export default function CircuitsPage() {
         </Alert>
       )}
 
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 transition-all">
+      <div className="border rounded-lg transition-all">
         <SearchAndFilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

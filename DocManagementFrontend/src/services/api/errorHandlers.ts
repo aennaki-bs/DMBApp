@@ -70,7 +70,7 @@ export const getErrorMessage = (error: any): string => {
       return 'Forbidden. You do not have permission to access this resource.';
     case 404:
       return 'Resource not found.';
-    case 500:
+    case 500: 
       return 'Server error. Please try again later.';
     default:
       return `Error ${status}: ${data || 'Unknown error'}`;

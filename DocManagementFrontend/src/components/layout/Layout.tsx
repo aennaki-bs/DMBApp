@@ -25,13 +25,6 @@ const backgroundOptions = [
     url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&h=1080&fit=crop",
   },
   {
-    id: "tech-abstract",
-    name: "Tech Abstract",
-    url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&h=1080&fit=crop",
-    // url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920&h=1080&fit=crop",
-    // url: "https://www.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_66626544.htm#fromView=keyword&page=1&position=4&uuid=0d5caa34-43b0-49f1-a07e-9f2b27fbdcc7&query=4k+Wallpaper+Abstract",
-  },
-  {
     id: "minimal-gradient",
     name: "Minimal Gradient",
     url: "https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&h=1080&fit=crop",
@@ -137,7 +130,7 @@ export function Layout() {
                 {/* Right side items */}
                 <div className="ml-auto flex items-center gap-3">
                   {/* Language switcher */}
-                  <LanguageSwitcher />
+                  {/* <LanguageSwitcher /> */}
 
                   {/* Connection status indicator */}
                   <ConnectionStatusIndicator showRetryButton />

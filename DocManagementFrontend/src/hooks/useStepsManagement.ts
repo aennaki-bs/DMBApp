@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useSteps } from '@/hooks/useSteps';
 import stepService from '@/services/stepService';
+import { Step } from '@/models/step';
 
 export function useStepsManagement() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);

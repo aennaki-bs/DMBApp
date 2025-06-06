@@ -63,7 +63,7 @@ const DocumentTypesHeader = ({
         }
       />
 
-      <div className="px-6 pt-2 pb-2">
+      <div className=" pt-2 pb-2">
         <SearchAndFilterBar
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}

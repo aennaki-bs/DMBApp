@@ -258,10 +258,10 @@ const App = () => (
                     path="/circuit/:circuitId/transitions"
                     element={<CircuitStatusStepsPage />}
                   />
-                  <Route
+                  {/* <Route
                     path="/circuits/:circuitId/steps/:stepId/statuses"
                     element={<StepStatusesPage />}
-                  />
+                  /> */}
                   <Route
                     path="/pending-approvals"
                     element={

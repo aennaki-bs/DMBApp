@@ -30,4 +30,4 @@ export function useThemeContext() {
     throw new Error('useThemeContext must be used within a ThemeProvider');
   }
   return context;
-} 
+}
