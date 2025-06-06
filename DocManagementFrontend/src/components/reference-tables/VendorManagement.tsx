@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Search, Truck, FileText, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Truck, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -69,7 +69,8 @@ export default function VendorManagement() {
         vendor.vendorCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
         vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         vendor.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vendor.country.toLowerCase().includes(searchTerm.toLowerCase())
+        vendor.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vendor.address.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return filtered.sort((a, b) => {
@@ -105,6 +106,22 @@ export default function VendorManagement() {
     `cursor-pointer hover:bg-blue-800/30 text-blue-200 font-medium ${
       sortField === field ? "bg-blue-700/40" : ""
     }`;
+
+  const handleSelectVendor = (vendorCode: string) => {
+    setSelectedVendors(prev =>
+      prev.includes(vendorCode)
+        ? prev.filter(v => v !== vendorCode)
+        : [...prev, vendorCode]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedVendors.length === filteredAndSortedVendors.length) {
+      setSelectedVendors([]);
+    } else {
+      setSelectedVendors(filteredAndSortedVendors.map(v => v.vendorCode));
+    }
+  };
 
   const openCreateWizard = () => {
     setIsCreateWizardOpen(true);
@@ -143,6 +160,13 @@ export default function VendorManagement() {
     } catch (error) {}
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all(selectedVendors.map(vendorCode => deleteMutation.mutateAsync(vendorCode)));
+      setSelectedVendors([]);
+    } catch (error) {}
+  };
+
   if (isLoading) return <div className="p-6 text-blue-200">Loading vendors...</div>;
   if (error) return <div className="p-6 text-red-400">Error loading vendors</div>;
 
@@ -157,10 +181,60 @@ export default function VendorManagement() {
             <p className="text-blue-300/80">Manage vendor information and relationships</p>
           </div>
         </div>
-        <Button onClick={openCreateWizard} className="bg-blue-600 text-white hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Vendor
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedVendors.length > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="opacity-90 hover:opacity-100"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete Selected ({selectedVendors.length})
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-gray-900 border-gray-700">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-red-400 flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5" />
+                            Confirm Bulk Deletion
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="text-gray-300">
+                            Are you sure you want to delete {selectedVendors.length} selected vendors?
+                            This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-gray-700 text-gray-200 hover:bg-gray-600">
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleBulkDelete}
+                            className="bg-red-600 text-white hover:bg-red-700"
+                          >
+                            Delete {selectedVendors.length} Vendors
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Delete {selectedVendors.length} selected vendors
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          <Button onClick={openCreateWizard} className="bg-blue-600 text-white hover:bg-blue-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Vendor
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -184,6 +258,13 @@ export default function VendorManagement() {
         <Table>
           <TableHeader>
             <TableRow className="border-blue-900/30 hover:bg-blue-900/20">
+              <TableHead className="w-12 text-blue-200 font-medium">
+                <Checkbox
+                  checked={selectedVendors.length === filteredAndSortedVendors.length && filteredAndSortedVendors.length > 0}
+                  onCheckedChange={handleSelectAll}
+                  className="border-blue-400 data-[state=checked]:bg-blue-600"
+                />
+              </TableHead>
               <TableHead className={headerClass("vendorCode")} onClick={() => handleSort("vendorCode")}>
                 <div className="flex items-center">Vendor Code {renderSortIcon("vendorCode")}</div>
               </TableHead>
@@ -196,23 +277,27 @@ export default function VendorManagement() {
               <TableHead className={headerClass("country")} onClick={() => handleSort("country")}>
                 <div className="flex items-center">Country {renderSortIcon("country")}</div>
               </TableHead>
-              <TableHead className="w-16 text-blue-200 font-medium text-center">Documents</TableHead>
+              <TableHead className={headerClass("address")} onClick={() => handleSort("address")}>
+                <div className="flex items-center">Address {renderSortIcon("address")}</div>
+              </TableHead>
               <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedVendors.map((vendor) => (
               <TableRow key={vendor.vendorCode} className="border-blue-900/30 hover:bg-blue-900/10">
+                <TableCell>
+                  <Checkbox
+                    checked={selectedVendors.includes(vendor.vendorCode)}
+                    onCheckedChange={() => handleSelectVendor(vendor.vendorCode)}
+                    className="border-blue-400 data-[state=checked]:bg-blue-600"
+                  />
+                </TableCell>
                 <TableCell className="font-mono text-blue-200">{vendor.vendorCode}</TableCell>
                 <TableCell className="font-medium text-blue-100">{vendor.name}</TableCell>
                 <TableCell className="text-blue-200">{vendor.city || "-"}</TableCell>
                 <TableCell className="text-blue-200">{vendor.country || "-"}</TableCell>
-                <TableCell className="text-center">
-                  <Badge variant={vendor.documentsCount > 0 ? "secondary" : "outline"} className="text-xs">
-                    <FileText className="h-3 w-3 mr-1" />
-                    {vendor.documentsCount}
-                  </Badge>
-                </TableCell>
+                <TableCell className="text-blue-200">{vendor.address || "-"}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <TooltipProvider>
@@ -222,18 +307,13 @@ export default function VendorManagement() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(vendor)}
-                            disabled={vendor.documentsCount > 0}
-                            className={`h-8 w-8 p-0 ${
-                              vendor.documentsCount > 0
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
-                            }`}
+                            className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          {vendor.documentsCount > 0 ? "Cannot edit: Vendor is used in documents" : "Edit vendor"}
+                          Edit vendor
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -247,12 +327,7 @@ export default function VendorManagement() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  disabled={vendor.documentsCount > 0}
-                                  className={`h-8 w-8 p-0 ${
-                                    vendor.documentsCount > 0
-                                      ? "opacity-50 cursor-not-allowed text-gray-400"
-                                      : "text-red-400 hover:text-red-300 hover:bg-red-800/30"
-                                  }`}
+                                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-800/30"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -284,7 +359,7 @@ export default function VendorManagement() {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          {vendor.documentsCount > 0 ? "Cannot delete: Vendor is used in documents" : "Delete vendor"}
+                          Delete vendor
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -311,12 +386,7 @@ export default function VendorManagement() {
               Edit Vendor: {editingVendor?.vendorCode}
             </DialogTitle>
           </DialogHeader>
-          {editingVendor && editingVendor.documentsCount > 0 && (
-            <div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded text-yellow-300 text-sm">
-              <AlertTriangle className="h-4 w-4 inline mr-2" />
-              This vendor is used in {editingVendor.documentsCount} document(s). Exercise caution when making changes.
-            </div>
-          )}
+
           <div className="space-y-4">
             <div>
               <Label className="text-blue-200">Vendor Code</Label>

@@ -1,15 +1,21 @@
 import { toast } from 'sonner';
 import api from './core';
 import { handleErrorResponse, shouldSkipAuthRedirect, shouldSkipErrorToast } from './errorHandlers';
+import { tokenManager } from '../tokenManager';
+
+// Track failed requests to avoid multiple login redirects
+let hasRedirectedToLogin = false;
 
 // Request interceptor for API calls
 const setupRequestInterceptor = () => {
   api.interceptors.request.use(
-    (config) => {
-      const token = localStorage.getItem('token');
+    async (config) => {
+      // Ensure we have a valid token before making the request
+      const token = await tokenManager.ensureValidToken();
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
       }
+      
       console.log('API Request:', {
         url: config.url,
         method: config.method,
@@ -108,17 +114,37 @@ const setupResponseInterceptor = () => {
                       
       const originalRequest = error.config;
       
-      // Only redirect to login for auth-required endpoints when token is invalid
+      // Handle 401 Unauthorized errors with token refresh
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         
-        // If it's not one of the exceptions and is a 401, only then redirect
+        // Check if we should skip auth redirect for certain endpoints
         const shouldRedirect = !shouldSkipAuthRedirect(originalRequest?.url || '');
         
-        if (shouldRedirect) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+        if (shouldRedirect && !hasRedirectedToLogin) {
+          // Try to refresh the token first
+          const newToken = await tokenManager.refreshToken();
+          
+          if (newToken) {
+            // Update the original request with new token and retry
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            return api(originalRequest);
+          } else {
+            // Refresh failed, redirect to login
+            hasRedirectedToLogin = true;
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            
+            // Reset the flag after a short delay to handle subsequent requests
+            setTimeout(() => {
+              hasRedirectedToLogin = false;
+            }, 1000);
+            
+            if (!window.location.pathname.includes('/login')) {
+              window.location.href = '/login';
+            }
+          }
         }
       }
       

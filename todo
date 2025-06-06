@@ -12,3 +12,9 @@ circuit steps card => on click shoudn't redirect to another page...
     devise:
         - add table 
         - 
+
+    add get apis endpoints:
+        - items: http://localhost:25048/BC250/api/bslink/docverse/v1.0/items
+        - generalAccounts: http://localhost:25048/BC250/api/bslink/docverse/v1.0/accounts
+        - Customers: http://localhost:25048/BC250/api/bslink/docverse/v1.0/customers
+        - Vendors: http://localhost:25048/BC250/api/bslink/docverse/v1.0/vendors

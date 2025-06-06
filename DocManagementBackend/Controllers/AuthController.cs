@@ -4,6 +4,8 @@ using DocManagementBackend.Data;
 using DocManagementBackend.Models;
 using DocManagementBackend.Utils;
 using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace DocManagementBackend.Controllers
 {
@@ -231,17 +233,55 @@ namespace DocManagementBackend.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
-            var refreshToken = Request.Cookies["refresh_token"];
+            // Try to get refresh token from cookies first, then from Authorization header
+            var refreshToken = Request.Cookies["refreshToken"] ?? Request.Cookies["refresh_token"];
+            
+            // If not in cookies, check Authorization header
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader != null && authHeader.StartsWith("Bearer "))
+                {
+                    // Extract the current access token to get user ID
+                    var currentToken = authHeader.Substring("Bearer ".Length);
+                    try
+                    {
+                        var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                        var token = tokenHandler.ReadJwtToken(currentToken);
+                        var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                        
+                        if (int.TryParse(userIdClaim, out int userId))
+                        {
+                            var userWithToken = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                            if (userWithToken != null)
+                            {
+                                refreshToken = userWithToken.RefreshToken;
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // If token parsing fails, continue with normal flow
+                    }
+                }
+            }
+            
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("No refresh token provided.");
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+                
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+                
             if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
                 return Unauthorized("Invalid or expired refresh token.");
+                
             var newAccessToken = AuthHelper.GenerateAccessToken(user);
             var newRefreshToken = AuthHelper.GenerateRefreshToken();
             user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiry = DateTime.UtcNow.AddHours(3);
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             await _context.SaveChangesAsync();
+            
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
@@ -249,10 +289,9 @@ namespace DocManagementBackend.Controllers
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(7)
             };
-            // Response.Cookies.Append("accessToken", accessToken, cookieOptions);
-            Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+            Response.Cookies.Append("refreshToken", newRefreshToken, cookieOptions);
 
-            return Ok(new { accessToken = newAccessToken });
+            return Ok(new { accessToken = newAccessToken, refreshToken = newRefreshToken });
         }
 
         [Authorize]
@@ -268,7 +307,11 @@ namespace DocManagementBackend.Controllers
             user.RefreshTokenExpiry = null;
             user.IsOnline = false;
             await _context.SaveChangesAsync();
+            
+            // Clear both possible cookie names
             Response.Cookies.Delete("refresh_token");
+            Response.Cookies.Delete("refreshToken");
+            Response.Cookies.Delete("accessToken");
 
             return Ok("Logged out successfully.");
         }

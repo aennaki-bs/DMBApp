@@ -92,7 +92,7 @@ namespace DocManagementBackend.Controllers
         [HttpPost("validate-code")]
         public async Task<IActionResult> ValidateCode([FromBody] ValidateLocationCodeRequest request)
         {
-            var authResult = await _authService.AuthorizeUserAsync(User);
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 

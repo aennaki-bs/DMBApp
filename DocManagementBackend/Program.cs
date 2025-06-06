@@ -111,6 +111,10 @@ builder.Services.AddScoped<CircuitManagementService>();
 builder.Services.AddScoped<DocumentWorkflowService>();
 builder.Services.AddScoped<UserAuthorizationService>();
 builder.Services.AddScoped<LineElementService>();
+
+// Add API Sync Services
+builder.Services.AddApiSyncServices();
+
 builder.Services.AddAuthorization();
 // builder.Services.AddScoped<CircuitProcessingService>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
