@@ -671,9 +671,6 @@ const UniteCodesManagement = ({
                         Description {renderSortIcon("description")}
                       </div>
                     </TableHead>
-                    <TableHead className="text-blue-200 font-medium">
-                      Items Count
-                    </TableHead>
                     <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
@@ -704,14 +701,6 @@ const UniteCodesManagement = ({
                       </TableCell>
                       <TableCell className="text-blue-200 max-w-xs truncate">
                         {uniteCode.description}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className="bg-amber-500/10 text-amber-400 border-amber-500/30"
-                        >
-                          {uniteCode.itemsCount || 0} items
-                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">

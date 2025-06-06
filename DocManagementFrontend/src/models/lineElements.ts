@@ -46,7 +46,7 @@ export interface Item {
   uniteCodeNavigation?: UniteCode;
   createdAt: string;
   updatedAt: string;
-  elementTypesCount: number;
+  elementTypesCount: number; // Count of lignes using this item (through element types)
 }
 
 export interface ItemSimple {
@@ -96,7 +96,7 @@ export interface GeneralAccounts {
   description: string;
   createdAt: string;
   updatedAt: string;
-  lignesCount: number;
+  lignesCount: number; // Count of lignes using this account (through element types)
 }
 
 export interface GeneralAccountsSimple {

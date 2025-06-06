@@ -1,1 +1,14 @@
 circuit steps card => on click shoudn't redirect to another page...
+
+    document:
+        - remove complet...
+        - show a message will changing the status (close the card).
+        - filter just the documents for the specific responsibilityCenter of this user.
+    approval:
+        - in all and seq groups the approver will accept approval auto
+    lines:
+        - choose type -> choose table based on type
+        - order the data and clarify it
+    devise:
+        - add table 
+        - 

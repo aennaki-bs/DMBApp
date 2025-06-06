@@ -36,7 +36,7 @@ namespace DocManagementBackend.Controllers
                     Description = ga.Description,
                     CreatedAt = ga.CreatedAt,
                     UpdatedAt = ga.UpdatedAt,
-                    LignesCount = ga.LignesElementTypes.Count()
+                    LignesCount = _context.Lignes.Count(l => l.ElementId == ga.Code)
                 })
                 .OrderBy(ga => ga.Code)
                 .ToListAsync();
@@ -81,7 +81,7 @@ namespace DocManagementBackend.Controllers
                     Description = ga.Description,
                     CreatedAt = ga.CreatedAt,
                     UpdatedAt = ga.UpdatedAt,
-                    LignesCount = ga.LignesElementTypes.Count()
+                    LignesCount = _context.Lignes.Count(l => l.ElementId == ga.Code)
                 })
                 .FirstOrDefaultAsync();
 
@@ -133,6 +133,7 @@ namespace DocManagementBackend.Controllers
             {
                 Code = request.Code.ToUpper().Trim(),
                 Description = request.Description.Trim(),
+                Type = GeneralAccountType.Expense, // Default to Expense type
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -176,7 +177,6 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("At least one field (Code or Description) must be provided.");
 
             var account = await _context.GeneralAccounts
-                .Include(ga => ga.LignesElementTypes)
                 .FirstOrDefaultAsync(ga => ga.Code == code);
                 
             if (account == null)
@@ -188,9 +188,10 @@ namespace DocManagementBackend.Controllers
 
             if (isCodeChanging)
             {
-                // Check if there are dependent records
-                if (account.LignesElementTypes.Any())
-                    return BadRequest("Cannot update code: This general account is referenced by line element types. Please remove all references first.");
+                // Check if there are lines directly referencing this general account
+                var lignesCount = await _context.Lignes.CountAsync(l => l.ElementId == code);
+                if (lignesCount > 0)
+                    return BadRequest("Cannot update code: This general account is used in document lines. Please remove all references first.");
 
                 // Check if new code already exists
                 var existingCode = await _context.GeneralAccounts
@@ -244,15 +245,15 @@ namespace DocManagementBackend.Controllers
                 return authResult.ErrorResponse!;
 
             var account = await _context.GeneralAccounts
-                .Include(ga => ga.LignesElementTypes)
                 .FirstOrDefaultAsync(ga => ga.Code == code);
 
             if (account == null)
                 return NotFound("General account not found.");
 
-            // Check if there are lines associated
-            if (account.LignesElementTypes.Any())
-                return BadRequest("Cannot delete general account. There are lines associated with it.");
+            // Check if there are lines directly referencing this general account
+            var lignesCount = await _context.Lignes.CountAsync(l => l.ElementId == code);
+            if (lignesCount > 0)
+                return BadRequest("Cannot delete general account. There are document lines associated with it.");
 
             _context.GeneralAccounts.Remove(account);
 

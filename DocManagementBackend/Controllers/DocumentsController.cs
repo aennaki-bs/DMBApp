@@ -50,6 +50,41 @@ namespace DocManagementBackend.Controllers
             return Ok(documents);
         }
 
+        [HttpGet("my-documents")]
+        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetMyDocuments()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
+
+            // Query builder for documents
+            IQueryable<Document> documentsQuery = _context.Documents
+                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.DocumentType)
+                .Include(d => d.SubType)
+                .Include(d => d.CurrentStep)
+                .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Lignes);
+
+            // Filter based on user's responsibility center
+            if (user.ResponsibilityCentreId.HasValue)
+            {
+                // User has a responsibility center - show only documents from that center
+                documentsQuery = documentsQuery.Where(d => d.ResponsibilityCentreId == user.ResponsibilityCentreId.Value);
+            }
+            // If user doesn't have a responsibility center, show all documents (no filter applied)
+
+            var documents = await documentsQuery
+                .Select(DocumentMappings.ToDocumentDto)
+                .ToListAsync();
+
+            return Ok(documents);
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<DocumentDto>> GetDocument(int id)
         {
@@ -91,14 +126,25 @@ namespace DocManagementBackend.Controllers
             if (limit > 50)
                 limit = 50; // Set a maximum limit to prevent excessive queries
 
-            var recentDocuments = await _context.Documents
+            // Query builder for documents
+            IQueryable<Document> documentsQuery = _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
-                .Include(d => d.Lignes)
+                .Include(d => d.Lignes);
+
+            // Filter based on user's responsibility center
+            if (thisUser.ResponsibilityCentreId.HasValue)
+            {
+                // User has a responsibility center - show only documents from that center
+                documentsQuery = documentsQuery.Where(d => d.ResponsibilityCentreId == thisUser.ResponsibilityCentreId.Value);
+            }
+            // If user doesn't have a responsibility center, show all documents (no filter applied)
+
+            var recentDocuments = await documentsQuery
                 .OrderByDescending(d => d.CreatedAt) // Sort by creation date, newest first
                 .Take(limit) // Take only the specified number of documents
                 .Select(DocumentMappings.ToDocumentDto)

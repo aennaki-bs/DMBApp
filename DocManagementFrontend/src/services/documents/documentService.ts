@@ -12,6 +12,16 @@ const documentService = {
     }
   },
 
+  getMyDocuments: async (): Promise<Document[]> => {
+    try {
+      const response = await api.get('/Documents/my-documents');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching my documents:', error);
+      throw error;
+    }
+  },
+
   getDocumentById: async (id: number): Promise<Document> => {
     try {
       const response = await api.get(`/Documents/${id}`);
@@ -28,8 +38,8 @@ const documentService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching recent documents:', error);
-      // If the API doesn't have this endpoint yet, fall back to getting all documents and sorting them
-      const allDocs = await documentService.getAllDocuments();
+      // If the API doesn't have this endpoint yet, fall back to getting my documents and sorting them
+      const allDocs = await documentService.getMyDocuments();
       return allDocs
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, limit);

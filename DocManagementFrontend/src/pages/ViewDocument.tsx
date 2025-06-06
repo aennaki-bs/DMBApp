@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import documentService from "@/services/documentService";
 import workflowService from "@/services/workflowService";
@@ -20,6 +20,7 @@ const ViewDocument = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -156,6 +157,19 @@ const ViewDocument = () => {
     }
   };
 
+  // Handle workflow updates - refresh all document-related data
+  const handleWorkflowUpdate = () => {
+    // Invalidate and refetch all document-related queries
+    queryClient.invalidateQueries({ queryKey: ["document", Number(id)] });
+    queryClient.invalidateQueries({ queryKey: ["documentWorkflow", Number(id)] });
+    queryClient.invalidateQueries({ queryKey: ["documentApprovalHistory", Number(id)] });
+    queryClient.invalidateQueries({ queryKey: ["documentApprovals", Number(id)] });
+    queryClient.invalidateQueries({ queryKey: ["documentLignes", Number(id)] });
+    
+    // Also invalidate the documents list for when user navigates back
+    queryClient.invalidateQueries({ queryKey: ["documents"] });
+  };
+
   if (!id) {
     navigate("/documents");
     return null;
@@ -218,6 +232,7 @@ const ViewDocument = () => {
               canManageDocuments={canManageDocuments}
               onDelete={() => setDeleteDialogOpen(true)}
               onDocumentFlow={handleDocumentFlow}
+              onWorkflowUpdate={handleWorkflowUpdate}
             />
           )}
         </motion.div>

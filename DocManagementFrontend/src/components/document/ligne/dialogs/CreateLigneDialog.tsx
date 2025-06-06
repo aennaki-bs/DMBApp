@@ -14,6 +14,7 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
+  Layers,
 } from "lucide-react";
 import { Document, CreateLigneRequest, Ligne } from "@/models/document";
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ interface FormValues {
   code: string;
   article: string;
   lignesElementTypeId?: number;
+  selectedElementCode?: string;
   quantity: number;
   priceHT: number;
   discountPercentage: number;
@@ -101,7 +103,9 @@ const CreateLigneDialog = ({
   // Dropdown data
   const [elementTypes, setElementTypes] = useState<LignesElementTypeSimple[]>([]);
   const [items, setItems] = useState<ItemSimple[]>([]);
-  const [generalAccounts, setGeneralAccountsSimple] = useState<GeneralAccountsSimple[]>([]);
+  const [generalAccounts, setGeneralAccounts] = useState<GeneralAccountsSimple[]>([]);
+  const [availableElements, setAvailableElements] = useState<(ItemSimple | GeneralAccountsSimple)[]>([]);
+  const [loadingElements, setLoadingElements] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -127,21 +131,116 @@ const CreateLigneDialog = ({
     }
   }, [isOpen, document.id]);
 
+  // Load elements dynamically based on selected element type
+  useEffect(() => {
+    const loadElements = async () => {
+      if (!formValues.lignesElementTypeId) {
+        setAvailableElements([]);
+        return;
+      }
+
+      const selectedType = elementTypes.find(t => t.id === formValues.lignesElementTypeId);
+      if (!selectedType) return;
+
+      setLoadingElements(true);
+      try {
+        if (selectedType.typeElement === 'Item') {
+          const itemsData = await lineElementsService.items.getSimple();
+          setItems(itemsData);
+          setAvailableElements(itemsData);
+        } else if (selectedType.typeElement === 'GeneralAccounts') {
+          const accountsData = await lineElementsService.generalAccounts.getSimple();
+          setGeneralAccounts(accountsData);
+          setAvailableElements(accountsData);
+        }
+      } catch (error) {
+        console.error("Failed to load elements:", error);
+        toast.error("Failed to load available elements");
+      } finally {
+        setLoadingElements(false);
+      }
+    };
+
+    loadElements();
+  }, [formValues.lignesElementTypeId, elementTypes]);
+
+  // Ensure element data is available for review step
+  useEffect(() => {
+    const ensureElementDataForReview = async () => {
+      if (step === 4 && formValues.lignesElementTypeId && availableElements.length === 0) {
+        const selectedType = elementTypes.find(t => t.id === formValues.lignesElementTypeId);
+        if (!selectedType) return;
+
+        try {
+          if (selectedType.typeElement === 'Item') {
+            const itemsData = await lineElementsService.items.getSimple();
+            setItems(itemsData);
+            setAvailableElements(itemsData);
+          } else if (selectedType.typeElement === 'GeneralAccounts') {
+            const accountsData = await lineElementsService.generalAccounts.getSimple();
+            setGeneralAccounts(accountsData);
+            setAvailableElements(accountsData);
+          }
+        } catch (error) {
+          console.error("Failed to reload elements for review:", error);
+        }
+      }
+    };
+
+    ensureElementDataForReview();
+  }, [step, formValues.lignesElementTypeId, elementTypes, availableElements.length]);
+
   // Reset form when dialog opens
   useEffect(() => {
     if (isOpen && document) {
       setFormValues(prev => ({ 
         ...prev, 
-        ligneKey: '', // Backend generates unique key using document key (e.g., AV2506-4-L1)
+        ligneKey: '', 
         code: '',
+        lignesElementTypeId: undefined,
+        selectedElementCode: undefined,
       }));
       setCodeValidation({
         isValidating: false,
         isValid: null,
         message: "",
       });
+      setAvailableElements([]);
     }
   }, [isOpen, document]);
+
+  // Auto-generate suggested codes when element is selected
+  useEffect(() => {
+    if (formValues.selectedElementCode && availableElements.length > 0) {
+      const selectedElement = availableElements.find(el => el.code === formValues.selectedElementCode);
+      const selectedType = elementTypes.find(t => t.id === formValues.lignesElementTypeId);
+      
+      if (selectedElement && selectedType) {
+        // Generate suggested code based on element type and selected element
+        const typePrefix = selectedType.typeElement === 'Item' ? 'ITM' : 'ACC';
+        let baseSuggestedCode = `${typePrefix}_${selectedElement.code}`;
+        
+        // Ensure uniqueness by checking against existing lignes
+        let suggestedCode = baseSuggestedCode;
+        let suffix = 1;
+        
+        // Get all existing codes in the document
+        const existingCodes = new Set(existingLignes.map(ligne => 
+          ligne.ligneKey?.toLowerCase() || ligne.title?.toLowerCase() || ''
+        ).filter(code => code.length > 0));
+        
+        // If the base code is already used, add a suffix
+        while (existingCodes.has(suggestedCode.toLowerCase())) {
+          suggestedCode = `${baseSuggestedCode}_${suffix}`;
+          suffix++;
+        }
+        
+        // Auto-fill code and description from selected element
+        handleFieldChange("code", suggestedCode);
+        handleFieldChange("article", selectedElement.description);
+      }
+    }
+  }, [formValues.selectedElementCode, availableElements, elementTypes, formValues.lignesElementTypeId, existingLignes]);
 
   // Validate code with debouncing (client-side validation)
   useEffect(() => {
@@ -198,7 +297,6 @@ const CreateLigneDialog = ({
         return;
       }
 
-      // Code is valid
       setCodeValidation({
         isValidating: false,
         isValid: true,
@@ -210,21 +308,27 @@ const CreateLigneDialog = ({
     return () => clearTimeout(timeoutId);
   }, [formValues.code, existingLignes]);
 
-  // Calculate amounts
   const calculateAmounts = () => {
-    const { quantity, priceHT, discountPercentage, discountAmount, vatPercentage, useFixedDiscount } = formValues;
+    const subtotal = formValues.quantity * formValues.priceHT;
     
-    let amountHT: number;
-    if (useFixedDiscount && discountAmount) {
-      amountHT = priceHT * quantity - discountAmount;
+    let discountAmount = 0;
+    if (formValues.useFixedDiscount) {
+      discountAmount = formValues.discountAmount || 0;
     } else {
-      amountHT = priceHT * quantity * (1 - discountPercentage);
+      discountAmount = subtotal * formValues.discountPercentage;
     }
     
-    const amountVAT = amountHT * vatPercentage;
+    const amountHT = subtotal - discountAmount;
+    const amountVAT = amountHT * formValues.vatPercentage;
     const amountTTC = amountHT + amountVAT;
     
-    return { amountHT, amountVAT, amountTTC };
+    return {
+      subtotal,
+      discountAmount,
+      amountHT,
+      amountVAT,
+      amountTTC,
+    };
   };
 
   const resetForm = () => {
@@ -232,19 +336,17 @@ const CreateLigneDialog = ({
       ligneKey: "",
       code: "",
       article: "",
+      lignesElementTypeId: undefined,
+      selectedElementCode: undefined,
       quantity: 1,
       priceHT: 0,
       discountPercentage: 0,
+      discountAmount: 0,
       vatPercentage: 0.2,
       useFixedDiscount: false,
     });
     setErrors({});
     setStep(1);
-    setCodeValidation({
-      isValidating: false,
-      isValid: null,
-      message: "",
-    });
   };
 
   const handleClose = () => {
@@ -253,82 +355,84 @@ const CreateLigneDialog = ({
   };
 
   const handleFieldChange = (key: keyof FormValues, value: any) => {
-    setFormValues((prev) => ({ ...prev, [key]: value }));
-
+    setFormValues(prev => ({ ...prev, [key]: value }));
+    // Clear error when user starts typing
     if (errors[key]) {
-      setErrors((prev) => ({ ...prev, [key]: undefined }));
+      setErrors(prev => ({ ...prev, [key]: undefined }));
     }
   };
 
   const validateStep = (stepNumber: number): boolean => {
+    const newErrors: Partial<Record<keyof FormValues, string>> = {};
+
     switch (stepNumber) {
       case 1:
-        return !!(
-          formValues.code && 
-          formValues.code.trim() &&
-          codeValidation.isValid === true &&
-          formValues.article &&
-          formValues.article.trim()
-        );
+        if (!formValues.lignesElementTypeId) {
+          newErrors.lignesElementTypeId = "Element type is required";
+        }
+        if (!formValues.selectedElementCode) {
+          newErrors.selectedElementCode = "Element selection is required";
+        }
+        break;
       case 2:
-        return !!(formValues.lignesElementTypeId);
+        if (!formValues.code.trim()) {
+          newErrors.code = "Code is required";
+        }
+        if (!formValues.article.trim()) {
+          newErrors.article = "Article description is required";
+        }
+        if (codeValidation.isValid !== true) {
+          newErrors.code = "Code validation failed";
+        }
+        break;
       case 3:
-        return !!(
-          formValues.quantity && 
-          formValues.quantity > 0 && 
-          formValues.priceHT && 
-          formValues.priceHT >= 0 &&
-          formValues.vatPercentage !== undefined &&
-          formValues.vatPercentage >= 0
-        );
-      default:
-        return true;
+        if (formValues.quantity <= 0) {
+          newErrors.quantity = "Quantity must be greater than 0";
+        }
+        if (formValues.priceHT < 0) {
+          newErrors.priceHT = "Price cannot be negative";
+        }
+        break;
     }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
-    if (step === 1 && (!formValues.code.trim() || codeValidation.isValid !== true)) {
-      toast.error("Please enter a valid, unique code before proceeding");
-      return;
-    }
-    
     if (validateStep(step)) {
-      setStep((prev) => (prev + 1) as Step);
+      setStep(prev => Math.min(prev + 1, 4) as Step);
     }
   };
 
   const handleBack = () => {
-    setStep((prev) => (prev - 1) as Step);
+    setStep(prev => Math.max(prev - 1, 1) as Step);
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(step)) return;
+    if (!validateStep(4)) return;
 
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      const newLigne: CreateLigneRequest = {
+      const request: CreateLigneRequest = {
         documentId: document.id,
-        title: formValues.code, // Use code as title
+        ligneKey: formValues.code,
+        title: formValues.article,
         article: formValues.article,
-        lignesElementTypeId: formValues.lignesElementTypeId,
+        lignesElementTypeId: formValues.lignesElementTypeId!,
+        selectedElementCode: formValues.selectedElementCode,
         quantity: formValues.quantity,
         priceHT: formValues.priceHT,
         discountPercentage: formValues.discountPercentage,
-        discountAmount: formValues.useFixedDiscount ? formValues.discountAmount : undefined,
+        discountAmount: formValues.useFixedDiscount ? (formValues.discountAmount || 0) : undefined,
         vatPercentage: formValues.vatPercentage,
-        ligneKey: formValues.code, // Set the code as ligneKey
       };
 
-      await documentService.createLigne(newLigne);
+      await documentService.createLigne(request);
+      await queryClient.invalidateQueries({ queryKey: ["documentLignes", document.id] });
+      
       toast.success("Line created successfully");
-      resetForm();
-      onOpenChange(false);
-
-      // Refresh document data
-      queryClient.invalidateQueries({ queryKey: ["document", document.id] });
-      queryClient.invalidateQueries({
-        queryKey: ["documentLignes", document.id],
-      });
+      handleClose();
     } catch (error) {
       console.error("Failed to create line:", error);
       toast.error("Failed to create line");
@@ -337,21 +441,32 @@ const CreateLigneDialog = ({
     }
   };
 
-  // Format price with MAD currency
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("fr-MA", {
-      style: "currency",
-      currency: "MAD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
     }).format(price);
   };
 
   const formatPercentage = (value: number) => {
-    return `${(value * 100).toFixed(1)}%`;
+    return `${(value * 100).toFixed(2)}%`;
   };
 
   const { amountHT, amountVAT, amountTTC } = calculateAmounts();
+
+  const getSelectedElementType = () => {
+    if (!formValues.lignesElementTypeId || !elementTypes.length) return null;
+    return elementTypes.find(t => t.id === formValues.lignesElementTypeId);
+  };
+
+  const getSelectedElement = () => {
+    if (!formValues.selectedElementCode || !availableElements.length) return null;
+    return availableElements.find(el => el.code === formValues.selectedElementCode);
+  };
+
+  // Keep a reference to selected element and type for the review
+  const selectedElementType = getSelectedElementType();
+  const selectedElement = getSelectedElement();
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -375,8 +490,8 @@ const CreateLigneDialog = ({
         <div className="px-6 py-4 border-b border-blue-500/20">
           <div className="flex items-center justify-between overflow-x-auto">
             {[
-              { number: 1, title: "Code & Description", icon: Hash },
-              { number: 2, title: "Element Type", icon: Package },
+              { number: 1, title: "Element Type", icon: Layers },
+              { number: 2, title: "Code & Description", icon: Hash },
               { number: 3, title: "Pricing", icon: Calculator },
               { number: 4, title: "Review", icon: Check },
             ].map((stepData, index) => (
@@ -421,8 +536,139 @@ const CreateLigneDialog = ({
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {/* Step 1: Code & Description */}
+              {/* Step 1: Element Type & Element Selection */}
               {step === 1 && (
+                <div className="space-y-6">
+                  {/* Element Type Selection */}
+                  <div className="space-y-3">
+                    <Label htmlFor="lignesElementTypeId" className="text-blue-200 text-base font-medium">
+                      Element Type<span className="text-red-400">*</span>
+                    </Label>
+                    <Select
+                      value={formValues.lignesElementTypeId?.toString()}
+                      onValueChange={(value) => {
+                        const lignesElementTypeId = value ? parseInt(value) : undefined;
+                        handleFieldChange("lignesElementTypeId", lignesElementTypeId);
+                        // Reset element selection when type changes
+                        handleFieldChange("selectedElementCode", undefined);
+                      }}
+                    >
+                      <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
+                        <SelectValue placeholder="Select element type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-blue-950 border-blue-400/20">
+                        {elementTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id.toString()} className="text-white hover:bg-blue-800">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-3 h-3 rounded-full ${
+                                type.typeElement === 'Item' ? 'bg-green-400' :
+                                type.typeElement === 'GeneralAccounts' ? 'bg-purple-400' :
+                                'bg-purple-400'
+                              }`}></div>
+                              <div>
+                                <div className="font-medium">{type.code} - {type.typeElement}</div>
+                                <div className="text-sm text-gray-400">{type.description}</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.lignesElementTypeId && (
+                      <p className="text-red-400 text-sm mt-1">{errors.lignesElementTypeId}</p>
+                    )}
+                  </div>
+
+                  {/* Dynamic Element Selection */}
+                  {formValues.lignesElementTypeId && (
+                    <div className="space-y-3">
+                      <Label htmlFor="selectedElementCode" className="text-blue-200 text-base font-medium">
+                        Select {getSelectedElementType()?.typeElement === 'Item' ? 'Item' : 'General Account'}<span className="text-red-400">*</span>
+                      </Label>
+                      
+                      {loadingElements ? (
+                        <div className="flex items-center justify-center p-8 bg-blue-950/30 rounded-lg border border-blue-400/20">
+                          <Loader2 className="h-6 w-6 text-blue-400 animate-spin mr-2" />
+                          <span className="text-blue-300">Loading available elements...</span>
+                        </div>
+                      ) : (
+                        <Select
+                          value={formValues.selectedElementCode || ""}
+                          onValueChange={(value) => handleFieldChange("selectedElementCode", value || undefined)}
+                        >
+                          <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
+                            <SelectValue placeholder={`Select ${getSelectedElementType()?.typeElement === 'Item' ? 'an item' : 'a general account'}`} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-blue-950 border-blue-400/20 max-h-60">
+                            {availableElements.map((element) => (
+                              <SelectItem key={element.code} value={element.code} className="text-white hover:bg-blue-800">
+                                <div className="flex flex-col">
+                                  <div className="font-medium">{element.code}</div>
+                                  <div className="text-sm text-gray-400">{element.description}</div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      
+                      {errors.selectedElementCode && (
+                        <p className="text-red-400 text-sm mt-1">{errors.selectedElementCode}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Information card about the selected element */}
+                  {formValues.selectedElementCode && getSelectedElement() && (
+                    <div className="p-4 bg-blue-950/30 rounded-lg border border-blue-400/20">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-blue-500/20 p-2 rounded-lg">
+                          <Package className="h-5 w-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-blue-200 font-medium mb-1">
+                            {getSelectedElement()?.code} - {getSelectedElementType()?.typeElement}
+                          </h4>
+                          <p className="text-blue-300/70 text-sm">
+                            {getSelectedElement()?.description}
+                          </p>
+                          <p className="text-blue-400/60 text-xs mt-2">
+                            This will be used as the reference for your line item. Code and description will be auto-suggested in the next step.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Help text when no selections are made */}
+                  {!formValues.lignesElementTypeId && (
+                    <div className="p-6 bg-gray-950/30 rounded-lg border border-gray-500/20 text-center">
+                      <div className="bg-gray-500/20 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <Layers className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <h4 className="text-gray-300 font-medium mb-2">Choose an Element Type</h4>
+                      <p className="text-gray-400 text-sm">
+                        Start by selecting the type of element you want to add to this line.
+                      </p>
+                    </div>
+                  )}
+
+                  {formValues.lignesElementTypeId && !formValues.selectedElementCode && !loadingElements && (
+                    <div className="p-6 bg-gray-950/30 rounded-lg border border-gray-500/20 text-center">
+                      <div className="bg-gray-500/20 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <Package className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <h4 className="text-gray-300 font-medium mb-2">Select Specific Element</h4>
+                      <p className="text-gray-400 text-sm">
+                        Now choose the specific {getSelectedElementType()?.typeElement === 'Item' ? 'item' : 'general account'} you want to reference.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 2: Code & Description */}
+              {step === 2 && (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="code" className="text-blue-200">
@@ -478,80 +724,25 @@ const CreateLigneDialog = ({
                       <p className="text-red-400 text-sm mt-1">{errors.article}</p>
                     )}
                   </div>
-                </div>
-              )}
 
-              {/* Step 2: Element References */}
-              {step === 2 && (
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <Label htmlFor="lignesElementTypeId" className="text-blue-200 text-base font-medium">
-                      Element Type
-                    </Label>
-                    <Select
-                      value={formValues.lignesElementTypeId?.toString()}
-                      onValueChange={(value) => {
-                        const lignesElementTypeId = value ? parseInt(value) : undefined;
-                        handleFieldChange("lignesElementTypeId", lignesElementTypeId);
-                      }}
-                    >
-                      <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
-                        <SelectValue placeholder="Select element type" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-blue-950 border-blue-400/20">
-                        {elementTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.id.toString()} className="text-white hover:bg-blue-800">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3 h-3 rounded-full ${
-                                type.typeElement === 'Item' ? 'bg-green-400' :
-                                type.typeElement === 'General Accounts' ? 'bg-purple-400' :
-                                'bg-purple-400'
-                              }`}></div>
-                              <div>
-                                <div className="font-medium">{type.code} - {type.typeElement}</div>
-                                <div className="text-sm text-gray-400">{type.description}</div>
-                              </div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Information card about the selected element type */}
-                  {formValues.lignesElementTypeId && (
-                    <div className="space-y-4">
-                      <div className="p-4 bg-blue-950/30 rounded-lg border border-blue-400/20">
-                        <div className="flex items-start gap-3">
-                          <div className="bg-blue-500/20 p-2 rounded-lg">
-                            <Package className="h-5 w-5 text-blue-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-blue-200 font-medium mb-1">
-                              {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.code} - {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.typeElement}
-                            </h4>
-                            <p className="text-blue-300/70 text-sm">
-                              {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.description}
-                            </p>
-                            <p className="text-blue-400/60 text-xs mt-2">
-                              This element type is automatically linked to its associated {elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.typeElement.toLowerCase()}.
-                            </p>
-                          </div>
+                  {/* Preview of selected element */}
+                  {getSelectedElement() && (
+                    <div className="p-4 bg-green-950/20 rounded-lg border border-green-400/20">
+                      <h4 className="text-green-200 font-medium mb-2">Based on Selected Element</h4>
+                      <div className="text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-green-300">Element Type:</span>
+                          <span className="text-white">{getSelectedElementType()?.typeElement}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-green-300">Element Code:</span>
+                          <span className="text-white">{getSelectedElement()?.code}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-green-300">Element Description:</span>
+                          <span className="text-white">{getSelectedElement()?.description}</span>
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Help text when no element type is selected */}
-                  {!formValues.lignesElementTypeId && (
-                    <div className="p-6 bg-gray-950/30 rounded-lg border border-gray-500/20 text-center">
-                      <div className="bg-gray-500/20 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                        <Package className="h-8 w-8 text-gray-400" />
-                      </div>
-                      <h4 className="text-gray-300 font-medium mb-2">Choose an Element Type</h4>
-                      <p className="text-gray-400 text-sm">
-                        Select an element type above. The type is automatically linked to its associated items or general accounts.
-                      </p>
                     </div>
                   )}
                 </div>
@@ -691,7 +882,13 @@ const CreateLigneDialog = ({
                       <Calculator className="h-5 w-5 text-gray-400" />
                       Calculation Preview
                     </h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-orange-950/30 rounded-lg border border-orange-500/20">
+                        <div className="text-orange-300 text-sm font-medium">Amount Discount</div>
+                        <div className="text-orange-100 text-xl font-bold">
+                          {formatPrice(calculateAmounts().discountAmount)}
+                        </div>
+                      </div>
                       <div className="text-center p-3 bg-blue-950/30 rounded-lg border border-blue-500/20">
                         <div className="text-blue-300 text-sm font-medium">Amount HT</div>
                         <div className="text-blue-100 text-xl font-bold">
@@ -699,13 +896,13 @@ const CreateLigneDialog = ({
                         </div>
                       </div>
                       <div className="text-center p-3 bg-purple-950/30 rounded-lg border border-purple-500/20">
-                        <div className="text-purple-300 text-sm font-medium">VAT Amount</div>
+                        <div className="text-purple-300 text-sm font-medium">VAT</div>
                         <div className="text-purple-100 text-xl font-bold">
                           {formatPrice(calculateAmounts().amountVAT)}
                         </div>
                       </div>
                       <div className="text-center p-3 bg-green-950/30 rounded-lg border border-green-500/20">
-                        <div className="text-green-300 text-sm font-medium">Total TTC</div>
+                        <div className="text-green-300 text-sm font-medium">Amount TTC</div>
                         <div className="text-green-100 text-xl font-bold">
                           {formatPrice(calculateAmounts().amountTTC)}
                         </div>
@@ -734,6 +931,46 @@ const CreateLigneDialog = ({
                             : formValues.article}
                         </div>
                       </div>
+                      <div>
+                        <span className="text-blue-400">Element Type:</span>
+                        <div className="text-white">
+                          {selectedElementType ? (
+                            <div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  selectedElementType?.typeElement === 'Item' ? 'bg-green-400' :
+                                  selectedElementType?.typeElement === 'GeneralAccounts' ? 'bg-purple-400' :
+                                  'bg-purple-400'
+                                }`}></div>
+                                <span>{selectedElementType?.code} - {selectedElementType?.typeElement}</span>
+                              </div>
+                              <div className="text-gray-400 text-xs mt-1">
+                                {selectedElementType?.description}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">Element type information not available</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-blue-400">Selected Element:</span>
+                        <div className="text-white">
+                          {selectedElement ? (
+                            <div>
+                              <div className="font-medium">{selectedElement?.code}</div>
+                              <div className="text-gray-400 text-xs">{selectedElement?.description}</div>
+                            </div>
+                          ) : formValues.selectedElementCode ? (
+                            <div>
+                              <div className="font-medium">{formValues.selectedElementCode}</div>
+                              <div className="text-gray-400 text-xs">Selected element details not available</div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">No element selected</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="space-y-2">
@@ -746,6 +983,15 @@ const CreateLigneDialog = ({
                         <div className="text-white">{formatPrice(formValues.priceHT)}</div>
                       </div>
                       <div>
+                        <span className="text-blue-400">Discount:</span>
+                        <div className="text-white">
+                          {formValues.useFixedDiscount 
+                            ? formatPrice(formValues.discountAmount || 0)
+                            : formatPercentage(formValues.discountPercentage)
+                          }
+                        </div>
+                      </div>
+                      <div>
                         <span className="text-blue-400">VAT:</span>
                         <div className="text-white">{formatPercentage(formValues.vatPercentage)}</div>
                       </div>
@@ -755,17 +1001,21 @@ const CreateLigneDialog = ({
                   {/* Final calculation */}
                   <div className="p-4 bg-green-950/30 rounded-lg border border-green-400/20">
                     <h4 className="text-green-200 font-medium mb-2">Final Calculation</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="text-center">
-                        <div className="text-green-400 text-sm">Amount HT</div>
+                        <div className="text-orange-400 text-sm">Amount Discount</div>
+                        <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().discountAmount)}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-blue-400 text-sm">Amount HT</div>
                         <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().amountHT)}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-green-400 text-sm">VAT Amount</div>
+                        <div className="text-purple-400 text-sm">VAT</div>
                         <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().amountVAT)}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-green-400 text-sm">Total TTC</div>
+                        <div className="text-green-400 text-sm">Amount TTC</div>
                         <div className="text-white font-bold text-xl">{formatPrice(calculateAmounts().amountTTC)}</div>
                       </div>
                     </div>
@@ -800,7 +1050,10 @@ const CreateLigneDialog = ({
               {step < 4 ? (
                 <Button
                   onClick={handleNext}
-                  disabled={step === 1 && (codeValidation.isValidating || codeValidation.isValid !== true)}
+                  disabled={
+                    (step === 1 && (!formValues.lignesElementTypeId || !formValues.selectedElementCode)) ||
+                    (step === 2 && (codeValidation.isValidating || codeValidation.isValid !== true))
+                  }
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next <ArrowRight className="h-4 w-4 ml-2" />

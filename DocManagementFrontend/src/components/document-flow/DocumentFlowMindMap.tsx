@@ -24,7 +24,25 @@ interface DocumentFlowMindMapProps {
   onStatusComplete: () => void;
   onMoveToStatus: (statusId: number) => void;
   hasPendingApprovals?: boolean;
+  wasRejected?: boolean;
   refreshTrigger?: number;
+  onCloseWorkflow?: () => void;
+}
+
+interface NextStep {
+  stepId: number;
+  stepKey: string;
+  title: string;
+  description: string;
+  currentStatusId: number;
+  currentStatusTitle: string;
+  nextStatusId: number;
+  nextStatusTitle: string;
+  isCurrentStep: boolean;
+  isCompleted: boolean;
+  completedAt?: Date;
+  completedBy?: string;
+  requiresApproval: boolean;
 }
 
 export function DocumentFlowMindMap({
@@ -33,12 +51,14 @@ export function DocumentFlowMindMap({
   onStatusComplete,
   onMoveToStatus,
   hasPendingApprovals = false,
+  wasRejected = false,
   refreshTrigger = 0,
+  onCloseWorkflow,
 }: DocumentFlowMindMapProps) {
   const { user } = useAuth();
   const { completeStatus } = useWorkflowStepStatuses(documentId);
-  const [nextStatuses, setNextStatuses] = useState<any[]>([]);
-  const [completedStatuses, setCompletedStatuses] = useState<any[]>([]);
+  const [nextSteps, setNextSteps] = useState<NextStep[]>([]);
+  const [processedStatuses, setProcessedStatuses] = useState<any[]>([]);
   const [requiresApproval, setRequiresApproval] = useState(false);
 
   // Check if user is SimpleUser (read-only access)
@@ -49,13 +69,13 @@ export function DocumentFlowMindMap({
     (s: any) => s.statusId === currentStatusId
   );
 
-  // Extract completed statuses
+  // Extract processed statuses
   useEffect(() => {
     if (workflowStatus?.statuses) {
-      const completed = workflowStatus.statuses.filter(
+      const processed = workflowStatus.statuses.filter(
         (s: any) => s.isComplete && s.statusId !== currentStatusId
       );
-      setCompletedStatuses(completed);
+      setProcessedStatuses(processed);
     }
   }, [workflowStatus?.statuses, currentStatusId]);
 
@@ -81,47 +101,35 @@ export function DocumentFlowMindMap({
     }
   }, [workflowStatus, currentStatus]);
 
-  // Always fetch next statuses if current status is complete
+  // Fetch next available steps from current status
   useEffect(() => {
-    if (currentStatus?.isComplete) {
-      circuitService.getNextStatuses(documentId).then(setNextStatuses);
-    } else {
-      setNextStatuses([]);
-    }
-  }, [currentStatus?.isComplete, documentId, workflowStatus?.currentStatusId, refreshTrigger]);
+    const fetchNextSteps = async () => {
+      if (currentStatusId && documentId) {
+        try {
+          // Get all document step statuses
+          const allSteps = await circuitService.getDocumentStepStatuses(documentId);
+          
+          // Filter steps where the current status matches the document's current status
+          // and the step is not completed yet
+          const availableSteps = allSteps.filter((step: NextStep) => 
+            step.currentStatusId === currentStatusId && !step.isCompleted
+          );
+          
+          setNextSteps(availableSteps);
+        } catch (error) {
+          console.error("Error fetching next steps:", error);
+          setNextSteps([]);
+        }
+      } else {
+        setNextSteps([]);
+      }
+    };
 
-  const handleMarkComplete = async () => {
-    if (!currentStatus) return;
-    
-    // Prevent SimpleUser from modifying status
-    if (isSimpleUser) {
-      toast.error("You don't have permission to modify document status. You can only view the workflow.");
-      return;
-    }
-    
-    try {
-      await completeStatus({
-        statusId: currentStatus.statusId,
-        isComplete: !currentStatus.isComplete,
-        comments: `Status ${currentStatus.title} marked as ${
-          currentStatus.isComplete ? "incomplete" : "complete"
-        }`,
-      });
-      toast.success(
-        `Status ${
-          currentStatus.isComplete
-            ? "marked as incomplete"
-            : "marked as complete"
-        }`
-      );
-      onStatusComplete();
-    } catch (error) {
-      toast.error("Failed to update status");
-    }
-  };
+    fetchNextSteps();
+  }, [currentStatusId, documentId, refreshTrigger]);
 
-  // Handle clicking on a next status
-  const handleNextStatusClick = async (statusId: number) => {
+  // Handle clicking on a next step
+  const handleNextStepClick = async (step: NextStep) => {
     // Prevent SimpleUser from moving documents
     if (isSimpleUser) {
       toast.error("You don't have permission to move documents. You can only view the workflow status.");
@@ -129,41 +137,23 @@ export function DocumentFlowMindMap({
     }
     
     try {
-      // Check if the target status requires approval
-      const statusInfo = workflowStatus.availableStatusTransitions?.find(
-        (s: any) => s.statusId === statusId
-      );
+      // Call the parent's move function with the next status ID
+      onMoveToStatus(step.nextStatusId);
       
-      // Check if the next status requires approval by checking multiple indicators
-      let requiresApproval = false;
-      
-      // Explicit flag
-      if (statusInfo?.requiresApproval) {
-        requiresApproval = true;
-      }
-      
-      // Check title and description
-      if (statusInfo) {
-        const titleLower = (statusInfo.title || '').toLowerCase();
-        const descLower = (statusInfo.description || '').toLowerCase();
-        if (titleLower.includes('approv') || descLower.includes('approv')) {
-          requiresApproval = true;
-        }
-      }
-      
-      // Call the parent's move function
-      onMoveToStatus(statusId);
-      
-      // Notify the user if approval is required
-      if (requiresApproval) {
+      // Update local state for approval requirement (UI feedback only)
+      if (step.requiresApproval) {
         setRequiresApproval(true);
-        toast.info("This step requires approval. An approval request will be initiated.");
       } else {
         setRequiresApproval(false);
       }
+
+      // Call the onCloseWorkflow function if it's provided
+      if (onCloseWorkflow) {
+        onCloseWorkflow();
+      }
     } catch (error) {
-      console.error("Error moving to next status:", error);
-      toast.error("Failed to move to next status");
+      console.error("Error moving to next step:", error);
+      toast.error("Failed to move to next step");
     }
   };
 
@@ -173,12 +163,12 @@ export function DocumentFlowMindMap({
       <div className="lg:w-1/3">
         <h3 className="text-lg font-semibold text-blue-300 mb-4 flex items-center">
           <Clock className="h-5 w-5 mr-2" />
-          Completed Status History
+          Processed Status History
         </h3>
 
         <div className="space-y-3">
-          {completedStatuses.length > 0 ? (
-            completedStatuses.map((status, index) => (
+          {processedStatuses.length > 0 ? (
+            processedStatuses.map((status, index) => (
               <motion.div
                 key={status.statusId}
                 initial={{ opacity: 0, y: 20 }}
@@ -204,7 +194,7 @@ export function DocumentFlowMindMap({
                         variant="outline"
                         className="bg-green-900/30 text-green-300 border-green-500/30"
                       >
-                        Completed
+                        Processed
                       </Badge>
                     </div>
                     <div className="mt-2 text-xs text-gray-400">
@@ -227,7 +217,7 @@ export function DocumentFlowMindMap({
           ) : (
             <Card className="border border-blue-900/30 bg-blue-900/10 p-4">
               <p className="text-sm text-gray-400 text-center">
-                No completed statuses yet
+                No processed statuses yet
               </p>
             </Card>
           )}
@@ -249,9 +239,11 @@ export function DocumentFlowMindMap({
           <Card
             className={cn(
               "border border-blue-500/50 bg-gradient-to-br from-blue-900/40 to-indigo-900/30 h-full",
-              currentStatus?.isComplete && !requiresApproval &&
+              wasRejected &&
+                "border-red-500/70 bg-gradient-to-br from-red-700/40 to-blue-900/20",
+              !wasRejected && currentStatus?.isComplete && !requiresApproval && !hasPendingApprovals &&
                 "border-green-500/50 bg-gradient-to-br from-green-900/30 to-blue-900/20",
-              requiresApproval &&
+              !wasRejected && (requiresApproval || hasPendingApprovals) &&
                 "border-amber-500/70 bg-gradient-to-br from-amber-700/40 to-blue-900/20"
             )}
           >
@@ -259,8 +251,10 @@ export function DocumentFlowMindMap({
               {currentStatus ? (
                 <>
                   <div className="w-16 h-16 rounded-full bg-blue-900/50 flex items-center justify-center mb-4">
-                    {currentStatus.isComplete ? (
-                      requiresApproval ? (
+                    {wasRejected ? (
+                      <AlertCircle className="h-8 w-8 text-red-400" />
+                    ) : currentStatus.isComplete ? (
+                      (requiresApproval || hasPendingApprovals) ? (
                         <Clock className="h-8 w-8 text-amber-300" />
                       ) : (
                         <CheckCircle className="h-8 w-8 text-green-400" />
@@ -272,7 +266,9 @@ export function DocumentFlowMindMap({
 
                   <h3 className="text-xl font-bold text-white mb-2 text-center">
                     {currentStatus.title}
-                    {requiresApproval && (
+                    {wasRejected ? (
+                      <span className="text-red-300 ml-2">(Rejected)</span>
+                    ) : (requiresApproval || hasPendingApprovals) && (
                       <span className="text-amber-300 ml-2">(Awaiting Approval)</span>
                     )}
                   </h3>
@@ -288,24 +284,38 @@ export function DocumentFlowMindMap({
                     <Badge
                       variant={currentStatus.isComplete ? "default" : "outline"}
                       className={
-                        currentStatus.isComplete && !requiresApproval
+                        wasRejected
+                          ? "bg-red-600 hover:bg-red-600 text-white font-medium"
+                          : currentStatus.isComplete && !requiresApproval && !hasPendingApprovals
                           ? "bg-green-700 hover:bg-green-700"
-                          : requiresApproval
+                          : (requiresApproval || hasPendingApprovals)
                           ? "bg-amber-500 hover:bg-amber-500 text-black font-medium"
                           : ""
                       }
                     >
-                      {currentStatus.isComplete 
-                        ? requiresApproval 
+                      {wasRejected
+                        ? "Rejected"
+                        : currentStatus.isComplete 
+                        ? (requiresApproval || hasPendingApprovals) 
                           ? "Waiting for Approval" 
-                          : "Completed" 
+                          : "In Progress" 
                         : "In Progress"}
                     </Badge>
                   </div>
 
-                  {requiresApproval && (
-                    <p className="text-amber-300 text-sm font-medium border border-amber-500/30 rounded-md p-2 mb-4 text-center bg-amber-900/20">
-                      This step requires approval. An approval request has been initiated.
+                  {(wasRejected || requiresApproval || hasPendingApprovals) && (
+                    <p className={cn(
+                      "text-sm font-medium border rounded-md p-2 mb-4 text-center",
+                      wasRejected 
+                        ? "text-red-300 border-red-500/30 bg-red-900/20"
+                        : "text-amber-300 border-amber-500/30 bg-amber-900/20"
+                    )}>
+                      {wasRejected 
+                        ? "This document was rejected. Please check the approval history for details."
+                        : requiresApproval 
+                        ? "This step requires approval. An approval request has been initiated."
+                        : "This document is waiting for approval before it can proceed."
+                      }
                     </p>
                   )}
 
@@ -314,34 +324,6 @@ export function DocumentFlowMindMap({
                       {currentStatus.description}
                     </p>
                   )}
-
-                  <Button
-                    variant={currentStatus.isComplete ? "outline" : "default"}
-                    onClick={handleMarkComplete}
-                    disabled={isSimpleUser}
-                    title={isSimpleUser ? "Read-only access: You can view but cannot modify workflow status" : undefined}
-                    className={cn(
-                      "w-full",
-                      currentStatus.isComplete && !requiresApproval
-                        ? "border-green-500/50 text-green-300 hover:bg-green-900/20"
-                        : requiresApproval
-                        ? "border-amber-500/50 text-amber-300 hover:bg-amber-900/20"
-                        : "bg-blue-600 hover:bg-blue-700",
-                      isSimpleUser && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {currentStatus.isComplete ? (
-                      <>
-                        <Circle className="mr-2 h-4 w-4" />
-                        {isSimpleUser ? "Status: Incomplete" : "Mark as Incomplete"}
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        {isSimpleUser ? "Status: In Progress" : "Mark as Complete"}
-                      </>
-                    )}
-                  </Button>
                 </>
               ) : (
                 <div className="text-gray-400 text-center py-8">
@@ -361,10 +343,10 @@ export function DocumentFlowMindMap({
         </h3>
 
         <div className="space-y-3">
-          {nextStatuses && nextStatuses.length > 0 ? (
-            nextStatuses.map((status, index) => (
+          {nextSteps && nextSteps.length > 0 ? (
+            nextSteps.map((step, index) => (
               <motion.div
-                key={status.statusId}
+                key={step.stepId}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -377,16 +359,16 @@ export function DocumentFlowMindMap({
                   )}
                   onClick={() => {
                     if (!hasPendingApprovals && !isSimpleUser) {
-                      handleNextStatusClick(status.statusId);
+                      handleNextStepClick(step);
                     }
                   }}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center">
                         <ArrowRight className="h-5 w-5 text-blue-500 mr-2" />
                         <span className="font-medium text-blue-300">
-                          {status.title}
+                          {step.nextStatusTitle}
                         </span>
                       </div>
                       <Button
@@ -394,13 +376,13 @@ export function DocumentFlowMindMap({
                         disabled={hasPendingApprovals || isSimpleUser}
                         className={cn(
                           "bg-blue-600 hover:bg-blue-700",
-                          status.requiresApproval && "bg-amber-600 hover:bg-amber-700",
+                          step.requiresApproval && "bg-amber-600 hover:bg-amber-700",
                           (hasPendingApprovals || isSimpleUser) && "opacity-50 cursor-not-allowed"
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!hasPendingApprovals && !isSimpleUser) {
-                            handleNextStatusClick(status.statusId);
+                            handleNextStepClick(step);
                           }
                         }}
                         title={
@@ -415,12 +397,18 @@ export function DocumentFlowMindMap({
                       </Button>
                     </div>
 
-                    {status.requiresApproval && (
-                      <div className="mt-2 text-xs text-amber-300 flex items-center">
-                        <AlertCircle className="h-3 w-3 mr-1" />
-                        This step will require approval
-                      </div>
-                    )}
+                    {/* Code */}
+                    <div className="text-sm text-gray-300 mb-2">
+                      <span className="text-gray-400">Code:</span> {step.stepKey} ({step.title})
+                    </div>
+
+                    {/* Approval */}
+                    <div className="text-sm">
+                      <span className="text-gray-400">Approval:</span>{" "}
+                      <span className={step.requiresApproval ? "text-amber-300" : "text-green-300"}>
+                        {step.requiresApproval ? "Requires approval" : "No approval required"}
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>

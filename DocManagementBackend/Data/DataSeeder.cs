@@ -7,8 +7,9 @@ namespace DocManagementBackend.Data
     {
         public static async Task SeedDataAsync(ApplicationDbContext context)
         {
-            // Only seed UniteCodes - remove items and general accounts seeding
+            // Seed UniteCodes and default LignesElementTypes for the new dynamic system
             await SeedUniteCodesAsync(context);
+            await SeedLignesElementTypesAsync(context);
         }
 
         private static async Task SeedUniteCodesAsync(ApplicationDbContext context)
@@ -43,6 +44,48 @@ namespace DocManagementBackend.Data
             if (newCodes.Any())
             {
                 context.UniteCodes.AddRange(newCodes);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private static async Task SeedLignesElementTypesAsync(ApplicationDbContext context)
+        {
+            var existingCodes = await context.LignesElementTypes.Select(let => let.Code).ToListAsync();
+            var elementTypesToSeed = new[]
+            {
+                new { 
+                    Code = "ITEM", 
+                    TypeElement = ElementType.Item, 
+                    Description = "Default element type for items", 
+                    TableName = "Items" 
+                },
+                new { 
+                    Code = "GENERAL_ACCOUNT", 
+                    TypeElement = ElementType.GeneralAccounts, 
+                    Description = "Default element type for general accounts", 
+                    TableName = "GeneralAccounts" 
+                }
+            };
+
+            var now = DateTime.UtcNow;
+            var newElementTypes = elementTypesToSeed
+                .Where(elementType => !existingCodes.Contains(elementType.Code))
+                .Select(elementType => new LignesElementType
+                {
+                    Code = elementType.Code,
+                    TypeElement = elementType.TypeElement,
+                    Description = elementType.Description,
+                    TableName = elementType.TableName,
+                    ItemCode = null, // These are generic types, not tied to specific items/accounts
+                    AccountCode = null,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                })
+                .ToList();
+
+            if (newElementTypes.Any())
+            {
+                context.LignesElementTypes.AddRange(newElementTypes);
                 await context.SaveChangesAsync();
             }
         }

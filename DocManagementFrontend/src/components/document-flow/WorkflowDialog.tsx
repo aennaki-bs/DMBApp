@@ -32,12 +32,14 @@ interface WorkflowDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documentId: number;
+  onWorkflowUpdate?: () => void;
 }
 
 export function WorkflowDialog({
   open,
   onOpenChange,
   documentId,
+  onWorkflowUpdate,
 }: WorkflowDialogProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -100,14 +102,26 @@ export function WorkflowDialog({
       circuitService
         .moveToStatus(documentId, statusId, `Moving from ${currentStatusTitle} to ${targetStatusTitle}`)
         .then((result) => {
+          // Only show one message based on the actual outcome
           if (result.requiresApproval) {
+            // Only show approval message if approval is actually pending
             toast.info("This step requires approval. An approval request has been initiated.");
             // Trigger refresh of DocumentApprovalStatus
             setApprovalRefreshTrigger(prev => prev + 1);
           } else {
-            toast.success("Document status updated successfully");
+            // Show success message if the move completed (including auto-approvals)
+            toast.success(result.message || "Document status updated successfully");
           }
+          
           refreshAllData();
+          
+          // Invalidate documents list cache to refresh the main document view
+          queryClient.invalidateQueries({ queryKey: ["documents"] });
+          queryClient.invalidateQueries({ queryKey: ["document", documentId] });
+
+          if (onWorkflowUpdate) {
+            onWorkflowUpdate();
+          }
         })
         .catch((error) => {
           console.error("Error moving document to status:", error);
@@ -191,6 +205,10 @@ export function WorkflowDialog({
         // Trigger another mind map refresh after a delay to ensure backend is updated
         setMindMapRefreshTrigger(prev => prev + 1);
       }, 500);
+    }
+
+    if (onWorkflowUpdate) {
+      onWorkflowUpdate();
     }
   };
 
@@ -359,7 +377,9 @@ export function WorkflowDialog({
                   onStatusComplete={refreshAllData}
                   onMoveToStatus={handleMoveToStatus}
                   hasPendingApprovals={hasPendingApprovals}
+                  wasRejected={wasRejected}
                   refreshTrigger={mindMapRefreshTrigger}
+                  onCloseWorkflow={() => onOpenChange(false)}
                 />
               </div>
             </div>

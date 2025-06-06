@@ -22,6 +22,7 @@ import {
   Package,
   Hash,
   Calculator,
+  Truck,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -50,7 +51,9 @@ export function SidebarNav() {
       isActive("/line-elements/element-types") ||
       isActive("/line-elements/items") ||
       isActive("/line-elements/unit-codes") ||
-      isActive("/line-elements/general-accounts")
+      isActive("/line-elements/general-accounts") ||
+      isActive("/customer-management") ||
+      isActive("/vendor-management")
     );
   };
 
@@ -263,6 +266,32 @@ export function SidebarNav() {
                       >
                         <Calculator className="h-4 w-4" />
                         <span>General Accounts</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/customer-management"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/customer-management")
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>Customers</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/vendor-management"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/vendor-management")
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <Truck className="h-4 w-4" />
+                        <span>Vendors</span>
                       </Link>
                     </li>
                   </ul>

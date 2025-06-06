@@ -29,6 +29,11 @@ namespace DocManagementBackend.Data
         public DbSet<UniteCode> UniteCodes { get; set; }
         public DbSet<GeneralAccounts> GeneralAccounts { get; set; }
 
+        // New reference tables
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<Location> Locations { get; set; }
+
         // Workflow entities
         public DbSet<Status> Status { get; set; }
         public DbSet<Step> Steps { get; set; }
@@ -328,7 +333,12 @@ namespace DocManagementBackend.Data
                 .HasIndex(let => let.Code)
                 .IsUnique();
 
-            // LignesElementType -> Item relationship (conditional)
+            // Configure TypeElement as enum
+            modelBuilder.Entity<LignesElementType>()
+                .Property(e => e.TypeElement)
+                .HasConversion<string>();
+
+            // Backward compatibility: LignesElementType -> Item relationship (conditional)
             modelBuilder.Entity<LignesElementType>()
                 .HasOne(let => let.Item)
                 .WithMany(i => i.LignesElementTypes)
@@ -336,7 +346,7 @@ namespace DocManagementBackend.Data
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
-            // LignesElementType -> GeneralAccounts relationship (conditional)
+            // Backward compatibility: LignesElementType -> GeneralAccounts relationship (conditional)
             modelBuilder.Entity<LignesElementType>()
                 .HasOne(let => let.GeneralAccount)
                 .WithMany(ga => ga.LignesElementTypes)
@@ -367,13 +377,47 @@ namespace DocManagementBackend.Data
                 .HasIndex(ga => ga.Code)
                 .IsUnique();
 
-            // Ligne -> LignesElementType relationship (new normalized relationship)
+            // Configure GeneralAccount Type as enum
+            modelBuilder.Entity<GeneralAccounts>()
+                .Property(e => e.Type)
+                .HasConversion<string>();
+
+            // Backward compatibility: Ligne -> LignesElementType relationship via LignesElementTypeId
             modelBuilder.Entity<Ligne>()
                 .HasOne(l => l.LignesElementType)
                 .WithMany(let => let.Lignes)
                 .HasForeignKey(l => l.LignesElementTypeId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
+
+            // Note: The new Type field will reference the same LignesElementType table
+            // ElementId is not configured as a foreign key in EF as it's a dynamic reference
+            // Validation of ElementId references is handled in application logic
+
+            // New reference tables configurations
+            // Customer unique constraint on Code
+            modelBuilder.Entity<Customer>()
+                .HasIndex(c => c.Code)
+                .IsUnique();
+
+            // Vendor unique constraint on VendorCode
+            modelBuilder.Entity<Vendor>()
+                .HasIndex(v => v.VendorCode)
+                .IsUnique();
+
+            // Location unique constraint on LocationCode
+            modelBuilder.Entity<Location>()
+                .HasIndex(l => l.LocationCode)
+                .IsUnique();
+
+            // Configure DocumentType TierType as enum
+            modelBuilder.Entity<DocumentType>()
+                .Property(dt => dt.TierType)
+                .HasConversion<string>();
+
+            // Document -> Customer relationship (conditional based on DocumentType.TierType)
+            // Note: These are manual navigation properties that need to be resolved in application logic
+            // We cannot use traditional foreign key constraints here due to the dynamic nature
 
             // Seed data
             modelBuilder.Entity<Role>().HasData(

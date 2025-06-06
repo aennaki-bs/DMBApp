@@ -23,7 +23,7 @@ namespace DocManagementBackend.Mappings
             {
                 Id = l.LignesElementType.Id,
                 Code = l.LignesElementType.Code,
-                TypeElement = l.LignesElementType.TypeElement,
+                TypeElement = l.LignesElementType.TypeElement.ToString(),
                 Description = l.LignesElementType.Description,
                 TableName = l.LignesElementType.TableName,
                 ItemCode = l.LignesElementType.ItemCode,
@@ -32,9 +32,25 @@ namespace DocManagementBackend.Mappings
                 UpdatedAt = l.LignesElementType.UpdatedAt
             },
             
-            // Element references (computed properties from LignesElementType)
-            ItemCode = l.LignesElementType != null ? l.LignesElementType.ItemCode : null,
-            Item = l.LignesElementType == null || l.LignesElementType.Item == null ? null : new ItemDto
+            // Element references - prioritize dynamically loaded elements over element type navigation
+            ItemCode = l.Item != null ? l.Item.Code : (l.LignesElementType != null ? l.LignesElementType.ItemCode : null),
+            Item = l.Item != null ? new ItemDto
+            {
+                Code = l.Item.Code,
+                Description = l.Item.Description,
+                Unite = l.Item.Unite,
+                UniteCodeNavigation = l.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
+                {
+                    Code = l.Item.UniteCodeNavigation.Code,
+                    Description = l.Item.UniteCodeNavigation.Description,
+                    CreatedAt = l.Item.UniteCodeNavigation.CreatedAt,
+                    UpdatedAt = l.Item.UniteCodeNavigation.UpdatedAt,
+                    ItemsCount = l.Item.UniteCodeNavigation.Items.Count()
+                },
+                CreatedAt = l.Item.CreatedAt,
+                UpdatedAt = l.Item.UpdatedAt,
+                ElementTypesCount = l.Item.LignesElementTypes.Count()
+            } : (l.LignesElementType == null || l.LignesElementType.Item == null ? null : new ItemDto
             {
                 Code = l.LignesElementType.Item.Code,
                 Description = l.LignesElementType.Item.Description,
@@ -50,16 +66,23 @@ namespace DocManagementBackend.Mappings
                 CreatedAt = l.LignesElementType.Item.CreatedAt,
                 UpdatedAt = l.LignesElementType.Item.UpdatedAt,
                 ElementTypesCount = l.LignesElementType.Item.LignesElementTypes.Count()
-            },
-            GeneralAccountsCode = l.LignesElementType != null ? l.LignesElementType.AccountCode : null,
-            GeneralAccounts = l.LignesElementType == null || l.LignesElementType.GeneralAccount == null ? null : new GeneralAccountsDto
+            }),
+            GeneralAccountsCode = l.GeneralAccount != null ? l.GeneralAccount.Code : (l.LignesElementType != null ? l.LignesElementType.AccountCode : null),
+            GeneralAccounts = l.GeneralAccount != null ? new GeneralAccountsDto
+            {
+                Code = l.GeneralAccount.Code,
+                Description = l.GeneralAccount.Description,
+                CreatedAt = l.GeneralAccount.CreatedAt,
+                UpdatedAt = l.GeneralAccount.UpdatedAt,
+                LignesCount = l.GeneralAccount.LignesElementTypes.Count()
+            } : (l.LignesElementType == null || l.LignesElementType.GeneralAccount == null ? null : new GeneralAccountsDto
             {
                 Code = l.LignesElementType.GeneralAccount.Code,
                 Description = l.LignesElementType.GeneralAccount.Description,
                 CreatedAt = l.LignesElementType.GeneralAccount.CreatedAt,
                 UpdatedAt = l.LignesElementType.GeneralAccount.UpdatedAt,
                 LignesCount = l.LignesElementType.GeneralAccount.LignesElementTypes.Count()
-            },
+            }),
             
             // Pricing fields
             Quantity = l.Quantity,
@@ -142,7 +165,7 @@ namespace DocManagementBackend.Mappings
                 {
                     Id = s.Ligne.LignesElementType.Id,
                     Code = s.Ligne.LignesElementType.Code,
-                    TypeElement = s.Ligne.LignesElementType.TypeElement,
+                    TypeElement = s.Ligne.LignesElementType.TypeElement.ToString(),
                     Description = s.Ligne.LignesElementType.Description,
                     TableName = s.Ligne.LignesElementType.TableName,
                     ItemCode = s.Ligne.LignesElementType.ItemCode,

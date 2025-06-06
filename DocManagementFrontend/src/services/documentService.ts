@@ -7,6 +7,7 @@ import documentTypeService from './documentTypeService';
 const combinedDocumentService = {
   // Document methods
   getAllDocuments: documentService.getAllDocuments,
+  getMyDocuments: documentService.getMyDocuments,
   getDocumentById: documentService.getDocumentById,
   getRecentDocuments: documentService.getRecentDocuments,
   createDocument: documentService.createDocument,

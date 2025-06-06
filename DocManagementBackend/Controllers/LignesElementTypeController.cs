@@ -40,7 +40,7 @@ namespace DocManagementBackend.Controllers
             {
                 Id = let.Id,
                 Code = let.Code,
-                TypeElement = let.TypeElement,
+                TypeElement = let.TypeElement.ToString(),
                 Description = let.Description,
                 TableName = let.TableName,
                 ItemCode = let.ItemCode,
@@ -91,7 +91,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Id = let.Id,
                     Code = let.Code,
-                    TypeElement = let.TypeElement,
+                    TypeElement = let.TypeElement.ToString(),
                     Description = let.Description
                 })
                 .OrderBy(let => let.Code)
@@ -114,7 +114,7 @@ namespace DocManagementBackend.Controllers
             {
                 Id = let.Id,
                 Code = let.Code,
-                TypeElement = let.TypeElement,
+                TypeElement = let.TypeElement.ToString(),
                 Description = let.Description,
                 TableName = let.TableName,
                 ItemCode = let.ItemCode,
@@ -146,7 +146,7 @@ namespace DocManagementBackend.Controllers
             {
                 Id = elementType.Id,
                 Code = elementType.Code,
-                TypeElement = elementType.TypeElement,
+                TypeElement = elementType.TypeElement.ToString(),
                 Description = elementType.Description,
                 TableName = elementType.TableName,
                 ItemCode = elementType.ItemCode,
@@ -226,7 +226,7 @@ namespace DocManagementBackend.Controllers
             var elementType = new LignesElementType
             {
                 Code = request.Code.ToUpper().Trim(),
-                TypeElement = request.TypeElement.Trim(),
+                TypeElementString = request.TypeElement.Trim(),
                 Description = request.Description.Trim(),
                 TableName = request.TableName?.Trim() ?? string.Empty,
                 ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim(),
@@ -249,7 +249,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Id = elementType.Id,
                     Code = elementType.Code,
-                    TypeElement = elementType.TypeElement,
+                    TypeElement = elementType.TypeElement.ToString(),
                     Description = elementType.Description,
                     TableName = elementType.TableName,
                     ItemCode = elementType.ItemCode,
@@ -285,7 +285,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Id = elementType.Id,
                     Code = elementType.Code,
-                    TypeElement = elementType.TypeElement,
+                    TypeElement = elementType.TypeElement.ToString(),
                     Description = elementType.Description,
                     TableName = elementType.TableName,
                     ItemCode = elementType.ItemCode,
@@ -326,7 +326,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Id = elementType.Id,
                     Code = elementType.Code,
-                    TypeElement = elementType.TypeElement,
+                    TypeElement = elementType.TypeElement.ToString(),
                     Description = elementType.Description,
                     TableName = elementType.TableName,
                     ItemCode = elementType.ItemCode,
@@ -368,7 +368,7 @@ namespace DocManagementBackend.Controllers
             {
                 Id = elementType.Id,
                 Code = !string.IsNullOrWhiteSpace(request.Code) ? request.Code.ToUpper().Trim() : elementType.Code,
-                TypeElement = !string.IsNullOrWhiteSpace(request.TypeElement) ? request.TypeElement.Trim() : elementType.TypeElement,
+                TypeElementString = !string.IsNullOrWhiteSpace(request.TypeElement) ? request.TypeElement.Trim() : elementType.TypeElementString,
                 Description = !string.IsNullOrWhiteSpace(request.Description) ? request.Description.Trim() : elementType.Description,
                 TableName = !string.IsNullOrWhiteSpace(request.TableName) ? request.TableName.Trim() : elementType.TableName,
                 ItemCode = request.ItemCode != null ? (string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim()) : elementType.ItemCode,
@@ -399,14 +399,14 @@ namespace DocManagementBackend.Controllers
 
             if (!string.IsNullOrWhiteSpace(request.TypeElement))
             {
-                elementType.TypeElement = request.TypeElement.Trim();
+                elementType.TypeElementString = request.TypeElement.Trim();
                 
                 // Clear opposite foreign key fields based on new type
-                if (elementType.TypeElement == "Item")
+                if (elementType.TypeElementString == "Item")
                 {
                     elementType.AccountCode = null; // Clear account code when switching to Item
                 }
-                else if (elementType.TypeElement == "General Accounts")
+                else if (elementType.TypeElementString == "General Accounts")
                 {
                     elementType.ItemCode = null; // Clear item code when switching to General Accounts
                 }
@@ -419,10 +419,10 @@ namespace DocManagementBackend.Controllers
                 elementType.TableName = request.TableName.Trim();
 
             // Update foreign key fields only if explicitly provided and matches the type
-            if (request.ItemCode != null && elementType.TypeElement == "Item")
+            if (request.ItemCode != null && elementType.TypeElementString == "Item")
                 elementType.ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim();
 
-            if (request.AccountCode != null && elementType.TypeElement == "General Accounts")
+            if (request.AccountCode != null && elementType.TypeElementString == "General Accounts")
                 elementType.AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim();
 
             elementType.UpdatedAt = DateTime.UtcNow;

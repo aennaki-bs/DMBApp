@@ -562,7 +562,7 @@ const GeneralAccountsManagement = ({
                             }`}
                             title={
                               account.lignesCount > 0
-                                ? "Cannot edit: Account is associated with element types"
+                                ? "Cannot edit: Account is used in document lines"
                                 : "Edit general account"
                             }
                           >
@@ -580,7 +580,7 @@ const GeneralAccountsManagement = ({
                             }`}
                             title={
                               account.lignesCount > 0
-                                ? "Cannot delete: Account is associated with element types"
+                                ? "Cannot delete: Account is used in document lines"
                                 : "Delete general account"
                             }
                           >
@@ -716,9 +716,7 @@ const GeneralAccountsManagement = ({
                     <FormMessage />
                     {selectedAccount?.lignesCount > 0 && (
                       <p className="text-amber-400 text-xs mt-1">
-                        Code cannot be changed because this account is
-                        referenced by {selectedAccount.lignesCount} line element
-                        types.
+                        Code cannot be changed because this account is used in {selectedAccount.lignesCount} document line{selectedAccount.lignesCount !== 1 ? 's' : ''}.
                       </p>
                     )}
                   </FormItem>

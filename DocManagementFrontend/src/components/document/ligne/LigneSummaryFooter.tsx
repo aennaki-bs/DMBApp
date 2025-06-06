@@ -41,12 +41,30 @@ const LigneSummaryFooter = ({ lignes }: LigneSummaryFooterProps) => {
       className="mt-6 space-y-4"
     >
       {/* Main totals */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Discount - First */}
+        <div className="bg-gradient-to-br from-red-900/30 to-rose-900/30 rounded-lg border border-red-500/20 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-red-300/60 text-sm font-medium mb-1">
+                Total Discount
+              </p>
+              <p className="text-2xl font-bold text-white">
+                {formatPrice(totalDiscount)}
+              </p>
+            </div>
+            <div className="bg-red-500/10 p-2 rounded-lg">
+              <Minus className="h-6 w-6 text-red-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Total HT - Second */}
         <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 rounded-lg border border-green-500/20 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-300/60 text-sm font-medium mb-1">
-                Total Amount HT
+                Total HT
               </p>
               <p className="text-2xl font-bold text-white">
                 {formatPrice(totalAmountHT)}
@@ -58,6 +76,7 @@ const LigneSummaryFooter = ({ lignes }: LigneSummaryFooterProps) => {
           </div>
         </div>
 
+        {/* Total VAT - Third */}
         <div className="bg-gradient-to-br from-purple-900/30 to-violet-900/30 rounded-lg border border-purple-500/20 p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -74,11 +93,12 @@ const LigneSummaryFooter = ({ lignes }: LigneSummaryFooterProps) => {
           </div>
         </div>
 
+        {/* Total TTC - Fourth */}
         <div className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 rounded-lg border border-blue-500/20 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-300/60 text-sm font-medium mb-1">
-                Total Amount TTC
+                Total TTC
               </p>
               <p className="text-2xl font-bold text-white">
                 {formatPrice(totalAmountTTC)}
@@ -88,25 +108,6 @@ const LigneSummaryFooter = ({ lignes }: LigneSummaryFooterProps) => {
               <div className="h-6 w-6 flex items-center justify-center text-blue-400 font-bold text-xs">
                 TTC
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Total Discount */}
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-        <div className="bg-gradient-to-br from-red-900/30 to-rose-900/30 rounded-lg border border-red-500/20 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-300/60 text-sm font-medium mb-1">
-                Total Discount
-              </p>
-              <p className="text-2xl font-bold text-white">
-                {formatPrice(totalDiscount)}
-              </p>
-            </div>
-            <div className="bg-red-500/10 p-2 rounded-lg">
-              <Minus className="h-6 w-6 text-red-400" />
             </div>
           </div>
         </div>

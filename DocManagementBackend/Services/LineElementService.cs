@@ -28,7 +28,7 @@ namespace DocManagementBackend.Services
 
             // Check if LignesElementType already exists for this item
             var existingElementType = await _context.LignesElementTypes
-                .FirstOrDefaultAsync(let => let.ItemCode == itemCode && let.TypeElement == "Item");
+                .FirstOrDefaultAsync(let => let.ItemCode == itemCode && let.TypeElement == ElementType.Item);
 
             if (existingElementType != null)
                 return existingElementType;
@@ -37,7 +37,7 @@ namespace DocManagementBackend.Services
             var elementType = new LignesElementType
             {
                 Code = $"ITEM_{itemCode}",
-                TypeElement = "Item",
+                TypeElement = ElementType.Item,
                 Description = $"Line element for item: {item.Description}",
                 TableName = "Item",
                 ItemCode = itemCode,
@@ -77,7 +77,7 @@ namespace DocManagementBackend.Services
 
             // Check if LignesElementType already exists for this account
             var existingElementType = await _context.LignesElementTypes
-                .FirstOrDefaultAsync(let => let.AccountCode == accountCode && let.TypeElement == "General Accounts");
+                .FirstOrDefaultAsync(let => let.AccountCode == accountCode && let.TypeElement == ElementType.GeneralAccounts);
 
             if (existingElementType != null)
                 return existingElementType;
@@ -86,7 +86,7 @@ namespace DocManagementBackend.Services
             var elementType = new LignesElementType
             {
                 Code = $"ACCOUNT_{accountCode}",
-                TypeElement = "General Accounts",
+                TypeElement = ElementType.GeneralAccounts,
                 Description = $"Line element for account: {account.Description}",
                 TableName = "GeneralAccounts",
                 ItemCode = null,
@@ -133,14 +133,14 @@ namespace DocManagementBackend.Services
             // Validate referenced entities exist
             switch (elementType.TypeElement)
             {
-                case "Item":
+                case ElementType.Item:
                     if (string.IsNullOrEmpty(elementType.ItemCode))
                         return false;
                     
                     var itemExists = await _context.Items.AnyAsync(i => i.Code == elementType.ItemCode);
                     return itemExists;
 
-                case "General Accounts":
+                case ElementType.GeneralAccounts:
                     if (string.IsNullOrEmpty(elementType.AccountCode))
                         return false;
                     
@@ -169,10 +169,15 @@ namespace DocManagementBackend.Services
         /// </summary>
         public async Task<List<LignesElementType>> GetElementTypesByTypeAsync(string typeElement)
         {
+            if (!Enum.TryParse<ElementType>(typeElement, true, out var enumValue))
+            {
+                return new List<LignesElementType>(); // Return empty list for invalid type
+            }
+            
             return await _context.LignesElementTypes
                 .Include(let => let.Item).ThenInclude(i => i!.UniteCodeNavigation)
                 .Include(let => let.GeneralAccount)
-                .Where(let => let.TypeElement == typeElement)
+                .Where(let => let.TypeElement == enumValue)
                 .OrderBy(let => let.Code)
                 .ToListAsync();
         }

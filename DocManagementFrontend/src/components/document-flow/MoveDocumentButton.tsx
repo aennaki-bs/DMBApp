@@ -207,19 +207,11 @@ export function MoveDocumentButton({
         `Changed status from ${currentStatus?.title} to ${statusTitle}`
       );
       
-      if (result.requiresApproval || requiresApproval) {
-        toast.info("This step requires approval. An approval request has been initiated.", {
-          duration: 5000 // Make this toast stay longer
-        });
-      } else {
-        toast.success(`Document moved to ${statusTitle}`);
-      }
-      
       // Close dialog first
       setOpen(false);
       setSelectedStatusId(null);
       
-      // Trigger immediate refresh
+      // Trigger immediate refresh - let parent handle toast notifications
       onStatusChange(result);
       
       // Add a small delay then trigger another refresh to ensure backend changes are reflected
