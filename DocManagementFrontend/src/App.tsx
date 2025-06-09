@@ -45,8 +45,12 @@ import ApproversManagement from "./pages/ApproversManagement";
 import ButtonShowcasePage from "./pages/ButtonShowcase";
 import ResponsibilityCentreManagement from "./pages/ResponsibilityCentreManagement";
 import LineElementsManagement from "./pages/LineElementsManagement";
+import ItemsPage from "./pages/ItemsPage";
+import UnitCodesPage from "./pages/UnitCodesPage";
+import GeneralAccountsPage from "./pages/GeneralAccountsPage";
 import CustomerManagementPage from "./pages/CustomerManagement";
 import VendorManagementPage from "./pages/VendorManagement";
+import ThemeDemo from "./pages/ThemeDemo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,6 +88,7 @@ const App = () => (
                   element={<UpdatePassword />}
                 />
                 <Route path="/ui-showcase" element={<ButtonShowcasePage />} />
+                <Route path="/theme-demo" element={<ThemeDemo />} />
 
                 {/* Protected routes with layout */}
                 <Route
@@ -153,6 +158,41 @@ const App = () => (
                         requiredRole={["Admin", "FullUser"]}
                       >
                         <LineElementsManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Individual Line Elements pages */}
+                  <Route
+                    path="/items-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <ItemsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/unit-codes-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <UnitCodesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/general-accounts-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <GeneralAccountsPage />
                       </ProtectedRoute>
                     }
                   />

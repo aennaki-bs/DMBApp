@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-
-type Theme = 'light' | 'dark' | 'system';
+import { type Theme, type BaseTheme, resolveTheme } from '@/lib/themes';
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
@@ -8,14 +7,12 @@ export function useTheme() {
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) return savedTheme;
     
-    // If no saved preference, check for system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    
-    // Default to light theme
-    return 'light';
+    // Default to standard theme
+    return 'standard';
   });
+  
+  // Calculate the current active theme (resolve named themes to base themes)
+  const currentActiveTheme = resolveTheme(theme);
   
   // Update the DOM when theme changes
   useEffect(() => {
@@ -24,22 +21,24 @@ export function useTheme() {
     // Remove old theme classes
     root.classList.remove('light', 'dark');
     
-    // Add the current theme class
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.add(systemTheme);
+    // Add the current active theme class
+    root.classList.add(currentActiveTheme);
+    
+    // Set the data-theme attribute for named themes
+    if (theme === 'standard') {
+      root.setAttribute('data-theme', 'standard');
     } else {
-      root.classList.add(theme);
+      root.removeAttribute('data-theme');
     }
     
     // Save the theme preference
     localStorage.setItem('theme', theme);
-  }, [theme]);
+  }, [theme, currentActiveTheme]);
   
   // Function to change the theme
   const setThemePreference = (newTheme: Theme) => {
     setTheme(newTheme);
   };
   
-  return { theme, setTheme: setThemePreference };
+  return { theme, setTheme: setThemePreference, currentActiveTheme };
 } 

@@ -1,20 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Moon,
-  Sun,
   Globe,
   Palette,
   Settings as SettingsIcon,
-  ArrowLeft,
   Check,
   User,
   Monitor,
 } from "lucide-react";
 import { DashboardCard } from "@/components/ui/dashboard-card";
-import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -23,12 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { useSettings } from "@/context/SettingsContext";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { translations } from "@/translations";
 import { toast } from "sonner";
+import { ThemeSelector } from "@/components/ui/ThemeSelector";
+import { useThemeContext } from "@/context/ThemeContext";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 // Predefined background options
 const backgroundOptions = [
@@ -60,6 +57,7 @@ const backgroundOptions = [
 
 const Settings = () => {
   const { theme, setTheme, language, setLanguage } = useSettings();
+  const { theme: newTheme } = useThemeContext();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -69,11 +67,6 @@ const Settings = () => {
   });
 
   const t = translations[language].settings;
-
-  const handleThemeChange = (value: "light" | "dark") => {
-    setTheme(value);
-    toast.success(`Theme changed to ${value} mode`);
-  };
 
   const handleLanguageChange = (value: "en" | "fr" | "es") => {
     setLanguage(value);
@@ -130,142 +123,66 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br relative">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 border-b border-blue-900/30 bg-[#0f1642]/80 backdrop-blur-xl shadow-lg"
-      >
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              {/* <EnhancedButton
-                variant="ghost"
-                size="lg"
-                onClick={() => navigate("/dashboard")}
-                className="text-blue-300 hover:text-white hover:bg-blue-800/50 px-4 py-2"
-              >
-                <ArrowLeft className="h-5 w-5 mr-3" />
-                Back to Dashboard
-              </EnhancedButton> */}
-              <Separator
-                orientation="vertical"
-                className="h-4 bg-blue-900/30"
-              />
-              <div className="flex items-center space-x-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30">
-                  <SettingsIcon className="h-8 w-8 text-blue-400" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-white mb-1">
-                    Application Settings
-                  </h1>
-                  <p className="text-blue-300/80">
-                    Customize your DocuVerse experience
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+      <PageHeader
+        title="Application Settings"
+        description="Customize your DocuVerse experience"
+        icon={<SettingsIcon className="h-6 w-6 text-blue-400" />}
+      />
 
       {/* Main Content */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 max-w-7xl mx-auto px-6 py-10"
+        className="space-y-6"
       >
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Theme Settings */}
-          <motion.div variants={itemVariants}>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Enhanced Theme Settings */}
+          <motion.div variants={itemVariants} className="lg:col-span-2">
             <DashboardCard
-              title="Display Theme"
+              title="Theme Selection"
               headerAction={
                 <Badge
                   variant="secondary"
                   className="bg-blue-500/10 text-blue-400 border-blue-500/20"
                 >
                   <Palette className="h-3 w-3 mr-1" />
-                  Visual
+                  Enhanced
                 </Badge>
               }
               className="h-full"
             >
               <div className="space-y-6">
-                <p className="text-blue-300/80 text-sm">
-                  Choose your preferred interface theme
-                </p>
-
-                <RadioGroup
-                  value={theme}
-                  onValueChange={handleThemeChange}
-                  className="space-y-4"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="relative"
+                <div className="flex items-center justify-between">
+                  <p className="text-blue-300/80 text-sm">
+                    Choose from our theme collection: Standard, Light, and Dark
+                  </p>
+                  <Badge
+                    variant="outline"
+                    className="bg-green-500/10 text-green-400 border-green-500/30"
                   >
-                    <RadioGroupItem
-                      value="light"
-                      id="light"
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor="light"
-                      className="flex items-center gap-4 p-4 border-2 border-blue-900/30 rounded-xl cursor-pointer hover:border-blue-600/50 peer-checked:border-amber-500 peer-checked:bg-amber-500/5 transition-all"
-                    >
-                      <div className="p-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500">
-                        <Sun className="h-6 w-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-blue-100 font-semibold text-lg">
-                          Light Mode
-                        </span>
-                        <p className="text-xs text-blue-300/80 mt-1">
-                          Bright and clean interface
-                        </p>
-                      </div>
-                    </Label>
-                  </motion.div>
+                    Current:{" "}
+                    {newTheme === "standard"
+                      ? "Standard"
+                      : newTheme.charAt(0).toUpperCase() + newTheme.slice(1)}
+                  </Badge>
+                </div>
 
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="relative"
-                  >
-                    <RadioGroupItem
-                      value="dark"
-                      id="dark"
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor="dark"
-                      className="flex items-center gap-4 p-4 border-2 border-blue-900/30 rounded-xl cursor-pointer hover:border-blue-600/50 peer-checked:border-indigo-500 peer-checked:bg-indigo-500/5 transition-all"
-                    >
-                      <div className="p-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600">
-                        <Moon className="h-6 w-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-blue-100 font-semibold text-lg">
-                          Dark Mode
-                        </span>
-                        <p className="text-xs text-blue-300/80 mt-1">
-                          Easy on the eyes
-                        </p>
-                      </div>
-                    </Label>
-                  </motion.div>
-                </RadioGroup>
+                <ThemeSelector />
+
+                {/* <div className="mt-6 p-4 rounded-lg bg-blue-950/20 border border-blue-800/30">
+                  <h4 className="text-blue-100 font-semibold mb-2">
+                    Standard Theme Features
+                  </h4>
+                  <ul className="text-blue-300/80 text-sm space-y-1">
+                    <li>• Optimized color palette for better readability</li>
+                    <li>• Enhanced spacing and typography</li>
+                    <li>• Professional DocuVerse branding</li>
+                    <li>• Improved accessibility and contrast</li>
+                  </ul>
+                </div> */}
               </div>
             </DashboardCard>
           </motion.div>
@@ -334,7 +251,7 @@ const Settings = () => {
           </motion.div>
 
           {/* User Info Display */}
-          <motion.div variants={itemVariants}>
+          {/* <motion.div variants={itemVariants}>
             <DashboardCard
               title="Account Information"
               headerAction={
@@ -370,8 +287,10 @@ const Settings = () => {
                     <p className="text-blue-300 text-xs uppercase tracking-wide mb-1">
                       Theme
                     </p>
-                    <p className="text-blue-100 font-medium capitalize">
-                      {theme}
+                    <p className="text-blue-100 font-medium">
+                      {newTheme === "standard"
+                        ? "Standard"
+                        : newTheme.charAt(0).toUpperCase() + newTheme.slice(1)}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-blue-950/20 border border-blue-800/30">
@@ -385,7 +304,7 @@ const Settings = () => {
                 </div>
               </div>
             </DashboardCard>
-          </motion.div>
+          </motion.div> */}
 
           {/* Background Settings - Full Width */}
           <motion.div variants={itemVariants} className="lg:col-span-3">

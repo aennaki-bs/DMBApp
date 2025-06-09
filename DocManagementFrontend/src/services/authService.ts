@@ -53,12 +53,19 @@ export interface UserInfo {
   companyPhone?: string;
   companyEmail?: string;
   companyWebsite?: string;
-  // Responsibility centre information
+  // Responsibility centre information - matching API response property name
+  responsibilityCenter?: {
+    id: number;
+    code: string;
+    descr: string;
+    isActive?: boolean;
+  } | null;
+  // Keep the old property name for backward compatibility
   responsibilityCentre?: {
     id: number;
     code: string;
     descr: string;
-    isActive: boolean;
+    isActive?: boolean;
   } | null;
 }
 

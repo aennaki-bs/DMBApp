@@ -1,11 +1,11 @@
 import React, { createContext, useContext, ReactNode } from "react";
 import { useTheme } from "@/hooks/useTheme";
-
-type Theme = "light" | "dark" | "system";
+import { type Theme, type BaseTheme } from "@/lib/themes";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  currentActiveTheme: BaseTheme; // The actual theme being applied (resolved from system if needed)
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

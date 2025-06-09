@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -9,8 +9,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, Hash, Calculator, Database, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Package,
+  Hash,
+  Calculator,
+  Database,
+  Tag,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 // Import the management components
 import LineElementTypeManagement from "@/components/line-elements/LineElementTypeManagement";
@@ -107,20 +116,11 @@ const LineElementsManagement = () => {
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 mb-6 transition-all">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-white flex items-center">
-              <Database className="mr-3 h-6 w-6 text-blue-400" />
-              Line Elements Management
-            </h1>
-            <p className="text-sm md:text-base text-blue-300">
-              Manage element types, items, unit codes, and general accounts used
-              in document lines
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Line Elements Management"
+        description="Manage element types, items, unit codes, and general accounts used in document lines"
+        icon={<Database className="h-6 w-6 text-blue-400" />}
+      />
 
       {/* Main Content */}
       <Card className="bg-[#0a1033] border-blue-900/30 shadow-lg">
@@ -225,24 +225,66 @@ const LineElementsManagement = () => {
               </TabsContent>
 
               <TabsContent value="items" className="mt-0">
-                <ItemsManagement
-                  searchTerm={searchTerm}
-                  elementType={getElementTypeInfo("Item")}
-                />
+                <div className="space-y-4">
+                  <div className="flex justify-end">
+                    <Link to="/items-management">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-800/20"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View as Standalone Page
+                      </Button>
+                    </Link>
+                  </div>
+                  <ItemsManagement
+                    searchTerm={searchTerm}
+                    elementType={getElementTypeInfo("Item")}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="unitecodes" className="mt-0">
-                <UniteCodesManagement
-                  searchTerm={searchTerm}
-                  elementType={getElementTypeInfo("UniteCode")}
-                />
+                <div className="space-y-4">
+                  <div className="flex justify-end">
+                    <Link to="/unit-codes-management">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-amber-500/30 text-amber-400 hover:bg-amber-800/20"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View as Standalone Page
+                      </Button>
+                    </Link>
+                  </div>
+                  <UniteCodesManagement
+                    searchTerm={searchTerm}
+                    elementType={getElementTypeInfo("UniteCode")}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="generalaccounts" className="mt-0">
-                <GeneralAccountsManagement
-                  searchTerm={searchTerm}
-                  elementType={getElementTypeInfo("GeneralAccounts")}
-                />
+                <div className="space-y-4">
+                  <div className="flex justify-end">
+                    <Link to="/general-accounts-management">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-violet-500/30 text-violet-400 hover:bg-violet-800/20"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View as Standalone Page
+                      </Button>
+                    </Link>
+                  </div>
+                  <GeneralAccountsManagement
+                    searchTerm={searchTerm}
+                    elementType={getElementTypeInfo("GeneralAccounts")}
+                  />
+                </div>
               </TabsContent>
             </div>
           </CardContent>

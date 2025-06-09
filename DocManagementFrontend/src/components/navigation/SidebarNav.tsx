@@ -48,10 +48,9 @@ export function SidebarNav() {
   const isLineElementsActive = () => {
     return (
       isActive("/line-elements-management") ||
-      isActive("/line-elements/element-types") ||
-      isActive("/line-elements/items") ||
-      isActive("/line-elements/unit-codes") ||
-      isActive("/line-elements/general-accounts") ||
+      isActive("/items-management") ||
+      isActive("/unit-codes-management") ||
+      isActive("/general-accounts-management") ||
       isActive("/customer-management") ||
       isActive("/vendor-management")
     );
@@ -225,11 +224,9 @@ export function SidebarNav() {
                     </li>
                     <li>
                       <Link
-                        to="/line-elements-management?tab=items"
+                        to="/items-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive("/line-elements-management") &&
-                          new URLSearchParams(location.search).get("tab") ===
-                            "items"
+                          isActive("/items-management")
                             ? "bg-blue-700/40 text-blue-200"
                             : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                         }`}
@@ -240,11 +237,9 @@ export function SidebarNav() {
                     </li>
                     <li>
                       <Link
-                        to="/line-elements-management?tab=unitecodes"
+                        to="/unit-codes-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive("/line-elements-management") &&
-                          new URLSearchParams(location.search).get("tab") ===
-                            "unitecodes"
+                          isActive("/unit-codes-management")
                             ? "bg-blue-700/40 text-blue-200"
                             : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                         }`}
@@ -255,11 +250,9 @@ export function SidebarNav() {
                     </li>
                     <li>
                       <Link
-                        to="/line-elements-management?tab=generalaccounts"
+                        to="/general-accounts-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive("/line-elements-management") &&
-                          new URLSearchParams(location.search).get("tab") ===
-                            "generalaccounts"
+                          isActive("/general-accounts-management")
                             ? "bg-blue-700/40 text-blue-200"
                             : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
                         }`}

@@ -1,0 +1,114 @@
+/* Standard Theme Styles */
+:root[data-theme="standard"] {
+    /* Enhanced color palette for standard theme */
+    --background: 248 250 252;
+    --foreground: 15 23 42;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+    --primary: 59 130 246;
+    --primary-foreground: 248 250 252;
+    --secondary: 241 245 249;
+    --secondary-foreground: 15 23 42;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+    --accent: 239 246 255;
+    --accent-foreground: 37 99 235;
+    --destructive: 239 68 68;
+    --destructive-foreground: 248 250 252;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 59 130 246;
+    --radius: 0.5rem;
+
+    /* Standard theme sidebar colors */
+    --sidebar-background: 255 255 255;
+    --sidebar-foreground: 15 23 42;
+    --sidebar-primary: 59 130 246;
+    --sidebar-primary-foreground: 248 250 252;
+    --sidebar-secondary: 248 250 252;
+    --sidebar-secondary-foreground: 15 23 42;
+    --sidebar-muted: 100 116 139;
+    --sidebar-muted-foreground: 148 163 184;
+    --sidebar-accent: 239 246 255;
+    --sidebar-accent-foreground: 37 99 235;
+    --sidebar-destructive: 239 68 68;
+    --sidebar-destructive-foreground: 248 250 252;
+    --sidebar-border: 226 232 240;
+    --sidebar-input: 226 232 240;
+    --sidebar-ring: 59 130 246;
+    --sidebar-radius: 0.5rem;
+
+    /* Enhanced spacing for standard theme */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+    --spacing-3xl: 2.5rem;
+    --spacing-4xl: 3rem;
+
+    /* Enhanced shadows for standard theme */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Standard theme component styles - flattened selectors */
+
+/* Enhanced button styles for standard theme */
+.standard-theme .btn-standard {
+    @apply bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+.standard-theme .btn-standard-outline {
+    @apply border border-blue-500 text-blue-500 hover:bg-blue-50 font-medium px-4 py-2 rounded-lg transition-all duration-200;
+}
+
+.standard-theme .btn-standard-ghost {
+    @apply text-blue-500 hover:bg-blue-50 font-medium px-4 py-2 rounded-lg transition-all duration-200;
+}
+
+/* Enhanced card styles for standard theme */
+.standard-theme .card-standard {
+    @apply bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
+}
+
+.standard-theme .card-standard-header {
+    @apply border-b border-slate-200 px-6 py-4;
+}
+
+.standard-theme .card-standard-content {
+    @apply px-6 py-4;
+}
+
+/* Enhanced form styles for standard theme */
+.standard-theme .input-standard {
+    @apply border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg px-3 py-2 text-sm transition-all duration-200;
+}
+
+.standard-theme .label-standard {
+    @apply text-sm font-medium text-slate-700 mb-1 block;
+}
+
+/* Enhanced navigation styles for standard theme */
+.standard-theme .nav-standard {
+    @apply bg-white border-b border-slate-200 shadow-sm;
+}
+
+.standard-theme .nav-standard-item {
+    @apply text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md transition-all duration-200 font-medium;
+}
+
+.standard-theme .nav-standard-item-active {
+    @apply text-blue-600 bg-blue-50 px-3 py-2 rounded-md font-medium;
+}
+
+/* Apply standard theme styles when the theme is active */
+:root[data-theme="standard"] .standard-theme,
+:root.light .standard-theme {
+    /* Theme is applied via the .standard-theme class */
+}

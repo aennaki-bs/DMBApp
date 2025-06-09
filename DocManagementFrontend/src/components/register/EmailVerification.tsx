@@ -278,10 +278,17 @@ const EmailVerification = () => {
           <DocuVerseLogo className="h-12 text-blue-400" />
         </div>
 
-        <Card className="bg-gradient-to-br from-[#0d1528]/40 to-[#0a0f1d]/40 border-blue-900/30 shadow-xl backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-blue-500/5 z-0"></div>
+        <Card
+          className="border-blue-900/30 shadow-xl backdrop-blur-xl relative overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(13, 21, 40, 0.95), rgba(10, 15, 29, 0.95))",
+            backdropFilter: "blur(16px)",
+          }}
+        >
+          <div className="absolute inset-0 bg-[#0a0f1d]/95 z-0"></div>
           <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-900/0 via-blue-900/30 to-blue-900/0 rounded-lg blur-sm opacity-70 z-0"></div>
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent to-blue-900/10 z-0"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1d]/50 to-blue-900/20 z-0"></div>
 
           <CardHeader className="relative z-10 text-center">
             <CardTitle className="text-2xl font-semibold text-white">
