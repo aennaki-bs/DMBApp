@@ -36,9 +36,7 @@ export function CircuitListActions({
 
   // Function to navigate to the circuit statuses page
   const goToCircuitStatuses = () => {
-    if (circuit.isActive) {
-      navigate(`/circuits/${circuit.id}/statuses`);
-    }
+    navigate(`/circuits/${circuit.id}/statuses`);
   };
 
   // For simple users or small screens, use dropdown menu
@@ -51,23 +49,14 @@ export function CircuitListActions({
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 p-0 ${
-                  circuit.isActive
-                    ? "text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                    : "text-blue-400/50 cursor-not-allowed"
-                }`}
-                disabled={!circuit.isActive}
+                className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
                 onClick={goToCircuitStatuses}
               >
                 <Eye className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-              <p>
-                {circuit.isActive
-                  ? "View Circuit Statuses"
-                  : "Activate circuit to view statuses"}
-              </p>
+              <p>View Circuit Statuses</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

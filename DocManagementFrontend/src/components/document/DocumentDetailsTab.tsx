@@ -11,8 +11,12 @@ import {
   ChevronUp,
   History,
   ExternalLink,
+  UserCheck,
+  Package,
+  Users,
+  Building2,
 } from "lucide-react";
-import { Document } from "@/models/document";
+import { Document, TierType } from "@/models/document";
 import { WorkflowStatus } from "@/services/workflowService";
 import { ApprovalHistoryItem } from "@/services/approvalService";
 import { Separator } from "@/components/ui/separator";
@@ -55,6 +59,38 @@ const DocumentDetailsTab = ({
   const progressDisplay = workflowStatus?.progressPercentage
     ? `${workflowStatus.progressPercentage}%`
     : "25% complete";
+
+  // Helper function to determine if customer/vendor section should be shown
+  const shouldShowCustomerVendor = () => {
+    return (
+      document.documentType?.tierType === TierType.Customer ||
+      document.documentType?.tierType === TierType.Vendor
+    );
+  };
+
+  // Helper function to get tier type string
+  const getTierTypeString = (tierType?: TierType): string => {
+    switch (tierType) {
+      case TierType.Customer:
+        return "Customer";
+      case TierType.Vendor:
+        return "Vendor";
+      default:
+        return "None";
+    }
+  };
+
+  // Helper function to get tier type icon
+  const getTierTypeIcon = (tierType?: TierType) => {
+    switch (tierType) {
+      case TierType.Customer:
+        return <UserCheck className="h-4 w-4 text-green-400" />;
+      case TierType.Vendor:
+        return <Package className="h-4 w-4 text-orange-400" />;
+      default:
+        return <Users className="h-4 w-4 text-gray-400" />;
+    }
+  };
 
   // Fetch circuit key when circuitId is available
   useEffect(() => {
@@ -131,20 +167,7 @@ const DocumentDetailsTab = ({
               Responsibility Centre
             </h3>
             <p className="font-semibold text-lg text-white flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-blue-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
-                <path d="M12 10v4"></path>
-                <path d="M12 14h4"></path>
-              </svg>
+              <Building2 className="h-5 w-5 text-blue-400" />
               {document.responsibilityCentre.descr || "No Centre Assigned"}
             </p>
             {document.responsibilityCentre.code && (
@@ -152,6 +175,68 @@ const DocumentDetailsTab = ({
                 Code: {document.responsibilityCentre.code}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Customer/Vendor Information Banner */}
+      {shouldShowCustomerVendor() && (document.customerVendorName || document.customerVendorCode) && (
+        <div className="bg-[#131f4f]/30 py-4 px-6 text-center border-b border-blue-900/20">
+          <div className="flex flex-col items-center justify-center">
+            <h3 className="text-sm font-medium text-blue-300 mb-1 flex items-center gap-2">
+              {getTierTypeIcon(document.documentType?.tierType)}
+              {getTierTypeString(document.documentType?.tierType)} Information
+            </h3>
+            
+            {/* Customer/Vendor Name */}
+            {/* <div className="mb-2"> */}
+              {/* <p className="text-xs text-blue-400/80 uppercase tracking-wide mb-1">
+                {document.documentType?.tierType === TierType.Customer ? "Customer Name" : "Vendor Name"}
+              </p> */}
+              
+            {/* </div> */}
+
+            {/* Customer/Vendor Code */}
+            {document.customerVendorCode && (
+              <div className="mt-1 py-1 px-3 bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-full text-sm font-mono">
+                Code: {document.customerVendorCode} </div>
+            )}
+
+            {/* Address Information */}
+            {(document.customerVendorAddress || document.customerVendorCity || document.customerVendorCountry) && (
+              <div className="mt-2">
+                <p className="text-xs text-blue-400/80 uppercase tracking-wide mb-1">
+                {document.customerVendorName}
+                </p>
+                <div className="text-sm text-blue-300/80 max-w-md">
+                  <div className="flex flex-col items-center gap-1">
+                    {document.customerVendorAddress && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-blue-400/60">Address:</span>
+                        <span>{document.customerVendorAddress}</span>
+                      </div>
+                    )}
+                    {document.customerVendorCity && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-blue-400/60">City:</span>
+                        <span>{document.customerVendorCity}</span>
+                      </div>
+                    )}
+                    {document.customerVendorCountry && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-blue-400/60">Country:</span>
+                        <span>{document.customerVendorCountry}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Information note */}
+            {/* <div className="mt-3 text-xs text-blue-400/60 italic">
+              This information was captured when the document was created
+            </div> */}
           </div>
         </div>
       )}

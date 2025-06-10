@@ -16,7 +16,7 @@ namespace DocManagementBackend.Models
         [MaxLength(500)]
         public string ApiUrl { get; set; } = string.Empty;
         
-        public int PollingIntervalMinutes { get; set; } = 10;
+        public int PollingIntervalMinutes { get; set; } = 60;
         
         public bool IsEnabled { get; set; } = true;
         
@@ -104,6 +104,6 @@ namespace DocManagementBackend.Models
         public string Name { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
         public ApiEndpointType Type { get; set; }
-        public int DefaultPollingIntervalMinutes { get; set; } = 10;
+        public int DefaultPollingIntervalMinutes { get; set; } = 60;
     }
 } 

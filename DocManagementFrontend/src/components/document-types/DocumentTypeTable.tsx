@@ -41,8 +41,8 @@ const DocumentTypeTable = ({
   return (
     <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
       <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
-        <div className="min-w-[800px]">
-          <Table>
+        <div className="min-w-[1000px]">
+          <Table className="table-fixed w-full">
             <DocumentTypeTableHeader
               onSelectAll={onSelectAll}
               areAllEligibleSelected={areAllEligibleSelected}
@@ -54,7 +54,7 @@ const DocumentTypeTable = ({
             <TableBody>
               {types.length === 0 ? (
                 <TableRow className="border-blue-900/20 hover:bg-blue-900/20">
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     <div className="flex flex-col items-center justify-center text-blue-300">
                       <AlertTriangle className="h-8 w-8 text-blue-400 mb-2" />
                       <p className="text-sm">No document types found</p>
