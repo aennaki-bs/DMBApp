@@ -89,6 +89,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePagination } from "@/hooks/usePagination";
 import SmartPagination from "@/components/shared/SmartPagination";
+import { motion } from "framer-motion";
+import { createPortal } from "react-dom";
 
 // Simple debounce utility
 const debounce = <F extends (...args: any[]) => any>(fn: F, delay: number) => {
@@ -1076,11 +1078,11 @@ export default function ResponsibilityCentreManagement() {
       </div>
 
       {/* Data Table */}
-      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-xl">
-        {/* Enhanced Header */}
-        <div className="p-6 border-b border-blue-900/30 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gradient-to-r from-[#1a2c6b]/30 to-[#0a1033]/30">
+      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-[#0a1033] shadow-xl">
+        {/* Clean Header */}
+        <div className="p-6 border-b border-blue-900/30 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-blue-100 tracking-wide flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-white tracking-wide flex items-center gap-3">
               <Building2 className="h-6 w-6 text-blue-400" />
               {t("responsibilityCentres.title")}
             </h2>
@@ -1106,16 +1108,16 @@ export default function ResponsibilityCentreManagement() {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-0">
           {isLoading ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 px-6">
               <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-6"></div>
               <p className="text-blue-300 text-lg font-medium">
                 {t("common.loading")}
               </p>
             </div>
           ) : filteredCentres.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-blue-900/50 rounded-xl bg-gradient-to-b from-[#182052]/50 to-[#0f1642]/50 backdrop-blur-sm">
+            <div className="text-center py-12 px-6 border border-dashed border-blue-900/50 rounded-xl bg-gradient-to-b from-[#182052]/50 to-[#0f1642]/50 backdrop-blur-sm mx-6 my-6">
               <Building2 className="h-20 w-20 mx-auto text-blue-800/50 mb-6" />
               <h3 className="text-2xl font-bold text-blue-300 mb-3">
                 {t("responsibilityCentres.noCentres")}
@@ -1135,45 +1137,13 @@ export default function ResponsibilityCentreManagement() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* Bulk Actions Bar */}
-              {selectedCentres.length > 0 && (
-                <div className="px-6 py-3 bg-blue-800/30 border border-blue-900/30 rounded-lg flex items-center justify-between backdrop-blur-sm shadow-md">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-blue-400" />
-                    <span className="text-blue-200 font-medium">
-                      {selectedCentres.length} centre
-                      {selectedCentres.length !== 1 && "s"} selected
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedCentres([])}
-                      className="bg-blue-900/40 text-blue-300 border-blue-800/50 hover:bg-blue-800/50 hover:shadow-md transition-all duration-200"
-                    >
-                      Clear Selection
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={openBulkDeleteDialog}
-                      className="bg-red-900/40 text-red-300 border-red-800/50 hover:bg-red-800/50 hover:shadow-md transition-all duration-200"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete Selected
-                    </Button>
-                  </div>
-                </div>
-              )}
-
+            <div>
               {/* Fixed Header - Never Scrolls */}
               <div className="min-w-[1000px] border-b border-blue-900/30">
                 <Table className="table-fixed w-full">
-                  <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
+                  <TableHeader className="bg-[#1a2c6b]">
                     <TableRow className="border-blue-900/30 hover:bg-transparent">
-                      <TableHead className="w-[50px] text-blue-300 font-bold py-5 px-6 text-center">
+                      <TableHead className="w-[50px] text-blue-300 font-semibold py-4 px-6 text-center">
                         <div className="flex items-center justify-center">
                           <Checkbox
                             checked={
@@ -1206,42 +1176,30 @@ export default function ResponsibilityCentreManagement() {
                           />
                         </div>
                       </TableHead>
-                      <TableHead className="w-[120px] text-blue-300 font-bold py-5 px-6 text-left">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold tracking-wide uppercase">
-                            {t("common.code")}
-                          </span>
-                        </div>
+                      <TableHead className="w-[120px] text-blue-300 font-semibold py-4 px-6 text-left">
+                        <span className="text-sm font-medium">
+                          {t("common.code")}
+                        </span>
                       </TableHead>
-                      <TableHead className="w-[280px] text-blue-300 font-bold py-5 px-6 text-left">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold tracking-wide uppercase">
-                            {t("common.description")}
-                          </span>
-                        </div>
+                      <TableHead className="w-[280px] text-blue-300 font-semibold py-4 px-6 text-left">
+                        <span className="text-sm font-medium">
+                          {t("common.description")}
+                        </span>
                       </TableHead>
-                      <TableHead className="w-[120px] text-blue-300 font-bold py-5 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <UsersRound className="h-4 w-4 text-blue-400" />
-                          <span className="text-sm font-semibold tracking-wide uppercase">
-                            {t("responsibilityCentres.usersCount")}
-                          </span>
-                        </div>
+                      <TableHead className="w-[120px] text-blue-300 font-semibold py-4 px-6 text-center">
+                        <span className="text-sm font-medium">
+                          {t("responsibilityCentres.usersCount")}
+                        </span>
                       </TableHead>
-                      <TableHead className="w-[120px] text-blue-300 font-bold py-5 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Building2 className="h-4 w-4 text-blue-400" />
-                          <span className="text-sm font-semibold tracking-wide uppercase">
-                            {t("responsibilityCentres.documentsCount")}
-                          </span>
-                        </div>
+                      <TableHead className="w-[120px] text-blue-300 font-semibold py-4 px-6 text-center">
+                        <span className="text-sm font-medium">
+                          {t("responsibilityCentres.documentsCount")}
+                        </span>
                       </TableHead>
-                      <TableHead className="w-[200px] text-blue-300 font-bold py-5 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-sm font-semibold tracking-wide uppercase">
-                            {t("common.actions")}
-                          </span>
-                        </div>
+                      <TableHead className="w-[200px] text-blue-300 font-semibold py-4 px-6 text-center">
+                        <span className="text-sm font-medium">
+                          {t("common.actions")}
+                        </span>
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1256,17 +1214,17 @@ export default function ResponsibilityCentreManagement() {
                       {paginatedCentres.map((centre, rowIndex) => (
                         <TableRow
                           key={centre.id}
-                          className={`border-blue-900/30 transition-all duration-300 group cursor-default ${
+                          className={`border-blue-900/30 transition-all duration-200 group cursor-default ${
                             rowIndex % 2 === 0
                               ? "bg-blue-950/10"
                               : "bg-transparent"
                           } ${
                             selectedCentres.includes(centre.id)
-                              ? "bg-blue-900/40 border-l-4 border-l-blue-500 shadow-sm"
-                              : "hover:bg-blue-900/25"
-                          } hover:shadow-lg hover:scale-[1.01]`}
+                              ? "bg-blue-900/40 border-l-4 border-l-blue-500"
+                              : "hover:bg-blue-900/20"
+                          }`}
                         >
-                          <TableCell className="w-[50px] py-5 px-6 text-center align-middle">
+                          <TableCell className="w-[50px] py-4 px-6 text-center align-middle">
                             <div className="flex items-center justify-center">
                               <Checkbox
                                 checked={selectedCentres.includes(centre.id)}
@@ -1288,41 +1246,41 @@ export default function ResponsibilityCentreManagement() {
                               />
                             </div>
                           </TableCell>
-                          <TableCell className="w-[120px] py-5 px-6 align-middle">
-                            <div className="font-bold text-blue-200 text-lg tracking-wide">
+                          <TableCell className="w-[120px] py-4 px-6 align-middle">
+                            <div className="font-semibold text-blue-200 text-base">
                               {centre.code}
                             </div>
                           </TableCell>
-                          <TableCell className="w-[280px] py-5 px-6 align-middle">
-                            <div className="text-blue-100 font-medium leading-relaxed">
-                              <div className="truncate max-w-[260px] text-base">
+                          <TableCell className="w-[280px] py-4 px-6 align-middle">
+                            <div className="text-blue-100 font-medium">
+                              <div className="truncate max-w-[260px]">
                                 {centre.descr}
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="w-[120px] py-5 px-6 text-center align-middle">
+                          <TableCell className="w-[120px] py-4 px-6 text-center align-middle">
                             <Badge
                               variant="outline"
-                              className="bg-gradient-to-r from-blue-900/30 to-blue-800/30 text-blue-200 border-blue-700/50 transition-all duration-200 hover:from-blue-800/40 hover:to-blue-700/40 px-3 py-1.5 text-sm font-semibold shadow-sm"
+                              className="bg-blue-900/30 text-blue-200 border-blue-700/50 px-2 py-1 text-sm font-medium"
                             >
                               {Math.max(0, centre.usersCount || 0)}
                             </Badge>
                           </TableCell>
-                          <TableCell className="w-[120px] py-5 px-6 text-center align-middle">
+                          <TableCell className="w-[120px] py-4 px-6 text-center align-middle">
                             <Badge
                               variant="outline"
-                              className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 text-purple-200 border-purple-700/50 transition-all duration-200 hover:from-purple-800/40 hover:to-purple-700/40 px-3 py-1.5 text-sm font-semibold shadow-sm"
+                              className="bg-purple-900/30 text-purple-200 border-purple-700/50 px-2 py-1 text-sm font-medium"
                             >
                               {centre.documentsCount || 0}
                             </Badge>
                           </TableCell>
-                          <TableCell className="w-[200px] py-5 px-6 text-center align-middle">
-                            <div className="flex justify-center items-center gap-2">
+                          <TableCell className="w-[200px] py-4 px-6 text-center align-middle">
+                            <div className="flex justify-center items-center gap-1">
                               <Button
                                 onClick={() => openAssociateUsersDialog(centre)}
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md rounded-lg"
+                                className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 rounded-md"
                                 title="Associate Users"
                               >
                                 <UsersRound className="h-4 w-4" />
@@ -1331,7 +1289,7 @@ export default function ResponsibilityCentreManagement() {
                                 onClick={() => openDetailsDialog(centre)}
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md rounded-lg"
+                                className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 rounded-md"
                                 title="View Details"
                               >
                                 <Eye className="h-4 w-4" />
@@ -1340,7 +1298,7 @@ export default function ResponsibilityCentreManagement() {
                                 onClick={() => openEditDialog(centre)}
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md rounded-lg"
+                                className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 rounded-md"
                                 title="Edit"
                               >
                                 <Edit className="h-4 w-4" />
@@ -1349,7 +1307,7 @@ export default function ResponsibilityCentreManagement() {
                                 onClick={() => openDeleteDialog(centre)}
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md rounded-lg"
+                                className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-all duration-200 rounded-md"
                                 title="Delete"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -1364,7 +1322,7 @@ export default function ResponsibilityCentreManagement() {
               </ScrollArea>
 
               {/* Smart Pagination with enhanced styling */}
-              <div className="pt-4 pb-2 border-t border-blue-900/20">
+              <div className="pt-4 pb-2 px-6 border-t border-blue-900/20">
                 <SmartPagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -1378,6 +1336,53 @@ export default function ResponsibilityCentreManagement() {
           )}
         </div>
       </div>
+
+      {/* Floating Selection Bar - Like User Management */}
+      {selectedCentres.length > 0 &&
+        createPortal(
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-6 right-16 transform -translate-x-1/2 z-[9999] w-[calc(100vw-4rem)] max-w-4xl mx-auto"
+          >
+            <div className="bg-gradient-to-r from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-lg shadow-[0_8px_32px_rgba(59,130,246,0.7)] rounded-2xl border border-blue-400/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-blue-400/40">
+              <div className="flex items-center text-blue-200 font-medium">
+                <div className="bg-blue-500/30 p-1.5 rounded-xl mr-3 flex-shrink-0">
+                  <Building2 className="w-5 h-5 text-blue-300" />
+                </div>
+                <span className="text-sm sm:text-base text-center sm:text-left">
+                  <span className="font-bold text-blue-100">
+                    {selectedCentres.length}
+                  </span>{" "}
+                  centre{selectedCentres.length !== 1 ? "s" : ""} selected
+                </span>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-blue-900/40 border-blue-500/40 text-blue-200 hover:text-blue-100 hover:bg-blue-800/60 hover:border-blue-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                  onClick={() => setSelectedCentres([])}
+                >
+                  <X className="w-4 h-4 mr-1.5" />
+                  Clear
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                  onClick={openBulkDeleteDialog}
+                >
+                  <Trash2 className="w-4 h-4 mr-1.5" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </motion.div>,
+          document.body
+        )}
 
       {/* Create/Edit Responsibility Centre Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
