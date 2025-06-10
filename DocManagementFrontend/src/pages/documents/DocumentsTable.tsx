@@ -74,66 +74,73 @@ export default function DocumentsTable({
   );
 
   return (
-    <div className="rounded-md overflow-hidden">
-      <ScrollArea className="h-[calc(100vh-400px)] min-h-[400px]">
-        <div className="min-w-[800px]">
-          <Table>
-            <TableHeader className="bg-gradient-to-r from-blue-900/30 to-blue-800/20 sticky top-0 z-10">
-              <TableRow className="border-blue-900/50 hover:bg-transparent">
-                <TableHead className="w-12 text-blue-300 font-medium">
-                  {canManageDocuments ? (
-                    <Checkbox
-                      checked={
-                        selectedDocuments.length === documents.length &&
-                        documents.length > 0
-                      }
-                      onCheckedChange={handleSelectAll}
-                      className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
-                    />
-                  ) : (
-                    <span>#</span>
-                  )}
-                </TableHead>
-                <TableHead className="text-blue-300 w-52 font-medium">
-                  {renderSortableHeader(
-                    "Document Code",
-                    "documentKey",
-                    <Tag className="h-4 w-4 text-blue-400" />
-                  )}
-                </TableHead>
-                <TableHead className="text-blue-300 font-medium">
-                  {renderSortableHeader(
-                    "Title",
-                    "title",
-                    <FileText className="h-4 w-4 text-blue-400" />
-                  )}
-                </TableHead>
-                <TableHead className="text-blue-300 font-medium">
-                  {renderSortableHeader(
-                    "Type",
-                    "documentType",
-                    <Filter className="h-4 w-4 text-blue-400" />
-                  )}
-                </TableHead>
-                <TableHead className="text-blue-300 font-medium">
-                  {renderSortableHeader(
-                    "Document Date",
-                    "docDate",
-                    <CalendarDays className="h-4 w-4 text-blue-400" />
-                  )}
-                </TableHead>
-                <TableHead className="text-blue-300 font-medium">
-                  {renderSortableHeader(
-                    "Created By",
-                    "createdBy",
-                    <User className="h-4 w-4 text-blue-400" />
-                  )}
-                </TableHead>
-                <TableHead className="w-24 text-right text-blue-300 font-medium">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
+    <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+      {/* Fixed Header - Never Scrolls */}
+      <div className="min-w-[1100px] border-b border-blue-900/30">
+        <Table className="table-fixed w-full">
+          <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
+            <TableRow className="border-blue-900/50 hover:bg-transparent">
+              <TableHead className="w-[50px] text-blue-300 font-medium">
+                {canManageDocuments ? (
+                  <Checkbox
+                    checked={
+                      selectedDocuments.length === documents.length &&
+                      documents.length > 0
+                    }
+                    onCheckedChange={handleSelectAll}
+                    className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
+                  />
+                ) : (
+                  <span>#</span>
+                )}
+              </TableHead>
+              <TableHead className="w-[160px] text-blue-300 font-medium">
+                {renderSortableHeader(
+                  "Document Code",
+                  "documentKey",
+                  <Tag className="h-4 w-4 text-blue-400" />
+                )}
+              </TableHead>
+              <TableHead className="w-[250px] text-blue-300 font-medium">
+                {renderSortableHeader(
+                  "Title",
+                  "title",
+                  <FileText className="h-4 w-4 text-blue-400" />
+                )}
+              </TableHead>
+              <TableHead className="w-[150px] text-blue-300 font-medium">
+                {renderSortableHeader(
+                  "Type",
+                  "documentType",
+                  <Filter className="h-4 w-4 text-blue-400" />
+                )}
+              </TableHead>
+              <TableHead className="w-[140px] text-blue-300 font-medium">
+                {renderSortableHeader(
+                  "Document Date",
+                  "docDate",
+                  <CalendarDays className="h-4 w-4 text-blue-400" />
+                )}
+              </TableHead>
+              <TableHead className="w-[150px] text-blue-300 font-medium">
+                {renderSortableHeader(
+                  "Created By",
+                  "createdBy",
+                  <User className="h-4 w-4 text-blue-400" />
+                )}
+              </TableHead>
+              <TableHead className="w-[100px] text-right text-blue-300 font-medium">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+        </Table>
+      </div>
+
+      {/* Scrollable Body - Only Content Scrolls */}
+      <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
+        <div className="min-w-[1100px]">
+          <Table className="table-fixed w-full">
             <TableBody>
               {documents.map((document, index) => (
                 <DocumentsTableRow

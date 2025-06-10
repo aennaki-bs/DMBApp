@@ -160,7 +160,7 @@ export default function DocumentsTableRow({
         isSelected ? "bg-blue-900/30 border-l-4 border-l-blue-500" : ""
       }`}
     >
-      <TableCell className="py-3">
+      <TableCell className="w-[50px] py-3">
         {canManageDocuments ? (
           <Checkbox
             checked={isSelected}
@@ -171,7 +171,7 @@ export default function DocumentsTableRow({
           <span className="text-sm text-gray-500">{index + 1}</span>
         )}
       </TableCell>
-      <TableCell className="font-mono text-sm py-3">
+      <TableCell className="w-[160px] font-mono text-sm py-3">
         <Link
           to={`/documents/${document.id}`}
           className="text-blue-300 hover:text-blue-200 hover:underline transition-colors flex items-center gap-1"
@@ -180,7 +180,7 @@ export default function DocumentsTableRow({
           {document.documentKey}
         </Link>
       </TableCell>
-      <TableCell className="py-3">
+      <TableCell className="w-[250px] py-3">
         <Link
           to={`/documents/${document.id}`}
           className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
@@ -188,14 +188,16 @@ export default function DocumentsTableRow({
           {document.title}
         </Link>
       </TableCell>
-      <TableCell className="py-3">{getStatusBadge(document.status)}</TableCell>
-      <TableCell className="text-blue-100 py-3">
+      <TableCell className="w-[120px] py-3">
+        {getStatusBadge(document.status)}
+      </TableCell>
+      <TableCell className="w-[150px] text-blue-100 py-3">
         {document.documentType.typeName}
       </TableCell>
-      <TableCell className="text-blue-100/70 text-sm py-3">
+      <TableCell className="w-[140px] text-blue-100/70 text-sm py-3">
         {new Date(document.docDate).toLocaleDateString()}
       </TableCell>
-      <TableCell className="py-3">
+      <TableCell className="w-[150px] py-3">
         <div className="flex items-center gap-2">
           <Avatar className="h-6 w-6 border border-blue-700/50">
             <AvatarFallback className="bg-gradient-to-br from-blue-800 to-blue-900 text-xs text-blue-100">
@@ -208,7 +210,7 @@ export default function DocumentsTableRow({
           </span>
         </div>
       </TableCell>
-      <TableCell className="text-right py-3">
+      <TableCell className="w-[100px] text-right py-3">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

@@ -35,9 +35,9 @@ export function UserTableHeader({
   `;
 
   return (
-    <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033] sticky top-0 z-10">
+    <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
       <TableRow className="border-blue-900/30 hover:bg-transparent">
-        <TableHead className="w-12">
+        <TableHead className="w-[48px]">
           <div className="flex items-center justify-center">
             <Checkbox
               checked={selectedCount > 0 && selectedCount === totalCount}
@@ -47,9 +47,9 @@ export function UserTableHeader({
             />
           </div>
         </TableHead>
-        <TableHead className="w-12"></TableHead>
+        <TableHead className="w-[48px]"></TableHead>
         <TableHead
-          className={headerClass("firstName")}
+          className={`${headerClass("firstName")} w-[200px]`}
           onClick={() => onSort("firstName")}
         >
           <div className="flex items-center">
@@ -57,7 +57,7 @@ export function UserTableHeader({
           </div>
         </TableHead>
         <TableHead
-          className={headerClass("email")}
+          className={`${headerClass("email")} w-[280px]`}
           onClick={() => onSort("email")}
         >
           <div className="flex items-center">
@@ -65,21 +65,23 @@ export function UserTableHeader({
           </div>
         </TableHead>
         <TableHead
-          className={headerClass("role")}
+          className={`${headerClass("role")} w-[150px]`}
           onClick={() => onSort("role")}
         >
           <div className="flex items-center">Role {renderSortIcon("role")}</div>
         </TableHead>
         <TableHead
-          className={headerClass("isActive")}
+          className={`${headerClass("isActive")} w-[120px]`}
           onClick={() => onSort("isActive")}
         >
           <div className="flex items-center">
             Status {renderSortIcon("isActive")}
           </div>
         </TableHead>
-        <TableHead className="text-blue-200 font-medium">Block</TableHead>
-        <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
+        <TableHead className="text-blue-200 font-medium w-[100px]">
+          Block
+        </TableHead>
+        <TableHead className="w-[80px] text-blue-200 font-medium text-right pr-4">
           Actions
         </TableHead>
       </TableRow>

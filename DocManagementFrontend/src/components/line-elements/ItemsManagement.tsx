@@ -77,6 +77,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
+import SmartPagination from "@/components/shared/SmartPagination";
+import { usePagination } from "@/hooks/usePagination";
 
 // Import services and types
 import lineElementsService from "@/services/lineElementsService";
@@ -260,6 +262,20 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
     sortDirection,
   ]);
 
+  // Use pagination hook
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    paginatedData: paginatedItems,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination({
+    data: filteredAndSortedItems,
+    initialPageSize: 25,
+  });
+
   const handleSort = (field: keyof Item) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -285,10 +301,22 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   `;
 
   const handleSelectAll = () => {
-    if (selectedItems.length === filteredAndSortedItems.length) {
-      setSelectedItems([]);
+    const currentPageCodes = paginatedItems.map((item) => item.code);
+    const selectedOnCurrentPage = selectedItems.filter((code) =>
+      currentPageCodes.includes(code)
+    );
+
+    if (selectedOnCurrentPage.length === currentPageCodes.length) {
+      // Deselect all on current page
+      setSelectedItems((prev) =>
+        prev.filter((code) => !currentPageCodes.includes(code))
+      );
     } else {
-      setSelectedItems(filteredAndSortedItems.map((item) => item.code));
+      // Select all on current page
+      setSelectedItems((prev) => [
+        ...prev.filter((code) => !currentPageCodes.includes(code)),
+        ...currentPageCodes,
+      ]);
     }
   };
 
@@ -511,18 +539,20 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
       {/* Table */}
       <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         {filteredAndSortedItems.length > 0 ? (
-          <ScrollArea className="h-[calc(100vh-400px)] min-h-[400px]">
-            <div className="min-w-[800px]">
-              <Table>
-                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033] sticky top-0 z-10">
+          <>
+            {/* Fixed Header - Never Scrolls */}
+            <div className="min-w-[900px] border-b border-blue-900/30">
+              <Table className="table-fixed w-full">
+                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
                   <TableRow className="border-blue-900/30 hover:bg-transparent">
-                    <TableHead className="w-12">
+                    <TableHead className="w-[50px]">
                       <div className="flex items-center justify-center">
                         <Checkbox
                           checked={
-                            selectedItems.length > 0 &&
-                            selectedItems.length ===
-                              filteredAndSortedItems.length
+                            paginatedItems.length > 0 &&
+                            paginatedItems.every((item) =>
+                              selectedItems.includes(item.code)
+                            )
                           }
                           onCheckedChange={handleSelectAll}
                           aria-label="Select all"
@@ -531,7 +561,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                       </div>
                     </TableHead>
                     <TableHead
-                      className={headerClass("code")}
+                      className={`${headerClass("code")} w-[120px]`}
                       onClick={() => handleSort("code")}
                     >
                       <div className="flex items-center">
@@ -539,7 +569,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                       </div>
                     </TableHead>
                     <TableHead
-                      className={headerClass("description")}
+                      className={`${headerClass("description")} w-[300px]`}
                       onClick={() => handleSort("description")}
                     >
                       <div className="flex items-center">
@@ -547,108 +577,118 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                       </div>
                     </TableHead>
                     <TableHead
-                      className={headerClass("unite")}
+                      className={`${headerClass("unite")} w-[200px]`}
                       onClick={() => handleSort("unite")}
                     >
                       <div className="flex items-center">
                         Unit Code {renderSortIcon("unite")}
                       </div>
                     </TableHead>
-                    <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
+                    <TableHead className="w-[130px] text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {filteredAndSortedItems.map((item) => (
-                    <TableRow
-                      key={item.code}
-                      className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
-                    >
-                      <TableCell>
-                        <div className="flex items-center justify-center">
-                          <Checkbox
-                            checked={selectedItems.includes(item.code)}
-                            onCheckedChange={() => handleSelectItem(item.code)}
-                            aria-label={`Select ${item.code}`}
-                            className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-blue-100 font-semibold">
-                        {item.code}
-                      </TableCell>
-                      <TableCell className="text-blue-200 max-w-xs truncate">
-                        {item.description}
-                      </TableCell>
-                      <TableCell>
-                        {item.unite ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-amber-500/10 text-amber-400 border-amber-500/30"
-                          >
-                            {item.unite}
-                          </Badge>
-                        ) : (
-                          <span className="text-blue-400/60">No unit</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openViewDialog(item)}
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-green-400 hover:bg-green-500/10"
-                            title="View item details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(item)}
-                            disabled={item.elementTypesCount > 0}
-                            className={`h-8 w-8 p-0 ${
-                              item.elementTypesCount > 0
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
-                            }`}
-                            title={
-                              item.elementTypesCount > 0
-                                ? "Cannot edit: Item is used in document lines"
-                                : "Edit item"
-                            }
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openDeleteDialog(item)}
-                            disabled={item.elementTypesCount > 0}
-                            className={`h-8 w-8 p-0 ${
-                              item.elementTypesCount > 0
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                            }`}
-                            title={
-                              item.elementTypesCount > 0
-                                ? "Cannot delete: Item is used in document lines"
-                                : "Delete item"
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
               </Table>
             </div>
-          </ScrollArea>
+
+            {/* Scrollable Body - Only Content Scrolls */}
+            <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
+              <div className="min-w-[900px]">
+                <Table className="table-fixed w-full">
+                  <TableBody>
+                    {paginatedItems.map((item) => (
+                      <TableRow
+                        key={item.code}
+                        className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
+                      >
+                        <TableCell className="w-[50px]">
+                          <div className="flex items-center justify-center">
+                            <Checkbox
+                              checked={selectedItems.includes(item.code)}
+                              onCheckedChange={() =>
+                                handleSelectItem(item.code)
+                              }
+                              aria-label={`Select ${item.code}`}
+                              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-[120px] font-mono text-blue-100 font-semibold">
+                          {item.code}
+                        </TableCell>
+                        <TableCell className="w-[300px] text-blue-200">
+                          <div className="truncate">{item.description}</div>
+                        </TableCell>
+                        <TableCell className="w-[200px]">
+                          {item.unite ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-500/10 text-amber-400 border-amber-500/30"
+                            >
+                              {item.unite}
+                            </Badge>
+                          ) : (
+                            <span className="text-blue-400/60">No unit</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="w-[130px] text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openViewDialog(item)}
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-green-400 hover:bg-green-500/10"
+                              title="View item details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(item)}
+                              disabled={item.elementTypesCount > 0}
+                              className={`h-8 w-8 p-0 ${
+                                item.elementTypesCount > 0
+                                  ? "opacity-50 cursor-not-allowed text-gray-400"
+                                  : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                              }`}
+                              title={
+                                item.elementTypesCount > 0
+                                  ? "Cannot edit: Item is used in document lines"
+                                  : "Edit item"
+                              }
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openDeleteDialog(item)}
+                              disabled={item.elementTypesCount > 0}
+                              className={`h-8 w-8 p-0 ${
+                                item.elementTypesCount > 0
+                                  ? "opacity-50 cursor-not-allowed text-gray-400"
+                                  : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                              }`}
+                              title={
+                                item.elementTypesCount > 0
+                                  ? "Cannot delete: Item is used in document lines"
+                                  : "Delete item"
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-blue-300">
             <Package className="h-12 w-12 mb-4 text-blue-400/50" />
@@ -672,6 +712,18 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
           </div>
         )}
       </div>
+
+      {/* Smart Pagination */}
+      {filteredAndSortedItems.length > 0 && (
+        <SmartPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
 
       {/* Bulk Actions Bar - rendered via portal to document body */}
       {createPortal(
@@ -838,23 +890,33 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-blue-300">Code</Label>
+                  <Label className="text-sm font-medium text-blue-300">
+                    Code
+                  </Label>
                   <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
-                    <span className="font-mono text-blue-300">{selectedItem.code}</span>
+                    <span className="font-mono text-blue-300">
+                      {selectedItem.code}
+                    </span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-blue-300">Description</Label>
+                  <Label className="text-sm font-medium text-blue-300">
+                    Description
+                  </Label>
                   <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
-                    <span className="text-blue-100">{selectedItem.description}</span>
+                    <span className="text-blue-100">
+                      {selectedItem.description}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Unit Information */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-blue-300">Unit Code</Label>
+                <Label className="text-sm font-medium text-blue-300">
+                  Unit Code
+                </Label>
                 <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
                   {selectedItem.unite ? (
                     <div className="flex items-center gap-2">
@@ -878,14 +940,17 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Tag className="h-4 w-4 text-amber-400" />
-                    <Label className="text-sm font-medium text-amber-300">Element Types Association</Label>
+                    <Label className="text-sm font-medium text-amber-300">
+                      Element Types Association
+                    </Label>
                   </div>
                   <div className="text-sm text-amber-200">
-                    This item is associated with{' '}
+                    This item is associated with{" "}
                     <span className="font-bold text-amber-100">
                       {selectedItem.elementTypesCount}
-                    </span>
-                    {' '}element type{selectedItem.elementTypesCount !== 1 ? 's' : ''}
+                    </span>{" "}
+                    element type
+                    {selectedItem.elementTypesCount !== 1 ? "s" : ""}
                   </div>
                 </div>
               )}
@@ -900,25 +965,31 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                   <div className="space-y-2">
                     <Label className="text-xs text-blue-400">Created At</Label>
                     <div className="text-blue-200">
-                      {new Date(selectedItem.createdAt).toLocaleDateString('fr-FR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      {new Date(selectedItem.createdAt).toLocaleDateString(
+                        "fr-FR",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs text-blue-400">Updated At</Label>
                     <div className="text-blue-200">
-                      {new Date(selectedItem.updatedAt).toLocaleDateString('fr-FR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      {new Date(selectedItem.updatedAt).toLocaleDateString(
+                        "fr-FR",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
                     </div>
                   </div>
                 </div>

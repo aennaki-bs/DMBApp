@@ -36,8 +36,8 @@ export const StepTableHeader = ({
   };
 
   return (
-    <TableHeader>
-      <TableRow className="border-b border-blue-900/30 bg-gradient-to-r from-blue-950/40 to-blue-900/20">
+    <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033] sticky top-0 z-10">
+      <TableRow className="border-b border-blue-900/30 hover:bg-transparent">
         <TableHead className="w-10 px-4 py-3">
           <Checkbox
             checked={hasEligibleSteps ? areAllEligibleSelected : false}

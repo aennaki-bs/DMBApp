@@ -45,7 +45,7 @@ export const DocumentTypeTableHeader = ({
   );
 
   return (
-    <TableHeader className="bg-blue-900/20 sticky top-0 z-10">
+    <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
       <TableRow className="border-blue-900/30 hover:bg-transparent">
         <TableHead className="w-[50px]">
           <Checkbox
@@ -63,28 +63,28 @@ export const DocumentTypeTableHeader = ({
             <Tag className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead>
+        <TableHead className="w-[200px]">
           {renderSortableHeader(
             "Type Name",
             "typeName",
             <FileText className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="max-w-[300px]">
+        <TableHead className="w-[300px]">
           {renderSortableHeader(
             "Description",
             "typeAttr",
             <Info className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="w-[150px]">
+        <TableHead className="w-[120px]">
           {renderSortableHeader(
             "Documents",
             "documentCounter",
             <Hash className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="text-right">Actions</TableHead>
+        <TableHead className="w-[80px] text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -88,6 +87,8 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
+import { usePagination } from "@/hooks/usePagination";
+import SmartPagination from "@/components/shared/SmartPagination";
 
 // Simple debounce utility
 const debounce = <F extends (...args: any[]) => any>(fn: F, delay: number) => {
@@ -167,6 +168,23 @@ export default function ResponsibilityCentreManagement() {
 
   // Add a tracking state for deleted users
   const [hasDeletedUsers, setHasDeletedUsers] = useState(false);
+
+  // Add bulk delete state
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  // Use pagination hook
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    paginatedData: paginatedCentres,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination({
+    data: filteredCentres,
+    initialPageSize: 25,
+  });
 
   // Search fields
   const searchFields = [
@@ -946,6 +964,40 @@ export default function ResponsibilityCentreManagement() {
     }
   };
 
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    try {
+      // Delete all selected centres
+      await Promise.all(
+        selectedCentres.map((centreId) =>
+          responsibilityCentreService.deleteResponsibilityCentre(centreId)
+        )
+      );
+
+      // Remove deleted centres from state
+      setCentres((prev) =>
+        prev.filter((centre) => !selectedCentres.includes(centre.id))
+      );
+
+      toast.success(
+        `${selectedCentres.length} responsibility centre${
+          selectedCentres.length > 1 ? "s" : ""
+        } deleted successfully`
+      );
+
+      setSelectedCentres([]);
+      setBulkDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to delete responsibility centres:", error);
+      toast.error("Failed to delete some responsibility centres");
+    }
+  };
+
+  // Open bulk delete dialog
+  const openBulkDeleteDialog = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Header Section */}
@@ -975,73 +1027,100 @@ export default function ResponsibilityCentreManagement() {
         </div>
       </div>
 
-      {/* Search and Filters - Simplified without filters */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 items-center mb-4">
-        <div className="flex-1 flex items-center gap-2 min-w-0">
-          <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[140px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
-              <SelectValue>
-                {searchFields.find((field) => field.id === searchField)
-                  ?.label || "All Fields"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
-              {searchFields.map((field) => (
-                <SelectItem key={field.id} value={field.id}>
-                  {field.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Enhanced Search Section */}
+      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+        <div className="p-5 border-b border-blue-900/30 bg-blue-900/20 backdrop-blur-sm">
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex-1 flex items-center gap-3 min-w-0">
+              <Select value={searchField} onValueChange={setSearchField}>
+                <SelectTrigger className="w-[160px] bg-[#22306e]/80 text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-800/50 shadow-sm rounded-lg backdrop-blur-sm h-11">
+                  <SelectValue>
+                    {searchFields.find((field) => field.id === searchField)
+                      ?.label || "All Fields"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 backdrop-blur-md">
+                  {searchFields.map((field) => (
+                    <SelectItem
+                      key={field.id}
+                      value={field.id}
+                      className="hover:bg-blue-800/40 focus:bg-blue-800/40"
+                    >
+                      {field.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-blue-400" />
-            <Input
-              type="search"
-              placeholder={t("responsibilityCentres.searchCentres")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-2.5 text-blue-400 hover:text-blue-300"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+                <Input
+                  type="search"
+                  placeholder={t("responsibilityCentres.searchCentres")}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-[#22306e]/80 text-blue-100 border border-blue-900/40 pl-11 pr-10 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-800/50 shadow-sm backdrop-blur-sm h-11"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors duration-150"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Data Table */}
-      <Card className="bg-[#0f1642] border-blue-900/30 shadow-xl">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl text-white">
-            {t("responsibilityCentres.title")}
-          </CardTitle>
-          <p className="text-sm text-blue-300/70">
-            {filteredCentres.length}{" "}
-            {filteredCentres.length === 1
-              ? t("responsibilityCentres.centreCode").toLowerCase()
-              : t("responsibilityCentres.title").toLowerCase()}{" "}
-            {searchQuery ? "found" : t("common.total").toLowerCase()}
-          </p>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-xl">
+        {/* Enhanced Header */}
+        <div className="p-6 border-b border-blue-900/30 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gradient-to-r from-[#1a2c6b]/30 to-[#0a1033]/30">
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-blue-100 tracking-wide flex items-center gap-3">
+              <Building2 className="h-6 w-6 text-blue-400" />
+              {t("responsibilityCentres.title")}
+            </h2>
+            <p className="text-sm text-blue-300 mt-1 font-medium">
+              {filteredCentres.length}{" "}
+              {filteredCentres.length === 1
+                ? t("responsibilityCentres.centreCode").toLowerCase()
+                : t("responsibilityCentres.title").toLowerCase()}{" "}
+              {searchQuery ? "found" : t("common.total").toLowerCase()}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => {
+                resetForm();
+                setCreateDialogOpen(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 h-11 px-6 shadow-md transition-all duration-200 hover:shadow-lg"
+            >
+              <Plus className="h-4 w-4" />
+              {t("responsibilityCentres.createCentre")}
+            </Button>
+          </div>
+        </div>
+
+        <div className="p-6">
           {isLoading ? (
-            <div className="text-center py-10">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="text-blue-300 mt-4">{t("common.loading")}</p>
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-6"></div>
+              <p className="text-blue-300 text-lg font-medium">
+                {t("common.loading")}
+              </p>
             </div>
-          ) : centres.length === 0 ? (
-            <div className="text-center py-10 border border-dashed border-blue-900/50 rounded-lg bg-[#182052]/50">
-              <Building2 className="h-16 w-16 mx-auto text-blue-800/50 mb-4" />
-              <h3 className="text-xl font-medium text-blue-300 mb-2">
+          ) : filteredCentres.length === 0 ? (
+            <div className="text-center py-12 border border-dashed border-blue-900/50 rounded-xl bg-gradient-to-b from-[#182052]/50 to-[#0f1642]/50 backdrop-blur-sm">
+              <Building2 className="h-20 w-20 mx-auto text-blue-800/50 mb-6" />
+              <h3 className="text-2xl font-bold text-blue-300 mb-3">
                 {t("responsibilityCentres.noCentres")}
               </h3>
-              <p className="text-blue-400/70 max-w-md mx-auto mb-6">
+              <p className="text-blue-400/70 max-w-md mx-auto mb-8 text-lg leading-relaxed">
                 {t("responsibilityCentres.createFirstCentre")}
               </p>
               <Button
@@ -1049,110 +1128,256 @@ export default function ResponsibilityCentreManagement() {
                   resetForm();
                   setCreateDialogOpen(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 h-12 px-8 text-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-3 h-5 w-5" />
                 {t("responsibilityCentres.createCentre")}
               </Button>
             </div>
           ) : (
-            <div className="rounded-md border border-blue-900/40 overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-[#192254] hover:bg-[#192254]">
-                    <TableHead className="w-[100px] text-blue-300">
-                      {t("common.code")}
-                    </TableHead>
-                    <TableHead className="text-blue-300">
-                      {t("common.description")}
-                    </TableHead>
-                    <TableHead className="text-blue-300 w-[100px] text-center">
-                      {t("responsibilityCentres.usersCount")}
-                    </TableHead>
-                    <TableHead className="text-blue-300 w-[100px] text-center">
-                      {t("responsibilityCentres.documentsCount")}
-                    </TableHead>
-                    <TableHead className="text-blue-300 text-right w-[150px]">
-                      {t("common.actions")}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCentres.map((centre) => (
-                    <TableRow
-                      key={centre.id}
-                      className="hover:bg-[#192254]/50 bg-[#0e1539]"
+            <div className="space-y-6">
+              {/* Bulk Actions Bar */}
+              {selectedCentres.length > 0 && (
+                <div className="px-6 py-3 bg-blue-800/30 border border-blue-900/30 rounded-lg flex items-center justify-between backdrop-blur-sm shadow-md">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-blue-400" />
+                    <span className="text-blue-200 font-medium">
+                      {selectedCentres.length} centre
+                      {selectedCentres.length !== 1 && "s"} selected
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedCentres([])}
+                      className="bg-blue-900/40 text-blue-300 border-blue-800/50 hover:bg-blue-800/50 hover:shadow-md transition-all duration-200"
                     >
-                      <TableCell className="font-medium text-blue-300">
-                        {centre.code}
-                      </TableCell>
-                      <TableCell className="text-blue-100">
-                        {centre.descr}
-                      </TableCell>
-                      <TableCell className="text-blue-100 text-center">
-                        <Badge
-                          variant="outline"
-                          className="bg-blue-900/20 text-blue-300 border-blue-900/40"
-                        >
-                          {Math.max(0, centre.usersCount || 0)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-blue-100 text-center">
-                        <Badge
-                          variant="outline"
-                          className="bg-purple-900/20 text-purple-300 border-purple-900/40"
-                        >
-                          {centre.documentsCount || 0}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end items-center gap-2">
-                          <Button
-                            onClick={() => openAssociateUsersDialog(centre)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                            title="Associate Users"
-                          >
-                            <UsersRound className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => openDetailsDialog(centre)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => openEditDialog(centre)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                            title="Edit"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => openDeleteDialog(centre)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                      Clear Selection
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={openBulkDeleteDialog}
+                      className="bg-red-900/40 text-red-300 border-red-800/50 hover:bg-red-800/50 hover:shadow-md transition-all duration-200"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete Selected
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Fixed Header - Never Scrolls */}
+              <div className="min-w-[1000px] border-b border-blue-900/30">
+                <Table className="table-fixed w-full">
+                  <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
+                    <TableRow className="border-blue-900/30 hover:bg-transparent">
+                      <TableHead className="w-[50px] text-blue-300 font-bold py-5 px-6 text-center">
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            checked={
+                              paginatedCentres.length > 0 &&
+                              paginatedCentres.every((centre) =>
+                                selectedCentres.includes(centre.id)
+                              )
+                            }
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                const newSelected = [...selectedCentres];
+                                paginatedCentres.forEach((centre) => {
+                                  if (!selectedCentres.includes(centre.id)) {
+                                    newSelected.push(centre.id);
+                                  }
+                                });
+                                setSelectedCentres(newSelected);
+                              } else {
+                                const currentPageIds = paginatedCentres.map(
+                                  (centre) => centre.id
+                                );
+                                setSelectedCentres(
+                                  selectedCentres.filter(
+                                    (id) => !currentPageIds.includes(id)
+                                  )
+                                );
+                              }
+                            }}
+                            className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+                          />
                         </div>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead className="w-[120px] text-blue-300 font-bold py-5 px-6 text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold tracking-wide uppercase">
+                            {t("common.code")}
+                          </span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-[280px] text-blue-300 font-bold py-5 px-6 text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold tracking-wide uppercase">
+                            {t("common.description")}
+                          </span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-[120px] text-blue-300 font-bold py-5 px-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <UsersRound className="h-4 w-4 text-blue-400" />
+                          <span className="text-sm font-semibold tracking-wide uppercase">
+                            {t("responsibilityCentres.usersCount")}
+                          </span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-[120px] text-blue-300 font-bold py-5 px-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Building2 className="h-4 w-4 text-blue-400" />
+                          <span className="text-sm font-semibold tracking-wide uppercase">
+                            {t("responsibilityCentres.documentsCount")}
+                          </span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-[200px] text-blue-300 font-bold py-5 px-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-sm font-semibold tracking-wide uppercase">
+                            {t("common.actions")}
+                          </span>
+                        </div>
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                </Table>
+              </div>
+
+              {/* Scrollable Body - Only Content Scrolls */}
+              <ScrollArea className="h-[calc(100vh-450px)] min-h-[400px]">
+                <div className="min-w-[1000px]">
+                  <Table className="table-fixed w-full">
+                    <TableBody>
+                      {paginatedCentres.map((centre, rowIndex) => (
+                        <TableRow
+                          key={centre.id}
+                          className={`border-blue-900/30 transition-all duration-300 group cursor-default ${
+                            rowIndex % 2 === 0
+                              ? "bg-blue-950/10"
+                              : "bg-transparent"
+                          } ${
+                            selectedCentres.includes(centre.id)
+                              ? "bg-blue-900/40 border-l-4 border-l-blue-500 shadow-sm"
+                              : "hover:bg-blue-900/25"
+                          } hover:shadow-lg hover:scale-[1.01]`}
+                        >
+                          <TableCell className="w-[50px] py-5 px-6 text-center align-middle">
+                            <div className="flex items-center justify-center">
+                              <Checkbox
+                                checked={selectedCentres.includes(centre.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedCentres([
+                                      ...selectedCentres,
+                                      centre.id,
+                                    ]);
+                                  } else {
+                                    setSelectedCentres(
+                                      selectedCentres.filter(
+                                        (id) => id !== centre.id
+                                      )
+                                    );
+                                  }
+                                }}
+                                className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500 transition-all duration-150"
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell className="w-[120px] py-5 px-6 align-middle">
+                            <div className="font-bold text-blue-200 text-lg tracking-wide">
+                              {centre.code}
+                            </div>
+                          </TableCell>
+                          <TableCell className="w-[280px] py-5 px-6 align-middle">
+                            <div className="text-blue-100 font-medium leading-relaxed">
+                              <div className="truncate max-w-[260px] text-base">
+                                {centre.descr}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="w-[120px] py-5 px-6 text-center align-middle">
+                            <Badge
+                              variant="outline"
+                              className="bg-gradient-to-r from-blue-900/30 to-blue-800/30 text-blue-200 border-blue-700/50 transition-all duration-200 hover:from-blue-800/40 hover:to-blue-700/40 px-3 py-1.5 text-sm font-semibold shadow-sm"
+                            >
+                              {Math.max(0, centre.usersCount || 0)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="w-[120px] py-5 px-6 text-center align-middle">
+                            <Badge
+                              variant="outline"
+                              className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 text-purple-200 border-purple-700/50 transition-all duration-200 hover:from-purple-800/40 hover:to-purple-700/40 px-3 py-1.5 text-sm font-semibold shadow-sm"
+                            >
+                              {centre.documentsCount || 0}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="w-[200px] py-5 px-6 text-center align-middle">
+                            <div className="flex justify-center items-center gap-2">
+                              <Button
+                                onClick={() => openAssociateUsersDialog(centre)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md rounded-lg"
+                                title="Associate Users"
+                              >
+                                <UsersRound className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                onClick={() => openDetailsDialog(centre)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md rounded-lg"
+                                title="View Details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                onClick={() => openEditDialog(centre)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md rounded-lg"
+                                title="Edit"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                onClick={() => openDeleteDialog(centre)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md rounded-lg"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </ScrollArea>
+
+              {/* Smart Pagination with enhanced styling */}
+              <div className="pt-4 pb-2 border-t border-blue-900/20">
+                <SmartPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                />
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Create/Edit Responsibility Centre Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -1384,6 +1609,36 @@ export default function ResponsibilityCentreManagement() {
               )}
             </div>
           </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent className="bg-[#1e2a4a] border border-blue-900/70 text-blue-100">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Bulk Delete</AlertDialogTitle>
+            <AlertDialogDescription className="text-blue-300">
+              Are you sure you want to delete {selectedCentres.length}{" "}
+              responsibility centre
+              {selectedCentres.length > 1 ? "s" : ""}? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-blue-950 text-blue-300 hover:bg-blue-900 hover:text-blue-200 border border-blue-800">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-red-900/70 hover:bg-red-900 text-red-100"
+            >
+              Delete {selectedCentres.length} Centre
+              {selectedCentres.length > 1 ? "s" : ""}
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
@@ -1779,12 +2034,6 @@ export default function ResponsibilityCentreManagement() {
                                       <span className="flex items-center">
                                         <Mail className="h-3 w-3 mr-1 text-blue-400" />
                                         {email}
-                                      </span>
-                                    )}
-                                    {role && (
-                                      <span className="flex items-center">
-                                        <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                                        {role}
                                       </span>
                                     )}
                                   </div>

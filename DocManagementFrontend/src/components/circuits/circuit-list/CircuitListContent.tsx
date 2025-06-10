@@ -1,4 +1,3 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
 import EditCircuitDialog from "../EditCircuitDialog";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { CircuitLoadingState } from "./CircuitLoadingState";
@@ -83,24 +82,20 @@ export function CircuitListContent({
     <>
       {circuits && circuits.length > 0 ? (
         <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
-          <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
-            <div className="min-w-[1000px]">
-              <CircuitsTable
-                circuits={circuits}
-                isSimpleUser={isSimpleUser}
-                selectedCircuits={selectedCircuits}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onViewDetails={onViewDetails}
-                onSelectCircuit={onSelectCircuit}
-                onSelectAll={onSelectAll}
-                sortConfig={sortConfig}
-                onSort={onSort}
-                onBulkDelete={onBulkDelete}
-                refetch={refetch}
-              />
-            </div>
-          </ScrollArea>
+          <CircuitsTable
+            circuits={circuits}
+            isSimpleUser={isSimpleUser}
+            selectedCircuits={selectedCircuits}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onViewDetails={onViewDetails}
+            onSelectCircuit={onSelectCircuit}
+            onSelectAll={onSelectAll}
+            sortConfig={sortConfig}
+            onSort={onSort}
+            onBulkDelete={onBulkDelete}
+            refetch={refetch}
+          />
         </div>
       ) : (
         <CircuitEmptyState

@@ -87,6 +87,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
+import SmartPagination from "@/components/shared/SmartPagination";
+import { usePagination } from "@/hooks/usePagination";
 
 // Import services and types
 import lineElementsService from "@/services/lineElementsService";
@@ -395,6 +397,20 @@ const UniteCodesManagement = ({
     sortDirection,
   ]);
 
+  // Use pagination hook
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    paginatedData: paginatedUniteCodes,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination({
+    data: filteredAndSortedUniteCodes,
+    initialPageSize: 25,
+  });
+
   const handleSort = (field: keyof UniteCode) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -420,10 +436,22 @@ const UniteCodesManagement = ({
   `;
 
   const handleSelectAll = () => {
-    if (selectedUniteCodes.length === filteredAndSortedUniteCodes.length) {
-      setSelectedUniteCodes([]);
+    const currentPageCodes = paginatedUniteCodes.map((uc) => uc.code);
+    const selectedOnCurrentPage = selectedUniteCodes.filter((code) =>
+      currentPageCodes.includes(code)
+    );
+
+    if (selectedOnCurrentPage.length === currentPageCodes.length) {
+      // Deselect all on current page
+      setSelectedUniteCodes((prev) =>
+        prev.filter((code) => !currentPageCodes.includes(code))
+      );
     } else {
-      setSelectedUniteCodes(filteredAndSortedUniteCodes.map((uc) => uc.code));
+      // Select all on current page
+      setSelectedUniteCodes((prev) => [
+        ...prev.filter((code) => !currentPageCodes.includes(code)),
+        ...currentPageCodes,
+      ]);
     }
   };
 
@@ -636,18 +664,20 @@ const UniteCodesManagement = ({
       {/* Table */}
       <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         {filteredAndSortedUniteCodes.length > 0 ? (
-          <ScrollArea className="h-[calc(100vh-400px)] min-h-[400px]">
-            <div className="min-w-[800px]">
-              <Table>
-                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033] sticky top-0 z-10">
+          <>
+            {/* Fixed Header - Never Scrolls */}
+            <div className="min-w-[700px] border-b border-blue-900/30">
+              <Table className="table-fixed w-full">
+                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
                   <TableRow className="border-blue-900/30 hover:bg-transparent">
-                    <TableHead className="w-12">
+                    <TableHead className="w-[50px]">
                       <div className="flex items-center justify-center">
                         <Checkbox
                           checked={
-                            selectedUniteCodes.length > 0 &&
-                            selectedUniteCodes.length ===
-                              filteredAndSortedUniteCodes.length
+                            paginatedUniteCodes.length > 0 &&
+                            paginatedUniteCodes.every((uniteCode) =>
+                              selectedUniteCodes.includes(uniteCode.code)
+                            )
                           }
                           onCheckedChange={handleSelectAll}
                           aria-label="Select all"
@@ -656,7 +686,7 @@ const UniteCodesManagement = ({
                       </div>
                     </TableHead>
                     <TableHead
-                      className={headerClass("code")}
+                      className={`${headerClass("code")} w-[120px]`}
                       onClick={() => handleSort("code")}
                     >
                       <div className="flex items-center">
@@ -664,90 +694,100 @@ const UniteCodesManagement = ({
                       </div>
                     </TableHead>
                     <TableHead
-                      className={headerClass("description")}
+                      className={`${headerClass("description")} w-[350px]`}
                       onClick={() => handleSort("description")}
                     >
                       <div className="flex items-center">
                         Description {renderSortIcon("description")}
                       </div>
                     </TableHead>
-                    <TableHead className="w-16 text-blue-200 font-medium text-right pr-4">
+                    <TableHead className="w-[80px] text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {filteredAndSortedUniteCodes.map((uniteCode) => (
-                    <TableRow
-                      key={uniteCode.code}
-                      className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
-                    >
-                      <TableCell>
-                        <div className="flex items-center justify-center">
-                          <Checkbox
-                            checked={selectedUniteCodes.includes(
-                              uniteCode.code
-                            )}
-                            onCheckedChange={() =>
-                              handleSelectUniteCode(uniteCode.code)
-                            }
-                            aria-label={`Select ${uniteCode.code}`}
-                            className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-blue-100 font-semibold">
-                        {uniteCode.code}
-                      </TableCell>
-                      <TableCell className="text-blue-200 max-w-xs truncate">
-                        {uniteCode.description}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(uniteCode)}
-                            disabled={uniteCode.itemsCount > 0}
-                            className={`h-8 w-8 p-0 ${
-                              uniteCode.itemsCount > 0
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
-                            }`}
-                            title={
-                              uniteCode.itemsCount > 0
-                                ? "Cannot edit: Unit is used by items"
-                                : "Edit unit code"
-                            }
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openDeleteDialog(uniteCode)}
-                            disabled={uniteCode.itemsCount > 0}
-                            className={`h-8 w-8 p-0 ${
-                              uniteCode.itemsCount > 0
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                            }`}
-                            title={
-                              uniteCode.itemsCount > 0
-                                ? "Cannot delete: Unit is used by items"
-                                : "Delete unit code"
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
               </Table>
             </div>
-          </ScrollArea>
+
+            {/* Scrollable Body - Only Content Scrolls */}
+            <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
+              <div className="min-w-[700px]">
+                <Table className="table-fixed w-full">
+                  <TableBody>
+                    {paginatedUniteCodes.map((uniteCode) => (
+                      <TableRow
+                        key={uniteCode.code}
+                        className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
+                      >
+                        <TableCell className="w-[50px]">
+                          <div className="flex items-center justify-center">
+                            <Checkbox
+                              checked={selectedUniteCodes.includes(
+                                uniteCode.code
+                              )}
+                              onCheckedChange={() =>
+                                handleSelectUniteCode(uniteCode.code)
+                              }
+                              aria-label={`Select ${uniteCode.code}`}
+                              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-[120px] font-mono text-blue-100 font-semibold">
+                          {uniteCode.code}
+                        </TableCell>
+                        <TableCell className="w-[350px] text-blue-200">
+                          <div className="truncate">
+                            {uniteCode.description}
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-[80px] text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(uniteCode)}
+                              disabled={uniteCode.itemsCount > 0}
+                              className={`h-8 w-8 p-0 ${
+                                uniteCode.itemsCount > 0
+                                  ? "opacity-50 cursor-not-allowed text-gray-400"
+                                  : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                              }`}
+                              title={
+                                uniteCode.itemsCount > 0
+                                  ? "Cannot edit: Unit is used by items"
+                                  : "Edit unit code"
+                              }
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openDeleteDialog(uniteCode)}
+                              disabled={uniteCode.itemsCount > 0}
+                              className={`h-8 w-8 p-0 ${
+                                uniteCode.itemsCount > 0
+                                  ? "opacity-50 cursor-not-allowed text-gray-400"
+                                  : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                              }`}
+                              title={
+                                uniteCode.itemsCount > 0
+                                  ? "Cannot delete: Unit is used by items"
+                                  : "Delete unit code"
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-blue-300">
             <Hash className="h-12 w-12 mb-4 text-blue-400/50" />
@@ -771,6 +811,18 @@ const UniteCodesManagement = ({
           </div>
         )}
       </div>
+
+      {/* Smart Pagination */}
+      {filteredAndSortedUniteCodes.length > 0 && (
+        <SmartPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
 
       {/* Bulk Actions Bar - rendered via portal to document body */}
       {createPortal(
@@ -801,14 +853,18 @@ const UniteCodesManagement = ({
                     variant="outline"
                     size="sm"
                     disabled={selectedUniteCodes.some((code) => {
-                      const uniteCode = filteredAndSortedUniteCodes.find(uc => uc.code === code);
+                      const uniteCode = filteredAndSortedUniteCodes.find(
+                        (uc) => uc.code === code
+                      );
                       return uniteCode && uniteCode.itemsCount > 0;
                     })}
                     className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => setIsBulkDeleteDialogOpen(true)}
                     title={
                       selectedUniteCodes.some((code) => {
-                        const uniteCode = filteredAndSortedUniteCodes.find(uc => uc.code === code);
+                        const uniteCode = filteredAndSortedUniteCodes.find(
+                          (uc) => uc.code === code
+                        );
                         return uniteCode && uniteCode.itemsCount > 0;
                       })
                         ? "Some selected unit codes are used by items"
@@ -820,7 +876,9 @@ const UniteCodesManagement = ({
                   </Button>
                 </div>
                 {selectedUniteCodes.some((code) => {
-                  const uniteCode = filteredAndSortedUniteCodes.find(uc => uc.code === code);
+                  const uniteCode = filteredAndSortedUniteCodes.find(
+                    (uc) => uc.code === code
+                  );
                   return uniteCode && uniteCode.itemsCount > 0;
                 }) && (
                   <div className="flex items-center gap-1 text-amber-400 text-sm">

@@ -79,7 +79,7 @@ export function UserTableRow({
             : "hover:bg-blue-900/20"
         }`}
       >
-        <TableCell>
+        <TableCell className="w-[48px]">
           <div className="flex items-center justify-center">
             <Checkbox
               checked={isSelected}
@@ -89,7 +89,7 @@ export function UserTableRow({
             />
           </div>
         </TableCell>
-        <TableCell>
+        <TableCell className="w-[48px]">
           <Avatar className="border-2 border-blue-900/50 h-9 w-9">
             <AvatarImage src={user.profilePicture} alt={user.username} />
             <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
@@ -98,24 +98,24 @@ export function UserTableRow({
             </AvatarFallback>
           </Avatar>
         </TableCell>
-        <TableCell>
+        <TableCell className="w-[200px]">
           <div className="font-medium text-blue-100">
             {user.firstName} {user.lastName}
           </div>
           <div className="text-xs text-blue-400">@{user.username}</div>
         </TableCell>
-        <TableCell className="text-blue-200 max-w-[180px]">
+        <TableCell className="w-[280px] text-blue-200">
           <span className="block truncate">{user.email}</span>
         </TableCell>
 
-        <TableCell>
+        <TableCell className="w-[150px]">
           <UserRoleSelect
             currentRole={currentRole}
             onRoleChange={(role) => onRoleChange(user.id, role)}
           />
         </TableCell>
 
-        <TableCell>
+        <TableCell className="w-[120px]">
           {user.isActive ? (
             <Badge
               variant="secondary"
@@ -135,7 +135,7 @@ export function UserTableRow({
           )}
         </TableCell>
 
-        <TableCell>
+        <TableCell className="w-[100px]">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -161,7 +161,7 @@ export function UserTableRow({
           </TooltipProvider>
         </TableCell>
 
-        <TableCell className="text-right">
+        <TableCell className="w-[80px] text-right">
           <UserActionsDropdown
             user={user}
             onEdit={handleEdit}
