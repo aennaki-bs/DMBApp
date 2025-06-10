@@ -256,7 +256,14 @@ namespace DocManagementBackend.Controllers
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 DocumentKey = documentKey,
-                IsCircuitCompleted = false // Explicitly set to false for new documents
+                IsCircuitCompleted = false, // Explicitly set to false for new documents
+                
+                // Customer/Vendor snapshot data
+                CustomerVendorCode = request.CustomerVendorCode,
+                CustomerVendorName = request.CustomerVendorName,
+                CustomerVendorAddress = request.CustomerVendorAddress,
+                CustomerVendorCity = request.CustomerVendorCity,
+                CustomerVendorCountry = request.CustomerVendorCountry
             };
 
             _context.Documents.Add(document);
@@ -357,6 +364,18 @@ namespace DocManagementBackend.Controllers
             {
                 document.DocumentExterne = request.DocumentExterne;
             }
+            
+            // Update Customer/Vendor fields if provided
+            if (request.CustomerVendorCode != null)
+                document.CustomerVendorCode = request.CustomerVendorCode;
+            if (request.CustomerVendorName != null)
+                document.CustomerVendorName = request.CustomerVendorName;
+            if (request.CustomerVendorAddress != null)
+                document.CustomerVendorAddress = request.CustomerVendorAddress;
+            if (request.CustomerVendorCity != null)
+                document.CustomerVendorCity = request.CustomerVendorCity;
+            if (request.CustomerVendorCountry != null)
+                document.CustomerVendorCountry = request.CustomerVendorCountry;
 
             // Handle SubType changes
             if (request.SubTypeId.HasValue && request.SubTypeId != document.SubTypeId)
@@ -625,6 +644,7 @@ namespace DocManagementBackend.Controllers
                 TypeKey = finalTypeKey,
                 TypeName = request.TypeName,
                 TypeAttr = request.TypeAttr,
+                TierType = request.TierType,
                 DocumentCounter = 0,
                 DocCounter = 0
             };
@@ -670,6 +690,10 @@ namespace DocManagementBackend.Controllers
             }
             if (!string.IsNullOrEmpty(request.TypeAttr))
                 ThisType.TypeAttr = request.TypeAttr;
+            
+            // Update TierType
+            ThisType.TierType = request.TierType;
+            
             // _context.DocumentTypes.Add(ThisType);
             await _context.SaveChangesAsync();
             return Ok("Type edited successfully");

@@ -1,7 +1,8 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DocumentTypeForm } from "@/components/document-types/DocumentTypeForm";
 import { DocumentType } from "@/models/document";
 import { motion, AnimatePresence } from "framer-motion";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface DocumentTypeDrawerProps {
   open: boolean;
@@ -35,6 +36,19 @@ const DocumentTypeDrawer = ({
             className="p-0 border-none shadow-none bg-transparent max-w-2xl mx-auto [&>button]:hidden"
             forceMount
           >
+            <VisuallyHidden>
+              <DialogHeader>
+                <DialogTitle>
+                  {type ? "Edit Document Type" : "Create Document Type"}
+                </DialogTitle>
+                <DialogDescription>
+                  {type 
+                    ? "Update the details for this document type." 
+                    : "Fill in the details to create a new document type."
+                  }
+                </DialogDescription>
+              </DialogHeader>
+            </VisuallyHidden>
             <DocumentTypeForm
               documentType={type}
               isEditMode={!!type}

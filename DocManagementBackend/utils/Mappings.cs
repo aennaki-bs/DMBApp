@@ -113,7 +113,8 @@ namespace DocManagementBackend.Mappings
                     {
                         TypeKey = l.Document.DocumentType.TypeKey,
                         TypeName = l.Document.DocumentType.TypeName,
-                        TypeAttr = l.Document.DocumentType.TypeAttr
+                        TypeAttr = l.Document.DocumentType.TypeAttr,
+                        TierType = l.Document.DocumentType.TierType
                     },
                 CreatedAt = l.Document.CreatedAt,
                 UpdatedAt = l.Document.UpdatedAt,
@@ -232,7 +233,8 @@ namespace DocManagementBackend.Mappings
                         {
                             TypeKey = s.Ligne.Document.DocumentType.TypeKey,
                             TypeName = s.Ligne.Document.DocumentType.TypeName,
-                            TypeAttr = s.Ligne.Document.DocumentType.TypeAttr
+                            TypeAttr = s.Ligne.Document.DocumentType.TypeAttr,
+                            TierType = s.Ligne.Document.DocumentType.TierType
                         },
                     CreatedAt = s.Ligne.Document.CreatedAt,
                     UpdatedAt = s.Ligne.Document.UpdatedAt,
@@ -276,7 +278,8 @@ namespace DocManagementBackend.Mappings
             {
                 TypeKey = d.DocumentType!.TypeKey,
                 TypeName = d.DocumentType!.TypeName,
-                TypeAttr = d.DocumentType.TypeAttr
+                TypeAttr = d.DocumentType.TypeAttr,
+                TierType = d.DocumentType.TierType
             },
             SubTypeId = d.SubTypeId,
             SubType = d.SubType == null ? null : new SubTypeDto
@@ -320,7 +323,14 @@ namespace DocManagementBackend.Mappings
                 Id = d.ResponsibilityCentre.Id,
                 Code = d.ResponsibilityCentre.Code,
                 Descr = d.ResponsibilityCentre.Descr
-            }
+            },
+            
+            // Customer/Vendor snapshot data
+            CustomerVendorCode = d.CustomerVendorCode,
+            CustomerVendorName = d.CustomerVendorName,
+            CustomerVendorAddress = d.CustomerVendorAddress,
+            CustomerVendorCity = d.CustomerVendorCity,
+            CustomerVendorCountry = d.CustomerVendorCountry
         };
     }
 

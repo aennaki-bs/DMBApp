@@ -8,6 +8,12 @@ import {
 import { SubType } from './subtype';
 import './circuit.d.ts';
 
+export enum TierType {
+  None = 0,
+  Customer = 1,
+  Vendor = 2
+}
+
 export interface Document {
   id: number;
   title: string;
@@ -37,6 +43,13 @@ export interface Document {
   lignes?: Ligne[];
   responsibilityCentreId?: number;
   responsibilityCentre?: ResponsibilityCentreSimple;
+  
+  // Customer/Vendor snapshot data
+  customerVendorCode?: string;
+  customerVendorName?: string;
+  customerVendorAddress?: string;
+  customerVendorCity?: string;
+  customerVendorCountry?: string;
 }
 
 export interface DocumentType {
@@ -44,6 +57,7 @@ export interface DocumentType {
   typeName: string;
   typeKey?: string;
   typeAttr?: string;
+  tierType?: TierType;
   documentCounter?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -68,6 +82,13 @@ export interface CreateDocumentRequest {
   docDate?: string;
   circuitId?: number;
   responsibilityCentreId?: number;
+  
+  // Customer/Vendor information
+  customerVendorCode?: string;
+  customerVendorName?: string;
+  customerVendorAddress?: string;
+  customerVendorCity?: string;
+  customerVendorCountry?: string;
 }
 
 export interface UpdateDocumentRequest {
@@ -79,6 +100,13 @@ export interface UpdateDocumentRequest {
   docDate?: string;
   comptableDate?: string;
   circuitId?: number;
+  
+  // Customer/Vendor information
+  customerVendorCode?: string;
+  customerVendorName?: string;
+  customerVendorAddress?: string;
+  customerVendorCity?: string;
+  customerVendorCountry?: string;
 }
 
 export interface Ligne {

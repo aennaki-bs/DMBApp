@@ -12,6 +12,7 @@ import {
   Tag,
   CheckCircle,
   Save,
+  Users,
 } from "lucide-react";
 import {
   Form,
@@ -24,8 +25,15 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import documentService from "@/services/documentService";
-import { DocumentType } from "@/models/document";
+import { DocumentType, TierType } from "@/models/document";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,6 +43,7 @@ import { cn } from "@/lib/utils";
 const typeSchema = z.object({
   typeName: z.string().min(2, "Type name must be at least 2 characters."),
   typeAttr: z.string().optional(),
+  tierType: z.nativeEnum(TierType).optional().default(TierType.None),
 });
 
 type DocumentTypeFormProps = {
@@ -71,6 +80,7 @@ export const DocumentTypeForm = ({
     defaultValues: {
       typeName: documentType?.typeName || "",
       typeAttr: documentType?.typeAttr || "",
+      tierType: documentType?.tierType || TierType.None,
     },
   });
 
@@ -79,12 +89,13 @@ export const DocumentTypeForm = ({
       form.reset({
         typeName: documentType.typeName || "",
         typeAttr: documentType.typeAttr || "",
+        tierType: documentType.tierType || TierType.None,
       });
 
-      if (isEditMode) {
-        // In edit mode, go to the details step directly
-        setCurrentStep(2);
-      }
+      // In edit mode, start from step 1 to allow users to review and edit all fields
+      setCurrentStep(1);
+      // Mark the type name as valid since it's an existing document type
+      setIsTypeNameValid(true);
     }
   }, [documentType, isEditMode, form]);
 
@@ -99,13 +110,20 @@ export const DocumentTypeForm = ({
     },
     {
       id: 2,
-      title: "Type Details",
-      description: "Add additional info",
-      icon: <FileText className="h-4 w-4" />,
+      title: "Type Tier",
+      description: "Select tier type",
+      icon: <Users className="h-4 w-4" />,
       completed: currentStep > 2,
     },
     {
       id: 3,
+      title: "Type Details",
+      description: "Add additional info",
+      icon: <FileText className="h-4 w-4" />,
+      completed: currentStep > 3,
+    },
+    {
+      id: 4,
       title: "Review",
       description: "Confirm details",
       icon: <CheckCircle className="h-4 w-4" />,
@@ -149,8 +167,11 @@ export const DocumentTypeForm = ({
         });
       }
     } else if (currentStep === 2) {
-      // Move to review
+      // Move to Type Details step
       setCurrentStep(3);
+    } else if (currentStep === 3) {
+      // Move to review
+      setCurrentStep(4);
     }
   };
 
@@ -182,12 +203,14 @@ export const DocumentTypeForm = ({
           typeName: data.typeName,
           typeAttr: data.typeAttr || undefined,
           documentCounter: documentType.documentCounter,
+          tierType: data.tierType || undefined,
         });
         toast.success("Document type updated successfully");
       } else {
         await documentService.createDocumentType({
           typeName: data.typeName,
           typeAttr: data.typeAttr || undefined,
+          tierType: data.tierType || undefined,
         });
         toast.success("Document type created successfully");
       }
@@ -319,10 +342,79 @@ export const DocumentTypeForm = ({
           </MotionDiv>
         );
 
-      case 2: // Type Details
+      case 2: // Type Tier
         return (
           <MotionDiv
             key="step2"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-4 py-4">
+              <div className="text-center mb-6">
+                <Users className="mx-auto h-12 w-12 text-blue-500 mb-3 p-2 bg-blue-500/10 rounded-full" />
+                <h3 className="text-lg font-medium text-blue-100">
+                  Type Tier
+                </h3>
+                <p className="text-sm text-blue-300/70">
+                  Select the tier type for this document type
+                </p>
+              </div>
+
+              <Form {...form}>
+                <form className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="tierType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-blue-100">
+                          Tier Type*
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value?.toString()}
+                            onValueChange={(value) => {
+                              field.onChange(parseInt(value) as TierType);
+                            }}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="bg-[#111633] border-blue-900/40 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white">
+                                <SelectValue placeholder="Select tier type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-[#111633] border-blue-900/40 text-white">
+                              <SelectItem value={TierType.None.toString()}>
+                                None
+                              </SelectItem>
+                              <SelectItem value={TierType.Customer.toString()}>
+                                Customer
+                              </SelectItem>
+                              <SelectItem value={TierType.Vendor.toString()}>
+                                Vendor
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormDescription className="text-sm text-blue-300/70 mt-2">
+                          Select the tier type for this document type
+                        </FormDescription>
+                        <FormMessage className="text-sm mt-1 text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                </form>
+              </Form>
+            </div>
+          </MotionDiv>
+        );
+
+      case 3: // Type Details
+        return (
+          <MotionDiv
+            key="step3"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -370,10 +462,10 @@ export const DocumentTypeForm = ({
           </MotionDiv>
         );
 
-      case 3: // Review
+      case 4: // Review
         return (
           <MotionDiv
-            key="step3"
+            key="step4"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -408,6 +500,26 @@ export const DocumentTypeForm = ({
                     <p className="text-sm text-blue-300/50 italic">
                       Will be auto-generated
                     </p>
+                  </div>
+                </div>
+
+                <div className="border-t border-blue-900/20 pt-3">
+                  <span className="text-blue-300 text-sm">Tier Type</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Users className="h-4 w-4 text-blue-400" />
+                    <span className="text-white font-medium">
+                      {(() => {
+                        const tierType = form.getValues("tierType") || TierType.None;
+                        switch (tierType) {
+                          case TierType.Customer:
+                            return "Customer";
+                          case TierType.Vendor:
+                            return "Vendor";
+                          default:
+                            return "None";
+                        }
+                      })()}
+                    </span>
                   </div>
                 </div>
 

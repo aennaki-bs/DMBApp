@@ -40,6 +40,7 @@ import circuitService from "@/services/circuitService";
 // Import step components
 import { DateSelectionStep } from "./steps/DateSelectionStep";
 import { TypeSelectionWithDateFilterStep } from "./steps/TypeSelectionWithDateFilterStep";
+import { CustomerVendorSelectionStep } from "./steps/CustomerVendorSelectionStep";
 import { ContentStep } from "./steps/ContentStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { CircuitAssignmentStep } from "./steps/CircuitAssignmentStep";
@@ -74,6 +75,12 @@ interface FormData {
   isExternal: boolean;
   externalReference: string;
   responsibilityCentreId: number | null;
+  // Customer/Vendor fields
+  selectedCustomerVendor: any;
+  customerVendorName: string;
+  customerVendorAddress: string;
+  customerVendorCity: string;
+  customerVendorCountry: string;
 }
 
 const MotionDiv = motion.div;
@@ -112,6 +119,12 @@ export default function CreateDocumentWizard({
     responsibilityCentreId: userHasResponsibilityCentre
       ? user?.responsibilityCentre?.id || null
       : null,
+    // Customer/Vendor fields
+    selectedCustomerVendor: null,
+    customerVendorName: "",
+    customerVendorAddress: "",
+    customerVendorCity: "",
+    customerVendorCountry: "",
   });
 
   // Data fetching states
@@ -159,6 +172,12 @@ export default function CreateDocumentWizard({
         isExternal: false,
         externalReference: "",
         responsibilityCentreId: null,
+        // Customer/Vendor fields
+        selectedCustomerVendor: null,
+        customerVendorName: "",
+        customerVendorAddress: "",
+        customerVendorCity: "",
+        customerVendorCountry: "",
       };
 
       setFormData(initialFormData);
@@ -224,24 +243,31 @@ export default function CreateDocumentWizard({
     },
     {
       id: 4,
+      title: "Customer/Vendor",
+      description: "Select customer or vendor",
+      icon: <Building2 className="h-4 w-4" />,
+      completed: currentStep > 4,
+    },
+    {
+      id: 5,
       title: "Content",
       description: "Add document content",
       icon: <FileText className="h-4 w-4" />,
-      completed: currentStep > 4,
+      completed: currentStep > 5,
     },
   ];
 
   // Circuit step and review step
   const circuitStep: Step = {
-    id: 5,
+    id: 6,
     title: "Circuit (Optional)",
     description: "Assign to workflow or skip",
     icon: <Share2 className="h-4 w-4" />,
-    completed: currentStep > 5,
+    completed: currentStep > 6,
   };
 
   const reviewStep: Step = {
-    id: 6,
+    id: 7,
     title: "Review",
     description: "Confirm document details",
     icon: <CheckCircle className="h-4 w-4" />,
@@ -652,6 +678,25 @@ export default function CreateDocumentWizard({
     return false;
   };
 
+  const validateCustomerVendorStep = (): boolean => {
+    // Get the selected document type
+    const selectedType = documentTypes.find(t => t.id === formData.selectedTypeId);
+    
+    // If document type requires customer or vendor
+    if (selectedType?.tierType === 1 || selectedType?.tierType === 2) { // Customer = 1, Vendor = 2
+      if (!formData.selectedCustomerVendor) {
+        const tierName = selectedType.tierType === 1 ? 'customer' : 'vendor';
+        toast.error(`Please select a ${tierName}`);
+        return false;
+      }
+      if (!formData.customerVendorName.trim()) {
+        toast.error("Please enter a name");
+        return false;
+      }
+    }
+    return true;
+  };
+
   const validateCurrentStep = () => {
     switch (currentStep) {
       case 1: // Responsibility Centre
@@ -660,10 +705,14 @@ export default function CreateDocumentWizard({
         return validateDateStep();
       case 3: // Document Type
         return validateTypeStep();
-      case 4: // Content
+      case 4: // Customer/Vendor
+        return validateCustomerVendorStep();
+      case 5: // Content
         return validateContentStep();
-      case 5: // Circuit
+      case 6: // Circuit
         return validateCircuitStep();
+      case 7: // Review
+        return true;
       default:
         return true;
     }
@@ -703,6 +752,22 @@ export default function CreateDocumentWizard({
         return;
       }
 
+      // Helper function to get the correct code property based on tier type
+      const getCustomerVendorCode = (): string | null => {
+        if (!formData.selectedCustomerVendor) return null;
+        
+        // For customers, use 'code' property
+        if (selectedType.tierType === 1) { // TierType.Customer = 1
+          return formData.selectedCustomerVendor.code || null;
+        }
+        // For vendors, use 'vendorCode' property
+        else if (selectedType.tierType === 2) { // TierType.Vendor = 2
+          return formData.selectedCustomerVendor.vendorCode || null;
+        }
+        
+        return null;
+      };
+
       // Prepare the request data
       const requestData = {
         typeId: formData.selectedTypeId!,
@@ -715,6 +780,12 @@ export default function CreateDocumentWizard({
         circuitId: formData.circuitId,
         circuitName: formData.circuitName,
         responsibilityCentreId: formData.responsibilityCentreId,
+        // Customer/Vendor data - using proper code extraction
+        customerVendorCode: getCustomerVendorCode(),
+        customerVendorName: formData.customerVendorName || null,
+        customerVendorAddress: formData.customerVendorAddress || null,
+        customerVendorCity: formData.customerVendorCity || null,
+        customerVendorCountry: formData.customerVendorCountry || null,
         ...(formData.isExternal && {
           documentExterne: formData.externalReference,
         }),
@@ -807,6 +878,27 @@ export default function CreateDocumentWizard({
     }
     // If user has a responsibility centre, their centre is already set in formData
     // and cannot be changed
+  };
+
+  // Customer/Vendor handlers
+  const handleCustomerVendorSelect = (customerVendor: any) => {
+    handleUpdateFormData("selectedCustomerVendor", customerVendor);
+  };
+
+  const handleCustomerVendorNameChange = (name: string) => {
+    handleUpdateFormData("customerVendorName", name);
+  };
+
+  const handleCustomerVendorAddressChange = (address: string) => {
+    handleUpdateFormData("customerVendorAddress", address);
+  };
+
+  const handleCustomerVendorCityChange = (city: string) => {
+    handleUpdateFormData("customerVendorCity", city);
+  };
+
+  const handleCustomerVendorCountryChange = (country: string) => {
+    handleUpdateFormData("customerVendorCountry", country);
   };
 
   const jumpToStep = (step: number) => {
@@ -989,10 +1081,39 @@ export default function CreateDocumentWizard({
           </MotionDiv>
         );
 
-      case 4: // Content
+      case 4: // Customer/Vendor
         return (
           <MotionDiv
-            key="step4-content"
+            key="step4-customer-vendor"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-4 py-4">
+              <CustomerVendorSelectionStep
+                selectedTypeId={formData.selectedTypeId}
+                documentTypes={documentTypes}
+                selectedCustomerVendor={formData.selectedCustomerVendor}
+                customerVendorName={formData.customerVendorName}
+                customerVendorAddress={formData.customerVendorAddress}
+                customerVendorCity={formData.customerVendorCity}
+                customerVendorCountry={formData.customerVendorCountry}
+                onCustomerVendorSelect={handleCustomerVendorSelect}
+                onNameChange={handleCustomerVendorNameChange}
+                onAddressChange={handleCustomerVendorAddressChange}
+                onCityChange={handleCustomerVendorCityChange}
+                onCountryChange={handleCustomerVendorCountryChange}
+              />
+            </div>
+          </MotionDiv>
+        );
+
+      case 5: // Content
+        return (
+          <MotionDiv
+            key="step5-content"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -1013,10 +1134,10 @@ export default function CreateDocumentWizard({
           </MotionDiv>
         );
 
-      case 5: // Circuit
+      case 6: // Circuit
         return (
           <MotionDiv
-            key="step5-circuit"
+            key="step6-circuit"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -1052,10 +1173,10 @@ export default function CreateDocumentWizard({
           </MotionDiv>
         );
 
-      case 6: // Review
+      case 7: // Review
         return (
           <MotionDiv
-            key="step6-review"
+            key="step7-review"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -1080,11 +1201,17 @@ export default function CreateDocumentWizard({
                 externalReference={formData.externalReference}
                 responsibilityCentreName={getSelectedResponsibilityCentreName()}
                 userHasAssignedCentre={userHasResponsibilityCentre}
+                selectedCustomerVendor={formData.selectedCustomerVendor}
+                customerVendorName={formData.customerVendorName}
+                customerVendorAddress={formData.customerVendorAddress}
+                customerVendorCity={formData.customerVendorCity}
+                customerVendorCountry={formData.customerVendorCountry}
                 onEditTypeClick={() => jumpToStep(3)}
-                onEditDetailsClick={() => jumpToStep(4)}
+                onEditDetailsClick={() => jumpToStep(5)} // Updated to point to Content step
                 onEditDateClick={() => jumpToStep(2)}
-                onEditContentClick={() => jumpToStep(4)}
-                onEditCircuitClick={() => jumpToStep(5)}
+                onEditContentClick={() => jumpToStep(5)} // Updated to point to Content step
+                onEditCircuitClick={() => jumpToStep(6)} // Updated to point to Circuit step
+                onEditCustomerVendorClick={() => jumpToStep(4)} // Point to Customer/Vendor step
                 onEditResponsibilityCentreClick={
                   userHasResponsibilityCentre ? undefined : () => jumpToStep(1)
                 }

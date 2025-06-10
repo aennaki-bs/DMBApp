@@ -1,4 +1,4 @@
-import { DocumentType } from "@/models/document";
+import { DocumentType, TierType } from "@/models/document";
 import { SubType } from "@/models/subtype";
 import {
   Card,
@@ -24,6 +24,9 @@ import {
   CheckCircle,
   Building2,
   Info,
+  UserCheck,
+  Package,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -41,12 +44,19 @@ interface ReviewStepProps {
   externalReference?: string;
   responsibilityCentreName?: string;
   userHasAssignedCentre?: boolean;
+  // Customer/Vendor props
+  selectedCustomerVendor?: any;
+  customerVendorName?: string;
+  customerVendorAddress?: string;
+  customerVendorCity?: string;
+  customerVendorCountry?: string;
   onEditTypeClick: () => void;
   onEditDetailsClick: () => void;
   onEditDateClick: () => void;
   onEditContentClick: () => void;
   onEditCircuitClick: () => void;
   onEditResponsibilityCentreClick?: () => void;
+  onEditCustomerVendorClick?: () => void;
 }
 
 export const ReviewStep = ({
@@ -62,13 +72,56 @@ export const ReviewStep = ({
   externalReference = "",
   responsibilityCentreName,
   userHasAssignedCentre = false,
+  selectedCustomerVendor,
+  customerVendorName,
+  customerVendorAddress,
+  customerVendorCity,
+  customerVendorCountry,
   onEditTypeClick,
   onEditDetailsClick,
   onEditDateClick,
   onEditContentClick,
   onEditCircuitClick,
   onEditResponsibilityCentreClick,
+  onEditCustomerVendorClick,
 }: ReviewStepProps) => {
+  // Helper function to determine if customer/vendor section should be shown
+  const shouldShowCustomerVendor = () => {
+    return selectedType?.tierType === TierType.Customer || selectedType?.tierType === TierType.Vendor;
+  };
+
+  // Helper function to get tier type string
+  const getTierTypeString = (tierType?: TierType): string => {
+    switch (tierType) {
+      case TierType.Customer:
+        return "Customer";
+      case TierType.Vendor:
+        return "Vendor";
+      default:
+        return "None";
+    }
+  };
+
+  // Helper function to get tier type icon
+  const getTierTypeIcon = (tierType?: TierType) => {
+    switch (tierType) {
+      case TierType.Customer:
+        return <UserCheck className="h-4 w-4 text-green-400" />;
+      case TierType.Vendor:
+        return <Package className="h-4 w-4 text-orange-400" />;
+      default:
+        return <Users className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  // Helper function to get the code property based on tier type
+  const getCustomerVendorCode = (): string => {
+    if (!selectedCustomerVendor) return "N/A";
+    return selectedType?.tierType === TierType.Customer 
+      ? selectedCustomerVendor.code 
+      : selectedCustomerVendor.vendorCode;
+  };
+
   return (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
       <div className="text-center mb-3">
@@ -129,8 +182,92 @@ export const ReviewStep = ({
               </p>
             </div>
           )}
+          {selectedType?.tierType !== TierType.None && (
+            <div className="pt-1 border-t border-gray-800/50">
+              <p className="text-xs text-gray-400">Tier Type</p>
+              <div className="flex items-center gap-2 mt-1">
+                {getTierTypeIcon(selectedType?.tierType)}
+                <span className="text-sm text-white">
+                  {getTierTypeString(selectedType?.tierType)}
+                </span>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Customer/Vendor Information */}
+      {shouldShowCustomerVendor() && (
+        <Card className="bg-[#0a1033]/80 border-gray-800">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-md text-white flex items-center gap-2">
+                {getTierTypeIcon(selectedType?.tierType)}
+                {getTierTypeString(selectedType?.tierType)} Information
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                Selected {getTierTypeString(selectedType?.tierType).toLowerCase()} details
+              </CardDescription>
+            </div>
+            {onEditCustomerVendorClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-400 hover:bg-blue-900/20"
+                onClick={onEditCustomerVendorClick}
+              >
+                <Edit className="h-4 w-4 mr-1" /> Edit
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-400">Code</p>
+                <p className="text-sm text-white font-mono">
+                  {getCustomerVendorCode()}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">Name</p>
+                <p className="text-sm text-white">
+                  {customerVendorName || "N/A"}
+                </p>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">Address</p>
+              <p className="text-sm text-white">
+                {customerVendorAddress || "N/A"}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-400">City</p>
+                <p className="text-sm text-white">
+                  {customerVendorCity || "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">Country</p>
+                <p className="text-sm text-white">
+                  {customerVendorCountry || "N/A"}
+                </p>
+              </div>
+            </div>
+            {selectedCustomerVendor && (
+              <div className="pt-2 mt-2 border-t border-gray-800/50">
+                <div className="flex items-start gap-2 bg-blue-900/20 p-2 rounded-md">
+                  <Info className="h-4 w-4 mt-0.5 text-blue-400" />
+                  <p className="text-xs text-gray-300">
+                    The information above can be modified for this document without affecting the original {getTierTypeString(selectedType?.tierType).toLowerCase()} record.
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Responsibility Centre */}
       {responsibilityCentreName && (

@@ -13,6 +13,13 @@ namespace DocManagementBackend.Models
         public DateTime? ComptableDate { get; set; }
         public int? CircuitId { get; set; }
         public int? ResponsibilityCentreId { get; set; }
+        
+        // Customer/Vendor information
+        public string? CustomerVendorCode { get; set; }
+        public string? CustomerVendorName { get; set; }
+        public string? CustomerVendorAddress { get; set; }
+        public string? CustomerVendorCity { get; set; }
+        public string? CustomerVendorCountry { get; set; }
     }
 
     public class UpdateDocumentRequest
@@ -26,7 +33,15 @@ namespace DocManagementBackend.Models
         public DateTime? DocDate { get; set; }
         public DateTime? ComptableDate { get; set; }
         public int? CircuitId { get; set; }
+        
+        // Customer/Vendor information
+        public string? CustomerVendorCode { get; set; }
+        public string? CustomerVendorName { get; set; }
+        public string? CustomerVendorAddress { get; set; }
+        public string? CustomerVendorCity { get; set; }
+        public string? CustomerVendorCountry { get; set; }
     }
+    
     public class DocumentDto
     {
         public int Id { get; set; }
@@ -58,8 +73,14 @@ namespace DocManagementBackend.Models
         public bool IsCircuitCompleted { get; set; }
         public int? ResponsibilityCentreId { get; set; }
         public ResponsibilityCentreSimpleDto? ResponsibilityCentre { get; set; }
+        
+        // Customer/Vendor information
+        public string? CustomerVendorCode { get; set; }
+        public string? CustomerVendorName { get; set; }
+        public string? CustomerVendorAddress { get; set; }
+        public string? CustomerVendorCity { get; set; }
+        public string? CustomerVendorCountry { get; set; }
     }
-}
 
     public class DocumentTypeDto
     {
@@ -67,6 +88,7 @@ namespace DocManagementBackend.Models
         public string TypeKey { get; set; } = string.Empty;
         public string TypeName { get; set; } = string.Empty;
         public string TypeAttr { get; set; } = string.Empty;
+        public TierType TierType { get; set; } = TierType.None;
     }
 
     public class DocumentUserDto
@@ -77,5 +99,5 @@ namespace DocManagementBackend.Models
         public string LastName { get; set; } = string.Empty;
         public string? Role { get; set; } = string.Empty;
         public string UserType { get; set; } = string.Empty;
-    
+    }
 }

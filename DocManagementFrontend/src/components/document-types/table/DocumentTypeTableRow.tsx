@@ -1,5 +1,5 @@
 import { TableRow, TableCell } from "@/components/ui/table";
-import { DocumentType } from "@/models/document";
+import { DocumentType, TierType } from "@/models/document";
 import { Button } from "@/components/ui/button";
 import {
   Edit,
@@ -8,6 +8,9 @@ import {
   MoreHorizontal,
   AlertCircle,
   ChevronRight,
+  Users,
+  UserCheck,
+  Package,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
@@ -57,6 +60,33 @@ export const DocumentTypeTableRow = ({
     navigate(`/document-types/${type.id}/subtypes`);
   };
 
+  // Helper function to render tier type with icon
+  const renderTierType = (tierType?: TierType) => {
+    switch (tierType) {
+      case TierType.Customer:
+        return (
+          <div className="flex items-center gap-1.5 text-green-400">
+            <UserCheck className="h-3.5 w-3.5" />
+            <span className="text-xs font-medium">Customer</span>
+          </div>
+        );
+      case TierType.Vendor:
+        return (
+          <div className="flex items-center gap-1.5 text-orange-400">
+            <Package className="h-3.5 w-3.5" />
+            <span className="text-xs font-medium">Vendor</span>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center gap-1.5 text-gray-400">
+            <Users className="h-3.5 w-3.5" />
+            <span className="text-xs">None</span>
+          </div>
+        );
+    }
+  };
+
   return (
     <TableRow
       className={cn(
@@ -89,6 +119,9 @@ export const DocumentTypeTableRow = ({
         </span>
       </TableCell>
       <TableCell>
+        {renderTierType(type.tierType)}
+      </TableCell>
+      <TableCell className="pl-6">
         <div className="flex items-center">
           <span className="text-blue-200">{type.documentCounter || 0}</span>
         </div>
@@ -167,4 +200,4 @@ export const DocumentTypeTableRow = ({
       </TableCell>
     </TableRow>
   );
-};
+}; 

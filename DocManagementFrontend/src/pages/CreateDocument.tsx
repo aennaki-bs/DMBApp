@@ -16,13 +16,14 @@ import {
 import { toast } from "sonner";
 import documentService from "@/services/documentService";
 import subTypeService from "@/services/subTypeService";
-import { DocumentType } from "@/models/document";
+import { DocumentType, TierType } from "@/models/document";
 import { SubType } from "@/models/subtype";
 import { TypeSelectionStep } from "@/components/create-document/steps/TypeSelectionStep";
 import { TitleStep } from "@/components/create-document/steps/TitleStep";
 import { DateSelectionStep } from "@/components/create-document/steps/DateSelectionStep";
 import { ContentStep } from "@/components/create-document/steps/ContentStep";
 import { ResponsibilityCentreStep } from "@/components/create-document/steps/ResponsibilityCentreStep";
+import { CustomerVendorSelectionStep } from "@/components/create-document/steps/CustomerVendorSelectionStep";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import api from "@/services/api";
@@ -62,8 +63,15 @@ export default function CreateDocument() {
     undefined
   );
 
+  // Customer/Vendor selection state
+  const [selectedCustomerVendor, setSelectedCustomerVendor] = useState<any>(null);
+  const [customerVendorName, setCustomerVendorName] = useState("");
+  const [customerVendorAddress, setCustomerVendorAddress] = useState("");
+  const [customerVendorCity, setCustomerVendorCity] = useState("");
+  const [customerVendorCountry, setCustomerVendorCountry] = useState("");
+
   // Total number of steps
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 6;
 
   // Step definitions
   const steps = [
@@ -83,20 +91,27 @@ export default function CreateDocument() {
     },
     {
       id: 3,
-      title: "Document Details",
-      description: "Enter title and alias",
-      icon: <FileSignature className="h-4 w-4" />,
+      title: "Customer/Vendor",
+      description: "Select customer or vendor",
+      icon: <Building2 className="h-4 w-4" />,
       completed: step > 3,
     },
     {
       id: 4,
-      title: "Responsibility Centre",
-      description: "Assign to responsibility centre",
-      icon: <Building2 className="h-4 w-4" />,
+      title: "Document Details",
+      description: "Enter title and alias",
+      icon: <FileSignature className="h-4 w-4" />,
       completed: step > 4,
     },
     {
       id: 5,
+      title: "Responsibility Centre",
+      description: "Assign to responsibility centre",
+      icon: <Building2 className="h-4 w-4" />,
+      completed: step > 5,
+    },
+    {
+      id: 6,
       title: "Content",
       description: "Add document content",
       icon: <FileText className="h-4 w-4" />,
@@ -376,12 +391,30 @@ export default function CreateDocument() {
         }
         return true;
       case 3:
+        // Customer/Vendor validation based on tierType
+        const selectedType = documentTypes.find(t => t.id === selectedTypeId);
+        if (selectedType?.tierType === TierType.Customer || selectedType?.tierType === TierType.Vendor) {
+          if (!selectedCustomerVendor) {
+            const tierName = selectedType.tierType === TierType.Customer ? 'customer' : 'vendor';
+            toast.error(`Please select a ${tierName}`);
+            return false;
+          }
+          if (!customerVendorName.trim()) {
+            toast.error("Please enter a name");
+            return false;
+          }
+        }
+        return true;
+      case 4:
         if (!title.trim()) {
           toast.error("Please enter a document title");
           return false;
         }
         return true;
-      case 4:
+      case 5:
+        // Responsibility centre step is optional
+        return true;
+      case 6:
         if (!content.trim()) {
           toast.error("Please enter document content");
           return false;
@@ -403,6 +436,26 @@ export default function CreateDocument() {
 
     try {
       setIsSubmitting(true);
+      
+      // Get the selected document type to determine tier type
+      const selectedType = documentTypes.find(t => t.id === selectedTypeId);
+      
+      // Helper function to get the correct code property based on tier type
+      const getCustomerVendorCode = (): string | null => {
+        if (!selectedCustomerVendor) return null;
+        
+        // For customers, use 'code' property
+        if (selectedType?.tierType === TierType.Customer) {
+          return selectedCustomerVendor.code || null;
+        }
+        // For vendors, use 'vendorCode' property
+        else if (selectedType?.tierType === TierType.Vendor) {
+          return selectedCustomerVendor.vendorCode || null;
+        }
+        
+        return null;
+      };
+      
       const documentData = {
         title,
         content,
@@ -411,6 +464,12 @@ export default function CreateDocument() {
         docDate,
         subTypeId: selectedSubTypeId,
         responsibilityCentreId: selectedCentreId,
+        // Customer/Vendor data - using proper code extraction
+        customerVendorCode: getCustomerVendorCode(),
+        customerVendorName: customerVendorName || null,
+        customerVendorAddress: customerVendorAddress || null,
+        customerVendorCity: customerVendorCity || null,
+        customerVendorCountry: customerVendorCountry || null,
       };
 
       const createdDocument = await documentService.createDocument(
@@ -504,6 +563,23 @@ export default function CreateDocument() {
         );
       case 3:
         return (
+          <CustomerVendorSelectionStep
+            selectedTypeId={selectedTypeId}
+            documentTypes={documentTypes}
+            selectedCustomerVendor={selectedCustomerVendor}
+            customerVendorName={customerVendorName}
+            customerVendorAddress={customerVendorAddress}
+            customerVendorCity={customerVendorCity}
+            customerVendorCountry={customerVendorCountry}
+            onCustomerVendorSelect={setSelectedCustomerVendor}
+            onNameChange={setCustomerVendorName}
+            onAddressChange={setCustomerVendorAddress}
+            onCityChange={setCustomerVendorCity}
+            onCountryChange={setCustomerVendorCountry}
+          />
+        );
+      case 4:
+        return (
           <TitleStep
             title={title}
             documentAlias={documentAlias}
@@ -511,7 +587,7 @@ export default function CreateDocument() {
             onDocumentAliasChange={setDocumentAlias}
           />
         );
-      case 4:
+      case 5:
         return (
           <ResponsibilityCentreStep
             selectedCentreId={selectedCentreId}
@@ -520,7 +596,7 @@ export default function CreateDocument() {
             userCentreName={undefined} // TODO: Get from user context
           />
         );
-      case 5:
+      case 6:
         return <ContentStep content={content} onContentChange={setContent} />;
       default:
         return null;

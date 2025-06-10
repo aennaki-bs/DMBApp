@@ -66,6 +66,22 @@ namespace DocManagementBackend.Models
         [ForeignKey("CustomerOrVendor")]  
         public Vendor? Vendor { get; set; }
         
+        // Customer/Vendor snapshot fields for historical accuracy
+        [MaxLength(50)]
+        public string? CustomerVendorCode { get; set; }
+        
+        [MaxLength(200)]
+        public string? CustomerVendorName { get; set; }
+        
+        [MaxLength(500)]
+        public string? CustomerVendorAddress { get; set; }
+        
+        [MaxLength(100)]
+        public string? CustomerVendorCity { get; set; }
+        
+        [MaxLength(100)]
+        public string? CustomerVendorCountry { get; set; }
+        
         [JsonIgnore]
         public ICollection<Ligne> Lignes { get; set; } = new List<Ligne>();
     }
