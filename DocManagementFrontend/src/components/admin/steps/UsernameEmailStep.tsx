@@ -8,6 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { AtSign, User, Check, Loader2, AlertCircle } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UsernameEmailStepProps {
   form: UseFormReturn<any>;
@@ -24,6 +25,8 @@ export function UsernameEmailStep({
   usernameChecking,
   emailChecking,
 }: UsernameEmailStepProps) {
+  const { t } = useTranslation();
+  
   // Helper function to render availability indicator
   const renderAvailabilityIndicator = (
     isChecking: boolean,
@@ -64,7 +67,7 @@ export function UsernameEmailStep({
           <div className="p-2 rounded-full bg-blue-800/20 text-blue-400">
             <User className="h-5 w-5" />
           </div>
-          <h3 className="text-base font-medium text-blue-200">Username</h3>
+          <h3 className="text-base font-medium text-blue-200">{t("userManagement.username")}</h3>
         </div>
 
         <div className="space-y-2">
@@ -74,7 +77,7 @@ export function UsernameEmailStep({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-blue-200">
-                  Choose a username
+                  {t("userManagement.chooseUsername")}
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
@@ -82,7 +85,7 @@ export function UsernameEmailStep({
                       <User className="h-4 w-4" />
                     </div>
                     <Input
-                      placeholder="username"
+                      placeholder={t("userManagement.usernamePlaceholder")}
                       {...field}
                       className="pl-10 bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                     />
@@ -96,7 +99,7 @@ export function UsernameEmailStep({
                 <FormMessage className="text-red-300" />
                 {usernameAvailable && (
                   <p className="text-xs text-green-400 mt-1">
-                    Username is available
+                    {t("userManagement.usernameAvailable")}
                   </p>
                 )}
               </FormItem>
@@ -104,7 +107,7 @@ export function UsernameEmailStep({
           />
 
           <p className="text-xs text-blue-400 mt-1">
-            Username must be at least 3 characters and unique in the system.
+            {t("userManagement.usernameRequirement")}
           </p>
         </div>
       </div>
@@ -114,7 +117,7 @@ export function UsernameEmailStep({
           <div className="p-2 rounded-full bg-blue-800/20 text-blue-400">
             <AtSign className="h-5 w-5" />
           </div>
-          <h3 className="text-base font-medium text-blue-200">Email Address</h3>
+          <h3 className="text-base font-medium text-blue-200">{t("userManagement.emailAddress")}</h3>
         </div>
 
         <div className="space-y-2">
@@ -123,7 +126,7 @@ export function UsernameEmailStep({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-blue-200">Email address</FormLabel>
+                <FormLabel className="text-blue-200">{t("userManagement.emailAddressLabel")}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
@@ -131,7 +134,7 @@ export function UsernameEmailStep({
                     </div>
                     <Input
                       type="email"
-                      placeholder="user@example.com"
+                      placeholder={t("userManagement.emailPlaceholder")}
                       {...field}
                       className="pl-10 bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                     />
@@ -145,7 +148,7 @@ export function UsernameEmailStep({
                 <FormMessage className="text-red-300" />
                 {emailAvailable && (
                   <p className="text-xs text-green-400 mt-1">
-                    Email is available
+                    {t("userManagement.emailAvailable")}
                   </p>
                 )}
               </FormItem>
@@ -153,7 +156,7 @@ export function UsernameEmailStep({
           />
 
           <p className="text-xs text-blue-400 mt-1">
-            A verification email will be sent to this address.
+            {t("userManagement.emailVerification")}
           </p>
         </div>
       </div>

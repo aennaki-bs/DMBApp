@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserDto } from "@/services/adminService";
 import { Edit, Eye, Mail, MoreVertical, Trash, UserCog } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UserActionsDropdownProps {
   user: UserDto;
@@ -25,6 +26,8 @@ export function UserActionsDropdown({
   onViewLogs,
   onDelete,
 }: UserActionsDropdownProps) {
+  const { t } = useTranslation();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -42,7 +45,7 @@ export function UserActionsDropdown({
       >
         <DropdownMenuLabel className="flex items-center gap-2 text-blue-800 dark:text-blue-200 px-3 py-2">
           <UserCog className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          User Actions
+          {t("userManagement.userActions")}
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-blue-300 dark:bg-blue-800/40 my-1" />
 
@@ -51,7 +54,7 @@ export function UserActionsDropdown({
           className="hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-md focus:bg-blue-100 dark:focus:bg-blue-800/40 px-3 py-2 cursor-pointer"
         >
           <Edit className="mr-2.5 h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <span>Edit User</span>
+          <span>{t("userManagement.editUser")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -59,7 +62,7 @@ export function UserActionsDropdown({
           className="hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-md focus:bg-blue-100 dark:focus:bg-blue-800/40 px-3 py-2 cursor-pointer"
         >
           <Mail className="mr-2.5 h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <span>Update Email</span>
+          <span>{t("userManagement.updateEmail")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -67,7 +70,7 @@ export function UserActionsDropdown({
           className="hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-md focus:bg-blue-100 dark:focus:bg-blue-800/40 px-3 py-2 cursor-pointer"
         >
           <Eye className="mr-2.5 h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <span>View Logs</span>
+          <span>{t("userManagement.viewLogs")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator className="bg-blue-300 dark:bg-blue-800/40 my-1" />
@@ -77,7 +80,7 @@ export function UserActionsDropdown({
           onClick={() => onDelete(user.id)}
         >
           <Trash className="mr-2.5 h-4 w-4" />
-          <span>Delete User</span>
+          <span>{t("userManagement.deleteUser")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

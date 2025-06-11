@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   Pagination,
   PaginationContent,
@@ -36,6 +37,7 @@ import CreateDocumentWizard from "@/components/create-document/CreateDocumentWiz
 import { useDocumentsFilter } from "./hooks/useDocumentsFilter";
 
 const DocumentsPage = () => {
+  const { t, tWithParams } = useTranslation();
   const { user } = useAuth();
   const canManageDocuments =
     user?.role === "Admin" || user?.role === "FullUser";
@@ -122,7 +124,7 @@ const DocumentsPage = () => {
       if (documentToDelete !== null) {
         // Single document delete
         await deleteDocument(documentToDelete);
-        toast.success("Document deleted successfully");
+        toast.success(t("documents.documentDeleted"));
       } else if (selectedDocuments.length > 0) {
         // Multiple documents delete with improved error handling
         try {
@@ -131,7 +133,7 @@ const DocumentsPage = () => {
           // All deletions were successful
           if (results.successful.length === selectedDocuments.length) {
             toast.success(
-              `${results.successful.length} documents deleted successfully`
+              tWithParams("documents.documentsDeleted", { count: results.successful.length })
             );
           }
         } catch (error: any) {
@@ -142,20 +144,20 @@ const DocumentsPage = () => {
             if (successful.length > 0 && failed.length > 0) {
               // Partial success
               toast.success(
-                `${successful.length} documents deleted successfully`
+                tWithParams("documents.documentsDeleted", { count: successful.length })
               );
               toast.error(
-                `Failed to delete ${failed.length} documents. Some may be referenced by other data.`
+                tWithParams("documents.failedToDeleteSome", { count: failed.length })
               );
             } else if (successful.length === 0) {
               // Complete failure
               toast.error(
-                `Failed to delete ${failed.length} documents. They may be referenced by other data or there's a server issue.`
+                tWithParams("documents.failedToDeleteAll", { count: failed.length })
               );
             }
           } else {
             // Generic error
-            toast.error("Failed to delete documents. Please try again.");
+            toast.error(t("documents.deleteError"));
           }
 
           // Don't return early - we still want to clean up the UI state
@@ -171,7 +173,7 @@ const DocumentsPage = () => {
       fetchDocuments();
     } catch (error) {
       console.error("Error deleting document(s):", error);
-      toast.error("Failed to delete document(s). Please try again.");
+      toast.error(t("documents.deleteError"));
 
       // Still clean up UI state on error
       setDeleteDialogOpen(false);
@@ -188,14 +190,14 @@ const DocumentsPage = () => {
     setAssignCircuitDialogOpen(false);
     setDocumentToAssign(null);
     fetchDocuments();
-    toast.success("Document assigned to circuit successfully");
+    toast.success(t("documents.circuitAssigned"));
   };
 
   return (
     <div className="container mx-auto px-4 py-6">
       <PageHeader
-        title="Documents"
-        description="View and manage your documents"
+        title={t("documents.title")}
+        description={t("documents.subtitle")}
         icon={<FileText className="h-6 w-6 text-blue-500" />}
         actions={
           <>
@@ -205,7 +207,7 @@ const DocumentsPage = () => {
                   className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
                   onClick={() => setCreateModalOpen(true)}
                 >
-                  <Plus className="h-4 w-4" /> New Document
+                  <Plus className="h-4 w-4" /> {t("documents.newDocument")}
                 </Button>
 
                 {selectedDocuments.length === 1 && (
@@ -218,13 +220,13 @@ const DocumentsPage = () => {
                       )
                     }
                   >
-                    <GitBranch className="mr-2 h-4 w-4" /> Assign to Circuit
+                    <GitBranch className="mr-2 h-4 w-4" /> {t("documents.assignToCircuit")}
                   </Button>
                 )}
               </>
             ) : (
               <Button className="bg-blue-600 hover:bg-blue-700" disabled>
-                <Plus className="mr-2 h-4 w-4" /> New Document
+                <Plus className="mr-2 h-4 w-4" /> {t("documents.newDocument")}
               </Button>
             )}
           </>
@@ -250,7 +252,7 @@ const DocumentsPage = () => {
               actions={[
                 {
                   id: "delete",
-                  label: "Delete Selected",
+                  label: t("documents.deleteSelected"),
                   icon: <Trash2 className="h-4 w-4" />,
                   onClick: openDeleteDialog,
                   variant: "destructive",
@@ -267,7 +269,7 @@ const DocumentsPage = () => {
           <CardContent className="p-8">
             <div className="flex flex-col items-center justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-              <p className="text-gray-400">Loading documents...</p>
+              <p className="text-gray-400">{t("documents.loading")}</p>
             </div>
           </CardContent>
         ) : filteredItems.length === 0 ? (

@@ -4,12 +4,14 @@ import dashboardService from "@/services/dashboardService";
 import { Users, FileCheck, GitBranch } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { DashboardCard } from "@/components/ui/dashboard-card";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ActivityScoreCardProps {
   user: User | null;
 }
 
 export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
+  const { t } = useTranslation();
   const { data: activityScore } = useQuery({
     queryKey: ["activity-score"],
     queryFn: () => dashboardService.getActivityScore(),
@@ -31,7 +33,7 @@ export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
   };
 
   return (
-    <DashboardCard title="Activity Score">
+    <DashboardCard title={t("dashboard.activityScore")}>
       <div className="space-y-6">
         <div className="flex justify-between items-start">
           <p className="text-xs text-blue-300/80">{user?.lastName}'s Team</p>
@@ -45,7 +47,7 @@ export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
             >
               {activityScore ? activityScore.score.toFixed(1) : "-"}/10
             </p>
-            <p className="text-xs text-blue-300/80">Overall Score</p>
+            <p className="text-xs text-blue-300/80">{t("dashboard.overallScore")}</p>
           </div>
         </div>
 
@@ -57,7 +59,7 @@ export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
                 <div className="p-1.5 rounded-full bg-blue-900/30">
                   <Users className="h-4 w-4 text-blue-400" />
                 </div>
-                <span className="text-sm text-blue-300">User Engagement</span>
+                <span className="text-sm text-blue-300">{t("dashboard.userEngagement")}</span>
               </div>
               <span className="text-sm font-medium text-white">
                 {activityScore ? Math.round(activityScore.userEngagement) : 0}%
@@ -72,8 +74,7 @@ export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
               ></div>
             </div>
             <p className="text-xs text-blue-300/80">
-              {activityScore?.activeUsers || 0} active out of{" "}
-              {activityScore?.totalUsers || 0} users
+              {activityScore?.activeUsers || 0} {t("dashboard.activeOut")} {activityScore?.totalUsers || 0} {t("dashboard.users")}
             </p>
           </div>
 
@@ -85,7 +86,7 @@ export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
                   <FileCheck className="h-4 w-4 text-green-400" />
                 </div>
                 <span className="text-sm text-blue-300">
-                  Processing Efficiency
+                  {t("dashboard.processingEfficiency")}
                 </span>
               </div>
               <span className="text-sm font-medium text-white">
@@ -106,8 +107,7 @@ export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
               ></div>
             </div>
             <p className="text-xs text-blue-300/80">
-              {activityScore?.documentsProcessed || 0} processed out of{" "}
-              {activityScore?.totalDocuments || 0} documents
+              {activityScore?.documentsProcessed || 0} {t("dashboard.processedOut")} {activityScore?.totalDocuments || 0} {t("dashboard.documents")}
             </p>
           </div>
 
@@ -118,7 +118,7 @@ export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
                 <div className="p-1.5 rounded-full bg-blue-900/30">
                   <GitBranch className="h-4 w-4 text-purple-400" />
                 </div>
-                <span className="text-sm text-blue-300">Workflow Progress</span>
+                <span className="text-sm text-blue-300">{t("dashboard.workflowProgress")}</span>
               </div>
               <span className="text-sm font-medium text-white">
                 {activityScore ? Math.round(activityScore.workflowProgress) : 0}
@@ -134,8 +134,7 @@ export function ActivityScoreCard({ user }: ActivityScoreCardProps) {
               ></div>
             </div>
             <p className="text-xs text-blue-300/80">
-              {activityScore?.activeCircuits || 0} active out of{" "}
-              {activityScore?.totalCircuits || 0} circuits
+              {activityScore?.activeCircuits || 0} {t("dashboard.activeOut")} {activityScore?.totalCircuits || 0} {t("dashboard.circuits")}
             </p>
           </div>
         </div>

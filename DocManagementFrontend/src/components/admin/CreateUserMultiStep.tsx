@@ -39,6 +39,7 @@ import {
   PenLine,
   UserPlus,
 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Import step components
 import { UserTypeStep } from "./steps/UserTypeStep";
@@ -143,49 +144,50 @@ export function CreateUserMultiStep({
   const [usernameChecking, setUsernameChecking] = useState(false);
   const [emailChecking, setEmailChecking] = useState(false);
   const [direction, setDirection] = useState(0);
+  const { t } = useTranslation();
 
   // Define steps for the form
   const steps: Step[] = [
     {
       id: 0,
-      title: "User Type",
-      description: "Choose the type of user",
+      title: t("userManagement.userTypeStep"),
+      description: t("userManagement.userTypeStepDesc"),
       icon: <User className="h-5 w-5" />,
     },
     {
       id: 1,
-      title: "Account Details",
-      description: "Enter basic information",
+      title: t("userManagement.accountDetailsStep"),
+      description: t("userManagement.accountDetailsStepDesc"),
       icon: <PenLine className="h-5 w-5" />,
     },
     {
       id: 2,
-      title: "Address",
-      description: "Enter contact information",
+      title: t("userManagement.addressStep"),
+      description: t("userManagement.addressStepDesc"),
       icon: <MapPin className="h-5 w-5" />,
     },
     {
       id: 3,
-      title: "Username & Email",
-      description: "Set login credentials",
+      title: t("userManagement.usernameEmailStep"),
+      description: t("userManagement.usernameEmailStepDesc"),
       icon: <AtSign className="h-5 w-5" />,
     },
     {
       id: 4,
-      title: "Password",
-      description: "Create a secure password",
+      title: t("userManagement.passwordStep"),
+      description: t("userManagement.passwordStepDesc"),
       icon: <Key className="h-5 w-5" />,
     },
     {
       id: 5,
-      title: "Admin Access",
-      description: "Set user permissions",
+      title: t("userManagement.adminAccessStep"),
+      description: t("userManagement.adminAccessStepDesc"),
       icon: <Shield className="h-5 w-5" />,
     },
     {
       id: 6,
-      title: "Review",
-      description: "Confirm user details",
+      title: t("userManagement.reviewStep"),
+      description: t("userManagement.reviewStepDesc"),
       icon: <CircleCheck className="h-5 w-5" />,
     },
   ];
@@ -440,11 +442,11 @@ export function CreateUserMultiStep({
               <UserPlus className="h-5 w-5" />
             </div>
             <DialogTitle className="text-xl text-blue-100">
-              Create User
+              {t("userManagement.createUserTitle")}
             </DialogTitle>
           </div>
           <DialogDescription className="text-blue-300">
-            Create a new user with specific role and permissions
+            {t("userManagement.createUserSubtitle")}
           </DialogDescription>
         </DialogHeader>
 
@@ -542,7 +544,7 @@ export function CreateUserMultiStep({
                   }`}
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back
+                  {t("userManagement.back")}
                 </Button>
 
                 {currentStep < steps.length - 1 ? (
@@ -551,7 +553,7 @@ export function CreateUserMultiStep({
                     onClick={nextStep}
                     className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
                   >
-                    Next
+                    {t("userManagement.next")}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 ) : (
@@ -560,7 +562,7 @@ export function CreateUserMultiStep({
                     disabled={isSubmitting}
                     className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
                   >
-                    {isSubmitting ? "Creating..." : "Create User"}
+                    {isSubmitting ? t("userManagement.creating") : t("userManagement.createUserButton")}
                     <UserPlus className="h-4 w-4" />
                   </Button>
                 )}

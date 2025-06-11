@@ -2,16 +2,19 @@ import { FormField, FormItem, FormControl } from "@/components/ui/form";
 import { motion } from "framer-motion";
 import { User, Building2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UserTypeStepProps {
   form: UseFormReturn<any>;
 }
 
 export function UserTypeStep({ form }: UserTypeStepProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-4">
       <p className="text-blue-300">
-        Select the type of user account you want to create:
+        {t("userManagement.selectUserType")}
       </p>
 
       <FormField
@@ -41,11 +44,10 @@ export function UserTypeStep({ form }: UserTypeStepProps) {
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-medium text-blue-100">
-                        Personal User
+                        {t("userManagement.personalUser")}
                       </h3>
                       <p className="text-sm text-blue-300">
-                        Create a standard user account for an individual with
-                        basic access to the platform.
+                        {t("userManagement.personalUserDesc")}
                       </p>
 
                       {field.value === "simple" && (
@@ -55,9 +57,9 @@ export function UserTypeStep({ form }: UserTypeStepProps) {
                           className="text-sm text-blue-200 mt-2 border-t border-blue-700/40 pt-2"
                         >
                           <ul className="list-disc list-inside space-y-1">
-                            <li>Access to personal documents</li>
-                            <li>Basic workflow features</li>
-                            <li>Limited permissions</li>
+                            <li>{t("userManagement.accessPersonalDocs")}</li>
+                            <li>{t("userManagement.basicWorkflow")}</li>
+                            <li>{t("userManagement.limitedPermissions")}</li>
                           </ul>
                         </motion.div>
                       )}
@@ -85,11 +87,10 @@ export function UserTypeStep({ form }: UserTypeStepProps) {
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-medium text-blue-100">
-                        Company Account
+                        {t("userManagement.companyAccount")}
                       </h3>
                       <p className="text-sm text-blue-300">
-                        Create a corporate account with enhanced permissions and
-                        capabilities.
+                        {t("userManagement.companyAccountDesc")}
                       </p>
 
                       {field.value === "company" && (
@@ -99,9 +100,9 @@ export function UserTypeStep({ form }: UserTypeStepProps) {
                           className="text-sm text-blue-200 mt-2 border-t border-blue-700/40 pt-2"
                         >
                           <ul className="list-disc list-inside space-y-1">
-                            <li>Advanced document management</li>
-                            <li>Multi-user access control</li>
-                            <li>Enhanced collaboration features</li>
+                            <li>{t("userManagement.advancedDocManagement")}</li>
+                            <li>{t("userManagement.multiUserAccess")}</li>
+                            <li>{t("userManagement.enhancedCollaboration")}</li>
                           </ul>
                         </motion.div>
                       )}

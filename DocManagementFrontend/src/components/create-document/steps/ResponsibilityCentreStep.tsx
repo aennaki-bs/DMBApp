@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ResponsibilityCentreSelect } from "@/components/responsibility-centre/ResponsibilityCentreSelect";
 import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ResponsibilityCentreStepProps {
   selectedCentreId?: number;
@@ -24,21 +25,23 @@ interface ResponsibilityCentreStepProps {
   onRetryFetch?: () => void;
 }
 
-const TroubleshootingTips = () => (
-  <div className="mt-4 p-4 bg-gray-900/60 rounded-md border border-gray-700">
-    <h4 className="text-blue-300 font-medium mb-2 flex items-center">
-      <Info className="h-4 w-4 mr-1" /> Troubleshooting Tips
-    </h4>
-    <ul className="text-sm text-gray-300 space-y-2 list-disc pl-5">
-      <li>Check your internet connection</li>
-      <li>
-        Ensure you have proper permissions to access responsibility centres
-      </li>
-      <li>Try logging out and logging back in</li>
-      <li>Contact your administrator if the problem persists</li>
-    </ul>
-  </div>
-);
+const TroubleshootingTips = () => {
+  const { t } = useTranslation();
+  
+  return (
+    <div className="mt-4 p-4 bg-gray-900/60 rounded-md border border-gray-700">
+      <h4 className="text-blue-300 font-medium mb-2 flex items-center">
+        <Info className="h-4 w-4 mr-1" /> {t("documents.troubleshootingTips")}
+      </h4>
+      <ul className="text-sm text-gray-300 space-y-2 list-disc pl-5">
+        <li>{t("documents.checkInternetConnection")}</li>
+        <li>{t("documents.ensureProperPermissions")}</li>
+        <li>{t("documents.tryLoggingOutAndIn")}</li>
+        <li>{t("documents.contactAdministrator")}</li>
+      </ul>
+    </div>
+  );
+};
 
 export const ResponsibilityCentreStep: React.FC<
   ResponsibilityCentreStepProps
@@ -51,6 +54,7 @@ export const ResponsibilityCentreStep: React.FC<
   responsibilityCentres = [],
   onRetryFetch,
 }) => {
+  const { t } = useTranslation();
   const hasNoCentres = !isLoading && responsibilityCentres.length === 0;
 
   return (
@@ -62,11 +66,11 @@ export const ResponsibilityCentreStep: React.FC<
     >
       <div className="text-center space-y-2">
         <Building2 className="h-12 w-12 text-blue-500 mx-auto" />
-        <h2 className="text-2xl font-bold text-white">Responsibility Centre</h2>
+        <h2 className="text-2xl font-bold text-white">{t("documents.responsibilityCentre")}</h2>
         <p className="text-gray-400">
           {userHasCentre
-            ? "Document will be assigned to your responsibility centre"
-            : "Select a responsibility centre for this document"}
+            ? t("documents.documentWillBeAssignedToYourCentre")
+            : t("documents.selectResponsibilityCentreForDocument")}
         </p>
       </div>
 
@@ -77,7 +81,7 @@ export const ResponsibilityCentreStep: React.FC<
             <div className="flex items-center justify-center space-x-3 py-8">
               <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
               <span className="text-blue-300 font-medium">
-                Loading responsibility centre information...
+                {t("documents.loadingResponsibilityCentreInfo")}
               </span>
             </div>
           </CardContent>
@@ -93,7 +97,7 @@ export const ResponsibilityCentreStep: React.FC<
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
                   <CheckCircle className="h-5 w-5 mr-2 text-green-400" />
-                  Your Responsibility Centre
+                  {t("documents.yourResponsibilityCentre")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -105,8 +109,7 @@ export const ResponsibilityCentreStep: React.FC<
                         {userCentreName}
                       </div>
                       <p className="text-blue-300 text-sm mt-1">
-                        This document will be automatically assigned to your
-                        responsibility centre
+                        {t("documents.documentWillBeAutomaticallyAssigned")}
                       </p>
                     </div>
                   </div>
@@ -119,15 +122,14 @@ export const ResponsibilityCentreStep: React.FC<
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
                   <Building2 className="h-5 w-5 mr-2" />
-                  Select Responsibility Centre
+                  {t("documents.selectResponsibilityCentre")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Alert className="mb-4 bg-amber-900/20 border-amber-800/30">
                   <Info className="h-4 w-4" />
                   <AlertDescription className="text-amber-300">
-                    Your account is not assigned to a responsibility centre.
-                    Please select a centre for this document.
+                    {t("documents.accountNotAssignedSelectCentre")}
                   </AlertDescription>
                 </Alert>
 
@@ -137,8 +139,7 @@ export const ResponsibilityCentreStep: React.FC<
                       <AlertTriangle className="h-4 w-4 text-amber-400" />
                       <AlertDescription className="text-amber-300 flex flex-col space-y-2">
                         <span>
-                          Unable to load responsibility centres. Please try
-                          again or contact administration.
+                          {t("documents.unableToLoadCentres")}
                         </span>
                         <Button
                           variant="outline"
@@ -147,7 +148,7 @@ export const ResponsibilityCentreStep: React.FC<
                           onClick={onRetryFetch}
                         >
                           <RefreshCw className="h-3 w-3 mr-2" />
-                          Retry Loading
+                          {t("documents.retryLoading")}
                         </Button>
                       </AlertDescription>
                     </Alert>
@@ -158,7 +159,7 @@ export const ResponsibilityCentreStep: React.FC<
                     <ResponsibilityCentreSelect
                       value={selectedCentreId}
                       onValueChange={onCentreChange}
-                      placeholder="Select a responsibility centre"
+                      placeholder={t("documents.selectResponsibilityCentre")}
                       required={true}
                     />
 
@@ -168,8 +169,7 @@ export const ResponsibilityCentreStep: React.FC<
                           <div className="flex items-center space-x-2 text-green-400">
                             <CheckCircle className="h-4 w-4" />
                             <span className="font-medium">
-                              Document will be assigned to the selected
-                              responsibility centre
+                              {t("documents.documentWillBeAssignedToSelected")}
                             </span>
                           </div>
                         </CardContent>

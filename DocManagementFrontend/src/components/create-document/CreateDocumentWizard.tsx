@@ -36,6 +36,7 @@ import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { checkApiConnection } from "@/services/api";
 import circuitService from "@/services/circuitService";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Import step components
 import { DateSelectionStep } from "./steps/DateSelectionStep";
@@ -94,6 +95,8 @@ export default function CreateDocumentWizard({
   const navigate = useNavigate();
   // Get user auth context
   const { user } = useAuth();
+  // Get translation function
+  const { t } = useTranslation();
 
   // Check if user has a responsibility centre
   const userHasResponsibilityCentre =
@@ -222,36 +225,36 @@ export default function CreateDocumentWizard({
   const baseSteps: Step[] = [
     {
       id: 1,
-      title: "Responsibility Centre",
-      description: "Select a responsibility centre",
+      title: t("documents.responsibilityCentre"),
+      description: t("documents.selectResponsibilityCentre"),
       icon: <Building2 className="h-4 w-4" />,
       completed: currentStep > 1,
     },
     {
       id: 2,
-      title: "Document Date",
-      description: "Select the document date",
+      title: t("documents.documentDate"),
+      description: t("documents.selectDocumentDate"),
       icon: <Calendar className="h-4 w-4" />,
       completed: currentStep > 2,
     },
     {
       id: 3,
-      title: "Document Type",
-      description: "Select type and serie",
+      title: t("common.type"),
+      description: t("documents.selectTypeAndSeries"),
       icon: <Layers className="h-4 w-4" />,
       completed: currentStep > 3,
     },
     {
       id: 4,
-      title: "Customer/Vendor",
-      description: "Select customer or vendor",
+      title: t("documents.customerVendor"),
+      description: t("documents.selectCustomerOrVendor"),
       icon: <Building2 className="h-4 w-4" />,
       completed: currentStep > 4,
     },
     {
       id: 5,
-      title: "Content",
-      description: "Add document content",
+      title: t("documents.content"),
+      description: t("documents.addDocumentContent"),
       icon: <FileText className="h-4 w-4" />,
       completed: currentStep > 5,
     },
@@ -260,16 +263,16 @@ export default function CreateDocumentWizard({
   // Circuit step and review step
   const circuitStep: Step = {
     id: 6,
-    title: "Circuit (Optional)",
-    description: "Assign to workflow or skip",
+    title: t("documents.circuitOptional"),
+    description: t("documents.assignToWorkflowOrSkip"),
     icon: <Share2 className="h-4 w-4" />,
     completed: currentStep > 6,
   };
 
   const reviewStep: Step = {
     id: 7,
-    title: "Review",
-    description: "Confirm document details",
+    title: t("documents.review"),
+    description: t("documents.confirmDocumentDetails"),
     icon: <CheckCircle className="h-4 w-4" />,
     completed: false,
   };
@@ -623,9 +626,9 @@ export default function CreateDocumentWizard({
 
   const validateContentStep = () => {
     if (!formData.content.trim()) {
-      setContentError("Document content is required");
-      toast.error("Document content is required", {
-        description: "Please enter content for your document to continue.",
+      setContentError(t("documents.documentContentRequired"));
+      toast.error(t("documents.documentContentRequired"), {
+        description: t("documents.pleaseEnterContentToContinue"),
         duration: 3000,
       });
       return false;
@@ -670,9 +673,9 @@ export default function CreateDocumentWizard({
     }
 
     // Require a responsibility centre selection for users without an assigned center
-    setResponsibilityCentreError("Please select a responsibility centre");
-    toast.error("Responsibility centre is required", {
-      description: "Please select a responsibility centre to continue.",
+    setResponsibilityCentreError(t("documents.pleaseSelectResponsibilityCentre"));
+    toast.error(t("documents.responsibilityCentreRequired"), {
+      description: t("documents.pleaseSelectResponsibilityCentreToContinue"),
       duration: 3000,
     });
     return false;
@@ -1231,31 +1234,31 @@ export default function CreateDocumentWizard({
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl text-blue-100">
             {currentStep === 1
-              ? "Responsibility Centre"
+                              ? t("documents.responsibilityCentre")
               : currentStep === 2
-              ? "Document Date"
+              ? t("documents.documentDate")
               : currentStep === 3
-              ? "Document Type"
+              ? t("common.type")
               : currentStep === 4
-              ? "Document Content"
+              ? t("documents.documentContent")
               : currentStep === 5
-              ? "Circuit Assignment (Optional)"
-              : "Review Document"}
+              ? t("documents.circuitAssignmentOptional")
+              : t("documents.reviewDocument")}
           </DialogTitle>
           <DialogDescription className="text-blue-300">
             {currentStep === 1
               ? userHasResponsibilityCentre
-                ? "Your document will be assigned to your responsibility centre"
-                : "Select a responsibility centre for this document"
+                ? t("documents.documentWillBeAssignedToYourCentre")
+                : t("documents.selectResponsibilityCentreForDocument")
               : currentStep === 2
-              ? "Select the document date"
+              ? t("documents.selectDocumentDate")
               : currentStep === 3
-              ? "Select document type and subtype"
+              ? t("documents.selectDocumentTypeAndSubtype")
               : currentStep === 4
-              ? "Add content for your document"
+              ? t("documents.addContentForDocument")
               : currentStep === 5
-              ? "Assign a circuit or skip this step to create a static document"
-              : "Confirm document details before creation"}
+              ? t("documents.assignCircuitOrSkipToCreateStatic")
+              : t("documents.confirmDocumentDetailsBeforeCreation")}
           </DialogDescription>
         </DialogHeader>
 
@@ -1341,7 +1344,7 @@ export default function CreateDocumentWizard({
                 className="bg-transparent border-blue-900/50 text-blue-200 hover:bg-blue-900/20"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                {t("common.back")}
               </Button>
             )}
           </div>
@@ -1354,7 +1357,7 @@ export default function CreateDocumentWizard({
               className="bg-transparent border-blue-900/50 text-blue-200 hover:bg-blue-900/20"
             >
               <X className="mr-2 h-4 w-4" />
-              Cancel
+              {t("common.cancel")}
             </Button>
             {currentStep < TOTAL_STEPS ? (
               <Button
@@ -1363,7 +1366,7 @@ export default function CreateDocumentWizard({
                 disabled={isSubmitting}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                Next
+                {t("common.next")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
@@ -1373,13 +1376,13 @@ export default function CreateDocumentWizard({
                 disabled={isSubmitting}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                {isSubmitting ? (
+                                  {isSubmitting ? (
                   <>
-                    <div className="spinner mr-2" /> Creating...
+                    <div className="spinner mr-2" /> {t("documents.creating")}
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" /> Create Document
+                    <Save className="mr-2 h-4 w-4" /> {t("documents.createDocument")}
                   </>
                 )}
               </Button>

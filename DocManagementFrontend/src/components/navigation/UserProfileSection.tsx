@@ -4,10 +4,12 @@ import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function UserProfileSection() {
   const { user, refreshUserInfo } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { t } = useTranslation();
 
   if (!user) return null;
 
@@ -91,7 +93,7 @@ export function UserProfileSection() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-0.5">
-                    Responsibility Centre
+                    {t("navigation.responsibilityCenter")}
                   </p>
                   <button
                     onClick={handleRefreshUserInfo}
@@ -111,7 +113,7 @@ export function UserProfileSection() {
                     responsibilityCenter.descr || responsibilityCenter.code
                   ) : (
                     <span className="text-blue-600 dark:text-blue-300/70 font-normal">
-                      Not Assigned
+                      {t("navigation.notAssigned")}
                     </span>
                   )}
                 </p>
@@ -133,7 +135,7 @@ export function UserProfileSection() {
           >
             <div className="flex items-center space-x-2">
               <Settings className="h-3.5 w-3.5" />
-              <span>Manage Account</span>
+              <span>{t("navigation.manageAccount")}</span>
             </div>
             <ChevronRight className="h-3 w-3 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
           </Link>
@@ -151,7 +153,7 @@ export function UserProfileSection() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">
-                Centre Code
+                {t("navigation.centerCode")}
               </p>
               <p className="text-sm text-blue-900 dark:text-white font-mono">
                 {responsibilityCenter.code}

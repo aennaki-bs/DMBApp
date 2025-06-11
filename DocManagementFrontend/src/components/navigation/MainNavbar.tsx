@@ -24,6 +24,7 @@ import { useNavSearch } from "@/hooks/useNavSearch";
 import { SearchResults } from "./SearchResults";
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function MainNavbar() {
   const { user, logout } = useAuth();
@@ -34,6 +35,7 @@ export function MainNavbar() {
     isSearching,
     navigateToResult,
   } = useNavSearch();
+  const { t } = useTranslation();
 
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -114,7 +116,7 @@ export function MainNavbar() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 group-hover:text-blue-800 dark:text-blue-300 dark:group-hover:text-blue-200 transition-colors duration-200" />
             <Input
               className="pl-9 pr-10 bg-blue-50 border-blue-200 text-blue-900 placeholder:text-blue-500 dark:bg-blue-950/40 dark:border-blue-800/30 dark:text-white dark:placeholder:text-blue-300/50 w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md transition-all duration-200 group-hover:border-blue-700/50 dark:group-hover:bg-blue-900/40 backdrop-blur-sm shadow-inner"
-              placeholder="Search pages, navigation, documents..."
+              placeholder={t("navigation.searchPlaceholder")}
               value={searchQuery}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
@@ -186,7 +188,9 @@ export function MainNavbar() {
                 align="end"
                 className="w-56 bg-white border-blue-200 text-blue-900 dark:bg-[#0a1033] dark:border-blue-900/50 dark:text-blue-100 animate-in fade-in-50 zoom-in-95 shadow-lg dark:shadow-blue-900/20"
               >
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {t("navigation.myAccount")}
+                </DropdownMenuLabel>
 
                 <DropdownMenuSeparator className="bg-blue-800/30" />
 
@@ -195,7 +199,7 @@ export function MainNavbar() {
                     to="/profile"
                     className="flex items-center cursor-pointer w-full hover:bg-blue-800/30"
                   >
-                    <User className="mr-2 h-4 w-4" /> Profile
+                    <User className="mr-2 h-4 w-4" /> {t("navigation.profile")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -204,7 +208,8 @@ export function MainNavbar() {
                     to="/settings"
                     className="flex items-center cursor-pointer w-full hover:bg-blue-800/30"
                   >
-                    <Settings className="mr-2 h-4 w-4" /> Settings
+                    <Settings className="mr-2 h-4 w-4" />{" "}
+                    {t("navigation.settings")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -214,7 +219,7 @@ export function MainNavbar() {
                   onClick={handleLogout}
                   className="flex items-center cursor-pointer hover:bg-blue-800/30 text-red-400 focus:text-red-400"
                 >
-                  <LogOut className="mr-2 h-4 w-4" /> Logout
+                  <LogOut className="mr-2 h-4 w-4" /> {t("navigation.logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

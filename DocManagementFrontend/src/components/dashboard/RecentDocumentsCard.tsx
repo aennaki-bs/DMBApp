@@ -1,9 +1,9 @@
-
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Clock } from "lucide-react";
 import { Document } from "@/models/document";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface RecentDocumentsCardProps {
   documents: Document[];
@@ -11,23 +11,35 @@ interface RecentDocumentsCardProps {
 
 export function RecentDocumentsCard({ documents }: RecentDocumentsCardProps) {
   const navigate = useNavigate();
+  const { t, formatDate } = useTranslation();
   
   if (!documents || documents.length === 0) return null;
+
+  const getStatusText = (status: number) => {
+    switch (status) {
+      case 1:
+        return t("dashboard.approved");
+      case 2:
+        return t("dashboard.pending");
+      default:
+        return t("dashboard.draft");
+    }
+  };
   
   return (
     <Card className="glass-card">
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-medium text-white">Recent Documents</h3>
-            <p className="text-sm text-blue-300/80">Recently created or modified documents</p>
+            <h3 className="text-lg font-medium text-white">{t("dashboard.recentDocuments")}</h3>
+            <p className="text-sm text-blue-300/80">{t("dashboard.recentDocumentsSubtitle")}</p>
           </div>
           <Button 
             onClick={() => navigate('/documents')}
             variant="outline"
             className="border-blue-800/40 hover:bg-blue-800/20 text-blue-300"
           >
-            View All
+            {t("dashboard.viewAll")}
           </Button>
         </div>
         
@@ -45,11 +57,11 @@ export function RecentDocumentsCard({ documents }: RecentDocumentsCardProps) {
                 <div>
                   <p className="font-medium text-white">{doc.title}</p>
                   <div className="flex items-center gap-2 text-sm text-blue-300/80">
-                    <span>{doc.documentType?.typeName || 'No document type'}</span>
+                    <span>{doc.documentType?.typeName || t("dashboard.noDocumentType")}</span>
                     <span>•</span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" /> 
-                      {new Date(doc.updatedAt).toLocaleDateString()}
+                      {formatDate(new Date(doc.updatedAt))}
                     </span>
                   </div>
                 </div>
@@ -59,7 +71,7 @@ export function RecentDocumentsCard({ documents }: RecentDocumentsCardProps) {
                 doc.status === 2 ? 'bg-amber-900/30 text-amber-400' : 
                 'bg-blue-900/30 text-blue-400'
               }`}>
-                {doc.status === 1 ? 'Approved' : doc.status === 2 ? 'Pending' : 'Draft'}
+                {getStatusText(doc.status)}
               </div>
             </div>
           ))}

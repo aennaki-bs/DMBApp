@@ -4,6 +4,7 @@ import { format, isValid } from "date-fns";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DateSelectionStepProps {
   docDate: string;
@@ -24,6 +25,8 @@ export const DateSelectionStep = ({
   onComptableDateChange,
   selectedSubType,
 }: DateSelectionStepProps) => {
+  const { t, tWithParams } = useTranslation();
+  
   // State for date values
   const [documentDate, setDocumentDate] = useState<Date | undefined>(() => {
     if (!docDate) return new Date();
@@ -128,9 +131,9 @@ export const DateSelectionStep = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-blue-400" />
-            <h3 className="text-base font-medium text-white">Document Date</h3>
+            <h3 className="text-base font-medium text-white">{t("documents.documentDate")}</h3>
           </div>
-          <span className="text-xs text-blue-300">Required</span>
+          <span className="text-xs text-blue-300">{t("common.required")}</span>
         </div>
 
         <DatePicker
@@ -150,7 +153,7 @@ export const DateSelectionStep = ({
           <div className="text-xs text-amber-400 flex items-center gap-1.5 mt-1">
             <Info className="h-3.5 w-3.5" />
             <span>
-              Selected date is outside the valid range for this document type
+              {t("documents.dateOutsideValidRange")}
             </span>
           </div>
         )}
@@ -162,13 +165,10 @@ export const DateSelectionStep = ({
           <Info className="h-5 w-5 mt-0.5 text-blue-400" />
           <div>
             <h4 className="text-sm font-medium text-blue-400">
-              About Date Selection
+              {t("documents.aboutDateSelection")}
             </h4>
             <p className="text-sm text-gray-300 mt-1">
-              <strong>Important:</strong> Only document types with active series
-              for the selected date will be available. If you don't
-              see a document type, it means there are no active series for that
-              type on this date.
+              <strong>{t("common.important")}:</strong> {t("documents.importantDateInfo")}
             </p>
           </div>
         </div>
@@ -180,21 +180,20 @@ export const DateSelectionStep = ({
           <div className="flex items-center gap-2">
             <Calculator className="h-5 w-5 text-green-400" />
             <h3 className="text-base font-medium text-white">
-              Accounting Date
+              {t("documents.accountingDate")}
             </h3>
           </div>
-          <span className="text-xs text-gray-400">(Optional)</span>
+          <span className="text-xs text-gray-400">({t("common.optional")})</span>
         </div>
         <p className="text-sm text-gray-400">
-          The accounting date is used for financial reporting purposes and may
-          differ from the document date.
+          {t("documents.accountingDateDescription")}
         </p>
 
         <DatePicker
           ref={accountingDateRef}
           value={formatDateForInput(accountingDate)}
           onDateChange={handleAccountingDateChange}
-          placeholder="Select date"
+          placeholder={t("common.selectDate")}
         />
 
         {comptableDateError && (
@@ -226,10 +225,10 @@ export const DateSelectionStep = ({
                   isDateValid ? "text-blue-400" : "text-amber-400"
                 }`}
               >
-                Valid Date Range for {selectedSubType.subTypeKey}
+                {tWithParams("documents.validDateRangeFor", { subType: selectedSubType.subTypeKey })}
               </h4>
               <p className="text-sm text-gray-300 mt-1">
-                Documents of this subtype must have a date between:
+                {t("documents.documentsOfThisSubtypeMustHaveDate")}
               </p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2.5">
                 <div className="flex items-center gap-2">
@@ -241,7 +240,7 @@ export const DateSelectionStep = ({
                     )}
                   </span>
                 </div>
-                <span className="hidden sm:inline text-gray-400">to</span>
+                <span className="hidden sm:inline text-gray-400">{t("common.to")}</span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-red-500"></div>
                   <span className="text-white font-medium">
@@ -252,7 +251,7 @@ export const DateSelectionStep = ({
 
               {!isDateValid && (
                 <p className="text-amber-400 text-sm mt-3 font-medium">
-                  The selected date is outside the valid range.
+                  {t("documents.selectedDateOutsideRange")}
                 </p>
               )}
             </div>

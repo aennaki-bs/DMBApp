@@ -17,9 +17,11 @@ import { format } from "date-fns";
 import { DashboardCard } from "@/components/ui/dashboard-card";
 import { Link } from "react-router-dom";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState<"day" | "week" | "month">("week");
 
   const { data: dashboardStats } = useQuery({
@@ -59,14 +61,14 @@ export default function Dashboard() {
       {/* Breadcrumb */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-blue-400/80">
-          <span>Home</span>
+          <span>{t("dashboard.home")}</span>
           <span>/</span>
-          <span className="text-blue-100">Dashboard</span>
+          <span className="text-blue-100">{t("dashboard.title")}</span>
         </div>
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-blue-400" />
           <span className="text-sm text-blue-300">
-            Last updated: {format(new Date(), "MMM d, yyyy HH:mm")}
+            {t("dashboard.lastUpdated")}: {format(new Date(), "MMM d, yyyy HH:mm")}
           </span>
         </div>
       </div>
@@ -90,13 +92,13 @@ export default function Dashboard() {
                 value="activity"
                 className="data-[state=active]:bg-blue-600"
               >
-                Activity Overview
+                {t("dashboard.activityOverview")}
               </TabsTrigger>
               <TabsTrigger
                 value="weekly"
                 className="data-[state=active]:bg-blue-600"
               >
-                Weekly Stats
+                {t("dashboard.weeklyStats")}
               </TabsTrigger>
             </TabsList>
 
@@ -109,7 +111,7 @@ export default function Dashboard() {
                 }`}
                 onClick={() => setTimeRange("day")}
               >
-                24h
+                {t("dashboard.timeRange24h")}
               </Button>
               <Button
                 variant="outline"
@@ -119,7 +121,7 @@ export default function Dashboard() {
                 }`}
                 onClick={() => setTimeRange("week")}
               >
-                7d
+                {t("dashboard.timeRange7d")}
               </Button>
               <Button
                 variant="outline"
@@ -129,7 +131,7 @@ export default function Dashboard() {
                 }`}
                 onClick={() => setTimeRange("month")}
               >
-                30d
+                {t("dashboard.timeRange30d")}
               </Button>
             </div>
           </div>
@@ -151,7 +153,7 @@ export default function Dashboard() {
       {/* Recent Documents */}
       {recentDocuments && recentDocuments.length > 0 && (
         <DashboardCard
-          title="Recent Documents"
+          title={t("dashboard.recentDocuments")}
           // headerAction={
           //   <Button variant="outline" size="sm" className="border-blue-900/30">
           //     <Filter className="h-4 w-4 mr-2" />

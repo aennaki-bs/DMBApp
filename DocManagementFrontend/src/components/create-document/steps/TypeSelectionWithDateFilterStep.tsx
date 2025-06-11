@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/services/api";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface TypeSelectionWithDateFilterStepProps {
   documentTypes: DocumentType[];
@@ -54,6 +55,7 @@ export const TypeSelectionWithDateFilterStep = ({
   documentDate,
   jumpToDateStep,
 }: TypeSelectionWithDateFilterStepProps) => {
+  const { t } = useTranslation();
   const [isLoadingSubTypes, setIsLoadingSubTypes] = useState(false);
   const [isLoadingTypes, setIsLoadingTypes] = useState(false);
   const [filteredSubTypes, setFilteredSubTypes] = useState<SubType[]>([]);
@@ -333,12 +335,11 @@ export const TypeSelectionWithDateFilterStep = ({
             <Calendar className="h-5 w-5 mt-0.5 text-blue-400" />
             <div>
               <h4 className="text-sm font-medium text-blue-400">
-                Filtering by Document Date
+                {t("documents.filteringByDocumentDate")}
               </h4>
               <p className="text-sm text-gray-300 mt-1">
-                <strong>Important:</strong> Only showing document types and
-                series that are
-                <span className="text-green-400"> active</span> and valid for:{" "}
+                <strong>{t("common.important")}:</strong> {t("documents.onlyShowingDocumentTypesAndSeries")}
+                <span className="text-green-400"> {t("common.active")}</span> {t("documents.andValidFor")}{" "}
                 <span className="font-medium text-white">
                   {format(new Date(documentDate), "MMMM d, yyyy")}
                 </span>
@@ -355,7 +356,7 @@ export const TypeSelectionWithDateFilterStep = ({
           className="text-sm font-medium text-gray-200 flex items-center gap-2"
         >
           <Tag className="h-4 w-4 text-blue-400" />
-          Document Type*
+          {t("documents.documentType")}*
         </Label>
 
         {isLoadingTypes ? (
@@ -363,7 +364,7 @@ export const TypeSelectionWithDateFilterStep = ({
             <Skeleton className="h-10 w-full bg-gray-800/50" />
             <div className="flex items-center gap-2 text-sm text-blue-400">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Loading document types for selected date...</span>
+              <span>{t("documents.loadingDocumentTypesForDate")}</span>
             </div>
           </div>
         ) : availableTypes.length === 0 ? (
@@ -437,7 +438,7 @@ export const TypeSelectionWithDateFilterStep = ({
                     ? `${selectedType.typeName} ${
                         selectedType.typeKey ? `(${selectedType.typeKey})` : ""
                       }`
-                    : "Select document type"}
+                    : t("documents.selectDocumentType")}
                 </span>
                 <ChevronDown
                   className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${

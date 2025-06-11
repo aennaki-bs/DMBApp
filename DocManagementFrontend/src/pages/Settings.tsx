@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { useSettings } from "@/context/SettingsContext";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { translations } from "@/translations";
+import { useTranslation } from "@/hooks/useTranslation";
 import { toast } from "sonner";
 import { ThemeSelector } from "@/components/ui/ThemeSelector";
 import { useThemeContext } from "@/context/ThemeContext";
@@ -32,27 +32,27 @@ import { getThemeClasses } from "@/utils/themeUtils";
 const backgroundOptions = [
   {
     id: "default",
-    name: "Default",
+    name: "backgrounds.default",
     url: "https://www.tigernix.com/wp-content/uploads/2024/01/why-singapore-needs-automation-erp-tigernix-singapore.jpg",
     preview:
       "https://www.tigernix.com/wp-content/uploads/2024/01/why-singapore-needs-automation-erp-tigernix-singapore.jpg",
-    description: "Professional business environment",
+    description: "backgrounds.defaultDescription",
   },
   {
     id: "modern-office",
-    name: "Modern Office",
+    name: "backgrounds.modernOffice",
     url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&h=1080&fit=crop",
     preview:
       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop",
-    description: "Clean workspace aesthetic",
+    description: "backgrounds.modernOfficeDescription",
   },
   {
     id: "minimal-gradient",
-    name: "Minimal Gradient",
+    name: "backgrounds.minimalGradient",
     url: "https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&h=1080&fit=crop",
     preview:
       "https://images.unsplash.com/photo-1557683316-973673baf926?w=800&h=600&fit=crop",
-    description: "Smooth, minimal design",
+    description: "backgrounds.minimalGradientDescription",
   },
 ];
 
@@ -61,17 +61,16 @@ const Settings = () => {
   const { theme: newTheme } = useThemeContext();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t, tWithParams } = useTranslation();
 
   // Background Settings
   const [selectedBackground, setSelectedBackground] = useState(() => {
     return localStorage.getItem("selectedBackground") || "default";
   });
 
-  const t = translations[language].settings;
-
   const handleLanguageChange = (value: "en" | "fr" | "es") => {
     setLanguage(value);
-    toast.success("Language updated successfully");
+    toast.success(t("settings.languageUpdated"));
   };
 
   const handleBackgroundChange = (backgroundId: string) => {
@@ -89,7 +88,11 @@ const Settings = () => {
       // Dispatch custom event to notify Layout component
       window.dispatchEvent(new CustomEvent("backgroundChanged"));
 
-      toast.success(`Background changed to ${background.name}`);
+      toast.success(
+        tWithParams("settings.backgroundChanged", {
+          name: t(`settings.${background.name}`),
+        })
+      );
     }
   };
 
@@ -127,8 +130,8 @@ const Settings = () => {
     <div className="min-h-screen bg-blue-25 dark:bg-[#070b28] p-6">
       {/* Header */}
       <PageHeader
-        title="Application Settings"
-        description="Customize your DocuVerse experience"
+        title={t("settings.title")}
+        description={t("settings.subtitle")}
         icon={<SettingsIcon className="h-6 w-6 text-blue-400" />}
       />
 
@@ -143,14 +146,14 @@ const Settings = () => {
           {/* Enhanced Theme Settings */}
           <motion.div variants={itemVariants} className="lg:col-span-2">
             <DashboardCard
-              title="Theme Selection"
+              title={t("settings.themeSelection")}
               headerAction={
                 <Badge
                   variant="secondary"
                   className="bg-blue-500/10 text-blue-400 border-blue-500/20"
                 >
                   <Palette className="h-3 w-3 mr-1" />
-                  Enhanced
+                  {t("settings.enhanced")}
                 </Badge>
               }
               className="h-full"
@@ -158,15 +161,15 @@ const Settings = () => {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <p className="text-blue-700 dark:text-blue-300/80 text-sm">
-                    Choose from our theme collection: Standard, Light, and Dark
+                    {t("settings.themeDescription")}
                   </p>
                   <Badge
                     variant="outline"
                     className="bg-green-500/10 text-green-400 border-green-500/30"
                   >
-                    Current:{" "}
+                    {t("settings.currentTheme")}:{" "}
                     {newTheme === "standard"
-                      ? "Standard"
+                      ? t("settings.standardTheme")
                       : newTheme.charAt(0).toUpperCase() + newTheme.slice(1)}
                   </Badge>
                 </div>
@@ -191,30 +194,30 @@ const Settings = () => {
           {/* Language Settings */}
           <motion.div variants={itemVariants}>
             <DashboardCard
-              title="Language & Region"
+              title={t("settings.languageAndRegion")}
               headerAction={
                 <Badge
                   variant="secondary"
                   className="bg-green-500/10 text-green-400 border-green-500/20"
                 >
                   <Globe className="h-3 w-3 mr-1" />
-                  Global
+                  {t("settings.global")}
                 </Badge>
               }
               className="h-full"
             >
               <div className="space-y-6">
                 <p className="text-blue-700 dark:text-blue-300/80 text-sm">
-                  Select your preferred display language
+                  {t("settings.selectLanguageDescription")}
                 </p>
 
                 <div className="space-y-4">
                   <Label className="text-blue-900 dark:text-blue-100 font-semibold">
-                    Display Language
+                    {t("settings.displayLanguage")}
                   </Label>
                   <Select value={language} onValueChange={handleLanguageChange}>
                     <SelectTrigger className="bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-800/30 dark:text-blue-100 h-12">
-                      <SelectValue placeholder="Select Language" />
+                      <SelectValue placeholder={t("settings.selectLanguage")} />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-blue-200 dark:bg-[#0f1642] dark:border-blue-800/30">
                       <SelectItem
@@ -310,21 +313,20 @@ const Settings = () => {
           {/* Background Settings - Full Width */}
           <motion.div variants={itemVariants} className="lg:col-span-3">
             <DashboardCard
-              title="Background Selection"
+              title={t("settings.backgroundSelection")}
               headerAction={
                 <Badge
                   variant="secondary"
                   className="bg-purple-500/10 text-purple-400 border-purple-500/20"
                 >
                   <Monitor className="h-3 w-3 mr-1" />
-                  Themes
+                  {t("settings.themes")}
                 </Badge>
               }
             >
               <div className="space-y-8">
                 <p className="text-blue-700 dark:text-blue-300/80">
-                  Choose from our curated background collection to personalize
-                  your workspace
+                  {t("settings.backgroundDescription")}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -375,10 +377,10 @@ const Settings = () => {
                           {/* Content */}
                           <div className="absolute bottom-0 left-0 right-0 p-4">
                             <h3 className="text-white font-bold text-lg mb-1">
-                              {background.name}
+                              {t(`settings.${background.name}`)}
                             </h3>
                             <p className="text-white/80 text-sm">
-                              {background.description}
+                              {t(`settings.${background.description}`)}
                             </p>
                           </div>
                         </div>

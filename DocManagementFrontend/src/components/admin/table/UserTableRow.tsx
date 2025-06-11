@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UserTableRowProps {
   user: UserDto;
@@ -55,6 +56,7 @@ export function UserTableRow({
 }: UserTableRowProps) {
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const currentRole = getRoleString(user.role);
+  const { t } = useTranslation();
 
   const handleStatusToggle = () => {
     setShowBlockDialog(true);
@@ -124,7 +126,7 @@ export function UserTableRow({
               className="bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/30"
             >
               <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-              Active
+              {t("userManagement.active")}
             </Badge>
           ) : (
             <Badge
@@ -132,7 +134,7 @@ export function UserTableRow({
               className="bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-900/30"
             >
               <XCircle className="w-3.5 h-3.5 mr-1" />
-              Inactive
+              {t("userManagement.inactive")}
             </Badge>
           )}
         </TableCell>
@@ -157,7 +159,7 @@ export function UserTableRow({
                 side="top"
                 className="bg-white dark:bg-blue-900/90 text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-500/30"
               >
-                {user.isActive ? "Block User" : "Unblock User"}
+                {user.isActive ? t("userManagement.blockUser") : t("userManagement.unblockUser")}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

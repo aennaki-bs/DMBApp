@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const UserManagement = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Check if user is authenticated and has admin role
@@ -21,12 +23,10 @@ const UserManagement = () => {
     }
 
     if (user?.role !== "Admin") {
-      toast.error(
-        "You do not have permission to access the user management page"
-      );
+      toast.error(t("userManagement.noPermission"));
       navigate("/dashboard");
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, t]);
 
   return (
     <div className="space-y-6 p-6">
@@ -35,10 +35,10 @@ const UserManagement = () => {
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-blue-900 dark:text-white flex items-center">
               <Users className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" />{" "}
-              User Management
+              {t("userManagement.title")}
             </h1>
             <p className="text-sm md:text-base text-blue-700 dark:text-gray-400">
-              Manage users and their permissions
+              {t("userManagement.subtitle")}
             </p>
           </div>
           <Button
@@ -46,7 +46,7 @@ const UserManagement = () => {
             className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
           >
             <UserPlus className="h-4 w-4" />
-            Create User
+            {t("userManagement.createUser")}
           </Button>
         </div>
       </div>

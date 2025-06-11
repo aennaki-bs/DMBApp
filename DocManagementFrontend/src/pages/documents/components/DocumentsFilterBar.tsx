@@ -55,6 +55,7 @@ import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const DATE_PRESETS = [
   {
@@ -95,6 +96,7 @@ const DATE_PRESETS = [
 ];
 
 export default function DocumentsFilterBar() {
+  const { t } = useTranslation();
   const {
     searchQuery,
     setSearchQuery,
@@ -414,7 +416,7 @@ export default function DocumentsFilterBar() {
         <div className="flex-1 flex items-center gap-2 min-w-0 bg-[#1e2a4a] rounded-lg p-1 border border-blue-900/40 shadow-inner">
           <div className="relative flex-1">
             <Input
-              placeholder="Search documents..."
+              placeholder={t("documents.searchDocuments")}
               value={searchQuery}
               onChange={handleSearchChange}
               className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"

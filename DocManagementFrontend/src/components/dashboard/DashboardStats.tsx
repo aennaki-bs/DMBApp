@@ -7,37 +7,40 @@ import {
   GitBranch,
   ClipboardCheck,
 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DashboardStatsProps {
   stats: DashboardStatsType | undefined;
 }
 
 export function DashboardStats({ stats }: DashboardStatsProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
-        title="Total Documents"
+        title={t("dashboard.totalDocuments")}
         value={stats?.totalDocuments || 0}
         change={5}
         icon={<FileText className="h-6 w-6 text-blue-400" />}
       />
 
       <StatCard
-        title="Active Circuits"
+        title={t("dashboard.activeCircuits")}
         value={stats?.activeCircuits || 0}
         change={12}
         icon={<GitBranch className="h-6 w-6 text-blue-400" />}
       />
 
       <StatCard
-        title="Pending Approvals"
+        title={t("dashboard.pendingApprovals")}
         value={stats?.pendingApprovals || 0}
         change={-9}
         icon={<ClipboardCheck className="h-6 w-6 text-blue-400" />}
       />
 
       <StatCard
-        title="Team Members"
+        title={t("dashboard.teamMembers")}
         value={stats?.teamMembers || 0}
         change={15}
         icon={<Users className="h-6 w-6 text-blue-400" />}

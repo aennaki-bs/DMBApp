@@ -82,6 +82,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { AnimatePresence } from "framer-motion";
 import responsibilityCentreService from "@/services/responsibilityCentreService";
 import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const mockDocuments: Document[] = [
   {
@@ -204,6 +205,11 @@ const mockDocuments: Document[] = [
 const Documents = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t, tWithParams } = useTranslation();
+  
+  // Debug: Check if translations are working
+  console.log('Documents page translation test:', t('documents.title'));
+  
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -262,7 +268,7 @@ const Documents = () => {
       setUseFakeData(false);
     } catch (error) {
       console.error("Failed to fetch documents:", error);
-      toast.error("Failed to load documents. Using test data instead.");
+      toast.error(t("documents.failedToLoad"));
       setDocuments(mockDocuments);
       setTotalPages(Math.ceil(mockDocuments.length / pageSize));
       setUseFakeData(true);
@@ -273,7 +279,7 @@ const Documents = () => {
 
   useEffect(() => {
     if (useFakeData) {
-      toast.info("You are currently viewing test data", {
+      toast.info(t("documents.viewingTestData"), {
         duration: 5000,
         position: "top-right",
       });
@@ -286,7 +292,7 @@ const Documents = () => {
 
   const handleSelectDocument = (id: number) => {
     if (!canManageDocuments) {
-      toast.error("You do not have permission to select documents");
+      toast.error(t("documents.noPermissionSelect"));
       return;
     }
 
@@ -301,7 +307,7 @@ const Documents = () => {
 
   const handleSelectAll = () => {
     if (!canManageDocuments) {
-      toast.error("You do not have permission to select documents");
+      toast.error(t("documents.noPermissionSelect"));
       return;
     }
 
@@ -314,7 +320,7 @@ const Documents = () => {
 
   const openDeleteDialog = (id?: number) => {
     if (!canManageDocuments) {
-      toast.error("You do not have permission to delete documents");
+      toast.error(t("documents.noPermissionDelete"));
       return;
     }
 
@@ -335,10 +341,10 @@ const Documents = () => {
           setDocuments((prev) =>
             prev.filter((doc) => doc.id !== documentToDelete)
           );
-          toast.success("Document deleted successfully (simulated)");
+          toast.success(t("documents.documentDeletedSimulated"));
         } else {
           await documentService.deleteDocument(documentToDelete);
-          toast.success("Document deleted successfully");
+          toast.success(t("documents.documentDeleted"));
         }
       } else if (selectedDocuments.length > 0) {
         if (useFakeData) {
@@ -346,12 +352,12 @@ const Documents = () => {
             prev.filter((doc) => !selectedDocuments.includes(doc.id))
           );
           toast.success(
-            `${selectedDocuments.length} documents deleted successfully (simulated)`
+            tWithParams("documents.documentsDeletedSimulated", { count: selectedDocuments.length })
           );
         } else {
           await documentService.deleteMultipleDocuments(selectedDocuments);
           toast.success(
-            `${selectedDocuments.length} documents deleted successfully`
+            tWithParams("documents.documentsDeleted", { count: selectedDocuments.length })
           );
         }
         setSelectedDocuments([]);
@@ -364,7 +370,7 @@ const Documents = () => {
       }
     } catch (error) {
       console.error("Failed to delete document(s):", error);
-      toast.error("Failed to delete document(s)");
+      toast.error(t("documents.failedToDelete"));
     } finally {
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
@@ -373,7 +379,7 @@ const Documents = () => {
 
   const openAssignCircuitDialog = (document: Document) => {
     if (!document) {
-      toast.error("No document selected");
+      toast.error(t("documents.noDocumentSelected"));
       return;
     }
 
@@ -382,7 +388,7 @@ const Documents = () => {
   };
 
   const handleAssignCircuitSuccess = () => {
-    toast.success("Document assigned to circuit successfully");
+    toast.success(t("documents.circuitAssignedSuccess"));
     if (!useFakeData) {
       fetchDocuments();
     }
@@ -539,17 +545,17 @@ const Documents = () => {
       case 0:
         return (
           <Badge className="bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 border-amber-500/30">
-            Draft
+            {t("documents.statusDraft")}
           </Badge>
         );
       case 1:
         return (
           <Badge className="bg-green-600/20 text-green-500 hover:bg-green-600/30 border-green-500/30">
-            In Progress
+            {t("documents.statusInProgress")}
           </Badge>
         );
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge variant="outline">{t("common.unknown")}</Badge>;
     }
   };
 
@@ -595,7 +601,7 @@ const Documents = () => {
   if (dateRange?.from) {
     filterBadges.push({
       id: "date",
-      label: "Date Range",
+      label: t("documents.dateRange"),
       value: dateRange.to
         ? `${format(dateRange.from, "MMM d, yyyy")} - ${format(
             dateRange.to,
@@ -610,15 +616,15 @@ const Documents = () => {
   if (statusFilter !== "any") {
     filterBadges.push({
       id: "status",
-      label: "Status",
+      label: t("common.status"),
       value:
         statusFilter === "0"
-          ? "Draft"
+          ? t("documents.statusDraft")
           : statusFilter === "1"
-          ? "In Progress"
+          ? t("documents.statusInProgress")
           : statusFilter === "2"
-          ? "Completed"
-          : "Unknown",
+          ? t("documents.statusCompleted")
+          : t("common.unknown"),
       onRemove: () => setStatusFilter("any"),
     });
   }
@@ -626,38 +632,38 @@ const Documents = () => {
   if (typeFilter !== "any") {
     filterBadges.push({
       id: "type",
-      label: "Type",
+      label: t("common.type"),
       value:
         typeFilter === "1"
-          ? "Proposal"
+          ? t("documents.typeProposal")
           : typeFilter === "2"
-          ? "Report"
+          ? t("documents.typeReport")
           : typeFilter === "3"
-          ? "Minutes"
+          ? t("documents.typeMinutes")
           : typeFilter === "4"
-          ? "Specifications"
-          : "Strategy",
+          ? t("documents.typeSpecifications")
+          : t("documents.typeStrategy"),
       icon: <Tag className="h-3.5 w-3.5" />,
       onRemove: () => setTypeFilter("any"),
     });
   }
 
   if (responsibilityCentreFilter !== "any") {
-    let value = "Unknown";
+    let value = t("common.unknown");
     if (responsibilityCentreFilter === "none") {
-      value = "No Centre Assigned";
+      value = t("documents.noCentreAssigned");
     } else {
       const selectedCentre = responsibilityCentres.find(
         (centre) => centre.id.toString() === responsibilityCentreFilter
       );
       value = selectedCentre
         ? `${selectedCentre.code} - ${selectedCentre.descr}`
-        : "Unknown";
+        : t("common.unknown");
     }
 
     filterBadges.push({
       id: "responsibilityCentre",
-      label: "Responsibility Centre",
+      label: t("documents.responsibilityCentre"),
       value: value,
       icon: <Building2 className="h-3.5 w-3.5" />,
       onRemove: () => setResponsibilityCentreFilter("any"),
@@ -670,7 +676,7 @@ const Documents = () => {
   if (selectedDocuments.length === 1) {
     bulkActions.push({
       id: "assign-circuit",
-      label: "Assign Circuit",
+      label: t("documents.assignCircuit"),
       icon: <GitBranch className="h-4 w-4" />,
       onClick: () => {
         const selectedDoc = documents.find(
@@ -687,7 +693,7 @@ const Documents = () => {
 
   bulkActions.push({
     id: "delete",
-    label: "Delete",
+    label: t("common.delete"),
     icon: <Trash className="h-4 w-4" />,
     onClick: () => openDeleteDialog(),
     variant: "destructive",
@@ -697,17 +703,17 @@ const Documents = () => {
 
   // Search fields
   const searchFields = [
-    { id: "all", label: "All fields" },
-    { id: "title", label: "Title" },
-    { id: "documentKey", label: "Document Code" },
-    { id: "content", label: "Content" },
+    { id: "all", label: t("documents.allFields") },
+    { id: "title", label: t("common.title") },
+    { id: "documentKey", label: t("documents.documentCode") },
+    { id: "content", label: t("documents.content") },
   ];
 
   return (
     <div className="space-y-6 p-6">
       <PageHeader
-        title="Documents"
-        description="Manage your documents and files"
+        title={`TEST TRANSLATION: ${t("documents.title")} - ${new Date().toLocaleTimeString()}`}
+        description={`SUBTITLE TEST: ${t("documents.subtitle")}`}
         icon={<FileText className="h-6 w-6 text-blue-400" />}
         actions={
           <>
@@ -718,7 +724,7 @@ const Documents = () => {
                 className="border-amber-500/50 text-amber-500 hover:bg-amber-500/20"
               >
                 <AlertCircle className="mr-2 h-4 w-4" />
-                Using Test Data
+                {t("documents.usingTestData")}
               </Button>
             )}
             {canManageDocuments ? (
@@ -728,7 +734,7 @@ const Documents = () => {
               >
                 <Link to="/documents/create">
                   <Plus className="h-4 w-4" />
-                  New Document
+                  {t("documents.newDocument")}
                 </Link>
               </Button>
             ) : (
@@ -736,11 +742,11 @@ const Documents = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button className="bg-blue-600 hover:bg-blue-700" disabled>
-                      <Plus className="mr-2 h-4 w-4" /> New Document
+                      <Plus className="mr-2 h-4 w-4" /> {t("documents.newDocument")}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                    <p>Only Admin or FullUser can create documents</p>
+                    <p>{t("documents.onlyAdminCanCreate")}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -756,36 +762,36 @@ const Documents = () => {
           searchFields={searchFields}
           selectedSearchField={searchField}
           onSearchFieldChange={setSearchField}
-          placeholder="Search documents..."
+          placeholder={t("documents.searchDocuments")}
           filterOpen={filterOpen}
           onFilterOpenChange={setFilterOpen}
           filterContent={
             <FilterContent
-              title="Filter Documents"
+              title={t("documents.filterDocuments")}
               onClearAll={clearAllFilters}
               onApply={() => setFilterOpen(false)}
             >
               {/* Status filter */}
               <div>
                 <label className="block text-sm text-blue-300 mb-1">
-                  Status
+                  {t("common.status")}
                 </label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t("documents.selectStatus")} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
                     <SelectItem value="any" className="hover:bg-blue-800/40">
-                      Any Status
+                      {t("documents.anyStatus")}
                     </SelectItem>
                     <SelectItem value="0" className="hover:bg-blue-800/40">
-                      Draft
+                      {t("documents.statusDraft")}
                     </SelectItem>
                     <SelectItem value="1" className="hover:bg-blue-800/40">
-                      In Progress
+                      {t("documents.statusInProgress")}
                     </SelectItem>
                     <SelectItem value="2" className="hover:bg-blue-800/40">
-                      Completed
+                      {t("documents.statusCompleted")}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -794,30 +800,30 @@ const Documents = () => {
               {/* Document Type filter */}
               <div>
                 <label className="block text-sm text-blue-300 mb-1">
-                  Document Type
+                  {t("documents.documentType")}
                 </label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={t("documents.selectType")} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
                     <SelectItem value="any" className="hover:bg-blue-800/40">
-                      Any Type
+                      {t("documents.anyType")}
                     </SelectItem>
                     <SelectItem value="1" className="hover:bg-blue-800/40">
-                      Proposal
+                      {t("documents.typeProposal")}
                     </SelectItem>
                     <SelectItem value="2" className="hover:bg-blue-800/40">
-                      Report
+                      {t("documents.typeReport")}
                     </SelectItem>
                     <SelectItem value="3" className="hover:bg-blue-800/40">
-                      Minutes
+                      {t("documents.typeMinutes")}
                     </SelectItem>
                     <SelectItem value="4" className="hover:bg-blue-800/40">
-                      Specifications
+                      {t("documents.typeSpecifications")}
                     </SelectItem>
                     <SelectItem value="5" className="hover:bg-blue-800/40">
-                      Strategy
+                      {t("documents.typeStrategy")}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -826,21 +832,21 @@ const Documents = () => {
               {/* Responsibility Centre filter */}
               <div>
                 <label className="block text-sm text-blue-300 mb-1">
-                  Responsibility Centre
+                  {t("documents.responsibilityCentre")}
                 </label>
                 <Select
                   value={responsibilityCentreFilter}
                   onValueChange={setResponsibilityCentreFilter}
                 >
                   <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
-                    <SelectValue placeholder="Select centre" />
+                    <SelectValue placeholder={t("documents.selectCentre")} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
                     <SelectItem value="any" className="hover:bg-blue-800/40">
-                      Any Centre
+                      {t("documents.anyCentre")}
                     </SelectItem>
                     <SelectItem value="none" className="hover:bg-blue-800/40">
-                      No Centre Assigned
+                      {t("documents.noCentreAssigned")}
                     </SelectItem>
                     {responsibilityCentres.map((centre) => (
                       <SelectItem
@@ -858,7 +864,7 @@ const Documents = () => {
               {/* Date Range */}
               <div>
                 <label className="block text-sm text-blue-300 mb-1">
-                  Date Range
+                  {t("documents.dateRange")}
                 </label>
                 <DateRangePicker
                   date={dateRange}
@@ -926,42 +932,42 @@ const Documents = () => {
                     </TableHead>
                     <TableHead className="text-blue-300 w-52">
                       {renderSortableHeader(
-                        "Document Code",
+                        t("documents.documentCode"),
                         "documentKey",
                         <Tag className="h-4 w-4" />
                       )}
                     </TableHead>
                     <TableHead className="text-blue-300">
                       {renderSortableHeader(
-                        "Title",
+                        t("common.title"),
                         "title",
                         <FileText className="h-4 w-4" />
                       )}
                     </TableHead>
                     <TableHead className="text-blue-300">
                       {renderSortableHeader(
-                        "Type",
+                        t("common.type"),
                         "documentType",
                         <Filter className="h-4 w-4" />
                       )}
                     </TableHead>
                     <TableHead className="text-blue-300">
                       {renderSortableHeader(
-                        "Document Date",
+                        t("documents.documentDate"),
                         "docDate",
                         <CalendarDays className="h-4 w-4" />
                       )}
                     </TableHead>
                     <TableHead className="text-blue-300">
                       {renderSortableHeader(
-                        "Created By",
+                        t("documents.createdBy"),
                         "createdBy",
                         <Users className="h-4 w-4" />
                       )}
                     </TableHead>
-                    <TableHead className="text-blue-300">Status</TableHead>
+                    <TableHead className="text-blue-300">{t("common.status")}</TableHead>
                     <TableHead className="text-blue-300 text-right">
-                      Actions
+                      {t("common.actions")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1043,7 +1049,7 @@ const Documents = () => {
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>Assign to circuit</p>
+                                  <p>{t("documents.assignCircuit")}</p>
                                 </TooltipContent>
                               </Tooltip>
 
@@ -1061,7 +1067,7 @@ const Documents = () => {
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>Edit document</p>
+                                  <p>{t("documents.editDocument")}</p>
                                 </TooltipContent>
                               </Tooltip>
 
@@ -1079,7 +1085,7 @@ const Documents = () => {
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>Delete document</p>
+                                  <p>{t("documents.deleteDocument")}</p>
                                 </TooltipContent>
                               </Tooltip>
                             </>
@@ -1097,7 +1103,7 @@ const Documents = () => {
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
                                   <p>
-                                    Only Admin or FullUser can edit documents
+                                    {t("documents.onlyAdminCanEdit")}
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
@@ -1114,17 +1120,17 @@ const Documents = () => {
         ) : (
           <EmptyState
             icon={<FileText className="h-10 w-10 text-blue-400" />}
-            title="No documents found"
+            title={t("documents.noDocuments")}
             description={
               searchQuery ||
               dateRange ||
               statusFilter !== "any" ||
               typeFilter !== "any"
-                ? "Try adjusting your search or filters"
-                : "Create your first document to get started"
+                ? t("documents.adjustFilters")
+                : t("documents.createFirstDocument")
             }
             actionLabel={
-              canManageDocuments && !searchQuery ? "Create Document" : undefined
+              canManageDocuments && !searchQuery ? t("documents.createDocument") : undefined
             }
             actionIcon={
               canManageDocuments && !searchQuery ? (
@@ -1195,12 +1201,12 @@ const Documents = () => {
         <DialogContent className="bg-[#1e2a4a] border-blue-900/40 text-white">
           <DialogHeader>
             <DialogTitle className="text-xl text-blue-100">
-              Confirm Deletion
+              {t("documents.confirmDeletion")}
             </DialogTitle>
             <DialogDescription className="text-blue-300">
               {documentToDelete
-                ? "Are you sure you want to delete this document? This action cannot be undone."
-                : `Are you sure you want to delete ${selectedDocuments.length} selected documents? This action cannot be undone.`}
+                ? t("documents.deleteConfirmMessage")
+                : tWithParams("documents.deleteMultipleConfirmMessage", { count: selectedDocuments.length })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1209,14 +1215,14 @@ const Documents = () => {
               onClick={() => setDeleteDialogOpen(false)}
               className="border-blue-800 text-blue-300 hover:bg-blue-900/50"
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete
+              {t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1239,7 +1245,7 @@ const Documents = () => {
         {canManageDocuments && selectedDocuments.length > 0 && (
           <BulkActionsBar
             selectedCount={selectedDocuments.length}
-            entityName="document"
+            entityName={t("nav.documents").toLowerCase()}
             actions={bulkActions}
             icon={<FileText className="w-5 h-5 text-blue-400" />}
           />
