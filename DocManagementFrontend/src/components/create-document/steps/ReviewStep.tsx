@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ReviewStepProps {
   selectedType: DocumentType | undefined;
@@ -85,6 +86,8 @@ export const ReviewStep = ({
   onEditResponsibilityCentreClick,
   onEditCustomerVendorClick,
 }: ReviewStepProps) => {
+  const { t } = useTranslation();
+  
   // Helper function to determine if customer/vendor section should be shown
   const shouldShowCustomerVendor = () => {
     return selectedType?.tierType === TierType.Customer || selectedType?.tierType === TierType.Vendor;
@@ -128,9 +131,9 @@ export const ReviewStep = ({
         <div className="inline-flex items-center justify-center p-2 bg-green-900/20 rounded-full mb-2">
           <Check className="h-5 w-5 text-green-500" />
         </div>
-        <h3 className="text-lg font-medium text-white">Review Your Document</h3>
+        <h3 className="text-lg font-medium text-white">{t("documents.reviewYourDocument")}</h3>
         <p className="text-sm text-gray-400">
-          Please review your document details before creating
+          {t("documents.pleaseReviewDocumentDetails")}
         </p>
       </div>
 
@@ -140,10 +143,10 @@ export const ReviewStep = ({
           <div>
             <CardTitle className="text-md text-white flex items-center gap-2">
               <Tag className="h-4 w-4 text-blue-400" />
-              Document Type
+              {t("documents.documentType")}
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Type and series information
+              {t("documents.typeAndSeriesInformation")}
             </CardDescription>
           </div>
           <Button

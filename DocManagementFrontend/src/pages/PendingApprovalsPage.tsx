@@ -36,11 +36,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function PendingApprovalsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApproval, setSelectedApproval] = useState<any>(null);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
@@ -230,11 +232,11 @@ export default function PendingApprovalsPage() {
   return (
     <div className="container mx-auto py-6 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">My Approvals</h1>
+        <h1 className="text-2xl font-bold text-white">{t("approvals.title")}</h1>
         <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search approvals..."
+            placeholder={t("approvals.searchPlaceholder")}
             className="pl-8 bg-blue-950/40 border-blue-900/30 text-white placeholder:text-gray-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -252,7 +254,7 @@ export default function PendingApprovalsPage() {
             value="pending"
             className="data-[state=active]:bg-blue-800/50"
           >
-            Pending Approvals
+            {t("approvals.pendingApprovals")}
             {pendingApprovals.length > 0 && (
               <Badge variant="destructive" className="ml-2 bg-red-600">
                 {pendingApprovals.length}
@@ -263,7 +265,7 @@ export default function PendingApprovalsPage() {
             value="history"
             className="data-[state=active]:bg-blue-800/50"
           >
-            Approval History
+            {t("approvals.approvalHistory")}
           </TabsTrigger>
         </TabsList>
 
@@ -305,19 +307,19 @@ export default function PendingApprovalsPage() {
                 {searchQuery ? (
                   <>
                     <h3 className="text-xl font-medium text-blue-300">
-                      No matching approvals
+                      {t("approvals.noMatchingApprovals")}
                     </h3>
                     <p className="text-gray-400">
-                      No approvals match your search criteria.
+                      {t("approvals.noMatchingApprovalsDesc")}
                     </p>
                   </>
                 ) : (
                   <>
                     <h3 className="text-xl font-medium text-blue-300">
-                      No pending approvals
+                      {t("approvals.noPendingApprovals")}
                     </h3>
                     <p className="text-gray-400">
-                      You don't have any documents waiting for your approval.
+                      {t("approvals.noPendingApprovalsDesc")}
                     </p>
                   </>
                 )}
@@ -327,15 +329,15 @@ export default function PendingApprovalsPage() {
                 <Table>
                   <TableHeader className="bg-blue-900/20 sticky top-0 z-10">
                     <TableRow className="border-blue-900/50 hover:bg-blue-900/30">
-                      <TableHead className="text-blue-300">Document</TableHead>
-                      <TableHead className="text-blue-300">Step</TableHead>
+                      <TableHead className="text-blue-300">{t("approvals.document")}</TableHead>
+                      <TableHead className="text-blue-300">{t("approvals.step")}</TableHead>
                       <TableHead className="text-blue-300">
-                        Requested By
+                        {t("approvals.requestedBy")}
                       </TableHead>
                       <TableHead className="text-blue-300">
-                        Requested On
+                        {t("approvals.requestedOn")}
                       </TableHead>
-                      <TableHead className="text-blue-300">Actions</TableHead>
+                      <TableHead className="text-blue-300">{t("approvals.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -381,7 +383,7 @@ export default function PendingApprovalsPage() {
                               }
                             >
                               <CircleCheck className="h-4 w-4 mr-1" />
-                              Approve
+                              {t("approvals.approve")}
                             </Button>
                             <Button
                               size="sm"
@@ -391,7 +393,7 @@ export default function PendingApprovalsPage() {
                               }
                             >
                               <CircleX className="h-4 w-4 mr-1" />
-                              Reject
+                              {t("approvals.reject")}
                             </Button>
                           </div>
                         </TableCell>
@@ -455,7 +457,7 @@ export default function PendingApprovalsPage() {
                     >
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4" />
-                        Waiting
+                        {t("approvals.waiting")}
                         {waitingApprovals.length > 0 && (
                           <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 text-xs">
                             {waitingApprovals.length}
@@ -473,7 +475,7 @@ export default function PendingApprovalsPage() {
                     >
                       <div className="flex items-center gap-2">
                         <CircleCheck className="h-4 w-4" />
-                        Accepted
+                        {t("approvals.accepted")}
                         {acceptedApprovals.length > 0 && (
                           <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
                             {acceptedApprovals.length}
@@ -491,7 +493,7 @@ export default function PendingApprovalsPage() {
                     >
                       <div className="flex items-center gap-2">
                         <CircleX className="h-4 w-4" />
-                        Rejected
+                        {t("approvals.rejected")}
                         {rejectedApprovals.length > 0 && (
                           <Badge variant="secondary" className="bg-red-500/20 text-red-400 text-xs">
                             {rejectedApprovals.length}
@@ -508,8 +510,8 @@ export default function PendingApprovalsPage() {
                     {waitingApprovals.length === 0 ? (
                       <div className="text-center py-8">
                         <Clock className="h-12 w-12 mx-auto text-amber-400/50 mb-3" />
-                        <h3 className="text-lg font-medium text-amber-300">No waiting approvals</h3>
-                        <p className="text-gray-400 text-sm">No approvals are currently waiting for action.</p>
+                        <h3 className="text-lg font-medium text-amber-300">{t("approvals.noWaitingApprovals")}</h3>
+                        <p className="text-gray-400 text-sm">{t("approvals.noWaitingApprovalsDesc")}</p>
                       </div>
                     ) : (
                       <ScrollArea className="h-[calc(100vh-400px)]">
@@ -583,8 +585,8 @@ export default function PendingApprovalsPage() {
                     {acceptedApprovals.length === 0 ? (
                       <div className="text-center py-8">
                         <CircleCheck className="h-12 w-12 mx-auto text-green-400/50 mb-3" />
-                        <h3 className="text-lg font-medium text-green-300">No accepted approvals</h3>
-                        <p className="text-gray-400 text-sm">No approvals have been accepted yet.</p>
+                        <h3 className="text-lg font-medium text-green-300">{t("approvals.noAcceptedApprovals")}</h3>
+                        <p className="text-gray-400 text-sm">{t("approvals.noAcceptedApprovalsDesc")}</p>
                       </div>
                     ) : (
                       <ScrollArea className="h-[calc(100vh-400px)]">
@@ -659,8 +661,8 @@ export default function PendingApprovalsPage() {
                     {rejectedApprovals.length === 0 ? (
                       <div className="text-center py-8">
                         <CircleX className="h-12 w-12 mx-auto text-red-400/50 mb-3" />
-                        <h3 className="text-lg font-medium text-red-300">No rejected approvals</h3>
-                        <p className="text-gray-400 text-sm">No approvals have been rejected.</p>
+                        <h3 className="text-lg font-medium text-red-300">{t("approvals.noRejectedApprovals")}</h3>
+                        <p className="text-gray-400 text-sm">{t("approvals.noRejectedApprovalsDesc")}</p>
                       </div>
                     ) : (
                       <ScrollArea className="h-[calc(100vh-400px)]">

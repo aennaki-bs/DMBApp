@@ -8,6 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { MapPin, Phone, Globe } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface AddressStepProps {
   form: UseFormReturn<any>;
@@ -15,6 +16,7 @@ interface AddressStepProps {
 
 export function AddressStep({ form }: AddressStepProps) {
   const userType = form.watch("userType");
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-5">
@@ -24,7 +26,7 @@ export function AddressStep({ form }: AddressStepProps) {
             <MapPin className="h-5 w-5" />
           </div>
           <h3 className="text-base font-medium text-blue-200">
-            Contact Information
+            {t("userManagement.contactInformation")}
           </h3>
         </div>
 
@@ -34,10 +36,10 @@ export function AddressStep({ form }: AddressStepProps) {
             name="address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-blue-200">Address</FormLabel>
+                <FormLabel className="text-blue-200">{t("userManagement.address")}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Enter address"
+                    placeholder={t("userManagement.addressPlaceholder")}
                     {...field}
                     className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                   />
@@ -53,10 +55,10 @@ export function AddressStep({ form }: AddressStepProps) {
               name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-blue-200">City</FormLabel>
+                  <FormLabel className="text-blue-200">{t("userManagement.city")}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter city"
+                      placeholder={t("userManagement.cityPlaceholder")}
                       {...field}
                       className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                     />
@@ -71,10 +73,10 @@ export function AddressStep({ form }: AddressStepProps) {
               name="country"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-blue-200">Country</FormLabel>
+                  <FormLabel className="text-blue-200">{t("userManagement.country")}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter country"
+                      placeholder={t("userManagement.countryPlaceholder")}
                       {...field}
                       className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                     />
@@ -93,7 +95,7 @@ export function AddressStep({ form }: AddressStepProps) {
             <Phone className="h-5 w-5" />
           </div>
           <h3 className="text-base font-medium text-blue-200">
-            Contact Details
+            {t("userManagement.contactDetails")}
           </h3>
         </div>
 
@@ -103,10 +105,10 @@ export function AddressStep({ form }: AddressStepProps) {
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-blue-200">Phone Number</FormLabel>
+                <FormLabel className="text-blue-200">{t("userManagement.phoneNumber")}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Enter phone number"
+                    placeholder={t("userManagement.phoneNumberPlaceholder")}
                     {...field}
                     className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                   />
@@ -124,11 +126,11 @@ export function AddressStep({ form }: AddressStepProps) {
                 <FormItem>
                   <FormLabel className="text-blue-200 flex items-center gap-1.5">
                     <Globe className="h-3.5 w-3.5" />
-                    Website URL
+                    {t("userManagement.websiteUrl")}
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="https://example.com"
+                      placeholder={t("userManagement.websitePlaceholder")}
                       {...field}
                       className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                     />

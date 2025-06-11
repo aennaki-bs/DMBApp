@@ -2,6 +2,7 @@ import { Label } from "@/components/ui/label";
 import { FileText, ExternalLink } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ContentStepProps {
   content: string;
@@ -22,6 +23,8 @@ export const ContentStep = ({
   externalReference = "",
   onExternalReferenceChange,
 }: ContentStepProps) => {
+  const { t } = useTranslation();
+  
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onContentChange(e.target.value);
   };
@@ -34,14 +37,14 @@ export const ContentStep = ({
           className="text-sm font-medium text-gray-200 flex items-center gap-2"
         >
           <FileText className="h-4 w-4 text-blue-400" />
-          Document Content*
+          {t("documents.content")}*
         </Label>
 
         <textarea
           id="content"
           value={content}
           onChange={handleContentChange}
-          placeholder="Enter document content"
+          placeholder={t("documents.enterDocumentContent")}
           rows={5}
           className={`w-full text-base resize-y bg-gray-900 border ${
             contentError ? "border-red-500" : "border-gray-800"
@@ -51,8 +54,7 @@ export const ContentStep = ({
         {contentError && <p className="text-sm text-red-500">{contentError}</p>}
 
         <p className="text-xs text-gray-400">
-          Enter the content for your document. This will be used as the main
-          body text.
+          {t("documents.contentDescription")}
         </p>
       </div>
 
@@ -62,11 +64,10 @@ export const ContentStep = ({
           <div className="space-y-1">
             <Label className="text-sm font-medium text-gray-200 flex items-center gap-2">
               <ExternalLink className="h-4 w-4 text-blue-400" />
-              External Document
+              {t("documents.externalDocument")}
             </Label>
             <p className="text-xs text-gray-400">
-              Enable if this is an external document (will be sent as
-              "documentExterne" and replace the alias field)
+              {t("documents.externalDocumentDescription")}
             </p>
           </div>
           <Switch
@@ -84,17 +85,17 @@ export const ContentStep = ({
             htmlFor="externalReference"
             className="text-sm font-medium text-gray-200"
           >
-            External Document Reference
+            {t("documents.externalDocumentReference")}
           </Label>
           <Input
             id="externalReference"
             value={externalReference}
             onChange={(e) => onExternalReferenceChange?.(e.target.value)}
-            placeholder="Enter external document reference"
+            placeholder={t("documents.enterExternalDocumentReference")}
             className="h-10 text-base bg-gray-900 border-gray-800 text-white"
           />
           <p className="text-xs text-gray-400">
-            Enter a reference or identifier for this external document
+            {t("documents.externalDocumentReferenceDescription")}
           </p>
         </div>
       )}

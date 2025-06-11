@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -49,6 +50,7 @@ export default function DocumentsTable({
   sortConfig,
   requestSort,
 }: DocumentsTableProps) {
+  const { t } = useTranslation();
   const getSortIndicator = (columnKey: string) => {
     if (sortConfig && sortConfig.key === columnKey) {
       return sortConfig.direction === "ascending" ? "↑" : "↓";
@@ -104,48 +106,48 @@ export default function DocumentsTable({
               </TableHead>
               <TableHead className="w-[160px] text-blue-300 font-medium">
                 {renderSortableHeader(
-                  "Document Code",
+                  t("documents.documentCode"),
                   "documentKey",
                   <Tag className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
               <TableHead className="w-[250px] text-blue-300 font-medium">
                 {renderSortableHeader(
-                  "Title",
+                  t("common.title"),
                   "title",
                   <FileText className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
               <TableHead className="w-[120px] text-blue-300 font-medium">
                 {renderSortableHeader(
-                  "Status",
+                  t("common.status"),
                   "status",
                   <AlertCircle className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
               <TableHead className="w-[150px] text-blue-300 font-medium">
                 {renderSortableHeader(
-                  "Type",
+                  t("common.type"),
                   "documentType",
                   <Filter className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
               <TableHead className="w-[140px] text-blue-300 font-medium">
                 {renderSortableHeader(
-                  "Document Date",
+                  t("documents.documentDate"),
                   "docDate",
                   <CalendarDays className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
               <TableHead className="w-[150px] text-blue-300 font-medium">
                 {renderSortableHeader(
-                  "Created By",
+                  t("documents.createdBy"),
                   "createdBy",
                   <User className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
               <TableHead className="w-[100px] text-right text-blue-300 font-medium">
-                Actions
+                {t("common.actions")}
               </TableHead>
             </TableRow>
           </TableHeader>

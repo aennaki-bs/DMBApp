@@ -8,12 +8,15 @@ import {
 import { UseFormReturn } from "react-hook-form";
 import { Shield, UserCog, Users, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface RoleStepProps {
   form: UseFormReturn<any>;
 }
 
 export function RoleStep({ form }: RoleStepProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-5">
       <div className="rounded-lg border border-blue-800/30 bg-blue-900/10 p-5">
@@ -22,7 +25,7 @@ export function RoleStep({ form }: RoleStepProps) {
             <Shield className="h-5 w-5" />
           </div>
           <h3 className="text-base font-medium text-blue-200">
-            Role Assignment
+            {t("userManagement.roleAssignment")}
           </h3>
         </div>
 
@@ -33,15 +36,20 @@ export function RoleStep({ form }: RoleStepProps) {
             render={({ field }) => (
               <FormItem className="space-y-3">
                 <FormLabel className="text-blue-200">
-                  Select user role
+                  {t("userManagement.selectUserRole")}
                 </FormLabel>
                 <FormControl>
                   <div className="flex flex-col gap-3">
                     {/* Admin Role */}
                     <RoleOption
                       id="Admin"
-                      title="Admin"
-                      description="Full system access with all privileges"
+                      title={t("userManagement.adminRole")}
+                      description={t("userManagement.adminDescription")}
+                      features={[
+                        t("userManagement.userManagementFeature"),
+                        t("userManagement.systemConfiguration"),
+                        t("userManagement.fullAccess")
+                      ]}
                       icon={<UserCog className="h-5 w-5" />}
                       color="bg-red-900/20 border-red-800/30 hover:bg-red-900/30"
                       activeColor="border-red-500 bg-red-900/30"
@@ -54,8 +62,13 @@ export function RoleStep({ form }: RoleStepProps) {
                     {/* Full User Role */}
                     <RoleOption
                       id="FullUser"
-                      title="Full User"
-                      description="Extended access with document management capabilities"
+                      title={t("userManagement.fullUserRole")}
+                      description={t("userManagement.fullUserDescription")}
+                      features={[
+                        t("userManagement.documentCreation"),
+                        t("userManagement.workflowApproval"),
+                        t("userManagement.reportingAccess")
+                      ]}
                       icon={<Users className="h-5 w-5" />}
                       color="bg-emerald-900/20 border-emerald-800/30 hover:bg-emerald-900/30"
                       activeColor="border-emerald-500 bg-emerald-900/30"
@@ -68,8 +81,13 @@ export function RoleStep({ form }: RoleStepProps) {
                     {/* Simple User Role */}
                     <RoleOption
                       id="SimpleUser"
-                      title="Simple User"
-                      description="Basic access with limited permissions"
+                      title={t("userManagement.simpleUserRole")}
+                      description={t("userManagement.simpleUserDescription")}
+                      features={[
+                        t("userManagement.viewEditDocs"),
+                        t("userManagement.basicWorkflowParticipation"),
+                        t("userManagement.limitedFeatureAccess")
+                      ]}
                       icon={<User className="h-5 w-5" />}
                       color="bg-blue-900/20 border-blue-800/30 hover:bg-blue-900/30"
                       activeColor="border-blue-500 bg-blue-900/30"
@@ -101,7 +119,7 @@ export function RoleStep({ form }: RoleStepProps) {
           >
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          The role determines what actions and resources the user can access.
+          {t("userManagement.roleDescription")}
         </p>
       </div>
     </div>
@@ -113,6 +131,7 @@ interface RoleOptionProps {
   id: string;
   title: string;
   description: string;
+  features: string[];
   icon: React.ReactNode;
   color: string;
   activeColor: string;
@@ -129,6 +148,7 @@ function RoleOption({
   id,
   title,
   description,
+  features,
   icon,
   color,
   activeColor,
@@ -165,27 +185,9 @@ function RoleOption({
               className={`text-xs ${textColor} mt-2 border-t border-blue-700/30 pt-2`}
             >
               <ul className="list-disc list-inside space-y-1">
-                {id === "Admin" && (
-                  <>
-                    <li>User management</li>
-                    <li>System configuration</li>
-                    <li>Full access to all features</li>
-                  </>
-                )}
-                {id === "FullUser" && (
-                  <>
-                    <li>Document creation and management</li>
-                    <li>Workflow approval capabilities</li>
-                    <li>Reporting access</li>
-                  </>
-                )}
-                {id === "SimpleUser" && (
-                  <>
-                    <li>View and edit own documents</li>
-                    <li>Basic workflow participation</li>
-                    <li>Limited feature access</li>
-                  </>
-                )}
+                {features.map((feature, index) => (
+                  <li key={index}>{feature}</li>
+                ))}
               </ul>
             </motion.div>
           )}

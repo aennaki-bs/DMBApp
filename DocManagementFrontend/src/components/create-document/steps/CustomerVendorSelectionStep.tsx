@@ -22,6 +22,7 @@ import customerService from "@/services/customerService";
 import vendorService from "@/services/vendorService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CustomerVendorSelectionStepProps {
   selectedTypeId: number | null;
@@ -52,6 +53,7 @@ export const CustomerVendorSelectionStep = ({
   onCityChange,
   onCountryChange,
 }: CustomerVendorSelectionStepProps) => {
+  const { t, tWithParams } = useTranslation();
   const [customers, setCustomers] = useState<any[]>([]);
   const [vendors, setVendors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -154,10 +156,10 @@ export const CustomerVendorSelectionStep = ({
           <div className="text-center py-8">
             <Building2 className="mx-auto h-12 w-12 text-blue-400 mb-4" />
             <h3 className="text-lg font-medium text-blue-100 mb-2">
-              No Customer/Vendor Required
+              {t("documents.noCustomerVendorRequired")}
             </h3>
             <p className="text-blue-300/70">
-              This document type doesn't require customer or vendor selection.
+              {t("documents.noCustomerVendorDescription")}
             </p>
           </div>
         </CardContent>
@@ -172,10 +174,10 @@ export const CustomerVendorSelectionStep = ({
           {renderTierIcon()}
           <div>
             <CardTitle className="text-blue-100">
-              Select {tierType === TierType.Customer ? "Customer" : "Vendor"}
+              {tierType === TierType.Customer ? t("documents.selectCustomer") : t("documents.selectVendor")}
             </CardTitle>
             <p className="text-sm text-blue-300/70 mt-1">
-              Choose a {getTierTypeString(tierType)} and review their information
+              {tierType === TierType.Customer ? t("documents.chooseCustomerAndReview") : t("documents.chooseVendorAndReview")}
             </p>
           </div>
         </div>
@@ -184,7 +186,7 @@ export const CustomerVendorSelectionStep = ({
         {/* Selection Dropdown */}
         <div className="space-y-2">
           <Label className="text-blue-200">
-            {tierType === TierType.Customer ? "Customer" : "Vendor"} *
+            {tierType === TierType.Customer ? t("documents.customer") : t("documents.vendor")} *
           </Label>
                       <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
@@ -208,8 +210,8 @@ export const CustomerVendorSelectionStep = ({
                         </div>
                       )
                     : isLoading 
-                      ? `Loading ${getTierTypeString(tierType!)}s...`
-                      : `Select a ${getTierTypeString(tierType!)}`
+                      ? tWithParams("documents.loadingItems", { type: getTierTypeString(tierType!) })
+                      : tWithParams("documents.selectItem", { type: getTierTypeString(tierType!) })
                   }
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -221,7 +223,7 @@ export const CustomerVendorSelectionStep = ({
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
-                        placeholder={`Search ${getTierTypeString(tierType!)}s...`}
+                        placeholder={tWithParams("documents.searchItems", { type: getTierTypeString(tierType!) })}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10 bg-[#1a1f3a] border-blue-900/40 text-white placeholder:text-gray-400"
@@ -242,7 +244,7 @@ export const CustomerVendorSelectionStep = ({
                   >
                     {filteredItems.length === 0 ? (
                       <div className="text-gray-400 py-4 px-3 text-center">
-                        No {getTierTypeString(tierType!)} found.
+                        {tWithParams("documents.noItemsFound", { type: getTierTypeString(tierType!) })}
                       </div>
                     ) : (
                       filteredItems.map((item) => {
@@ -287,42 +289,42 @@ export const CustomerVendorSelectionStep = ({
         {/* Editable Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-blue-200">Name *</Label>
+            <Label className="text-blue-200">{t("common.name")} *</Label>
             <Input
               value={customerVendorName}
               onChange={(e) => onNameChange(e.target.value)}
-              placeholder="Enter name"
+              placeholder={t("documents.enterName")}
               className="bg-[#111633] border-blue-900/40 text-white placeholder:text-gray-400"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-blue-200">City</Label>
+            <Label className="text-blue-200">{t("documents.city")}</Label>
             <Input
               value={customerVendorCity}
               onChange={(e) => onCityChange(e.target.value)}
-              placeholder="Enter city"
+              placeholder={t("documents.enterCity")}
               className="bg-[#111633] border-blue-900/40 text-white placeholder:text-gray-400"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label className="text-blue-200">Address</Label>
+          <Label className="text-blue-200">{t("documents.address")}</Label>
           <Input
             value={customerVendorAddress}
             onChange={(e) => onAddressChange(e.target.value)}
-            placeholder="Enter address"
+            placeholder={t("documents.enterAddress")}
             className="bg-[#111633] border-blue-900/40 text-white placeholder:text-gray-400"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-blue-200">Country</Label>
+          <Label className="text-blue-200">{t("documents.country")}</Label>
           <Input
             value={customerVendorCountry}
             onChange={(e) => onCountryChange(e.target.value)}
-            placeholder="Enter country"
+            placeholder={t("documents.enterCountry")}
             className="bg-[#111633] border-blue-900/40 text-white placeholder:text-gray-400"
           />
         </div>
@@ -330,25 +332,24 @@ export const CustomerVendorSelectionStep = ({
         {selectedCustomerVendor && (
           <div className="mt-4 p-4 bg-blue-900/20 rounded-lg border border-blue-800/40">
             <h4 className="text-sm font-medium text-blue-200 mb-2">
-              Selected {tierType === TierType.Customer ? "Customer" : "Vendor"}
+              {tierType === TierType.Customer ? t("documents.selectedCustomer") : t("documents.selectedVendor")}
             </h4>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-blue-400">Code:</span>
+                <span className="text-blue-400">{t("documents.code")}:</span>
                 <span className="text-white ml-2 font-mono">
                   {getCodeProperty(selectedCustomerVendor, tierType)}
                 </span>
               </div>
               <div>
-                <span className="text-blue-400">Original Name:</span>
+                <span className="text-blue-400">{t("documents.originalName")}:</span>
                 <span className="text-white ml-2">
                   {selectedCustomerVendor.name}
                 </span>
               </div>
             </div>
             <p className="text-xs text-blue-300/70 mt-2">
-              You can modify the information above. Changes will be saved with the document 
-              without affecting the original {getTierTypeString(tierType)} record.
+              {tWithParams("documents.modifyInformationNote", { type: getTierTypeString(tierType) })}
             </p>
           </div>
         )}

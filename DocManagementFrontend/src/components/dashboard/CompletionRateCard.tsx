@@ -1,5 +1,6 @@
 import { DashboardCard } from "@/components/ui/dashboard-card";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CompletionRateProps {
   rate: number;
@@ -15,14 +16,15 @@ interface CompletionRateCardProps {
 export function CompletionRateCard({
   completionRate,
 }: CompletionRateCardProps) {
+  const { t } = useTranslation();
   const rate = completionRate?.rate || 0;
 
   return (
-    <DashboardCard title="Completion Rate">
+    <DashboardCard title={t("dashboard.completionRate")}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-3xl font-bold text-white">{rate}%</p>
-          <p className="text-sm text-blue-300 mt-1">Documents processed</p>
+          <p className="text-sm text-blue-300 mt-1">{t("dashboard.documentsProcessed")}</p>
         </div>
         <div className="h-24 w-24 relative">
           <div className="absolute inset-0 flex items-center justify-center">
@@ -66,7 +68,7 @@ export function CompletionRateCard({
       </div>
       <div className="mt-4 space-y-2">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-blue-300">Completed</span>
+          <span className="text-sm text-blue-300">{t("dashboard.completed")}</span>
           <span className="text-sm text-white">
             {completionRate?.completed || 0}
           </span>
@@ -89,7 +91,7 @@ export function CompletionRateCard({
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-blue-300">In Progress</span>
+          <span className="text-sm text-blue-300">{t("dashboard.inProgress")}</span>
           <span className="text-sm text-white">
             {completionRate?.inProgress || 0}
           </span>
@@ -112,7 +114,7 @@ export function CompletionRateCard({
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-blue-300">Pending</span>
+          <span className="text-sm text-blue-300">{t("dashboard.pending")}</span>
           <span className="text-sm text-white">
             {completionRate?.pending || 0}
           </span>

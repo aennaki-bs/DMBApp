@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DocumentsTableRowProps {
   document: Document;
@@ -52,6 +53,7 @@ const DocumentActionsDropdown = ({
   onDelete: () => void;
   onAssignCircuit: () => void;
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const isAssignedToCircuit = !!document.circuitId;
 
@@ -71,7 +73,7 @@ const DocumentActionsDropdown = ({
         align="end"
         className="bg-[#1a2c6b] border-blue-900/60 text-blue-100 rounded-lg shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200"
       >
-        <DropdownMenuLabel className="text-blue-300">Actions</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-blue-300">{t("common.actions")}</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-blue-900/60" />
 
         <DropdownMenuItem
@@ -79,7 +81,7 @@ const DocumentActionsDropdown = ({
           onClick={() => navigate(`/documents/${document.id}`)}
         >
           <ExternalLink className="mr-2 h-4 w-4 text-blue-400" />
-          View Document
+          {t("documents.viewDocument")}
         </DropdownMenuItem>
 
         {canManageDocuments && (
@@ -91,7 +93,7 @@ const DocumentActionsDropdown = ({
                 onClick={() => navigate(`/documents/${document.id}/flow`)}
               >
                 <GitBranch className="mr-2 h-4 w-4 text-blue-400" />
-                Document Flow
+                {t("documents.documentFlow")}
               </DropdownMenuItem>
             )}
 
@@ -102,7 +104,7 @@ const DocumentActionsDropdown = ({
                 onClick={onAssignCircuit}
               >
                 <GitBranch className="mr-2 h-4 w-4 text-blue-400" />
-                Assign to Circuit
+                {t("documents.assignToCircuit")}
               </DropdownMenuItem>
             )}
 
@@ -112,7 +114,7 @@ const DocumentActionsDropdown = ({
             >
               <Link to={`/documents/${document.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4 text-blue-400" />
-                Edit
+                {t("common.edit")}
               </Link>
             </DropdownMenuItem>
 
@@ -123,7 +125,7 @@ const DocumentActionsDropdown = ({
               onClick={onDelete}
             >
               <Trash className="mr-2 h-4 w-4" />
-              Delete
+              {t("common.delete")}
             </DropdownMenuItem>
           </>
         )}
@@ -131,7 +133,7 @@ const DocumentActionsDropdown = ({
         {!canManageDocuments && (
           <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
             <Edit className="mr-2 h-4 w-4" />
-            Requires permissions
+            {t("documents.requiresPermissions")}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

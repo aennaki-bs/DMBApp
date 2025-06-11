@@ -12,6 +12,7 @@ import { UseFormReturn } from "react-hook-form";
 import { Key, Eye, EyeOff, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface PasswordStepProps {
   form: UseFormReturn<any>;
@@ -25,6 +26,7 @@ export function PasswordStep({
   togglePasswordVisibility,
 }: PasswordStepProps) {
   const password = form.watch("passwordHash");
+  const { t } = useTranslation();
 
   // Password strength indicators
   const hasMinLength = password?.length >= 8;
@@ -56,10 +58,10 @@ export function PasswordStep({
 
   // Get description based on strength
   const getStrengthText = () => {
-    if (passwordStrength <= 2) return "Weak";
-    if (passwordStrength <= 3) return "Fair";
-    if (passwordStrength <= 4) return "Good";
-    return "Strong";
+    if (passwordStrength <= 2) return t("userManagement.weak");
+    if (passwordStrength <= 3) return t("userManagement.fair");
+    if (passwordStrength <= 4) return t("userManagement.good");
+    return t("userManagement.strong");
   };
 
   return (
@@ -70,7 +72,7 @@ export function PasswordStep({
             <Key className="h-5 w-5" />
           </div>
           <h3 className="text-base font-medium text-blue-200">
-            Create Password
+            {t("userManagement.createPassword")}
           </h3>
         </div>
 
@@ -80,12 +82,12 @@ export function PasswordStep({
             name="passwordHash"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-blue-200">Password</FormLabel>
+                <FormLabel className="text-blue-200">{t("userManagement.password")}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter a secure password"
+                      placeholder={t("userManagement.passwordPlaceholder")}
                       {...field}
                       className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50 pr-10"
                     />
@@ -114,7 +116,7 @@ export function PasswordStep({
             <div className="space-y-3">
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-blue-300">Password Strength</span>
+                  <span className="text-blue-300">{t("userManagement.passwordStrength")}</span>
                   <span
                     className={
                       password
@@ -142,23 +144,23 @@ export function PasswordStep({
 
               <div className="grid grid-cols-1 gap-2 text-sm">
                 <RequirementItem
-                  text="At least 8 characters"
+                  text={t("userManagement.atLeast8Chars")}
                   met={hasMinLength}
                 />
                 <RequirementItem
-                  text="At least one uppercase letter (A-Z)"
+                  text={t("userManagement.atLeastOneUppercase")}
                   met={hasUppercase}
                 />
                 <RequirementItem
-                  text="At least one lowercase letter (a-z)"
+                  text={t("userManagement.atLeastOneLowercase")}
                   met={hasLowercase}
                 />
                 <RequirementItem
-                  text="At least one number (0-9)"
+                  text={t("userManagement.atLeastOneNumber")}
                   met={hasNumber}
                 />
                 <RequirementItem
-                  text="At least one special character"
+                  text={t("userManagement.atLeastOneSpecial")}
                   met={hasSpecial}
                 />
               </div>
@@ -181,7 +183,7 @@ export function PasswordStep({
           >
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          Create a strong password to protect the user account.
+          {t("userManagement.passwordProtection")}
         </p>
       </div>
     </div>

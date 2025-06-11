@@ -20,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Circuit {
   id: number;
@@ -52,6 +53,7 @@ export const CircuitAssignmentStep = ({
   onCircuitChange,
   isLoading,
 }: CircuitAssignmentStepProps) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
 
   // No need to filter by isActive as the API already returns only active circuits
@@ -81,7 +83,7 @@ export const CircuitAssignmentStep = ({
           isActive ? "text-green-400 font-bold" : "text-red-400"
         )}
       >
-        {isActive ? "Active" : "Inactive"}
+        {isActive ? t("common.active") : t("common.inactive")}
       </span>
     </div>
   );
@@ -92,7 +94,7 @@ export const CircuitAssignmentStep = ({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
         <Input
-          placeholder="Search circuits..."
+          placeholder={t("circuits.searchCircuits")}
           className="pl-9 bg-gray-900 border-gray-800"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -104,15 +106,15 @@ export const CircuitAssignmentStep = ({
         <div className="flex items-center gap-2">
           <Share2 className="h-4 w-4 text-blue-400" />
           <Label className="text-sm font-medium text-gray-200">
-            Select Circuit{" "}
-            <span className="ml-1 text-blue-400">(Optional)</span>
+            {t("circuits.selectCircuit")}{" "}
+            <span className="ml-1 text-blue-400">({t("common.optional")})</span>
           </Label>
         </div>
 
         {isLoading ? (
           <div className="flex items-center space-x-3 text-blue-400 text-sm py-2 px-3">
             <div className="animate-spin h-4 w-4 border-2 border-blue-400 rounded-full border-t-transparent"></div>
-            <span>Loading circuits...</span>
+            <span>{t("circuits.loadingCircuits")}</span>
           </div>
         ) : noCircuitsAvailable ? (
           <Card className="bg-blue-900/20 border-blue-900/40">
@@ -121,11 +123,10 @@ export const CircuitAssignmentStep = ({
                 <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-medium">
-                    No active circuits available
+                    {t("circuits.noActiveCircuitsAvailable")}
                   </p>
                   <p className="text-xs mt-1 text-blue-300/80">
-                    There are no active circuits in the system. Only active
-                    circuits can be assigned to documents.
+                    {t("circuits.noActiveCircuitsDescription")}
                   </p>
                 </div>
               </div>

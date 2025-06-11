@@ -1,6 +1,7 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowDown, ArrowUp } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UserTableHeaderProps {
   selectedCount: number;
@@ -19,6 +20,8 @@ export function UserTableHeader({
   sortDirection,
   onSort,
 }: UserTableHeaderProps) {
+  const { t } = useTranslation();
+  
   const renderSortIcon = (field: string) => {
     if (sortBy !== field) return null;
     return sortDirection === "asc" ? (
@@ -53,7 +56,7 @@ export function UserTableHeader({
           onClick={() => onSort("firstName")}
         >
           <div className="flex items-center">
-            User {renderSortIcon("firstName")}
+            {t("userManagement.user")} {renderSortIcon("firstName")}
           </div>
         </TableHead>
         <TableHead
@@ -61,28 +64,28 @@ export function UserTableHeader({
           onClick={() => onSort("email")}
         >
           <div className="flex items-center">
-            Email {renderSortIcon("email")}
+            {t("userManagement.email")} {renderSortIcon("email")}
           </div>
         </TableHead>
         <TableHead
           className={`${headerClass("role")} w-[150px]`}
           onClick={() => onSort("role")}
         >
-          <div className="flex items-center">Role {renderSortIcon("role")}</div>
+          <div className="flex items-center">{t("userManagement.role")} {renderSortIcon("role")}</div>
         </TableHead>
         <TableHead
           className={`${headerClass("isActive")} w-[120px]`}
           onClick={() => onSort("isActive")}
         >
           <div className="flex items-center">
-            Status {renderSortIcon("isActive")}
+            {t("userManagement.status")} {renderSortIcon("isActive")}
           </div>
         </TableHead>
         <TableHead className="text-blue-200 font-medium w-[100px]">
-          Block
+          {t("userManagement.block")}
         </TableHead>
         <TableHead className="w-[80px] text-blue-200 font-medium text-right pr-4">
-          Actions
+          {t("userManagement.actions")}
         </TableHead>
       </TableRow>
     </TableHeader>

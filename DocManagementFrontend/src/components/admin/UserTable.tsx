@@ -29,11 +29,13 @@ import { Button } from "@/components/ui/button";
 import { DEFAULT_USER_SEARCH_FIELDS } from "@/components/table/constants/filters";
 import { BulkRoleChangeDialog } from "./dialogs/BulkRoleChangeDialog";
 import { BulkDeleteDialog } from "./dialogs/BulkDeleteDialog";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function UserTable() {
   const [directEditModalOpen, setDirectEditModalOpen] = useState(false);
   const [directEditEmailModalOpen, setDirectEditEmailModalOpen] =
     useState(false);
+  const { t, tWithParams } = useTranslation();
 
   const {
     selectedUsers,
@@ -82,10 +84,10 @@ export function UserTable() {
     try {
       const newStatus = !currentStatus;
       await adminService.updateUser(userId, { isActive: newStatus });
-      toast.success(`User ${newStatus ? "activated" : "blocked"} successfully`);
+      toast.success(newStatus ? t("userManagement.userActivated") : t("userManagement.userBlocked"));
       refetch();
     } catch (error) {
-      toast.error(`Failed to ${currentStatus ? "block" : "activate"} user`);
+      toast.error(currentStatus ? t("userManagement.failedToBlock") : t("userManagement.failedToActivate"));
       console.error(error);
     }
   };
@@ -93,10 +95,10 @@ export function UserTable() {
   const handleUserRoleChange = async (userId: number, roleName: string) => {
     try {
       await adminService.updateUser(userId, { roleName });
-      toast.success(`User role changed to ${roleName}`);
+      toast.success(tWithParams("userManagement.roleChanged", { role: roleName }));
       refetch();
     } catch (error) {
-      toast.error("Failed to change user role");
+      toast.error(t("userManagement.failedToChangeRole"));
       console.error(error);
     }
   };
@@ -114,13 +116,13 @@ export function UserTable() {
 
       await Promise.all(updatePromises);
       toast.success(
-        `Role updated to ${selectedRole} for ${selectedUsers.length} users`
+        tWithParams("userManagement.roleUpdateSuccess", { role: selectedRole, count: selectedUsers.length })
       );
       refetch();
       setRoleChangeOpen(false);
       setSelectedRole("");
     } catch (error) {
-      toast.error("Failed to update roles for selected users");
+      toast.error(t("userManagement.failedToUpdateRoles"));
       console.error(error);
     }
   };
@@ -128,10 +130,10 @@ export function UserTable() {
   const handleDeleteMultiple = async () => {
     try {
       await adminService.deleteMultipleUsers(selectedUsers);
-      toast.success(`${selectedUsers.length} users deleted successfully`);
+      toast.success(tWithParams("userManagement.deleteSuccess", { count: selectedUsers.length }));
       handleMultipleDeleted();
     } catch (error) {
-      toast.error("Failed to delete users");
+      toast.error(t("userManagement.failedToDelete"));
       console.error(error);
     }
   };
@@ -170,15 +172,15 @@ export function UserTable() {
 
   // Filter options
   const statusOptions = [
-    { id: "any", label: "Any Status", value: "any" },
-    { id: "active", label: "Active", value: "active" },
-    { id: "inactive", label: "Inactive", value: "inactive" },
+    { id: "any", label: t("userManagement.anyStatus"), value: "any" },
+    { id: "active", label: t("userManagement.active"), value: "active" },
+    { id: "inactive", label: t("userManagement.inactive"), value: "inactive" },
   ];
   const roleOptions = [
-    { id: "any", label: "Any Role", value: "any" },
-    { id: "Admin", label: "Admin", value: "Admin" },
-    { id: "FullUser", label: "Full User", value: "FullUser" },
-    { id: "SimpleUser", label: "Simple User", value: "SimpleUser" },
+    { id: "any", label: t("userManagement.anyRole"), value: "any" },
+    { id: "Admin", label: t("userManagement.admin"), value: "Admin" },
+    { id: "FullUser", label: t("userManagement.fullUser"), value: "FullUser" },
+    { id: "SimpleUser", label: t("userManagement.simpleUser"), value: "SimpleUser" },
   ];
 
   // Apply filters immediately when changed
@@ -210,7 +212,7 @@ export function UserTable() {
     return (
       <div className="text-red-500 py-10 text-center">
         <AlertTriangle className="h-10 w-10 mx-auto mb-2" />
-        Error loading users. Please try again.
+        {t("userManagement.errorLoading")}
       </div>
     );
   }
@@ -226,7 +228,7 @@ export function UserTable() {
               <SelectValue>
                 {DEFAULT_USER_SEARCH_FIELDS.find(
                   (opt) => opt.id === searchField
-                )?.label || "All fields"}
+                )?.label || t("userManagement.allFields")}
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
@@ -243,7 +245,7 @@ export function UserTable() {
           </Select>
           <div className="relative flex-1">
             <Input
-              placeholder="Search users..."
+              placeholder={t("userManagement.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
@@ -272,17 +274,17 @@ export function UserTable() {
               className="bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2 ml-2"
             >
               <Filter className="h-4 w-4 text-blue-400" />
-              Filter
+              {t("userManagement.filter")}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
             <div className="mb-2 text-blue-200 font-semibold">
-              Advanced Filters
+              {t("userManagement.advancedFilters")}
             </div>
             <div className="flex flex-col gap-4">
               {/* Status Filter */}
               <div className="flex flex-col gap-1">
-                <span className="text-sm text-blue-200">Status</span>
+                <span className="text-sm text-blue-200">{t("userManagement.status")}</span>
                 <Select value={statusFilter} onValueChange={handleStatusChange}>
                   <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
                     <SelectValue>
@@ -307,7 +309,7 @@ export function UserTable() {
               </div>
               {/* Role Filter */}
               <div className="flex flex-col gap-1">
-                <span className="text-sm text-blue-200">Role</span>
+                <span className="text-sm text-blue-200">{t("userManagement.role")}</span>
                 <Select value={roleFilter} onValueChange={handleRoleChange}>
                   <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
                     <SelectValue>
@@ -339,7 +341,7 @@ export function UserTable() {
                   className="text-blue-300 hover:text-white flex items-center gap-1"
                   onClick={clearAllFilters}
                 >
-                  <X className="h-3 w-3" /> Clear All
+                  <X className="h-3 w-3" /> {t("userManagement.clearAll")}
                 </Button>
               )}
             </div>

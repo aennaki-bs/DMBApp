@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Building2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface AccountDetailsStepProps {
   form: UseFormReturn<any>;
@@ -16,6 +17,7 @@ interface AccountDetailsStepProps {
 
 export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
   const userType = form.watch("userType");
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-5">
@@ -35,7 +37,7 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
                   <User className="h-5 w-5" />
                 </div>
                 <h3 className="text-base font-medium text-blue-200">
-                  Personal Information
+                  {t("userManagement.personalInformation")}
                 </h3>
               </div>
 
@@ -46,11 +48,11 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-blue-200">
-                        First Name
+                        {t("userManagement.firstName")}
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter first name"
+                          placeholder={t("userManagement.firstNamePlaceholder")}
                           {...field}
                           className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                         />
@@ -65,10 +67,10 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-blue-200">Last Name</FormLabel>
+                      <FormLabel className="text-blue-200">{t("userManagement.lastName")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter last name"
+                          placeholder={t("userManagement.lastNamePlaceholder")}
                           {...field}
                           className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                         />
@@ -95,7 +97,7 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
                   <Building2 className="h-5 w-5" />
                 </div>
                 <h3 className="text-base font-medium text-blue-200">
-                  Company Information
+                  {t("userManagement.companyInformation")}
                 </h3>
               </div>
 
@@ -105,11 +107,11 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-blue-200">
-                      Company Name
+                      {t("userManagement.companyName")}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter company name"
+                        placeholder={t("userManagement.companyNamePlaceholder")}
                         {...field}
                         className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
                       />
@@ -139,7 +141,7 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
             <path d="M12 16v-4" />
             <path d="M12 8h.01" />
           </svg>
-          This information will be used to identify the user in the system.
+          {t("userManagement.identificationInfo")}
         </p>
       </div>
     </div>
