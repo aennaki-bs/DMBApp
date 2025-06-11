@@ -370,9 +370,9 @@ const LineElementTypeManagement = ({
   };
 
   const headerClass = (field: keyof LignesElementType) => `
-    text-blue-200 font-medium cursor-pointer select-none
-    hover:text-blue-100 transition-colors duration-150
-    ${sortField === field ? "text-blue-100" : ""}
+    text-blue-800 dark:text-blue-200 font-medium cursor-pointer select-none
+    hover:text-blue-900 dark:hover:text-blue-100 transition-colors duration-150
+    ${sortField === field ? "text-blue-900 dark:text-blue-100" : ""}
   `;
 
   const handleSelectAll = () => {
@@ -508,14 +508,16 @@ const LineElementTypeManagement = ({
   };
 
   const getTypeBadgeColor = (typeElement: string) => {
-    const type = typeElement.toLowerCase();
-    if (type.includes("account") || type.includes("budget"))
-      return "bg-green-500/20 text-green-300 border-green-500/30";
-    if (type.includes("item") || type.includes("product"))
-      return "bg-blue-500/20 text-blue-300 border-blue-500/30";
-    if (type.includes("database") || type.includes("data"))
-      return "bg-purple-500/20 text-purple-300 border-purple-500/30";
-    return "bg-gray-500/20 text-gray-300 border-gray-500/30";
+    switch (typeElement?.toLowerCase()) {
+      case "item":
+        return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30";
+      case "generalaccounts":
+        return "bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-500/30";
+      case "unitecode":
+        return "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30";
+      default:
+        return "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30";
+    }
   };
 
   // Get unique types for filter dropdown
@@ -528,60 +530,42 @@ const LineElementTypeManagement = ({
   const BulkActionsBar = () => {
     if (selectedElementTypes.length === 0) return null;
 
-    const selectedInUse = selectedElementTypes.some((id) => {
-      // Only check if element type is actually used by lines
-      return elementTypesInUse.has(id);
-    });
-
     return createPortal(
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-6 right-16 transform -translate-x-1/2 z-[9999] w-[calc(100vw-4rem)] max-w-4xl mx-auto"
+        initial={{ opacity: 0, y: 100 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 100 }}
+        className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 bg-white dark:bg-[#1a2c6b] border border-blue-200 dark:border-blue-500/50 rounded-xl shadow-2xl p-4 min-w-[400px]"
       >
-        <div className="bg-gradient-to-r from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-lg shadow-[0_8px_32px_rgba(59,130,246,0.7)] rounded-2xl border border-blue-400/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-blue-400/40">
-          <div className="flex items-center text-blue-200 font-medium">
-            <div className="bg-blue-500/30 p-1.5 rounded-xl mr-3 flex-shrink-0">
-              <Tag className="w-5 h-5 text-blue-300" />
-            </div>
-            <span className="text-sm sm:text-base text-center sm:text-left">
-              <span className="font-bold text-blue-100">
+        <div className="flex items-center text-blue-800 dark:text-blue-200 font-medium">
+          <div className="flex items-center gap-2 flex-1">
+            <Tag className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+            <span>
+              <span className="font-bold text-blue-900 dark:text-blue-100">
                 {selectedElementTypes.length}
               </span>{" "}
-              element type{selectedElementTypes.length !== 1 ? "s" : ""}{" "}
-              selected
+              element types selected
             </span>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="bg-blue-900/40 border-blue-500/40 text-blue-200 hover:text-blue-100 hover:bg-blue-800/60 hover:border-blue-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
               onClick={() => setSelectedElementTypes([])}
+              className="bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-500/40 text-blue-800 dark:text-blue-200 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800/60 hover:border-blue-400 dark:hover:border-blue-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
             >
-              <X className="w-4 h-4 mr-1.5" />
-              Clear
+              Cancel
             </Button>
             <Button
-              variant="outline"
+              variant="destructive"
               size="sm"
-              className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
               onClick={() => setIsBulkDeleteDialogOpen(true)}
-              disabled={selectedInUse}
+              className="bg-red-600 hover:bg-red-700 text-white shadow-lg min-w-[80px] font-medium"
             >
-              <Trash2 className="w-4 h-4 mr-1.5" />
+              <Trash2 className="w-4 h-4 mr-1" />
               Delete
             </Button>
           </div>
-
-          {selectedInUse && (
-            <div className="flex items-center gap-1 text-amber-400 text-sm ml-4">
-              <AlertTriangle className="h-4 w-4" />
-              <span>Some items are used by lines</span>
-            </div>
-          )}
         </div>
       </motion.div>,
       document.body
@@ -592,14 +576,14 @@ const LineElementTypeManagement = ({
     <>
       <div className="space-y-6">
         {/* Modern Header */}
-        <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-[#0a1033] shadow-xl">
-          <div className="p-6 border-b border-blue-900/30 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden bg-white dark:bg-[#0a1033] shadow-xl">
+          <div className="p-6 border-b border-blue-200 dark:border-blue-900/30 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-white tracking-wide flex items-center gap-3">
-                <Tag className="h-6 w-6 text-blue-400" />
+              <h2 className="text-2xl font-bold text-blue-900 dark:text-white tracking-wide flex items-center gap-3">
+                <Tag className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 Element Types
               </h2>
-              <p className="text-sm text-blue-300 mt-1 font-medium">
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium">
                 {filteredAndSortedElementTypes.length} of {elementTypes.length}{" "}
                 element types{" "}
                 {searchQuery || typeFilter !== "any" ? "found" : "total"}
@@ -620,26 +604,26 @@ const LineElementTypeManagement = ({
           <div className="p-6 space-y-4">
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <Input
                   placeholder="Search element types..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-blue-950/50 border-blue-800/50 text-white placeholder:text-blue-400/60 focus:border-blue-600 focus:ring-blue-600/20"
+                  className="pl-10 bg-white dark:bg-blue-950/50 border-blue-300 dark:border-blue-800/50 text-blue-900 dark:text-white placeholder:text-blue-500 dark:placeholder:text-blue-400/60 focus:border-blue-600 focus:ring-blue-600/20"
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 <Select value={searchField} onValueChange={setSearchField}>
-                  <SelectTrigger className="w-40 bg-blue-950/50 border-blue-800/50 text-white">
+                  <SelectTrigger className="w-40 bg-white dark:bg-blue-950/50 border-blue-300 dark:border-blue-800/50 text-blue-900 dark:text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a2c6b] border-blue-700/50 text-white">
+                  <SelectContent className="bg-white dark:bg-[#1a2c6b] border-blue-300 dark:border-blue-700/50 text-blue-900 dark:text-white">
                     {ELEMENT_TYPE_SEARCH_FIELDS.map((field) => (
                       <SelectItem
                         key={field.id}
                         value={field.id}
-                        className="text-white hover:bg-blue-800/50"
+                        className="text-blue-900 dark:text-white hover:bg-blue-100 dark:hover:bg-blue-800/50"
                       >
                         {field.label}
                       </SelectItem>
@@ -651,37 +635,37 @@ const LineElementTypeManagement = ({
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="bg-blue-950/50 border-blue-800/50 text-white hover:bg-blue-800/50"
+                      className="bg-white dark:bg-blue-950/50 border-blue-300 dark:border-blue-800/50 text-blue-900 dark:text-white hover:bg-blue-100 dark:hover:bg-blue-800/50"
                     >
                       <Filter className="h-4 w-4 mr-2" />
                       Filters
                       {typeFilter !== "any" && (
-                        <Badge className="ml-2 bg-blue-500/30 text-blue-200 text-xs">
+                        <Badge className="ml-2 bg-blue-200 dark:bg-blue-500/30 text-blue-800 dark:text-blue-200 text-xs">
                           1
                         </Badge>
                       )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
-                    className="w-64 bg-[#1a2c6b] border-blue-700/50 text-white"
+                    className="w-64 bg-white dark:bg-[#1a2c6b] border-blue-300 dark:border-blue-700/50 text-blue-900 dark:text-white"
                     align="end"
                   >
                     <div className="space-y-4">
                       <div>
-                        <Label className="text-sm font-medium text-blue-200">
+                        <Label className="text-sm font-medium text-blue-800 dark:text-blue-200">
                           Type Element
                         </Label>
                         <Select
                           value={typeFilter}
                           onValueChange={setTypeFilter}
                         >
-                          <SelectTrigger className="mt-1 bg-blue-950/50 border-blue-800/50 text-white">
+                          <SelectTrigger className="mt-1 bg-white dark:bg-blue-950/50 border-blue-300 dark:border-blue-800/50 text-blue-900 dark:text-white">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#1a2c6b] border-blue-700/50 text-white">
+                          <SelectContent className="bg-white dark:bg-[#1a2c6b] border-blue-300 dark:border-blue-700/50 text-blue-900 dark:text-white">
                             <SelectItem
                               value="any"
-                              className="text-white hover:bg-blue-800/50"
+                              className="text-blue-900 dark:text-white hover:bg-blue-100 dark:hover:bg-blue-800/50"
                             >
                               Any Type
                             </SelectItem>
@@ -689,7 +673,7 @@ const LineElementTypeManagement = ({
                               <SelectItem
                                 key={type}
                                 value={type}
-                                className="text-white hover:bg-blue-800/50"
+                                className="text-blue-900 dark:text-white hover:bg-blue-100 dark:hover:bg-blue-800/50"
                               >
                                 {type}
                               </SelectItem>
@@ -703,7 +687,7 @@ const LineElementTypeManagement = ({
                           variant="outline"
                           size="sm"
                           onClick={clearAllFilters}
-                          className="bg-blue-950/50 border-blue-800/50 text-blue-300 hover:bg-blue-800/50"
+                          className="bg-white dark:bg-blue-950/50 border-blue-300 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/50"
                         >
                           Clear All
                         </Button>
@@ -724,12 +708,14 @@ const LineElementTypeManagement = ({
             {/* Clear filters shortcut */}
             {(searchQuery || typeFilter !== "any") && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-blue-300">Active filters:</span>
+                <span className="text-sm text-blue-700 dark:text-blue-300">
+                  Active filters:
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={clearAllFilters}
-                  className="h-7 px-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
+                  className="h-7 px-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30"
                 >
                   <X className="h-3 w-3 mr-1" />
                   Clear all
@@ -743,19 +729,19 @@ const LineElementTypeManagement = ({
             {loading ? (
               <div className="text-center py-12 px-6">
                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-6"></div>
-                <p className="text-blue-300 text-lg font-medium">
+                <p className="text-blue-700 dark:text-blue-300 text-lg font-medium">
                   Loading element types...
                 </p>
               </div>
             ) : filteredAndSortedElementTypes.length === 0 ? (
-              <div className="text-center py-12 px-6 border border-dashed border-blue-900/50 rounded-xl bg-gradient-to-b from-[#182052]/50 to-[#0f1642]/50 backdrop-blur-sm mx-6 my-6">
-                <Tag className="h-20 w-20 mx-auto text-blue-800/50 mb-6" />
-                <h3 className="text-2xl font-bold text-blue-300 mb-3">
+              <div className="text-center py-12 px-6 border border-dashed border-blue-300 dark:border-blue-900/50 rounded-xl bg-blue-50 dark:bg-gradient-to-b dark:from-[#182052]/50 dark:to-[#0f1642]/50 backdrop-blur-sm mx-6 my-6">
+                <Tag className="h-20 w-20 mx-auto text-blue-400 dark:text-blue-800/50 mb-6" />
+                <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-300 mb-3">
                   {searchQuery || typeFilter !== "any"
                     ? "No element types found"
                     : "No element types yet"}
                 </h3>
-                <p className="text-blue-400/70 max-w-md mx-auto mb-8 text-lg leading-relaxed">
+                <p className="text-blue-600 dark:text-blue-400/70 max-w-md mx-auto mb-8 text-lg leading-relaxed">
                   {searchQuery || typeFilter !== "any"
                     ? "No element types match your current filters. Try adjusting your search criteria."
                     : "Get started by creating your first element type to organize your document line elements."}
@@ -773,11 +759,11 @@ const LineElementTypeManagement = ({
             ) : (
               <div>
                 {/* Fixed Header - Never Scrolls */}
-                <div className="min-w-[1200px] border-b border-blue-900/30">
+                <div className="min-w-[1200px] border-b border-blue-200 dark:border-blue-900/30">
                   <Table className="table-fixed w-full">
-                    <TableHeader className="bg-[#1a2c6b]">
-                      <TableRow className="border-blue-900/30 hover:bg-transparent">
-                        <TableHead className="w-[50px] text-blue-300 font-semibold py-4 px-6 text-center">
+                    <TableHeader className="bg-blue-100 dark:bg-[#1a2c6b]">
+                      <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
+                        <TableHead className="w-[50px] text-blue-800 dark:text-blue-300 font-semibold py-4 px-6 text-center">
                           <div className="flex items-center justify-center">
                             <Checkbox
                               checked={
@@ -792,48 +778,50 @@ const LineElementTypeManagement = ({
                           </div>
                         </TableHead>
                         <TableHead
-                          className="w-[150px] text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-200"
                           onClick={() => handleSort("code")}
+                          className={`w-[150px] text-blue-800 dark:text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-900 dark:hover:text-blue-200 ${headerClass(
+                            "code"
+                          )}`}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">Code</span>
+                          <div className="flex items-center">
+                            Code
                             {renderSortIcon("code")}
                           </div>
                         </TableHead>
                         <TableHead
-                          className="w-[200px] text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-200"
                           onClick={() => handleSort("typeElement")}
+                          className={`w-[200px] text-blue-800 dark:text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-900 dark:hover:text-blue-200 ${headerClass(
+                            "typeElement"
+                          )}`}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">
-                              Type Element
-                            </span>
+                          <div className="flex items-center">
+                            Type Element
                             {renderSortIcon("typeElement")}
                           </div>
                         </TableHead>
                         <TableHead
-                          className="w-[300px] text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-200"
                           onClick={() => handleSort("description")}
+                          className={`w-[300px] text-blue-800 dark:text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-900 dark:hover:text-blue-200 ${headerClass(
+                            "description"
+                          )}`}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">
-                              Description
-                            </span>
+                          <div className="flex items-center">
+                            Description
                             {renderSortIcon("description")}
                           </div>
                         </TableHead>
                         <TableHead
-                          className="w-[200px] text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-200"
                           onClick={() => handleSort("tableName")}
+                          className={`w-[200px] text-blue-800 dark:text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-900 dark:hover:text-blue-200 ${headerClass(
+                            "tableName"
+                          )}`}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">
-                              Table Name
-                            </span>
+                          <div className="flex items-center">
+                            Table Name
                             {renderSortIcon("tableName")}
                           </div>
                         </TableHead>
-                        <TableHead className="w-[120px] text-blue-300 font-semibold py-4 px-6 text-center">
+                        <TableHead className="w-[120px] text-blue-800 dark:text-blue-300 font-semibold py-4 px-6 text-center">
                           <span className="text-sm font-medium">Actions</span>
                         </TableHead>
                       </TableRow>
@@ -853,14 +841,14 @@ const LineElementTypeManagement = ({
                           return (
                             <TableRow
                               key={elementType.id}
-                              className={`border-blue-900/30 transition-all duration-200 group cursor-default ${
+                              className={`border-blue-200 dark:border-blue-900/30 transition-all duration-200 group cursor-default ${
                                 rowIndex % 2 === 0
-                                  ? "bg-blue-950/10"
-                                  : "bg-transparent"
+                                  ? "bg-blue-50 dark:bg-blue-950/10"
+                                  : "bg-white dark:bg-transparent"
                               } ${
                                 selectedElementTypes.includes(elementType.id)
-                                  ? "bg-blue-900/40 border-l-4 border-l-blue-500"
-                                  : "hover:bg-blue-900/20"
+                                  ? "bg-blue-200 dark:bg-blue-900/40 border-l-4 border-l-blue-500"
+                                  : "hover:bg-blue-100 dark:hover:bg-blue-900/20"
                               }`}
                             >
                               <TableCell className="w-[50px] py-4 px-6 text-center align-middle">
@@ -872,12 +860,12 @@ const LineElementTypeManagement = ({
                                     onCheckedChange={() =>
                                       handleSelectElementType(elementType.id)
                                     }
-                                    className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500 transition-all duration-150"
+                                    className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
                                   />
                                 </div>
                               </TableCell>
                               <TableCell className="w-[150px] py-4 px-6 align-middle">
-                                <div className="font-mono text-blue-300 font-semibold text-base">
+                                <div className="font-mono text-blue-900 dark:text-blue-300 font-semibold text-base">
                                   {elementType.code}
                                 </div>
                               </TableCell>
@@ -894,14 +882,14 @@ const LineElementTypeManagement = ({
                                 </div>
                               </TableCell>
                               <TableCell className="w-[300px] py-4 px-6 align-middle">
-                                <div className="text-blue-100 font-medium">
+                                <div className="text-blue-800 dark:text-blue-100 font-medium">
                                   <div className="truncate max-w-[280px]">
                                     {elementType.description}
                                   </div>
                                 </div>
                               </TableCell>
                               <TableCell className="w-[200px] py-4 px-6 align-middle">
-                                <div className="font-mono text-blue-200 text-sm">
+                                <div className="font-mono text-blue-700 dark:text-blue-200 text-sm">
                                   {elementType.tableName}
                                 </div>
                               </TableCell>
@@ -911,7 +899,7 @@ const LineElementTypeManagement = ({
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => openViewDialog(elementType)}
-                                    className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 rounded-md"
+                                    className="h-8 w-8 text-blue-600 dark:text-blue-400 hover:text-green-600 dark:hover:text-blue-300 hover:bg-green-100 dark:hover:bg-blue-900/30 transition-all duration-200 rounded-md"
                                     title="View Details"
                                   >
                                     <Eye className="h-4 w-4" />
@@ -921,7 +909,7 @@ const LineElementTypeManagement = ({
                                     size="icon"
                                     onClick={() => openEditDialog(elementType)}
                                     disabled={shouldDisable}
-                                    className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-all duration-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="h-8 w-8 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                                     title={
                                       shouldDisable
                                         ? "Cannot edit: Element type is used by lines"
@@ -950,7 +938,7 @@ const LineElementTypeManagement = ({
                                           openDeleteDialog(elementType)
                                         }
                                         disabled={shouldDisable}
-                                        className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-all duration-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="h-8 w-8 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                                         title={
                                           shouldDisable
                                             ? "Cannot delete: Element type is used by lines"
@@ -960,24 +948,24 @@ const LineElementTypeManagement = ({
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-red-500/30 text-white shadow-[0_0_25px_rgba(239,68,68,0.2)] rounded-xl">
+                                    <AlertDialogContent className="bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b] dark:to-[#0a1033] border-red-300 dark:border-red-500/30 text-blue-900 dark:text-white shadow-[0_0_25px_rgba(239,68,68,0.2)] rounded-xl">
                                       <AlertDialogHeader>
-                                        <AlertDialogTitle className="text-xl text-red-300">
+                                        <AlertDialogTitle className="text-xl text-red-700 dark:text-red-300">
                                           Delete Element Type
                                         </AlertDialogTitle>
-                                        <AlertDialogDescription className="text-blue-300">
+                                        <AlertDialogDescription className="text-blue-700 dark:text-blue-300">
                                           Are you sure you want to delete the
                                           element type "{elementType.code}"?
                                           This action cannot be undone.
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                        <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200">
+                                        <AlertDialogCancel className="bg-transparent border-blue-300 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/20 hover:text-blue-800 dark:hover:text-blue-200">
                                           Cancel
                                         </AlertDialogCancel>
                                         <AlertDialogAction
                                           onClick={handleDeleteElementType}
-                                          className="bg-red-900/30 text-red-300 hover:bg-red-900/50 hover:text-red-200 border border-red-500/30 hover:border-red-400/50 transition-all duration-200"
+                                          className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 hover:text-red-800 dark:hover:text-red-200 border border-red-300 dark:border-red-500/30 hover:border-red-400 dark:hover:border-red-400/50 transition-all duration-200"
                                         >
                                           Delete
                                         </AlertDialogAction>
@@ -995,7 +983,7 @@ const LineElementTypeManagement = ({
                 </ScrollArea>
 
                 {/* Smart Pagination */}
-                <div className="pt-4 pb-2 px-6 border-t border-blue-900/20">
+                <div className="pt-4 pb-2 px-6 border-t border-blue-200 dark:border-blue-900/20">
                   <SmartPagination
                     currentPage={currentPage}
                     totalPages={totalPages}

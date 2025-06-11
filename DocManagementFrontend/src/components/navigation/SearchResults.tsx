@@ -46,7 +46,7 @@ export function SearchResults({
   }
 
   return (
-    <div className="absolute top-full left-0 right-0 mt-1 z-50 overflow-hidden shadow-lg bg-[#0a1033] border border-blue-900/40 rounded-md animate-in fade-in-50 slide-in-from-top-5 max-h-[calc(100vh-120px)] overflow-y-auto">
+    <div className="absolute top-full left-0 right-0 mt-1 z-50 overflow-hidden shadow-lg bg-white border-blue-200 dark:bg-[#0a1033] dark:border-blue-900/40 border rounded-md animate-in fade-in-50 slide-in-from-top-5 max-h-[calc(100vh-120px)] overflow-y-auto">
       {isSearching ? (
         <div className="p-4 text-center text-blue-300">
           <Icons.Loader className="h-5 w-5 mx-auto animate-spin text-blue-400 mb-2" />

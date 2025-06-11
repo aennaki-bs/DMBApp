@@ -62,7 +62,7 @@ const DocumentLignesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b28]">
+    <div className="min-h-screen bg-blue-25 dark:bg-[#070b28]">
       <DocumentHeader
         document={document}
         onBack={() => navigate("/documents")}

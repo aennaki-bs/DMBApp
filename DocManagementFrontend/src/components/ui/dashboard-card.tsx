@@ -28,25 +28,30 @@ export function DashboardCard({
   return (
     <Card
       className={cn(
-        "bg-[#0f1642] border-blue-900/30 shadow-md overflow-hidden",
+        "bg-white border-blue-200 dark:bg-[#0f1642] dark:border-blue-900/30 shadow-md overflow-hidden",
         className
       )}
     >
       {title && (
-        <CardHeader className="bg-[#0a1033]/50 border-b border-blue-900/30 px-4 py-3">
+        <CardHeader className="bg-blue-50 border-b border-blue-200 dark:bg-[#0a1033]/50 dark:border-blue-900/30 px-4 py-3">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-semibold text-white">
+            <CardTitle className="text-lg font-semibold text-blue-900 dark:text-white">
               {title}
             </CardTitle>
             {headerAction}
           </div>
         </CardHeader>
       )}
-      <CardContent className={cn("text-blue-100", noPadding ? "p-0" : "p-4")}>
+      <CardContent
+        className={cn(
+          "text-blue-900 dark:text-blue-100",
+          noPadding ? "p-0" : "p-4"
+        )}
+      >
         {children}
       </CardContent>
       {footer && (
-        <CardFooter className="bg-[#0a1033]/30 border-t border-blue-900/30 px-4 py-3">
+        <CardFooter className="bg-blue-50 border-t border-blue-200 dark:bg-[#0a1033]/30 dark:border-blue-900/30 px-4 py-3">
           {footer}
         </CardFooter>
       )}

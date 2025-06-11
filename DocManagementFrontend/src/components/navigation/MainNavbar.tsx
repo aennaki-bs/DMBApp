@@ -92,14 +92,14 @@ export function MainNavbar() {
   }, []);
 
   return (
-    <nav className="border-b border-blue-900/30 bg-[#0a1033]/95 backdrop-blur-sm h-16 shadow-md w-full">
+    <nav className="border-b border-blue-200 bg-white/95 dark:border-blue-900/30 dark:bg-[#0a1033]/95 backdrop-blur-sm h-16 shadow-md w-full">
       <div className="container h-full mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center md:w-64">
           <Link to="/dashboard" className="flex items-center gap-2">
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 w-8 h-8 rounded flex items-center justify-center text-white font-bold shadow-[0_0_10px_rgba(59,130,246,0.3)]">
               D
             </div>
-            <span className="text-xl font-semibold bg-gradient-to-r from-blue-200 to-blue-400 text-transparent bg-clip-text">
+            <span className="text-xl font-semibold text-blue-900 dark:bg-gradient-to-r dark:from-blue-200 dark:to-blue-400 dark:text-transparent dark:bg-clip-text">
               DocuVerse
             </span>
           </Link>
@@ -111,9 +111,9 @@ export function MainNavbar() {
           ref={searchRef}
         >
           <div className="relative w-full group">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-300 group-hover:text-blue-200 transition-colors duration-200" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 group-hover:text-blue-800 dark:text-blue-300 dark:group-hover:text-blue-200 transition-colors duration-200" />
             <Input
-              className="pl-9 pr-10 bg-blue-950/40 border-blue-800/30 text-white placeholder:text-blue-300/50 w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md transition-all duration-200 group-hover:border-blue-700/50 group-hover:bg-blue-900/40 backdrop-blur-sm shadow-inner"
+              className="pl-9 pr-10 bg-blue-50 border-blue-200 text-blue-900 placeholder:text-blue-500 dark:bg-blue-950/40 dark:border-blue-800/30 dark:text-white dark:placeholder:text-blue-300/50 w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md transition-all duration-200 group-hover:border-blue-700/50 dark:group-hover:bg-blue-900/40 backdrop-blur-sm shadow-inner"
               placeholder="Search pages, navigation, documents..."
               value={searchQuery}
               onChange={handleInputChange}
@@ -123,7 +123,7 @@ export function MainNavbar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 text-blue-300 hover:text-blue-100 hover:bg-blue-800/40 rounded-full"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-200 dark:text-blue-300 dark:hover:text-blue-100 dark:hover:bg-blue-800/40 rounded-full"
                 onClick={handleClearSearch}
               >
                 <X className="h-3 w-3" />
@@ -147,7 +147,7 @@ export function MainNavbar() {
             <EnhancedButton
               variant="ghost"
               size="icon-sm"
-              className="relative text-blue-300 hover:text-white hover:bg-blue-800/30"
+              className="relative text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:text-blue-300 dark:hover:text-white dark:hover:bg-blue-800/30"
               animation="pulse"
             >
               <Bell className="h-5 w-5" />
@@ -159,13 +159,15 @@ export function MainNavbar() {
                 <EnhancedButton
                   variant="frost"
                   size="sm"
-                  className="flex items-center gap-2 text-blue-100 hover:bg-blue-800/30"
+                  className="flex items-center gap-2 text-blue-900 hover:bg-blue-100 dark:text-blue-100 dark:hover:bg-blue-800/30"
                 >
                   <div className="hidden md:block text-right">
                     <p className="text-sm font-medium">
                       {user.username || "User"}
                     </p>
-                    <p className="text-xs text-blue-300">{user.role}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-300">
+                      {user.role}
+                    </p>
                   </div>
                   <Avatar className="h-8 w-8 ring-2 ring-blue-600/30">
                     <AvatarImage
@@ -177,12 +179,12 @@ export function MainNavbar() {
                       {user.username?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <ChevronDown className="h-4 w-4 text-blue-300" />
+                  <ChevronDown className="h-4 w-4 text-blue-600 dark:text-blue-300" />
                 </EnhancedButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-56 bg-[#0a1033] border-blue-900/50 text-blue-100 animate-in fade-in-50 zoom-in-95 shadow-lg shadow-blue-900/20"
+                className="w-56 bg-white border-blue-200 text-blue-900 dark:bg-[#0a1033] dark:border-blue-900/50 dark:text-blue-100 animate-in fade-in-50 zoom-in-95 shadow-lg dark:shadow-blue-900/20"
               >
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
 

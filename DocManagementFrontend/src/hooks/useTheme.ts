@@ -7,8 +7,8 @@ export function useTheme() {
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) return savedTheme;
     
-    // Default to standard theme
-    return 'standard';
+    // Default to dark theme (standard theme now uses dark mode)
+    return 'dark';
   });
   
   // Calculate the current active theme (resolve named themes to base themes)

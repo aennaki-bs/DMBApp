@@ -1,43 +1,43 @@
-/* Standard Theme Styles */
+/* Standard Theme Styles - Now Dark Mode */
 :root[data-theme="standard"] {
-    /* Enhanced color palette for standard theme */
-    --background: 248 250 252;
-    --foreground: 15 23 42;
-    --card: 255 255 255;
-    --card-foreground: 15 23 42;
-    --popover: 255 255 255;
-    --popover-foreground: 15 23 42;
-    --primary: 59 130 246;
-    --primary-foreground: 248 250 252;
-    --secondary: 241 245 249;
-    --secondary-foreground: 15 23 42;
-    --muted: 241 245 249;
-    --muted-foreground: 100 116 139;
-    --accent: 239 246 255;
-    --accent-foreground: 37 99 235;
-    --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 59 130 246;
+    /* Enhanced dark color palette for standard theme */
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.6% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 72.2% 50.6%;
     --radius: 0.5rem;
 
-    /* Standard theme sidebar colors */
-    --sidebar-background: 255 255 255;
-    --sidebar-foreground: 15 23 42;
-    --sidebar-primary: 59 130 246;
-    --sidebar-primary-foreground: 248 250 252;
-    --sidebar-secondary: 248 250 252;
-    --sidebar-secondary-foreground: 15 23 42;
-    --sidebar-muted: 100 116 139;
-    --sidebar-muted-foreground: 148 163 184;
-    --sidebar-accent: 239 246 255;
-    --sidebar-accent-foreground: 37 99 235;
-    --sidebar-destructive: 239 68 68;
-    --sidebar-destructive-foreground: 248 250 252;
-    --sidebar-border: 226 232 240;
-    --sidebar-input: 226 232 240;
-    --sidebar-ring: 59 130 246;
+    /* Standard theme sidebar colors - dark mode */
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-secondary: 222.2 47.4% 11.2%;
+    --sidebar-secondary-foreground: 210 40% 98%;
+    --sidebar-muted: 210 40% 98%;
+    --sidebar-muted-foreground: 215.4 16.3% 56.9%;
+    --sidebar-accent: 222.2 47.4% 11.2%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-destructive: 0 62.8% 30.6%;
+    --sidebar-destructive-foreground: 210 40% 98%;
+    --sidebar-border: 214.3 31.8% 9.1%;
+    --sidebar-input: 214.3 31.8% 9.1%;
+    --sidebar-ring: 222.2 84% 4.9%;
     --sidebar-radius: 0.5rem;
 
     /* Enhanced spacing for standard theme */
@@ -109,6 +109,6 @@
 
 /* Apply standard theme styles when the theme is active */
 :root[data-theme="standard"] .standard-theme,
-:root.light .standard-theme {
+:root.dark .standard-theme {
     /* Theme is applied via the .standard-theme class */
 }

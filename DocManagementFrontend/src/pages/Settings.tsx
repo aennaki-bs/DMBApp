@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Globe,
@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { ThemeSelector } from "@/components/ui/ThemeSelector";
 import { useThemeContext } from "@/context/ThemeContext";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { getThemeClasses } from "@/utils/themeUtils";
 
 // Predefined background options
 const backgroundOptions = [
@@ -123,7 +124,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-blue-25 dark:bg-[#070b28] p-6">
       {/* Header */}
       <PageHeader
         title="Application Settings"
@@ -156,7 +157,7 @@ const Settings = () => {
             >
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <p className="text-blue-300/80 text-sm">
+                  <p className="text-blue-700 dark:text-blue-300/80 text-sm">
                     Choose from our theme collection: Standard, Light, and Dark
                   </p>
                   <Badge
@@ -203,22 +204,22 @@ const Settings = () => {
               className="h-full"
             >
               <div className="space-y-6">
-                <p className="text-blue-300/80 text-sm">
+                <p className="text-blue-700 dark:text-blue-300/80 text-sm">
                   Select your preferred display language
                 </p>
 
                 <div className="space-y-4">
-                  <Label className="text-blue-100 font-semibold">
+                  <Label className="text-blue-900 dark:text-blue-100 font-semibold">
                     Display Language
                   </Label>
                   <Select value={language} onValueChange={handleLanguageChange}>
-                    <SelectTrigger className="bg-blue-950/30 border-blue-800/30 text-blue-100 h-12">
+                    <SelectTrigger className="bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-800/30 dark:text-blue-100 h-12">
                       <SelectValue placeholder="Select Language" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#0f1642] border-blue-800/30">
+                    <SelectContent className="bg-white border-blue-200 dark:bg-[#0f1642] dark:border-blue-800/30">
                       <SelectItem
                         value="en"
-                        className="text-blue-100 focus:bg-blue-800/30 py-3"
+                        className="text-blue-900 focus:bg-blue-100 dark:text-blue-100 dark:focus:bg-blue-800/30 py-3"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-xl">🇺🇸</span>
@@ -227,7 +228,7 @@ const Settings = () => {
                       </SelectItem>
                       <SelectItem
                         value="fr"
-                        className="text-blue-100 focus:bg-blue-800/30 py-3"
+                        className="text-blue-900 focus:bg-blue-100 dark:text-blue-100 dark:focus:bg-blue-800/30 py-3"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-xl">🇫🇷</span>
@@ -236,7 +237,7 @@ const Settings = () => {
                       </SelectItem>
                       <SelectItem
                         value="es"
-                        className="text-blue-100 focus:bg-blue-800/30 py-3"
+                        className="text-blue-900 focus:bg-blue-100 dark:text-blue-100 dark:focus:bg-blue-800/30 py-3"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-xl">🇪🇸</span>
@@ -321,7 +322,7 @@ const Settings = () => {
               }
             >
               <div className="space-y-8">
-                <p className="text-blue-300/80">
+                <p className="text-blue-700 dark:text-blue-300/80">
                   Choose from our curated background collection to personalize
                   your workspace
                 </p>

@@ -86,12 +86,12 @@ export function SidebarNav() {
   });
 
   return (
-    <div className="h-full w-full bg-[#0a1033]/95 backdrop-blur-lg border-r border-blue-900/30 overflow-y-auto">
+    <div className="h-full w-full bg-blue-50/95 border-blue-200 dark:bg-[#0a1033]/95 backdrop-blur-lg border-r dark:border-blue-900/30 overflow-y-auto">
       {/* User Profile Section */}
       <UserProfileSection />
 
       <div className="px-4 py-2">
-        <p className="text-xs font-medium text-blue-400/80 px-2 py-2">
+        <p className="text-xs font-medium text-blue-600 dark:text-blue-400/80 px-2 py-2">
           MAIN NAVIGATION
         </p>
         <ul className="space-y-1">
@@ -101,8 +101,8 @@ export function SidebarNav() {
               to="/dashboard"
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive("/dashboard")
-                  ? "bg-blue-600/40 text-blue-200"
-                  : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                  ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                  : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
               }`}
             >
               <LayoutDashboard className="h-5 w-5" />
@@ -117,8 +117,8 @@ export function SidebarNav() {
                 to="/pending-approvals"
                 className={`flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive("/pending-approvals")
-                    ? "bg-blue-600/40 text-blue-200"
-                    : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                    ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                    : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -141,8 +141,8 @@ export function SidebarNav() {
                 to="/user-management"
                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive("/user-management")
-                    ? "bg-blue-600/40 text-blue-200"
-                    : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                    ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                    : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                 }`}
               >
                 <Users className="h-5 w-5" />
@@ -157,8 +157,8 @@ export function SidebarNav() {
               to="/documents"
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive("/documents")
-                  ? "bg-blue-600/40 text-blue-200"
-                  : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                  ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                  : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
               }`}
             >
               <FileText className="h-5 w-5" />
@@ -174,8 +174,8 @@ export function SidebarNav() {
                   to="/document-types-management"
                   className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive("/document-types-management")
-                      ? "bg-blue-600/40 text-blue-200"
-                      : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                      ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                      : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                   }`}
                 >
                   <Layers className="h-5 w-5" />
@@ -189,8 +189,8 @@ export function SidebarNav() {
                   onClick={() => setLineElementsMenuOpen(!lineElementsMenuOpen)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isLineElementsActive()
-                      ? "bg-blue-600/40 text-blue-200"
-                      : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                      ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                      : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ export function SidebarNav() {
 
                 {/* Submenu for Line Elements section */}
                 {lineElementsMenuOpen && (
-                  <ul className="ml-6 mt-1 space-y-1 border-l-2 border-blue-900/30 pl-2">
+                  <ul className="ml-6 mt-1 space-y-1 border-l-2 border-blue-300 dark:border-blue-900/30 pl-2">
                     <li>
                       <Link
                         to="/line-elements-management?tab=elementtypes"
@@ -214,8 +214,8 @@ export function SidebarNav() {
                           isActive("/line-elements-management") &&
                           new URLSearchParams(location.search).get("tab") ===
                             "elementtypes"
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
+                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                         }`}
                       >
                         <Tag className="h-4 w-4" />
@@ -227,8 +227,8 @@ export function SidebarNav() {
                         to="/items-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           isActive("/items-management")
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
+                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                         }`}
                       >
                         <Package className="h-4 w-4" />
@@ -240,8 +240,8 @@ export function SidebarNav() {
                         to="/unit-codes-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           isActive("/unit-codes-management")
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
+                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                         }`}
                       >
                         <Hash className="h-4 w-4" />
@@ -253,8 +253,8 @@ export function SidebarNav() {
                         to="/general-accounts-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           isActive("/general-accounts-management")
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
+                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                         }`}
                       >
                         <Calculator className="h-4 w-4" />
@@ -266,8 +266,8 @@ export function SidebarNav() {
                         to="/customer-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           isActive("/customer-management")
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
+                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                         }`}
                       >
                         <Users className="h-4 w-4" />
@@ -279,8 +279,8 @@ export function SidebarNav() {
                         to="/vendor-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           isActive("/vendor-management")
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
+                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                         }`}
                       >
                         <Truck className="h-4 w-4" />
@@ -297,8 +297,8 @@ export function SidebarNav() {
                   to="/circuits"
                   className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive("/circuits")
-                      ? "bg-blue-600/40 text-blue-200"
-                      : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                      ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                      : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                   }`}
                 >
                   <GitBranch className="h-5 w-5" />
@@ -312,8 +312,8 @@ export function SidebarNav() {
                   onClick={() => setApprovalMenuOpen(!approvalMenuOpen)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isApprovalActive()
-                      ? "bg-blue-600/40 text-blue-200"
-                      : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                      ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                      : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -329,14 +329,14 @@ export function SidebarNav() {
 
                 {/* Submenu for Approval section */}
                 {approvalMenuOpen && (
-                  <ul className="ml-6 mt-1 space-y-1 border-l-2 border-blue-900/30 pl-2">
+                  <ul className="ml-6 mt-1 space-y-1 border-l-2 border-blue-300 dark:border-blue-900/30 pl-2">
                     <li>
                       <Link
                         to="/approval-groups"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           isActive("/approval-groups")
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
+                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                         }`}
                       >
                         <UsersRound className="h-4 w-4" />
@@ -348,8 +348,8 @@ export function SidebarNav() {
                         to="/approvers-management"
                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           isActive("/approvers-management")
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
+                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                         }`}
                       >
                         <UserCog className="h-4 w-4" />
@@ -367,8 +367,8 @@ export function SidebarNav() {
                     to="/responsibility-centres"
                     className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive("/responsibility-centres")
-                        ? "bg-blue-600/40 text-blue-200"
-                        : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
+                        : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
                     }`}
                   >
                     <Building2 className="h-5 w-5" />

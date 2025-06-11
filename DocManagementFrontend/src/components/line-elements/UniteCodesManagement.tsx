@@ -423,16 +423,16 @@ const UniteCodesManagement = ({
   const renderSortIcon = (field: keyof UniteCode) => {
     if (sortField !== field) return null;
     return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-400" />
+      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
     ) : (
-      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-400" />
+      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
     );
   };
 
   const headerClass = (field: keyof UniteCode) => `
-    text-blue-200 font-medium cursor-pointer select-none
-    hover:text-blue-100 transition-colors duration-150
-    ${sortField === field ? "text-blue-100" : ""}
+    text-blue-800 dark:text-blue-200 font-medium cursor-pointer select-none
+    hover:text-blue-900 dark:hover:text-blue-100 transition-colors duration-150
+    ${sortField === field ? "text-blue-900 dark:text-blue-100" : ""}
   `;
 
   const handleSelectAll = () => {
@@ -599,14 +599,16 @@ const UniteCodesManagement = ({
 
   // Filter card class
   const filterCardClass =
-    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40";
+    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-blue-50 dark:bg-[#1e2a4a] shadow-lg border border-blue-200 dark:border-blue-900/40";
 
   if (loading) {
     return (
       <div className="flex justify-center py-10">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-          <p className="text-blue-300 font-medium">Loading unit codes...</p>
+          <p className="text-blue-700 dark:text-blue-300 font-medium">
+            Loading unit codes...
+          </p>
         </div>
       </div>
     );
@@ -619,18 +621,18 @@ const UniteCodesManagement = ({
         {/* Search and field select */}
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[120px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+            <SelectTrigger className="w-[120px] bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
               <SelectValue>
                 {UNITE_CODE_SEARCH_FIELDS.find((opt) => opt.id === searchField)
                   ?.label || "All fields"}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+            <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
               {UNITE_CODE_SEARCH_FIELDS.map((opt) => (
                 <SelectItem
                   key={opt.id}
                   value={opt.id}
-                  className="hover:bg-blue-800/40"
+                  className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                 >
                   {opt.label}
                 </SelectItem>
@@ -642,34 +644,37 @@ const UniteCodesManagement = ({
               placeholder="Search unit codes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+              className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm placeholder:text-blue-500 dark:placeholder:text-blue-400"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Create button */}
-          <Button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+          <Dialog
+            open={isCreateDialogOpen}
+            onOpenChange={setIsCreateDialogOpen}
           >
-            <Plus className="h-4 w-4" />
-            Create Unit Code
-          </Button>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create Unit Code
+              </Button>
+            </DialogTrigger>
+          </Dialog>
         </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
         {filteredAndSortedUniteCodes.length > 0 ? (
           <>
             {/* Fixed Header - Never Scrolls */}
-            <div className="min-w-[700px] border-b border-blue-900/30">
+            <div className="min-w-[800px] border-b border-blue-200 dark:border-blue-900/30">
               <Table className="table-fixed w-full">
-                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
-                  <TableRow className="border-blue-900/30 hover:bg-transparent">
+                <TableHeader className="bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
+                  <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
                     <TableHead className="w-[50px]">
                       <div className="flex items-center justify-center">
                         <Checkbox
@@ -686,7 +691,7 @@ const UniteCodesManagement = ({
                       </div>
                     </TableHead>
                     <TableHead
-                      className={`${headerClass("code")} w-[120px]`}
+                      className={`${headerClass("code")} w-[150px]`}
                       onClick={() => handleSort("code")}
                     >
                       <div className="flex items-center">
@@ -694,14 +699,14 @@ const UniteCodesManagement = ({
                       </div>
                     </TableHead>
                     <TableHead
-                      className={`${headerClass("description")} w-[350px]`}
+                      className={`${headerClass("description")} w-[400px]`}
                       onClick={() => handleSort("description")}
                     >
                       <div className="flex items-center">
                         Description {renderSortIcon("description")}
                       </div>
                     </TableHead>
-                    <TableHead className="w-[80px] text-blue-200 font-medium text-right pr-4">
+                    <TableHead className="w-[200px] text-blue-800 dark:text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -711,13 +716,21 @@ const UniteCodesManagement = ({
 
             {/* Scrollable Body - Only Content Scrolls */}
             <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
-              <div className="min-w-[700px]">
+              <div className="min-w-[800px]">
                 <Table className="table-fixed w-full">
                   <TableBody>
-                    {paginatedUniteCodes.map((uniteCode) => (
+                    {paginatedUniteCodes.map((uniteCode, rowIndex) => (
                       <TableRow
                         key={uniteCode.code}
-                        className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
+                        className={`border-blue-200 dark:border-blue-900/30 transition-all duration-200 group cursor-default ${
+                          rowIndex % 2 === 0
+                            ? "bg-blue-50 dark:bg-blue-950/10"
+                            : "bg-white dark:bg-transparent"
+                        } ${
+                          selectedUniteCodes.includes(uniteCode.code)
+                            ? "bg-blue-200 dark:bg-blue-900/40 border-l-4 border-l-blue-500"
+                            : "hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                        }`}
                       >
                         <TableCell className="w-[50px]">
                           <div className="flex items-center justify-center">
@@ -733,15 +746,15 @@ const UniteCodesManagement = ({
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="w-[120px] font-mono text-blue-100 font-semibold">
+                        <TableCell className="w-[150px] font-mono text-blue-900 dark:text-blue-300 font-semibold">
                           {uniteCode.code}
                         </TableCell>
-                        <TableCell className="w-[350px] text-blue-200">
+                        <TableCell className="w-[400px] text-blue-800 dark:text-blue-200">
                           <div className="truncate">
                             {uniteCode.description}
                           </div>
                         </TableCell>
-                        <TableCell className="w-[80px] text-right">
+                        <TableCell className="w-[200px] text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
@@ -750,35 +763,73 @@ const UniteCodesManagement = ({
                               disabled={uniteCode.itemsCount > 0}
                               className={`h-8 w-8 p-0 ${
                                 uniteCode.itemsCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-400"
-                                  : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                                  : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30"
                               }`}
                               title={
                                 uniteCode.itemsCount > 0
-                                  ? "Cannot edit: Unit is used by items"
+                                  ? "Cannot edit: Unit code is used in items"
                                   : "Edit unit code"
                               }
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openDeleteDialog(uniteCode)}
-                              disabled={uniteCode.itemsCount > 0}
-                              className={`h-8 w-8 p-0 ${
-                                uniteCode.itemsCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-400"
-                                  : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                              }`}
-                              title={
-                                uniteCode.itemsCount > 0
-                                  ? "Cannot delete: Unit is used by items"
-                                  : "Delete unit code"
-                              }
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={uniteCode.itemsCount > 0}
+                                  className={`h-8 w-8 p-0 ${
+                                    uniteCode.itemsCount > 0
+                                      ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                                      : "text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
+                                  }`}
+                                  title={
+                                    uniteCode.itemsCount > 0
+                                      ? "Cannot delete: Unit code is used in items"
+                                      : "Delete unit code"
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b] dark:to-[#0a1033] border-red-300 dark:border-red-500/30 text-blue-900 dark:text-white shadow-[0_0_25px_rgba(239,68,68,0.2)] rounded-xl">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-xl text-red-700 dark:text-red-300">
+                                    Delete Unit Code
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription className="text-blue-700 dark:text-blue-300">
+                                    Are you sure you want to delete unit code "
+                                    {uniteCode.code}"? This action cannot be
+                                    undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                {uniteCode.itemsCount > 0 && (
+                                  <div className="bg-blue-100 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-300 dark:border-blue-900/30">
+                                    <p className="text-red-700 dark:text-red-400 flex items-center">
+                                      <AlertTriangle className="mr-1 h-4 w-4" />
+                                      This unit code is used in{" "}
+                                      {uniteCode.itemsCount} item
+                                      {uniteCode.itemsCount !== 1 ? "s" : ""}{" "}
+                                      and cannot be deleted.
+                                    </p>
+                                  </div>
+                                )}
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-white dark:bg-transparent border-blue-300 dark:border-blue-800/40 text-blue-900 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/20">
+                                    Cancel
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => openDeleteDialog(uniteCode)}
+                                    disabled={uniteCode.itemsCount > 0}
+                                    className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -789,10 +840,10 @@ const UniteCodesManagement = ({
             </ScrollArea>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-blue-300">
-            <Hash className="h-12 w-12 mb-4 text-blue-400/50" />
+          <div className="flex flex-col items-center justify-center py-12 text-blue-700 dark:text-blue-300">
+            <Hash className="h-12 w-12 mb-4 text-blue-500 dark:text-blue-400/50" />
             <h3 className="text-lg font-semibold mb-2">No unit codes found</h3>
-            <p className="text-sm text-blue-400/70 text-center">
+            <p className="text-sm text-blue-600 dark:text-blue-400/70 text-center">
               {searchQuery
                 ? "Try adjusting your search terms."
                 : "Get started by creating your first unit code."}
@@ -801,7 +852,7 @@ const UniteCodesManagement = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-4 text-blue-300 border-blue-500/30 hover:bg-blue-800/30"
+                className="mt-4 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-800/30"
                 onClick={clearAllFilters}
               >
                 <X className="h-4 w-4 mr-2" />

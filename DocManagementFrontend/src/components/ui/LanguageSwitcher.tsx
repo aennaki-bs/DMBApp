@@ -40,7 +40,7 @@ export const LanguageSwitcher: React.FC = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-48 bg-[#0f1642] border-blue-900/30"
+        className="w-48 bg-white border-blue-200 dark:bg-[#0f1642] dark:border-blue-900/30"
       >
         {languages.map((language) => (
           <DropdownMenuItem

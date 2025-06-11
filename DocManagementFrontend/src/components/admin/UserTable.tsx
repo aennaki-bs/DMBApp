@@ -163,7 +163,7 @@ export function UserTable() {
 
   // Document-style filter/search bar
   const filterCardClass =
-    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40";
+    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-blue-50 dark:bg-[#1e2a4a] shadow-lg border border-blue-200 dark:border-blue-900/40";
 
   // Filter popover state
   const [filterOpen, setFilterOpen] = useState(false);
@@ -201,14 +201,14 @@ export function UserTable() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="text-red-500 py-10 text-center">
+      <div className="text-red-600 dark:text-red-500 py-10 text-center">
         <AlertTriangle className="h-10 w-10 mx-auto mb-2" />
         Error loading users. Please try again.
       </div>
@@ -222,19 +222,19 @@ export function UserTable() {
         {/* Search and field select */}
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[120px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+            <SelectTrigger className="w-[120px] bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
               <SelectValue>
                 {DEFAULT_USER_SEARCH_FIELDS.find(
                   (opt) => opt.id === searchField
                 )?.label || "All fields"}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+            <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
               {DEFAULT_USER_SEARCH_FIELDS.map((opt) => (
                 <SelectItem
                   key={opt.id}
                   value={opt.id as string}
-                  className="hover:bg-blue-800/40"
+                  className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                 >
                   {opt.label}
                 </SelectItem>
@@ -246,10 +246,10 @@ export function UserTable() {
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+              className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm"
             />
             <svg
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 dark:text-blue-400"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -269,22 +269,24 @@ export function UserTable() {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2 ml-2"
+              className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2 ml-2"
             >
-              <Filter className="h-4 w-4 text-blue-400" />
+              <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               Filter
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
-            <div className="mb-2 text-blue-200 font-semibold">
+          <PopoverContent className="w-80 bg-white dark:bg-[#1e2a4a] border border-blue-300 dark:border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
+            <div className="mb-2 text-blue-900 dark:text-blue-200 font-semibold">
               Advanced Filters
             </div>
             <div className="flex flex-col gap-4">
               {/* Status Filter */}
               <div className="flex flex-col gap-1">
-                <span className="text-sm text-blue-200">Status</span>
+                <span className="text-sm text-blue-800 dark:text-blue-200">
+                  Status
+                </span>
                 <Select value={statusFilter} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+                  <SelectTrigger className="w-full bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
                     <SelectValue>
                       {
                         statusOptions.find((opt) => opt.value === statusFilter)
@@ -292,12 +294,12 @@ export function UserTable() {
                       }
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                  <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
                     {statusOptions.map((opt) => (
                       <SelectItem
                         key={opt.id}
                         value={opt.value}
-                        className="hover:bg-blue-800/40"
+                        className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                       >
                         {opt.label}
                       </SelectItem>
@@ -307,9 +309,11 @@ export function UserTable() {
               </div>
               {/* Role Filter */}
               <div className="flex flex-col gap-1">
-                <span className="text-sm text-blue-200">Role</span>
+                <span className="text-sm text-blue-800 dark:text-blue-200">
+                  Role
+                </span>
                 <Select value={roleFilter} onValueChange={handleRoleChange}>
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+                  <SelectTrigger className="w-full bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
                     <SelectValue>
                       {
                         roleOptions.find((opt) => opt.value === roleFilter)
@@ -317,12 +321,12 @@ export function UserTable() {
                       }
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                  <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
                     {roleOptions.map((opt) => (
                       <SelectItem
                         key={opt.id}
                         value={opt.value}
-                        className="hover:bg-blue-800/40"
+                        className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                       >
                         {opt.label}
                       </SelectItem>
@@ -336,7 +340,7 @@ export function UserTable() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-blue-300 hover:text-white flex items-center gap-1"
+                  className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-white flex items-center gap-1"
                   onClick={clearAllFilters}
                 >
                   <X className="h-3 w-3" /> Clear All

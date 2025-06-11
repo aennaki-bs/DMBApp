@@ -100,7 +100,7 @@ export function Layout() {
         {/* Lighter overlay for background - more transparent to show background */}
         <div
           className={`absolute inset-0 ${
-            theme === "dark" ? "bg-[#070b28]/60" : "bg-slate-100/50"
+            theme === "dark" ? "bg-[#070b28]/60" : "bg-blue-50/50"
           } z-0`}
         ></div>
 
@@ -110,7 +110,7 @@ export function Layout() {
           <aside
             className={`h-full ${
               isMobile ? "hidden" : "w-64 flex-shrink-0"
-            } border-r border-blue-900/30 transition-all duration-200 z-20`}
+            } border-r border-blue-200 dark:border-blue-900/30 transition-all duration-200 z-20`}
           >
             <SidebarNav />
           </aside>
@@ -120,8 +120,10 @@ export function Layout() {
             {/* Top navbar */}
             <header
               className={`${
-                isMobile ? "bg-[#0a1033]/90" : "bg-[#0a1033]/80"
-              } backdrop-blur-lg border-b border-blue-900/30 z-30`}
+                isMobile
+                  ? "bg-white/90 dark:bg-[#0a1033]/90"
+                  : "bg-white/80 dark:bg-[#0a1033]/80"
+              } backdrop-blur-lg border-b border-blue-200 dark:border-blue-900/30 z-30`}
             >
               <div className="flex items-center">
                 {isMobile && <SidebarTrigger className="p-2" />}
@@ -142,8 +144,8 @@ export function Layout() {
             <main className="flex-1 overflow-auto p-4">
               <div
                 className={`${
-                  theme === "dark" ? "bg-[#0f1642]/50" : "bg-white/85"
-                } h-full rounded-xl border border-blue-900/30 shadow-lg overflow-auto backdrop-blur-sm`}
+                  theme === "dark" ? "bg-[#0f1642]/50" : "bg-white/90"
+                } h-full rounded-xl border border-blue-200 dark:border-blue-900/30 shadow-lg overflow-auto backdrop-blur-sm`}
               >
                 <Outlet />
               </div>

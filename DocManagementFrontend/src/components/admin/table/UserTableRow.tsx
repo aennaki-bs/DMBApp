@@ -73,10 +73,10 @@ export function UserTableRow({
   return (
     <>
       <TableRow
-        className={`border-blue-900/30 transition-all duration-150 ${
+        className={`border-blue-200 dark:border-blue-900/30 transition-all duration-150 ${
           isSelected
-            ? "bg-blue-900/30 border-l-4 border-l-blue-500"
-            : "hover:bg-blue-900/20"
+            ? "bg-blue-100 dark:bg-blue-900/30 border-l-4 border-l-blue-600 dark:border-l-blue-500"
+            : "hover:bg-blue-50 dark:hover:bg-blue-900/20"
         }`}
       >
         <TableCell className="w-[48px]">
@@ -90,7 +90,7 @@ export function UserTableRow({
           </div>
         </TableCell>
         <TableCell className="w-[48px]">
-          <Avatar className="border-2 border-blue-900/50 h-9 w-9">
+          <Avatar className="border-2 border-blue-300 dark:border-blue-900/50 h-9 w-9">
             <AvatarImage src={user.profilePicture} alt={user.username} />
             <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
               {user.firstName.charAt(0)}
@@ -99,12 +99,14 @@ export function UserTableRow({
           </Avatar>
         </TableCell>
         <TableCell className="w-[200px]">
-          <div className="font-medium text-blue-100">
+          <div className="font-medium text-blue-900 dark:text-blue-100">
             {user.firstName} {user.lastName}
           </div>
-          <div className="text-xs text-blue-400">@{user.username}</div>
+          <div className="text-xs text-blue-600 dark:text-blue-400">
+            @{user.username}
+          </div>
         </TableCell>
-        <TableCell className="w-[280px] text-blue-200">
+        <TableCell className="w-[280px] text-blue-800 dark:text-blue-200">
           <span className="block truncate">{user.email}</span>
         </TableCell>
 
@@ -119,7 +121,7 @@ export function UserTableRow({
           {user.isActive ? (
             <Badge
               variant="secondary"
-              className="bg-emerald-900/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/30"
+              className="bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/30"
             >
               <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
               Active
@@ -127,7 +129,7 @@ export function UserTableRow({
           ) : (
             <Badge
               variant="destructive"
-              className="bg-red-900/20 text-red-300 border border-red-500/30 hover:bg-red-900/30"
+              className="bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-900/30"
             >
               <XCircle className="w-3.5 h-3.5 mr-1" />
               Inactive
@@ -153,7 +155,7 @@ export function UserTableRow({
               </TooltipTrigger>
               <TooltipContent
                 side="top"
-                className="bg-blue-900/90 text-blue-100 border-blue-500/30"
+                className="bg-white dark:bg-blue-900/90 text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-500/30"
               >
                 {user.isActive ? "Block User" : "Unblock User"}
               </TooltipContent>

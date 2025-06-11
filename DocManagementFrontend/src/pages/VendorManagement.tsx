@@ -29,13 +29,13 @@ const VendorManagementPage = () => {
 
   return (
     <div className="space-y-6 p-6 h-full">
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 mb-6 transition-all h-1/12">
+      <div className="bg-white dark:bg-[#0a1033] border border-blue-200 dark:border-blue-900/30 rounded-lg p-6 mb-6 transition-all h-1/12">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-white flex items-center">
-              <Truck className="mr-3 h-6 w-6 text-blue-400" /> Vendor Management
+            <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-blue-900 dark:text-white flex items-center">
+              <Truck className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> Vendor Management
             </h1>
-            <p className="text-sm md:text-base text-gray-400">
+            <p className="text-sm md:text-base text-blue-700 dark:text-gray-400">
               Manage your vendor database and supplier information
             </p>
           </div>
@@ -49,7 +49,7 @@ const VendorManagementPage = () => {
         </div>
       </div>
 
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 transition-all h-11/12 overflow-y-auto">
+      <div className="bg-white dark:bg-[#0a1033] border border-blue-200 dark:border-blue-900/30 rounded-lg p-6 transition-all h-11/12 overflow-y-auto">
         <VendorTable />
       </div>
 

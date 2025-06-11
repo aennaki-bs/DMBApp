@@ -241,8 +241,8 @@ export default function VendorTable() {
   };
 
   const headerClass = (field: keyof Vendor) =>
-    `cursor-pointer hover:bg-blue-800/30 text-blue-200 font-medium ${
-      sortBy === field ? "bg-blue-800/20" : ""
+    `cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/30 text-blue-800 dark:text-blue-200 font-medium ${
+      sortBy === field ? "bg-blue-200 dark:bg-blue-800/50" : ""
     }`;
 
   const handleSelectVendor = (vendorCode: string) => {
@@ -330,12 +330,17 @@ export default function VendorTable() {
 
   // Document-style filter/search bar
   const filterCardClass =
-    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40";
+    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-blue-50 dark:bg-[#1e2a4a] shadow-lg border border-blue-200 dark:border-blue-900/40";
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="text-blue-700 dark:text-blue-300 font-medium">
+            Loading vendors...
+          </p>
+        </div>
       </div>
     );
   }
@@ -404,26 +409,28 @@ export default function VendorTable() {
               Filter
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
-            <div className="mb-2 text-blue-200 font-semibold">
+          <PopoverContent className="w-80 bg-white dark:bg-[#1e2a4a] border border-blue-300 dark:border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
+            <div className="mb-2 text-blue-800 dark:text-blue-200 font-semibold">
               Advanced Filters
             </div>
             <div className="flex flex-col gap-4">
               {/* Country Filter */}
               <div className="flex flex-col gap-1">
-                <span className="text-sm text-blue-200">Country</span>
+                <span className="text-sm text-blue-700 dark:text-blue-200">
+                  Country
+                </span>
                 <Select value={countryFilter} onValueChange={setCountryFilter}>
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+                  <SelectTrigger className="w-full bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
                     <SelectValue>
                       {countries.find((c) => c.value === countryFilter)?.label}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                  <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
                     {countries.map((country) => (
                       <SelectItem
                         key={country.id}
                         value={country.value}
-                        className="hover:bg-blue-800/40"
+                        className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                       >
                         {country.label}
                       </SelectItem>
@@ -437,7 +444,7 @@ export default function VendorTable() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-blue-300 hover:text-white flex items-center gap-1"
+                  className="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-white flex items-center gap-1"
                   onClick={clearAllFilters}
                 >
                   <X className="h-3 w-3" /> Clear All
@@ -449,7 +456,7 @@ export default function VendorTable() {
       </div>
 
       {/* Results Summary */}
-      <div className="flex items-center gap-2 text-blue-400 mb-4">
+      <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-4">
         <TrendingUp className="h-4 w-4" />
         <span className="text-sm">
           Showing {paginatedVendors.length} of {filteredVendors.length} vendors
@@ -467,13 +474,13 @@ export default function VendorTable() {
       )}
 
       {/* Table Container */}
-      <div className="bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-[#1e2a4a] border border-blue-200 dark:border-blue-900/40 rounded-xl shadow-lg overflow-hidden">
         {/* Fixed Header */}
-        <div className="bg-[#22306e] border-b border-blue-900/40">
+        <div className="bg-blue-50 dark:bg-[#22306e] border-b border-blue-200 dark:border-blue-900/40">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-blue-200">
+                <TableHead className="w-12 text-blue-800 dark:text-blue-200">
                   <Checkbox
                     checked={
                       paginatedVendors.length > 0 &&
@@ -528,7 +535,7 @@ export default function VendorTable() {
                     {renderSortIcon("address")}
                   </div>
                 </TableHead>
-                <TableHead className="text-blue-200 text-center">
+                <TableHead className="text-blue-800 dark:text-blue-200 text-center">
                   Actions
                 </TableHead>
               </TableRow>
@@ -537,13 +544,13 @@ export default function VendorTable() {
         </div>
 
         {/* Scrollable Body */}
-        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-track-blue-900/20 scrollbar-thumb-blue-600/50 hover:scrollbar-thumb-blue-500/70">
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-track-blue-200 dark:scrollbar-track-blue-900/20 scrollbar-thumb-blue-500 dark:scrollbar-thumb-blue-600/50 hover:scrollbar-thumb-blue-600 dark:hover:scrollbar-thumb-blue-500/70">
           <Table>
             <TableBody>
               {paginatedVendors.map((vendor, index) => (
                 <TableRow
                   key={vendor.vendorCode}
-                  className="hover:bg-blue-900/20 transition-all duration-200 hover:scale-[1.01] border-b border-blue-700/30"
+                  className="hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-all duration-200 hover:scale-[1.01] border-b border-blue-200 dark:border-blue-700/30"
                   style={{
                     animationDelay: `${index * 50}ms`,
                   }}
@@ -557,15 +564,19 @@ export default function VendorTable() {
                       className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                     />
                   </TableCell>
-                  <TableCell className="font-medium text-blue-300">
+                  <TableCell className="font-medium text-blue-900 dark:text-blue-300">
                     {vendor.vendorCode}
                   </TableCell>
-                  <TableCell className="text-blue-100">{vendor.name}</TableCell>
-                  <TableCell className="text-blue-200">{vendor.city}</TableCell>
-                  <TableCell className="text-blue-200">
+                  <TableCell className="text-blue-800 dark:text-blue-100">
+                    {vendor.name}
+                  </TableCell>
+                  <TableCell className="text-blue-700 dark:text-blue-200">
+                    {vendor.city}
+                  </TableCell>
+                  <TableCell className="text-blue-700 dark:text-blue-200">
                     {vendor.country}
                   </TableCell>
-                  <TableCell className="text-blue-200 max-w-xs truncate">
+                  <TableCell className="text-blue-700 dark:text-blue-200 max-w-xs truncate">
                     {vendor.address}
                   </TableCell>
                   <TableCell>
@@ -577,7 +588,7 @@ export default function VendorTable() {
                               variant="ghost"
                               size="sm"
                               onClick={() => openEditDialog(vendor)}
-                              className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 hover:scale-110 transition-all duration-200"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:scale-110 transition-all duration-200"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -596,24 +607,24 @@ export default function VendorTable() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-900/30 hover:scale-110 transition-all duration-200"
+                                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:scale-110 transition-all duration-200"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-slate-800 text-white border border-slate-700">
+                              <AlertDialogContent className="bg-white dark:bg-slate-800 text-blue-900 dark:text-white border border-blue-300 dark:border-slate-700">
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>
                                     Are you sure?
                                   </AlertDialogTitle>
-                                  <AlertDialogDescription>
+                                  <AlertDialogDescription className="text-blue-700 dark:text-gray-300">
                                     This will permanently delete the vendor "
                                     {vendor.name}" ({vendor.vendorCode}). This
                                     action cannot be undone.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">
+                                  <AlertDialogCancel className="bg-white dark:bg-slate-700 text-blue-900 dark:text-white hover:bg-blue-100 dark:hover:bg-slate-600 border border-blue-300 dark:border-none">
                                     Cancel
                                   </AlertDialogCancel>
                                   <AlertDialogAction
@@ -654,24 +665,30 @@ export default function VendorTable() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-slate-800 text-white border border-slate-700 max-w-md">
+        <DialogContent className="bg-white dark:bg-slate-800 text-blue-900 dark:text-white border border-blue-300 dark:border-slate-700 max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Vendor</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="vendorCode" className="text-blue-300">
+              <Label
+                htmlFor="vendorCode"
+                className="text-blue-700 dark:text-blue-300"
+              >
                 Vendor Code
               </Label>
               <Input
                 id="vendorCode"
                 value={editingVendor?.vendorCode || ""}
                 disabled
-                className="bg-slate-700 text-gray-400 mt-1"
+                className="bg-blue-50 dark:bg-slate-700 text-gray-600 dark:text-gray-400 mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="name" className="text-blue-300">
+              <Label
+                htmlFor="name"
+                className="text-blue-700 dark:text-blue-300"
+              >
                 Name
               </Label>
               <Input
@@ -680,11 +697,14 @@ export default function VendorTable() {
                 onChange={(e) =>
                   setEditFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                className="bg-slate-700 text-white border-slate-600 mt-1"
+                className="bg-white dark:bg-slate-700 text-blue-900 dark:text-white border-blue-300 dark:border-slate-600 mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="city" className="text-blue-300">
+              <Label
+                htmlFor="city"
+                className="text-blue-700 dark:text-blue-300"
+              >
                 City
               </Label>
               <Input
@@ -693,11 +713,14 @@ export default function VendorTable() {
                 onChange={(e) =>
                   setEditFormData((prev) => ({ ...prev, city: e.target.value }))
                 }
-                className="bg-slate-700 text-white border-slate-600 mt-1"
+                className="bg-white dark:bg-slate-700 text-blue-900 dark:text-white border-blue-300 dark:border-slate-600 mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="country" className="text-blue-300">
+              <Label
+                htmlFor="country"
+                className="text-blue-700 dark:text-blue-300"
+              >
                 Country
               </Label>
               <Input
@@ -709,11 +732,14 @@ export default function VendorTable() {
                     country: e.target.value,
                   }))
                 }
-                className="bg-slate-700 text-white border-slate-600 mt-1"
+                className="bg-white dark:bg-slate-700 text-blue-900 dark:text-white border-blue-300 dark:border-slate-600 mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="address" className="text-blue-300">
+              <Label
+                htmlFor="address"
+                className="text-blue-700 dark:text-blue-300"
+              >
                 Address
               </Label>
               <Textarea
@@ -725,8 +751,7 @@ export default function VendorTable() {
                     address: e.target.value,
                   }))
                 }
-                className="bg-slate-700 text-white border-slate-600 mt-1"
-                rows={3}
+                className="bg-white dark:bg-slate-700 text-blue-900 dark:text-white border-blue-300 dark:border-slate-600 mt-1"
               />
             </div>
           </div>

@@ -68,7 +68,7 @@ const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
     };
 
     return (
-      <div className="flex rounded-md overflow-hidden border border-blue-900/50 bg-[#0a1033] focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400/30 hover:border-blue-700/60 transition-all">
+      <div className="flex rounded-md overflow-hidden border border-blue-200 bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400/30 hover:border-blue-300 transition-all dark:border-blue-900/50 dark:bg-[#0a1033] dark:hover:border-blue-700/60">
         {/* Visible text input (for display only) */}
         <input
           type="text"

@@ -78,11 +78,11 @@ export function UserTableContent({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
         {hasUsers ? (
           <>
             {/* Fixed Header - Never Scrolls */}
-            <div className="min-w-[1026px] border-b border-blue-900/30">
+            <div className="min-w-[1026px] border-b border-blue-200 dark:border-blue-900/30">
               <Table className="table-fixed w-full">
                 <UserTableHeader
                   selectedCount={

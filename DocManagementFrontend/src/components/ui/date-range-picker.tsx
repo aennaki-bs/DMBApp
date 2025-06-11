@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -61,9 +60,9 @@ export function DateRangePicker({
             </Button>
           )}
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-auto p-0 bg-[#0a1033] border-blue-900/30" 
-          align={align} 
+        <PopoverContent
+          className="w-auto p-0 bg-white border-blue-200 dark:bg-[#0a1033] dark:border-blue-900/30"
+          align={align}
           sideOffset={4}
         >
           <Calendar
@@ -73,19 +72,19 @@ export function DateRangePicker({
             selected={date}
             onSelect={onDateChange}
             numberOfMonths={2}
-            className="bg-[#0a1033] text-white"
+            className="bg-white text-blue-900 dark:bg-[#0a1033] dark:text-white"
           />
           <div className="p-3 border-t border-blue-900/30 flex justify-end space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => onDateChange(undefined)}
               className="border-blue-800/50 text-blue-300 hover:bg-blue-900/30"
             >
               Clear
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={() => document.body.click()}
               className="bg-blue-600 hover:bg-blue-700"
             >

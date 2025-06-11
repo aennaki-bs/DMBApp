@@ -749,7 +749,7 @@ const Documents = () => {
         }
       />
 
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 transition-all">
+      <div className="bg-white border-blue-200 dark:bg-[#0a1033] dark:border-blue-900/30 border rounded-lg p-6 transition-all">
         <SearchAndFilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

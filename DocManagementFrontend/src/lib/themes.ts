@@ -4,14 +4,14 @@ export type Theme = BaseTheme | NamedTheme;
 
 // Theme configurations mapping named themes to base themes
 export const themeConfigurations = {
-  standard: 'light' as BaseTheme, // Standard theme uses light mode styling
+  standard: 'dark' as BaseTheme, // Standard theme uses dark mode styling
 } as const;
 
 // Theme definitions for display purposes
 export const themeDefinitions = {
   light: {
     name: 'Light',
-    description: 'Light theme with bright colors',
+    description: 'Blue and white theme with clean, professional styling',
   },
   dark: {
     name: 'Dark', 
@@ -19,7 +19,7 @@ export const themeDefinitions = {
   },
   standard: {
     name: 'Standard Theme',
-    description: 'Default DocuVerse theme with optimized colors and spacing',
+    description: 'Default DocuVerse dark theme with optimized colors and spacing',
   },
 } as const;
 

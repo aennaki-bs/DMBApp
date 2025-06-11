@@ -341,7 +341,7 @@ const DocumentTypes = () => {
         }
       />
 
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 transition-all">
+      <div className="bg-white border-blue-200 dark:bg-[#0a1033] dark:border-blue-900/30 border rounded-lg p-6 transition-all">
         <SearchAndFilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -366,10 +366,10 @@ const DocumentTypes = () => {
                   value={attributeFilter}
                   onValueChange={setAttributeFilter}
                 >
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
+                  <SelectTrigger className="w-full bg-blue-50 border-blue-200 text-blue-900 dark:bg-[#22306e] dark:text-blue-100 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500">
                     <SelectValue placeholder="Filter by attributes" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                  <SelectContent className="bg-white border-blue-200 text-blue-900 dark:bg-[#22306e] dark:text-blue-100 dark:border-blue-900/40">
                     <SelectItem value="any" className="hover:bg-blue-800/40">
                       Any
                     </SelectItem>

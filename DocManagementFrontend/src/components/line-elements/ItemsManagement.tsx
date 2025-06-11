@@ -288,16 +288,16 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   const renderSortIcon = (field: keyof Item) => {
     if (sortField !== field) return null;
     return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-400" />
+      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
     ) : (
-      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-400" />
+      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
     );
   };
 
   const headerClass = (field: keyof Item) => `
-    text-blue-200 font-medium cursor-pointer select-none
-    hover:text-blue-100 transition-colors duration-150
-    ${sortField === field ? "text-blue-100" : ""}
+    text-blue-800 dark:text-blue-200 font-medium cursor-pointer select-none
+    hover:text-blue-900 dark:hover:text-blue-100 transition-colors duration-150
+    ${sortField === field ? "text-blue-900 dark:text-blue-100" : ""}
   `;
 
   const handleSelectAll = () => {
@@ -407,7 +407,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
 
   // Filter card class
   const filterCardClass =
-    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40";
+    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-blue-50 dark:bg-[#1e2a4a] shadow-lg border border-blue-200 dark:border-blue-900/40";
 
   // Unite filter options
   const uniteOptions = [
@@ -425,7 +425,9 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
       <div className="flex justify-center py-10">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-          <p className="text-blue-300 font-medium">Loading items...</p>
+          <p className="text-blue-700 dark:text-blue-300 font-medium">
+            Loading items...
+          </p>
         </div>
       </div>
     );
@@ -438,18 +440,18 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
         {/* Search and field select */}
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[120px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+            <SelectTrigger className="w-[120px] bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
               <SelectValue>
                 {ITEM_SEARCH_FIELDS.find((opt) => opt.id === searchField)
                   ?.label || "All fields"}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+            <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
               {ITEM_SEARCH_FIELDS.map((opt) => (
                 <SelectItem
                   key={opt.id}
                   value={opt.id}
-                  className="hover:bg-blue-800/40"
+                  className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                 >
                   {opt.label}
                 </SelectItem>
@@ -461,9 +463,9 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+              className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm placeholder:text-blue-500 dark:placeholder:text-blue-400"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
         </div>
 
@@ -474,21 +476,23 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2"
+                className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2"
               >
-                <Filter className="h-4 w-4 text-blue-400" />
+                <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 Filter
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-4">
-              <div className="mb-2 text-blue-200 font-semibold">
+            <PopoverContent className="w-80 bg-white dark:bg-[#1e2a4a] border border-blue-300 dark:border-blue-900/40 rounded-xl shadow-lg p-4">
+              <div className="mb-2 text-blue-800 dark:text-blue-200 font-semibold">
                 Advanced Filters
               </div>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm text-blue-200">Unit Code</span>
+                  <span className="text-sm text-blue-700 dark:text-blue-200">
+                    Unit Code
+                  </span>
                   <Select value={uniteFilter} onValueChange={setUniteFilter}>
-                    <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40">
+                    <SelectTrigger className="w-full bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
                       <SelectValue>
                         {
                           uniteOptions.find((opt) => opt.value === uniteFilter)
@@ -496,12 +500,12 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                         }
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                    <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
                       {uniteOptions.map((opt) => (
                         <SelectItem
                           key={opt.id}
                           value={opt.value}
-                          className="hover:bg-blue-800/40"
+                          className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                         >
                           {opt.label}
                         </SelectItem>
@@ -515,7 +519,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-blue-300 hover:text-white flex items-center gap-1"
+                    className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-white flex items-center gap-1"
                     onClick={clearAllFilters}
                   >
                     <X className="h-3 w-3" /> Clear All
@@ -537,14 +541,14 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
         {filteredAndSortedItems.length > 0 ? (
           <>
             {/* Fixed Header - Never Scrolls */}
-            <div className="min-w-[900px] border-b border-blue-900/30">
+            <div className="min-w-[900px] border-b border-blue-200 dark:border-blue-900/30">
               <Table className="table-fixed w-full">
-                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
-                  <TableRow className="border-blue-900/30 hover:bg-transparent">
+                <TableHeader className="bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
+                  <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
                     <TableHead className="w-[50px]">
                       <div className="flex items-center justify-center">
                         <Checkbox
@@ -584,7 +588,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                         Unit Code {renderSortIcon("unite")}
                       </div>
                     </TableHead>
-                    <TableHead className="w-[130px] text-blue-200 font-medium text-right pr-4">
+                    <TableHead className="w-[130px] text-blue-800 dark:text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -600,7 +604,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                     {paginatedItems.map((item) => (
                       <TableRow
                         key={item.code}
-                        className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
+                        className="border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/20 transition-colors duration-150"
                       >
                         <TableCell className="w-[50px]">
                           <div className="flex items-center justify-center">
@@ -614,22 +618,24 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="w-[120px] font-mono text-blue-100 font-semibold">
+                        <TableCell className="w-[120px] font-mono text-blue-900 dark:text-blue-100 font-semibold">
                           {item.code}
                         </TableCell>
-                        <TableCell className="w-[300px] text-blue-200">
+                        <TableCell className="w-[300px] text-blue-800 dark:text-blue-200">
                           <div className="truncate">{item.description}</div>
                         </TableCell>
                         <TableCell className="w-[200px]">
                           {item.unite ? (
                             <Badge
                               variant="outline"
-                              className="bg-amber-500/10 text-amber-400 border-amber-500/30"
+                              className="bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/30"
                             >
                               {item.unite}
                             </Badge>
                           ) : (
-                            <span className="text-blue-400/60">No unit</span>
+                            <span className="text-gray-600 dark:text-blue-400/60">
+                              No unit
+                            </span>
                           )}
                         </TableCell>
                         <TableCell className="w-[130px] text-right">
@@ -638,7 +644,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                               variant="ghost"
                               size="sm"
                               onClick={() => openViewDialog(item)}
-                              className="h-8 w-8 p-0 text-gray-400 hover:text-green-400 hover:bg-green-500/10"
+                              className="h-8 w-8 p-0 text-blue-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/10"
                               title="View item details"
                             >
                               <Eye className="h-4 w-4" />
@@ -651,8 +657,8 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                               disabled={item.elementTypesCount > 0}
                               className={`h-8 w-8 p-0 ${
                                 item.elementTypesCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-400"
-                                  : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                                  : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30"
                               }`}
                               title={
                                 item.elementTypesCount > 0
@@ -669,8 +675,8 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                               disabled={item.elementTypesCount > 0}
                               className={`h-8 w-8 p-0 ${
                                 item.elementTypesCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-400"
-                                  : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                                  : "text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
                               }`}
                               title={
                                 item.elementTypesCount > 0
@@ -690,10 +696,10 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
             </ScrollArea>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-blue-300">
-            <Package className="h-12 w-12 mb-4 text-blue-400/50" />
+          <div className="flex flex-col items-center justify-center py-12 text-blue-700 dark:text-blue-300">
+            <Package className="h-12 w-12 mb-4 text-blue-500 dark:text-blue-400/50" />
             <h3 className="text-lg font-semibold mb-2">No items found</h3>
-            <p className="text-sm text-blue-400/70 text-center">
+            <p className="text-sm text-blue-600 dark:text-blue-400/70 text-center">
               {searchQuery || uniteFilter !== "any"
                 ? "Try adjusting your filters or search terms."
                 : "Get started by creating your first item."}
@@ -702,7 +708,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-4 text-blue-300 border-blue-500/30 hover:bg-blue-800/30"
+                className="mt-4 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-800/30"
                 onClick={clearAllFilters}
               >
                 <X className="h-4 w-4 mr-2" />
@@ -736,13 +742,13 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed bottom-6 right-16 transform -translate-x-1/2 z-[9999] w-[calc(100vw-4rem)] max-w-4xl mx-auto"
             >
-              <div className="bg-gradient-to-r from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-lg shadow-[0_8px_32px_rgba(59,130,246,0.7)] rounded-2xl border border-blue-400/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-blue-400/40">
-                <div className="flex items-center text-blue-200 font-medium">
+              <div className="bg-gradient-to-r from-blue-200 dark:from-[#1a2c6b]/95 to-blue-100 dark:to-[#0a1033]/95 backdrop-blur-lg shadow-[0_8px_32px_rgba(59,130,246,0.3)] dark:shadow-[0_8px_32px_rgba(59,130,246,0.7)] rounded-2xl border border-blue-300 dark:border-blue-400/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-blue-300 dark:ring-blue-400/40">
+                <div className="flex items-center text-blue-800 dark:text-blue-200 font-medium">
                   <div className="bg-blue-500/30 p-1.5 rounded-xl mr-3 flex-shrink-0">
-                    <Package className="w-5 h-5 text-blue-300" />
+                    <Package className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                   </div>
                   <span className="text-sm sm:text-base text-center sm:text-left">
-                    <span className="font-bold text-blue-100">
+                    <span className="font-bold text-blue-900 dark:text-blue-100">
                       {selectedItems.length}
                     </span>{" "}
                     item{selectedItems.length !== 1 ? "s" : ""} selected
@@ -752,7 +758,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                    className="bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-500/40 text-red-700 dark:text-red-200 hover:text-red-800 dark:hover:text-red-100 hover:bg-red-200 dark:hover:bg-red-900/60 hover:border-red-400 dark:hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
                     onClick={() => setIsBulkDeleteDialogOpen(true)}
                   >
                     <Trash2 className="w-4 h-4 mr-1.5" />
@@ -779,12 +785,12 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
+        <DialogContent className="bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b] dark:to-[#0a1033] border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-white">
           <DialogHeader>
-            <DialogTitle className="text-xl text-blue-100">
+            <DialogTitle className="text-xl text-blue-900 dark:text-blue-100">
               Edit Item
             </DialogTitle>
-            <DialogDescription className="text-blue-300">
+            <DialogDescription className="text-blue-700 dark:text-blue-300">
               Update item information
             </DialogDescription>
           </DialogHeader>
@@ -798,12 +804,14 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 name="code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Code</FormLabel>
+                    <FormLabel className="text-blue-800 dark:text-blue-200">
+                      Code
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         disabled
-                        className="bg-blue-950/30 border-blue-800/30 text-blue-300"
+                        className="bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800/30 text-blue-700 dark:text-blue-300"
                       />
                     </FormControl>
                     <FormMessage />
@@ -815,11 +823,13 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Description</FormLabel>
+                    <FormLabel className="text-blue-800 dark:text-blue-200">
+                      Description
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        className="bg-blue-950/30 border-blue-800/30 text-blue-100"
+                        className="bg-white dark:bg-blue-950/30 border-blue-300 dark:border-blue-800/30 text-blue-900 dark:text-blue-100"
                       />
                     </FormControl>
                     <FormMessage />
@@ -831,19 +841,21 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 name="unite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">Unit Code</FormLabel>
+                    <FormLabel className="text-blue-800 dark:text-blue-200">
+                      Unit Code
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-blue-950/30 border-blue-800/30 text-blue-100">
+                        <SelectTrigger className="bg-white dark:bg-blue-950/30 border-blue-300 dark:border-blue-800/30 text-blue-900 dark:text-blue-100">
                           <SelectValue placeholder="Select unit code" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                      <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
                         {uniteCodes.map((unite) => (
                           <SelectItem
                             key={unite.code}
                             value={unite.code}
-                            className="hover:bg-blue-800/40"
+                            className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                           >
                             {unite.code} - {unite.description}
                           </SelectItem>
@@ -859,7 +871,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                   type="button"
                   variant="outline"
                   onClick={() => setIsEditDialogOpen(false)}
-                  className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20"
+                  className="bg-transparent border-blue-300 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/20"
                 >
                   Cancel
                 </Button>
@@ -874,13 +886,13 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
 
       {/* View Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white max-w-2xl">
+        <DialogContent className="bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b] dark:to-[#0a1033] border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-white max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-blue-400" />
+              <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               Item Details
             </DialogTitle>
-            <DialogDescription className="text-blue-300">
+            <DialogDescription className="text-blue-700 dark:text-blue-300">
               Complete information about the selected item
             </DialogDescription>
           </DialogHeader>
@@ -890,22 +902,22 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-blue-300">
+                  <Label className="text-sm font-medium text-blue-700 dark:text-blue-300">
                     Code
                   </Label>
-                  <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
-                    <span className="font-mono text-blue-300">
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-300 dark:border-blue-800/30 rounded-md p-3">
+                    <span className="font-mono text-blue-700 dark:text-blue-300">
                       {selectedItem.code}
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-blue-300">
+                  <Label className="text-sm font-medium text-blue-700 dark:text-blue-300">
                     Description
                   </Label>
-                  <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
-                    <span className="text-blue-100">
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-300 dark:border-blue-800/30 rounded-md p-3">
+                    <span className="text-blue-900 dark:text-blue-100">
                       {selectedItem.description}
                     </span>
                   </div>
@@ -914,39 +926,41 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
 
               {/* Unit Information */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-blue-300">
+                <Label className="text-sm font-medium text-blue-700 dark:text-blue-300">
                   Unit Code
                 </Label>
-                <div className="bg-blue-950/30 border border-blue-800/30 rounded-md p-3">
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-300 dark:border-blue-800/30 rounded-md p-3">
                   {selectedItem.unite ? (
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">
+                      <Badge className="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30">
                         {selectedItem.unite}
                       </Badge>
                       {selectedItem.uniteCodeNavigation && (
-                        <span className="text-blue-200 text-sm">
+                        <span className="text-blue-700 dark:text-blue-200 text-sm">
                           - {selectedItem.uniteCodeNavigation.description}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <span className="text-blue-400/60">No unit assigned</span>
+                    <span className="text-gray-600 dark:text-blue-400/60">
+                      No unit
+                    </span>
                   )}
                 </div>
               </div>
 
               {/* Element Types Association */}
               {selectedItem.elementTypesCount > 0 && (
-                <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-500/30 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Tag className="h-4 w-4 text-amber-400" />
-                    <Label className="text-sm font-medium text-amber-300">
+                    <Tag className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <Label className="text-sm font-medium text-amber-700 dark:text-amber-300">
                       Element Types Association
                     </Label>
                   </div>
-                  <div className="text-sm text-amber-200">
+                  <div className="text-sm text-amber-700 dark:text-amber-200">
                     This item is associated with{" "}
-                    <span className="font-bold text-amber-100">
+                    <span className="font-bold text-amber-800 dark:text-amber-100">
                       {selectedItem.elementTypesCount}
                     </span>{" "}
                     element type
@@ -956,15 +970,17 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               )}
 
               {/* Metadata */}
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                <h4 className="text-blue-200 font-medium mb-3 flex items-center gap-2">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-500/30 rounded-lg p-4">
+                <h4 className="text-blue-800 dark:text-blue-200 font-medium mb-3 flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   Metadata
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div className="space-y-2">
-                    <Label className="text-xs text-blue-400">Created At</Label>
-                    <div className="text-blue-200">
+                    <Label className="text-xs text-blue-600 dark:text-blue-400">
+                      Created At
+                    </Label>
+                    <div className="text-blue-800 dark:text-blue-200">
                       {new Date(selectedItem.createdAt).toLocaleDateString(
                         "fr-FR",
                         {
@@ -978,8 +994,10 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs text-blue-400">Updated At</Label>
-                    <div className="text-blue-200">
+                    <Label className="text-xs text-blue-600 dark:text-blue-400">
+                      Updated At
+                    </Label>
+                    <div className="text-blue-800 dark:text-blue-200">
                       {new Date(selectedItem.updatedAt).toLocaleDateString(
                         "fr-FR",
                         {
@@ -1014,18 +1032,18 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
       >
-        <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
+        <AlertDialogContent className="bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b] dark:to-[#0a1033] border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl text-blue-100">
+            <AlertDialogTitle className="text-xl text-blue-900 dark:text-blue-100">
               Delete Item
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-blue-300">
+            <AlertDialogDescription className="text-blue-700 dark:text-blue-300">
               Are you sure you want to delete item "{selectedItem?.code}"? This
               action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20">
+            <AlertDialogCancel className="bg-transparent border-blue-300 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/20">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -1043,18 +1061,18 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
         open={isBulkDeleteDialogOpen}
         onOpenChange={setIsBulkDeleteDialogOpen}
       >
-        <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white">
+        <AlertDialogContent className="bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b] dark:to-[#0a1033] border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl text-blue-100">
+            <AlertDialogTitle className="text-xl text-blue-900 dark:text-blue-100">
               Delete Items
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-blue-300">
+            <AlertDialogDescription className="text-blue-700 dark:text-blue-300">
               Are you sure you want to delete {selectedItems.length} items? This
               action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20">
+            <AlertDialogCancel className="bg-transparent border-blue-300 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/20">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

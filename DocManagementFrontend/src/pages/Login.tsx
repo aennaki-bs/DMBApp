@@ -166,13 +166,13 @@ const Login = () => {
     }
 
     // If we haven't checked the connection yet, check it now
-    if (isAvailable === null) {
-      await checkConnection();
-      // If connection check fails, the error will be shown via the error state
-      if (isAvailable === false) {
-        return;
-      }
-    }
+    // if (isAvailable === null) {
+    //   const connectionResult = await checkConnection();
+    //   // If connection check fails, the error will be shown via the error state
+    //   if (!connectionResult) {
+    //     return;
+    //   }
+    // }
 
     try {
       const success = await login({
@@ -379,13 +379,6 @@ const Login = () => {
             <p className="mt-2 text-blue-300">
               Sign in to access your documents and workspace
             </p>
-            {/* Debug info - remove in production */}
-            <div className="mt-2 text-xs text-blue-400/60 font-mono">
-              Debug: authLoading={authIsLoading.toString()}, localLoading=
-              {localIsLoading.toString()}, checking=
-              {isChecking.toString()}, available=
-              {isAvailable?.toString() || "null"}
-            </div>
           </motion.div>
 
           <motion.div
@@ -592,9 +585,9 @@ const Login = () => {
                     id="emailOrUsername"
                     type="text"
                     placeholder="Enter your email or username"
-                    className={`pl-10 h-10 w-full rounded-md transition-all duration-200 bg-[#0f1642]/70 ${getInputBorderClass(
+                    className={`pl-10 h-10 w-full rounded-md transition-all duration-200 bg-blue-50 border-blue-200 text-blue-900 placeholder:text-blue-500 dark:bg-[#0f1642]/70 ${getInputBorderClass(
                       "emailOrUsername"
-                    )} text-white placeholder:text-blue-300/50`}
+                    )} dark:text-white dark:placeholder:text-blue-300/50`}
                     value={emailOrUsername}
                     onChange={(e) =>
                       handleInputChange("emailOrUsername", e.target.value)
@@ -644,9 +637,9 @@ const Login = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className={`pl-10 h-10 w-full rounded-md transition-all duration-200 bg-[#0f1642]/70 ${getInputBorderClass(
+                    className={`pl-10 h-10 w-full rounded-md transition-all duration-200 bg-blue-50 border-blue-200 text-blue-900 placeholder:text-blue-500 dark:bg-[#0f1642]/70 ${getInputBorderClass(
                       "password"
-                    )} text-white placeholder:text-blue-300/50`}
+                    )} dark:text-white dark:placeholder:text-blue-300/50`}
                     value={password}
                     onChange={(e) =>
                       handleInputChange("password", e.target.value)

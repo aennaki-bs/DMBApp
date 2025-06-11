@@ -88,7 +88,7 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full justify-between text-left bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white hover:bg-[#182047]/90 flex items-center",
+              "w-full justify-between text-left bg-white border-blue-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-blue-900 hover:bg-blue-50 flex items-center dark:bg-[#0d1541]/70 dark:border-blue-900/50 dark:text-white dark:hover:bg-[#182047]/90",
               disabled && "opacity-50 cursor-not-allowed",
               triggerClassName
             )}
@@ -108,7 +108,7 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
         </PopoverTrigger>
         <PopoverContent
           className={cn(
-            "p-0 bg-[#0d1541] border-blue-900/50 text-white shadow-lg shadow-blue-900/20",
+            "p-0 bg-white border-blue-200 text-blue-900 shadow-lg shadow-blue-900/20 dark:bg-[#0d1541] dark:border-blue-900/50 dark:text-white",
             className
           )}
         >

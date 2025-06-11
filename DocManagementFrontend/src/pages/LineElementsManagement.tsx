@@ -104,7 +104,7 @@ const LineElementsManagement = () => {
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-            <p className="text-blue-300 font-medium">
+            <p className="text-blue-700 dark:text-blue-300 font-medium">
               Loading line elements...
             </p>
           </div>
@@ -119,23 +119,23 @@ const LineElementsManagement = () => {
       <PageHeader
         title="Line Elements Management"
         description="Manage element types, items, unit codes, and general accounts used in document lines"
-        icon={<Database className="h-6 w-6 text-blue-400" />}
+        icon={<Database className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
       />
 
       {/* Main Content */}
-      <Card className="bg-[#0a1033] border-blue-900/30 shadow-lg">
+      <Card className="bg-white dark:bg-[#0a1033] border-blue-200 dark:border-blue-900/30 shadow-lg">
         <Tabs
           value={activeTab}
           onValueChange={handleTabChange}
           className="w-full"
         >
-          <CardHeader className="border-b border-blue-900/30 pb-0">
+          <CardHeader className="border-b border-blue-200 dark:border-blue-900/30 pb-0">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <CardTitle className="text-xl font-semibold text-white">
+                <CardTitle className="text-xl font-semibold text-blue-900 dark:text-white">
                   Element Management
                 </CardTitle>
-                <CardDescription className="text-blue-300 mt-1">
+                <CardDescription className="text-blue-700 dark:text-blue-300 mt-1">
                   Create, edit, and manage line elements across different
                   categories
                 </CardDescription>
@@ -145,7 +145,7 @@ const LineElementsManagement = () => {
                   <Badge
                     key={type.id}
                     variant="outline"
-                    className="text-xs border-blue-500/30 text-blue-400 bg-blue-900/20"
+                    className="text-xs border-blue-300 dark:border-blue-500/30 text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/20"
                   >
                     {type.typeElement}
                   </Badge>
@@ -153,7 +153,7 @@ const LineElementsManagement = () => {
                 {elementTypes.length > 3 && (
                   <Badge
                     variant="outline"
-                    className="text-xs border-blue-500/30 text-blue-400 bg-blue-900/20"
+                    className="text-xs border-blue-300 dark:border-blue-500/30 text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/20"
                   >
                     +{elementTypes.length - 3} more
                   </Badge>
@@ -162,55 +162,55 @@ const LineElementsManagement = () => {
             </div>
 
             {/* Tab Navigation */}
-            <TabsList className="grid w-full grid-cols-4 bg-[#111633] p-1 rounded-lg border border-blue-900/30 h-12">
+            <TabsList className="grid w-full grid-cols-4 bg-blue-100 dark:bg-[#111633] p-1 rounded-lg border border-blue-200 dark:border-blue-900/30 h-12">
               <TabsTrigger
                 value="elementtypes"
-                className="flex items-center justify-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 h-10 rounded-md"
+                className="flex items-center justify-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-800 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/30 h-10 rounded-md"
               >
                 <Tag className="h-4 w-4" />
                 <span className="font-medium">Element Types</span>
                 <Badge
                   variant="secondary"
-                  className="ml-1 text-xs bg-blue-900/30 text-blue-300 border-blue-500/30"
+                  className="ml-1 text-xs bg-blue-200 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-500/30"
                 >
                   {counts.elementTypes}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger
                 value="items"
-                className="flex items-center justify-center space-x-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 h-10 rounded-md"
+                className="flex items-center justify-center space-x-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-800 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/30 h-10 rounded-md"
               >
                 <Package className="h-4 w-4" />
                 <span className="font-medium">Items</span>
                 <Badge
                   variant="secondary"
-                  className="ml-1 text-xs bg-emerald-900/30 text-emerald-300 border-emerald-500/30"
+                  className="ml-1 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30"
                 >
                   {counts.items}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger
                 value="unitecodes"
-                className="flex items-center justify-center space-x-2 data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 h-10 rounded-md"
+                className="flex items-center justify-center space-x-2 data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-800 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/30 h-10 rounded-md"
               >
                 <Hash className="h-4 w-4" />
                 <span className="font-medium">Unit Codes</span>
                 <Badge
                   variant="secondary"
-                  className="ml-1 text-xs bg-amber-900/30 text-amber-300 border-amber-500/30"
+                  className="ml-1 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30"
                 >
                   {counts.uniteCodes}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger
                 value="generalaccounts"
-                className="flex items-center justify-center space-x-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 h-10 rounded-md"
+                className="flex items-center justify-center space-x-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-800 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/30 h-10 rounded-md"
               >
                 <Calculator className="h-4 w-4" />
                 <span className="font-medium">General Accounts</span>
                 <Badge
                   variant="secondary"
-                  className="ml-1 text-xs bg-violet-900/30 text-violet-300 border-violet-500/30"
+                  className="ml-1 text-xs bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-500/30"
                 >
                   {counts.generalAccounts}
                 </Badge>
@@ -231,7 +231,7 @@ const LineElementsManagement = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-800/20"
+                        className="border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-800/20"
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View as Standalone Page
@@ -252,7 +252,7 @@ const LineElementsManagement = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-amber-500/30 text-amber-400 hover:bg-amber-800/20"
+                        className="border-amber-300 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-800/20"
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View as Standalone Page
@@ -273,7 +273,7 @@ const LineElementsManagement = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-violet-500/30 text-violet-400 hover:bg-violet-800/20"
+                        className="border-violet-300 dark:border-violet-500/30 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-800/20"
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View as Standalone Page

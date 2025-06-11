@@ -264,16 +264,16 @@ const GeneralAccountsManagement = ({
   const renderSortIcon = (field: keyof GeneralAccounts) => {
     if (sortField !== field) return null;
     return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-400" />
+      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
     ) : (
-      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-400" />
+      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
     );
   };
 
   const headerClass = (field: keyof GeneralAccounts) => `
-    text-blue-200 font-medium cursor-pointer select-none
-    hover:text-blue-100 transition-colors duration-150
-    ${sortField === field ? "text-blue-100" : ""}
+    text-blue-800 dark:text-blue-200 font-medium cursor-pointer select-none
+    hover:text-blue-900 dark:hover:text-blue-100 transition-colors duration-150
+    ${sortField === field ? "text-blue-900 dark:text-blue-100" : ""}
   `;
 
   // Checkbox selection handlers
@@ -437,14 +437,14 @@ const GeneralAccountsManagement = ({
 
   // Filter card class
   const filterCardClass =
-    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40";
+    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-blue-50 dark:bg-[#1e2a4a] shadow-lg border border-blue-200 dark:border-blue-900/40";
 
   if (loading) {
     return (
       <div className="flex justify-center py-10">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-          <p className="text-blue-300 font-medium">
+          <p className="text-blue-700 dark:text-blue-300 font-medium">
             Loading general accounts...
           </p>
         </div>
@@ -459,19 +459,19 @@ const GeneralAccountsManagement = ({
         {/* Search and field select */}
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[120px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+            <SelectTrigger className="w-[120px] bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
               <SelectValue>
                 {GENERAL_ACCOUNT_SEARCH_FIELDS.find(
                   (opt) => opt.id === searchField
                 )?.label || "All fields"}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+            <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
               {GENERAL_ACCOUNT_SEARCH_FIELDS.map((opt) => (
                 <SelectItem
                   key={opt.id}
                   value={opt.id}
-                  className="hover:bg-blue-800/40"
+                  className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                 >
                   {opt.label}
                 </SelectItem>
@@ -483,9 +483,9 @@ const GeneralAccountsManagement = ({
               placeholder="Search general accounts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+              className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm placeholder:text-blue-500 dark:placeholder:text-blue-400"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
         </div>
 
@@ -503,14 +503,14 @@ const GeneralAccountsManagement = ({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
         {filteredAndSortedAccounts.length > 0 ? (
           <>
             {/* Fixed Header - Never Scrolls */}
-            <div className="min-w-[800px] border-b border-blue-900/30">
+            <div className="min-w-[800px] border-b border-blue-200 dark:border-blue-900/30">
               <Table className="table-fixed w-full">
-                <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
-                  <TableRow className="border-blue-900/30 hover:bg-transparent">
+                <TableHeader className="bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
+                  <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
                     <TableHead className="w-[50px]">
                       <div className="flex items-center justify-center">
                         <Checkbox
@@ -542,7 +542,7 @@ const GeneralAccountsManagement = ({
                         Description {renderSortIcon("description")}
                       </div>
                     </TableHead>
-                    <TableHead className="w-[150px] text-blue-200 font-medium text-right pr-4">
+                    <TableHead className="w-[150px] text-blue-800 dark:text-blue-200 font-medium text-right pr-4">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -558,7 +558,7 @@ const GeneralAccountsManagement = ({
                     {paginatedAccounts.map((account) => (
                       <TableRow
                         key={account.code}
-                        className="border-blue-900/30 hover:bg-blue-800/20 transition-colors duration-150"
+                        className="border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/20 transition-colors duration-150"
                       >
                         <TableCell className="w-[50px]">
                           <div className="flex items-center justify-center">
@@ -572,10 +572,10 @@ const GeneralAccountsManagement = ({
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="w-[150px] font-mono text-blue-100 font-semibold">
+                        <TableCell className="w-[150px] font-mono text-blue-900 dark:text-blue-100 font-semibold">
                           {account.code}
                         </TableCell>
-                        <TableCell className="w-[450px] text-blue-200">
+                        <TableCell className="w-[450px] text-blue-800 dark:text-blue-200">
                           <div className="truncate">{account.description}</div>
                         </TableCell>
                         <TableCell className="w-[150px] text-right">
@@ -584,7 +584,7 @@ const GeneralAccountsManagement = ({
                               variant="ghost"
                               size="sm"
                               onClick={() => openViewDialog(account)}
-                              className="h-8 w-8 p-0 text-gray-400 hover:text-green-400 hover:bg-green-500/10"
+                              className="h-8 w-8 p-0 text-blue-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/10"
                               title="View general account details"
                             >
                               <Eye className="h-4 w-4" />
@@ -597,8 +597,8 @@ const GeneralAccountsManagement = ({
                               disabled={account.lignesCount > 0}
                               className={`h-8 w-8 p-0 ${
                                 account.lignesCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-400"
-                                  : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/30"
+                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                                  : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30"
                               }`}
                               title={
                                 account.lignesCount > 0
@@ -615,8 +615,8 @@ const GeneralAccountsManagement = ({
                               disabled={account.lignesCount > 0}
                               className={`h-8 w-8 p-0 ${
                                 account.lignesCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-400"
-                                  : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                                  : "text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
                               }`}
                               title={
                                 account.lignesCount > 0
@@ -636,12 +636,12 @@ const GeneralAccountsManagement = ({
             </ScrollArea>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-blue-300">
-            <Calculator className="h-12 w-12 mb-4 text-blue-400/50" />
+          <div className="flex flex-col items-center justify-center py-12 text-blue-700 dark:text-blue-300">
+            <Calculator className="h-12 w-12 mb-4 text-blue-500 dark:text-blue-400/50" />
             <h3 className="text-lg font-semibold mb-2">
               No general accounts found
             </h3>
-            <p className="text-sm text-blue-400/70 text-center">
+            <p className="text-sm text-blue-600 dark:text-blue-400/70 text-center">
               {searchQuery
                 ? "Try adjusting your search terms."
                 : "Get started by creating your first general account."}
@@ -650,7 +650,7 @@ const GeneralAccountsManagement = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-4 text-blue-300 border-blue-500/30 hover:bg-blue-800/30"
+                className="mt-4 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-800/30"
                 onClick={clearAllFilters}
               >
                 <X className="h-4 w-4 mr-2" />

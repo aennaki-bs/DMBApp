@@ -25,7 +25,7 @@ const Welcome = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0f1d] relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:bg-[#0a0f1d] relative overflow-hidden">
       {/* Background image and overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-20 z-0"
@@ -108,7 +108,7 @@ const Welcome = () => {
             backdropFilter: "blur(16px)",
           }}
         >
-          <div className="absolute inset-0 bg-[#0a0f1d]/95 z-0"></div>
+          <div className="absolute inset-0 bg-white/95 dark:bg-[#0a0f1d]/95 z-0"></div>
           <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-900/0 via-blue-900/30 to-blue-900/0 rounded-lg blur-sm opacity-70 z-0"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1d]/50 to-blue-900/20 z-0"></div>
 
@@ -117,32 +117,34 @@ const Welcome = () => {
               <ShieldCheck className="h-12 w-12 text-green-400" />
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-200">
+            <h2 className="text-2xl sm:text-3xl font-bold text-blue-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-700 dark:from-white dark:to-blue-200">
               Registration Complete
             </h2>
 
             <div className="space-y-4 mb-6 w-full">
-              <p className="text-blue-300 text-center">
+              <p className="text-blue-700 dark:text-blue-300 text-center">
                 Your account has been verified and is ready to use
               </p>
 
               {userEmail && (
-                <div className="bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-lg p-4 text-sm text-blue-200 shadow-lg">
+                <div className="bg-blue-100 border-blue-300 dark:bg-blue-500/20 dark:border-blue-500/30 backdrop-blur-xl rounded-lg p-4 text-sm text-blue-800 dark:text-blue-200 shadow-lg">
                   <p className="text-center">
                     You've successfully registered with{" "}
-                    <span className="font-medium text-white">{userEmail}</span>
+                    <span className="font-medium text-blue-900 dark:text-white">
+                      {userEmail}
+                    </span>
                   </p>
                 </div>
               )}
 
-              <p className="text-blue-200/80 text-center text-sm px-4">
+              <p className="text-blue-600 dark:text-blue-200/80 text-center text-sm px-4">
                 Thank you for joining DocuVerse! You can now sign in to your
                 account and start managing your documents securely.
               </p>
             </div>
           </CardContent>
 
-          <CardFooter className="border-t border-blue-900/30 bg-blue-950/30 backdrop-blur-xl p-6 relative z-10">
+          <CardFooter className="border-t border-blue-300 bg-blue-50 dark:border-blue-900/30 dark:bg-blue-950/30 backdrop-blur-xl p-6 relative z-10">
             <Button
               onClick={handleContinue}
               className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30 border border-blue-500/40"

@@ -248,8 +248,8 @@ export default function CustomerTable() {
   };
 
   const headerClass = (field: keyof Customer) =>
-    `cursor-pointer hover:bg-blue-800/30 text-blue-200 font-medium ${
-      sortBy === field ? "bg-blue-800/20" : ""
+    `cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800/30 text-blue-800 dark:text-blue-200 font-medium ${
+      sortBy === field ? "bg-blue-200 dark:bg-blue-800/50" : ""
     }`;
 
   const handleSelectCustomer = (code: string) => {
@@ -335,12 +335,17 @@ export default function CustomerTable() {
 
   // Document-style filter/search bar
   const filterCardClass =
-    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40";
+    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-blue-50 dark:bg-[#1e2a4a] shadow-lg border border-blue-200 dark:border-blue-900/40";
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="text-blue-700 dark:text-blue-300 font-medium">
+            Loading customers...
+          </p>
+        </div>
       </div>
     );
   }
@@ -361,20 +366,19 @@ export default function CustomerTable() {
         {/* Search and field select */}
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[120px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+            <SelectTrigger className="w-[120px] bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
               <SelectValue>
-                {searchFields.find((opt) => opt.id === searchField)?.label ||
-                  "All fields"}
+                {searchFields.find((field) => field.id === searchField)?.label}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
-              {searchFields.map((opt) => (
+            <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
+              {searchFields.map((field) => (
                 <SelectItem
-                  key={opt.id}
-                  value={opt.id}
-                  className="hover:bg-blue-800/40"
+                  key={field.id}
+                  value={field.id}
+                  className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                 >
-                  {opt.label}
+                  {field.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -384,9 +388,9 @@ export default function CustomerTable() {
               placeholder="Search customers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+              className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm placeholder:text-blue-500 dark:placeholder:text-blue-400"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 dark:text-blue-400" />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
@@ -403,32 +407,36 @@ export default function CustomerTable() {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2 ml-2"
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2 ml-2"
             >
-              <Filter className="h-4 w-4 text-blue-400" />
+              <Filter className="h-4 w-4" />
               Filter
+              {countryFilter !== "any" && (
+                <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-200 dark:bg-blue-500/30 text-blue-800 dark:text-blue-200 rounded">
+                  1
+                </span>
+              )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
-            <div className="mb-2 text-blue-200 font-semibold">
-              Advanced Filters
-            </div>
-            <div className="flex flex-col gap-4">
-              {/* Country Filter */}
-              <div className="flex flex-col gap-1">
-                <span className="text-sm text-blue-200">Country</span>
+          <PopoverContent className="w-80 bg-white dark:bg-[#1e2a4a] border border-blue-300 dark:border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2 block">
+                  Country
+                </label>
                 <Select value={countryFilter} onValueChange={setCountryFilter}>
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
+                  <SelectTrigger className="w-full bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
                     <SelectValue>
                       {countries.find((c) => c.value === countryFilter)?.label}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                  <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
                     {countries.map((country) => (
                       <SelectItem
                         key={country.id}
                         value={country.value}
-                        className="hover:bg-blue-800/40"
+                        className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
                       >
                         {country.label}
                       </SelectItem>
@@ -474,13 +482,13 @@ export default function CustomerTable() {
       )}
 
       {/* Table Container */}
-      <div className="bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-[#1e2a4a] border border-blue-200 dark:border-blue-900/40 rounded-xl shadow-lg overflow-hidden">
         {/* Fixed Header */}
-        <div className="bg-[#22306e] border-b border-blue-900/40">
+        <div className="bg-blue-50 dark:bg-[#22306e] border-b border-blue-200 dark:border-blue-900/40">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-blue-200">
+                <TableHead className="w-12 text-blue-800 dark:text-blue-200">
                   <Checkbox
                     checked={
                       paginatedCustomers.length > 0 &&
@@ -535,7 +543,7 @@ export default function CustomerTable() {
                     {renderSortIcon("address")}
                   </div>
                 </TableHead>
-                <TableHead className="text-blue-200 text-center">
+                <TableHead className="text-blue-800 dark:text-blue-200 text-center">
                   Actions
                 </TableHead>
               </TableRow>
@@ -544,13 +552,13 @@ export default function CustomerTable() {
         </div>
 
         {/* Scrollable Body */}
-        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-track-blue-900/20 scrollbar-thumb-blue-600/50 hover:scrollbar-thumb-blue-500/70">
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-track-blue-200 dark:scrollbar-track-blue-900/20 scrollbar-thumb-blue-500 dark:scrollbar-thumb-blue-600/50 hover:scrollbar-thumb-blue-600 dark:hover:scrollbar-thumb-blue-500/70">
           <Table>
             <TableBody>
               {paginatedCustomers.map((customer, index) => (
                 <TableRow
                   key={customer.code}
-                  className="hover:bg-blue-900/20 transition-all duration-200 hover:scale-[1.01] border-b border-blue-700/30"
+                  className="hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-all duration-200 hover:scale-[1.01] border-b border-blue-200 dark:border-blue-700/30"
                   style={{
                     animationDelay: `${index * 50}ms`,
                   }}
@@ -564,19 +572,19 @@ export default function CustomerTable() {
                       className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                     />
                   </TableCell>
-                  <TableCell className="font-medium text-blue-300">
+                  <TableCell className="font-medium text-blue-900 dark:text-blue-300">
                     {customer.code}
                   </TableCell>
-                  <TableCell className="text-blue-100">
+                  <TableCell className="text-blue-800 dark:text-blue-100">
                     {customer.name}
                   </TableCell>
-                  <TableCell className="text-blue-200">
+                  <TableCell className="text-blue-700 dark:text-blue-200">
                     {customer.city}
                   </TableCell>
-                  <TableCell className="text-blue-200">
+                  <TableCell className="text-blue-700 dark:text-blue-200">
                     {customer.country}
                   </TableCell>
-                  <TableCell className="text-blue-200 max-w-xs truncate">
+                  <TableCell className="text-blue-700 dark:text-blue-200 max-w-xs truncate">
                     {customer.address}
                   </TableCell>
                   <TableCell>
@@ -588,7 +596,7 @@ export default function CustomerTable() {
                               variant="ghost"
                               size="sm"
                               onClick={() => openEditDialog(customer)}
-                              className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 hover:scale-110 transition-all duration-200"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:scale-110 transition-all duration-200"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -607,24 +615,24 @@ export default function CustomerTable() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-900/30 hover:scale-110 transition-all duration-200"
+                                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:scale-110 transition-all duration-200"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-slate-800 text-white border border-slate-700">
+                              <AlertDialogContent className="bg-white dark:bg-slate-800 text-blue-900 dark:text-white border border-blue-300 dark:border-slate-700">
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>
                                     Are you sure?
                                   </AlertDialogTitle>
-                                  <AlertDialogDescription>
+                                  <AlertDialogDescription className="text-blue-700 dark:text-gray-300">
                                     This will permanently delete the customer "
                                     {customer.name}" ({customer.code}). This
                                     action cannot be undone.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">
+                                  <AlertDialogCancel className="bg-white dark:bg-slate-700 text-blue-900 dark:text-white hover:bg-blue-100 dark:hover:bg-slate-600 border border-blue-300 dark:border-none">
                                     Cancel
                                   </AlertDialogCancel>
                                   <AlertDialogAction

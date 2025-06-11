@@ -1,8 +1,7 @@
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-type Theme = 'light' | 'dark';
-type Language = 'en' | 'fr' | 'es';
+type Theme = "light" | "dark";
+type Language = "en" | "fr" | "es";
 
 interface SettingsContextType {
   theme: Theme;
@@ -11,61 +10,60 @@ interface SettingsContextType {
   setLanguage: (lang: Language) => void;
 }
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType | undefined>(
+  undefined
+);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     // Check localStorage first
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light' || savedTheme === 'dark') {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light" || savedTheme === "dark") {
       return savedTheme;
     }
-    
-    // If no saved theme, check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    
-    // Default to dark mode
-    return 'dark';
+
+    // Default to dark mode as standard
+    return "dark";
   });
-  
+
   const [language, setLanguage] = useState<Language>(() => {
-    const savedLang = localStorage.getItem('language');
-    if (savedLang === 'en' || savedLang === 'fr' || savedLang === 'es') {
+    const savedLang = localStorage.getItem("language");
+    if (savedLang === "en" || savedLang === "fr" || savedLang === "es") {
       return savedLang;
     }
-    
+
     // Try to detect browser language
-    const browserLang = navigator.language.split('-')[0];
-    if (browserLang === 'fr' || browserLang === 'es') {
+    const browserLang = navigator.language.split("-")[0];
+    if (browserLang === "fr" || browserLang === "es") {
       return browserLang as Language;
     }
-    
-    return 'en';
+
+    return "en";
   });
 
   useEffect(() => {
-    localStorage.setItem('theme', theme);
-    
+    localStorage.setItem("theme", theme);
+
     // Apply theme class to document element
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
-    
+
     // Also set a data attribute for potential CSS selectors
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
   useEffect(() => {
-    localStorage.setItem('language', language);
-    document.documentElement.setAttribute('lang', language);
+    localStorage.setItem("language", language);
+    document.documentElement.setAttribute("lang", language);
   }, [language]);
 
   return (
-    <SettingsContext.Provider value={{ theme, setTheme, language, setLanguage }}>
+    <SettingsContext.Provider
+      value={{ theme, setTheme, language, setLanguage }}
+    >
       {children}
     </SettingsContext.Provider>
   );
@@ -74,7 +72,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (context === undefined) {
-    throw new Error('useSettings must be used within a SettingsProvider');
+    throw new Error("useSettings must be used within a SettingsProvider");
   }
   return context;
 };
