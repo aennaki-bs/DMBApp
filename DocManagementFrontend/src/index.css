@@ -1,143 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
 @import './styles/form-overrides.css';
 @import './styles/themes.css';
+@import './styles/responsive.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
-
 @layer base {
-  :root {
-    /* Blue and White Light theme variables */
-    --background: 0 0% 100%;
-    --foreground: 224 71% 4%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 217 91% 95%;
-    --secondary-foreground: 224 71% 4%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 214 95% 93%;
-    --accent-foreground: 221 83% 53%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
-    --radius: 0.5rem;
-
-    /* Sidebar variables for blue and white light mode */
-    --sidebar-background: 217 91% 95%;
-    --sidebar-foreground: 224 71% 4%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-secondary: 214 95% 93%;
-    --sidebar-secondary-foreground: 224 71% 4%;
-    --sidebar-muted: 215 20% 65%;
-    --sidebar-muted-foreground: 215 28% 17%;
-    --sidebar-accent: 214 95% 93%;
-    --sidebar-accent-foreground: 221 83% 53%;
-    --sidebar-destructive: 0 84% 60%;
-    --sidebar-destructive-foreground: 0 0% 98%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-input: 214 32% 91%;
-    --sidebar-ring: 221 83% 53%;
-    --sidebar-radius: 0.5rem;
-
-    /* Document UI specific variables */
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 0.75rem;
-    --spacing-lg: 1rem;
-    --spacing-xl: 1.5rem;
-    --spacing-2xl: 2rem;
-  }
-
-  .light {
-    /* Blue and White Light theme variables - explicit override */
-    --background: 0 0% 100%;
-    --foreground: 224 71% 4%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 217 91% 95%;
-    --secondary-foreground: 224 71% 4%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 214 95% 93%;
-    --accent-foreground: 221 83% 53%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
-
-    /* Sidebar variables for blue and white light mode */
-    --sidebar-background: 217 91% 95%;
-    --sidebar-foreground: 224 71% 4%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-secondary: 214 95% 93%;
-    --sidebar-secondary-foreground: 224 71% 4%;
-    --sidebar-muted: 215 20% 65%;
-    --sidebar-muted-foreground: 215 28% 17%;
-    --sidebar-accent: 214 95% 93%;
-    --sidebar-accent-foreground: 221 83% 53%;
-    --sidebar-destructive: 0 84% 60%;
-    --sidebar-destructive-foreground: 0 0% 98%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-input: 214 32% 91%;
-    --sidebar-ring: 221 83% 53%;
-    --sidebar-radius: 0.5rem;
-  }
-
-  .dark {
-    /* Dark theme variables */
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.6% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 72.2% 50.6%;
-
-    /* Sidebar variables for dark mode */
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 40% 98%;
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-secondary: 222.2 47.4% 11.2%;
-    --sidebar-secondary-foreground: 210 40% 98%;
-    --sidebar-muted: 210 40% 98%;
-    --sidebar-muted-foreground: 215.4 16.3% 56.9%;
-    --sidebar-accent: 222.2 47.4% 11.2%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-destructive: 0 62.8% 30.6%;
-    --sidebar-destructive-foreground: 210 40% 98%;
-    --sidebar-border: 214.3 31.8% 9.1%;
-    --sidebar-input: 214.3 31.8% 9.1%;
-    --sidebar-ring: 222.2 84% 4.9%;
-    --sidebar-radius: 0.4rem;
-  }
 
   /* Improved custom scrollbar for the registration form */
   .custom-scrollbar::-webkit-scrollbar {
@@ -178,18 +47,70 @@
     background: #2563eb;
   }
 
-  /* HTML and Body */
+  /* HTML and Body - Critical for viewport handling */
   html {
-    overflow-x: hidden;
     height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
   }
 
   body {
+    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
     scrollbar-width: thin;
     -ms-overflow-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #root {
     height: 100%;
     min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ensure consistent viewport behavior across zoom levels */
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Fix for zoom level consistency */
+  @media screen {
+
+    html,
+    body,
+    #root {
+      min-height: 100vh !important;
+      min-height: 100dvh !important;
+    }
+  }
+
+  /* Enhanced ScrollArea styling for table */
+  .table-scroll-area [data-radix-scroll-area-viewport] {
+    height: 100% !important;
+  }
+
+  .table-scroll-area [data-radix-scroll-area-scrollbar] {
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 6px;
+    width: 8px;
+  }
+
+  .table-scroll-area [data-radix-scroll-area-thumb] {
+    background: rgba(59, 130, 246, 0.5);
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+
+  .table-scroll-area [data-radix-scroll-area-thumb]:hover {
+    background: rgba(59, 130, 246, 0.7);
   }
 
   /* Hide scrollbar for body on the registration page */
@@ -202,11 +123,61 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    /* Prevent horizontal scroll on all devices */
+    overflow-x: hidden;
+    /* Ensure proper scaling on high-DPI displays */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-background text-foreground transition-colors duration-300;
-    font-size: 14px;
+    /* Responsive font sizing using clamp for perfect scaling */
+    font-size: clamp(0.875rem, 0.875rem + 0.1vw, 0.9375rem);
+    line-height: 1.5;
+    /* Prevent layout shift */
+    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* Dynamic viewport height for mobile */
+    /* Better font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Responsive scaling for different viewport sizes */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    body {
+      font-size: clamp(0.8125rem, 0.8125rem + 0.15vw, 0.875rem);
+    }
+  }
+
+  @media (min-width: 1025px) and (max-width: 1440px) {
+    body {
+      font-size: clamp(0.875rem, 0.875rem + 0.1vw, 0.9375rem);
+    }
+  }
+
+  @media (min-width: 1441px) {
+    body {
+      font-size: clamp(0.9375rem, 0.9375rem + 0.05vw, 1rem);
+    }
+  }
+
+  /* High DPI display optimizations */
+  @media (-webkit-min-device-pixel-ratio: 1.5),
+  (min-resolution: 144dpi) {
+    body {
+      font-size: clamp(0.8125rem, 0.8125rem + 0.1vw, 0.875rem);
+    }
   }
 }
 
@@ -298,14 +269,177 @@
     @apply bg-gradient-to-b from-blue-50 to-white border border-blue-200 backdrop-blur-md shadow-md rounded-lg;
   }
 
-  /* Responsive padding utility */
+  /* Professional responsive utilities */
   .responsive-padding {
-    @apply px-2 sm:px-3 md:px-4 py-2 sm:py-3;
+    padding: clamp(0.5rem, 2vw, 1rem) clamp(0.75rem, 3vw, 1.5rem);
   }
 
-  /* Container utility with max-width constraints */
+  .responsive-margin {
+    margin: clamp(0.5rem, 2vw, 1rem) clamp(0.75rem, 3vw, 1.5rem);
+  }
+
+  /* Container utility with proper scaling */
   .container-fluid {
-    @apply w-full max-w-7xl mx-auto px-2 sm:px-3 lg:px-4;
+    width: 100%;
+    max-width: min(100vw - 2rem, 90rem);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: clamp(0.5rem, 2vw, 1.5rem);
+    padding-right: clamp(0.5rem, 2vw, 1.5rem);
+  }
+
+  /* Responsive text sizing */
+  .text-responsive-xs {
+    font-size: clamp(0.75rem, 0.75rem + 0.1vw, 0.8125rem);
+  }
+
+  .text-responsive-sm {
+    font-size: clamp(0.8125rem, 0.8125rem + 0.1vw, 0.875rem);
+  }
+
+  .text-responsive-base {
+    font-size: clamp(0.875rem, 0.875rem + 0.1vw, 0.9375rem);
+  }
+
+  .text-responsive-lg {
+    font-size: clamp(1rem, 1rem + 0.2vw, 1.125rem);
+  }
+
+  .text-responsive-xl {
+    font-size: clamp(1.125rem, 1.125rem + 0.3vw, 1.25rem);
+  }
+
+  .text-responsive-2xl {
+    font-size: clamp(1.25rem, 1.25rem + 0.5vw, 1.5rem);
+  }
+
+  .text-responsive-3xl {
+    font-size: clamp(1.5rem, 1.5rem + 0.8vw, 1.875rem);
+  }
+
+  /* Responsive spacing utilities */
+  .gap-responsive {
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .gap-responsive-lg {
+    gap: clamp(0.75rem, 3vw, 1.5rem);
+  }
+
+  /* Professional component sizing */
+  .btn-responsive {
+    padding: clamp(0.375rem, 1vw, 0.5rem) clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(0.8125rem, 0.8125rem + 0.05vw, 0.875rem);
+    border-radius: clamp(0.375rem, 0.5vw, 0.5rem);
+  }
+
+  .input-responsive {
+    padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(0.8125rem, 0.8125rem + 0.05vw, 0.875rem);
+    border-radius: clamp(0.375rem, 0.5vw, 0.5rem);
+    min-height: clamp(2.5rem, 4vw, 3rem);
+  }
+
+  .card-responsive {
+    padding: clamp(1rem, 3vw, 2rem);
+    border-radius: clamp(0.5rem, 1vw, 1rem);
+  }
+
+  /* High DPI and scaling optimizations */
+  .icon-responsive {
+    width: clamp(1rem, 2vw, 1.5rem);
+    height: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  .icon-responsive-sm {
+    width: clamp(0.75rem, 1.5vw, 1rem);
+    height: clamp(0.75rem, 1.5vw, 1rem);
+  }
+
+  .icon-responsive-lg {
+    width: clamp(1.5rem, 3vw, 2.25rem);
+    height: clamp(1.5rem, 3vw, 2.25rem);
+  }
+
+  /* Professional table scaling */
+  .table-responsive {
+    font-size: clamp(0.8125rem, 0.8125rem + 0.05vw, 0.875rem);
+  }
+
+  .table-responsive th {
+    padding: clamp(0.5rem, 1.5vw, 0.875rem) clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(0.75rem, 0.75rem + 0.05vw, 0.8125rem);
+  }
+
+  .table-responsive td {
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(0.8125rem, 0.8125rem + 0.05vw, 0.875rem);
+  }
+
+  /* Better form scaling */
+  .form-responsive label {
+    font-size: clamp(0.8125rem, 0.8125rem + 0.05vw, 0.875rem);
+    margin-bottom: clamp(0.25rem, 0.5vw, 0.375rem);
+  }
+
+  .form-responsive input,
+  .form-responsive select,
+  .form-responsive textarea {
+    padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(0.8125rem, 0.8125rem + 0.05vw, 0.875rem);
+    border-radius: clamp(0.375rem, 0.5vw, 0.5rem);
+    min-height: clamp(2.5rem, 4vw, 3rem);
+  }
+
+  /* Enhanced modals and dialogs */
+  .modal-responsive {
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: clamp(0.75rem, 1.5vw, 1.25rem);
+    max-width: min(90vw, 48rem);
+    max-height: min(90vh, 48rem);
+  }
+
+  /* Improved scroll areas */
+  .scroll-area-responsive {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+  }
+
+  .scroll-area-responsive::-webkit-scrollbar {
+    width: clamp(0.25rem, 0.5vw, 0.375rem);
+    height: clamp(0.25rem, 0.5vw, 0.375rem);
+  }
+
+  /* Prevent layout shift and improve performance */
+  .no-layout-shift {
+    contain: layout style;
+  }
+
+  .gpu-optimized {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Ultra-wide display optimizations */
+  @media (min-width: 1920px) {
+    .container-fluid {
+      max-width: min(95vw, 120rem);
+    }
+
+    body {
+      font-size: clamp(0.9375rem, 0.9375rem + 0.025vw, 1rem);
+    }
+  }
+
+  /* 4K display optimizations */
+  @media (min-width: 2560px) {
+    .container-fluid {
+      max-width: min(90vw, 140rem);
+    }
+
+    body {
+      font-size: clamp(1rem, 1rem + 0.015vw, 1.0625rem);
+    }
   }
 
   /* Compact card styling */

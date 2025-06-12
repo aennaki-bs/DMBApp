@@ -58,45 +58,50 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Breadcrumb */}
+      {/* Professional breadcrumb navigation */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-blue-400/80">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>{t("dashboard.home")}</span>
           <span>/</span>
-          <span className="text-blue-100">{t("dashboard.title")}</span>
+          <span className="text-foreground font-medium">
+            {t("dashboard.title")}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-blue-400" />
-          <span className="text-sm text-blue-300">
-            {t("dashboard.lastUpdated")}: {format(new Date(), "MMM d, yyyy HH:mm")}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50 border border-border">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">
+            {t("dashboard.lastUpdated")}:{" "}
+            <span className="text-foreground font-medium">
+              {format(new Date(), "MMM d, yyyy HH:mm")}
+            </span>
           </span>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Professional stats cards */}
       <DashboardStats stats={dashboardStats} />
 
-      {/* Main Content */}
+      {/* Main content grid with enhanced styling */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <WelcomeCard user={user} />
         <CompletionRateCard completionRate={dashboardStats?.completionRate} />
         <ActivityScoreCard user={user} />
       </div>
 
-      {/* Charts Section */}
-      <DashboardCard className="p-0">
+      {/* Professional charts section */}
+      <DashboardCard className="p-0 overflow-hidden">
         <Tabs defaultValue="activity" className="w-full">
-          <div className="flex items-center justify-between p-4 border-b border-blue-900/30">
-            <TabsList className="bg-blue-900/20">
+          <div className="flex items-center justify-between p-6 border-b border-border bg-card">
+            <TabsList className="bg-muted">
               <TabsTrigger
                 value="activity"
-                className="data-[state=active]:bg-blue-600"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
               >
                 {t("dashboard.activityOverview")}
               </TabsTrigger>
               <TabsTrigger
                 value="weekly"
-                className="data-[state=active]:bg-blue-600"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
               >
                 {t("dashboard.weeklyStats")}
               </TabsTrigger>
@@ -104,30 +109,30 @@ export default function Dashboard() {
 
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
+                variant={timeRange === "day" ? "default" : "outline"}
                 size="sm"
-                className={`border-blue-900/30 ${
-                  timeRange === "day" ? "bg-blue-600" : ""
+                className={`border-border transition-all duration-200 ${
+                  timeRange === "day" ? "shadow-sm" : "hover:bg-accent"
                 }`}
                 onClick={() => setTimeRange("day")}
               >
                 {t("dashboard.timeRange24h")}
               </Button>
               <Button
-                variant="outline"
+                variant={timeRange === "week" ? "default" : "outline"}
                 size="sm"
-                className={`border-blue-900/30 ${
-                  timeRange === "week" ? "bg-blue-600" : ""
+                className={`border-border transition-all duration-200 ${
+                  timeRange === "week" ? "shadow-sm" : "hover:bg-accent"
                 }`}
                 onClick={() => setTimeRange("week")}
               >
                 {t("dashboard.timeRange7d")}
               </Button>
               <Button
-                variant="outline"
+                variant={timeRange === "month" ? "default" : "outline"}
                 size="sm"
-                className={`border-blue-900/30 ${
-                  timeRange === "month" ? "bg-blue-600" : ""
+                className={`border-border transition-all duration-200 ${
+                  timeRange === "month" ? "shadow-sm" : "hover:bg-accent"
                 }`}
                 onClick={() => setTimeRange("month")}
               >
@@ -136,55 +141,46 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <TabsContent value="activity" className="m-0 p-4">
-            <div className="h-64">
+          <TabsContent value="activity" className="m-0 p-6">
+            <div className="h-64 rounded-lg bg-muted/20 p-4">
               <DocumentActivityChart data={documentActivity || []} />
             </div>
           </TabsContent>
 
-          <TabsContent value="weekly" className="m-0 p-4">
-            <div className="h-64">
+          <TabsContent value="weekly" className="m-0 p-6">
+            <div className="h-64 rounded-lg bg-muted/20 p-4">
               <WeeklyStatsChart data={dashboardStats?.weeklyStats || []} />
             </div>
           </TabsContent>
         </Tabs>
       </DashboardCard>
 
-      {/* Recent Documents */}
+      {/* Professional recent documents section */}
       {recentDocuments && recentDocuments.length > 0 && (
         <DashboardCard
           title={t("dashboard.recentDocuments")}
-          // headerAction={
-          //   <Button variant="outline" size="sm" className="border-blue-900/30">
-          //     <Filter className="h-4 w-4 mr-2" />
-          //     Filter
-          //   </Button>
-          // }
+          className="transition-all duration-300 hover:shadow-lg"
         >
           <RecentDocumentsCard documents={recentDocuments} />
         </DashboardCard>
       )}
 
-      {/* UI Showcase Link */}
-      {/* <DashboardCard title="UI Components">
-        <div className="p-4">
-          <p className="text-blue-200 mb-4">
+      {/* Optional UI Showcase section (professionally hidden for now) */}
+      {/* 
+      <DashboardCard title="UI Components" className="border-dashed border-2 border-muted-foreground/20">
+        <div className="p-6 text-center">
+          <p className="text-muted-foreground mb-4">
             Explore the enhanced UI components available in DocuVerse with
             interactive previews.
           </p>
           <Link to="/ui-showcase">
-            <EnhancedButton
-              variant="premium"
-              size="lg"
-              animation="shimmer"
-              rounded="lg"
-              className="mt-2"
-            >
+            <Button variant="outline" className="hover:bg-accent">
               View UI Component Showcase
-            </EnhancedButton>
+            </Button>
           </Link>
         </div>
-      </DashboardCard> */}
+      </DashboardCard>
+      */}
     </div>
   );
 }

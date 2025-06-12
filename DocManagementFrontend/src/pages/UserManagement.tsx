@@ -8,6 +8,7 @@ import { UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
+import { PageLayout } from "@/components/layout/PageLayout";
 
 const UserManagement = () => {
   const { user, isAuthenticated } = useAuth();
@@ -28,38 +29,36 @@ const UserManagement = () => {
     }
   }, [isAuthenticated, user, navigate, t]);
 
+  const pageActions = [
+    {
+      label: "Export Users",
+      variant: "outline" as const,
+      icon: Users,
+      onClick: () => {
+        // Export functionality
+      },
+    },
+    {
+      label: t("userManagement.createUser"),
+      variant: "default" as const,
+      icon: UserPlus,
+      onClick: () => setIsCreateUserOpen(true),
+    },
+  ];
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="bg-white dark:bg-[#0a1033] border border-blue-200 dark:border-blue-900/30 rounded-lg p-6 mb-6 transition-all">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-blue-900 dark:text-white flex items-center">
-              <Users className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" />{" "}
-              {t("userManagement.title")}
-            </h1>
-            <p className="text-sm md:text-base text-blue-700 dark:text-gray-400">
-              {t("userManagement.subtitle")}
-            </p>
-          </div>
-          <Button
-            onClick={() => setIsCreateUserOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-          >
-            <UserPlus className="h-4 w-4" />
-            {t("userManagement.createUser")}
-          </Button>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-[#0a1033] border border-blue-200 dark:border-blue-900/30 rounded-lg p-6 transition-all">
-        <UserTable />
-      </div>
-
+    <PageLayout
+      title={t("userManagement.title")}
+      subtitle={t("userManagement.subtitle")}
+      icon={Users}
+      actions={pageActions}
+    >
+      <UserTable />
       <CreateUserMultiStep
         open={isCreateUserOpen}
         onOpenChange={setIsCreateUserOpen}
       />
-    </div>
+    </PageLayout>
   );
 };
 

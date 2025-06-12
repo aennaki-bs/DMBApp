@@ -7,6 +7,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/context/ThemeContext";
 
 interface DashboardCardProps {
   title?: string;
@@ -25,33 +26,42 @@ export function DashboardCard({
   noPadding = false,
   headerAction,
 }: DashboardCardProps) {
+  const { theme } = useTheme();
+  const isStandardTheme = theme.variant === "standard";
+
   return (
     <Card
       className={cn(
-        "bg-white border-blue-200 dark:bg-[#0f1642] dark:border-blue-900/30 shadow-md overflow-hidden",
+        "border-border shadow-md overflow-hidden",
+        isStandardTheme ? "glass-card" : "bg-card",
         className
       )}
     >
       {title && (
-        <CardHeader className="bg-blue-50 border-b border-blue-200 dark:bg-[#0a1033]/50 dark:border-blue-900/30 px-4 py-3">
+        <CardHeader
+          className={cn(
+            "border-b border-border px-4 py-3",
+            isStandardTheme ? "bg-white/20 backdrop-blur-sm" : "bg-muted/50"
+          )}
+        >
           <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-semibold text-blue-900 dark:text-white">
+            <CardTitle className="text-lg font-semibold text-foreground">
               {title}
             </CardTitle>
             {headerAction}
           </div>
         </CardHeader>
       )}
-      <CardContent
-        className={cn(
-          "text-blue-900 dark:text-blue-100",
-          noPadding ? "p-0" : "p-4"
-        )}
-      >
+      <CardContent className={cn("text-foreground", noPadding ? "p-0" : "p-4")}>
         {children}
       </CardContent>
       {footer && (
-        <CardFooter className="bg-blue-50 border-t border-blue-200 dark:bg-[#0a1033]/30 dark:border-blue-900/30 px-4 py-3">
+        <CardFooter
+          className={cn(
+            "border-t border-border px-4 py-3",
+            isStandardTheme ? "bg-white/10 backdrop-blur-sm" : "bg-muted/30"
+          )}
+        >
           {footer}
         </CardFooter>
       )}

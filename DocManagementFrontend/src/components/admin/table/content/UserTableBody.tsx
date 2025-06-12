@@ -1,7 +1,6 @@
-
-import { TableBody } from '@/components/ui/table';
-import { UserDto } from '@/services/adminService';
-import { UserTableRow } from '../UserTableRow';
+import { TableBody } from "@/components/ui/table";
+import { UserDto } from "@/services/adminService";
+import { UserTableRow } from "../UserTableRow";
 
 interface UserTableBodyProps {
   users: UserDto[] | undefined;

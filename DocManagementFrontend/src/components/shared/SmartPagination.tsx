@@ -92,33 +92,33 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2332] dark:to-[#1e2a4a] rounded-lg border border-blue-200 dark:border-blue-900/30 ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl rounded-2xl border border-primary/20 shadow-xl ${className}`}
     >
       {/* Left section: Page size selector */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-blue-800 dark:text-blue-300 whitespace-nowrap">
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-foreground font-medium whitespace-nowrap">
           Show
         </span>
         <Select
           value={pageSize.toString()}
           onValueChange={(value) => onPageSizeChange(Number(value))}
         >
-          <SelectTrigger className="w-[70px] h-8 bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-md">
+          <SelectTrigger className="w-[75px] h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
+          <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
             {pageSizeOptions.map((size) => (
               <SelectItem
                 key={size}
                 value={size.toString()}
-                className="hover:bg-blue-100 dark:hover:bg-blue-800/40 focus:bg-blue-100 dark:focus:bg-blue-800/40"
+                className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
               >
                 {size}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <span className="text-sm text-blue-800 dark:text-blue-300 whitespace-nowrap">
+        <span className="text-sm text-foreground font-medium whitespace-nowrap">
           entries
         </span>
       </div>

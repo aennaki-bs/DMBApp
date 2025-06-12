@@ -1,14 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Palette, Info, CheckCircle } from "lucide-react";
-import { DashboardCard } from "@/components/ui/dashboard-card";
+import { Palette, Moon, Sun, Monitor } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ThemeSelector } from "@/components/ui/ThemeSelector";
-import { useThemeContext } from "@/context/ThemeContext";
-import { getThemeDisplayName, getThemeDescription } from "@/lib/themes";
+import { ThemeSelector } from "@/components/theme/ThemeSelector";
+import { useTheme } from "@/context/ThemeContext";
 
 const ThemeDemo = () => {
-  const { theme, currentActiveTheme } = useThemeContext();
+  const { theme } = useTheme();
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -28,181 +28,138 @@ const ThemeDemo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="border-b border-border bg-card shadow-sm"
-      >
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-primary/10 border border-primary/30">
-              <Palette className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground mb-1">
-                Theme System Demo
-              </h1>
-              <p className="text-muted-foreground">
-                Showcasing the enhanced theme system with Standard Theme
-              </p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Main Content */}
+    <div className="min-h-screen bg-background p-6">
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-7xl mx-auto px-6 py-10"
+        className="max-w-6xl mx-auto space-y-8"
       >
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Theme Selector */}
-          <motion.div variants={itemVariants}>
-            <DashboardCard
-              title="Theme Control Panel"
-              headerAction={
-                <Badge
-                  variant="secondary"
-                  className="bg-primary/10 text-primary border-primary/30"
-                >
-                  <Palette className="h-3 w-3 mr-1" />
-                  Live Demo
-                </Badge>
-              }
-              className="h-full"
-            >
+        {/* Header */}
+        <motion.div variants={itemVariants} className="text-center space-y-4">
+          <h1 className="text-4xl font-bold text-foreground flex items-center justify-center gap-3">
+            <Palette className="h-10 w-10 text-primary" />
+            Theme Demo
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Experience our beautiful theming system with live previews of all
+            components
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <Badge variant="secondary">Current: {theme.variant}</Badge>
+            <Badge variant="outline">{theme.mode} mode</Badge>
+          </div>
+        </motion.div>
+
+        {/* Theme Selector */}
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Theme Controls
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <ThemeSelector />
-            </DashboardCard>
-          </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-          {/* Current Theme Status */}
-          <motion.div variants={itemVariants}>
-            <DashboardCard
-              title="Current Theme Status"
-              headerAction={
-                <Badge
-                  variant="secondary"
-                  className="bg-green-500/10 text-green-600 border-green-500/30"
-                >
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Active
-                </Badge>
-              }
-              className="h-full"
-            >
-              <div className="space-y-6">
-                <div className="grid gap-4">
-                  <div className="p-4 rounded-lg bg-muted border border-border">
-                    <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">
-                      Selected Theme
-                    </p>
-                    <p className="text-foreground font-semibold text-lg">
-                      {getThemeDisplayName(theme)}
-                    </p>
-                    <p className="text-muted-foreground text-sm mt-1">
-                      {getThemeDescription(theme)}
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-lg bg-muted border border-border">
-                    <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">
-                      Active Mode
-                    </p>
-                    <p className="text-foreground font-semibold text-lg capitalize">
-                      {currentActiveTheme}
-                    </p>
-                    <p className="text-muted-foreground text-sm mt-1">
-                      Currently applied visual theme
-                    </p>
-                  </div>
-                </div>
-
-                {theme === "standard" && (
-                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Info className="h-4 w-4 text-primary" />
-                      <h4 className="text-foreground font-semibold">
-                        Standard Theme Features
-                      </h4>
-                    </div>
-                    <ul className="text-muted-foreground text-sm space-y-1">
-                      <li>• Enhanced DocuVerse branding colors</li>
-                      <li>• Optimized for professional use</li>
-                      <li>• Improved accessibility and contrast</li>
-                      <li>• Clean and modern interface design</li>
-                    </ul>
-                  </div>
-                )}
+        {/* Component Examples */}
+        <motion.div
+          variants={itemVariants}
+          className="grid gap-6 md:grid-cols-2"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Buttons & Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Button variant="default">Primary</Button>
+                <Button variant="secondary">Secondary</Button>
+                <Button variant="outline">Outline</Button>
+                <Button variant="ghost">Ghost</Button>
+                <Button variant="destructive">Destructive</Button>
               </div>
-            </DashboardCard>
-          </motion.div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm">Small</Button>
+                <Button size="default">Default</Button>
+                <Button size="lg">Large</Button>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Color Palette Demo */}
-          <motion.div variants={itemVariants} className="lg:col-span-2">
-            <DashboardCard
-              title="Color Palette Preview"
-              headerAction={
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-500/10 text-blue-600 border-blue-500/30"
-                >
-                  <Palette className="h-3 w-3 mr-1" />
-                  Showcase
-                </Badge>
-              }
-            >
-              <div className="space-y-6">
-                <p className="text-muted-foreground">
-                  Preview of the current theme's color palette and components
-                </p>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-lg bg-primary text-primary-foreground text-center">
-                    <p className="font-semibold">Primary</p>
-                    <p className="text-xs opacity-80">Action Color</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-secondary text-secondary-foreground text-center">
-                    <p className="font-semibold">Secondary</p>
-                    <p className="text-xs opacity-80">Support Color</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted text-muted-foreground text-center">
-                    <p className="font-semibold">Muted</p>
-                    <p className="text-xs opacity-80">Subtle Color</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-accent text-accent-foreground text-center">
-                    <p className="font-semibold">Accent</p>
-                    <p className="text-xs opacity-80">Highlight Color</p>
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Badges & Status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="default">Default</Badge>
+                <Badge variant="secondary">Secondary</Badge>
+                <Badge variant="outline">Outline</Badge>
+                <Badge variant="destructive">Error</Badge>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">
+                    Online - All systems operational
+                  </span>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-lg border border-border bg-card text-card-foreground">
-                    <h4 className="font-semibold mb-2">Card Component</h4>
-                    <p className="text-sm text-muted-foreground">
-                      This demonstrates how cards look in the current theme.
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-lg border border-border bg-popover text-popover-foreground">
-                    <h4 className="font-semibold mb-2">Popover Style</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Popover components with theme colors.
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-lg border-2 border-primary bg-primary/5 text-foreground">
-                    <h4 className="font-semibold mb-2">Featured Content</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Highlighted content with primary colors.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm">
+                    Warning - Minor issues detected
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm">
+                    Error - System maintenance required
+                  </span>
                 </div>
               </div>
-            </DashboardCard>
-          </motion.div>
-        </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Cards Demo */}
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Card Layouts</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
+              <Card className="bg-card border border-border">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2">Feature Card</h4>
+                  <p className="text-sm text-muted-foreground">
+                    This card adapts to the current theme automatically.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2">Muted Card</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Using muted background colors for variety.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="bg-accent text-accent-foreground">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2">Accent Card</h4>
+                  <p className="text-sm opacity-90">
+                    Highlighted with accent colors for emphasis.
+                  </p>
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
       </motion.div>
     </div>
   );

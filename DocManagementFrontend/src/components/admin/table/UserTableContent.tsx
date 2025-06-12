@@ -6,6 +6,7 @@ import { UserTableEmpty } from "./UserTableEmpty";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SmartPagination from "@/components/shared/SmartPagination";
 import { usePagination } from "@/hooks/usePagination";
+import { Loader2 } from "lucide-react";
 
 interface UserTableContentProps {
   users: UserDto[] | undefined;
@@ -22,6 +23,8 @@ interface UserTableContentProps {
   sortDirection: string;
   onSort: (field: string) => void;
   onClearFilters: () => void;
+  isLoading?: boolean;
+  isError?: boolean;
 }
 
 export function UserTableContent({
@@ -39,6 +42,8 @@ export function UserTableContent({
   sortDirection,
   onSort,
   onClearFilters,
+  isLoading = false,
+  isError = false,
 }: UserTableContentProps) {
   // Use pagination hook
   const {
@@ -51,7 +56,7 @@ export function UserTableContent({
     handlePageSizeChange,
   } = usePagination({
     data: users || [],
-    initialPageSize: 25,
+    initialPageSize: 15,
   });
 
   // Check if we have users to display
@@ -76,50 +81,98 @@ export function UserTableContent({
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
-        {hasUsers ? (
-          <>
-            {/* Fixed Header - Never Scrolls */}
-            <div className="min-w-[1026px] border-b border-blue-200 dark:border-blue-900/30">
-              <Table className="table-fixed w-full">
-                <UserTableHeader
-                  selectedCount={
-                    selectedUsers.filter((id) =>
-                      paginatedUsers.some((user) => user.id === id)
-                    ).length
-                  }
-                  totalCount={paginatedUsers.length}
-                  onSelectAll={handleSelectAll}
-                  sortBy={sortBy}
-                  sortDirection={sortDirection}
-                  onSort={onSort}
-                />
-              </Table>
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading users...</p>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            {/* Scrollable Body - Only Content Scrolls */}
-            <ScrollArea className="h-[calc(100vh-380px)] min-h-[300px]">
+  // Error state
+  if (isError) {
+    return (
+      <div className="space-y-4">
+        <div className="relative overflow-hidden rounded-2xl border border-destructive/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                <span className="text-destructive font-bold">!</span>
+              </div>
+              <p className="text-destructive">
+                Failed to load users. Please try again.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col gap-4" style={{ minHeight: "100%" }}>
+      <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg min-h-0">
+        {/* Subtle animated background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/2 via-transparent to-primary/2 animate-pulse"></div>
+
+        {hasUsers ? (
+          <div className="relative h-full flex flex-col z-10">
+            {/* Fixed Header - Never Scrolls */}
+            <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
               <div className="min-w-[1026px]">
                 <Table className="table-fixed w-full">
-                  <UserTableBody
-                    users={paginatedUsers}
-                    selectedUsers={selectedUsers}
-                    onSelectUser={onSelectUser}
-                    onToggleStatus={onToggleStatus}
-                    onRoleChange={onRoleChange}
-                    onEdit={onEdit}
-                    onEditEmail={onEditEmail}
-                    onViewLogs={onViewLogs}
-                    onDelete={onDelete}
+                  <UserTableHeader
+                    selectedCount={
+                      selectedUsers.filter((id) =>
+                        paginatedUsers.some((user) => user.id === id)
+                      ).length
+                    }
+                    totalCount={paginatedUsers.length}
+                    onSelectAll={handleSelectAll}
+                    sortBy={sortBy}
+                    sortDirection={sortDirection}
+                    onSort={onSort}
                   />
                 </Table>
               </div>
-            </ScrollArea>
-          </>
+            </div>
+
+            {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
+            <div
+              className="flex-1 overflow-hidden"
+              style={{ maxHeight: "calc(100vh - 300px)" }}
+            >
+              <ScrollArea className="table-scroll-area h-full w-full">
+                <div className="min-w-[1026px] pb-4">
+                  <Table className="table-fixed w-full">
+                    <UserTableBody
+                      users={paginatedUsers}
+                      selectedUsers={selectedUsers}
+                      onSelectUser={onSelectUser}
+                      onToggleStatus={onToggleStatus}
+                      onRoleChange={onRoleChange}
+                      onEdit={onEdit}
+                      onEditEmail={onEditEmail}
+                      onViewLogs={onViewLogs}
+                      onDelete={onDelete}
+                    />
+                  </Table>
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
         ) : (
-          <UserTableEmpty onClearFilters={onClearFilters} />
+          <div className="relative h-full flex items-center justify-center z-10">
+            <UserTableEmpty onClearFilters={onClearFilters} />
+          </div>
         )}
       </div>
 

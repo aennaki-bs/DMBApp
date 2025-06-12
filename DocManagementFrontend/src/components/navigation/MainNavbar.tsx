@@ -94,28 +94,56 @@ export function MainNavbar() {
   }, []);
 
   return (
-    <nav className="border-b border-blue-200 bg-white/95 dark:border-blue-900/30 dark:bg-[#0a1033]/95 backdrop-blur-sm h-16 shadow-md w-full">
-      <div className="container h-full mx-auto px-4 flex justify-between items-center">
-        <div className="flex items-center md:w-64">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 w-8 h-8 rounded flex items-center justify-center text-white font-bold shadow-[0_0_10px_rgba(59,130,246,0.3)]">
-              D
-            </div>
-            <span className="text-xl font-semibold text-blue-900 dark:bg-gradient-to-r dark:from-blue-200 dark:to-blue-400 dark:text-transparent dark:bg-clip-text">
-              DocuVerse
-            </span>
-          </Link>
-        </div>
-
-        {/* Search bar */}
-        <div
-          className="hidden md:flex flex-1 max-w-md mx-6 relative"
-          ref={searchRef}
+    <div
+      className="flex items-center justify-between w-full"
+      style={{ height: "clamp(3.5rem, 5vw, 4rem)" }}
+    >
+      {/* Brand/Logo Section */}
+      <div className="flex items-center min-w-0 flex-shrink-0">
+        <Link
+          to="/dashboard"
+          className="flex items-center gap-responsive group"
         >
-          <div className="relative w-full group">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 group-hover:text-blue-800 dark:text-blue-300 dark:group-hover:text-blue-200 transition-colors duration-200" />
+          <div
+            className="bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold shadow-lg group-hover:shadow-primary/30 group-hover:scale-105 transition-all duration-300"
+            style={{
+              width: "clamp(2rem, 3vw, 2.5rem)",
+              height: "clamp(2rem, 3vw, 2.5rem)",
+              fontSize: "clamp(0.875rem, 1.5vw, 1.125rem)",
+            }}
+          >
+            D
+          </div>
+          <span className="text-responsive-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 hidden sm:block">
+            DocuVerse
+          </span>
+        </Link>
+      </div>
+
+      {/* Central Search Bar - Enhanced Design with Responsive Sizing */}
+      <div
+        className="flex-1 mx-4 sm:mx-6 lg:mx-8 hidden md:block"
+        style={{ maxWidth: "clamp(20rem, 50vw, 42rem)" }}
+        ref={searchRef}
+      >
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+          <div className="relative flex items-center">
+            <Search
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground group-hover:text-primary transition-colors duration-300 z-10"
+              style={{
+                width: "clamp(1rem, 2vw, 1.25rem)",
+                height: "clamp(1rem, 2vw, 1.25rem)",
+              }}
+            />
             <Input
-              className="pl-9 pr-10 bg-blue-50 border-blue-200 text-blue-900 placeholder:text-blue-500 dark:bg-blue-950/40 dark:border-blue-800/30 dark:text-white dark:placeholder:text-blue-300/50 w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md transition-all duration-200 group-hover:border-blue-700/50 dark:group-hover:bg-blue-900/40 backdrop-blur-sm shadow-inner"
+              className="input-responsive bg-muted/60 border-2 border-border hover:border-primary/30 focus:border-primary text-foreground placeholder:text-muted-foreground w-full rounded-xl transition-all duration-300 backdrop-blur-md shadow-inner group-hover:bg-muted/80 focus:bg-card/90"
+              style={{
+                paddingLeft: "clamp(2.75rem, 4vw, 3.5rem)",
+                paddingRight: "clamp(2.75rem, 4vw, 3.5rem)",
+                paddingTop: "clamp(0.5rem, 1.5vw, 0.75rem)",
+                paddingBottom: "clamp(0.5rem, 1.5vw, 0.75rem)",
+              }}
               placeholder={t("navigation.searchPlaceholder")}
               value={searchQuery}
               onChange={handleInputChange}
@@ -125,131 +153,155 @@ export function MainNavbar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-200 dark:text-blue-300 dark:hover:text-blue-100 dark:hover:bg-blue-800/40 rounded-full"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-all duration-200"
+                style={{
+                  width: "clamp(1.5rem, 2.5vw, 1.75rem)",
+                  height: "clamp(1.5rem, 2.5vw, 1.75rem)",
+                }}
                 onClick={handleClearSearch}
               >
-                <X className="h-3 w-3" />
+                <X
+                  style={{
+                    width: "clamp(0.875rem, 1.5vw, 1rem)",
+                    height: "clamp(0.875rem, 1.5vw, 1rem)",
+                  }}
+                />
               </Button>
             )}
           </div>
-
-          {/* Search results dropdown */}
-          {showResults && (
-            <SearchResults
-              results={searchResults}
-              isSearching={isSearching}
-              onSelect={handleSelectResult}
-              searchQuery={searchQuery}
-            />
-          )}
         </div>
 
-        {user ? (
-          <div className="flex items-center space-x-4 ml-auto">
-            <EnhancedButton
-              variant="ghost"
-              size="icon-sm"
-              className="relative text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:text-blue-300 dark:hover:text-white dark:hover:bg-blue-800/30"
-              animation="pulse"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[#0a1033]/95"></span>
-            </EnhancedButton>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <EnhancedButton
-                  variant="frost"
-                  size="sm"
-                  className="flex items-center gap-2 text-blue-900 hover:bg-blue-100 dark:text-blue-100 dark:hover:bg-blue-800/30"
-                >
-                  <div className="hidden md:block text-right">
-                    <p className="text-sm font-medium">
-                      {user.username || "User"}
-                    </p>
-                    <p className="text-xs text-blue-600 dark:text-blue-300">
-                      {user.role}
-                    </p>
-                  </div>
-                  <Avatar className="h-8 w-8 ring-2 ring-blue-600/30">
-                    <AvatarImage
-                      src={user.profilePicture}
-                      alt={user.username || "User"}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-                      {user.username?.[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <ChevronDown className="h-4 w-4 text-blue-600 dark:text-blue-300" />
-                </EnhancedButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56 bg-white border-blue-200 text-blue-900 dark:bg-[#0a1033] dark:border-blue-900/50 dark:text-blue-100 animate-in fade-in-50 zoom-in-95 shadow-lg dark:shadow-blue-900/20"
-              >
-                <DropdownMenuLabel>
-                  {t("navigation.myAccount")}
-                </DropdownMenuLabel>
-
-                <DropdownMenuSeparator className="bg-blue-800/30" />
-
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/profile"
-                    className="flex items-center cursor-pointer w-full hover:bg-blue-800/30"
-                  >
-                    <User className="mr-2 h-4 w-4" /> {t("navigation.profile")}
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/settings"
-                    className="flex items-center cursor-pointer w-full hover:bg-blue-800/30"
-                  >
-                    <Settings className="mr-2 h-4 w-4" />{" "}
-                    {t("navigation.settings")}
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator className="bg-blue-800/30" />
-
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="flex items-center cursor-pointer hover:bg-blue-800/30 text-red-400 focus:text-red-400"
-                >
-                  <LogOut className="mr-2 h-4 w-4" /> {t("navigation.logout")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-4">
-            <Link to="/login">
-              <EnhancedButton
-                variant="frost"
-                size="sm"
-                rounded="lg"
-                className="text-blue-300 hover:text-white"
-              >
-                Login
-              </EnhancedButton>
-            </Link>
-            <Link to="/register">
-              <EnhancedButton
-                variant="premium"
-                size="sm"
-                rounded="lg"
-                animation="shimmer"
-                leadingIcon={<User className="h-4 w-4" />}
-              >
-                Register
-              </EnhancedButton>
-            </Link>
-          </div>
+        {/* Enhanced Search Results */}
+        {showResults && (
+          <SearchResults
+            results={searchResults}
+            isSearching={isSearching}
+            onSelect={handleSelectResult}
+            searchQuery={searchQuery}
+          />
         )}
       </div>
-    </nav>
+
+      {/* Right Section - User Actions */}
+      {user ? (
+        <div className="flex items-center gap-responsive flex-shrink-0">
+          {/* Clean Notification Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-200 rounded-lg btn-responsive"
+          >
+            <Bell
+              style={{
+                width: "clamp(1rem, 2vw, 1.25rem)",
+                height: "clamp(1rem, 2vw, 1.25rem)",
+              }}
+            />
+            <span
+              className="absolute -top-1 -right-1 bg-destructive rounded-full ring-1 ring-background"
+              style={{
+                width: "clamp(0.5rem, 1vw, 0.625rem)",
+                height: "clamp(0.5rem, 1vw, 0.625rem)",
+              }}
+            ></span>
+          </Button>
+
+          {/* Clean User Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center gap-responsive text-foreground hover:bg-accent/50 transition-all duration-200 btn-responsive rounded-lg h-auto"
+              >
+                <div className="hidden lg:block text-right">
+                  <p className="text-responsive-sm font-medium text-foreground leading-tight">
+                    {user.username || "User"}
+                  </p>
+                  <p className="text-responsive-xs text-muted-foreground uppercase tracking-wide">
+                    {user.role}
+                  </p>
+                </div>
+                <Avatar
+                  className="ring-1 ring-border"
+                  style={{
+                    width: "clamp(1.75rem, 3vw, 2.25rem)",
+                    height: "clamp(1.75rem, 3vw, 2.25rem)",
+                  }}
+                >
+                  <AvatarImage
+                    src={user.profilePicture}
+                    alt={user.username || "User"}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-primary text-primary-foreground font-medium text-responsive-sm">
+                    {user.username?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <ChevronDown
+                  className="text-muted-foreground hidden lg:block"
+                  style={{
+                    width: "clamp(0.875rem, 1.5vw, 1rem)",
+                    height: "clamp(0.875rem, 1.5vw, 1rem)",
+                  }}
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-56 bg-popover/95 backdrop-blur-sm border-border text-popover-foreground shadow-lg"
+            >
+              <DropdownMenuLabel className="text-foreground font-medium">
+                {t("navigation.myAccount")}
+              </DropdownMenuLabel>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem asChild>
+                <Link
+                  to="/profile"
+                  className="flex items-center cursor-pointer w-full"
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  <span>{t("navigation.profile")}</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link
+                  to="/settings"
+                  className="flex items-center cursor-pointer w-full"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>{t("navigation.settings")}</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="flex items-center cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>{t("nav.logout")}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : (
+        <div className="flex items-center space-x-2">
+          <Link to="/login">
+            <Button variant="ghost" className="text-foreground hover:bg-accent">
+              {t("auth.signIn")}
+            </Button>
+          </Link>
+          <Link to="/register">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {t("auth.signUp")}
+            </Button>
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }

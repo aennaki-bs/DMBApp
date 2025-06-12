@@ -33,7 +33,8 @@ const VendorManagementPage = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-blue-900 dark:text-white flex items-center">
-              <Truck className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" /> Vendor Management
+              <Truck className="mr-3 h-6 w-6 text-blue-600 dark:text-blue-400" />{" "}
+              Vendor Management
             </h1>
             <p className="text-sm md:text-base text-blue-700 dark:text-gray-400">
               Manage your vendor database and supplier information

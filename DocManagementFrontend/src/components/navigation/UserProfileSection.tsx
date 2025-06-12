@@ -37,9 +37,9 @@ export function UserProfileSection() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      {/* Main Profile Card */}
-      <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-[#1a2570] dark:to-[#0f1642] rounded-xl border border-blue-200 dark:border-blue-800/30 shadow-lg overflow-hidden">
-        {/* User Avatar and Basic Info */}
+      {/* Professional profile card with semantic theming */}
+      <div className="bg-gradient-to-br from-card to-muted/50 rounded-xl border border-border shadow-lg overflow-hidden backdrop-blur-sm">
+        {/* User avatar and basic info */}
         <div className="p-4 pb-3">
           <div className="flex items-center space-x-3">
             <motion.div
@@ -47,7 +47,7 @@ export function UserProfileSection() {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="h-12 w-12 rounded-xl overflow-hidden bg-gradient-to-br from-blue-400 to-blue-600 ring-2 ring-blue-500/40 shadow-md">
+              <div className="h-12 w-12 rounded-xl overflow-hidden bg-primary ring-2 ring-primary/40 shadow-md">
                 {user.profilePicture ? (
                   <img
                     src={user.profilePicture}
@@ -55,13 +55,13 @@ export function UserProfileSection() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center text-white text-lg font-bold">
+                  <div className="h-full w-full flex items-center justify-center text-primary-foreground text-lg font-bold">
                     {user.username?.[0]?.toUpperCase() || "U"}
                   </div>
                 )}
               </div>
               <motion.div
-                className="absolute -bottom-0.5 -right-0.5 bg-green-500 h-3 w-3 rounded-full border-2 border-blue-200 dark:border-[#1a2570] shadow-sm"
+                className="absolute -bottom-0.5 -right-0.5 bg-green-500 h-3 w-3 rounded-full border-2 border-card shadow-sm"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.2, type: "spring" }}
@@ -69,11 +69,11 @@ export function UserProfileSection() {
             </motion.div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="text-blue-900 dark:text-white font-semibold text-sm truncate">
+              <h3 className="text-foreground font-semibold text-sm truncate">
                 {user.username || "User"}
               </h3>
               <div className="mt-1">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-600 text-white dark:bg-blue-500/20 dark:text-blue-300 border border-blue-600 dark:border-blue-500/30">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary text-primary-foreground border border-primary/50 shadow-sm">
                   {user.role || "User"}
                 </span>
               </div>
@@ -81,24 +81,24 @@ export function UserProfileSection() {
           </div>
         </div>
 
-        {/* Responsibility Centre Section */}
-        <div className="px-4 py-3 bg-blue-100/40 border-blue-300/20 dark:bg-[#0a1033]/40 border-t dark:border-blue-800/20">
+        {/* Professional responsibility centre section */}
+        <div className="px-4 py-3 bg-muted/30 border-t border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <div className="flex-shrink-0">
-                <div className="p-1.5 rounded-lg bg-blue-600/20 border border-blue-600/40 dark:bg-blue-500/10 dark:border-blue-500/20">
-                  <Building2 className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
+                <div className="p-1.5 rounded-lg bg-primary/20 border border-primary/40">
+                  <Building2 className="h-3.5 w-3.5 text-primary" />
                 </div>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-0.5">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">
                     {t("navigation.responsibilityCenter")}
                   </p>
                   <button
                     onClick={handleRefreshUserInfo}
                     disabled={isRefreshing}
-                    className="text-blue-700 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-1 rounded-md hover:bg-blue-600/20 dark:hover:bg-blue-500/10"
+                    className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-accent"
                     title="Refresh user information"
                   >
                     <RefreshCw
@@ -108,11 +108,11 @@ export function UserProfileSection() {
                     />
                   </button>
                 </div>
-                <p className="text-sm text-blue-900 dark:text-white font-medium truncate">
+                <p className="text-sm text-foreground font-medium truncate">
                   {responsibilityCenter ? (
                     responsibilityCenter.descr || responsibilityCenter.code
                   ) : (
-                    <span className="text-blue-600 dark:text-blue-300/70 font-normal">
+                    <span className="text-muted-foreground font-normal">
                       {t("navigation.notAssigned")}
                     </span>
                   )}
@@ -127,11 +127,11 @@ export function UserProfileSection() {
           </div>
         </div>
 
-        {/* Manage Account Link */}
+        {/* Professional manage account link */}
         <div className="p-2">
           <Link
             to="/profile"
-            className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-blue-700 hover:text-blue-900 hover:bg-blue-200/50 dark:text-blue-300 dark:hover:text-white dark:hover:bg-blue-600/20 rounded-lg transition-all duration-200 group"
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-foreground hover:bg-accent rounded-lg transition-all duration-200 group"
           >
             <div className="flex items-center space-x-2">
               <Settings className="h-3.5 w-3.5" />
@@ -142,26 +142,26 @@ export function UserProfileSection() {
         </div>
       </div>
 
-      {/* Optional: Quick Stats or Additional Info Card */}
+      {/* Professional center info card */}
       {responsibilityCenter && (
         <motion.div
-          className="mt-3 p-3 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-500/10 dark:to-indigo-500/10 rounded-lg border border-blue-300 dark:border-blue-500/20"
+          className="mt-3 p-3 bg-gradient-to-r from-muted/50 to-accent/30 rounded-lg border border-border"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">
+              <p className="text-xs text-muted-foreground font-medium">
                 {t("navigation.centerCode")}
               </p>
-              <p className="text-sm text-blue-900 dark:text-white font-mono">
+              <p className="text-sm text-foreground font-mono">
                 {responsibilityCenter.code}
               </p>
             </div>
             <div className="text-right">
-              <div className="w-6 h-6 rounded-full bg-blue-600/30 dark:bg-blue-500/20 flex items-center justify-center">
-                <Building2 className="h-3 w-3 text-blue-700 dark:text-blue-400" />
+              <div className="w-6 h-6 rounded-full bg-primary/30 flex items-center justify-center">
+                <Building2 className="h-3 w-3 text-primary" />
               </div>
             </div>
           </div>

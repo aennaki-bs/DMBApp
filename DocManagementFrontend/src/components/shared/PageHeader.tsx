@@ -18,16 +18,19 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div
-      className={`bg-white border-blue-200 dark:bg-[#0a1033] dark:border-blue-900/30 border rounded-lg p-6 mb-6 transition-all ${className}`}
+      className={cn(
+        "bg-card border-border rounded-lg p-6 mb-6 transition-all shadow-md",
+        className
+      )}
     >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-blue-900 dark:text-white flex items-center">
+          <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-foreground flex items-center">
             {icon && <span className="mr-3">{icon}</span>}
             {title}
           </h1>
           {description && (
-            <p className="text-sm md:text-base text-blue-600 dark:text-gray-400">
+            <p className="text-sm md:text-base text-muted-foreground">
               {description}
             </p>
           )}

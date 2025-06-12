@@ -85,13 +85,30 @@ export function SidebarNav() {
     enabled: !!user?.userId && !isSimpleUser,
   });
 
+  // Professional navigation item classes with semantic theming
+  const getNavItemClasses = (isActiveItem: boolean) => {
+    return `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+      isActiveItem
+        ? "bg-accent text-accent-foreground shadow-sm border border-border"
+        : "text-foreground hover:bg-accent/50 hover:text-accent-foreground"
+    }`;
+  };
+
+  const getSubmenuItemClasses = (isActiveItem: boolean) => {
+    return `flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+      isActiveItem
+        ? "bg-accent text-accent-foreground shadow-sm"
+        : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
+    }`;
+  };
+
   return (
-    <div className="h-full w-full bg-blue-50/95 border-blue-200 dark:bg-[#0a1033]/95 backdrop-blur-lg border-r dark:border-blue-900/30 overflow-y-auto">
+    <div className="h-full w-full bg-card/95 border-border backdrop-blur-lg border-r overflow-y-auto">
       {/* User Profile Section */}
       <UserProfileSection />
 
       <div className="px-4 py-2">
-        <p className="text-xs font-medium text-blue-600 dark:text-blue-400/80 px-2 py-2">
+        <p className="text-xs font-semibold text-muted-foreground px-2 py-3 uppercase tracking-wide">
           MAIN NAVIGATION
         </p>
         <ul className="space-y-1">
@@ -99,11 +116,7 @@ export function SidebarNav() {
           <li>
             <Link
               to="/dashboard"
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive("/dashboard")
-                  ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                  : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-              }`}
+              className={getNavItemClasses(isActive("/dashboard"))}
             >
               <LayoutDashboard className="h-5 w-5" />
               <span>{t("nav.dashboard")}</span>
@@ -115,18 +128,16 @@ export function SidebarNav() {
             <li>
               <Link
                 to="/pending-approvals"
-                className={`flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`${getNavItemClasses(
                   isActive("/pending-approvals")
-                    ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                    : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                }`}
+                )} justify-between`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <ClipboardCheck className="h-5 w-5" />
                   <span>{t("nav.myApprovals")}</span>
                 </div>
                 {pendingApprovals.length > 0 && (
-                  <div className="flex items-center justify-center h-5 w-5 text-xs bg-red-500 text-white rounded-full">
+                  <div className="flex items-center justify-center h-5 w-5 text-xs bg-destructive text-destructive-foreground rounded-full font-medium">
                     {pendingApprovals.length}
                   </div>
                 )}
@@ -139,11 +150,7 @@ export function SidebarNav() {
             <li>
               <Link
                 to="/user-management"
-                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive("/user-management")
-                    ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                    : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                }`}
+                className={getNavItemClasses(isActive("/user-management"))}
               >
                 <Users className="h-5 w-5" />
                 <span>{t("nav.userManagement")}</span>
@@ -155,11 +162,7 @@ export function SidebarNav() {
           <li>
             <Link
               to="/documents"
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive("/documents")
-                  ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                  : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-              }`}
+              className={getNavItemClasses(isActive("/documents"))}
             >
               <FileText className="h-5 w-5" />
               <span>{t("nav.documents")}</span>
@@ -172,11 +175,9 @@ export function SidebarNav() {
               <li>
                 <Link
                   to="/document-types-management"
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={getNavItemClasses(
                     isActive("/document-types-management")
-                      ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                      : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                  }`}
+                  )}
                 >
                   <Layers className="h-5 w-5" />
                   <span>{t("nav.documentTypes")}</span>
@@ -187,36 +188,32 @@ export function SidebarNav() {
               <li>
                 <button
                   onClick={() => setLineElementsMenuOpen(!lineElementsMenuOpen)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`w-full ${getNavItemClasses(
                     isLineElementsActive()
-                      ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                      : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                  }`}
+                  )} justify-between`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <Box className="h-5 w-5" />
                     <span>{t("nav.lineElements")}</span>
                   </div>
                   {lineElementsMenuOpen ? (
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
                   ) : (
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 transition-transform duration-200" />
                   )}
                 </button>
 
-                {/* Submenu for Line Elements section */}
+                {/* Professional submenu for Line Elements */}
                 {lineElementsMenuOpen && (
-                  <ul className="ml-6 mt-1 space-y-1 border-l-2 border-blue-300 dark:border-blue-900/30 pl-2">
+                  <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border pl-3">
                     <li>
                       <Link
                         to="/line-elements-management?tab=elementtypes"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={getSubmenuItemClasses(
                           isActive("/line-elements-management") &&
-                          new URLSearchParams(location.search).get("tab") ===
-                            "elementtypes"
-                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
-                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                        }`}
+                            new URLSearchParams(location.search).get("tab") ===
+                              "elementtypes"
+                        )}
                       >
                         <Tag className="h-4 w-4" />
                         <span>Element Types</span>
@@ -225,11 +222,9 @@ export function SidebarNav() {
                     <li>
                       <Link
                         to="/items-management"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={getSubmenuItemClasses(
                           isActive("/items-management")
-                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
-                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                        }`}
+                        )}
                       >
                         <Package className="h-4 w-4" />
                         <span>Items</span>
@@ -238,11 +233,9 @@ export function SidebarNav() {
                     <li>
                       <Link
                         to="/unit-codes-management"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={getSubmenuItemClasses(
                           isActive("/unit-codes-management")
-                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
-                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                        }`}
+                        )}
                       >
                         <Hash className="h-4 w-4" />
                         <span>Unit Codes</span>
@@ -251,11 +244,9 @@ export function SidebarNav() {
                     <li>
                       <Link
                         to="/general-accounts-management"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={getSubmenuItemClasses(
                           isActive("/general-accounts-management")
-                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
-                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                        }`}
+                        )}
                       >
                         <Calculator className="h-4 w-4" />
                         <span>General Accounts</span>
@@ -264,11 +255,9 @@ export function SidebarNav() {
                     <li>
                       <Link
                         to="/customer-management"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={getSubmenuItemClasses(
                           isActive("/customer-management")
-                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
-                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                        }`}
+                        )}
                       >
                         <Users className="h-4 w-4" />
                         <span>Customers</span>
@@ -277,11 +266,9 @@ export function SidebarNav() {
                     <li>
                       <Link
                         to="/vendor-management"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={getSubmenuItemClasses(
                           isActive("/vendor-management")
-                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
-                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                        }`}
+                        )}
                       >
                         <Truck className="h-4 w-4" />
                         <span>Vendors</span>
@@ -295,11 +282,7 @@ export function SidebarNav() {
               <li>
                 <Link
                   to="/circuits"
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/circuits")
-                      ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                      : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                  }`}
+                  className={getNavItemClasses(isActive("/circuits"))}
                 >
                   <GitBranch className="h-5 w-5" />
                   <span>{t("nav.circuits")}</span>
@@ -310,34 +293,30 @@ export function SidebarNav() {
               <li>
                 <button
                   onClick={() => setApprovalMenuOpen(!approvalMenuOpen)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`w-full ${getNavItemClasses(
                     isApprovalActive()
-                      ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                      : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                  }`}
+                  )} justify-between`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <UserCheck className="h-5 w-5" />
                     <span>{t("nav.approval")}</span>
                   </div>
                   {approvalMenuOpen ? (
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
                   ) : (
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 transition-transform duration-200" />
                   )}
                 </button>
 
-                {/* Submenu for Approval section */}
+                {/* Professional submenu for Approval */}
                 {approvalMenuOpen && (
-                  <ul className="ml-6 mt-1 space-y-1 border-l-2 border-blue-300 dark:border-blue-900/30 pl-2">
+                  <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border pl-3">
                     <li>
                       <Link
                         to="/approval-groups"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={getSubmenuItemClasses(
                           isActive("/approval-groups")
-                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
-                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                        }`}
+                        )}
                       >
                         <UsersRound className="h-4 w-4" />
                         <span>Groups</span>
@@ -346,11 +325,9 @@ export function SidebarNav() {
                     <li>
                       <Link
                         to="/approvers-management"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={getSubmenuItemClasses(
                           isActive("/approvers-management")
-                            ? "bg-blue-200 text-blue-900 dark:bg-blue-700/40 dark:text-blue-200"
-                            : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                        }`}
+                        )}
                       >
                         <UserCog className="h-4 w-4" />
                         <span>Approvers</span>
@@ -365,11 +342,9 @@ export function SidebarNav() {
                 <li>
                   <Link
                     to="/responsibility-centres"
-                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={getNavItemClasses(
                       isActive("/responsibility-centres")
-                        ? "bg-blue-200 text-blue-900 dark:bg-blue-600/40 dark:text-blue-200"
-                        : "text-blue-700 hover:bg-blue-100 hover:text-blue-900 dark:text-blue-100 dark:hover:bg-blue-800/30 dark:hover:text-blue-50"
-                    }`}
+                    )}
                   >
                     <Building2 className="h-5 w-5" />
                     <span>{t("nav.responsibilityCentres")}</span>

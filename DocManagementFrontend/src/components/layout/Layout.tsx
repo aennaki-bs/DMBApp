@@ -11,6 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useSettings } from "@/context/SettingsContext";
 import ConnectionStatusIndicator from "@/components/shared/ConnectionStatusIndicator";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useTheme } from "@/context/ThemeContext";
 
 // Predefined background options (same as in Settings)
 const backgroundOptions = [
@@ -34,6 +35,7 @@ const backgroundOptions = [
 export function Layout() {
   const isMobile = useIsMobile();
   const { theme } = useSettings();
+  const { theme: themeConfig } = useTheme();
   const [backgroundUrl, setBackgroundUrl] = useState("");
 
   // Get the selected background from localStorage
@@ -84,10 +86,13 @@ export function Layout() {
     };
   }, []);
 
+  // Use Standard theme styling but allow background images
+  const isStandardTheme = themeConfig.variant === "standard";
+
   return (
     <SidebarProvider>
       <div
-        className="min-h-screen w-full flex flex-col bg-background text-foreground"
+        className="flex-1 min-h-full w-full flex text-foreground bg-background"
         style={{
           backgroundImage: backgroundUrl
             ? `url('${backgroundUrl}')`
@@ -95,59 +100,78 @@ export function Layout() {
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
+          minHeight: "100vh",
+          height: "100%",
         }}
       >
-        {/* Lighter overlay for background - more transparent to show background */}
-        <div
-          className={`absolute inset-0 ${
-            theme === "dark" ? "bg-[#070b28]/60" : "bg-blue-50/50"
-          } z-0`}
-        ></div>
+        {/* Light overlay for better readability */}
+        <div className="absolute inset-0 bg-background/20 z-0"></div>
 
-        {/* Main layout structure - z-10 to appear above the overlay */}
-        <div className="relative flex h-screen overflow-hidden z-10">
-          {/* Sidebar - hidden on mobile unless triggered */}
+        {/* Main layout structure - elevated above overlay */}
+        <div className="relative flex w-full min-h-full z-10">
+          {/* Sidebar - clean transparent styling with responsive width */}
           <aside
             className={`h-full ${
-              isMobile ? "hidden" : "w-64 flex-shrink-0"
-            } border-r border-blue-200 dark:border-blue-900/30 transition-all duration-200 z-20`}
+              isMobile ? "hidden" : "w-56 sm:w-60 lg:w-64 xl:w-64 flex-shrink-0"
+            } ${
+              isStandardTheme
+                ? "glass-sidebar"
+                : "border-r border-border bg-card/95"
+            } transition-all duration-300 ease-in-out shadow-lg z-20 overflow-hidden`}
           >
             <SidebarNav />
           </aside>
 
           {/* Main content area */}
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
-            {/* Top navbar */}
+          <div className="flex-1 flex flex-col min-h-full">
+            {/* Clean transparent header with responsive sizing */}
             <header
               className={`${
-                isMobile
-                  ? "bg-white/90 dark:bg-[#0a1033]/90"
-                  : "bg-white/80 dark:bg-[#0a1033]/80"
-              } backdrop-blur-lg border-b border-blue-200 dark:border-blue-900/30 z-30`}
+                isStandardTheme
+                  ? "glass-header"
+                  : isMobile
+                  ? "bg-card/95 border-b border-border"
+                  : "bg-card/90 border-b border-border"
+              } shadow-sm z-30 transition-all duration-300`}
+              style={{
+                height: "4rem",
+                flexShrink: 0,
+              }}
             >
-              <div className="flex items-center">
-                {isMobile && <SidebarTrigger className="p-2" />}
-                <MainNavbar />
+              <div className="flex items-center h-full responsive-padding">
+                {isMobile && (
+                  <SidebarTrigger className="p-2 mr-4 hover:bg-accent rounded-md transition-colors flex-shrink-0" />
+                )}
 
-                {/* Right side items */}
-                <div className="ml-auto flex items-center gap-3">
-                  {/* Language switcher */}
-                  {/* <LanguageSwitcher /> */}
+                {/* Main navbar content */}
+                <div className="flex-1 min-w-0">
+                  <MainNavbar />
+                </div>
 
+                {/* Right side items with proper spacing */}
+                <div className="flex items-center gap-responsive ml-4 flex-shrink-0">
                   {/* Connection status indicator */}
                   <ConnectionStatusIndicator showRetryButton />
                 </div>
               </div>
             </header>
 
-            {/* Main content */}
-            <main className="flex-1 overflow-auto p-4">
+            {/* Main content with clean transparent styling and responsive padding */}
+            <main
+              className="flex-1 overflow-hidden p-4"
+              style={{ minHeight: "calc(100vh - 4rem)" }}
+            >
               <div
-                className={`${
-                  theme === "dark" ? "bg-[#0f1642]/50" : "bg-white/90"
-                } h-full rounded-xl border border-blue-200 dark:border-blue-900/30 shadow-lg overflow-auto backdrop-blur-sm`}
+                className={`h-full rounded-lg overflow-hidden ${
+                  isStandardTheme
+                    ? "glass-card"
+                    : "border border-border bg-card/85"
+                } shadow-lg transition-all duration-300`}
+                style={{ minHeight: "100%" }}
               >
-                <Outlet />
+                <div className="h-full overflow-hidden p-6">
+                  <Outlet />
+                </div>
               </div>
             </main>
           </div>

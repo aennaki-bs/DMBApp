@@ -25,28 +25,28 @@ export function UserTableHeader({
   const renderSortIcon = (field: string) => {
     if (sortBy !== field) return null;
     return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+      <ArrowUp className="ml-1 h-3.5 w-3.5 text-primary" />
     ) : (
-      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+      <ArrowDown className="ml-1 h-3.5 w-3.5 text-primary" />
     );
   };
 
   const headerClass = (field: string) => `
-    text-blue-800 dark:text-blue-200 font-medium cursor-pointer select-none
-    hover:text-blue-900 dark:hover:text-blue-100 transition-colors duration-150
-    ${sortBy === field ? "text-blue-900 dark:text-blue-100" : ""}
+    text-foreground font-medium cursor-pointer select-none
+    hover:text-primary transition-colors duration-150
+    ${sortBy === field ? "text-primary" : ""}
   `;
 
   return (
-    <TableHeader className="bg-blue-100 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
-      <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
+    <TableHeader className="bg-muted/20 backdrop-blur-sm">
+      <TableRow className="border-border/30 hover:bg-transparent">
         <TableHead className="w-[48px]">
           <div className="flex items-center justify-center">
             <Checkbox
               checked={selectedCount > 0 && selectedCount === totalCount}
               onCheckedChange={onSelectAll}
               aria-label="Select all"
-              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+              className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
           </div>
         </TableHead>
@@ -83,10 +83,10 @@ export function UserTableHeader({
             {t("userManagement.status")} {renderSortIcon("isActive")}
           </div>
         </TableHead>
-        <TableHead className="text-blue-800 dark:text-blue-200 font-medium w-[100px]">
+        <TableHead className="text-foreground font-medium w-[100px]">
           {t("userManagement.block")}
         </TableHead>
-        <TableHead className="w-[80px] text-blue-800 dark:text-blue-200 font-medium text-right pr-4">
+        <TableHead className="w-[80px] text-foreground font-medium text-right pr-4">
           {t("userManagement.actions")}
         </TableHead>
       </TableRow>
