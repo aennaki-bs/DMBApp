@@ -6,6 +6,7 @@ import {
   GeneralAccounts 
 } from './lineElements';
 import { SubType } from './subtype';
+import { LocationDto } from './location';
 import './circuit.d.ts';
 
 export enum TierType {
@@ -131,6 +132,10 @@ export interface Ligne {
   generalAccountsCode?: string;
   generalAccounts?: GeneralAccounts;
   
+  // Location reference (only for Item types)
+  locationCode?: string;
+  location?: LocationDto;
+  
   // Pricing fields
   quantity: number;
   priceHT: number;
@@ -161,6 +166,9 @@ export interface CreateLigneRequest {
   // Selected element code (Item.Code or GeneralAccounts.Code)
   selectedElementCode?: string;
   
+  // Location code (only for Item types)
+  locationCode?: string;
+  
   // Pricing fields
   quantity: number;
   priceHT: number;
@@ -179,6 +187,9 @@ export interface UpdateLigneRequest {
   
   // Selected element code (Item.Code or GeneralAccounts.Code)
   selectedElementCode?: string;
+  
+  // Location code (only for Item types)
+  locationCode?: string;
   
   // Pricing fields
   quantity?: number;

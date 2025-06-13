@@ -903,6 +903,15 @@ namespace DocManagementBackend.Services
                 documentStatus.CompletedAt = DateTime.UtcNow;
             }
 
+            // Check if the target status is final and mark document as circuit completed
+            if (targetStatus.IsFinal)
+            {
+                document.IsCircuitCompleted = true;
+                document.Status = 2; // Completed status
+                document.UpdatedAt = DateTime.UtcNow;
+                document.UpdatedByUserId = userId; // Track who completed the circuit
+            }
+
             // Create history entry
             var history = new DocumentCircuitHistory
             {
@@ -931,9 +940,6 @@ namespace DocManagementBackend.Services
 
                 _context.DocumentStepHistory.Add(stepHistory);
             }
-
-            // Note: Circuit completion is now handled in CompleteDocumentStatusAsync
-            // when the final status is actually marked as complete
 
             await _context.SaveChangesAsync();
             return true;

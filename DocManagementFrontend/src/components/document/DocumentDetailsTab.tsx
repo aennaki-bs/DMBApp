@@ -159,6 +159,13 @@ const DocumentDetailsTab = ({
         </div>
       </div>
 
+      {/* Approval Details Component - Moved to Top */}
+      <DocumentApprovalDetails
+        pendingApproval={pendingApproval}
+        approvalHistory={approvalHistory}
+        isLoadingApproval={isLoadingApproval}
+      />
+
       {/* Responsibility Center Banner */}
       {document.responsibilityCentre && (
         <div className="bg-[#131f4f]/30 py-4 px-6 text-center border-b border-blue-900/20">
@@ -179,76 +186,9 @@ const DocumentDetailsTab = ({
         </div>
       )}
 
-      {/* Customer/Vendor Information Banner */}
-      {shouldShowCustomerVendor() && (document.customerVendorName || document.customerVendorCode) && (
-        <div className="bg-[#131f4f]/30 py-4 px-6 text-center border-b border-blue-900/20">
-          <div className="flex flex-col items-center justify-center">
-            <h3 className="text-sm font-medium text-blue-300 mb-1 flex items-center gap-2">
-              {getTierTypeIcon(document.documentType?.tierType)}
-              {getTierTypeString(document.documentType?.tierType)} Information
-            </h3>
-            
-            {/* Customer/Vendor Name */}
-            {/* <div className="mb-2"> */}
-              {/* <p className="text-xs text-blue-400/80 uppercase tracking-wide mb-1">
-                {document.documentType?.tierType === TierType.Customer ? "Customer Name" : "Vendor Name"}
-              </p> */}
-              
-            {/* </div> */}
 
-            {/* Customer/Vendor Code */}
-            {document.customerVendorCode && (
-              <div className="mt-1 py-1 px-3 bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-full text-sm font-mono">
-                Code: {document.customerVendorCode} </div>
-            )}
-
-            {/* Address Information */}
-            {(document.customerVendorAddress || document.customerVendorCity || document.customerVendorCountry) && (
-              <div className="mt-2">
-                <p className="text-xs text-blue-400/80 uppercase tracking-wide mb-1">
-                {document.customerVendorName}
-                </p>
-                <div className="text-sm text-blue-300/80 max-w-md">
-                  <div className="flex flex-col items-center gap-1">
-                    {document.customerVendorAddress && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-blue-400/60">Address:</span>
-                        <span>{document.customerVendorAddress}</span>
-                      </div>
-                    )}
-                    {document.customerVendorCity && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-blue-400/60">City:</span>
-                        <span>{document.customerVendorCity}</span>
-                      </div>
-                    )}
-                    {document.customerVendorCountry && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-blue-400/60">Country:</span>
-                        <span>{document.customerVendorCountry}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Information note */}
-            {/* <div className="mt-3 text-xs text-blue-400/60 italic">
-              This information was captured when the document was created
-            </div> */}
-          </div>
-        </div>
-      )}
 
       <div className="p-6 text-blue-100">
-        {/* Approval Details Component */}
-        <DocumentApprovalDetails
-          pendingApproval={pendingApproval}
-          approvalHistory={approvalHistory}
-          isLoadingApproval={isLoadingApproval}
-        />
-
         <div className="grid md:grid-cols-3 gap-5 mb-6">
           <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
             <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
@@ -393,6 +333,36 @@ const DocumentDetailsTab = ({
               {new Date(document.createdAt).toLocaleTimeString()}
             </p>
           </div>
+
+          {/* Customer/Vendor Information Grid Item */}
+          {shouldShowCustomerVendor() && (document.customerVendorName || document.customerVendorCode) && (
+            <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
+              <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
+                {getTierTypeIcon(document.documentType?.tierType)}
+                <span className="ml-2">{getTierTypeString(document.documentType?.tierType)}</span>
+              </h3>
+              {document.customerVendorName && (
+                <p className="font-medium text-white">
+                  {document.customerVendorName}
+                </p>
+              )}
+              {document.customerVendorCode && (
+                <p className="text-xs text-blue-300/70 mt-1">
+                  Code: {document.customerVendorCode}
+                </p>
+              )}
+              {document.customerVendorAddress && (
+                <p className="text-xs text-blue-300/70">
+                  {document.customerVendorAddress}
+                </p>
+              )}
+              {(document.customerVendorCity || document.customerVendorCountry) && (
+                <p className="text-xs text-blue-300/70">
+                  {document.customerVendorCity}{document.customerVendorCity && document.customerVendorCountry && ', '}{document.customerVendorCountry}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="h-px w-full bg-gradient-to-r from-transparent via-blue-900/30 to-transparent my-6"></div>

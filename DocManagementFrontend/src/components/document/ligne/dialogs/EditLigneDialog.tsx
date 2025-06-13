@@ -5,11 +5,13 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import documentService from "@/services/documentService";
 import lineElementsService from "@/services/lineElementsService";
+import locationService from "@/services/locationService";
 import {
   LignesElementTypeSimple,
   ItemSimple,
   GeneralAccountsSimple,
 } from "@/models/lineElements";
+import { LocationSimpleDto } from "@/models/location";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +45,7 @@ interface FormValues {
   title: string;
   article: string;
   lignesElementTypeId?: number;
+  locationCode?: string;
   quantity: number;
   priceHT: number;
   discountPercentage: number;
@@ -73,6 +76,7 @@ const EditLigneDialog = ({
   const [elementTypes, setElementTypes] = useState<LignesElementTypeSimple[]>([]);
   const [items, setItems] = useState<ItemSimple[]>([]);
   const [generalAccounts, setGeneralAccountsSimple] = useState<GeneralAccountsSimple[]>([]);
+  const [locations, setLocations] = useState<LocationSimpleDto[]>([]);
 
   const queryClient = useQueryClient();
 
@@ -80,15 +84,17 @@ const EditLigneDialog = ({
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [typesData, itemsData, accountsData] = await Promise.all([
+        const [typesData, itemsData, accountsData, locationsData] = await Promise.all([
           lineElementsService.elementTypes.getSimple(),
           lineElementsService.items.getSimple(),
           lineElementsService.generalAccounts.getSimple(),
+          locationService.getSimple(),
         ]);
         
         setElementTypes(typesData);
         setItems(itemsData);
         setGeneralAccountsSimple(accountsData);
+        setLocations(locationsData);
       } catch (error) {
         console.error("Failed to load dropdown data:", error);
         toast.error("Failed to load form data");
@@ -108,6 +114,7 @@ const EditLigneDialog = ({
         title: ligne.title,
         article: ligne.article,
         lignesElementTypeId: ligne.lignesElementTypeId,
+        locationCode: ligne.locationCode,
         quantity: ligne.quantity,
         priceHT: ligne.priceHT,
         discountPercentage: ligne.discountPercentage,
@@ -159,6 +166,7 @@ const EditLigneDialog = ({
         article: formValues.article,
         lignesElementTypeId: formValues.lignesElementTypeId,
         selectedElementCode: undefined,
+        locationCode: formValues.locationCode,
         quantity: formValues.quantity,
         priceHT: formValues.priceHT,
         discountPercentage: formValues.discountPercentage,
@@ -312,6 +320,34 @@ const EditLigneDialog = ({
                       </p>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Location Selection - Only for Item types */}
+              {formValues.lignesElementTypeId && 
+                elementTypes.find(t => t.id === formValues.lignesElementTypeId)?.typeElement === 'Item' && (
+                <div className="space-y-3">
+                  <Label htmlFor="locationCode" className="text-blue-200 text-base font-medium">
+                    Location<span className="text-red-400">*</span>
+                  </Label>
+                  <Select
+                    value={formValues.locationCode || ""}
+                    onValueChange={(value) => handleFieldChange("locationCode", value || undefined)}
+                  >
+                    <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-blue-950 border-blue-400/20 max-h-60">
+                      {locations.map((location) => (
+                        <SelectItem key={location.locationCode} value={location.locationCode} className="text-white hover:bg-blue-800">
+                          <div className="flex flex-col">
+                            <div className="font-medium">{location.locationCode}</div>
+                            <div className="text-sm text-gray-400">{location.description}</div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 

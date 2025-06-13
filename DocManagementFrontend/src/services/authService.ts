@@ -211,10 +211,19 @@ const authService = {
         return null;
       }
 
-      const response = await api.post('/Auth/refresh-token');
+      // Send refresh token in the request body
+      const response = await api.post('/Auth/refresh-token', {
+        refreshToken: refreshToken
+      });
       
       if (response.data.accessToken) {
         localStorage.setItem('token', response.data.accessToken);
+        
+        // Update refresh token if a new one is provided
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
+        
         console.log('Token refreshed successfully');
         return response.data.accessToken;
       }
