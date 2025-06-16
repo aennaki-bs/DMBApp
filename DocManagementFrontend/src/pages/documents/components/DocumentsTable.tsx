@@ -67,30 +67,32 @@ export default function DocumentsTable({
       className="flex items-center gap-1 cursor-pointer select-none group"
       onClick={() => requestSort(key)}
     >
-      <span className="text-blue-400 group-hover:text-blue-300 transition-colors">
+      <span className="table-glass-header-icon group-hover:opacity-80 transition-opacity">
         {icon}
       </span>
-      <span className="group-hover:text-blue-200 transition-colors">
+      <span className="table-glass-header-text group-hover:opacity-80 transition-opacity">
         {label}
       </span>
       <div className="ml-1 w-4 text-center">
         {getSortIndicator(key) ? (
-          <span className="text-blue-300">{getSortIndicator(key)}</span>
+          <span className="table-glass-sort-active">
+            {getSortIndicator(key)}
+          </span>
         ) : (
-          <ArrowUpDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+          <ArrowUpDown className="h-3 w-3 table-glass-sort-inactive group-hover:opacity-100 transition-opacity" />
         )}
       </div>
     </div>
   );
 
   return (
-    <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+    <div className="table-glass-container">
       {/* Fixed Header - Never Scrolls */}
-      <div className="min-w-[1200px] border-b border-blue-900/30">
+      <div className="min-w-[1200px] table-glass-header-border">
         <Table className="table-fixed w-full">
-          <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
-            <TableRow className="border-blue-900/50 hover:bg-transparent">
-              <TableHead className="w-[50px] text-blue-300 font-medium">
+          <TableHeader className="table-glass-header">
+            <TableRow className="table-glass-header-row">
+              <TableHead className="w-[50px] table-glass-header-cell">
                 {canManageDocuments ? (
                   <Checkbox
                     checked={
@@ -98,55 +100,55 @@ export default function DocumentsTable({
                       documents.length > 0
                     }
                     onCheckedChange={handleSelectAll}
-                    className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
+                    className="table-glass-checkbox"
                   />
                 ) : (
                   <span>#</span>
                 )}
               </TableHead>
-              <TableHead className="w-[160px] text-blue-300 font-medium">
+              <TableHead className="w-[160px] table-glass-header-cell">
                 {renderSortableHeader(
                   t("documents.documentCode"),
                   "documentKey",
-                  <Tag className="h-4 w-4 text-blue-400" />
+                  <Tag className="h-4 w-4" />
                 )}
               </TableHead>
-              <TableHead className="w-[250px] text-blue-300 font-medium">
+              <TableHead className="w-[250px] table-glass-header-cell">
                 {renderSortableHeader(
                   t("common.title"),
                   "title",
-                  <FileText className="h-4 w-4 text-blue-400" />
+                  <FileText className="h-4 w-4" />
                 )}
               </TableHead>
-              <TableHead className="w-[120px] text-blue-300 font-medium">
+              <TableHead className="w-[120px] table-glass-header-cell">
                 {renderSortableHeader(
                   t("common.status"),
                   "status",
-                  <AlertCircle className="h-4 w-4 text-blue-400" />
+                  <AlertCircle className="h-4 w-4" />
                 )}
               </TableHead>
-              <TableHead className="w-[150px] text-blue-300 font-medium">
+              <TableHead className="w-[150px] table-glass-header-cell">
                 {renderSortableHeader(
                   t("common.type"),
                   "documentType",
-                  <Filter className="h-4 w-4 text-blue-400" />
+                  <Filter className="h-4 w-4" />
                 )}
               </TableHead>
-              <TableHead className="w-[140px] text-blue-300 font-medium">
+              <TableHead className="w-[140px] table-glass-header-cell">
                 {renderSortableHeader(
                   t("documents.documentDate"),
                   "docDate",
-                  <CalendarDays className="h-4 w-4 text-blue-400" />
+                  <CalendarDays className="h-4 w-4" />
                 )}
               </TableHead>
-              <TableHead className="w-[150px] text-blue-300 font-medium">
+              <TableHead className="w-[150px] table-glass-header-cell">
                 {renderSortableHeader(
                   t("documents.createdBy"),
                   "createdBy",
-                  <User className="h-4 w-4 text-blue-400" />
+                  <User className="h-4 w-4" />
                 )}
               </TableHead>
-              <TableHead className="w-[100px] text-right text-blue-300 font-medium">
+              <TableHead className="w-[100px] text-right table-glass-header-cell">
                 {t("common.actions")}
               </TableHead>
             </TableRow>

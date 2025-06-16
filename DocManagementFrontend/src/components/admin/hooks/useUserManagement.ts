@@ -66,6 +66,10 @@ export function useUserManagement() {
     setDeleteMultipleOpen(false);
   };
 
+  const clearSelectedUsers = () => {
+    setSelectedUsers([]);
+  };
+
   const getRoleName = (role: any) => {
     if (!role) return '';
     if (typeof role === 'string') return role;
@@ -178,5 +182,6 @@ export function useUserManagement() {
     handleUserEmailEdited,
     handleUserDeleted,
     handleMultipleDeleted,
+    clearSelectedUsers,
   };
 }

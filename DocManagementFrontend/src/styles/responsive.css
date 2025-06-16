@@ -327,21 +327,13 @@
     }
 }
 
-/* Fix for Windows scaling issues */
-@media screen and (-webkit-min-device-pixel-ratio: 1.25) {
-    html {
-        zoom: 0.8;
-    }
-}
+/* High DPI display optimization - let browser handle scaling natively */
+@media screen and (-webkit-min-device-pixel-ratio: 1.25),
+screen and (min-resolution: 120dpi) {
 
-@media screen and (-webkit-min-device-pixel-ratio: 1.5) {
-    html {
-        zoom: 0.85;
-    }
-}
-
-@media screen and (-webkit-min-device-pixel-ratio: 1.75) {
-    html {
-        zoom: 0.9;
+    /* Enhanced font smoothing for high DPI */
+    * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 }

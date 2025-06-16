@@ -221,166 +221,164 @@ export default function DocumentsFilterBar() {
   };
 
   const clearAllFilters = () => {
-    setStatusFilter("any");
-    setTypeFilter("any");
-    setAdvancedDateRange(undefined);
-    setSelectedDatePreset("custom");
     resetFilters();
     setFilterOpen(false);
   };
 
-  // Handle keyboard shortcuts
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + F to focus search
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
-        e.preventDefault();
-        const searchInput = document.querySelector(
-          'input[placeholder="Search documents..."]'
-        ) as HTMLInputElement;
-        if (searchInput) searchInput.focus();
-      }
-
-      // Escape to close filter popover
-      if (e.key === "Escape" && filterOpen) {
-        setFilterOpen(false);
-      }
-
-      // Alt + F to open filter
+      // Alt+F to toggle filter panel
       if (e.altKey && e.key === "f") {
         e.preventDefault();
-        setFilterOpen(true);
+        setFilterOpen(!filterOpen);
       }
 
-      // Alt + C to clear all filters
-      if (e.altKey && e.key === "c" && isFilterActive) {
+      // Alt+C to clear all filters
+      if (e.altKey && e.key === "c") {
         e.preventDefault();
         clearAllFilters();
+      }
+
+      // Ctrl+F to focus search (if not already focused)
+      if (e.ctrlKey && e.key === "f") {
+        e.preventDefault();
+        const searchInput = document.querySelector(
+          'input[aria-label="Search documents"]'
+        ) as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+
+      // Escape to close filter panel
+      if (e.key === "Escape" && filterOpen) {
+        setFilterOpen(false);
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [filterOpen, isFilterActive, clearAllFilters]);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [filterOpen]);
 
-  // Apply date preset
   const applyDatePreset = (preset: string) => {
     setSelectedDatePreset(preset);
+    let range: DateRange | undefined;
 
-    let newRange: DateRange | undefined;
     const today = new Date();
+    const yesterday = subDays(today, 1);
 
     switch (preset) {
       case "today":
-        newRange = { from: today, to: today };
+        range = { from: today, to: today };
         break;
       case "yesterday":
-        const yesterday = subDays(today, 1);
-        newRange = { from: yesterday, to: yesterday };
+        range = { from: yesterday, to: yesterday };
         break;
       case "thisWeek":
-        newRange = {
-          from: startOfWeek(today, { weekStartsOn: 0 }),
-          to: endOfWeek(today, { weekStartsOn: 0 }),
+        range = {
+          from: startOfWeek(today, { weekStartsOn: 1 }),
+          to: endOfWeek(today, { weekStartsOn: 1 }),
         };
         break;
       case "lastWeek":
-        const lastWeekStart = subDays(
-          startOfWeek(today, { weekStartsOn: 0 }),
-          7
-        );
-        newRange = {
-          from: lastWeekStart,
-          to: addDays(lastWeekStart, 6),
-        };
+        const lastWeekStart = startOfWeek(subDays(today, 7), {
+          weekStartsOn: 1,
+        });
+        const lastWeekEnd = endOfWeek(subDays(today, 7), { weekStartsOn: 1 });
+        range = { from: lastWeekStart, to: lastWeekEnd };
         break;
       case "thisMonth":
-        newRange = {
-          from: startOfMonth(today),
-          to: endOfMonth(today),
-        };
+        range = { from: startOfMonth(today), to: endOfMonth(today) };
         break;
       case "lastMonth":
         const lastMonth = subDays(startOfMonth(today), 1);
-        newRange = {
-          from: startOfMonth(lastMonth),
-          to: endOfMonth(lastMonth),
-        };
+        range = { from: startOfMonth(lastMonth), to: endOfMonth(lastMonth) };
         break;
       case "custom":
-        // Keep the current advanced date range
-        newRange = advancedDateRange;
-        break;
+        // Don't change the range for custom
+        return;
       default:
-        newRange = undefined;
+        range = undefined;
     }
 
-    setAdvancedDateRange(newRange);
-    handleDateRangeChange(newRange);
+    if (range) {
+      setAdvancedDateRange(range);
+      setDateRange(range);
+      applyFilters({
+        ...activeFilters,
+        dateRange: range,
+      });
+    }
   };
 
-  // Get date preset from range
   const getDatePresetFromRange = (range: DateRange): string | null => {
-    if (!range.from || !range.to) return null;
+    if (!range?.from || !range?.to) return null;
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const from = new Date(range.from);
-    const to = new Date(range.to);
-    from.setHours(0, 0, 0, 0);
-    to.setHours(0, 0, 0, 0);
-
-    if (
-      from.getTime() === today.getTime() &&
-      to.getTime() === today.getTime()
-    ) {
-      return "today";
-    }
-
     const yesterday = subDays(today, 1);
-    if (
-      from.getTime() === yesterday.getTime() &&
-      to.getTime() === yesterday.getTime()
-    ) {
-      return "yesterday";
+
+    // Normalize dates to compare only date parts
+    const normalizeDate = (date: Date) => {
+      const normalized = new Date(date);
+      normalized.setHours(0, 0, 0, 0);
+      return normalized;
+    };
+
+    const rangeFrom = normalizeDate(range.from);
+    const rangeTo = normalizeDate(range.to);
+    const normalizedToday = normalizeDate(today);
+    const normalizedYesterday = normalizeDate(yesterday);
+
+    // Check for single day ranges
+    if (rangeFrom.getTime() === rangeTo.getTime()) {
+      if (rangeFrom.getTime() === normalizedToday.getTime()) return "today";
+      if (rangeFrom.getTime() === normalizedYesterday.getTime())
+        return "yesterday";
     }
 
-    const thisWeekStart = startOfWeek(today, { weekStartsOn: 0 });
-    const thisWeekEnd = endOfWeek(today, { weekStartsOn: 0 });
+    // Check for week ranges
+    const thisWeekStart = normalizeDate(
+      startOfWeek(today, { weekStartsOn: 1 })
+    );
+    const thisWeekEnd = normalizeDate(endOfWeek(today, { weekStartsOn: 1 }));
     if (
-      from.getTime() === thisWeekStart.getTime() &&
-      to.getTime() === thisWeekEnd.getTime()
+      rangeFrom.getTime() === thisWeekStart.getTime() &&
+      rangeTo.getTime() === thisWeekEnd.getTime()
     ) {
       return "thisWeek";
     }
 
-    const lastWeekStart = subDays(thisWeekStart, 7);
-    const lastWeekEnd = subDays(thisWeekEnd, 7);
+    const lastWeekStart = normalizeDate(
+      startOfWeek(subDays(today, 7), { weekStartsOn: 1 })
+    );
+    const lastWeekEnd = normalizeDate(
+      endOfWeek(subDays(today, 7), { weekStartsOn: 1 })
+    );
     if (
-      from.getTime() === lastWeekStart.getTime() &&
-      to.getTime() === lastWeekEnd.getTime()
+      rangeFrom.getTime() === lastWeekStart.getTime() &&
+      rangeTo.getTime() === lastWeekEnd.getTime()
     ) {
       return "lastWeek";
     }
 
-    const thisMonthStart = startOfMonth(today);
-    const thisMonthEnd = endOfMonth(today);
+    // Check for month ranges
+    const thisMonthStart = normalizeDate(startOfMonth(today));
+    const thisMonthEnd = normalizeDate(endOfMonth(today));
     if (
-      from.getTime() === thisMonthStart.getTime() &&
-      to.getTime() === thisMonthEnd.getTime()
+      rangeFrom.getTime() === thisMonthStart.getTime() &&
+      rangeTo.getTime() === thisMonthEnd.getTime()
     ) {
       return "thisMonth";
     }
 
-    const lastMonth = subDays(thisMonthStart, 1);
-    const lastMonthStart = startOfMonth(lastMonth);
-    const lastMonthEnd = endOfMonth(lastMonth);
+    const lastMonth = subDays(startOfMonth(today), 1);
+    const lastMonthStart = normalizeDate(startOfMonth(lastMonth));
+    const lastMonthEnd = normalizeDate(endOfMonth(lastMonth));
     if (
-      from.getTime() === lastMonthStart.getTime() &&
-      to.getTime() === lastMonthEnd.getTime()
+      rangeFrom.getTime() === lastMonthStart.getTime() &&
+      rangeTo.getTime() === lastMonthEnd.getTime()
     ) {
       return "lastMonth";
     }
@@ -388,15 +386,11 @@ export default function DocumentsFilterBar() {
     return null;
   };
 
-  // Format date range for display
   const formatDateRangeDisplay = (range: DateRange | undefined): string => {
-    if (!range || !range.from) return "Any date";
+    if (!range?.from) return "Any date";
 
     const from = new Date(range.from);
-
-    if (!range.to) {
-      return `From ${format(from, "MMM d, yyyy")}`;
-    }
+    if (!range.to) return format(from, "MMM d, yyyy");
 
     const to = new Date(range.to);
 
@@ -413,20 +407,17 @@ export default function DocumentsFilterBar() {
     <div className="flex flex-col gap-4 w-full">
       <div className="w-full flex items-center justify-between gap-3">
         {/* Search bar */}
-        <div className="flex-1 flex items-center gap-2 min-w-0 bg-[#1e2a4a] rounded-lg p-1 border border-blue-900/40 shadow-inner">
+        <div className="flex-1 flex items-center gap-2 min-w-0 table-glass-search-container">
           <div className="relative flex-1">
             <Input
               placeholder={t("documents.searchDocuments")}
               value={searchQuery}
               onChange={handleSearchChange}
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
+              className="table-glass-search-input"
               aria-label="Search documents"
             />
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center">
-              <Search className="h-4 w-4 text-blue-400" />
-              {/* <kbd className="sr-only md:not-sr-only md:ml-2 text-[10px] text-blue-300 bg-blue-900/40 px-1.5 py-0.5 rounded border border-blue-800/50 hidden md:inline-block">
-                Ctrl+F
-              </kbd> */}
+              <Search className="h-4 w-4 table-glass-search-icon" />
             </div>
             {searchQuery && (
               <button
@@ -437,7 +428,7 @@ export default function DocumentsFilterBar() {
                     searchQuery: "",
                   });
                 }}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 table-glass-search-clear"
                 aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
@@ -452,26 +443,28 @@ export default function DocumentsFilterBar() {
             <Button
               variant="outline"
               className={cn(
-                "bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-md rounded-md flex items-center gap-2 h-10 px-4 min-w-[120px] transition-all duration-200",
-                isFilterActive && "border-blue-500 bg-blue-900/40"
+                "table-glass-filter-button",
+                isFilterActive && "table-glass-filter-button-active"
               )}
               aria-label="Toggle filter panel"
             >
               <SlidersHorizontal
                 className={cn(
                   "h-4 w-4",
-                  isFilterActive ? "text-blue-300" : "text-blue-400"
+                  isFilterActive
+                    ? "table-glass-filter-icon-active"
+                    : "table-glass-filter-icon"
                 )}
               />
               <span className="flex-1 text-left">Filter</span>
               {isFilterActive ? (
-                <Badge className="bg-blue-600 text-white text-xs py-0 px-1.5 rounded-full">
+                <Badge className="table-glass-filter-badge">
                   {activeFilterCount}
                 </Badge>
               ) : (
                 <>
-                  <ChevronDown className="h-4 w-4 text-blue-400" />
-                  <kbd className="sr-only md:not-sr-only text-[10px] text-blue-300 bg-blue-900/40 px-1.5 py-0.5 rounded border border-blue-800/50 hidden md:inline-block ml-1">
+                  <ChevronDown className="h-4 w-4 table-glass-filter-icon" />
+                  <kbd className="sr-only md:not-sr-only table-glass-filter-kbd">
                     Alt+F
                   </kbd>
                 </>
@@ -479,7 +472,7 @@ export default function DocumentsFilterBar() {
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-[340px] sm:w-[400px] bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-xl p-0 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200"
+            className="table-glass-filter-popover"
             align="end"
             sideOffset={5}
           >
@@ -488,13 +481,13 @@ export default function DocumentsFilterBar() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="p-4 border-b border-blue-900/30 bg-gradient-to-r from-[#1a2c6b]/50 to-[#0a1033]/50"
+              className="table-glass-filter-header"
             >
-              <h3 className="text-lg font-medium text-blue-100 flex items-center">
-                <Filter className="h-5 w-5 mr-2 text-blue-400" />
+              <h3 className="table-glass-filter-title">
+                <Filter className="h-5 w-5 mr-2 table-glass-filter-icon" />
                 Filter Documents
               </h3>
-              <p className="text-sm text-blue-300/80 mt-1">
+              <p className="table-glass-filter-subtitle">
                 Refine your document list using the filters below
               </p>
             </motion.div>
@@ -505,17 +498,11 @@ export default function DocumentsFilterBar() {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="w-full bg-blue-900/20 border-b border-blue-900/30 rounded-none">
-                <TabsTrigger
-                  value="filters"
-                  className="flex-1 data-[state=active]:bg-blue-800/30"
-                >
+              <TabsList className="table-glass-filter-tabs">
+                <TabsTrigger value="filters" className="table-glass-filter-tab">
                   <Tag className="h-4 w-4 mr-2" /> Filters
                 </TabsTrigger>
-                <TabsTrigger
-                  value="date"
-                  className="flex-1 data-[state=active]:bg-blue-800/30"
-                >
+                <TabsTrigger value="date" className="table-glass-filter-tab">
                   <CalendarRange className="h-4 w-4 mr-2" /> Date Range
                 </TabsTrigger>
               </TabsList>
@@ -524,27 +511,27 @@ export default function DocumentsFilterBar() {
                 <TabsContent value="filters" className="p-4 space-y-4 mt-0">
                   {/* Search field filter */}
                   <div>
-                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                      <Search className="h-4 w-4 mr-2 text-blue-400" />
+                    <label className="table-glass-filter-label">
+                      <Search className="h-4 w-4 mr-2 table-glass-filter-icon" />
                       Search In
                     </label>
                     <Select
                       value={searchField}
                       onValueChange={handleSearchFieldChange}
                     >
-                      <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                      <SelectTrigger className="table-glass-filter-select">
                         <SelectValue>
                           {DEFAULT_DOCUMENT_SEARCH_FIELDS.find(
                             (opt) => opt.id === searchField
                           )?.label || "All fields"}
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                      <SelectContent className="table-glass-filter-select-content">
                         {DEFAULT_DOCUMENT_SEARCH_FIELDS.map((opt) => (
                           <SelectItem
                             key={opt.id}
                             value={String(opt.id)}
-                            className="hover:bg-blue-800/40"
+                            className="table-glass-filter-select-item"
                           >
                             {opt.label}
                           </SelectItem>
@@ -555,8 +542,8 @@ export default function DocumentsFilterBar() {
 
                   {/* Status filter */}
                   <div>
-                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                      <Clock className="h-4 w-4 mr-2 text-blue-400" />
+                    <label className="table-glass-filter-label">
+                      <Clock className="h-4 w-4 mr-2 table-glass-filter-icon" />
                       Status
                     </label>
                     <div className="grid grid-cols-3 gap-2">
@@ -567,14 +554,14 @@ export default function DocumentsFilterBar() {
                           variant="outline"
                           size="sm"
                           className={cn(
-                            "bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 h-9",
+                            "table-glass-filter-option",
                             statusFilter === status.value &&
-                              "bg-blue-800 border-blue-500"
+                              "table-glass-filter-option-active"
                           )}
                           onClick={() => handleStatusChange(status.value)}
                         >
                           {statusFilter === status.value && (
-                            <Check className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
+                            <Check className="h-3.5 w-3.5 mr-1.5 table-glass-filter-icon" />
                           )}
                           {status.label}
                         </Button>
@@ -584,24 +571,24 @@ export default function DocumentsFilterBar() {
 
                   {/* Document Type filter */}
                   <div>
-                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                      <FileText className="h-4 w-4 mr-2 text-blue-400" />
+                    <label className="table-glass-filter-label">
+                      <FileText className="h-4 w-4 mr-2 table-glass-filter-icon" />
                       Document Type
                     </label>
                     <Select value={typeFilter} onValueChange={handleTypeChange}>
-                      <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                      <SelectTrigger className="table-glass-filter-select">
                         <SelectValue>
                           {typeFilterOptions.find(
                             (opt) => opt.value === typeFilter
                           )?.label || "Any Type"}
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 max-h-[200px]">
+                      <SelectContent className="table-glass-filter-select-content max-h-[200px]">
                         {typeFilterOptions.map((type) => (
                           <SelectItem
                             key={type.value}
                             value={type.value}
-                            className="hover:bg-blue-800/40"
+                            className="table-glass-filter-select-item"
                           >
                             {type.label}
                           </SelectItem>
@@ -614,8 +601,8 @@ export default function DocumentsFilterBar() {
                 <TabsContent value="date" className="p-4 space-y-4 mt-0">
                   {/* Date range presets */}
                   <div>
-                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                      <Clock className="h-4 w-4 mr-2 text-blue-400" />
+                    <label className="table-glass-filter-label">
+                      <Clock className="h-4 w-4 mr-2 table-glass-filter-icon" />
                       Quick Date Ranges
                     </label>
                     <div className="grid grid-cols-2 gap-2 mb-4">
@@ -626,9 +613,9 @@ export default function DocumentsFilterBar() {
                           variant="outline"
                           size="sm"
                           className={cn(
-                            "bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 h-9 justify-start",
+                            "table-glass-filter-option justify-start",
                             selectedDatePreset === preset.value &&
-                              "bg-blue-800 border-blue-500"
+                              "table-glass-filter-option-active"
                           )}
                           onClick={() => applyDatePreset(preset.value)}
                         >
@@ -641,8 +628,8 @@ export default function DocumentsFilterBar() {
 
                   {/* Calendar date picker */}
                   {selectedDatePreset === "custom" && (
-                    <div className="border border-blue-900/40 rounded-md p-3 bg-blue-900/20">
-                      <label className="text-sm font-medium text-blue-200 block mb-2">
+                    <div className="table-glass-filter-calendar">
+                      <label className="table-glass-filter-label">
                         Select Custom Date Range
                       </label>
                       <div className="flex justify-center">
@@ -650,14 +637,14 @@ export default function DocumentsFilterBar() {
                           mode="range"
                           selected={advancedDateRange}
                           onSelect={handleDateRangeChange}
-                          className="bg-[#22306e] border border-blue-900/40 rounded-md shadow-md"
+                          className="table-glass-calendar"
                           classNames={{
-                            day_selected: "bg-blue-600 text-white",
-                            day_today: "bg-blue-900/40 text-blue-200",
+                            day_selected: "bg-primary text-primary-foreground",
+                            day_today: "bg-accent text-accent-foreground",
                           }}
                         />
                       </div>
-                      <div className="mt-2 text-xs text-blue-300">
+                      <div className="mt-2 text-xs table-glass-filter-info">
                         {advancedDateRange?.from ? (
                           advancedDateRange.to ? (
                             <>
@@ -677,12 +664,12 @@ export default function DocumentsFilterBar() {
                   )}
 
                   <div className="mt-2">
-                    <div className="bg-blue-900/20 p-2 rounded-md border border-blue-900/40">
+                    <div className="table-glass-filter-active-info">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-blue-300 font-medium">
+                        <span className="table-glass-filter-info-label">
                           Active Date Filter:
                         </span>
-                        <span className="text-sm text-white">
+                        <span className="table-glass-filter-info-value">
                           {dateRange
                             ? formatDateRangeDisplay(dateRange)
                             : "Any date"}
@@ -694,24 +681,24 @@ export default function DocumentsFilterBar() {
               </ScrollArea>
             </Tabs>
 
-            <div className="p-3 border-t border-blue-900/30 bg-blue-900/20 flex justify-between items-center">
+            <div className="table-glass-filter-footer">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
-                className="text-blue-300 hover:text-blue-200 hover:bg-blue-800/40"
+                className="table-glass-filter-reset"
               >
                 <RefreshCw className="h-4 w-4 mr-1.5" />
                 Reset All
-                <kbd className="sr-only md:not-sr-only text-[10px] text-blue-400/70 bg-blue-900/40 px-1.5 py-0.5 rounded border border-blue-800/30 ml-1.5 hidden md:inline-block">
+                <kbd className="sr-only md:not-sr-only table-glass-filter-kbd">
                   Alt+C
                 </kbd>
               </Button>
               <Button
                 type="button"
                 onClick={() => setFilterOpen(false)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="table-glass-filter-apply"
                 size="sm"
               >
                 Apply Filters
@@ -733,9 +720,9 @@ export default function DocumentsFilterBar() {
             {activeFilters.searchQuery && (
               <Badge
                 variant="outline"
-                className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
+                className="table-glass-filter-active-badge"
               >
-                <Search className="h-3 w-3 text-blue-400" />
+                <Search className="h-3 w-3 table-glass-filter-icon" />
                 <span className="text-xs">{activeFilters.searchQuery}</span>
                 <button
                   onClick={() => {
@@ -745,7 +732,7 @@ export default function DocumentsFilterBar() {
                       searchQuery: "",
                     });
                   }}
-                  className="ml-1 text-blue-400 hover:text-blue-300"
+                  className="ml-1 table-glass-filter-remove"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -756,9 +743,9 @@ export default function DocumentsFilterBar() {
               activeFilters.statusFilter !== "any" && (
                 <Badge
                   variant="outline"
-                  className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
+                  className="table-glass-filter-active-badge"
                 >
-                  <Clock className="h-3 w-3 text-blue-400" />
+                  <Clock className="h-3 w-3 table-glass-filter-icon" />
                   <span className="text-xs">
                     {DEFAULT_STATUS_FILTERS.find(
                       (s) => s.value === activeFilters.statusFilter
@@ -772,7 +759,7 @@ export default function DocumentsFilterBar() {
                         statusFilter: "any",
                       });
                     }}
-                    className="ml-1 text-blue-400 hover:text-blue-300"
+                    className="ml-1 table-glass-filter-remove"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -782,9 +769,9 @@ export default function DocumentsFilterBar() {
             {activeFilters.typeFilter && activeFilters.typeFilter !== "any" && (
               <Badge
                 variant="outline"
-                className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
+                className="table-glass-filter-active-badge"
               >
-                <FileText className="h-3 w-3 text-blue-400" />
+                <FileText className="h-3 w-3 table-glass-filter-icon" />
                 <span className="text-xs">
                   {typeFilterOptions.find(
                     (t) => t.value === activeFilters.typeFilter
@@ -798,7 +785,7 @@ export default function DocumentsFilterBar() {
                       typeFilter: "any",
                     });
                   }}
-                  className="ml-1 text-blue-400 hover:text-blue-300"
+                  className="ml-1 table-glass-filter-remove"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -808,9 +795,9 @@ export default function DocumentsFilterBar() {
             {activeFilters.dateRange && (
               <Badge
                 variant="outline"
-                className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
+                className="table-glass-filter-active-badge"
               >
-                <Calendar className="h-3 w-3 text-blue-400" />
+                <Calendar className="h-3 w-3 table-glass-filter-icon" />
                 <span className="text-xs">
                   {formatDateRangeDisplay(activeFilters.dateRange)}
                 </span>
@@ -824,7 +811,7 @@ export default function DocumentsFilterBar() {
                       dateRange: undefined,
                     });
                   }}
-                  className="ml-1 text-blue-400 hover:text-blue-300"
+                  className="ml-1 table-glass-filter-remove"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -835,7 +822,7 @@ export default function DocumentsFilterBar() {
               variant="ghost"
               size="sm"
               onClick={clearAllFilters}
-              className="h-6 px-2 py-0 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
+              className="table-glass-filter-clear-all"
             >
               Clear all
             </Button>

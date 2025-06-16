@@ -75,71 +75,69 @@ export function UserTableRow({
   return (
     <>
       <TableRow
-        className={`border-blue-200 dark:border-blue-900/30 transition-all duration-150 ${
-          isSelected
-            ? "bg-blue-100 dark:bg-blue-900/30 border-l-4 border-l-blue-600 dark:border-l-blue-500"
-            : "hover:bg-blue-50 dark:hover:bg-blue-900/20"
+        className={`table-glass-row h-12 ${
+          isSelected ? "table-glass-row-selected" : ""
         }`}
       >
-        <TableCell className="w-[48px]">
+        <TableCell className="w-[40px] py-2">
           <div className="flex items-center justify-center">
             <Checkbox
               checked={isSelected}
               onCheckedChange={() => onSelect(user.id)}
               aria-label={`Select user ${user.username}`}
-              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+              className="h-3.5 w-3.5"
             />
           </div>
         </TableCell>
-        <TableCell className="w-[48px]">
-          <Avatar className="border-2 border-blue-300 dark:border-blue-900/50 h-9 w-9">
+        <TableCell className="w-[40px] py-2">
+          <Avatar className="border border-border/40 h-7 w-7">
             <AvatarImage src={user.profilePicture} alt={user.username} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
+            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-xs">
               {user.firstName.charAt(0)}
               {user.lastName.charAt(0)}
             </AvatarFallback>
           </Avatar>
         </TableCell>
-        <TableCell className="w-[200px]">
-          <div className="font-medium text-blue-900 dark:text-blue-100">
+        <TableCell className="w-[180px] py-2">
+          <div className="font-medium text-sm leading-tight">
             {user.firstName} {user.lastName}
           </div>
-          <div className="text-xs text-blue-600 dark:text-blue-400">
+          <div className="text-[10px] text-muted-foreground leading-tight">
             @{user.username}
           </div>
         </TableCell>
-        <TableCell className="w-[280px] text-blue-800 dark:text-blue-200">
-          <span className="block truncate">{user.email}</span>
+        <TableCell className="w-[250px] py-2">
+          <span className="block truncate text-sm">{user.email}</span>
         </TableCell>
 
-        <TableCell className="w-[150px]">
+        <TableCell className="w-[130px] py-2">
           <UserRoleSelect
             currentRole={currentRole}
             onRoleChange={(role) => onRoleChange(user.id, role)}
           />
         </TableCell>
 
-        <TableCell className="w-[120px]">
+        <TableCell className="w-[100px] py-2">
           {user.isActive ? (
             <Badge
               variant="secondary"
-              className="bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/30"
+              className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-xs px-2 py-0.5 h-5"
             >
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+              <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
               {t("userManagement.active")}
             </Badge>
           ) : (
             <Badge
               variant="destructive"
-              className="bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-900/30"
+              className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs px-2 py-0.5 h-5"
             >
-              <XCircle className="w-3.5 h-3.5 mr-1" />
+              <XCircle className="w-2.5 h-2.5 mr-1" />
               {t("userManagement.inactive")}
             </Badge>
           )}
         </TableCell>
 
-        <TableCell className="w-[100px]">
+        <TableCell className="w-[80px] py-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -147,25 +145,24 @@ export function UserTableRow({
                   <Switch
                     checked={user.isActive}
                     onCheckedChange={handleStatusToggle}
-                    className={
+                    className={`h-4 w-7 ${
                       user.isActive
                         ? "bg-emerald-600 data-[state=checked]:bg-emerald-600"
                         : "bg-red-600 data-[state=unchecked]:bg-red-600"
-                    }
+                    }`}
                   />
                 </div>
               </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="bg-white dark:bg-blue-900/90 text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-500/30"
-              >
-                {user.isActive ? t("userManagement.blockUser") : t("userManagement.unblockUser")}
+              <TooltipContent side="top" className="text-xs">
+                {user.isActive
+                  ? t("userManagement.blockUser")
+                  : t("userManagement.unblockUser")}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </TableCell>
 
-        <TableCell className="w-[80px] text-right">
+        <TableCell className="w-[70px] text-right py-2 pr-3">
           <UserActionsDropdown
             user={user}
             onEdit={handleEdit}

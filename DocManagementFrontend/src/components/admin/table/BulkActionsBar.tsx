@@ -39,13 +39,15 @@ export function BulkActionsBar({
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="fixed bottom-6 right-16 transform -translate-x-1/2 z-[9999] w-[calc(100vw-4rem)] max-w-4xl mx-auto"
         >
-          <div className="bg-gradient-to-r from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-lg shadow-[0_8px_32px_rgba(59,130,246,0.7)] rounded-2xl border border-blue-400/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-blue-400/40">
-            <div className="flex items-center text-blue-200 font-medium">
-              <div className="bg-blue-500/30 p-1.5 rounded-xl mr-3 flex-shrink-0">
-                <Users className="w-5 h-5 text-blue-300" />
+          <div className="bg-gradient-to-r from-primary/95 to-primary/80 backdrop-blur-lg shadow-[0_8px_32px_rgba(var(--primary),0.3)] rounded-2xl border border-primary/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-primary/40">
+            <div className="flex items-center text-primary-foreground font-medium">
+              <div className="bg-primary-foreground/30 p-1.5 rounded-xl mr-3 flex-shrink-0">
+                <Users className="w-5 h-5 text-primary-foreground/80" />
               </div>
               <span className="text-sm sm:text-base text-center sm:text-left">
-                <span className="font-bold text-blue-100">{selectedCount}</span>{" "}
+                <span className="font-bold text-primary-foreground">
+                  {selectedCount}
+                </span>{" "}
                 users selected
               </span>
             </div>
@@ -53,7 +55,7 @@ export function BulkActionsBar({
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-blue-900/40 border-blue-500/40 text-blue-200 hover:text-blue-100 hover:bg-blue-800/60 hover:border-blue-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                className="bg-primary-foreground/20 border-primary-foreground/40 text-primary-foreground hover:text-primary-foreground hover:bg-primary-foreground/30 hover:border-primary-foreground/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
                 onClick={onChangeRole}
               >
                 <Shield className="w-4 h-4 mr-1.5" />
@@ -62,7 +64,7 @@ export function BulkActionsBar({
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                className="bg-destructive/40 border-destructive/40 text-destructive-foreground hover:text-destructive-foreground hover:bg-destructive/60 hover:border-destructive/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
                 onClick={onDelete}
               >
                 <Trash className="w-4 h-4 mr-1.5" />
@@ -75,18 +77,18 @@ export function BulkActionsBar({
       )}
 
       <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
-        <AlertDialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl">
+        <AlertDialogContent className="bg-gradient-to-b from-primary/95 to-primary/80 border-primary/30 text-primary-foreground shadow-[0_0_25px_rgba(var(--primary),0.2)] rounded-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl text-blue-100">
+            <AlertDialogTitle className="text-xl text-primary-foreground">
               Block Multiple Users
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-blue-300">
+            <AlertDialogDescription className="text-primary-foreground/80">
               Are you sure you want to block {selectedCount} users? This will
               prevent them from accessing the system.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-blue-800/40 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200">
+            <AlertDialogCancel className="bg-transparent border-primary-foreground/40 text-primary-foreground/80 hover:bg-primary-foreground/20 hover:text-primary-foreground">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -94,7 +96,7 @@ export function BulkActionsBar({
                 onBlock?.();
                 setShowBlockDialog(false);
               }}
-              className="bg-red-900/30 text-red-300 hover:bg-red-900/50 hover:text-red-200 border border-red-500/30 hover:border-red-400/50 transition-all duration-200"
+              className="bg-destructive/30 text-destructive-foreground hover:bg-destructive/50 hover:text-destructive-foreground border border-destructive/30 hover:border-destructive/50 transition-all duration-200"
             >
               Block Users
             </AlertDialogAction>

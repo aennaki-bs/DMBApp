@@ -308,8 +308,6 @@ const DocumentTypes = () => {
       icon: <Trash2 className="h-4 w-4" />,
       onClick: openBulkDeleteDialog,
       variant: "destructive",
-      className:
-        "bg-red-900/30 border-red-500/30 text-red-300 hover:text-red-200 hover:bg-red-900/50 hover:border-red-400/50 transition-all duration-200 shadow-md",
     },
   ];
 

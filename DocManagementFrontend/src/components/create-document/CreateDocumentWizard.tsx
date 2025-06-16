@@ -673,7 +673,9 @@ export default function CreateDocumentWizard({
     }
 
     // Require a responsibility centre selection for users without an assigned center
-    setResponsibilityCentreError(t("documents.pleaseSelectResponsibilityCentre"));
+    setResponsibilityCentreError(
+      t("documents.pleaseSelectResponsibilityCentre")
+    );
     toast.error(t("documents.responsibilityCentreRequired"), {
       description: t("documents.pleaseSelectResponsibilityCentreToContinue"),
       duration: 3000,
@@ -683,12 +685,15 @@ export default function CreateDocumentWizard({
 
   const validateCustomerVendorStep = (): boolean => {
     // Get the selected document type
-    const selectedType = documentTypes.find(t => t.id === formData.selectedTypeId);
-    
+    const selectedType = documentTypes.find(
+      (t) => t.id === formData.selectedTypeId
+    );
+
     // If document type requires customer or vendor
-    if (selectedType?.tierType === 1 || selectedType?.tierType === 2) { // Customer = 1, Vendor = 2
+    if (selectedType?.tierType === 1 || selectedType?.tierType === 2) {
+      // Customer = 1, Vendor = 2
       if (!formData.selectedCustomerVendor) {
-        const tierName = selectedType.tierType === 1 ? 'customer' : 'vendor';
+        const tierName = selectedType.tierType === 1 ? "customer" : "vendor";
         toast.error(`Please select a ${tierName}`);
         return false;
       }
@@ -758,16 +763,18 @@ export default function CreateDocumentWizard({
       // Helper function to get the correct code property based on tier type
       const getCustomerVendorCode = (): string | null => {
         if (!formData.selectedCustomerVendor) return null;
-        
+
         // For customers, use 'code' property
-        if (selectedType.tierType === 1) { // TierType.Customer = 1
+        if (selectedType.tierType === 1) {
+          // TierType.Customer = 1
           return formData.selectedCustomerVendor.code || null;
         }
         // For vendors, use 'vendorCode' property
-        else if (selectedType.tierType === 2) { // TierType.Vendor = 2
+        else if (selectedType.tierType === 2) {
+          // TierType.Vendor = 2
           return formData.selectedCustomerVendor.vendorCode || null;
         }
-        
+
         return null;
       };
 
@@ -914,60 +921,12 @@ export default function CreateDocumentWizard({
       console.log("CreateDocumentWizard: Fetching responsibility centres");
       setIsLoading(true);
 
-      // Check API connectivity first
-      const isApiConnected = await checkApiConnection();
-      if (!isApiConnected) {
-        console.error(
-          "API is not connected - cannot fetch responsibility centres"
-        );
-        toast.error("Cannot connect to server", {
-          description: "Please check your internet connection and try again.",
-          duration: 4000,
-        });
-        setResponsibilityCentres([]);
-        return;
-      }
+      // Try to fetch from the service method directly
+      const centres = await responsibilityCentreService.getSimple();
+      console.log("CreateDocumentWizard: Fetched centres:", centres);
 
-      // Try to fetch from the API directly first for more reliable results
-      try {
-        const response = await api.get("/ResponsibilityCentre/simple");
-        const centres = response.data;
-
-        console.log("CreateDocumentWizard: Fetched centres:", centres);
-
-        if (centres && centres.length > 0) {
-          setResponsibilityCentres(centres);
-        } else {
-          console.warn(
-            "CreateDocumentWizard: No responsibility centres returned from API"
-          );
-          toast.error("No responsibility centres available", {
-            description:
-              "Please contact your administrator to set up responsibility centres.",
-            duration: 4000,
-          });
-          setResponsibilityCentres([]);
-        }
-      } catch (directApiError) {
-        console.error(
-          "Direct API call failed, trying service:",
-          directApiError
-        );
-
-        // Fallback to the service method
-        const centres =
-          await responsibilityCentreService.getSimpleResponsibilityCentres();
-        if (centres && centres.length > 0) {
-          setResponsibilityCentres(centres);
-        } else {
-          setResponsibilityCentres([]);
-          toast.error("No responsibility centres available", {
-            description:
-              "Please contact your administrator to set up responsibility centres.",
-            duration: 4000,
-          });
-        }
-      }
+      // Always set the centres, even if empty
+      setResponsibilityCentres(centres || []);
     } catch (error) {
       console.error(
         "CreateDocumentWizard: Failed to fetch responsibility centres:",
@@ -1234,7 +1193,7 @@ export default function CreateDocumentWizard({
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl text-blue-100">
             {currentStep === 1
-                              ? t("documents.responsibilityCentre")
+              ? t("documents.responsibilityCentre")
               : currentStep === 2
               ? t("documents.documentDate")
               : currentStep === 3
@@ -1376,13 +1335,14 @@ export default function CreateDocumentWizard({
                 disabled={isSubmitting}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                                  {isSubmitting ? (
+                {isSubmitting ? (
                   <>
                     <div className="spinner mr-2" /> {t("documents.creating")}
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" /> {t("documents.createDocument")}
+                    <Save className="mr-2 h-4 w-4" />{" "}
+                    {t("documents.createDocument")}
                   </>
                 )}
               </Button>

@@ -103,7 +103,7 @@ export function SidebarNav() {
   };
 
   return (
-    <div className="h-full w-full bg-card/95 border-border backdrop-blur-lg border-r overflow-y-auto">
+    <div className="h-full w-full bg-transparent overflow-y-auto">
       {/* User Profile Section */}
       <UserProfileSection />
 

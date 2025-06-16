@@ -59,12 +59,12 @@ export function UserRoleSelect({
   return (
     <Select value={currentRole} onValueChange={onRoleChange}>
       <SelectTrigger
-        className={`w-[130px] bg-white dark:bg-gradient-to-r dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 border-blue-300 dark:border-blue-900/30 text-blue-900 dark:text-blue-100 hover:border-blue-500 dark:hover:border-blue-500/40 transition-all duration-150 shadow-sm ${
+        className={`w-[130px] bg-blue-900/40 backdrop-blur-md border-blue-700/40 text-blue-100 hover:border-blue-600/50 hover:bg-blue-800/50 transition-all duration-150 shadow-sm ${
           currentRole === "Admin"
-            ? "border-red-400 dark:border-red-500/30"
+            ? "border-red-500/40"
             : currentRole === "FullUser"
-            ? "border-emerald-400 dark:border-emerald-500/30"
-            : "border-blue-400 dark:border-blue-500/30"
+            ? "border-emerald-500/40"
+            : "border-blue-500/40"
         }`}
       >
         <div className="flex items-center">
@@ -72,7 +72,7 @@ export function UserRoleSelect({
           <SelectValue placeholder={currentRole} />
         </div>
       </SelectTrigger>
-      <SelectContent className="bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b] dark:to-[#0a1033] border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-blue-100 rounded-lg shadow-lg animate-in fade-in-0 zoom-in-95 duration-100">
+      <SelectContent className="bg-blue-950/95 backdrop-blur-xl border-blue-800/30 text-blue-100 rounded-lg shadow-lg animate-in fade-in-0 zoom-in-95 duration-100">
         <SelectItem
           key={currentRole}
           value={currentRole}
@@ -83,12 +83,12 @@ export function UserRoleSelect({
           {/* {getRoleIcon(currentRole)} */}
           {currentRole}
         </SelectItem>
-        <SelectSeparator className="bg-blue-300 dark:bg-blue-900/30 my-1" />
+        <SelectSeparator className="bg-blue-700/30 my-1" />
         {getAvailableRoles(currentRole).map((role) => (
           <SelectItem
             key={role}
             value={role}
-            className="flex items-center text-blue-800 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md"
+            className="flex items-center text-blue-100 hover:bg-blue-800/40 hover:text-blue-50 rounded-md"
           >
             {/* {getRoleIcon(role)} */}
             {role}

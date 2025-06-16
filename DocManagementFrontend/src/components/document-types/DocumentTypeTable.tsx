@@ -4,8 +4,7 @@ import { DocumentTypeTableHeader } from "./table/DocumentTypeTableHeader";
 import { DocumentTypeTableRow } from "./table/DocumentTypeTableRow";
 import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import SmartPagination from "@/components/shared/SmartPagination";
-import { usePagination } from "@/hooks/usePagination";
+import { Card } from "@/components/ui/card";
 
 interface DocumentTypeTableProps {
   types: DocumentType[];
@@ -34,35 +33,26 @@ const DocumentTypeTable = ({
   searchQuery,
   onSearchChange,
 }: DocumentTypeTableProps) => {
-  // Use pagination hook
-  const {
-    currentPage,
-    pageSize,
-    totalPages,
-    totalItems,
-    paginatedData: paginatedTypes,
-    handlePageChange,
-    handlePageSizeChange,
-  } = usePagination({
-    data: types,
-    initialPageSize: 25,
-  });
-
   const areAllEligibleSelected =
-    paginatedTypes.length > 0 &&
-    paginatedTypes.filter((type) => type.documentCounter === 0).length ===
-      selectedTypes.filter((id) =>
-        paginatedTypes.some((type) => type.id === id)
-      ).length;
-  const hasEligibleTypes = paginatedTypes.some((t) => t.documentCounter === 0);
+    types.length > 0 &&
+    types.filter((type) => (type.documentCounter || 0) === 0).length > 0 &&
+    types
+      .filter((type) => (type.documentCounter || 0) === 0)
+      .every((type) => selectedTypes.includes(type.id!));
+  const hasEligibleTypes = types.some((t) => (t.documentCounter || 0) === 0);
+
+  // Handle select all for current page
+  const handleSelectAll = (checked: boolean) => {
+    onSelectAll(checked);
+  };
 
   return (
-    <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
-      <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
+    <Card className="border-primary/10 bg-gradient-to-b from-background/95 to-primary/5 backdrop-blur-sm overflow-hidden">
+      <ScrollArea className="h-[calc(100vh-400px)] min-h-[500px]">
         <div className="min-w-[1000px]">
           <Table className="table-fixed w-full">
             <DocumentTypeTableHeader
-              onSelectAll={onSelectAll}
+              onSelectAll={handleSelectAll}
               areAllEligibleSelected={areAllEligibleSelected}
               hasEligibleTypes={hasEligibleTypes}
               onSort={onSort}
@@ -71,13 +61,15 @@ const DocumentTypeTable = ({
             />
             <TableBody>
               {types.length === 0 ? (
-                <TableRow className="border-blue-900/20 hover:bg-blue-900/20">
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    <div className="flex flex-col items-center justify-center text-blue-300">
-                      <AlertTriangle className="h-8 w-8 text-blue-400 mb-2" />
-                      <p className="text-sm">No document types found</p>
+                <TableRow className="border-primary/10 hover:bg-primary/5 transition-colors">
+                  <TableCell colSpan={7} className="h-32 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <AlertTriangle className="h-12 w-12 text-primary/40 mb-4" />
+                      <p className="text-lg font-medium mb-2">
+                        No document types found
+                      </p>
                       {searchQuery && (
-                        <p className="text-xs text-blue-400 mt-1">
+                        <p className="text-sm text-muted-foreground">
                           Try adjusting your search or filters
                         </p>
                       )}
@@ -100,7 +92,7 @@ const DocumentTypeTable = ({
           </Table>
         </div>
       </ScrollArea>
-    </div>
+    </Card>
   );
 };
 

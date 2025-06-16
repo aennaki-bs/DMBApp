@@ -92,75 +92,73 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl rounded-2xl border border-primary/20 shadow-xl ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-2.5 pagination-container rounded-lg shadow-md ${className}`}
     >
       {/* Left section: Page size selector */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-foreground font-medium whitespace-nowrap">
+      <div className="flex items-center gap-2">
+        <span className="text-xs pagination-text font-medium whitespace-nowrap">
           Show
         </span>
         <Select
           value={pageSize.toString()}
           onValueChange={(value) => onPageSizeChange(Number(value))}
         >
-          <SelectTrigger className="w-[75px] h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+          <SelectTrigger className="w-[60px] h-7 text-xs pagination-button focus:ring-1 transition-all duration-200 shadow-sm rounded-md">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+          <SelectContent className="pagination-button rounded-lg shadow-xl">
             {pageSizeOptions.map((size) => (
               <SelectItem
                 key={size}
                 value={size.toString()}
-                className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                className="text-xs hover:pagination-button focus:pagination-button rounded-md"
               >
                 {size}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <span className="text-sm text-foreground font-medium whitespace-nowrap">
+        <span className="text-xs pagination-text font-medium whitespace-nowrap">
           entries
         </span>
       </div>
 
       {/* Center section: Entry count display */}
-      <div className="text-sm text-blue-800 dark:text-blue-300 font-medium bg-blue-100 dark:bg-blue-900/20 px-3 py-1 rounded-md border border-blue-200 dark:border-blue-900/30">
+      <div className="text-xs pagination-info font-medium px-2 py-1 rounded-md">
         {totalItems > 0 ? (
           <>
             Showing{" "}
-            <span className="text-blue-900 dark:text-blue-100 font-semibold">
+            <span className="pagination-info-accent font-semibold">
               {startItem}
             </span>{" "}
             to{" "}
-            <span className="text-blue-900 dark:text-blue-100 font-semibold">
+            <span className="pagination-info-accent font-semibold">
               {endItem}
             </span>{" "}
             of{" "}
-            <span className="text-blue-900 dark:text-blue-100 font-semibold">
+            <span className="pagination-info-accent font-semibold">
               {totalItems}
             </span>{" "}
             entries
           </>
         ) : (
-          <span className="text-blue-600 dark:text-blue-400">
-            No entries found
-          </span>
+          <span className="pagination-info">No entries found</span>
         )}
       </div>
 
       {/* Right section: Page navigation */}
       {totalPages > 1 && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {showFirstLast && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPageChange(1)}
               disabled={currentPage === 1}
-              className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+              className="h-7 w-7 p-0 text-xs pagination-button disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
               title="First page"
             >
-              <ChevronsLeft className="h-4 w-4" />
+              <ChevronsLeft className="h-3 w-3" />
             </Button>
           )}
 
@@ -169,10 +167,10 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+            className="h-7 w-7 p-0 text-xs pagination-button disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
             title="Previous page"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3" />
           </Button>
 
           {visiblePages.map((page, index) => {
@@ -180,9 +178,9 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
               return (
                 <div
                   key={`ellipsis-${index}`}
-                  className="h-8 w-8 flex items-center justify-center text-blue-600 dark:text-blue-400"
+                  className="h-7 w-7 flex items-center justify-center pagination-text"
                 >
-                  <MoreHorizontal className="h-4 w-4" />
+                  <MoreHorizontal className="h-3 w-3" />
                 </div>
               );
             }
@@ -195,10 +193,9 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
                 onClick={() => onPageChange(page)}
                 className={
                   page === currentPage
-                    ? "h-8 min-w-[32px] px-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 border-blue-500 shadow-md font-semibold"
-                    : "h-8 min-w-[32px] px-2 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 transition-all duration-200 shadow-sm"
+                    ? "h-7 min-w-[28px] px-1.5 text-xs pagination-button-active shadow-md font-semibold"
+                    : "h-7 min-w-[28px] px-1.5 text-xs pagination-button transition-all duration-200 shadow-sm"
                 }
-                title={`Page ${page}`}
               >
                 {page}
               </Button>
@@ -210,10 +207,10 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
             size="sm"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+            className="h-7 w-7 p-0 text-xs pagination-button disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
             title="Next page"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3" />
           </Button>
 
           {showFirstLast && (
@@ -222,10 +219,10 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
               size="sm"
               onClick={() => onPageChange(totalPages)}
               disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+              className="h-7 w-7 p-0 text-xs pagination-button disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
               title="Last page"
             >
-              <ChevronsRight className="h-4 w-4" />
+              <ChevronsRight className="h-3 w-3" />
             </Button>
           )}
         </div>

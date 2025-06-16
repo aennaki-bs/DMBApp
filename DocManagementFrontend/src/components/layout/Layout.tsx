@@ -105,10 +105,10 @@ export function Layout() {
         }}
       >
         {/* Light overlay for better readability */}
-        <div className="absolute inset-0 bg-background/20 z-0"></div>
+        <div className="absolute inset-0 bg-background/20 pointer-events-none"></div>
 
         {/* Main layout structure - elevated above overlay */}
-        <div className="relative flex w-full min-h-full z-10">
+        <div className="relative flex w-full min-h-full">
           {/* Sidebar - clean transparent styling with responsive width */}
           <aside
             className={`h-full ${
@@ -116,8 +116,8 @@ export function Layout() {
             } ${
               isStandardTheme
                 ? "glass-sidebar"
-                : "border-r border-border bg-card/95"
-            } transition-all duration-300 ease-in-out shadow-lg z-20 overflow-hidden`}
+                : "bg-card/15 backdrop-blur-xl border-r border-border"
+            } transition-all duration-300 ease-in-out shadow-lg overflow-hidden`}
           >
             <SidebarNav />
           </aside>
@@ -130,9 +130,9 @@ export function Layout() {
                 isStandardTheme
                   ? "glass-header"
                   : isMobile
-                  ? "bg-card/95 border-b border-border"
-                  : "bg-card/90 border-b border-border"
-              } shadow-sm z-30 transition-all duration-300`}
+                  ? "bg-card/15 backdrop-blur-xl border-b border-border"
+                  : "bg-card/15 backdrop-blur-xl border-b border-border"
+              } shadow-sm transition-all duration-300 relative`}
               style={{
                 height: "4rem",
                 flexShrink: 0,
@@ -158,7 +158,7 @@ export function Layout() {
 
             {/* Main content with clean transparent styling and responsive padding */}
             <main
-              className="flex-1 overflow-hidden p-4"
+              className="flex-1 overflow-hidden p-4 relative"
               style={{ minHeight: "calc(100vh - 4rem)" }}
             >
               <div
@@ -166,10 +166,10 @@ export function Layout() {
                   isStandardTheme
                     ? "glass-card"
                     : "border border-border bg-card/85"
-                } shadow-lg transition-all duration-300`}
+                } shadow-lg transition-all duration-300 relative`}
                 style={{ minHeight: "100%" }}
               >
-                <div className="h-full overflow-hidden p-6">
+                <div className="h-full overflow-hidden p-6 relative">
                   <Outlet />
                 </div>
               </div>

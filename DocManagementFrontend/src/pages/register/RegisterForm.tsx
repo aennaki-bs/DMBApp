@@ -477,10 +477,10 @@ const RegisterForm: React.FC = () => {
                 strokeLinecap="round"
               />
             </svg>
-          </div>
+                  </div>
           <h3 className="text-sm font-medium text-blue-300">
             Enterprise Resource Platform
-          </h3>
+                    </h3>
           <p className="text-xs text-blue-400 mt-1">
             Document Management System
           </p>

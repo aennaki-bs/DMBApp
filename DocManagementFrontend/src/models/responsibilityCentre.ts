@@ -5,7 +5,6 @@ export interface ResponsibilityCentre {
   id: number;
   code: string;
   descr: string;
-  isActive: boolean;
   createdAt: string;
   updatedAt: string;
   usersCount?: number;
@@ -27,7 +26,6 @@ export interface CreateResponsibilityCentreRequest {
 export interface UpdateResponsibilityCentreRequest {
   code: string;
   descr: string;
-  isActive?: boolean;
 }
 
 /**
@@ -45,7 +43,6 @@ export interface ResponsibilityCentreSimple {
   id: number;
   code: string;
   descr: string;
-  isActive: boolean;
 }
 
 export interface User {

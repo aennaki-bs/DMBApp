@@ -21,6 +21,9 @@ interface ResponsibilityCentreSelectProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  // Optional external data - when provided, component won't fetch its own data
+  externalCentres?: ResponsibilityCentreSimple[];
+  externalIsLoading?: boolean;
 }
 
 export const ResponsibilityCentreSelect = ({
@@ -31,31 +34,71 @@ export const ResponsibilityCentreSelect = ({
   required = false,
   disabled = false,
   className = "",
+  externalCentres,
+  externalIsLoading,
 }: ResponsibilityCentreSelectProps) => {
-  const [centres, setCentres] = useState<ResponsibilityCentreSimple[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [internalCentres, setInternalCentres] = useState<
+    ResponsibilityCentreSimple[]
+  >([]);
+  const [internalIsLoading, setInternalIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
+  // Use external data if provided, otherwise use internal data
+  const centres =
+    externalCentres !== undefined ? externalCentres : internalCentres;
+  const isLoading =
+    externalIsLoading !== undefined ? externalIsLoading : internalIsLoading;
+
+  console.log("ResponsibilityCentreSelect: Rendering with:", {
+    externalCentres,
+    externalIsLoading,
+    internalCentres,
+    internalIsLoading,
+    finalCentres: centres,
+    finalIsLoading: isLoading,
+    centresLength: centres.length,
+  });
+
   const fetchCentres = async () => {
+    // Don't fetch if external data is provided
+    if (externalCentres !== undefined) {
+      console.log(
+        "ResponsibilityCentreSelect: Using external data, skipping fetch"
+      );
+      return;
+    }
+
     try {
-      setIsLoading(true);
+      setInternalIsLoading(true);
       setHasError(false);
 
-      console.log("Fetching responsibility centres...");
+      console.log(
+        "ResponsibilityCentreSelect: Fetching responsibility centres..."
+      );
       // Use the getSimple method which has better error handling
       const data = await responsibilityCentreService.getSimple();
 
-      console.log("Fetched centres:", data);
+      console.log("ResponsibilityCentreSelect: Fetched centres:", data);
+      console.log(
+        "ResponsibilityCentreSelect: Number of centres:",
+        data?.length || 0
+      );
 
+      // Log each centre to see the structure
       if (data && data.length > 0) {
-        setCentres(data);
-      } else {
-        console.warn("No responsibility centres returned from API");
-        setHasError(true);
+        data.forEach((centre, index) => {
+          console.log(`ResponsibilityCentreSelect: Centre ${index}:`, centre);
+        });
       }
+
+      // Always set the centres, even if empty - empty array is a valid response
+      setInternalCentres(data || []);
     } catch (error) {
-      console.error("Failed to fetch responsibility centres:", error);
+      console.error(
+        "ResponsibilityCentreSelect: Failed to fetch responsibility centres:",
+        error
+      );
       setHasError(true);
 
       // Don't show toast error during registration as it's optional
@@ -67,13 +110,30 @@ export const ResponsibilityCentreSelect = ({
         });
       }
     } finally {
-      setIsLoading(false);
+      setInternalIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCentres();
-  }, [retryCount]); // Re-run when retry count changes
+    // Only fetch if external data is not provided
+    if (externalCentres === undefined) {
+      fetchCentres();
+    }
+  }, [retryCount, externalCentres]); // Re-run when retry count changes or external data changes
+
+  // Debug effect to track centres state changes
+  useEffect(() => {
+    console.log("ResponsibilityCentreSelect: centres state changed:", centres);
+    console.log("ResponsibilityCentreSelect: centres length:", centres.length);
+  }, [centres]);
+
+  // Debug effect to track loading state changes
+  useEffect(() => {
+    console.log(
+      "ResponsibilityCentreSelect: isLoading state changed:",
+      isLoading
+    );
+  }, [isLoading]);
 
   const handleRetry = () => {
     setRetryCount((prev) => prev + 1);
@@ -121,6 +181,17 @@ export const ResponsibilityCentreSelect = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
+      {/* Debug info - can be removed later */}
+      <div className="text-xs text-gray-400 p-2 bg-gray-800 rounded">
+        Debug: centres.length = {centres.length}, isLoading ={" "}
+        {isLoading.toString()}, hasError = {hasError.toString()}
+        {centres.length > 0 && (
+          <div>
+            Centres: {centres.map((c) => `${c.code}(${c.id})`).join(", ")}
+          </div>
+        )}
+      </div>
+
       {label && (
         <Label
           htmlFor="responsibility-centre-select"
@@ -131,43 +202,30 @@ export const ResponsibilityCentreSelect = ({
           {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
       )}
-      <Select
-        value={value ? value.toString() : undefined}
-        onValueChange={handleValueChange}
+
+      {/* Working native HTML select */}
+      <select
+        id="responsibility-centre-select"
+        value={value || ""}
+        onChange={(e) => handleValueChange(e.target.value)}
+        className="w-full p-3 border rounded-md bg-white dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={disabled || isLoading}
       >
-        <SelectTrigger id="responsibility-centre-select" className="w-full">
-          {isLoading ? (
-            <div className="flex items-center">
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              <span>Loading centres...</span>
-            </div>
-          ) : (
-            <SelectValue placeholder={placeholder} />
-          )}
-        </SelectTrigger>
-        <SelectContent>
-          {!required && (
-            <SelectItem value="none">
-              <span className="text-gray-500">No responsibility centre</span>
-            </SelectItem>
-          )}
-          {centres.map((centre) => (
-            <SelectItem key={centre.id} value={centre.id.toString()}>
-              <div className="flex items-center space-x-2">
-                <span className="font-medium">{centre.code}</span>
-                <span className="text-gray-500">-</span>
-                <span>{centre.descr}</span>
-              </div>
-            </SelectItem>
-          ))}
-          {centres.length === 0 && !isLoading && (
-            <div className="py-2 px-2 text-center text-sm text-gray-500">
-              No centres available
-            </div>
-          )}
-        </SelectContent>
-      </Select>
+        <option value="">
+          {isLoading ? "Loading centres..." : placeholder}
+        </option>
+        {!required && <option value="none">No responsibility centre</option>}
+        {centres.map((centre) => (
+          <option key={centre.id} value={centre.id.toString()}>
+            {centre.code} {centre.descr ? `- ${centre.descr}` : ""}
+          </option>
+        ))}
+        {centres.length === 0 && !isLoading && (
+          <option value="" disabled>
+            No centres available
+          </option>
+        )}
+      </select>
     </div>
   );
 };

@@ -25,26 +25,26 @@ export default function DocumentsEmptyState({
 
   return (
     <motion.div
-      className="text-center py-16 px-4"
+      className="table-glass-empty-container"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="mx-auto h-20 w-20 rounded-full bg-blue-900/30 border border-blue-800/50 flex items-center justify-center mb-4 shadow-inner">
+      <div className="table-glass-empty-icon">
         {hasFilters ? (
-          <FilterX className="h-10 w-10 text-blue-400/80" />
+          <FilterX className="table-glass-empty-icon-svg" />
         ) : isSearching ? (
-          <Search className="h-10 w-10 text-blue-400/80" />
+          <Search className="table-glass-empty-icon-svg" />
         ) : (
-          <File className="h-10 w-10 text-blue-400/80" />
+          <File className="table-glass-empty-icon-svg" />
         )}
       </div>
 
-      <h3 className="text-xl font-semibold text-white">
+      <h3 className="table-glass-empty-title">
         {hasFilters ? "No matching documents" : "No documents found"}
       </h3>
 
-      <p className="mt-2 text-sm text-blue-300/80 max-w-md mx-auto">
+      <p className="table-glass-empty-description">
         {hasFilters ? (
           <>
             No documents match your current filter criteria. Try adjusting your
@@ -53,8 +53,10 @@ export default function DocumentsEmptyState({
         ) : searchQuery ? (
           <>
             No documents match your search for{" "}
-            <span className="text-blue-300 font-medium">"{searchQuery}"</span>.
-            Try a different search term or browse all documents.
+            <span className="table-glass-empty-search-term">
+              "{searchQuery}"
+            </span>
+            . Try a different search term or browse all documents.
           </>
         ) : canManageDocuments ? (
           <>
@@ -69,11 +71,11 @@ export default function DocumentsEmptyState({
         )}
       </p>
 
-      <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+      <div className="table-glass-empty-actions">
         {hasFilters && onClearFilters && (
           <Button
             variant="outline"
-            className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20 min-w-[160px]"
+            className="table-glass-empty-button-secondary"
             onClick={onClearFilters}
           >
             <FilterX className="mr-2 h-4 w-4" />
@@ -83,7 +85,7 @@ export default function DocumentsEmptyState({
 
         {canManageDocuments && (
           <Button
-            className="bg-blue-600 hover:bg-blue-700 min-w-[160px]"
+            className="table-glass-empty-button-primary"
             onClick={() => setCreateModalOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />

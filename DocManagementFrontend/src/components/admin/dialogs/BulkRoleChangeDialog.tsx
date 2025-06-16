@@ -29,13 +29,13 @@ interface BulkRoleChangeDialogProps {
 function getRoleIcon(role: string) {
   switch (role) {
     case "Admin":
-      return <ShieldAlert className="h-4 w-4 text-red-400 mr-2" />;
+      return <ShieldAlert className="h-4 w-4 text-red-500 mr-2" />;
     case "FullUser":
-      return <ShieldCheck className="h-4 w-4 text-emerald-400 mr-2" />;
+      return <ShieldCheck className="h-4 w-4 text-emerald-500 mr-2" />;
     case "SimpleUser":
-      return <Shield className="h-4 w-4 text-blue-400 mr-2" />;
+      return <Shield className="h-4 w-4 text-blue-500 mr-2" />;
     default:
-      return <ShieldQuestion className="h-4 w-4 text-gray-400 mr-2" />;
+      return <ShieldQuestion className="h-4 w-4 text-gray-500 mr-2" />;
   }
 }
 
@@ -86,7 +86,7 @@ export function BulkRoleChangeDialog({
 
         <div className="my-4 bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
           <Select value={selectedRole} onValueChange={onRoleChange}>
-            <SelectTrigger className="w-full bg-[#111633]/80 border-blue-900/50 text-white relative focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-blue-500 focus-visible:ring-offset-0 focus-visible:outline-none focus-visible:border-blue-500">
+            <SelectTrigger className="w-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-slate-600">
               <SelectValue placeholder="Select a role">
                 {selectedRole && (
                   <div className="flex items-center">
@@ -98,18 +98,14 @@ export function BulkRoleChangeDialog({
             </SelectTrigger>
             <SelectContent
               position="popper"
-              className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-blue-100 rounded-lg shadow-lg z-[200]"
+              className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-gray-100 rounded-lg shadow-xl z-[200] min-w-[200px]"
               sideOffset={5}
             >
               {["Admin", "FullUser", "SimpleUser"].map((role) => (
                 <SelectItem
                   key={role}
                   value={role}
-                  className={`flex items-center ${
-                    selectedRole === role
-                      ? getRoleColor(role) + " border-l-2 rounded-md"
-                      : "text-blue-200 hover:bg-blue-900/30 rounded-md"
-                  }`}
+                  className="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer transition-colors duration-200 text-gray-900 dark:text-gray-100"
                 >
                   {getRoleIcon(role)}
                   {role === "Admin"

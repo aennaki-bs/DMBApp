@@ -19,8 +19,6 @@ let apiUrl = `http://${address}:${port}/api`;
 // Create axios instance with default configuration
 const api = axios.create({
   // Use the correct port for the API (5205) as seen in the network tab
-  // baseURL: import.meta.env.VITE_API_URL || 'http://192.168.1.94:5205/api',
-  // baseURL: import.meta.env.VITE_API_URL || 'http://172.20.10.4:5205/api',
   baseURL: import.meta.env.VITE_API_URL || apiUrl,
   headers: {
     'Content-Type': 'application/json',
@@ -37,7 +35,19 @@ api.interceptors.request.use(
       config._retryCount = 0;
     }
 
-    // You can add auth token here if needed
+    // Ensure URL is properly formed
+    if (config.url && !config.url.startsWith('/') && !config.url.startsWith('http')) {
+      config.url = '/' + config.url;
+    }
+
+    // Only reject truly invalid URLs (undefined, null, or empty string)
+    // Root path '/' is valid for health checks
+    if (!config.url) {
+      console.error('Empty or invalid URL detected:', config.url);
+      return Promise.reject(new Error('Invalid API endpoint'));
+    }
+
+    console.log('API Request URL:', config.baseURL + config.url);
     return config;
   },
   (error) => {

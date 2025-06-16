@@ -3,38 +3,50 @@ import { useDocumentsData } from "./hooks/useDocumentsData";
 import DocumentsHeader from "./components/DocumentsHeader";
 import DocumentsTable from "./components/DocumentsTable";
 import DocumentsEmptyState from "./components/DocumentsEmptyState";
-import DocumentsFilterBar from "./components/DocumentsFilterBar";
 import SelectedDocumentsBar from "./components/SelectedDocumentsBar";
 import DeleteConfirmDialog from "./components/DeleteConfirmDialog";
 import { Document } from "@/models/document";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
 import { toast } from "sonner";
 import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { PageLayout } from "@/components/layout/PageLayout";
 import {
   FileText,
   Plus,
   GitBranch,
   Trash2,
   AlertCircle,
-  FilterX,
-  SlidersHorizontal,
+  Filter,
+  Search,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { AnimatePresence, motion } from "framer-motion";
 import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
 import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
 import { useDocumentsFilter } from "./hooks/useDocumentsFilter";
+import SmartPagination from "@/components/shared/SmartPagination";
+import { usePagination } from "@/hooks/usePagination";
+import {
+  DEFAULT_STATUS_FILTERS,
+  DEFAULT_TYPE_FILTERS,
+  DEFAULT_DOCUMENT_SEARCH_FIELDS,
+} from "@/components/table";
 
 const DocumentsPage = () => {
   const { t, tWithParams } = useTranslation();
@@ -56,24 +68,48 @@ const DocumentsPage = () => {
   } = useDocumentsData();
 
   // Get filter state to check if filters are applied
-  const { activeFilters, resetFilters } = useDocumentsFilter();
+  const {
+    searchQuery,
+    setSearchQuery,
+    activeFilters,
+    applyFilters,
+    resetFilters,
+  } = useDocumentsFilter();
 
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [pageSize] = useState(10);
   const [assignCircuitDialogOpen, setAssignCircuitDialogOpen] = useState(false);
   const [documentToAssign, setDocumentToAssign] = useState<Document | null>(
     null
   );
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    setTotalPages(Math.ceil(filteredItems.length / pageSize));
-    setPage(1); // Reset to first page when filters change
-  }, [filteredItems, pageSize]);
+  // Filter state
+  const [searchField, setSearchField] = useState(
+    activeFilters.searchField || "all"
+  );
+  const [statusFilter, setStatusFilter] = useState(
+    activeFilters.statusFilter || "any"
+  );
+  const [typeFilter, setTypeFilter] = useState(
+    activeFilters.typeFilter || "any"
+  );
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // Use pagination hook for better pagination management
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    paginatedData: paginatedDocuments,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination({
+    data: filteredItems,
+    initialPageSize: 10,
+  });
 
   // Check if any filters are applied
   const hasActiveFilters =
@@ -82,14 +118,53 @@ const DocumentsPage = () => {
     activeFilters.typeFilter !== "any" ||
     activeFilters.dateRange !== undefined;
 
-  const getPageDocuments = () => {
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    return filteredItems.slice(start, end);
+  // Update local state when activeFilters change
+  useEffect(() => {
+    setSearchField(activeFilters.searchField || "all");
+    setStatusFilter(activeFilters.statusFilter || "any");
+    setTypeFilter(activeFilters.typeFilter || "any");
+  }, [activeFilters]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    applyFilters({
+      ...activeFilters,
+      searchQuery: query,
+      searchField,
+    });
   };
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+  const handleSearchFieldChange = (field: string) => {
+    setSearchField(field);
+    applyFilters({
+      ...activeFilters,
+      searchField: field,
+    });
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    applyFilters({
+      ...activeFilters,
+      statusFilter: value,
+    });
+  };
+
+  const handleTypeChange = (value: string) => {
+    setTypeFilter(value);
+    applyFilters({
+      ...activeFilters,
+      typeFilter: value,
+    });
+  };
+
+  const clearAllFilters = () => {
+    setStatusFilter("any");
+    setTypeFilter("any");
+    setSearchQuery("");
+    setFilterOpen(false);
+    resetFilters();
   };
 
   const handleSelectDocument = (documentId: number) => {
@@ -103,10 +178,10 @@ const DocumentsPage = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedDocuments.length === getPageDocuments().length) {
+    if (selectedDocuments.length === paginatedDocuments.length) {
       setSelectedDocuments([]);
     } else {
-      setSelectedDocuments(getPageDocuments().map((doc) => doc.id));
+      setSelectedDocuments(paginatedDocuments.map((doc) => doc.id));
     }
   };
 
@@ -133,7 +208,9 @@ const DocumentsPage = () => {
           // All deletions were successful
           if (results.successful.length === selectedDocuments.length) {
             toast.success(
-              tWithParams("documents.documentsDeleted", { count: results.successful.length })
+              tWithParams("documents.documentsDeleted", {
+                count: results.successful.length,
+              })
             );
           }
         } catch (error: any) {
@@ -144,20 +221,18 @@ const DocumentsPage = () => {
             if (successful.length > 0 && failed.length > 0) {
               // Partial success
               toast.success(
-                tWithParams("documents.documentsDeleted", { count: successful.length })
+                tWithParams("documents.documentsDeleted", {
+                  count: successful.length,
+                })
               );
-              toast.error(
-                tWithParams("documents.failedToDeleteSome", { count: failed.length })
-              );
+              toast.error(`Failed to delete ${failed.length} documents`);
             } else if (successful.length === 0) {
               // Complete failure
-              toast.error(
-                tWithParams("documents.failedToDeleteAll", { count: failed.length })
-              );
+              toast.error(`Failed to delete all ${failed.length} documents`);
             }
           } else {
             // Generic error
-            toast.error(t("documents.deleteError"));
+            toast.error(t("documents.failedToDelete"));
           }
 
           // Don't return early - we still want to clean up the UI state
@@ -173,7 +248,7 @@ const DocumentsPage = () => {
       fetchDocuments();
     } catch (error) {
       console.error("Error deleting document(s):", error);
-      toast.error(t("documents.deleteError"));
+      toast.error(t("documents.failedToDelete"));
 
       // Still clean up UI state on error
       setDeleteDialogOpen(false);
@@ -190,157 +265,296 @@ const DocumentsPage = () => {
     setAssignCircuitDialogOpen(false);
     setDocumentToAssign(null);
     fetchDocuments();
-    toast.success(t("documents.circuitAssigned"));
+    toast.success(t("documents.circuitAssignedSuccess"));
   };
 
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <PageHeader
-        title={t("documents.title")}
-        description={t("documents.subtitle")}
-        icon={<FileText className="h-6 w-6 text-blue-500" />}
-        actions={
-          <>
-            {canManageDocuments ? (
-              <>
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-                  onClick={() => setCreateModalOpen(true)}
-                >
-                  <Plus className="h-4 w-4" /> {t("documents.newDocument")}
-                </Button>
+  // Page actions for the header
+  const pageActions = [
+    ...(canManageDocuments
+      ? [
+          {
+            label: "Export Documents",
+            variant: "outline" as const,
+            icon: FileText,
+            onClick: () => {
+              // Export functionality - placeholder
+              toast.info("Export functionality coming soon");
+            },
+          },
+          {
+            label: t("documents.newDocument"),
+            variant: "default" as const,
+            icon: Plus,
+            onClick: () => setCreateModalOpen(true),
+          },
+        ]
+      : []),
+  ];
 
-                {selectedDocuments.length === 1 && (
+  return (
+    <PageLayout
+      title={t("documents.title")}
+      subtitle={t("documents.subtitle")}
+      icon={FileText}
+      actions={pageActions}
+    >
+      <div
+        className="h-full flex flex-col gap-5 w-full px-1"
+        style={{ minHeight: "100%" }}
+      >
+        {/* Compact Search + Filter Bar */}
+        <div className="p-4 rounded-xl table-glass-container shadow-lg">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+            {/* Search and field select */}
+            <div className="flex-1 flex items-center gap-2.5 min-w-0">
+              <div className="relative">
+                <Select
+                  value={searchField}
+                  onValueChange={handleSearchFieldChange}
+                >
+                  <SelectTrigger className="w-[130px] h-9 text-sm table-search-select hover:table-search-select focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all duration-200 shadow-sm rounded-md flex-shrink-0">
+                    <SelectValue>
+                      {DEFAULT_DOCUMENT_SEARCH_FIELDS.find(
+                        (opt) => opt.id === searchField
+                      )?.label || "All Fields"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="table-search-select rounded-lg shadow-xl">
+                    {DEFAULT_DOCUMENT_SEARCH_FIELDS.map((opt) => (
+                      <SelectItem
+                        key={opt.id}
+                        value={String(opt.id)}
+                        className="text-xs hover:table-search-select focus:table-search-select rounded-md"
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="relative flex-1 group min-w-[200px]">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-sm"></div>
+                <Input
+                  placeholder={t("documents.searchDocuments")}
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="relative h-9 text-sm table-search-input pl-10 pr-4 rounded-md focus:ring-1 transition-all duration-200 shadow-sm group-hover:shadow-md"
+                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 table-search-icon group-hover:table-search-icon transition-colors duration-200">
+                  <Search className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+
+            {/* Filter popover */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20"
-                    onClick={() =>
-                      openAssignCircuitDialog(
-                        documents.find((d) => d.id === selectedDocuments[0])!
-                      )
-                    }
+                    size="sm"
+                    className="h-9 px-4 text-sm table-search-select hover:table-search-select shadow-sm rounded-md flex items-center gap-2 transition-all duration-200 hover:shadow-md whitespace-nowrap"
                   >
-                    <GitBranch className="mr-2 h-4 w-4" /> {t("documents.assignToCircuit")}
+                    <Filter className="h-3.5 w-3.5" />
+                    Filter
+                    {(statusFilter !== "any" || typeFilter !== "any") && (
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                    )}
                   </Button>
-                )}
-              </>
-            ) : (
-              <Button className="bg-blue-600 hover:bg-blue-700" disabled>
-                <Plus className="mr-2 h-4 w-4" /> {t("documents.newDocument")}
-              </Button>
-            )}
-          </>
-        }
-      />
+                </PopoverTrigger>
+                <PopoverContent className="w-72 table-search-select rounded-lg shadow-xl p-4">
+                  <div className="mb-3 table-search-text font-semibold text-sm flex items-center gap-2">
+                    <Filter className="h-4 w-4 table-search-icon" />
+                    Filter Documents
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {/* Status Filter */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs table-search-text font-medium">
+                        Status
+                      </span>
+                      <Select
+                        value={statusFilter}
+                        onValueChange={handleStatusChange}
+                      >
+                        <SelectTrigger className="w-full h-8 text-xs table-search-select focus:ring-1 transition-colors duration-200 shadow-sm rounded-md">
+                          <SelectValue>
+                            {
+                              DEFAULT_STATUS_FILTERS.find(
+                                (opt) => opt.value === statusFilter
+                              )?.label
+                            }
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="table-search-select">
+                          {DEFAULT_STATUS_FILTERS.map((opt) => (
+                            <SelectItem
+                              key={opt.value}
+                              value={opt.value}
+                              className="text-xs hover:table-search-select"
+                            >
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-      {/* Filter Bar */}
-      <DocumentsFilterBar />
-
-      {/* Selected Documents Bar */}
-      <AnimatePresence>
-        {selectedDocuments.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <BulkActionsBar
-              selectedCount={selectedDocuments.length}
-              entityName="document"
-              icon={<FileText className="h-4 w-4 text-blue-400" />}
-              actions={[
-                {
-                  id: "delete",
-                  label: t("documents.deleteSelected"),
-                  icon: <Trash2 className="h-4 w-4" />,
-                  onClick: openDeleteDialog,
-                  variant: "destructive",
-                },
-              ]}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Content */}
-      <Card className="mt-6 border-gray-800 bg-[#0d1117]/60 backdrop-blur-sm shadow-md">
-        {isLoading ? (
-          <CardContent className="p-8">
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-              <p className="text-gray-400">{t("documents.loading")}</p>
+                    {/* Type Filter */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs table-search-text font-medium">
+                        Document Type
+                      </span>
+                      <Select
+                        value={typeFilter}
+                        onValueChange={handleTypeChange}
+                      >
+                        <SelectTrigger className="w-full h-8 text-xs table-search-select focus:ring-1 transition-colors duration-200 shadow-sm rounded-md">
+                          <SelectValue>
+                            {
+                              DEFAULT_TYPE_FILTERS.find(
+                                (opt) => opt.value === typeFilter
+                              )?.label
+                            }
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="table-search-select">
+                          {DEFAULT_TYPE_FILTERS.map((opt) => (
+                            <SelectItem
+                              key={opt.value}
+                              value={opt.value}
+                              className="text-xs hover:table-search-select"
+                            >
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end mt-4">
+                    {(statusFilter !== "any" || typeFilter !== "any") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs table-search-text hover:table-search-text-hover hover:table-search-select rounded-md transition-all duration-200 flex items-center gap-1.5"
+                        onClick={clearAllFilters}
+                      >
+                        <X className="h-3 w-3" /> Clear All
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
-          </CardContent>
-        ) : filteredItems.length === 0 ? (
-          <DocumentsEmptyState
-            canManageDocuments={canManageDocuments}
-            onDocumentCreated={fetchDocuments}
-            hasFilters={hasActiveFilters}
-            onClearFilters={resetFilters}
-          />
-        ) : (
-          <>
-            <CardContent className="p-0">
-              <DocumentsTable
-                documents={getPageDocuments()}
-                selectedDocuments={selectedDocuments}
-                canManageDocuments={canManageDocuments}
-                handleSelectDocument={handleSelectDocument}
-                handleSelectAll={handleSelectAll}
-                openDeleteDialog={openDeleteSingleDialog}
-                openAssignCircuitDialog={openAssignCircuitDialog}
-                sortConfig={sortConfig}
-                requestSort={requestSort}
-                page={page}
-                pageSize={pageSize}
-              />
-            </CardContent>
+          </div>
+        </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center py-4 border-t border-gray-800">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => handlePageChange(Math.max(1, page - 1))}
-                        className={
-                          page === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <PaginationItem key={i + 1}>
-                        <PaginationLink
-                          onClick={() => handlePageChange(i + 1)}
-                          isActive={page === i + 1}
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          handlePageChange(Math.min(totalPages, page + 1))
-                        }
-                        className={
-                          page === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+        {/* Selected Documents Bar */}
+        <AnimatePresence>
+          {selectedDocuments.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <BulkActionsBar
+                selectedCount={selectedDocuments.length}
+                entityName="document"
+                icon={<FileText className="h-4 w-4 text-primary" />}
+                actions={[
+                  ...(selectedDocuments.length === 1 && canManageDocuments
+                    ? [
+                        {
+                          id: "assign-circuit",
+                          label: t("documents.assignCircuit"),
+                          icon: <GitBranch className="h-4 w-4" />,
+                          onClick: () =>
+                            openAssignCircuitDialog(
+                              documents.find(
+                                (d) => d.id === selectedDocuments[0]
+                              )!
+                            ),
+                          variant: "outline" as const,
+                        },
+                      ]
+                    : []),
+                  {
+                    id: "delete",
+                    label: "Delete Selected",
+                    icon: <Trash2 className="h-4 w-4" />,
+                    onClick: openDeleteDialog,
+                    variant: "destructive",
+                  },
+                ]}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Content */}
+        <div className="flex-1 min-h-0">
+          <div
+            className="h-full flex flex-col gap-3"
+            style={{ minHeight: "100%" }}
+          >
+            <div className="flex-1 relative overflow-hidden rounded-2xl table-glass-container min-h-0">
+              {isLoading ? (
+                <div className="table-glass-loading">
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                    <p className="table-glass-loading-text">
+                      {t("common.loading")}
+                    </p>
+                  </div>
+                </div>
+              ) : filteredItems.length === 0 ? (
+                <DocumentsEmptyState
+                  canManageDocuments={canManageDocuments}
+                  onDocumentCreated={fetchDocuments}
+                  hasFilters={hasActiveFilters}
+                  onClearFilters={resetFilters}
+                />
+              ) : (
+                <div className="relative h-full flex flex-col z-10">
+                  <DocumentsTable
+                    documents={paginatedDocuments}
+                    selectedDocuments={selectedDocuments}
+                    canManageDocuments={canManageDocuments}
+                    handleSelectDocument={handleSelectDocument}
+                    handleSelectAll={handleSelectAll}
+                    openDeleteDialog={openDeleteSingleDialog}
+                    openAssignCircuitDialog={openAssignCircuitDialog}
+                    sortConfig={sortConfig}
+                    requestSort={requestSort}
+                    page={currentPage}
+                    pageSize={pageSize}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Smart Pagination - Always show when there are documents */}
+            {filteredItems.length > 0 && (
+              <div className="table-glass-pagination p-4 rounded-2xl">
+                <SmartPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  pageSizeOptions={[5, 10, 15, 25, 50]}
+                  showFirstLast={true}
+                  maxVisiblePages={5}
+                />
               </div>
             )}
-          </>
-        )}
-      </Card>
+          </div>
+        </div>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
@@ -368,7 +582,7 @@ const DocumentsPage = () => {
         onOpenChange={setCreateModalOpen}
         onSuccess={fetchDocuments}
       />
-    </div>
+    </PageLayout>
   );
 };
 

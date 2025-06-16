@@ -70,14 +70,19 @@ export function UserTableContent({
     );
 
     if (allCurrentSelected) {
-      // If all current page users are selected, deselect them
-      const newSelected = selectedUsers.filter(
-        (id) => !currentPageUserIds.includes(id)
-      );
-      onSelectAll(); // This should handle the logic in parent component
+      // Deselect all users on current page
+      currentPageUserIds.forEach((userId) => {
+        if (selectedUsers.includes(userId)) {
+          onSelectUser(userId);
+        }
+      });
     } else {
-      // If not all current page users are selected, select them all
-      onSelectAll();
+      // Select all users on current page only
+      currentPageUserIds.forEach((userId) => {
+        if (!selectedUsers.includes(userId)) {
+          onSelectUser(userId);
+        }
+      });
     }
   };
 
@@ -85,11 +90,11 @@ export function UserTableContent({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl table-glass-loading shadow-lg">
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading users...</p>
+              <Loader2 className="h-8 w-8 animate-spin table-glass-loading-spinner" />
+              <p className="table-glass-loading-text">Loading users...</p>
             </div>
           </div>
         </div>
@@ -101,13 +106,13 @@ export function UserTableContent({
   if (isError) {
     return (
       <div className="space-y-4">
-        <div className="relative overflow-hidden rounded-2xl border border-destructive/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl table-glass-error shadow-lg">
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
-                <span className="text-destructive font-bold">!</span>
+              <div className="h-8 w-8 rounded-full table-glass-error-icon flex items-center justify-center">
+                <span className="font-bold">!</span>
               </div>
-              <p className="text-destructive">
+              <p className="table-glass-error-text">
                 Failed to load users. Please try again.
               </p>
             </div>
@@ -118,15 +123,12 @@ export function UserTableContent({
   }
 
   return (
-    <div className="h-full flex flex-col gap-4" style={{ minHeight: "100%" }}>
-      <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg min-h-0">
-        {/* Subtle animated background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/2 via-transparent to-primary/2 animate-pulse"></div>
-
+    <div className="h-full flex flex-col gap-3" style={{ minHeight: "100%" }}>
+      <div className="flex-1 relative overflow-hidden rounded-2xl table-glass-container min-h-0">
         {hasUsers ? (
           <div className="relative h-full flex flex-col z-10">
             {/* Fixed Header - Never Scrolls */}
-            <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
+            <div className="flex-shrink-0 overflow-x-auto table-glass-header">
               <div className="min-w-[1026px]">
                 <Table className="table-fixed w-full">
                   <UserTableHeader
@@ -148,10 +150,10 @@ export function UserTableContent({
             {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
             <div
               className="flex-1 overflow-hidden"
-              style={{ maxHeight: "calc(100vh - 300px)" }}
+              style={{ maxHeight: "calc(100vh - 280px)" }}
             >
-              <ScrollArea className="table-scroll-area h-full w-full">
-                <div className="min-w-[1026px] pb-4">
+              <ScrollArea className="h-full w-full">
+                <div className="min-w-[1026px] pb-2">
                   <Table className="table-fixed w-full">
                     <UserTableBody
                       users={paginatedUsers}
@@ -178,14 +180,17 @@ export function UserTableContent({
 
       {/* Smart Pagination */}
       {hasUsers && (
-        <SmartPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-        />
+        <div className="table-glass-pagination p-4 rounded-b-2xl">
+          <SmartPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            pageSizeOptions={[10, 15, 25, 50, 100]}
+          />
+        </div>
       )}
     </div>
   );

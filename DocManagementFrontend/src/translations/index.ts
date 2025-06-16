@@ -274,6 +274,11 @@ export const translations = {
       unableToLoadCentres: 'Unable to load responsibility centres. Please try again or contact administration.',
       retryLoading: 'Retry Loading',
       documentWillBeAssignedToSelected: 'Document will be assigned to the selected responsibility centre',
+      noResponsibilityCentresAvailable: 'No responsibility centres are available in the system.',
+      toCreateDocuments: 'To create documents, you need responsibility centres',
+      askAdminToCreateCentres: 'Ask your administrator to create responsibility centres',
+      orGoToResponsibilityCentres: 'Or go to Responsibility Centres management to create them',
+      manageResponsibilityCentres: 'Manage Centres',
       // DateSelectionStep
       accountingDate: 'Accounting Date',
       dateOutsideValidRange: 'Selected date is outside the valid range for this document type',

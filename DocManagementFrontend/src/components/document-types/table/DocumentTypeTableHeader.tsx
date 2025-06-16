@@ -28,7 +28,7 @@ export const DocumentTypeTableHeader = ({
   ) => (
     <div
       className={cn(
-        "flex items-center gap-1 cursor-pointer select-none hover:text-blue-100 transition-colors",
+        "flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors text-muted-foreground",
         className
       )}
       onClick={() => onSort(field)}
@@ -37,7 +37,7 @@ export const DocumentTypeTableHeader = ({
       {label}
       <ArrowUpDown
         className={cn("ml-1 h-3.5 w-3.5", {
-          "text-blue-400": sortField === field,
+          "text-primary": sortField === field,
           "opacity-50": sortField !== field,
         })}
       />
@@ -45,8 +45,8 @@ export const DocumentTypeTableHeader = ({
   );
 
   return (
-    <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
-      <TableRow className="border-blue-900/30 hover:bg-transparent">
+    <TableHeader className="bg-gradient-to-r from-primary/10 to-primary/5 backdrop-blur-sm">
+      <TableRow className="border-primary/20 hover:bg-transparent">
         <TableHead className="w-[50px]">
           <Checkbox
             checked={areAllEligibleSelected && hasEligibleTypes}
@@ -60,38 +60,40 @@ export const DocumentTypeTableHeader = ({
           {renderSortableHeader(
             "Type Code",
             "typeKey",
-            <Tag className="h-4 w-4 mr-1 text-blue-400" />
+            <Tag className="h-4 w-4 mr-1 text-primary/70" />
           )}
         </TableHead>
         <TableHead className="w-[200px]">
           {renderSortableHeader(
             "Type Name",
             "typeName",
-            <FileText className="h-4 w-4 mr-1 text-blue-400" />
+            <FileText className="h-4 w-4 mr-1 text-primary/70" />
           )}
         </TableHead>
         <TableHead className="w-[250px]">
           {renderSortableHeader(
             "Description",
             "typeAttr",
-            <Info className="h-4 w-4 mr-1 text-blue-400" />
+            <Info className="h-4 w-4 mr-1 text-primary/70" />
           )}
         </TableHead>
         <TableHead className="w-[140px]">
           {renderSortableHeader(
             "Tier Type",
             "tierType",
-            <Users className="h-4 w-4 mr-1 text-blue-400" />
+            <Users className="h-4 w-4 mr-1 text-primary/70" />
           )}
         </TableHead>
         <TableHead className="w-[120px] pl-6">
           {renderSortableHeader(
             "Documents",
             "documentCounter",
-            <Hash className="h-4 w-4 mr-1 text-blue-400" />
+            <Hash className="h-4 w-4 mr-1 text-primary/70" />
           )}
         </TableHead>
-        <TableHead className="text-right w-[140px]">Actions</TableHead>
+        <TableHead className="text-right w-[140px] text-muted-foreground">
+          Actions
+        </TableHead>
       </TableRow>
     </TableHeader>
   );

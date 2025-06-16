@@ -27,7 +27,7 @@ interface ResponsibilityCentreStepProps {
 
 const TroubleshootingTips = () => {
   const { t } = useTranslation();
-  
+
   return (
     <div className="mt-4 p-4 bg-gray-900/60 rounded-md border border-gray-700">
       <h4 className="text-blue-300 font-medium mb-2 flex items-center">
@@ -66,7 +66,9 @@ export const ResponsibilityCentreStep: React.FC<
     >
       <div className="text-center space-y-2">
         <Building2 className="h-12 w-12 text-blue-500 mx-auto" />
-        <h2 className="text-2xl font-bold text-white">{t("documents.responsibilityCentre")}</h2>
+        <h2 className="text-2xl font-bold text-white">
+          {t("documents.responsibilityCentre")}
+        </h2>
         <p className="text-gray-400">
           {userHasCentre
             ? t("documents.documentWillBeAssignedToYourCentre")
@@ -137,19 +139,43 @@ export const ResponsibilityCentreStep: React.FC<
                   <div className="space-y-4">
                     <Alert className="bg-amber-900/20 border-amber-800/30">
                       <AlertTriangle className="h-4 w-4 text-amber-400" />
-                      <AlertDescription className="text-amber-300 flex flex-col space-y-2">
+                      <AlertDescription className="text-amber-300 flex flex-col space-y-3">
                         <span>
-                          {t("documents.unableToLoadCentres")}
+                          {t("documents.noResponsibilityCentresAvailable")}
                         </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="self-start bg-amber-900/30 border-amber-700 text-amber-200 hover:bg-amber-800/50"
-                          onClick={onRetryFetch}
-                        >
-                          <RefreshCw className="h-3 w-3 mr-2" />
-                          {t("documents.retryLoading")}
-                        </Button>
+                        <div className="flex flex-col space-y-2">
+                          <span className="text-sm">
+                            {t("documents.toCreateDocuments")}:
+                          </span>
+                          <ol className="text-sm list-decimal list-inside space-y-1 ml-2">
+                            <li>{t("documents.askAdminToCreateCentres")}</li>
+                            <li>
+                              {t("documents.orGoToResponsibilityCentres")}
+                            </li>
+                          </ol>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="self-start bg-amber-900/30 border-amber-700 text-amber-200 hover:bg-amber-800/50"
+                            onClick={onRetryFetch}
+                          >
+                            <RefreshCw className="h-3 w-3 mr-2" />
+                            {t("documents.retryLoading")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="self-start bg-blue-900/30 border-blue-700 text-blue-200 hover:bg-blue-800/50"
+                            onClick={() =>
+                              window.open("/responsibility-centres", "_blank")
+                            }
+                          >
+                            <Building2 className="h-3 w-3 mr-2" />
+                            {t("documents.manageResponsibilityCentres")}
+                          </Button>
+                        </div>
                       </AlertDescription>
                     </Alert>
                     <TroubleshootingTips />
@@ -161,6 +187,8 @@ export const ResponsibilityCentreStep: React.FC<
                       onValueChange={onCentreChange}
                       placeholder={t("documents.selectResponsibilityCentre")}
                       required={true}
+                      externalCentres={responsibilityCentres}
+                      externalIsLoading={isLoading}
                     />
 
                     {selectedCentreId && (
