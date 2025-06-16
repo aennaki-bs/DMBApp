@@ -29,6 +29,10 @@ namespace DocManagementBackend.Models
         public string? GeneralAccountsCode { get; set; }
         public GeneralAccountsDto? GeneralAccounts { get; set; }
         
+        // Location reference (only for Item types)
+        public string? LocationCode { get; set; }
+        public LocationDto? Location { get; set; }
+        
         // Pricing fields
         public decimal Quantity { get; set; }
         public decimal PriceHT { get; set; }

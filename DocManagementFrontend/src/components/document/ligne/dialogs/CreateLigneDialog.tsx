@@ -21,11 +21,13 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import documentService from "@/services/documentService";
 import lineElementsService from "@/services/lineElementsService";
+import locationService from "@/services/locationService";
 import {
   LignesElementTypeSimple,
   ItemSimple,
   GeneralAccountsSimple,
 } from "@/models/lineElements";
+import { LocationSimpleDto } from "@/models/location";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +63,7 @@ interface FormValues {
   article: string;
   lignesElementTypeId?: number;
   selectedElementCode?: string;
+  locationCode?: string;
   quantity: number;
   priceHT: number;
   discountPercentage: number;
@@ -106,6 +109,8 @@ const CreateLigneDialog = ({
   const [generalAccounts, setGeneralAccounts] = useState<GeneralAccountsSimple[]>([]);
   const [availableElements, setAvailableElements] = useState<(ItemSimple | GeneralAccountsSimple)[]>([]);
   const [loadingElements, setLoadingElements] = useState(false);
+  const [locations, setLocations] = useState<LocationSimpleDto[]>([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -113,13 +118,15 @@ const CreateLigneDialog = ({
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [typesData, lignesData] = await Promise.all([
+        const [typesData, lignesData, locationsData] = await Promise.all([
           lineElementsService.elementTypes.getSimple(),
-          documentService.getLignesByDocumentId(document.id)
+          documentService.getLignesByDocumentId(document.id),
+          locationService.getSimple()
         ]);
         
         setElementTypes(typesData);
         setExistingLignes(lignesData);
+        setLocations(locationsData);
       } catch (error) {
         console.error("Failed to load form data:", error);
         toast.error("Failed to load form data");
@@ -373,6 +380,11 @@ const CreateLigneDialog = ({
         if (!formValues.selectedElementCode) {
           newErrors.selectedElementCode = "Element selection is required";
         }
+        // Location is required only for Item types
+        const selectedType = elementTypes.find(t => t.id === formValues.lignesElementTypeId);
+        if (selectedType?.typeElement === 'Item' && !formValues.locationCode) {
+          newErrors.locationCode = "Location is required for items";
+        }
         break;
       case 2:
         if (!formValues.code.trim()) {
@@ -421,6 +433,7 @@ const CreateLigneDialog = ({
         article: formValues.article,
         lignesElementTypeId: formValues.lignesElementTypeId!,
         selectedElementCode: formValues.selectedElementCode,
+        locationCode: formValues.locationCode,
         quantity: formValues.quantity,
         priceHT: formValues.priceHT,
         discountPercentage: formValues.discountPercentage,
@@ -442,9 +455,11 @@ const CreateLigneDialog = ({
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
+    return new Intl.NumberFormat("fr-MA", {
+      style: "currency",
+      currency: "MAD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(price);
   };
 
@@ -549,8 +564,9 @@ const CreateLigneDialog = ({
                       onValueChange={(value) => {
                         const lignesElementTypeId = value ? parseInt(value) : undefined;
                         handleFieldChange("lignesElementTypeId", lignesElementTypeId);
-                        // Reset element selection when type changes
+                        // Reset element selection and location when type changes
                         handleFieldChange("selectedElementCode", undefined);
+                        handleFieldChange("locationCode", undefined);
                       }}
                     >
                       <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
@@ -614,6 +630,36 @@ const CreateLigneDialog = ({
                       
                       {errors.selectedElementCode && (
                         <p className="text-red-400 text-sm mt-1">{errors.selectedElementCode}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Location Selection - Only for Item types */}
+                  {formValues.lignesElementTypeId && getSelectedElementType()?.typeElement === 'Item' && (
+                    <div className="space-y-3">
+                      <Label htmlFor="locationCode" className="text-blue-200 text-base font-medium">
+                        Location<span className="text-red-400">*</span>
+                      </Label>
+                      <Select
+                        value={formValues.locationCode || ""}
+                        onValueChange={(value) => handleFieldChange("locationCode", value || undefined)}
+                      >
+                        <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
+                          <SelectValue placeholder="Select location" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-blue-950 border-blue-400/20 max-h-60">
+                          {locations.map((location) => (
+                            <SelectItem key={location.locationCode} value={location.locationCode} className="text-white hover:bg-blue-800">
+                              <div className="flex flex-col">
+                                <div className="font-medium">{location.locationCode}</div>
+                                <div className="text-sm text-gray-400">{location.description}</div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.locationCode && (
+                        <p className="text-red-400 text-sm mt-1">{errors.locationCode}</p>
                       )}
                     </div>
                   )}
@@ -971,6 +1017,24 @@ const CreateLigneDialog = ({
                           )}
                         </div>
                       </div>
+                      {/* Location - Only for Item types */}
+                      {selectedElementType?.typeElement === 'Item' && (
+                        <div>
+                          <span className="text-blue-400">Location:</span>
+                          <div className="text-white">
+                            {formValues.locationCode ? (
+                              <div>
+                                <div className="font-medium">{formValues.locationCode}</div>
+                                <div className="text-gray-400 text-xs">
+                                  {locations.find(l => l.locationCode === formValues.locationCode)?.description || 'Location details not available'}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">No location selected</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="space-y-2">
@@ -1051,7 +1115,8 @@ const CreateLigneDialog = ({
                 <Button
                   onClick={handleNext}
                   disabled={
-                    (step === 1 && (!formValues.lignesElementTypeId || !formValues.selectedElementCode)) ||
+                    (step === 1 && (!formValues.lignesElementTypeId || !formValues.selectedElementCode || 
+                      (getSelectedElementType()?.typeElement === 'Item' && !formValues.locationCode))) ||
                     (step === 2 && (codeValidation.isValidating || codeValidation.isValid !== true))
                   }
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"

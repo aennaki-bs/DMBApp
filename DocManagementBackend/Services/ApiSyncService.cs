@@ -10,6 +10,7 @@ namespace DocManagementBackend.Services
         Task<SyncResult> SyncGeneralAccountsAsync();
         Task<SyncResult> SyncCustomersAsync();
         Task<SyncResult> SyncVendorsAsync();
+        Task<SyncResult> SyncLocationsAsync();
         Task<List<SyncResult>> SyncAllAsync();
         Task<SyncResult> SyncEndpointAsync(ApiEndpointType endpointType);
         Task InitializeConfigurationAsync();
@@ -38,10 +39,11 @@ namespace DocManagementBackend.Services
 
             var endpoints = new List<ApiEndpointConfig>
             {
-                new() { Name = "Items", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/items", Type = ApiEndpointType.Items },
-                new() { Name = "GeneralAccounts", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/accounts", Type = ApiEndpointType.GeneralAccounts },
-                new() { Name = "Customers", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/customers", Type = ApiEndpointType.Customers },
-                new() { Name = "Vendors", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/vendors", Type = ApiEndpointType.Vendors }
+                new() { Name = "Items", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/items", Type = ApiEndpointType.Items, DefaultPollingIntervalMinutes = 60 },
+                new() { Name = "GeneralAccounts", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/accounts", Type = ApiEndpointType.GeneralAccounts, DefaultPollingIntervalMinutes = 60 },
+                new() { Name = "Customers", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/customers", Type = ApiEndpointType.Customers, DefaultPollingIntervalMinutes = 30 },
+                new() { Name = "Vendors", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/vendors", Type = ApiEndpointType.Vendors, DefaultPollingIntervalMinutes = 30 },
+                new() { Name = "Locations", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/locations", Type = ApiEndpointType.Locations, DefaultPollingIntervalMinutes = 60 }
             };
 
             foreach (var endpoint in endpoints)
@@ -64,7 +66,7 @@ namespace DocManagementBackend.Services
                     };
 
                     _context.ApiSyncConfigurations.Add(config);
-                    _logger.LogInformation("Added configuration for endpoint: {EndpointName}", endpoint.Name);
+                    _logger.LogInformation("Added configuration for endpoint: {EndpointName} with {Interval} minute interval", endpoint.Name, endpoint.DefaultPollingIntervalMinutes);
                 }
             }
 
@@ -90,6 +92,11 @@ namespace DocManagementBackend.Services
         public async Task<SyncResult> SyncVendorsAsync()
         {
             return await SyncEndpointAsync(ApiEndpointType.Vendors);
+        }
+
+        public async Task<SyncResult> SyncLocationsAsync()
+        {
+            return await SyncEndpointAsync(ApiEndpointType.Locations);
         }
 
         public async Task<List<SyncResult>> SyncAllAsync()
@@ -131,6 +138,9 @@ namespace DocManagementBackend.Services
                         break;
                     case ApiEndpointType.Vendors:
                         await SyncVendorsInternalAsync(result);
+                        break;
+                    case ApiEndpointType.Locations:
+                        await SyncLocationsInternalAsync(result);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(endpointType), endpointType, null);
@@ -424,6 +434,66 @@ namespace DocManagementBackend.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving vendors to database: {Error}", ex.Message);
+                throw;
+            }
+        }
+
+        private async Task SyncLocationsInternalAsync(SyncResult result)
+        {
+            var apiResponse = await _bcApiClient.GetLocationsAsync();
+            if (apiResponse?.Value == null)
+            {
+                throw new InvalidOperationException("Failed to fetch locations from BC API");
+            }
+
+            result.RecordsProcessed = apiResponse.Value.Count;
+
+            foreach (var bcLocation in apiResponse.Value)
+            {
+                try
+                {
+                    // Skip records with missing required fields
+                    if (string.IsNullOrWhiteSpace(bcLocation.No))
+                    {
+                        _logger.LogWarning("Skipping location with missing No field");
+                        result.RecordsSkipped++;
+                        continue;
+                    }
+
+                    var existingLocation = await _context.Locations.FindAsync(bcLocation.No);
+                    if (existingLocation == null)
+                    {
+                        var newLocation = new Location
+                        {
+                            LocationCode = bcLocation.No.Trim(),
+                            Description = (bcLocation.Description ?? "Unknown Location").Trim(),
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+
+                        _context.Locations.Add(newLocation);
+                        result.RecordsInserted++;
+                    }
+                    else
+                    {
+                        result.RecordsSkipped++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing location {LocationNo}: {Error}", 
+                        bcLocation.No ?? "Unknown", ex.Message);
+                    result.RecordsSkipped++;
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving locations to database: {Error}", ex.Message);
                 throw;
             }
         }

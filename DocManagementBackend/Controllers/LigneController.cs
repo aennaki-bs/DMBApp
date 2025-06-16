@@ -38,6 +38,7 @@ namespace DocManagementBackend.Controllers
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
+                .Include(l => l.Location)
                 .ToListAsync();
 
             // Load selected elements dynamically for each ligne
@@ -62,6 +63,7 @@ namespace DocManagementBackend.Controllers
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
+                .Include(l => l.Location)
                 .FirstOrDefaultAsync(l => l.Id == id);
                 
             if (ligne == null)
@@ -87,6 +89,7 @@ namespace DocManagementBackend.Controllers
                 .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
                 .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
+                .Include(l => l.Location)
                 .ToListAsync();
 
             // Load selected elements dynamically for each ligne
@@ -141,6 +144,22 @@ namespace DocManagementBackend.Controllers
                 // Validate that the element type is properly configured
                 if (!elementType.IsValid())
                     return BadRequest("The specified element type is not properly configured.");
+                
+                // Validate location is only provided for Item types
+                if (!string.IsNullOrEmpty(request.LocationCode))
+                {
+                    if (elementType.TypeElement != ElementType.Item)
+                        return BadRequest("Location can only be specified for Item element types.");
+                    
+                    // Validate that the location exists
+                    var locationExists = await _context.Locations.AnyAsync(l => l.LocationCode == request.LocationCode);
+                    if (!locationExists)
+                        return BadRequest("Invalid LocationCode. Location not found.");
+                }
+            }
+            else if (!string.IsNullOrEmpty(request.LocationCode))
+            {
+                return BadRequest("Location can only be specified when LignesElementTypeId is provided and is an Item type.");
             }
 
             // Create the ligne entity
@@ -154,6 +173,7 @@ namespace DocManagementBackend.Controllers
                 Article = request.Article.Trim(),
                 LignesElementTypeId = request.LignesElementTypeId,
                 ElementId = request.SelectedElementCode,
+                LocationCode = request.LocationCode, // Set location for Item types
                 Quantity = request.Quantity,
                 PriceHT = request.PriceHT,
                 DiscountPercentage = request.DiscountPercentage,
@@ -197,6 +217,7 @@ namespace DocManagementBackend.Controllers
                     .Include(l => l.Document!).ThenInclude(d => d.CreatedBy).ThenInclude(u => u.Role)
                     .Include(l => l.LignesElementType).ThenInclude(let => let!.Item).ThenInclude(i => i!.UniteCodeNavigation)
                     .Include(l => l.LignesElementType).ThenInclude(let => let!.GeneralAccount)
+                    .Include(l => l.Location)
                     .FirstOrDefaultAsync(l => l.Id == ligne.Id);
 
                 if (createdLigne != null)
@@ -266,6 +287,40 @@ namespace DocManagementBackend.Controllers
                 {
                     newGeneralAccount = elementType.GeneralAccount;
                 }
+                
+                // Validate location is only provided for Item types
+                if (request.LocationCode != null) // Check for null to allow clearing location
+                {
+                    if (!string.IsNullOrEmpty(request.LocationCode))
+                    {
+                        if (elementType.TypeElement != ElementType.Item)
+                            return BadRequest("Location can only be specified for Item element types.");
+                        
+                        // Validate that the location exists
+                        var locationExists = await _context.Locations.AnyAsync(l => l.LocationCode == request.LocationCode);
+                        if (!locationExists)
+                            return BadRequest("Invalid LocationCode. Location not found.");
+                    }
+                    
+                    ligne.LocationCode = request.LocationCode; // Set or clear location
+                }
+            }
+            else if (request.LocationCode != null)
+            {
+                // If no element type is being updated but location is provided
+                if (!string.IsNullOrEmpty(request.LocationCode))
+                {
+                    // Check current element type
+                    if (ligne.LignesElementType?.TypeElement != ElementType.Item)
+                        return BadRequest("Location can only be specified for Item element types.");
+                    
+                    // Validate that the location exists
+                    var locationExists = await _context.Locations.AnyAsync(l => l.LocationCode == request.LocationCode);
+                    if (!locationExists)
+                        return BadRequest("Invalid LocationCode. Location not found.");
+                }
+                
+                ligne.LocationCode = request.LocationCode; // Set or clear location
             }
 
             // Update selected element code

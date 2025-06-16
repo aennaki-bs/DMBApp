@@ -3,16 +3,18 @@ import authService from './authService';
 class TokenManager {
   private isRefreshing = false;
   private refreshSubscribers: Array<(token: string) => void> = [];
+  private lastRefreshAttempt = 0;
+  private refreshCooldown = 5000; // 5 seconds cooldown between refresh attempts
 
-  // Check if token is expired or about to expire (within 5 minutes)
+  // Check if token is expired or about to expire (within 2 minutes to reduce frequent refreshes)
   isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const exp = payload.exp * 1000; // Convert to milliseconds
       const now = Date.now();
-      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+      const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
       
-      return (exp - now) < fiveMinutes;
+      return (exp - now) < twoMinutes;
     } catch (error) {
       console.error('Error parsing token:', error);
       return true; // Consider invalid tokens as expired
@@ -30,8 +32,16 @@ class TokenManager {
     this.refreshSubscribers = [];
   }
 
-  // Refresh token with proper handling for race conditions
+  // Refresh token with proper handling for race conditions and cooldown
   async refreshToken(): Promise<string | null> {
+    const now = Date.now();
+    
+    // Check cooldown period to prevent too frequent refresh attempts
+    if (now - this.lastRefreshAttempt < this.refreshCooldown) {
+      console.log('Token refresh in cooldown period, skipping');
+      return localStorage.getItem('token');
+    }
+
     if (this.isRefreshing) {
       // If refresh is already in progress, wait for it
       return new Promise((resolve) => {
@@ -42,6 +52,7 @@ class TokenManager {
     }
 
     this.isRefreshing = true;
+    this.lastRefreshAttempt = now;
 
     try {
       const newToken = await authService.refreshToken();

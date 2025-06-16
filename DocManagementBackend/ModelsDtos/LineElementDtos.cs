@@ -125,6 +125,9 @@ namespace DocManagementBackend.Models
         // Selected element code (Item.Code or GeneralAccounts.Code)
         public string? SelectedElementCode { get; set; }
         
+        // Location reference (only for Item types)
+        public string? LocationCode { get; set; }
+        
         // Pricing fields
         public decimal Quantity { get; set; } = 1;
         public decimal PriceHT { get; set; } = 0;
@@ -144,6 +147,9 @@ namespace DocManagementBackend.Models
         
         // Selected element code (Item.Code or GeneralAccounts.Code)
         public string? SelectedElementCode { get; set; }
+        
+        // Location reference (only for Item types)
+        public string? LocationCode { get; set; }
         
         // Pricing fields
         public decimal? Quantity { get; set; }

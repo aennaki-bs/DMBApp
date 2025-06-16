@@ -12,6 +12,7 @@ namespace DocManagementBackend.Services
         Task<BcApiResponse<BcGeneralAccountDto>?> GetGeneralAccountsAsync();
         Task<BcApiResponse<BcCustomerDto>?> GetCustomersAsync();
         Task<BcApiResponse<BcVendorDto>?> GetVendorsAsync();
+        Task<BcApiResponse<BcLocationDto>?> GetLocationsAsync();
         Task<T?> GetDataAsync<T>(string endpoint) where T : class;
     }
 
@@ -91,6 +92,12 @@ namespace DocManagementBackend.Services
         {
             const string endpoint = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/vendors";
             return await GetDataAsync<BcApiResponse<BcVendorDto>>(endpoint);
+        }
+
+        public async Task<BcApiResponse<BcLocationDto>?> GetLocationsAsync()
+        {
+            const string endpoint = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/locations";
+            return await GetDataAsync<BcApiResponse<BcLocationDto>>(endpoint);
         }
 
         public async Task<T?> GetDataAsync<T>(string endpoint) where T : class

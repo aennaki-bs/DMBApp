@@ -23,6 +23,7 @@ import {
   Hash,
   Calculator,
   Truck,
+  MapPin,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -52,7 +53,8 @@ export function SidebarNav() {
       isActive("/unit-codes-management") ||
       isActive("/general-accounts-management") ||
       isActive("/customer-management") ||
-      isActive("/vendor-management")
+      isActive("/vendor-management") ||
+      isActive("/locations-management")
     );
   };
 
@@ -250,6 +252,19 @@ export function SidebarNav() {
                       >
                         <Calculator className="h-4 w-4" />
                         <span>General Accounts</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/locations-management"
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive("/locations-management")
+                            ? "bg-blue-700/40 text-blue-200"
+                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                        }`}
+                      >
+                        <MapPin className="h-4 w-4" />
+                        <span>Locations</span>
                       </Link>
                     </li>
                     <li>

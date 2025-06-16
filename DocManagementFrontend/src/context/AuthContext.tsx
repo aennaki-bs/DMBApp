@@ -57,61 +57,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const storedToken = localStorage.getItem("token");
         const storedUser = localStorage.getItem("user");
+        const storedRefreshToken = localStorage.getItem("refreshToken");
+
+        console.log("Auth initialization - stored data:", {
+          hasToken: !!storedToken,
+          hasUser: !!storedUser,
+          hasRefreshToken: !!storedRefreshToken
+        });
 
         if (storedToken && storedUser) {
           try {
             const parsedUser = JSON.parse(storedUser);
 
-            // Add timeout to prevent hanging
-            const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(
-                () => reject(new Error("Auth initialization timeout")),
-                5000
-              )
-            );
+            // First, check if the token is still valid without making network calls
+            if (!tokenManager.isTokenExpired(storedToken)) {
+              // Token is still valid, use it directly
+              setToken(storedToken);
+              setUser(parsedUser);
+              console.log("Using valid stored token and user data");
+              return;
+            }
 
-            // Use tokenManager to ensure we have a valid token with timeout
-            const validToken = await Promise.race([
-              tokenManager.ensureValidToken(),
-              timeoutPromise,
-            ]);
+            // Token is expired, try to refresh it
+            console.log("Token expired, attempting refresh...");
+            const validToken = await tokenManager.ensureValidToken();
 
             if (validToken) {
-              setToken(validToken as string);
+              setToken(validToken);
               setUser(parsedUser);
-
-              console.log("Stored user data:", parsedUser);
-
-              // Verify token is still valid by fetching user info with timeout
-              try {
-                const userInfo = await Promise.race([
-                  authService.getUserInfo(),
-                  timeoutPromise,
-                ]);
-                console.log("User info verified on init:", userInfo);
-                setUser(userInfo as UserInfo);
-                localStorage.setItem("user", JSON.stringify(userInfo));
-              } catch (error) {
-                console.error(
-                  "Failed to get user info, but token is valid. Using stored user data."
-                );
-                // If getUserInfo fails but token is valid, use stored user data
-              }
+              console.log("Token refreshed successfully, using stored user data");
+              
+              // Optionally verify user info in background (don't block initialization)
+              authService.getUserInfo()
+                .then(userInfo => {
+                  console.log("User info verified in background:", userInfo);
+                  setUser(userInfo);
+                  localStorage.setItem("user", JSON.stringify(userInfo));
+                })
+                .catch(error => {
+                  console.warn("Background user info verification failed:", error);
+                  // Keep using stored user data
+                });
             } else {
-              // Token is invalid/expired and refresh failed
-              console.log(
-                "Token invalid and refresh failed, clearing auth state"
-              );
+              // Token refresh failed
+              console.log("Token refresh failed, clearing auth state");
               authService.clearTokens();
               setUser(null);
               setToken(null);
             }
           } catch (error) {
-            console.error("Session expired or invalid", error);
+            console.error("Error parsing stored user data or refreshing token:", error);
             authService.clearTokens();
             setUser(null);
             setToken(null);
           }
+        } else {
+          console.log("No stored authentication data found");
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -122,6 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } finally {
         // Always set loading to false, no matter what happens
         setIsLoading(false);
+        console.log("Auth initialization completed");
       }
     };
 

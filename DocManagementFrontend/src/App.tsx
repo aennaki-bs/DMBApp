@@ -50,6 +50,7 @@ import UnitCodesPage from "./pages/UnitCodesPage";
 import GeneralAccountsPage from "./pages/GeneralAccountsPage";
 import CustomerManagementPage from "./pages/CustomerManagement";
 import VendorManagementPage from "./pages/VendorManagement";
+import LocationsManagementPage from "./pages/LocationsManagement";
 import ThemeDemo from "./pages/ThemeDemo";
 
 const queryClient = new QueryClient({
@@ -193,6 +194,17 @@ const App = () => (
                         requiredRole={["Admin", "FullUser"]}
                       >
                         <GeneralAccountsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/locations-management"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <LocationsManagementPage />
                       </ProtectedRoute>
                     }
                   />

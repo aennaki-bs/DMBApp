@@ -122,29 +122,38 @@ const setupResponseInterceptor = () => {
         const shouldRedirect = !shouldSkipAuthRedirect(originalRequest?.url || '');
         
         if (shouldRedirect && !hasRedirectedToLogin) {
+          console.log('401 error detected, attempting token refresh for:', originalRequest.url);
+          
           // Try to refresh the token first
           const newToken = await tokenManager.refreshToken();
           
           if (newToken) {
+            console.log('Token refreshed successfully, retrying request');
             // Update the original request with new token and retry
             originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
             return api(originalRequest);
           } else {
             // Refresh failed, redirect to login
+            console.log('Token refresh failed, redirecting to login');
             hasRedirectedToLogin = true;
+            
+            // Clear all auth data
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('user');
             
-            // Reset the flag after a short delay to handle subsequent requests
+            // Reset the flag after a delay to handle subsequent requests
             setTimeout(() => {
               hasRedirectedToLogin = false;
-            }, 1000);
+            }, 2000);
             
+            // Only redirect if not already on login page
             if (!window.location.pathname.includes('/login')) {
               window.location.href = '/login';
             }
           }
+        } else {
+          console.log('Skipping token refresh for endpoint:', originalRequest.url);
         }
       }
       

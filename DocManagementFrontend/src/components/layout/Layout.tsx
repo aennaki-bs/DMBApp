@@ -162,7 +162,7 @@ export function Layout() {
               style={{ minHeight: "calc(100vh - 4rem)" }}
             >
               <div
-                className={`h-full rounded-lg overflow-hidden ${
+                className={`h-full rounded-lg overflow-auto ${
                   isStandardTheme
                     ? "glass-card"
                     : "border border-border bg-card/85"

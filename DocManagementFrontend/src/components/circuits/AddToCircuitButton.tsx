@@ -5,7 +5,7 @@ import AssignCircuitDialog from "./AssignCircuitDialog";
 
 interface AddToCircuitButtonProps {
   documentId: number;
-  documentTitle: string;
+  documentKey: string;
   documentTypeId?: number;
   onSuccess?: () => void;
   variant?:
@@ -21,7 +21,7 @@ interface AddToCircuitButtonProps {
 
 export default function AddToCircuitButton({
   documentId,
-  documentTitle,
+  documentKey,
   documentTypeId,
   onSuccess,
   variant = "default",
@@ -50,7 +50,7 @@ export default function AddToCircuitButton({
 
       <AssignCircuitDialog
         documentId={documentId}
-        documentTitle={documentTitle}
+        documentKey={documentKey}
         documentTypeId={documentTypeId}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}

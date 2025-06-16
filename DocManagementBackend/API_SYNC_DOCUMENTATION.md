@@ -100,7 +100,7 @@ BC_WORKSTATION=localhost
 {
   "ApiSync": {
     "CheckIntervalMinutes": 1,
-    "DefaultPollingIntervalMinutes": 10
+    "DefaultPollingIntervalMinutes": 60
   },
   "BcApi": {
     "BaseUrl": "http://localhost:25048/BC250/api/bslink/docverse/v1.0",
@@ -130,7 +130,9 @@ The `ApiSyncConfigurations` table stores individual endpoint settings:
 GET /api/apisync/configurations
 GET /api/apisync/configurations/{id}
 PUT /api/apisync/configurations/{id}
+PUT /api/apisync/configurations/{endpointName}/interval
 POST /api/apisync/initialize
+POST /api/apisync/update-all-intervals
 ```
 
 ### Manual Sync Operations
@@ -206,9 +208,12 @@ Response includes:
 ## Performance Considerations
 
 ### Polling Frequency
-- **Default**: 10 minutes per endpoint
+- **Items**: 10 minutes (high frequency for inventory changes)
+- **GeneralAccounts**: 60 minutes (low frequency for chart of accounts)
+- **Customers**: 30 minutes (medium frequency for customer updates)
+- **Vendors**: 20 minutes (medium-high frequency for vendor updates)
 - **Minimum**: 1 minute (to prevent excessive load)
-- **Recommendation**: Adjust based on data change frequency and system load
+- **Customizable**: Each endpoint can be configured independently
 
 ### Duplicate Prevention
 - Uses unique identifiers (Code/VendorCode) to prevent duplicates

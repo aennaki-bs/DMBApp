@@ -17,6 +17,7 @@ import {
   Database,
   Tag,
   ExternalLink,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -26,9 +27,11 @@ import LineElementTypeManagement from "@/components/line-elements/LineElementTyp
 import ItemsManagement from "@/components/line-elements/ItemsManagement";
 import UniteCodesManagement from "@/components/line-elements/UniteCodesManagement";
 import GeneralAccountsManagement from "@/components/line-elements/GeneralAccountsManagement";
+import LocationsManagement from "@/components/line-elements/LocationsManagement";
 
 // Import services
 import lineElementsService from "@/services/lineElementsService";
+import locationService from "@/services/locationService";
 import { LignesElementType } from "@/models/lineElements";
 
 const LineElementsManagement = () => {
@@ -48,6 +51,7 @@ const LineElementsManagement = () => {
     items: 0,
     uniteCodes: 0,
     generalAccounts: 0,
+    locations: 0,
   });
 
   // Update active tab when URL changes
@@ -68,11 +72,12 @@ const LineElementsManagement = () => {
     const fetchElementTypes = async () => {
       try {
         setIsLoading(true);
-        const [types, items, uniteCodes, generalAccounts] = await Promise.all([
+        const [types, items, uniteCodes, generalAccounts, locations] = await Promise.all([
           lineElementsService.elementTypes.getAll(),
           lineElementsService.items.getAll(),
           lineElementsService.uniteCodes.getAll(),
           lineElementsService.generalAccounts.getAll(),
+          locationService.getAll(),
         ]);
         setElementTypes(types);
         setCounts({
@@ -80,6 +85,7 @@ const LineElementsManagement = () => {
           items: items.length,
           uniteCodes: uniteCodes.length,
           generalAccounts: generalAccounts.length,
+          locations: locations.length,
         });
       } catch (error) {
         console.error("Failed to fetch element types:", error);
@@ -162,7 +168,7 @@ const LineElementsManagement = () => {
             </div>
 
             {/* Tab Navigation */}
-            <TabsList className="grid w-full grid-cols-4 bg-blue-100 dark:bg-[#111633] p-1 rounded-lg border border-blue-200 dark:border-blue-900/30 h-12">
+            <TabsList className="grid w-full grid-cols-5 bg-[#111633] p-1 rounded-lg border border-blue-900/30 h-12">
               <TabsTrigger
                 value="elementtypes"
                 className="flex items-center justify-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-800 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/30 h-10 rounded-md"
@@ -213,6 +219,19 @@ const LineElementsManagement = () => {
                   className="ml-1 text-xs bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-500/30"
                 >
                   {counts.generalAccounts}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger
+                value="locations"
+                className="flex items-center justify-center space-x-2 data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 h-10 rounded-md"
+              >
+                <MapPin className="h-4 w-4" />
+                <span className="font-medium">Locations</span>
+                <Badge
+                  variant="secondary"
+                  className="ml-1 text-xs bg-orange-900/30 text-orange-300 border-orange-500/30"
+                >
+                  {counts.locations}
                 </Badge>
               </TabsTrigger>
             </TabsList>
@@ -285,6 +304,10 @@ const LineElementsManagement = () => {
                     elementType={getElementTypeInfo("GeneralAccounts")}
                   />
                 </div>
+              </TabsContent>
+
+              <TabsContent value="locations" className="mt-0">
+                <LocationsManagement searchTerm={searchTerm} />
               </TabsContent>
             </div>
           </CardContent>

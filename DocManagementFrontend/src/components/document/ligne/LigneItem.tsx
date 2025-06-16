@@ -302,6 +302,14 @@ const LigneItem = ({
                                   </div>
                                 </div>
                               )}
+                              {ligne.location && (
+                                <div>
+                                  <div className="text-xs text-emerald-400 mb-1">Location</div>
+                                  <div className="text-sm font-medium text-emerald-300">
+                                    {ligne.location.locationCode} - {ligne.location.description}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
 

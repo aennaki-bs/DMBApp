@@ -159,7 +159,7 @@ export const translations = {
       selectCircuit: 'Select Circuit',
       loadingCircuits: 'Loading circuits...',
       noActiveCircuitsAvailable: 'No active circuits available',
-      noActiveCircuitsDescription: 'There are no active circuits in the system. Only active circuits can be assigned to documents.'
+      noActiveCircuitsDescription: 'There are no active circuits matching the document type choosing. Only active circuits can be assigned to documents.'
     },
 
     // Documents
@@ -235,6 +235,7 @@ export const translations = {
       documentsDeletedSimulated: '{{count}} documents deleted successfully (simulated)',
       failedToDelete: 'Failed to delete document(s)',
       circuitAssignedSuccess: 'Document assigned to circuit successfully',
+      documentFlow: 'Document Flow',
       // Create Document Wizard
       selectResponsibilityCentreForDocument: 'Select a responsibility centre for this document',
       documentWillBeAssignedToYourCentre: 'Your document will be assigned to your responsibility centre',
@@ -956,6 +957,7 @@ export const translations = {
       documentsDeletedSimulated: '{{count}} documents supprimés avec succès (simulé)',
       failedToDelete: 'Échec de la suppression du/des document(s)',
       circuitAssignedSuccess: 'Document assigné au circuit avec succès',
+      documentFlow: 'Flux de Document',
       // Create Document Wizard
       selectResponsibilityCentreForDocument: 'Sélectionnez un centre de responsabilité pour ce document',
       documentWillBeAssignedToYourCentre: 'Votre document sera assigné à votre centre de responsabilité',
@@ -1672,6 +1674,7 @@ export const translations = {
       documentsDeletedSimulated: '{{count}} documentos eliminados exitosamente (simulado)',
       failedToDelete: 'Error al eliminar documento(s)',
       circuitAssignedSuccess: 'Documento asignado al circuito exitosamente',
+      documentFlow: 'Flujo de Documento',
       // Create Document Wizard
       selectResponsibilityCentreForDocument: 'Selecciona un centro de responsabilidad para este documento',
       documentWillBeAssignedToYourCentre: 'Su documento será asignado a su centro de responsabilidad',

@@ -84,6 +84,16 @@ namespace DocManagementBackend.Mappings
                 LignesCount = l.LignesElementType.GeneralAccount.LignesElementTypes.Count()
             }),
             
+            // Location reference (only for Item types)
+            LocationCode = l.LocationCode,
+            Location = l.Location == null ? null : new LocationDto
+            {
+                LocationCode = l.Location.LocationCode,
+                Description = l.Location.Description,
+                CreatedAt = l.Location.CreatedAt,
+                UpdatedAt = l.Location.UpdatedAt
+            },
+            
             // Pricing fields
             Quantity = l.Quantity,
             PriceHT = l.PriceHT,
@@ -202,6 +212,16 @@ namespace DocManagementBackend.Mappings
                     CreatedAt = s.Ligne.LignesElementType.GeneralAccount.CreatedAt,
                     UpdatedAt = s.Ligne.LignesElementType.GeneralAccount.UpdatedAt,
                     LignesCount = s.Ligne.LignesElementType.GeneralAccount.LignesElementTypes.Count()
+                },
+                
+                // Location reference (only for Item types)
+                LocationCode = s.Ligne.LocationCode,
+                Location = s.Ligne.Location == null ? null : new LocationDto
+                {
+                    LocationCode = s.Ligne.Location.LocationCode,
+                    Description = s.Ligne.Location.Description,
+                    CreatedAt = s.Ligne.Location.CreatedAt,
+                    UpdatedAt = s.Ligne.Location.UpdatedAt
                 },
                 
                 // Pricing fields

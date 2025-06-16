@@ -32,6 +32,12 @@ namespace DocManagementBackend.Models {
         [MaxLength(50)]
         public string? ElementId { get; set; } // Dynamic foreign key reference based on type
         
+        // Location support - only applicable when LignesElementType is Item
+        [MaxLength(50)]
+        public string? LocationCode { get; set; } // Foreign key to Location
+        [ForeignKey("LocationCode")]
+        public Location? Location { get; set; }
+        
         [Column(TypeName = "decimal(18,4)")]
         public decimal Quantity { get; set; } = 1;
         [Column(TypeName = "decimal(18,4)")]
@@ -145,6 +151,15 @@ namespace DocManagementBackend.Models {
                 // Additional validation can be implemented here
                 // For now, we rely on the LoadElementAsync method to validate the reference
                 return true;
+            }
+            
+            // Validate location is only set for Item types
+            if (!string.IsNullOrEmpty(LocationCode) && LignesElementType != null)
+            {
+                if (LignesElementType.TypeElement != ElementType.Item)
+                {
+                    return false; // Location should only be set for Item types
+                }
             }
             
             return true;

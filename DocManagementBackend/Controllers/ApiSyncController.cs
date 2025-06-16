@@ -198,6 +198,25 @@ namespace DocManagementBackend.Controllers
         }
 
         /// <summary>
+        /// Manually trigger sync for Locations endpoint
+        /// </summary>
+        [HttpPost("sync/locations")]
+        public async Task<ActionResult<SyncResult>> SyncLocations()
+        {
+            try
+            {
+                _logger.LogInformation("Manual sync triggered for Locations endpoint");
+                var result = await _apiSyncService.SyncLocationsAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during manual sync for Locations endpoint");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
         /// Manually trigger sync for a specific endpoint by type
         /// </summary>
         [HttpPost("sync/{endpointType}")]
@@ -265,6 +284,110 @@ namespace DocManagementBackend.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        /// <summary>
+        /// Update all existing configurations to use their specific recommended polling intervals
+        /// Items: 60 min, GeneralAccounts: 60 min, Customers: 30 min, Vendors: 30 min
+        /// </summary>
+        [HttpPost("update-all-intervals")]
+        public async Task<IActionResult> UpdateAllIntervals()
+        {
+            try
+            {
+                var configurations = await _context.ApiSyncConfigurations.ToListAsync();
+                var updatedCount = 0;
+                var updates = new List<string>();
+
+                // Define the specific intervals for each endpoint
+                var endpointIntervals = new Dictionary<string, int>
+                {
+                    { "Items", 60 },
+                    { "GeneralAccounts", 60 },
+                    { "Customers", 30 },
+                    { "Vendors", 30 },
+                    { "Locations", 60 }
+                };
+
+                foreach (var config in configurations)
+                {
+                    if (endpointIntervals.TryGetValue(config.EndpointName, out var targetInterval))
+                    {
+                        if (config.PollingIntervalMinutes != targetInterval)
+                        {
+                            var oldInterval = config.PollingIntervalMinutes;
+                            config.PollingIntervalMinutes = targetInterval;
+                            config.NextSyncTime = DateTime.UtcNow.AddMinutes(targetInterval);
+                            config.UpdatedAt = DateTime.UtcNow;
+                            updatedCount++;
+                            updates.Add($"{config.EndpointName}: {oldInterval} → {targetInterval} minutes");
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Updated {Count} configurations with specific polling intervals", updatedCount);
+                return Ok(new { 
+                    message = $"Updated {updatedCount} configurations with specific polling intervals",
+                    totalConfigurations = configurations.Count,
+                    updatedConfigurations = updatedCount,
+                    updates = updates,
+                    intervals = endpointIntervals
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating polling intervals");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Update polling interval for a specific endpoint by name
+        /// </summary>
+        [HttpPut("configurations/{endpointName}/interval")]
+        public async Task<IActionResult> UpdateEndpointInterval(string endpointName, [FromBody] UpdateIntervalRequest request)
+        {
+            try
+            {
+                if (request.PollingIntervalMinutes < 1)
+                {
+                    return BadRequest("Polling interval must be at least 1 minute");
+                }
+
+                var configuration = await _context.ApiSyncConfigurations
+                    .FirstOrDefaultAsync(c => c.EndpointName == endpointName);
+
+                if (configuration == null)
+                {
+                    return NotFound($"Configuration for endpoint '{endpointName}' not found");
+                }
+
+                var oldInterval = configuration.PollingIntervalMinutes;
+                configuration.PollingIntervalMinutes = request.PollingIntervalMinutes;
+                configuration.IsEnabled = request.IsEnabled ?? configuration.IsEnabled;
+                configuration.NextSyncTime = DateTime.UtcNow.AddMinutes(request.PollingIntervalMinutes);
+                configuration.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Updated {EndpointName} polling interval from {OldInterval} to {NewInterval} minutes", 
+                    endpointName, oldInterval, request.PollingIntervalMinutes);
+
+                return Ok(new { 
+                    message = $"Updated {endpointName} polling interval from {oldInterval} to {request.PollingIntervalMinutes} minutes",
+                    endpointName = endpointName,
+                    oldInterval = oldInterval,
+                    newInterval = request.PollingIntervalMinutes,
+                    isEnabled = configuration.IsEnabled,
+                    nextSyncTime = configuration.NextSyncTime
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating polling interval for endpoint: {EndpointName}", endpointName);
+                return StatusCode(500, "Internal server error");
+            }
+        }
     }
 
     // Request models
@@ -272,6 +395,12 @@ namespace DocManagementBackend.Controllers
     {
         public int PollingIntervalMinutes { get; set; }
         public bool IsEnabled { get; set; }
+    }
+
+    public class UpdateIntervalRequest
+    {
+        public int PollingIntervalMinutes { get; set; }
+        public bool? IsEnabled { get; set; }
     }
 
     // Response models
