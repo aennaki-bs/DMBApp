@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import locationService from "@/services/locationService";
@@ -42,6 +44,7 @@ const LocationsManagement = ({ searchTerm = "" }: LocationsManagementProps) => {
   const [selectedLocation, setSelectedLocation] = useState<LocationDto | null>(null);
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   // Form state
   const [formData, setFormData] = useState<CreateLocationRequest>({
@@ -169,6 +172,28 @@ const LocationsManagement = ({ searchTerm = "" }: LocationsManagementProps) => {
     setIsDeleteDialogOpen(true);
   };
 
+  // Handle checkbox selection
+  const handleSelectLocation = (locationCode: string) => {
+    setSelectedLocations(prev => 
+      prev.includes(locationCode)
+        ? prev.filter(code => code !== locationCode)
+        : [...prev, locationCode]
+    );
+  };
+
+  // Handle select all checkbox
+  const handleSelectAll = () => {
+    if (selectedLocations.length === filteredLocations.length) {
+      setSelectedLocations([]);
+    } else {
+      setSelectedLocations(filteredLocations.map(location => location.locationCode));
+    }
+  };
+
+  // Check if all locations are selected
+  const isAllSelected = filteredLocations.length > 0 && selectedLocations.length === filteredLocations.length;
+  const isIndeterminate = selectedLocations.length > 0 && selectedLocations.length < filteredLocations.length;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -222,73 +247,128 @@ const LocationsManagement = ({ searchTerm = "" }: LocationsManagementProps) => {
 
 
 
+      {/* Selection Info */}
+      {selectedLocations.length > 0 && (
+        <div className="flex items-center justify-between p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Badge variant="secondary" className="bg-blue-600 text-white">
+              {selectedLocations.length} selected
+            </Badge>
+            <span className="text-blue-300 text-sm">
+              {selectedLocations.length === 1 ? "location" : "locations"} selected
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedLocations([])}
+              className="border-blue-400/30 text-blue-300 hover:bg-blue-900/40"
+            >
+              Clear Selection
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       <Card className="bg-blue-950/20 border-blue-500/20">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-blue-500/20 hover:bg-blue-950/30">
-                <TableHead className="text-blue-300">Location Code</TableHead>
-                <TableHead className="text-blue-300">Description</TableHead>
-                <TableHead className="text-blue-300 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLocations.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={3}
-                    className="text-center py-8 text-blue-400"
-                  >
-                    {locations.length === 0
-                      ? "No locations found. Create your first location to get started."
-                      : "No locations match your search criteria."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredLocations.map((location) => (
-                  <TableRow
-                    key={location.locationCode}
-                    className="border-blue-500/20 hover:bg-blue-950/30"
-                  >
-                    <TableCell className="font-medium text-white">
-                      <div className="flex items-center space-x-2">
-                        <Badge
-                          variant="outline"
-                          className="bg-orange-900/30 border-orange-500/30 text-orange-300"
+          {filteredLocations.length === 0 ? (
+            <div className="text-center py-8 text-blue-400">
+              {locations.length === 0
+                ? "No locations found. Create your first location to get started."
+                : "No locations match your search criteria."}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+              {/* Fixed Header - Never Scrolls */}
+              <div className="min-w-[850px] border-b border-blue-900/30">
+                <Table className="table-fixed w-full">
+                  <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
+                    <TableRow className="border-blue-500/20 hover:bg-transparent">
+                      <TableHead className="w-[50px]">
+                        <Checkbox
+                          checked={isAllSelected}
+                          ref={(el) => {
+                            if (el && "indeterminate" in el) {
+                              (el as any).indeterminate = isIndeterminate;
+                            }
+                          }}
+                          onCheckedChange={handleSelectAll}
+                          className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                      </TableHead>
+                      <TableHead className="text-blue-300 w-[200px]">Location Code</TableHead>
+                      <TableHead className="text-blue-300 w-[400px]">Description</TableHead>
+                      <TableHead className="text-blue-300 text-right w-[200px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                </Table>
+              </div>
+
+              {/* Scrollable Body - Only Content Scrolls */}
+              <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
+                <div className="min-w-[850px]">
+                  <Table className="table-fixed w-full">
+                    <TableBody>
+                      {filteredLocations.map((location) => (
+                        <TableRow
+                          key={location.locationCode}
+                          className={`border-blue-500/20 hover:bg-blue-950/30 ${
+                            selectedLocations.includes(location.locationCode)
+                              ? "bg-blue-900/40 border-l-4 border-l-blue-500"
+                              : ""
+                          }`}
                         >
-                          {location.locationCode}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-blue-200">
-                      {location.description}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditDialog(location)}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openDeleteDialog(location)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-900/40"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                          <TableCell className="w-[50px]">
+                            <Checkbox
+                              checked={selectedLocations.includes(location.locationCode)}
+                              onCheckedChange={() => handleSelectLocation(location.locationCode)}
+                              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium text-white w-[200px]">
+                            <div className="flex items-center space-x-2">
+                              <Badge
+                                variant="outline"
+                                className="bg-orange-900/30 border-orange-500/30 text-orange-300"
+                              >
+                                {location.locationCode}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-blue-200 w-[400px]">
+                            {location.description}
+                          </TableCell>
+                          <TableCell className="text-right w-[200px]">
+                            <div className="flex items-center justify-end space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditDialog(location)}
+                                className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openDeleteDialog(location)}
+                                className="text-red-400 hover:text-red-300 hover:bg-red-900/40"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </ScrollArea>
+            </div>
+          )}
         </CardContent>
       </Card>
 

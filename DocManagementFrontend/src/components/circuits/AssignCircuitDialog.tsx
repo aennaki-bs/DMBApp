@@ -70,7 +70,7 @@ interface CircuitValidation {
 
 interface AssignCircuitDialogProps {
   documentId: number;
-  documentTitle: string;
+  documentKey: string;
   documentTypeId?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -79,7 +79,7 @@ interface AssignCircuitDialogProps {
 
 export default function AssignCircuitDialog({
   documentId,
-  documentTitle,
+  documentKey,
   documentTypeId,
   open,
   onOpenChange,
@@ -309,7 +309,7 @@ export default function AssignCircuitDialog({
             <div className="mt-3 space-y-2 text-sm">
               <p>
                 <span className="text-blue-400">Document:</span>{" "}
-                <span className="text-white">{documentTitle}</span>
+                <span className="text-white">{documentKey}</span>
               </p>
               <p>
                 <span className="text-blue-400">Circuit:</span>{" "}
@@ -365,7 +365,7 @@ export default function AssignCircuitDialog({
           <DialogHeader>
             <DialogTitle>Assign to Circuit</DialogTitle>
             <DialogDescription>
-              Select a circuit for document: {documentTitle}
+              Select a circuit for document: {documentKey}
             </DialogDescription>
           </DialogHeader>
 
@@ -380,7 +380,7 @@ export default function AssignCircuitDialog({
                 </h3>
                 <div className="mt-2 text-sm text-blue-200">
                   <p>
-                    There are no active circuits available for assignment. You
+                    There are no active circuits matching this document type available for assignment. You
                     need to create a circuit and activate it before you can
                     assign documents.
                   </p>
@@ -410,7 +410,7 @@ export default function AssignCircuitDialog({
         <DialogHeader>
           <DialogTitle>Assign to Circuit</DialogTitle>
           <DialogDescription>
-            Select a circuit for document: {documentTitle}
+            Select a circuit for document: {documentKey}
           </DialogDescription>
         </DialogHeader>
 

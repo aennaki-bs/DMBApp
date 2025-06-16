@@ -159,7 +159,7 @@ export const translations = {
       selectCircuit: 'Select Circuit',
       loadingCircuits: 'Loading circuits...',
       noActiveCircuitsAvailable: 'No active circuits available',
-      noActiveCircuitsDescription: 'There are no active circuits in the system. Only active circuits can be assigned to documents.'
+      noActiveCircuitsDescription: 'There are no active circuits matching the document type choosing. Only active circuits can be assigned to documents.'
     },
 
     // Documents

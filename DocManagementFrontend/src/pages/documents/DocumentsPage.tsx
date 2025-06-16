@@ -356,7 +356,7 @@ const DocumentsPage = () => {
           open={assignCircuitDialogOpen}
           onOpenChange={setAssignCircuitDialogOpen}
           documentId={documentToAssign.id}
-          documentTitle={documentToAssign.title}
+          documentKey={documentToAssign.documentKey}
           documentTypeId={documentToAssign.typeId}
           onSuccess={handleAssignCircuitSuccess}
         />

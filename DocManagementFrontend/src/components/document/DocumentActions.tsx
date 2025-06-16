@@ -104,7 +104,7 @@ const DocumentActions = ({
       {/* Assign Circuit Dialog */}
       <AssignCircuitDialog
         documentId={document.id}
-        documentTitle={document.title}
+                  documentKey={document.documentKey}
         documentTypeId={document.typeId}
         open={isAssignCircuitOpen}
         onOpenChange={setIsAssignCircuitOpen}

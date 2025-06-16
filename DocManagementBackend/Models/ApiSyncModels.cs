@@ -77,6 +77,12 @@ namespace DocManagementBackend.Models
         public string Country { get; set; } = string.Empty;
     }
 
+    public class BcLocationDto
+    {
+        public string No { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
     // Sync result models
     public class SyncResult
     {
@@ -96,7 +102,8 @@ namespace DocManagementBackend.Models
         Items,
         GeneralAccounts,
         Customers,
-        Vendors
+        Vendors,
+        Locations
     }
 
     public class ApiEndpointConfig

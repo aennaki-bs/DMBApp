@@ -1234,7 +1234,7 @@ const Documents = () => {
           open={assignCircuitDialogOpen}
           onOpenChange={setAssignCircuitDialogOpen}
           documentId={selectedDocumentForCircuit.id}
-          documentTitle={selectedDocumentForCircuit.title || ""}
+          documentKey={selectedDocumentForCircuit.documentKey || ""}
           documentTypeId={selectedDocumentForCircuit.typeId}
           onSuccess={handleAssignCircuitSuccess}
         />
