@@ -12,14 +12,6 @@ const ApprovalGroupsManagement = () => {
 
   const pageActions = [
     {
-      label: "Export Groups",
-      variant: "outline" as const,
-      icon: Users,
-      onClick: () => {
-        // Export functionality
-      },
-    },
-    {
       label: "New Approval Group",
       variant: "default" as const,
       icon: UserPlus,

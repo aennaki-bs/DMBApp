@@ -4,7 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Loader2, MoreVertical, Eye, Edit, Trash } from "lucide-react";
+import {
+  Loader2,
+  MoreVertical,
+  Eye,
+  Edit,
+  Trash,
+  CircuitBoard,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +26,7 @@ interface CircuitTableBodyProps {
   onSelectCircuit: (circuitId: number, checked: boolean) => void;
   onEdit: (circuit: Circuit) => void;
   onView: (circuit: Circuit) => void;
+  onViewStatuses: (circuit: Circuit) => void;
   onDelete: (circuit: Circuit) => void;
   onToggleActive: (circuit: Circuit) => void;
   loadingCircuits: number[];
@@ -31,6 +39,7 @@ export function CircuitTableBody({
   onSelectCircuit,
   onEdit,
   onView,
+  onViewStatuses,
   onDelete,
   onToggleActive,
   loadingCircuits,
@@ -54,7 +63,10 @@ export function CircuitTableBody({
   return (
     <TableBody>
       {circuits.map((circuit) => (
-        <TableRow key={circuit.id} className="table-glass-row h-12">
+        <TableRow
+          key={circuit.id}
+          className="border-border hover:bg-muted/30 transition-colors"
+        >
           <TableCell className="w-[40px]">
             <div className="flex items-center justify-center">
               <Checkbox
@@ -62,15 +74,15 @@ export function CircuitTableBody({
                 onCheckedChange={(checked) =>
                   onSelectCircuit(circuit.id, checked as boolean)
                 }
-                className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                className="border-border"
               />
             </div>
           </TableCell>
 
-          <TableCell className="w-[280px]">
+          <TableCell className="min-w-[280px]">
             <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8 bg-primary/10 border border-primary/20">
-                <AvatarFallback className="text-xs font-medium text-primary bg-transparent">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                   {getCircuitInitials(circuit)}
                 </AvatarFallback>
               </Avatar>
@@ -85,24 +97,19 @@ export function CircuitTableBody({
             </div>
           </TableCell>
 
-          <TableCell className="w-[300px]">
+          <TableCell className="min-w-[300px]">
             <div className="font-medium text-foreground truncate">
               {circuit.title || "No title"}
             </div>
           </TableCell>
 
-          <TableCell className="w-[140px]">
-            <Badge
-              variant="outline"
-              className={`text-xs font-medium border ${getTypeColor(
-                circuit.descriptif
-              )}`}
-            >
+          <TableCell className="min-w-[140px]">
+            <Badge variant="outline" className="text-xs border-border">
               {circuit.descriptif || "Type"}
             </Badge>
           </TableCell>
 
-          <TableCell className="w-[100px] text-center">
+          <TableCell className="w-24 text-center">
             <div className="flex items-center justify-center">
               {loadingCircuits.includes(circuit.id) ? (
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -117,32 +124,49 @@ export function CircuitTableBody({
             </div>
           </TableCell>
 
-          <TableCell className="w-[120px] text-right pr-3">
+          <TableCell className="w-20 text-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 hover:bg-primary/10"
+                  className="h-8 w-8 p-0 hover:bg-accent/50"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => onView(circuit)}>
+              <DropdownMenuContent
+                align="end"
+                className="bg-background border-border"
+              >
+                <DropdownMenuItem
+                  onClick={() => onView(circuit)}
+                  className="hover:bg-accent/50"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View Steps
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onViewStatuses(circuit)}
+                  className="hover:bg-accent/50"
+                >
+                  <CircuitBoard className="h-4 w-4 mr-2" />
+                  View Statuses
+                </DropdownMenuItem>
                 {!isSimpleUser && (
                   <>
-                    <DropdownMenuItem onClick={() => onEdit(circuit)}>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuItem
+                      onClick={() => onEdit(circuit)}
+                      className="hover:bg-accent/50"
+                    >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator className="bg-border" />
                     <DropdownMenuItem
                       onClick={() => onDelete(circuit)}
-                      className="text-destructive focus:text-destructive"
+                      className="text-destructive hover:bg-destructive/10"
                     >
                       <Trash className="h-4 w-4 mr-2" />
                       Delete

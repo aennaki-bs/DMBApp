@@ -547,7 +547,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
             {/* Fixed Header - Never Scrolls */}
             <div className="min-w-[900px] border-b border-blue-200 dark:border-blue-900/30">
               <Table className="table-fixed w-full">
-                <TableHeader className="bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
+                <TableHeader className=" dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
                   <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
                     <TableHead className="w-[50px]">
                       <div className="flex items-center justify-center">
@@ -604,7 +604,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                     {paginatedItems.map((item) => (
                       <TableRow
                         key={item.code}
-                        className="border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/20 transition-colors duration-150"
+                        className=" dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/20 transition-colors duration-150"
                       >
                         <TableCell className="w-[50px]">
                           <div className="flex items-center justify-center">

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { CircuitTable } from "@/components/circuits/CircuitTable";
 import CreateCircuitDialog from "@/components/circuits/CreateCircuitDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, GitBranch, Download } from "lucide-react";
+import { Plus, GitBranch } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -24,15 +24,6 @@ export default function CircuitsPage() {
   }, [isAuthenticated, navigate]);
 
   const pageActions = [
-    {
-      label: "Export Circuits",
-      variant: "outline" as const,
-      icon: Download,
-      onClick: () => {
-        // Export functionality
-        toast.info("Export functionality coming soon");
-      },
-    },
     ...(isSimpleUser
       ? []
       : [

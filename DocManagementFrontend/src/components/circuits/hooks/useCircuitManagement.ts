@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import circuitService from "@/services/circuitService";
 
-export type SortField = "circuitKey" | "title" | "descriptif" | "isActive";
+export type SortField = "circuitKey" | "title" | "descriptif" | "isActive" | "status";
 export type SortDirection = "asc" | "desc";
 
 export function useCircuitManagement() {
@@ -106,6 +106,10 @@ export function useCircuitManagement() {
           aValue = a.isActive ? "1" : "0";
           bValue = b.isActive ? "1" : "0";
           break;
+        case "status":
+          aValue = a.isActive ? "Active" : "Inactive";
+          bValue = b.isActive ? "Active" : "Inactive";
+          break;
       }
 
       const comparison = aValue.localeCompare(bValue);
@@ -188,24 +192,47 @@ export function useCircuitManagement() {
       await circuitService.deleteCircuit(circuit.id);
       await fetchCircuits();
       toast.success("Circuit deleted successfully");
-      setDeletingCircuit(null);
       clearSelectedCircuits();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to delete circuit");
+      console.error("Delete circuit error:", error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to delete circuit";
+      toast.error(errorMessage);
+      throw error; // Re-throw to allow UI to handle appropriately
     }
   };
 
   const handleBulkDelete = async () => {
+    if (selectedCircuits.length === 0) {
+      toast.warning("No circuits selected for deletion");
+      return;
+    }
+
     try {
-      await Promise.all(
+      // Delete circuits sequentially to better handle individual errors
+      const results = await Promise.allSettled(
         selectedCircuits.map((circuitId) => circuitService.deleteCircuit(circuitId))
       );
+      
+      const failed = results.filter(result => result.status === 'rejected');
+      const successful = results.filter(result => result.status === 'fulfilled');
+      
       await fetchCircuits();
-      toast.success(`${selectedCircuits.length} circuits deleted successfully`);
-      setDeleteMultipleOpen(false);
+      
+      if (failed.length === 0) {
+        toast.success(`${selectedCircuits.length} circuits deleted successfully`);
+      } else if (successful.length === 0) {
+        toast.error("Failed to delete any circuits");
+        throw new Error("All deletions failed");
+      } else {
+        toast.warning(`${successful.length} circuits deleted, ${failed.length} failed`);
+      }
+      
       clearSelectedCircuits();
     } catch (error: any) {
-      toast.error("Failed to delete circuits");
+      console.error("Bulk delete error:", error);
+      const errorMessage = error?.message || "Failed to delete circuits";
+      toast.error(errorMessage);
+      throw error; // Re-throw to allow UI to handle appropriately
     }
   };
 

@@ -331,7 +331,6 @@ export const translations = {
       // ReviewStep
       reviewYourDocument: 'Review Your Document',
       pleaseReviewDocumentDetails: 'Please review your document details before creating',
-      documentType: 'Document Type',
       typeAndSeriesInformation: 'Type and series information'
     },
 
@@ -1048,8 +1047,7 @@ export const translations = {
       // ReviewStep
       reviewYourDocument: 'Réviser Votre Document',
       pleaseReviewDocumentDetails: 'Veuillez réviser les détails de votre document avant la création',
-      documentType: 'Type de Document',
-      typeAndSeriesInformation: 'Informations sur le type et la série'
+      typeAndSeriesInformation: 'Type et série d\'information'
     },
 
     // Responsibility Centres
@@ -1765,7 +1763,6 @@ export const translations = {
       // ReviewStep
       reviewYourDocument: 'Revisar Su Documento',
       pleaseReviewDocumentDetails: 'Por favor revise los detalles de su documento antes de crearlo',
-      documentType: 'Tipo de Documento',
       typeAndSeriesInformation: 'Información de tipo y serie'
     },
 

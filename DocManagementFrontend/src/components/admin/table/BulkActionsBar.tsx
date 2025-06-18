@@ -37,25 +37,25 @@ export function BulkActionsBar({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-6 right-16 transform -translate-x-1/2 z-[9999] w-[calc(100vw-4rem)] max-w-4xl mx-auto"
+          className="fixed bottom-4 sm:bottom-6 left-4 right-4 sm:left-16 sm:right-16 z-[9999] max-w-4xl mx-auto"
         >
-          <div className="bg-gradient-to-r from-primary/95 to-primary/80 backdrop-blur-lg shadow-[0_8px_32px_rgba(var(--primary),0.3)] rounded-2xl border border-primary/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-primary/40">
-            <div className="flex items-center text-primary-foreground font-medium">
+          <div className="bg-gradient-to-r from-primary/95 to-primary/80 backdrop-blur-lg shadow-[0_8px_32px_rgba(var(--primary),0.3)] rounded-xl sm:rounded-2xl border border-primary/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 ring-2 ring-primary/40">
+            <div className="flex items-center text-primary-foreground font-medium w-full sm:w-auto justify-center sm:justify-start">
               <div className="bg-primary-foreground/30 p-1.5 rounded-xl mr-3 flex-shrink-0">
-                <Users className="w-5 h-5 text-primary-foreground/80" />
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground/80" />
               </div>
-              <span className="text-sm sm:text-base text-center sm:text-left">
+              <span className="text-sm sm:text-base">
                 <span className="font-bold text-primary-foreground">
                   {selectedCount}
                 </span>{" "}
-                users selected
+                {selectedCount === 1 ? "item" : "items"} selected
               </span>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-primary-foreground/20 border-primary-foreground/40 text-primary-foreground hover:text-primary-foreground hover:bg-primary-foreground/30 hover:border-primary-foreground/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                className="flex-1 sm:flex-none bg-primary-foreground/20 border-primary-foreground/40 text-primary-foreground hover:text-primary-foreground hover:bg-primary-foreground/30 hover:border-primary-foreground/60 transition-all duration-200 shadow-lg font-medium"
                 onClick={onChangeRole}
               >
                 <Shield className="w-4 h-4 mr-1.5" />
@@ -64,7 +64,7 @@ export function BulkActionsBar({
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-destructive/40 border-destructive/40 text-destructive-foreground hover:text-destructive-foreground hover:bg-destructive/60 hover:border-destructive/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
+                className="flex-1 sm:flex-none bg-destructive/40 border-destructive/40 text-destructive-foreground hover:text-destructive-foreground hover:bg-destructive/60 hover:border-destructive/60 transition-all duration-200 shadow-lg font-medium"
                 onClick={onDelete}
               >
                 <Trash className="w-4 h-4 mr-1.5" />

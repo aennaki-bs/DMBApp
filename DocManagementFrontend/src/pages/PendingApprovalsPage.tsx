@@ -271,7 +271,7 @@ export default function PendingApprovalsPage() {
 
         {/* Pending Approvals Tab */}
         <TabsContent value="pending" className="mt-4">
-          <div className="rounded-xl border border-blue-200 overflow-hidden bg-white dark:border-blue-900/30 dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
+          <div className="rounded-xl border border-blue-200 overflow-hidden dark:border-blue-900/30 dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
             {isPendingLoading ? (
               <div className="p-6 space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -425,7 +425,7 @@ export default function PendingApprovalsPage() {
 
         {/* Approval History Tab */}
         <TabsContent value="history" className="mt-4">
-          <div className="rounded-xl border border-blue-200 overflow-hidden bg-white dark:border-blue-900/30 dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
+          <div className="rounded-xl border border-blue-200 overflow-hidden  dark:border-blue-900/30 dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
             {isWaitingLoading || isAcceptedLoading || isRejectedLoading ? (
               <div className="p-6 space-y-4">
                 {[1, 2, 3].map((i) => (

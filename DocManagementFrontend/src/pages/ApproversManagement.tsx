@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserCog, UserPlus, FileDown } from "lucide-react";
+import { UserCog, UserPlus } from "lucide-react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ApproversTable } from "@/components/approvers/ApproversTable";
 import ApproverCreateWizard from "@/components/approval/ApproverCreateWizard";
@@ -8,15 +8,6 @@ export default function ApproversManagement() {
   const [isCreateApproverOpen, setIsCreateApproverOpen] = useState(false);
 
   const pageActions = [
-    {
-      label: "Export Approvers",
-      variant: "outline" as const,
-      icon: FileDown,
-      onClick: () => {
-        // Export functionality to be implemented
-        console.log("Export approvers");
-      },
-    },
     {
       label: "New Approver",
       variant: "default" as const,

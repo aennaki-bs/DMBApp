@@ -273,15 +273,6 @@ const DocumentsPage = () => {
     ...(canManageDocuments
       ? [
           {
-            label: "Export Documents",
-            variant: "outline" as const,
-            icon: FileText,
-            onClick: () => {
-              // Export functionality - placeholder
-              toast.info("Export functionality coming soon");
-            },
-          },
-          {
             label: t("documents.newDocument"),
             variant: "default" as const,
             icon: Plus,

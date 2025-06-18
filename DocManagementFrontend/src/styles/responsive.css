@@ -337,3 +337,222 @@ screen and (min-resolution: 120dpi) {
         -moz-osx-font-smoothing: grayscale;
     }
 }
+
+/* Responsive Design Utilities */
+
+/* Container utilities */
+.responsive-container {
+    @apply px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto;
+}
+
+.responsive-container-tight {
+    @apply px-3 sm:px-4 lg:px-6 max-w-6xl mx-auto;
+}
+
+/* Grid utilities */
+.responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+}
+
+.responsive-grid-2 {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6;
+}
+
+.responsive-grid-auto {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6;
+}
+
+/* Flex utilities */
+.responsive-flex {
+    @apply flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4;
+}
+
+.responsive-flex-center {
+    @apply flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4;
+}
+
+.responsive-flex-between {
+    @apply flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0;
+}
+
+/* Spacing utilities */
+.responsive-spacing {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+}
+
+.responsive-spacing-tight {
+    @apply space-y-3 sm:space-y-4 lg:space-y-6;
+}
+
+.responsive-padding {
+    @apply p-4 sm:p-6 lg:p-8;
+}
+
+.responsive-padding-tight {
+    @apply p-3 sm:p-4 lg:p-6;
+}
+
+.responsive-margin {
+    @apply m-4 sm:m-6 lg:m-8;
+}
+
+.responsive-margin-tight {
+    @apply m-3 sm:m-4 lg:m-6;
+}
+
+/* Text utilities */
+.responsive-text-sm {
+    @apply text-xs sm:text-sm;
+}
+
+.responsive-text-base {
+    @apply text-sm sm:text-base;
+}
+
+.responsive-text-lg {
+    @apply text-base sm:text-lg;
+}
+
+.responsive-text-xl {
+    @apply text-lg sm:text-xl lg:text-2xl;
+}
+
+.responsive-text-2xl {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+}
+
+/* Button utilities */
+.responsive-button {
+    @apply w-full sm:w-auto px-4 py-2 text-sm sm:text-base;
+}
+
+.responsive-button-group {
+    @apply flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto;
+}
+
+/* Card utilities */
+.responsive-card {
+    @apply rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm sm:shadow-md;
+}
+
+.responsive-card-compact {
+    @apply rounded-md sm:rounded-lg p-3 sm:p-4 shadow-sm;
+}
+
+/* Table utilities */
+.responsive-table-container {
+    @apply overflow-x-auto -mx-4 sm:mx-0 sm:rounded-lg;
+}
+
+.responsive-table {
+    @apply min-w-[640px] sm:min-w-[768px] lg:min-w-0;
+}
+
+/* Modal/Dialog utilities */
+.responsive-modal {
+    @apply w-full max-w-md sm:max-w-lg lg:max-w-xl mx-4 sm:mx-auto;
+}
+
+.responsive-modal-wide {
+    @apply w-full max-w-lg sm:max-w-xl lg:max-w-2xl xl:max-w-4xl mx-4 sm:mx-auto;
+}
+
+.responsive-modal-full {
+    @apply w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl mx-4 sm:mx-auto;
+}
+
+/* Form utilities */
+.responsive-form {
+    @apply space-y-4 sm:space-y-6;
+}
+
+.responsive-form-group {
+    @apply flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4;
+}
+
+.responsive-form-buttons {
+    @apply flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-6;
+}
+
+/* Navigation utilities */
+.responsive-nav {
+    @apply flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4;
+}
+
+.responsive-nav-compact {
+    @apply flex flex-col sm:flex-row items-stretch sm:items-center gap-1 sm:gap-2;
+}
+
+/* Sidebar utilities */
+.responsive-sidebar {
+    @apply w-full sm:w-64 lg:w-72 xl:w-80;
+}
+
+.responsive-sidebar-compact {
+    @apply w-full sm:w-56 lg:w-64;
+}
+
+/* Header utilities */
+.responsive-header {
+    @apply flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 pb-4 sm:pb-6;
+}
+
+.responsive-header-compact {
+    @apply flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4;
+}
+
+/* Content utilities */
+.responsive-content {
+    @apply max-w-none sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl mx-auto;
+}
+
+.responsive-content-narrow {
+    @apply max-w-none sm:max-w-lg lg:max-w-2xl xl:max-w-4xl mx-auto;
+}
+
+/* Search bar utilities */
+.responsive-search {
+    @apply flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full;
+}
+
+.responsive-search-input {
+    @apply flex-1 min-w-0 w-full sm:w-auto;
+}
+
+.responsive-search-filters {
+    @apply flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto;
+}
+
+/* Action bar utilities */
+.responsive-actions {
+    @apply flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto;
+}
+
+.responsive-actions-right {
+    @apply flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto;
+}
+
+/* Responsive visibility utilities */
+.mobile-only {
+    @apply block sm:hidden;
+}
+
+.desktop-only {
+    @apply hidden sm:block;
+}
+
+.tablet-up {
+    @apply hidden md:block;
+}
+
+.mobile-tablet {
+    @apply block lg:hidden;
+}
+
+/* Responsive breakpoints for reference:
+   sm: 640px
+   md: 768px
+   lg: 1024px
+   xl: 1280px
+   2xl: 1536px
+*/

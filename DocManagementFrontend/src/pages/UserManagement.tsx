@@ -31,14 +31,6 @@ const UserManagement = () => {
 
   const pageActions = [
     {
-      label: "Export Users",
-      variant: "outline" as const,
-      icon: Users,
-      onClick: () => {
-        // Export functionality
-      },
-    },
-    {
       label: t("userManagement.createUser"),
       variant: "default" as const,
       icon: UserPlus,

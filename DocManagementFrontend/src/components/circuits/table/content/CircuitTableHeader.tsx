@@ -1,6 +1,6 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { SortField, SortDirection } from "../../hooks/useCircuitManagement";
 
 interface CircuitTableHeaderProps {
@@ -23,78 +23,53 @@ export function CircuitTableHeader({
   isSimpleUser,
 }: CircuitTableHeaderProps) {
   const renderSortIcon = (field: SortField) => {
-    if (sortBy !== field) return null;
-    return sortDirection === "asc" ? (
-      <ArrowUp className="h-4 w-4" />
-    ) : (
-      <ArrowDown className="h-4 w-4" />
-    );
+    return <ArrowUpDown className="ml-1 h-3 w-3" />;
   };
 
-  const headerClass = (field: SortField) => `
-    cursor-pointer hover:bg-primary/10 transition-colors duration-200 
-    text-left font-semibold text-primary/90 hover:text-primary
-    ${sortBy === field ? "bg-primary/5" : ""}
-  `;
+  const getSortButton = (field: SortField, label: string) => (
+    <button
+      className="h-8 px-2 -ml-2 text-xs font-medium hover:bg-accent/50 flex items-center gap-1 rounded transition-colors"
+      onClick={() => onSort(field)}
+    >
+      {label}
+      {renderSortIcon(field)}
+    </button>
+  );
 
   const isAllSelected =
     circuits.length > 0 &&
     circuits.every((circuit) => selectedCircuits.includes(circuit.id));
 
   return (
-    <TableHeader className="bg-muted/20 backdrop-blur-sm">
-      <TableRow className="table-glass-header-row">
+    <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+      <TableRow className="border-border hover:bg-muted/50">
         <TableHead className="w-[40px]">
           <div className="flex items-center justify-center">
             <Checkbox
               checked={isAllSelected}
               onCheckedChange={onSelectAll}
-              className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              className="border-border"
             />
           </div>
         </TableHead>
 
-        <TableHead
-          className={`w-[280px] ${headerClass("circuitKey")}`}
-          onClick={() => onSort("circuitKey")}
-        >
-          <div className="flex items-center gap-2">
-            Circuit
-            {renderSortIcon("circuitKey")}
-          </div>
+        <TableHead className="min-w-[280px]">
+          {getSortButton("circuitKey", "Circuit")}
         </TableHead>
 
-        <TableHead
-          className={`w-[300px] ${headerClass("title")}`}
-          onClick={() => onSort("title")}
-        >
-          <div className="flex items-center gap-2">
-            Title
-            {renderSortIcon("title")}
-          </div>
+        <TableHead className="min-w-[300px]">
+          {getSortButton("title", "Title")}
         </TableHead>
 
-        <TableHead
-          className={`w-[140px] ${headerClass("descriptif")}`}
-          onClick={() => onSort("descriptif")}
-        >
-          <div className="flex items-center gap-2">
-            Type
-            {renderSortIcon("descriptif")}
-          </div>
+        <TableHead className="min-w-[140px]">
+          {getSortButton("descriptif", "Type")}
         </TableHead>
 
-        <TableHead
-          className={`w-[100px] text-center ${headerClass("isActive")}`}
-          onClick={() => onSort("isActive")}
-        >
-          <div className="flex items-center justify-center gap-2">
-            Block
-            {renderSortIcon("isActive")}
-          </div>
+        <TableHead className="w-24 text-center">
+          {getSortButton("isActive", "Block")}
         </TableHead>
 
-        <TableHead className="w-[120px] text-right pr-3">Actions</TableHead>
+        <TableHead className="w-20 text-center">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

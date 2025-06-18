@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { CircuitTableContent } from "./table/CircuitTableContent";
 import { BulkActionsBar } from "@/components/admin/table/BulkActionsBar";
-import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { SmartDeleteDialog } from "./dialogs/SmartDeleteDialog";
 import EditCircuitDialog from "./EditCircuitDialog";
 import {
   Select,
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCircuitManagement } from "./hooks/useCircuitManagement";
+import { useSmartDelete } from "./hooks/useSmartDelete";
 import { AlertTriangle, Filter, X } from "lucide-react";
 import {
   Popover,
@@ -24,6 +25,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import {
+  circuitDeleteService,
+  type DeleteOptions,
+} from "@/services/circuitDeleteService";
 
 const DEFAULT_CIRCUIT_SEARCH_FIELDS = [
   { id: "all", label: "All Fields" },
@@ -42,6 +47,7 @@ export function CircuitTable() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isSimpleUser = user?.role === "SimpleUser";
+  const { deleteCircuits } = useSmartDelete();
 
   const {
     selectedCircuits,
@@ -95,21 +101,54 @@ export function CircuitTable() {
     navigate(`/circuits/${circuit.id}/steps`);
   };
 
+  const handleViewStatuses = (circuit: Circuit) => {
+    navigate(`/circuits/${circuit.id}/statuses`);
+  };
+
   const handleDeleteCircuit = (circuit: Circuit) => {
     setDeletingCircuit(circuit);
     setDeleteOpen(true);
   };
 
-  const confirmDelete = async () => {
-    if (deletingCircuit) {
-      await handleDelete(deletingCircuit);
-      setDeleteOpen(false);
+  const confirmDelete = async (options: DeleteOptions) => {
+    if (!deletingCircuit) return;
+
+    try {
+      await deleteCircuits([deletingCircuit], options, () => {
+        refetch(); // Refresh the circuits list
+        setDeleteOpen(false);
+        setDeletingCircuit(null);
+      });
+    } catch (error) {
+      console.error("Delete failed:", error);
     }
   };
 
-  const confirmBulkDelete = async () => {
-    await handleBulkDelete();
-    setBulkDeleteOpen(false);
+  const confirmBulkDelete = async (options: DeleteOptions) => {
+    if (selectedCircuits.length === 0) return;
+
+    try {
+      const circuitsToDelete =
+        filteredCircuits?.filter((c) => selectedCircuits.includes(c.id)) || [];
+      await deleteCircuits(circuitsToDelete, options, () => {
+        refetch(); // Refresh the circuits list
+        setBulkDeleteOpen(false);
+        clearSelectedCircuits();
+      });
+    } catch (error) {
+      console.error("Bulk delete failed:", error);
+    }
+  };
+
+  const handleDeleteDialogClose = (open: boolean) => {
+    setDeleteOpen(open);
+    if (!open) {
+      setDeletingCircuit(null);
+    }
+  };
+
+  const handleBulkDeleteDialogClose = (open: boolean) => {
+    setBulkDeleteOpen(open);
   };
 
   if (isLoading) {
@@ -131,7 +170,7 @@ export function CircuitTable() {
 
   return (
     <div
-      className="h-full flex flex-col gap-5 w-full px-1"
+      className="h-full flex flex-col gap-3 sm:gap-5 w-full px-2 sm:px-1"
       style={{ minHeight: "100%" }}
     >
       {/* API Error Alert */}
@@ -147,13 +186,13 @@ export function CircuitTable() {
       )}
 
       {/* Compact Search + Filter Bar */}
-      <div className="p-4 rounded-xl table-search-bar shadow-lg">
+      <div className="p-3 sm:p-4 rounded-xl table-glass-container shadow-lg">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
           {/* Search and field select */}
-          <div className="flex-1 flex items-center gap-2.5 min-w-0">
-            <div className="relative">
+          <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 min-w-0">
+            <div className="relative w-full sm:w-auto">
               <Select value={searchField} onValueChange={setSearchField}>
-                <SelectTrigger className="w-[130px] h-9 text-sm table-search-select hover:table-search-select focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all duration-200 shadow-sm rounded-md flex-shrink-0">
+                <SelectTrigger className="w-full sm:w-[130px] h-9 text-sm table-search-select hover:table-search-select focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all duration-200 shadow-sm rounded-md flex-shrink-0">
                   <SelectValue>
                     {DEFAULT_CIRCUIT_SEARCH_FIELDS.find(
                       (opt) => opt.id === searchField
@@ -174,13 +213,13 @@ export function CircuitTable() {
               </Select>
             </div>
 
-            <div className="relative flex-1 group min-w-[200px]">
+            <div className="relative flex-1 group min-w-0">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-sm"></div>
               <Input
                 placeholder="Search circuits..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="relative h-9 text-sm table-search-input pl-10 pr-4 rounded-md focus:ring-1 transition-all duration-200 shadow-sm group-hover:shadow-md"
+                className="relative h-9 text-sm table-search-input pl-10 pr-4 rounded-md focus:ring-1 transition-all duration-200 shadow-sm group-hover:shadow-md w-full"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 table-search-icon group-hover:table-search-icon transition-colors duration-200">
                 <svg
@@ -200,13 +239,13 @@ export function CircuitTable() {
             </div>
           </div>
           {/* Filter popover */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
             <Popover open={filterOpen} onOpenChange={setFilterOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-9 px-4 text-sm table-search-select hover:table-search-select shadow-sm rounded-md flex items-center gap-2 transition-all duration-200 hover:shadow-md whitespace-nowrap"
+                  className="w-full sm:w-auto h-9 px-4 text-sm table-search-select hover:table-search-select shadow-sm rounded-md flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-md whitespace-nowrap"
                 >
                   <Filter className="h-3.5 w-3.5" />
                   Filter
@@ -279,6 +318,7 @@ export function CircuitTable() {
           onSelectCircuit={handleSelectCircuit}
           onEdit={handleEditCircuit}
           onView={handleViewCircuit}
+          onViewStatuses={handleViewStatuses}
           onDelete={handleDeleteCircuit}
           onToggleActive={handleToggleActive}
           sortBy={sortBy}
@@ -318,27 +358,27 @@ export function CircuitTable() {
 
       {/* Delete Confirmation Dialog */}
       {deletingCircuit && (
-        <DeleteConfirmDialog
-          title="Delete Circuit"
-          description={`Are you sure you want to delete the circuit "${deletingCircuit.title}"? This action cannot be undone.`}
+        <SmartDeleteDialog
           open={deleteOpen}
-          onOpenChange={setDeleteOpen}
+          onOpenChange={handleDeleteDialogClose}
           onConfirm={confirmDelete}
-          confirmText="Delete"
-          destructive={true}
+          circuits={[deletingCircuit]}
+          isBulk={false}
         />
       )}
 
       {/* Bulk Delete Confirmation Dialog */}
-      <DeleteConfirmDialog
-        title="Delete Circuits"
-        description={`Are you sure you want to delete ${selectedCircuits.length} circuits? This action cannot be undone.`}
-        open={bulkDeleteOpen}
-        onOpenChange={setBulkDeleteOpen}
-        onConfirm={confirmBulkDelete}
-        confirmText="Delete"
-        destructive={true}
-      />
+      {selectedCircuits.length > 0 && filteredCircuits && (
+        <SmartDeleteDialog
+          open={bulkDeleteOpen}
+          onOpenChange={handleBulkDeleteDialogClose}
+          onConfirm={confirmBulkDelete}
+          circuits={filteredCircuits.filter((c) =>
+            selectedCircuits.includes(c.id)
+          )}
+          isBulk={true}
+        />
+      )}
     </div>
   );
 }

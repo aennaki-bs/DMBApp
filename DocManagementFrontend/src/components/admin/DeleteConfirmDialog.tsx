@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, Trash } from "lucide-react";
+import { AlertTriangle, Trash, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface DeleteConfirmDialogProps {
@@ -17,7 +17,7 @@ interface DeleteConfirmDialogProps {
   description: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   confirmText?: string;
   cancelText?: string;
   destructive?: boolean;
@@ -37,8 +37,28 @@ export function DeleteConfirmDialog({
   destructive = true,
   children,
 }: DeleteConfirmDialogProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (isLoading) return;
+
+    setIsLoading(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isLoading) return; // Prevent closing during loading
+    onOpenChange(newOpen);
+  };
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <MotionAlertDialogContent
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -69,22 +89,32 @@ export function DeleteConfirmDialog({
         )}
 
         <AlertDialogFooter className="gap-2 sm:gap-0">
-          <AlertDialogCancel className="bg-transparent border-blue-500/30 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200 hover:border-blue-400/40 transition-all duration-200">
+          <AlertDialogCancel
+            disabled={isLoading}
+            className="bg-transparent border-blue-500/30 text-blue-300 hover:bg-blue-800/20 hover:text-blue-200 hover:border-blue-400/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
-              onConfirm();
-            }}
+            onClick={handleConfirm}
+            disabled={isLoading}
             className={
               destructive
-                ? "bg-red-900/30 text-red-300 hover:bg-red-900/50 hover:text-red-200 border border-red-500/30 hover:border-red-400/50 transition-all duration-200 flex items-center gap-2"
-                : "bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
+                ? "bg-red-900/30 text-red-300 hover:bg-red-900/50 hover:text-red-200 border border-red-500/30 hover:border-red-400/50 transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                : "bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             }
           >
-            {destructive && <Trash className="h-4 w-4" />}
-            {confirmText}
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {destructive ? "Deleting..." : "Processing..."}
+              </>
+            ) : (
+              <>
+                {destructive && <Trash className="h-4 w-4" />}
+                {confirmText}
+              </>
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </MotionAlertDialogContent>

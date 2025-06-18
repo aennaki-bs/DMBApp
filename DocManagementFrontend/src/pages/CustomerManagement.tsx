@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import CustomerTable from "@/components/reference-tables/CustomerTable";
 import CreateCustomerWizard from "@/components/reference-tables/CreateCustomerWizard";
-import { Plus, Users, FileDown } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -27,14 +27,6 @@ const CustomerManagementPage = () => {
   }, [isAuthenticated, user, navigate]);
 
   const pageActions = [
-    {
-      label: "Export Customers",
-      variant: "outline" as const,
-      icon: FileDown,
-      onClick: () => {
-        // Export functionality
-      },
-    },
     {
       label: "Add Customer",
       variant: "default" as const,
