@@ -228,11 +228,26 @@ export default function ApprovalGroupEditDialog({
       // Call the API to update the group
       await approvalService.updateApprovalGroup(group.id, requestData);
 
-      onSuccess(); // Notify parent component
-      toast.success("Approval group updated successfully!");
+      // Enhanced success feedback
+      toast.success(`Approval group "${formData.name}" updated successfully!`, {
+        description:
+          "The table will refresh automatically to show your changes.",
+        duration: 4000,
+      });
+
+      // Notify parent component for auto-refresh
+      onSuccess();
     } catch (error) {
       console.error("Failed to update approval group:", error);
-      toast.error("Failed to update approval group");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to update approval group";
+
+      toast.error("Failed to update approval group", {
+        description: errorMessage,
+        duration: 5000,
+      });
     } finally {
       setIsSubmitting(false);
     }

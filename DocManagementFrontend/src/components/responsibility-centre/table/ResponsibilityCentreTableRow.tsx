@@ -1,11 +1,9 @@
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ResponsibilityCentre } from "@/models/responsibilityCentre";
 import { ResponsibilityCentreActionsDropdown } from "./row/ResponsibilityCentreActionsDropdown";
-import { Building2, UsersRound, FileText } from "lucide-react";
-import { useTranslation } from "@/hooks/useTranslation";
+import { Building2, Users, FileText } from "lucide-react";
 
 interface ResponsibilityCentreTableRowProps {
   centre: ResponsibilityCentre;
@@ -26,80 +24,125 @@ export function ResponsibilityCentreTableRow({
   onAssociateUsers,
   onViewDetails,
 }: ResponsibilityCentreTableRowProps) {
-  const { t } = useTranslation();
+  const handleRowClick = (event: React.MouseEvent) => {
+    // Don't trigger row selection if clicking on action buttons or links
+    const target = event.target as HTMLElement;
+    const isActionElement = target.closest(
+      'button, a, [role="button"], .dropdown-trigger'
+    );
 
-  const handleEdit = () => {
-    onEdit(centre);
+    if (!isActionElement) {
+      onSelect(centre.id);
+    }
   };
 
-  const handleDelete = () => {
-    onDelete(centre);
-  };
-
-  const handleAssociateUsers = () => {
-    onAssociateUsers(centre);
-  };
-
-  const handleViewDetails = () => {
-    onViewDetails(centre);
+  const handleSelectChange = (checked: boolean) => {
+    onSelect(centre.id);
   };
 
   return (
     <TableRow
-      className={`table-glass-row ${
-        isSelected ? "table-glass-row-selected" : ""
+      className={`responsibility-centre-table-layout transition-all duration-200 cursor-pointer select-none ${
+        isSelected
+          ? "bg-primary/10 border-primary/30 shadow-sm"
+          : "hover:bg-muted/30"
       }`}
+      onClick={handleRowClick}
     >
-      <TableCell className="w-[40px] py-2">
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onSelect(centre.id)}
-            aria-label={`Select centre ${centre.code}`}
-            className="h-3.5 w-3.5"
-          />
+      {/* Selection Column */}
+      <TableCell className="py-4 table-cell-center">
+        <Checkbox
+          enhanced={true}
+          size="sm"
+          checked={isSelected}
+          onCheckedChange={handleSelectChange}
+          className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
+        />
+      </TableCell>
+
+      {/* Centre Code Column */}
+      <TableCell className="py-4 table-cell-start">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="flex-shrink-0">
+            <div
+              className={`h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 flex items-center justify-center transition-all duration-200 ${
+                isSelected
+                  ? "from-primary/30 to-primary/20 border-primary/40 shadow-sm"
+                  : ""
+              }`}
+            >
+              <Building2 className="h-5 w-5 text-primary" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div
+              className={`text-sm font-medium truncate transition-colors duration-200 ${
+                isSelected ? "text-primary" : "text-foreground"
+              }`}
+            >
+              {centre.code}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">
+              ID: {centre.id}
+            </div>
+          </div>
         </div>
       </TableCell>
 
-      <TableCell className="w-[150px] py-2">
-        <div className="font-medium text-sm leading-tight">{centre.code}</div>
-      </TableCell>
-
-      <TableCell className="w-[300px] py-2">
-        <span className="block truncate text-sm">{centre.descr}</span>
-      </TableCell>
-
-      <TableCell className="w-[120px] py-2 text-center">
-        <div className="flex items-center justify-center">
-          <Badge
-            variant="secondary"
-            className="text-xs px-2 py-0.5 h-5 min-w-[40px] justify-center"
-          >
-            <UsersRound className="w-2.5 h-2.5 mr-1" />
-            {Math.max(0, centre.usersCount || 0)}
-          </Badge>
+      {/* Description Column */}
+      <TableCell className="py-4 table-cell-start max-md:hidden">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          {centre.descr ? (
+            <span className="text-sm truncate max-w-[200px]">
+              {centre.descr}
+            </span>
+          ) : (
+            <span className="text-sm text-muted-foreground italic">
+              No description
+            </span>
+          )}
         </div>
       </TableCell>
 
-      <TableCell className="w-[120px] py-2 text-center">
-        <div className="flex items-center justify-center">
-          <Badge
-            variant="secondary"
-            className="text-xs px-2 py-0.5 h-5 min-w-[40px] justify-center"
-          >
-            <FileText className="w-2.5 h-2.5 mr-1" />
-            {centre.documentsCount || 0}
-          </Badge>
-        </div>
+      {/* Users Column */}
+      <TableCell className="py-4 table-cell-center">
+        <Badge
+          variant="secondary"
+          className={`text-xs px-2 py-1 transition-colors duration-200 ${
+            isSelected
+              ? "bg-blue-500/30 text-blue-400 border-blue-500/40"
+              : "bg-blue-500/20 text-blue-400 border-blue-500/30"
+          }`}
+        >
+          <Users className="h-3 w-3 mr-1" />
+          {Math.max(0, centre.usersCount || 0)}
+        </Badge>
       </TableCell>
 
-      <TableCell className="w-[200px] text-right py-2 pr-3">
+      {/* Documents Column */}
+      <TableCell className="py-4 table-cell-center max-md:hidden">
+        <Badge
+          variant="secondary"
+          className={`text-xs px-2 py-1 transition-colors duration-200 ${
+            isSelected
+              ? "bg-green-500/30 text-green-400 border-green-500/40"
+              : "bg-green-500/20 text-green-400 border-green-500/30"
+          }`}
+        >
+          <FileText className="h-3 w-3 mr-1" />
+          {centre.documentsCount || 0}
+        </Badge>
+      </TableCell>
+
+      {/* Actions Column */}
+      <TableCell className="py-4 table-cell-center">
         <ResponsibilityCentreActionsDropdown
           centre={centre}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onAssociateUsers={handleAssociateUsers}
-          onViewDetails={handleViewDetails}
+          onEdit={() => onEdit(centre)}
+          onDelete={() => onDelete(centre)}
+          onAssociateUsers={() => onAssociateUsers(centre)}
+          onViewDetails={() => onViewDetails(centre)}
         />
       </TableCell>
     </TableRow>

@@ -46,13 +46,19 @@ const getStatusBadge = (status: number) => {
   switch (status) {
     case 0:
       return (
-        <Badge className="table-glass-badge-warning">
+        <Badge
+          variant="secondary"
+          className="bg-orange-500/20 text-orange-600 border-orange-500/30 hover:bg-orange-500/30 transition-colors"
+        >
           {t("documents.statusDraft")}
         </Badge>
       );
     case 1:
       return (
-        <Badge className="table-glass-badge-success">
+        <Badge
+          variant="secondary"
+          className="bg-green-500/20 text-green-600 border-green-500/30 hover:bg-green-500/30 transition-colors"
+        >
           {t("documents.statusInProgress")}
         </Badge>
       );
@@ -81,19 +87,26 @@ const DocumentActionsDropdown = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="table-glass-action-button" size="sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 hover:bg-muted/50 transition-colors duration-200"
+        >
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="table-glass-dropdown">
-        <DropdownMenuLabel className="table-glass-dropdown-label">
+      <DropdownMenuContent
+        align="end"
+        className="bg-background/95 border-border/40 shadow-xl rounded-xl backdrop-blur-md"
+      >
+        <DropdownMenuLabel className="text-sm font-medium text-foreground">
           {t("common.actions")}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="table-glass-dropdown-separator" />
+        <DropdownMenuSeparator className="bg-border/30" />
 
         <DropdownMenuItem
           onClick={() => navigate(`/documents/${document.id}`)}
-          className="table-glass-dropdown-item"
+          className="text-sm focus:bg-primary/10 hover:bg-primary/5 rounded-lg transition-colors cursor-pointer"
         >
           <ExternalLink className="mr-2 h-4 w-4" />
           {t("common.view")}
@@ -103,7 +116,7 @@ const DocumentActionsDropdown = ({
           <>
             <DropdownMenuItem
               onClick={() => navigate(`/documents/${document.id}/edit`)}
-              className="table-glass-dropdown-item"
+              className="text-sm focus:bg-primary/10 hover:bg-primary/5 rounded-lg transition-colors cursor-pointer"
             >
               <Edit className="mr-2 h-4 w-4" />
               {t("common.edit")}
@@ -112,7 +125,7 @@ const DocumentActionsDropdown = ({
             <DropdownMenuItem
               onClick={onAssignCircuit}
               disabled={isAssignedToCircuit}
-              className="table-glass-dropdown-item"
+              className="text-sm focus:bg-primary/10 hover:bg-primary/5 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <GitBranch className="mr-2 h-4 w-4" />
               {isAssignedToCircuit
@@ -123,10 +136,10 @@ const DocumentActionsDropdown = ({
               )}
             </DropdownMenuItem>
 
-            <DropdownMenuSeparator className="table-glass-dropdown-separator" />
+            <DropdownMenuSeparator className="bg-border/30" />
             <DropdownMenuItem
               onClick={onDelete}
-              className="table-glass-dropdown-item-destructive"
+              className="text-sm focus:bg-destructive/10 hover:bg-destructive/5 text-destructive rounded-lg transition-colors cursor-pointer"
             >
               <Trash className="mr-2 h-4 w-4" />
               {t("common.delete")}
@@ -150,66 +163,182 @@ export default function DocumentsTableRow({
   // Check if document is already assigned to a circuit
   const isAssignedToCircuit = !!document.circuitId;
 
+  const handleRowClick = (event: React.MouseEvent) => {
+    // Don't trigger row selection if clicking on action buttons or links
+    const target = event.target as HTMLElement;
+    const isActionElement = target.closest(
+      'button, a, [role="button"], .dropdown-trigger'
+    );
+
+    if (!isActionElement && canManageDocuments) {
+      onSelect();
+    }
+  };
+
   return (
-    <motion.tr
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.02 }}
-      className={`table-glass-row ${
-        isSelected ? "table-glass-row-selected" : ""
-      }`}
+    <TableRow
+      className={`
+        documents-table-layout transition-all duration-200 cursor-pointer select-none relative
+        ${
+          isSelected
+            ? "bg-primary/10 border-primary/30 shadow-sm"
+            : "hover:bg-muted/30"
+        }
+        border-b border-border/5
+      `}
+      onClick={handleRowClick}
+      style={
+        isSelected
+          ? {
+              borderLeft: "4px solid hsl(var(--primary))",
+              background:
+                "linear-gradient(90deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.05) 100%)",
+            }
+          : {}
+      }
     >
-      <TableCell className="w-[50px] py-3">
+      {/* Selection/Index Column */}
+      <TableCell className="py-4 table-cell-center w-[50px]">
         {canManageDocuments ? (
           <Checkbox
+            enhanced={true}
+            size="sm"
             checked={isSelected}
             onCheckedChange={onSelect}
-            className="table-glass-checkbox"
+            onClick={(e) => e.stopPropagation()}
+            className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
         ) : (
-          <span className="table-glass-index">{index + 1}</span>
+          <span className="text-sm text-muted-foreground font-medium">
+            {index + 1}
+          </span>
         )}
       </TableCell>
-      <TableCell className="w-[160px] font-mono text-sm py-3">
-        <Link
-          to={`/documents/${document.id}`}
-          className="table-glass-link flex items-center gap-1"
-        >
-          <FileText className="h-3.5 w-3.5 opacity-70" />
-          {document.documentKey}
-        </Link>
+
+      {/* Document Code Column */}
+      <TableCell className="py-4 table-cell-start w-[160px]">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="flex-shrink-0">
+            <div
+              className={`h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 flex items-center justify-center transition-all duration-200 ${
+                isSelected
+                  ? "from-primary/30 to-primary/20 border-primary/40 shadow-sm"
+                  : ""
+              }`}
+            >
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <Link
+              to={`/documents/${document.id}`}
+              className={`text-sm font-medium truncate transition-colors duration-200 hover:text-primary ${
+                isSelected ? "text-primary" : "text-foreground"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {document.documentKey}
+            </Link>
+            <div className="text-xs text-muted-foreground truncate">
+              ID: {document.id}
+            </div>
+          </div>
+        </div>
       </TableCell>
-      <TableCell className="w-[250px] py-3">
+
+      {/* Title Column */}
+      <TableCell className="py-4 table-cell-start w-[250px]">
         <Link
           to={`/documents/${document.id}`}
-          className="table-glass-link-primary"
+          className={`text-sm font-medium truncate transition-colors duration-200 hover:text-primary ${
+            isSelected ? "text-primary" : "text-foreground"
+          }`}
+          onClick={(e) => e.stopPropagation()}
         >
           {document.title}
         </Link>
       </TableCell>
-      <TableCell className="w-[120px] py-3">
-        {getStatusBadge(document.status)}
+
+      {/* Status Column */}
+      <TableCell className="py-4 table-cell-center w-[120px]">
+        <Badge
+          variant="secondary"
+          className={`text-xs px-2 py-1 transition-colors duration-200 ${
+            document.status === 0
+              ? isSelected
+                ? "bg-orange-500/30 text-orange-400 border-orange-500/40"
+                : "bg-orange-500/20 text-orange-600 border-orange-500/30"
+              : document.status === 1
+              ? isSelected
+                ? "bg-green-500/30 text-green-400 border-green-500/40"
+                : "bg-green-500/20 text-green-600 border-green-500/30"
+              : "bg-muted/50 text-muted-foreground border-muted/30"
+          }`}
+        >
+          {document.status === 0
+            ? "Draft"
+            : document.status === 1
+            ? "In Progress"
+            : "Unknown"}
+        </Badge>
       </TableCell>
-      <TableCell className="w-[150px] table-glass-text py-3">
-        {document.documentType.typeName}
+
+      {/* Type Column */}
+      <TableCell className="py-4 table-cell-start w-[150px]">
+        <div
+          className={`text-sm truncate transition-colors duration-200 ${
+            isSelected ? "text-primary" : "text-muted-foreground"
+          }`}
+        >
+          {document.documentType.typeName}
+        </div>
       </TableCell>
-      <TableCell className="w-[140px] table-glass-text py-3">
-        {new Date(document.docDate).toLocaleDateString()}
+
+      {/* Date Column */}
+      <TableCell className="py-4 table-cell-center w-[140px]">
+        <div
+          className={`text-sm transition-colors duration-200 ${
+            isSelected ? "text-primary" : "text-muted-foreground"
+          }`}
+        >
+          {new Date(document.docDate).toLocaleDateString()}
+        </div>
       </TableCell>
-      <TableCell className="w-[150px] py-3">
+
+      {/* Created By Column */}
+      <TableCell className="py-4 table-cell-start w-[150px]">
         <div className="flex items-center gap-2">
-          <Avatar className="table-glass-avatar">
-            <AvatarFallback className="table-glass-avatar-fallback">
+          <Avatar
+            className={`h-8 w-8 border-2 transition-all duration-200 ${
+              isSelected ? "border-primary/40 shadow-sm" : "border-border/30"
+            }`}
+          >
+            <AvatarFallback
+              className={`text-xs font-medium transition-colors duration-200 ${
+                isSelected
+                  ? "bg-primary/20 text-primary"
+                  : "bg-muted/50 text-muted-foreground"
+              }`}
+            >
               {document.createdBy.firstName[0]}
               {document.createdBy.lastName[0]}
             </AvatarFallback>
           </Avatar>
-          <span className="table-glass-text-secondary">
+          <span
+            className={`text-sm truncate transition-colors duration-200 ${
+              isSelected ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
             {document.createdBy.username}
           </span>
         </div>
       </TableCell>
-      <TableCell className="w-[100px] text-right py-3">
+
+      {/* Actions Column */}
+      <TableCell
+        className="py-4 table-cell-center w-[100px]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -222,12 +351,12 @@ export default function DocumentsTableRow({
                 />
               </div>
             </TooltipTrigger>
-            <TooltipContent className="table-glass-tooltip">
+            <TooltipContent className="bg-background/95 border-border/40 shadow-xl rounded-lg backdrop-blur-md">
               Document Actions
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </TableCell>
-    </motion.tr>
+    </TableRow>
   );
 }

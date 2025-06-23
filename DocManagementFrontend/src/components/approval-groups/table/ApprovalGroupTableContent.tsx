@@ -14,9 +14,10 @@ interface ApprovalGroupTableContentProps {
   selectedGroups: number[];
   onSelectAll: () => void;
   onSelectGroup: (groupId: number, checked: boolean) => void;
-  onEdit: (group: ApprovalGroup) => void;
-  onView: (group: ApprovalGroup) => void;
-  onDelete: (groupId: number) => void;
+  onEditGroup: (group: ApprovalGroup) => void;
+  onViewGroup: (group: ApprovalGroup) => void;
+  onDeleteGroup: (group: ApprovalGroup) => void;
+  onManageApprovers: (group: ApprovalGroup) => void;
   sortBy: SortField;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
@@ -30,9 +31,10 @@ export function ApprovalGroupTableContent({
   selectedGroups,
   onSelectAll,
   onSelectGroup,
-  onEdit,
-  onView,
-  onDelete,
+  onEditGroup,
+  onViewGroup,
+  onDeleteGroup,
+  onManageApprovers,
   sortBy,
   sortDirection,
   onSort,
@@ -120,12 +122,16 @@ export function ApprovalGroupTableContent({
   }
 
   return (
-    <div className="h-full flex flex-col gap-3" style={{ minHeight: "100%" }}>
-      <div className="flex-1 relative overflow-hidden rounded-2xl table-glass-container min-h-0">
+    <div
+      className="h-full flex flex-col gap-4 w-full px-1"
+      style={{ minHeight: "100%" }}
+    >
+      {/* Modern Approval Groups Table */}
+      <div className="flex-1 relative overflow-hidden rounded-2xl table-glass-container min-h-0 shadow-xl">
         {hasGroups ? (
           <div className="relative h-full flex flex-col z-10">
-            {/* Fixed Header - Never Scrolls */}
-            <div className="flex-shrink-0 overflow-x-auto table-glass-header">
+            {/* Fixed Header with Glass Effect */}
+            <div className="flex-shrink-0 overflow-x-auto table-glass-header border-b border-border/20">
               <div className="min-w-[1026px]">
                 <Table className="table-fixed w-full">
                   <ApprovalGroupTableHeader
@@ -142,21 +148,22 @@ export function ApprovalGroupTableContent({
               </div>
             </div>
 
-            {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
+            {/* Scrollable Body with Better Height Management */}
             <div
               className="flex-1 overflow-hidden"
-              style={{ maxHeight: "calc(100vh - 280px)" }}
+              style={{ maxHeight: "calc(100vh - 320px)" }}
             >
               <ScrollArea className="h-full w-full">
-                <div className="min-w-[1026px] pb-2">
+                <div className="min-w-[1026px]">
                   <Table className="table-fixed w-full">
                     <ApprovalGroupTableBody
                       groups={paginatedGroups}
                       selectedGroups={selectedGroups}
                       onSelectGroup={onSelectGroup}
-                      onEdit={onEdit}
-                      onView={onView}
-                      onDelete={onDelete}
+                      onEditGroup={onEditGroup}
+                      onViewGroup={onViewGroup}
+                      onDeleteGroup={onDeleteGroup}
+                      onManageApprovers={onManageApprovers}
                     />
                   </Table>
                 </div>
@@ -170,9 +177,9 @@ export function ApprovalGroupTableContent({
         )}
       </div>
 
-      {/* Smart Pagination */}
+      {/* Enhanced Pagination with Glass Effect */}
       {hasGroups && (
-        <div className="table-glass-pagination p-4 rounded-b-2xl">
+        <div className="flex-shrink-0 table-glass-pagination p-4 rounded-2xl shadow-lg backdrop-blur-md">
           <SmartPagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -180,7 +187,10 @@ export function ApprovalGroupTableContent({
             totalItems={totalItems}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            className="justify-center"
             pageSizeOptions={[10, 15, 25, 50, 100]}
+            showFirstLast={true}
+            maxVisiblePages={5}
           />
         </div>
       )}

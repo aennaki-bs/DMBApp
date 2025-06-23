@@ -87,29 +87,69 @@ export function useResponsibilityCentreManagement({
     return sorted;
   }, [filteredCentres, sortBy, sortDirection]);
 
-  // Handle centre selection
-  const handleSelectCentre = useCallback((centreId: number) => {
-    setSelectedCentres((prev) =>
-      prev.includes(centreId)
-        ? prev.filter((id) => id !== centreId)
-        : [...prev, centreId]
-    );
+  // Handle centre selection with functional updates
+  const handleSelectCentre = useCallback(
+    (centreId: number, checked: boolean) => {
+      setSelectedCentres((prevSelected) => {
+        const isCurrentlySelected = prevSelected.includes(centreId);
+
+        if (checked && !isCurrentlySelected) {
+          return [...prevSelected, centreId];
+        } else if (!checked && isCurrentlySelected) {
+          return prevSelected.filter((id) => id !== centreId);
+        }
+
+        return prevSelected;
+      });
+    },
+    []
+  );
+
+  // Utility functions
+  const isAllFilteredSelected = useCallback(
+    (centresToCheck?: ResponsibilityCentre[]) => {
+      const centres = centresToCheck || sortedAndFilteredCentres;
+      if (centres.length === 0) return false;
+      return centres.every((centre) => selectedCentres.includes(centre.id));
+    },
+    [selectedCentres, sortedAndFilteredCentres]
+  );
+
+  const getSelectedCount = useCallback(() => {
+    return selectedCentres.length;
+  }, [selectedCentres]);
+
+  const getFilteredSelectedCount = useCallback(() => {
+    return selectedCentres.filter((id) =>
+      sortedAndFilteredCentres.some((centre) => centre.id === id)
+    ).length;
+  }, [selectedCentres, sortedAndFilteredCentres]);
+
+  // Clear all selections
+  const clearSelectedCentres = useCallback(() => {
+    setSelectedCentres([]);
   }, []);
 
-  // Handle select all
-  const handleSelectAll = useCallback(
-    (centres: ResponsibilityCentre[]) => {
-      const allIds = centres.map((centre) => centre.id);
-      const allSelected = allIds.every((id) => selectedCentres.includes(id));
+  // Handle select all with improved logic
+  const handleSelectAll = useCallback(() => {
+    setSelectedCentres((prevSelected) => {
+      const allFilteredIds = sortedAndFilteredCentres.map(
+        (centre) => centre.id
+      );
+      const allFilteredSelected = allFilteredIds.every((id) =>
+        prevSelected.includes(id)
+      );
 
-      if (allSelected) {
-        setSelectedCentres((prev) => prev.filter((id) => !allIds.includes(id)));
+      if (allFilteredSelected) {
+        // Deselect all filtered centres
+        return prevSelected.filter((id) => !allFilteredIds.includes(id));
       } else {
-        setSelectedCentres((prev) => [...new Set([...prev, ...allIds])]);
+        // Select all filtered centres
+        const newSelected = new Set([...prevSelected, ...allFilteredIds]);
+        return Array.from(newSelected);
       }
-    },
-    [selectedCentres]
-  );
+    });
+  }, [sortedAndFilteredCentres]);
 
   // Handle sort
   const handleSort = useCallback(
@@ -199,5 +239,10 @@ export function useResponsibilityCentreManagement({
     handleDeleteCentre,
     handleBulkDelete,
     refreshCentres,
+    // New utility functions
+    isAllFilteredSelected,
+    getSelectedCount,
+    getFilteredSelectedCount,
+    clearSelectedCentres,
   };
 }

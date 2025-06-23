@@ -223,11 +223,35 @@ export default function ApprovalGroupCreateDialog({
       // Call the API to create the group
       await approvalService.createApprovalGroup(requestData);
 
-      onSuccess(); // Notify parent component
-      toast.success("Approval group created successfully!");
+      // Enhanced success feedback
+      toast.success(`Approval group "${formData.name}" created successfully!`, {
+        description:
+          "The table will refresh automatically to show your new group.",
+        duration: 4000,
+      });
+
+      // Close dialog and trigger refresh
+      onSuccess(); // Notify parent component for auto-refresh
+
+      // Reset form for next use
+      setFormData({
+        name: "",
+        comment: "",
+        selectedUsers: [],
+        ruleType: ApprovalRuleType.Any,
+      });
+      setCurrentStep(1);
     } catch (error) {
       console.error("Failed to create approval group:", error);
-      toast.error("Failed to create approval group");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to create approval group";
+
+      toast.error("Failed to create approval group", {
+        description: errorMessage,
+        duration: 5000,
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -1,11 +1,18 @@
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowDown, ArrowUp } from "lucide-react";
-import { useTranslation } from "@/hooks/useTranslation";
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Building2,
+  Users,
+  FileText,
+} from "lucide-react";
+import { ResponsibilityCentre } from "@/models/responsibilityCentre";
 
 interface ResponsibilityCentreTableHeaderProps {
-  selectedCount: number;
-  totalCount: number;
+  centres: ResponsibilityCentre[];
+  selectedCentres: number[];
   onSelectAll: () => void;
   sortBy: string;
   sortDirection: string;
@@ -13,81 +20,104 @@ interface ResponsibilityCentreTableHeaderProps {
 }
 
 export function ResponsibilityCentreTableHeader({
-  selectedCount,
-  totalCount,
+  centres,
+  selectedCentres,
   onSelectAll,
   sortBy,
   sortDirection,
   onSort,
 }: ResponsibilityCentreTableHeaderProps) {
-  const { t } = useTranslation();
+  const isAllSelected =
+    centres.length > 0 && selectedCentres.length === centres.length;
+  const isIndeterminate =
+    selectedCentres.length > 0 && selectedCentres.length < centres.length;
 
   const renderSortIcon = (field: string) => {
-    if (sortBy !== field) return null;
+    if (sortBy !== field) {
+      return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
+    }
     return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3 w-3" />
+      <ArrowUp className="ml-1 h-3 w-3 text-primary" />
     ) : (
-      <ArrowDown className="ml-1 h-3 w-3" />
+      <ArrowDown className="ml-1 h-3 w-3 text-primary" />
     );
   };
 
-  const headerClass = (field: string) => `
-    font-medium cursor-pointer select-none text-xs
-    hover:opacity-80 transition-colors duration-150
-    ${sortBy === field ? "opacity-100" : ""}
-  `;
+  const getSortButton = (
+    field: string,
+    label: string,
+    icon?: React.ReactNode
+  ) => (
+    <button
+      className="h-8 px-2 -ml-2 text-xs font-medium hover:bg-accent/50 flex items-center gap-1 rounded-md transition-all duration-200 hover:shadow-sm"
+      onClick={() => onSort(field)}
+    >
+      {icon && <span className="mr-1">{icon}</span>}
+      {label}
+      {renderSortIcon(field)}
+    </button>
+  );
 
   return (
-    <TableHeader className="table-glass-header">
-      <TableRow className="table-glass-header-row h-10">
-        <TableHead className="w-[40px] py-2">
-          <div className="flex items-center justify-center">
-            <Checkbox
-              checked={selectedCount > 0 && selectedCount === totalCount}
-              onCheckedChange={onSelectAll}
-              aria-label="Select all"
-              className="h-3.5 w-3.5"
-            />
-          </div>
+    <TableHeader className="sticky top-0 z-10">
+      <TableRow className="border-border/20 hover:bg-muted/30 transition-colors duration-200 responsibility-centre-table-layout">
+        {/* Checkbox Column */}
+        <TableHead className="py-3 table-cell-center">
+          <Checkbox
+            enhanced={true}
+            size="sm"
+            checked={isAllSelected}
+            onCheckedChange={onSelectAll}
+            aria-label="Select all"
+            className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            ref={(el) => {
+              if (el && el.querySelector) {
+                const input = el.querySelector(
+                  'input[type="checkbox"]'
+                ) as HTMLInputElement;
+                if (input) input.indeterminate = isIndeterminate;
+              }
+            }}
+          />
         </TableHead>
-        <TableHead
-          className={`${headerClass("code")} w-[150px] py-2`}
-          onClick={() => onSort("code")}
-        >
-          <div className="flex items-center">
-            {t("common.code")}
-            {renderSortIcon("code")}
-          </div>
+
+        {/* Centre Code Column */}
+        <TableHead className="py-3 table-cell-start">
+          {getSortButton(
+            "code",
+            "Centre Code",
+            <Building2 className="h-3.5 w-3.5" />
+          )}
         </TableHead>
-        <TableHead
-          className={`${headerClass("descr")} w-[300px] py-2`}
-          onClick={() => onSort("descr")}
-        >
-          <div className="flex items-center">
-            {t("common.description")}
-            {renderSortIcon("descr")}
-          </div>
+
+        {/* Description Column */}
+        <TableHead className="py-3 table-cell-start max-md:hidden">
+          {getSortButton("descr", "Description")}
         </TableHead>
-        <TableHead
-          className={`${headerClass("usersCount")} w-[120px] py-2`}
-          onClick={() => onSort("usersCount")}
-        >
-          <div className="flex items-center justify-center">
-            {t("responsibilityCentres.usersCount")}
-            {renderSortIcon("usersCount")}
-          </div>
+
+        {/* Users Column */}
+        <TableHead className="py-3 table-cell-center">
+          {getSortButton(
+            "usersCount",
+            "Users",
+            <Users className="h-3.5 w-3.5" />
+          )}
         </TableHead>
-        <TableHead
-          className={`${headerClass("documentsCount")} w-[120px] py-2`}
-          onClick={() => onSort("documentsCount")}
-        >
-          <div className="flex items-center justify-center">
-            {t("responsibilityCentres.documentsCount")}
-            {renderSortIcon("documentsCount")}
-          </div>
+
+        {/* Documents Column */}
+        <TableHead className="py-3 table-cell-center max-md:hidden">
+          {getSortButton(
+            "documentsCount",
+            "Documents",
+            <FileText className="h-3.5 w-3.5" />
+          )}
         </TableHead>
-        <TableHead className="w-[200px] font-medium text-right py-2 text-xs pr-3">
-          {t("common.actions")}
+
+        {/* Actions Column */}
+        <TableHead className="py-3 table-cell-center">
+          <span className="text-xs font-medium text-muted-foreground">
+            Actions
+          </span>
         </TableHead>
       </TableRow>
     </TableHeader>

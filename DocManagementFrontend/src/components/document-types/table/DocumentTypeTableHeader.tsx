@@ -1,100 +1,145 @@
-import { ArrowUpDown, Tag, FileText, Info, Hash, Users } from "lucide-react";
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  FileText,
+  Hash,
+  AlignLeft,
+  Layers,
+  Files,
+} from "lucide-react";
+import { DocumentType } from "@/models/document";
 
 interface DocumentTypeTableHeaderProps {
-  onSelectAll: (checked: boolean) => void;
-  areAllEligibleSelected: boolean;
-  hasEligibleTypes: boolean;
+  types: DocumentType[];
+  selectedTypes: number[];
+  onSelectAll: () => void;
+  sortBy: string;
+  sortDirection: string;
   onSort: (field: string) => void;
-  sortField: string | null;
-  sortDirection: "asc" | "desc";
 }
 
-export const DocumentTypeTableHeader = ({
+export function DocumentTypeTableHeader({
+  types,
+  selectedTypes,
   onSelectAll,
-  areAllEligibleSelected,
-  hasEligibleTypes,
-  onSort,
-  sortField,
+  sortBy,
   sortDirection,
-}: DocumentTypeTableHeaderProps) => {
-  const renderSortableHeader = (
-    label: string,
+  onSort,
+}: DocumentTypeTableHeaderProps) {
+  // Only count types that can be selected (no documents)
+  const eligibleTypes = types.filter(
+    (type) => (type.documentCounter || 0) === 0
+  );
+  const isAllEligibleSelected =
+    eligibleTypes.length > 0 &&
+    eligibleTypes.every((type) => selectedTypes.includes(type.id!));
+  const isIndeterminate = selectedTypes.length > 0 && !isAllEligibleSelected;
+
+  const renderSortIcon = (field: string) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="ml-1 h-3 w-3 text-primary" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3 text-primary" />
+    );
+  };
+
+  const getSortButton = (
     field: string,
-    icon: React.ReactNode,
-    className?: string
+    label: string,
+    icon?: React.ReactNode
   ) => (
-    <div
-      className={cn(
-        "flex items-center gap-1 cursor-pointer select-none hover:text-foreground transition-colors text-muted-foreground",
-        className
-      )}
+    <button
+      className="h-8 px-2 -ml-2 text-xs font-medium hover:bg-accent/50 flex items-center gap-1 rounded-md transition-all duration-200 hover:shadow-sm"
       onClick={() => onSort(field)}
     >
-      {icon}
+      {icon && <span className="mr-1">{icon}</span>}
       {label}
-      <ArrowUpDown
-        className={cn("ml-1 h-3.5 w-3.5", {
-          "text-primary": sortField === field,
-          "opacity-50": sortField !== field,
-        })}
-      />
-    </div>
+      {renderSortIcon(field)}
+    </button>
   );
 
   return (
-    <TableHeader className="bg-gradient-to-r from-primary/10 to-primary/5 backdrop-blur-sm">
-      <TableRow className="border-primary/20 hover:bg-transparent">
-        <TableHead className="w-[50px]">
+    <TableHeader className="sticky top-0 z-10">
+      <TableRow className="border-border/20 hover:bg-muted/30 transition-colors duration-200 document-types-table-layout">
+        {/* Checkbox Column */}
+        <TableHead className="py-3 table-cell-center">
           <Checkbox
-            checked={areAllEligibleSelected && hasEligibleTypes}
+            enhanced={true}
+            size="sm"
+            checked={isAllEligibleSelected}
             onCheckedChange={onSelectAll}
-            disabled={!hasEligibleTypes}
-            aria-label="Select all types"
-            className="translate-y-[2px]"
+            disabled={eligibleTypes.length === 0}
+            aria-label="Select all eligible document types"
+            className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            ref={(el) => {
+              if (el && el.querySelector) {
+                const input = el.querySelector(
+                  'input[type="checkbox"]'
+                ) as HTMLInputElement;
+                if (input) input.indeterminate = isIndeterminate;
+              }
+            }}
           />
         </TableHead>
-        <TableHead className="w-[140px]">
-          {renderSortableHeader(
-            "Type Code",
+
+        {/* Type Code Column */}
+        <TableHead className="py-3 table-cell-start">
+          {getSortButton(
             "typeKey",
-            <Tag className="h-4 w-4 mr-1 text-primary/70" />
+            "Type Code",
+            <Hash className="h-3.5 w-3.5" />
           )}
         </TableHead>
-        <TableHead className="w-[200px]">
-          {renderSortableHeader(
-            "Type Name",
+
+        {/* Type Name Column */}
+        <TableHead className="py-3 table-cell-start">
+          {getSortButton(
             "typeName",
-            <FileText className="h-4 w-4 mr-1 text-primary/70" />
+            "Type Name",
+            <FileText className="h-3.5 w-3.5" />
           )}
         </TableHead>
-        <TableHead className="w-[250px]">
-          {renderSortableHeader(
-            "Description",
+
+        {/* Description Column */}
+        <TableHead className="py-3 table-cell-start max-md:hidden">
+          {getSortButton(
             "typeAttr",
-            <Info className="h-4 w-4 mr-1 text-primary/70" />
+            "Description",
+            <AlignLeft className="h-3.5 w-3.5" />
           )}
         </TableHead>
-        <TableHead className="w-[140px]">
-          {renderSortableHeader(
-            "Tier Type",
+
+        {/* Tier Type Column */}
+        <TableHead className="py-3 table-cell-center">
+          {getSortButton(
             "tierType",
-            <Users className="h-4 w-4 mr-1 text-primary/70" />
+            "Tier Type",
+            <Layers className="h-3.5 w-3.5" />
           )}
         </TableHead>
-        <TableHead className="w-[120px] pl-6">
-          {renderSortableHeader(
-            "Documents",
+
+        {/* Documents Column */}
+        <TableHead className="py-3 table-cell-center max-md:hidden">
+          {getSortButton(
             "documentCounter",
-            <Hash className="h-4 w-4 mr-1 text-primary/70" />
+            "Documents",
+            <Files className="h-3.5 w-3.5" />
           )}
         </TableHead>
-        <TableHead className="text-right w-[140px] text-muted-foreground">
-          Actions
+
+        {/* Actions Column */}
+        <TableHead className="py-3 table-cell-center">
+          <span className="text-xs font-medium text-muted-foreground">
+            Actions
+          </span>
         </TableHead>
       </TableRow>
     </TableHeader>
   );
-};
+}

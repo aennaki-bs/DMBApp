@@ -6,7 +6,7 @@ export type SortDirection = "asc" | "desc";
 
 export function useApproversManagement() {
   // Core data
-  const { approvers: allApprovers, isLoading, error, refetch, deleteApprover } = useApprovers();
+  const { approvers: allApprovers, isLoading, error, refetch, isFetching, isRefetching, deleteApprover } = useApprovers();
 
   // Selection state
   const [selectedApprovers, setSelectedApprovers] = useState<number[]>([]);
@@ -76,9 +76,9 @@ export function useApproversManagement() {
   // Selection handlers
   const handleSelectApprover = (approverId: number, checked: boolean) => {
     if (checked) {
-      setSelectedApprovers([...selectedApprovers, approverId]);
+      setSelectedApprovers(prev => [...prev, approverId]);
     } else {
-      setSelectedApprovers(selectedApprovers.filter((id) => id !== approverId));
+      setSelectedApprovers(prev => prev.filter((id) => id !== approverId));
     }
   };
 
@@ -87,22 +87,33 @@ export function useApproversManagement() {
     const allSelected = approverIds.every((id) => selectedApprovers.includes(id));
 
     if (allSelected) {
-      // Deselect all
-      setSelectedApprovers(selectedApprovers.filter((id) => !approverIds.includes(id)));
+      // Deselect all filtered approvers
+      setSelectedApprovers(prev => prev.filter((id) => !approverIds.includes(id)));
     } else {
-      // Select all
-      const newSelected = [...selectedApprovers];
-      approverIds.forEach((id) => {
-        if (!newSelected.includes(id)) {
-          newSelected.push(id);
-        }
+      // Select all filtered approvers (merge with existing selections)
+      setSelectedApprovers(prev => {
+        const newSelected = new Set(prev);
+        approverIds.forEach(id => newSelected.add(id));
+        return Array.from(newSelected);
       });
-      setSelectedApprovers(newSelected);
     }
   };
 
   const clearSelectedApprovers = () => {
     setSelectedApprovers([]);
+  };
+
+  // Bulk selection utilities
+  const isAllFilteredSelected = (approvers: Approver[]) => {
+    if (!approvers || approvers.length === 0) return false;
+    return approvers.every(approver => selectedApprovers.includes(approver.id));
+  };
+
+  const getSelectedCount = () => selectedApprovers.length;
+
+  const getFilteredSelectedCount = (approvers: Approver[]) => {
+    if (!approvers) return 0;
+    return approvers.filter(approver => selectedApprovers.includes(approver.id)).length;
   };
 
   // Sorting handler
@@ -140,6 +151,8 @@ export function useApproversManagement() {
     isLoading,
     isError: !!error,
     refetch,
+    isFetching,
+    isRefetching,
 
     // Selection
     selectedApprovers,
@@ -172,5 +185,10 @@ export function useApproversManagement() {
     handleApproverEdited,
     handleMultipleDeleted,
     deleteApprover,
+
+    // Bulk selection utilities
+    isAllFilteredSelected,
+    getSelectedCount,
+    getFilteredSelectedCount,
   };
 }

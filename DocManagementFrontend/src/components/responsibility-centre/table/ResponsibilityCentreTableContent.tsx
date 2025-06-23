@@ -4,9 +4,9 @@ import { ResponsibilityCentreTableHeader } from "./content/ResponsibilityCentreT
 import { ResponsibilityCentreTableBody } from "./content/ResponsibilityCentreTableBody";
 import { ResponsibilityCentreTableEmpty } from "./ResponsibilityCentreTableEmpty";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2 } from "lucide-react";
 import SmartPagination from "@/components/shared/SmartPagination";
 import { usePagination } from "@/hooks/usePagination";
-import { Loader2 } from "lucide-react";
 
 interface ResponsibilityCentreTableContentProps {
   centres: ResponsibilityCentre[] | undefined;
@@ -20,7 +20,7 @@ interface ResponsibilityCentreTableContentProps {
   sortBy: string;
   sortDirection: string;
   onSort: (field: string) => void;
-  onClearFilters: () => void;
+  onClearFilters?: () => void;
   isLoading?: boolean;
   isError?: boolean;
 }
@@ -90,7 +90,9 @@ export function ResponsibilityCentreTableContent({
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="h-8 w-8 animate-spin table-glass-loading-spinner" />
-              <p className="table-glass-loading-text">Loading centres...</p>
+              <p className="table-glass-loading-text">
+                Loading responsibility centres...
+              </p>
             </div>
           </div>
         </div>
@@ -109,7 +111,7 @@ export function ResponsibilityCentreTableContent({
                 <span className="font-bold">!</span>
               </div>
               <p className="table-glass-error-text">
-                Failed to load centres. Please try again.
+                Failed to load responsibility centres. Please try again.
               </p>
             </div>
           </div>
@@ -119,21 +121,23 @@ export function ResponsibilityCentreTableContent({
   }
 
   return (
-    <div className="h-full flex flex-col gap-3" style={{ minHeight: "100%" }}>
-      <div className="flex-1 relative overflow-hidden rounded-2xl table-glass-container min-h-0">
+    <div
+      className={`h-full flex flex-col gap-4 w-full px-1`}
+      style={{ minHeight: "100%" }}
+    >
+      {/* Modern Responsibility Centre Table */}
+      <div className="flex-1 relative overflow-hidden rounded-2xl table-glass-container min-h-0 shadow-xl">
         {hasCentres ? (
           <div className="relative h-full flex flex-col z-10">
-            {/* Fixed Header - Never Scrolls */}
-            <div className="flex-shrink-0 overflow-x-auto table-glass-header">
+            {/* Fixed Header with Glass Effect */}
+            <div className="flex-shrink-0 overflow-x-auto table-glass-header border-b border-border/20">
               <div className="min-w-[930px]">
                 <Table className="table-fixed w-full">
                   <ResponsibilityCentreTableHeader
-                    selectedCount={
-                      selectedCentres.filter((id) =>
-                        paginatedCentres.some((centre) => centre.id === id)
-                      ).length
-                    }
-                    totalCount={paginatedCentres.length}
+                    centres={paginatedCentres}
+                    selectedCentres={selectedCentres.filter((id) =>
+                      paginatedCentres.some((centre) => centre.id === id)
+                    )}
                     onSelectAll={handleSelectAll}
                     sortBy={sortBy}
                     sortDirection={sortDirection}
@@ -143,13 +147,13 @@ export function ResponsibilityCentreTableContent({
               </div>
             </div>
 
-            {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
+            {/* Scrollable Body with Better Height Management */}
             <div
               className="flex-1 overflow-hidden"
-              style={{ maxHeight: "calc(100vh - 280px)" }}
+              style={{ maxHeight: "calc(100vh - 320px)" }}
             >
               <ScrollArea className="h-full w-full">
-                <div className="min-w-[930px] pb-2">
+                <div className="min-w-[930px]">
                   <Table className="table-fixed w-full">
                     <ResponsibilityCentreTableBody
                       centres={paginatedCentres}
@@ -172,9 +176,9 @@ export function ResponsibilityCentreTableContent({
         )}
       </div>
 
-      {/* Smart Pagination */}
+      {/* Enhanced Pagination with Glass Effect */}
       {hasCentres && (
-        <div className="table-glass-pagination p-4 rounded-b-2xl">
+        <div className="flex-shrink-0 table-glass-pagination p-4 rounded-2xl shadow-lg backdrop-blur-md">
           <SmartPagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -182,7 +186,10 @@ export function ResponsibilityCentreTableContent({
             totalItems={totalItems}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            className="justify-center"
             pageSizeOptions={[10, 15, 25, 50, 100]}
+            showFirstLast={true}
+            maxVisiblePages={5}
           />
         </div>
       )}

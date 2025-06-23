@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import approvalService from "@/services/approvalService";
 
 export interface Approver {
@@ -12,39 +12,30 @@ export interface Approver {
 }
 
 export function useApprovers() {
-  const [approvers, setApprovers] = useState<Approver[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchApprovers = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await approvalService.getAllApprovators();
-      
-      if (Array.isArray(response)) {
-        setApprovers(response);
-      } else {
-        setError("Failed to fetch approvers");
-        setApprovers([]);
-      }
-    } catch (err) {
-      console.error("Error fetching approvers:", err);
-      setError("An error occurred while fetching approvers");
-      setApprovers([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const refetch = () => {
-    fetchApprovers();
-  };
+  // Fetch approvers with enhanced configuration
+  const {
+    data: approvers = [],
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["approvers"],
+    queryFn: () => approvalService.getAllApprovators(),
+    staleTime: 30 * 1000, // Consider data stale after 30 seconds
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnMount: true, // Always refetch on component mount
+    refetchInterval: 60 * 1000, // Auto-refresh every 60 seconds
+    refetchIntervalInBackground: false, // Don't refetch when tab is not active
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+  });
 
   const deleteApprover = async (id: number) => {
     try {
       await approvalService.deleteApprovator(id);
-      await fetchApprovers(); // Refetch data
+      await refetch(); // Refetch data after deletion
       return { success: true };
     } catch (err) {
       console.error("Error deleting approver:", err);
@@ -52,15 +43,13 @@ export function useApprovers() {
     }
   };
 
-  useEffect(() => {
-    fetchApprovers();
-  }, []);
-
   return {
     approvers,
     isLoading,
-    error,
+    error: isError,
     refetch,
+    isFetching,
+    isRefetching,
     deleteApprover,
   };
 }

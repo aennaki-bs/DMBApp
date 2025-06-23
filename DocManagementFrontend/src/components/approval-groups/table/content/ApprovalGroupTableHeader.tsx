@@ -1,5 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUp, ArrowDown, Users } from "lucide-react";
+import { ArrowUp, ArrowDown, ArrowUpDown, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ApprovalGroup } from "@/models/approval";
 import {
@@ -31,91 +31,83 @@ export function ApprovalGroupTableHeader({
     selectedGroups.length > 0 && selectedGroups.length < groups.length;
 
   const renderSortIcon = (field: SortField) => {
-    if (sortBy !== field) return null;
+    if (sortBy !== field) {
+      return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
+    }
     return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3 w-3" />
+      <ArrowUp className="ml-1 h-3 w-3 text-primary" />
     ) : (
-      <ArrowDown className="ml-1 h-3 w-3" />
+      <ArrowDown className="ml-1 h-3 w-3 text-primary" />
     );
   };
 
-  const headerClass = (field: SortField) => `
-    font-medium cursor-pointer select-none text-xs
-    hover:opacity-80 transition-colors duration-150
-    ${sortBy === field ? "opacity-100" : ""}
-  `;
+  const getSortButton = (
+    field: SortField,
+    label: string,
+    icon?: React.ReactNode
+  ) => (
+    <button
+      className="h-8 px-2 -ml-2 text-xs font-medium hover:bg-accent/50 flex items-center gap-1 rounded-md transition-all duration-200 hover:shadow-sm"
+      onClick={() => onSort(field)}
+    >
+      {icon && <span className="mr-1">{icon}</span>}
+      {label}
+      {renderSortIcon(field)}
+    </button>
+  );
 
   return (
-    <TableHeader className="table-glass-header">
-      <TableRow className="table-glass-header-row h-10">
+    <TableHeader className="sticky top-0 z-10">
+      <TableRow className="border-border/20 hover:bg-muted/30 transition-colors duration-200 approval-table-layout">
         {/* Checkbox Column */}
-        <TableHead className="w-[40px] py-2">
-          <div className="flex items-center justify-center">
-            <Checkbox
-              checked={isAllSelected}
-              onCheckedChange={onSelectAll}
-              aria-label="Select all"
-              className="h-3.5 w-3.5"
-              ref={(el) => {
-                if (el && el.querySelector) {
-                  const input = el.querySelector(
-                    'input[type="checkbox"]'
-                  ) as HTMLInputElement;
-                  if (input) input.indeterminate = isIndeterminate;
-                }
-              }}
-            />
-          </div>
+        <TableHead className="py-3 table-cell-center">
+          <Checkbox
+            enhanced={true}
+            size="sm"
+            checked={isAllSelected}
+            onCheckedChange={onSelectAll}
+            aria-label="Select all"
+            className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            ref={(el) => {
+              if (el && el.querySelector) {
+                const input = el.querySelector(
+                  'input[type="checkbox"]'
+                ) as HTMLInputElement;
+                if (input) input.indeterminate = isIndeterminate;
+              }
+            }}
+          />
         </TableHead>
 
         {/* Group Name Column */}
-        <TableHead
-          className={`${headerClass("name")} w-[280px] py-2`}
-          onClick={() => onSort("name")}
-        >
-          <div className="flex items-center">
-            <Users className="h-3.5 w-3.5 mr-1.5" />
-            Group Name
-            {renderSortIcon("name")}
-          </div>
+        <TableHead className="py-3 table-cell-start">
+          {getSortButton(
+            "name",
+            "Group Name",
+            <Users className="h-3.5 w-3.5" />
+          )}
         </TableHead>
 
         {/* Rule Type Column */}
-        <TableHead
-          className={`${headerClass("ruleType")} w-[140px] py-2`}
-          onClick={() => onSort("ruleType")}
-        >
-          <div className="flex items-center">
-            Rule Type
-            {renderSortIcon("ruleType")}
-          </div>
+        <TableHead className="py-3 table-cell-center max-md:hidden">
+          {getSortButton("ruleType", "Rule Type")}
         </TableHead>
 
         {/* Comment Column */}
-        <TableHead
-          className={`${headerClass("comment")} w-[300px] py-2`}
-          onClick={() => onSort("comment")}
-        >
-          <div className="flex items-center">
-            Comment
-            {renderSortIcon("comment")}
-          </div>
+        <TableHead className="py-3 table-cell-start max-md:hidden">
+          {getSortButton("comment", "Comment")}
         </TableHead>
 
         {/* Approvers Column */}
-        <TableHead
-          className={`${headerClass("approversCount")} w-[100px] py-2`}
-          onClick={() => onSort("approversCount")}
-        >
-          <div className="flex items-center justify-center">
-            Approvers
-            {renderSortIcon("approversCount")}
-          </div>
+        <TableHead className="py-3 table-cell-center">
+          {getSortButton("approversCount", "Approvers")}
         </TableHead>
 
         {/* Actions Column */}
-        <TableHead className="w-[120px] font-medium text-right py-2 text-xs pr-3">
-          Actions
+        <TableHead className="py-3 table-cell-center">
+          <span className="text-xs font-medium text-muted-foreground">
+            Actions
+          </span>
         </TableHead>
       </TableRow>
     </TableHeader>

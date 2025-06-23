@@ -40,6 +40,22 @@
     --scrollbar-thumb-active: rgba(37, 99, 235, 0.9);
     --scrollbar-corner: rgba(30, 58, 138, 0.1);
 
+    /* Checkbox Variables - Standard theme (Enhanced Blue) */
+    --checkbox-bg: rgba(255, 255, 255, 0.9);
+    --checkbox-bg-hover: rgba(239, 246, 255, 0.95);
+    --checkbox-bg-checked: rgba(59, 130, 246, 0.9);
+    --checkbox-bg-checked-hover: rgba(37, 99, 235, 0.95);
+    --checkbox-border: rgba(59, 130, 246, 0.4);
+    --checkbox-border-hover: rgba(59, 130, 246, 0.6);
+    --checkbox-border-checked: rgba(37, 99, 235, 0.8);
+    --checkbox-border-focus: rgba(96, 165, 250, 0.8);
+    --checkbox-checkmark: rgb(255, 255, 255);
+    --checkbox-checkmark-hover: rgb(248, 250, 252);
+    --checkbox-shadow: rgba(59, 130, 246, 0.15);
+    --checkbox-shadow-hover: rgba(59, 130, 246, 0.25);
+    --checkbox-shadow-focus: rgba(96, 165, 250, 0.3);
+    --checkbox-ring: rgba(59, 130, 246, 0.2);
+
     /* Table Component Variables - Standard theme (Enhanced Blue) */
     --table-search-bg: rgba(30, 58, 138, 0.6);
     --table-search-bg-hover: rgba(30, 64, 175, 0.8);
@@ -138,6 +154,22 @@
     --scrollbar-thumb-active: rgba(6, 182, 212, 0.9);
     --scrollbar-corner: rgba(8, 145, 178, 0.1);
 
+    /* Checkbox Variables - Ocean blue theme (Enhanced Cyan) */
+    --checkbox-bg: rgba(255, 255, 255, 0.9);
+    --checkbox-bg-hover: rgba(207, 250, 254, 0.95);
+    --checkbox-bg-checked: rgba(6, 182, 212, 0.9);
+    --checkbox-bg-checked-hover: rgba(8, 145, 178, 0.95);
+    --checkbox-border: rgba(6, 182, 212, 0.4);
+    --checkbox-border-hover: rgba(6, 182, 212, 0.6);
+    --checkbox-border-checked: rgba(8, 145, 178, 0.8);
+    --checkbox-border-focus: rgba(34, 211, 238, 0.8);
+    --checkbox-checkmark: rgb(255, 255, 255);
+    --checkbox-checkmark-hover: rgb(236, 254, 255);
+    --checkbox-shadow: rgba(6, 182, 212, 0.15);
+    --checkbox-shadow-hover: rgba(6, 182, 212, 0.25);
+    --checkbox-shadow-focus: rgba(34, 211, 238, 0.3);
+    --checkbox-ring: rgba(6, 182, 212, 0.2);
+
     /* Table Component Variables - Ocean blue theme (Enhanced Cyan) */
     --table-search-bg: rgba(8, 145, 178, 0.6);
     --table-search-bg-hover: rgba(6, 182, 212, 0.8);
@@ -225,32 +257,32 @@
 
 /* ===== DARK NEUTRAL THEME (Professional) ===== */
 [data-theme="dark-neutral"] {
-    /* Light Mode */
+    /* Light Mode - Neutral */
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 9% 10%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
 
     /* Glass Effect Variables */
     --glass-bg: rgba(255, 255, 255, 0.15);
-    --glass-bg-dark: rgba(23, 23, 23, 0.15);
-    --glass-border: rgba(115, 115, 115, 0.2);
-    --glass-shadow: rgba(115, 115, 115, 0.1);
+    --glass-bg-dark: rgba(38, 38, 38, 0.15);
+    --glass-border: rgba(115, 115, 115, 0.3);
+    --glass-shadow: rgba(115, 115, 115, 0.15);
     --glass-opacity: 0.15;
     --glass-opacity-card: 0.8;
     --glass-opacity-morphism: 0.95;
@@ -263,6 +295,22 @@
     --scrollbar-thumb-hover: rgba(209, 213, 219, 0.8);
     --scrollbar-thumb-active: rgba(107, 114, 128, 0.9);
     --scrollbar-corner: rgba(75, 85, 99, 0.1);
+
+    /* Checkbox Variables - Dark neutral theme (Enhanced Gray) */
+    --checkbox-bg: rgba(255, 255, 255, 0.9);
+    --checkbox-bg-hover: rgba(249, 250, 251, 0.95);
+    --checkbox-bg-checked: rgba(107, 114, 128, 0.9);
+    --checkbox-bg-checked-hover: rgba(75, 85, 99, 0.95);
+    --checkbox-border: rgba(156, 163, 175, 0.4);
+    --checkbox-border-hover: rgba(156, 163, 175, 0.6);
+    --checkbox-border-checked: rgba(75, 85, 99, 0.8);
+    --checkbox-border-focus: rgba(209, 213, 219, 0.8);
+    --checkbox-checkmark: rgb(255, 255, 255);
+    --checkbox-checkmark-hover: rgb(249, 250, 251);
+    --checkbox-shadow: rgba(156, 163, 175, 0.15);
+    --checkbox-shadow-hover: rgba(156, 163, 175, 0.25);
+    --checkbox-shadow-focus: rgba(209, 213, 219, 0.3);
+    --checkbox-ring: rgba(156, 163, 175, 0.2);
 
     /* Table Component Variables - Dark neutral theme (Enhanced Gray) */
     --table-search-bg: rgba(75, 85, 99, 0.6);
@@ -358,7 +406,7 @@
     --card-foreground: 151 16% 12%;
     --popover: 0 0% 100%;
     --popover-foreground: 151 16% 12%;
-    --primary: 151 55% 41.5%;
+    --primary: 151 62% 50%;
     --primary-foreground: 0 0% 98%;
     --secondary: 151 32% 91%;
     --secondary-foreground: 151 16% 16%;
@@ -370,13 +418,13 @@
     --destructive-foreground: 0 0% 98%;
     --border: 151 20% 82%;
     --input: 151 20% 82%;
-    --ring: 151 55% 41.5%;
+    --ring: 151 62% 50%;
 
     /* Glass Effect Variables */
     --glass-bg: rgba(255, 255, 255, 0.15);
     --glass-bg-dark: rgba(6, 78, 59, 0.15);
-    --glass-border: rgba(16, 185, 129, 0.2);
-    --glass-shadow: rgba(16, 185, 129, 0.1);
+    --glass-border: rgba(16, 185, 129, 0.3);
+    --glass-shadow: rgba(16, 185, 129, 0.15);
     --glass-opacity: 0.15;
     --glass-opacity-card: 0.8;
     --glass-opacity-morphism: 0.95;
@@ -389,6 +437,22 @@
     --scrollbar-thumb-hover: rgba(52, 211, 153, 0.8);
     --scrollbar-thumb-active: rgba(5, 150, 105, 0.9);
     --scrollbar-corner: rgba(6, 95, 70, 0.1);
+
+    /* Checkbox Variables - Emerald green theme (Enhanced) */
+    --checkbox-bg: rgba(255, 255, 255, 0.9);
+    --checkbox-bg-hover: rgba(209, 250, 229, 0.95);
+    --checkbox-bg-checked: rgba(16, 185, 129, 0.9);
+    --checkbox-bg-checked-hover: rgba(5, 150, 105, 0.95);
+    --checkbox-border: rgba(16, 185, 129, 0.4);
+    --checkbox-border-hover: rgba(16, 185, 129, 0.6);
+    --checkbox-border-checked: rgba(5, 150, 105, 0.8);
+    --checkbox-border-focus: rgba(52, 211, 153, 0.8);
+    --checkbox-checkmark: rgb(255, 255, 255);
+    --checkbox-checkmark-hover: rgb(209, 250, 229);
+    --checkbox-shadow: rgba(16, 185, 129, 0.15);
+    --checkbox-shadow-hover: rgba(16, 185, 129, 0.25);
+    --checkbox-shadow-focus: rgba(52, 211, 153, 0.3);
+    --checkbox-ring: rgba(16, 185, 129, 0.2);
 
     /* Table Component Variables - Emerald green theme (Enhanced) */
     --table-search-bg: rgba(6, 95, 70, 0.6);
@@ -516,6 +580,22 @@
     --scrollbar-thumb-active: rgba(107, 33, 168, 0.9);
     --scrollbar-corner: rgba(88, 28, 135, 0.1);
 
+    /* Checkbox Variables - Purple haze theme (Enhanced) */
+    --checkbox-bg: rgba(255, 255, 255, 0.9);
+    --checkbox-bg-hover: rgba(237, 233, 254, 0.95);
+    --checkbox-bg-checked: rgba(168, 85, 247, 0.9);
+    --checkbox-bg-checked-hover: rgba(107, 33, 168, 0.95);
+    --checkbox-border: rgba(168, 85, 247, 0.4);
+    --checkbox-border-hover: rgba(168, 85, 247, 0.6);
+    --checkbox-border-checked: rgba(107, 33, 168, 0.8);
+    --checkbox-border-focus: rgba(196, 181, 253, 0.8);
+    --checkbox-checkmark: rgb(255, 255, 255);
+    --checkbox-checkmark-hover: rgb(237, 233, 254);
+    --checkbox-shadow: rgba(168, 85, 247, 0.15);
+    --checkbox-shadow-hover: rgba(168, 85, 247, 0.25);
+    --checkbox-shadow-focus: rgba(196, 181, 253, 0.3);
+    --checkbox-ring: rgba(168, 85, 247, 0.2);
+
     /* Table Component Variables - Purple haze theme (Enhanced) */
     --table-search-bg: rgba(88, 28, 135, 0.6);
     --table-search-bg-hover: rgba(107, 33, 168, 0.8);
@@ -641,6 +721,22 @@
     --scrollbar-thumb-hover: rgba(253, 186, 116, 0.8);
     --scrollbar-thumb-active: rgba(194, 65, 12, 0.9);
     --scrollbar-corner: rgba(154, 52, 18, 0.1);
+
+    /* Checkbox Variables - Orange sunset theme */
+    --checkbox-bg: rgba(255, 255, 255, 0.9);
+    --checkbox-bg-hover: rgba(255, 237, 213, 0.95);
+    --checkbox-bg-checked: rgba(251, 146, 60, 0.9);
+    --checkbox-bg-checked-hover: rgba(194, 65, 12, 0.95);
+    --checkbox-border: rgba(251, 146, 60, 0.4);
+    --checkbox-border-hover: rgba(251, 146, 60, 0.6);
+    --checkbox-border-checked: rgba(194, 65, 12, 0.8);
+    --checkbox-border-focus: rgba(253, 186, 116, 0.8);
+    --checkbox-checkmark: rgb(255, 255, 255);
+    --checkbox-checkmark-hover: rgb(255, 237, 213);
+    --checkbox-shadow: rgba(251, 146, 60, 0.15);
+    --checkbox-shadow-hover: rgba(251, 146, 60, 0.25);
+    --checkbox-shadow-focus: rgba(253, 186, 116, 0.3);
+    --checkbox-ring: rgba(251, 146, 60, 0.2);
 
     /* Table Component Variables - Orange sunset theme */
     --table-search-bg: rgba(154, 52, 18, 0.4);
@@ -1827,4 +1923,571 @@ html {
     .table-glass-filter-option-active {
         border-width: 2px;
     }
+}
+
+/* ===== ENHANCED THEME-AWARE CHECKBOX STYLING ===== */
+
+/* Enhanced Checkbox Styling - Uses Theme Variables */
+.enhanced-checkbox {
+    /* Base Styling */
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    border: 2px solid var(--checkbox-border);
+    background: var(--checkbox-bg);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px var(--checkbox-shadow);
+    backdrop-filter: blur(4px);
+    transform: translateZ(0);
+    outline: none;
+
+    /* Flex container for checkmark */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Hover State */
+.enhanced-checkbox:hover {
+    border-color: var(--checkbox-border-hover);
+    background: var(--checkbox-bg-hover);
+    box-shadow: 0 2px 8px var(--checkbox-shadow-hover);
+    transform: translateY(-1px) scale(1.05);
+}
+
+/* Focus State */
+.enhanced-checkbox:focus {
+    border-color: var(--checkbox-border-focus);
+    box-shadow:
+        0 0 0 3px var(--checkbox-ring),
+        0 2px 8px var(--checkbox-shadow-focus);
+    transform: scale(1.05);
+}
+
+/* Checked State */
+.enhanced-checkbox:checked {
+    border-color: var(--checkbox-border-checked);
+    background: var(--checkbox-bg-checked);
+    box-shadow: 0 2px 8px var(--checkbox-shadow-hover);
+}
+
+.enhanced-checkbox:checked:hover {
+    background: var(--checkbox-bg-checked-hover);
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 4px 16px var(--checkbox-shadow-focus);
+}
+
+/* Checkmark Icon */
+.enhanced-checkbox::after {
+    content: '';
+    position: absolute;
+    width: 0.375rem;
+    height: 0.625rem;
+    border: solid var(--checkbox-checkmark);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    opacity: 0;
+}
+
+.enhanced-checkbox:checked::after {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+}
+
+.enhanced-checkbox:checked:hover::after {
+    color: var(--checkbox-checkmark-hover);
+}
+
+/* Indeterminate State */
+.enhanced-checkbox:indeterminate {
+    border-color: var(--checkbox-border-checked);
+    background: var(--checkbox-bg-checked);
+}
+
+.enhanced-checkbox:indeterminate::after {
+    content: '';
+    position: absolute;
+    width: 0.5rem;
+    height: 2px;
+    background: var(--checkbox-checkmark);
+    border: none;
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+    border-radius: 1px;
+}
+
+/* Disabled State */
+.enhanced-checkbox:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.enhanced-checkbox:disabled:hover {
+    transform: none;
+    box-shadow: 0 1px 3px var(--checkbox-shadow);
+}
+
+/* Size Variants */
+.enhanced-checkbox-sm {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.enhanced-checkbox-sm::after {
+    width: 0.3125rem;
+    height: 0.5rem;
+}
+
+.enhanced-checkbox-lg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.enhanced-checkbox-lg::after {
+    width: 0.5rem;
+    height: 0.75rem;
+}
+
+/* Animation for theme changes */
+[data-theme] .enhanced-checkbox {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced Checkbox Group Styling */
+.enhanced-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.enhanced-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.enhanced-checkbox-item:hover {
+    background: hsl(var(--muted) / 0.5);
+}
+
+.enhanced-checkbox-item .enhanced-checkbox {
+    margin: 0;
+}
+
+.enhanced-checkbox-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.enhanced-checkbox-description {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.125rem;
+}
+
+/* Pulse animation for selection feedback */
+@keyframes checkbox-pulse {
+    0% {
+        box-shadow: 0 0 0 0 var(--checkbox-ring);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px transparent;
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+.enhanced-checkbox:checked {
+    animation: checkbox-pulse 0.5s ease-out;
+}
+
+/* Table-specific enhanced checkboxes */
+.table-enhanced-checkbox {
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 0.25rem;
+}
+
+.table-enhanced-checkbox::after {
+    width: 0.3125rem;
+    height: 0.5rem;
+    border-width: 0 1.5px 1.5px 0;
+}
+
+/* Bulk selection visual feedback */
+.bulk-selection-active .table-enhanced-checkbox {
+    box-shadow: 0 0 0 2px var(--checkbox-ring);
+    animation: checkbox-pulse 1s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .enhanced-checkbox {
+        width: 1.125rem;
+        height: 1.125rem;
+        touch-action: manipulation;
+    }
+
+    .enhanced-checkbox::after {
+        width: 0.4375rem;
+        height: 0.6875rem;
+    }
+
+    .enhanced-checkbox-item {
+        padding: 0.75rem;
+        gap: 1rem;
+    }
+}
+
+/* ===== ENHANCED TABLE ROW SELECTION STYLING ===== */
+
+/* Enhanced Row Selection - Easy Click to Select */
+.table-glass-row.cursor-pointer {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.table-glass-row.cursor-pointer:hover {
+    background: hsl(var(--muted) / 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: hsl(var(--primary) / 0.3);
+}
+
+.table-glass-row.cursor-pointer:active {
+    transform: translateY(0);
+    transition: transform 0.1s ease;
+}
+
+/* Selection indicator bar */
+.table-glass-row.cursor-pointer::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+/* Selected row styling */
+.table-glass-row-selected {
+    background: hsl(var(--primary) / 0.1) !important;
+    border-color: hsl(var(--primary) / 0.3) !important;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.15);
+}
+
+.table-glass-row-selected::before {
+    background: hsl(var(--primary)) !important;
+    width: 4px !important;
+}
+
+.table-glass-row-selected:hover {
+    background: hsl(var(--primary) / 0.15) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px hsl(var(--primary) / 0.2);
+}
+
+/* Enhanced hover state for better visual feedback */
+.table-glass-row.cursor-pointer:hover .enhanced-checkbox {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+/* Selection ripple effect */
+@keyframes selection-ripple {
+    0% {
+        box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    }
+}
+
+.table-glass-row-selected {
+    animation: selection-ripple 0.6s ease-out;
+}
+
+/* Bulk selection mode styling */
+.bulk-selection-mode .table-glass-row.cursor-pointer {
+    border: 2px dashed hsl(var(--primary) / 0.3);
+}
+
+.bulk-selection-mode .table-glass-row.cursor-pointer:hover {
+    border-color: hsl(var(--primary) / 0.6);
+    background: hsl(var(--primary) / 0.05);
+}
+
+/* Enhanced visual feedback for actions */
+.table-glass-row .dropdown-trigger {
+    opacity: 0.6;
+    transition: all 0.2s ease;
+}
+
+.table-glass-row:hover .dropdown-trigger {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.table-glass-row-selected .dropdown-trigger {
+    opacity: 1;
+}
+
+/* Accessibility improvements */
+.table-glass-row.cursor-pointer:focus-within {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+}
+
+/* Mobile enhancements */
+@media (max-width: 768px) {
+    .table-glass-row.cursor-pointer {
+        padding: 0.75rem 0.5rem;
+        touch-action: manipulation;
+    }
+
+    .table-glass-row.cursor-pointer:hover {
+        transform: none;
+        /* Disable transform on mobile for performance */
+    }
+
+    .table-glass-row.cursor-pointer:active {
+        background: hsl(var(--primary) / 0.1);
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+}
+
+/* Theme-specific enhancements */
+[data-theme="dark-neutral"] .table-glass-row.cursor-pointer:hover {
+    background: hsl(var(--muted) / 0.6);
+}
+
+[data-theme="ocean-blue"] .table-glass-row-selected::before {
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+}
+
+[data-theme="emerald-green"] .table-glass-row-selected::before {
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+}
+
+[data-theme="purple-haze"] .table-glass-row-selected::before {
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+}
+
+[data-theme="orange-sunset"] .table-glass-row-selected::before {
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+}
+
+/* Selection counter enhancement */
+.selection-counter {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    animation: bounce 0.3s ease-out;
+}
+
+@keyframes bounce {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+    .table-glass-row.cursor-pointer,
+    .table-glass-row.cursor-pointer::before,
+    .enhanced-checkbox,
+    .dropdown-trigger {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+    }
+
+    .table-glass-row.cursor-pointer:hover,
+    .table-glass-row.cursor-pointer:active {
+        transform: none !important;
+    }
+}
+
+/* Table cell alignment utilities */
+.table-cell-center {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-cell-start {
+    text-align: left;
+    vertical-align: middle;
+}
+
+.table-cell-end {
+    text-align: right;
+    vertical-align: middle;
+}
+
+/* Table glass styling for headers */
+.table-glass-header-cell {
+    font-weight: 500;
+    color: var(--foreground);
+    transition: opacity 0.15s ease;
+}
+
+.table-glass-header-cell-active {
+    color: var(--primary);
+    opacity: 1;
+}
+
+/* Table glass row styling */
+.table-glass-row {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--border);
+}
+
+.table-glass-row:hover {
+    background-color: var(--muted);
+}
+
+.table-glass-row-selected {
+    background-color: var(--primary-bg);
+    border-color: var(--primary);
+}
+
+/* Table glass container */
+.table-glass-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Table glass pagination */
+.table-glass-pagination {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+}
+
+/* Table glass loading states */
+.table-glass-loading {
+    background: var(--card);
+    border: 1px solid var(--border);
+}
+
+.table-glass-loading-spinner {
+    color: var(--primary);
+}
+
+.table-glass-loading-text {
+    color: var(--muted-foreground);
+    font-size: 14px;
+}
+
+/* Table glass error states */
+.table-glass-error {
+    background: var(--card);
+    border: 1px solid var(--destructive);
+}
+
+.table-glass-error-icon {
+    background: var(--destructive);
+    color: var(--destructive-foreground);
+}
+
+.table-glass-error-text {
+    color: var(--destructive);
+    font-size: 14px;
+}
+
+/* Approvers Table Layout */
+.approvers-table-layout {
+    display: grid;
+    grid-template-columns: 48px minmax(320px, 1fr) minmax(300px, 1fr) 80px;
+    align-items: center;
+    gap: 0;
+}
+
+.approvers-table-layout .table-cell-center {
+    justify-self: center;
+    align-self: center;
+}
+
+.approvers-table-layout .table-cell-start {
+    justify-self: start;
+    align-self: center;
+}
+
+.approvers-table-layout .table-cell-end {
+    justify-self: end;
+    align-self: center;
+}
+
+/* Responsive adjustments for approvers table */
+@media (max-width: 768px) {
+    .approvers-table-layout {
+        grid-template-columns: 48px minmax(280px, 1fr) 80px;
+    }
+
+    .approvers-table-layout>*:nth-child(3) {
+        display: none;
+    }
+}
+
+/* Enhanced table dropdown styling */
+.table-dropdown-content {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .table-dropdown-content {
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }

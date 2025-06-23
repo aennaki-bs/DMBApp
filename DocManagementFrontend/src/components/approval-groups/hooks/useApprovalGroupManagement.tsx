@@ -25,15 +25,24 @@ export function useApprovalGroupManagement() {
   const [sortBy, setSortBy] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  // Fetch groups
+  // Fetch groups with enhanced configuration
   const {
     data: groups = [],
     isLoading,
     isError,
     refetch,
+    isFetching,
+    isRefetching,
   } = useQuery({
     queryKey: ["approval-groups"],
     queryFn: () => approvalService.getAllApprovalGroups(),
+    staleTime: 30 * 1000, // Consider data stale after 30 seconds
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnMount: true, // Always refetch on component mount
+    refetchInterval: 60 * 1000, // Auto-refresh every 60 seconds
+    refetchIntervalInBackground: false, // Don't refetch when tab is not active
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
   // Filter and search groups
@@ -154,6 +163,8 @@ export function useApprovalGroupManagement() {
     isLoading,
     isError,
     refetch,
+    isFetching,
+    isRefetching,
 
     // Selection
     selectedGroups,

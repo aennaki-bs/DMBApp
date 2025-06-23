@@ -1,19 +1,12 @@
 import { useState } from "react";
 import { useDocumentTypes } from "@/hooks/useDocumentTypes";
-import DocumentTypesHeaderSection from "./DocumentTypesHeaderSection";
-import DocumentTypesContent from "./DocumentTypesContent";
+import { DocumentTypeManagementTable } from "../DocumentTypeManagementTable";
 import DocumentTypeDrawer from "./DocumentTypeDrawer";
 import DeleteConfirmDialog from "@/components/document-types/DeleteConfirmDialog";
-import BottomActionBar from "@/components/document-types/BottomActionBar";
-import DocumentTypeFilters from "@/components/document-types/DocumentTypeFilters";
 import { DocumentType } from "@/models/document";
 import { toast } from "sonner";
 import documentService from "@/services/documentService";
-import { FilterContent } from "@/components/shared/FilterContent";
-import { FilterBadges, FilterBadge } from "@/components/shared/FilterBadges";
-import { Tag, Trash2, Plus, FileText, Download } from "lucide-react";
-import { BulkActionsBar, BulkAction } from "@/components/shared/BulkActionsBar";
-import { AnimatePresence } from "framer-motion";
+import { Plus, FileText, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,70 +25,17 @@ const DocumentTypesManagementPage = () => {
   const {
     types,
     isLoading,
-    searchQuery,
-    setSearchQuery,
     selectedTypes,
     setSelectedTypes,
-    viewMode,
-    setViewMode,
     handleSelectType,
     handleSelectAll,
-    documentTypesProps,
-    setFilters,
-    appliedFilters,
-    setAppliedFilters,
-    filterBadges,
-    setFilterBadges,
     refreshTypes,
   } = useDocumentTypes();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [typeToEdit, setTypeToEdit] = useState<DocumentType | null>(null);
   const [typeToDelete, setTypeToDelete] = useState<DocumentType | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-
-  const handleToggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-
-  const handleFilterChange = (newFilters: any) => {
-    setFilters(newFilters);
-    setAppliedFilters(newFilters);
-
-    // Create filter badges
-    const badges: FilterBadge[] = [];
-    if (newFilters.hasDocuments !== "any") {
-      badges.push({
-        id: "hasDocuments",
-        label:
-          newFilters.hasDocuments === "yes" ? "Has Documents" : "No Documents",
-        value: newFilters.hasDocuments,
-        onRemove: () => {
-          const updatedFilters = { ...newFilters, hasDocuments: "any" };
-          setFilters(updatedFilters);
-          setAppliedFilters(updatedFilters);
-          handleFilterChange(updatedFilters);
-        },
-      });
-    }
-
-    setFilterBadges(badges);
-  };
-
-  const clearAllFilters = () => {
-    const defaultFilters = {
-      hasDocuments: "any",
-    };
-    setFilters(defaultFilters);
-    setAppliedFilters(defaultFilters);
-    setFilterBadges([]);
-    setShowFilters(false);
-  };
-
-  const handleViewModeChange = (mode: "table" | "grid") => {
-    setViewMode(mode);
-  };
 
   const handleAddType = () => {
     setTypeToEdit(null);
@@ -164,16 +104,6 @@ const DocumentTypesManagementPage = () => {
     }
   };
 
-  const bulkActions: BulkAction[] = [
-    {
-      id: "delete",
-      label: "Delete Selected",
-      icon: <Trash2 className="h-4 w-4" />,
-      onClick: handleBulkDelete,
-      variant: "destructive",
-    },
-  ];
-
   const pageActions = [
     {
       label: "Export Types",
@@ -199,24 +129,17 @@ const DocumentTypesManagementPage = () => {
       icon={FileText}
       actions={pageActions}
     >
-      <DocumentTypesContent
-        isLoading={isLoading}
-        types={types}
-        viewMode={viewMode}
-        selectedTypes={selectedTypes}
-        onDeleteType={handleDeleteType}
-        onEditType={handleEditType}
-        onSelectType={handleSelectType}
-        onSelectAll={handleSelectAll}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        setViewMode={setViewMode}
-        onAddType={() => {
-          setTypeToEdit(null);
-          setIsDrawerOpen(true);
-        }}
-        {...documentTypesProps}
-      />
+      <div className="h-full">
+        <DocumentTypeManagementTable
+          types={types}
+          selectedTypes={selectedTypes}
+          onSelectType={handleSelectType}
+          onSelectAll={handleSelectAll}
+          onDeleteType={handleDeleteType}
+          onEditType={handleEditType}
+          isLoading={isLoading}
+        />
+      </div>
 
       <DocumentTypeDrawer
         open={isDrawerOpen}
@@ -239,17 +162,6 @@ const DocumentTypesManagementPage = () => {
             : ""
         }
       />
-
-      <AnimatePresence>
-        {selectedTypes.length > 0 && (
-          <BulkActionsBar
-            selectedCount={selectedTypes.length}
-            entityName="document type"
-            actions={bulkActions}
-            icon={<Tag className="w-5 h-5 text-primary-foreground/80" />}
-          />
-        )}
-      </AnimatePresence>
 
       <AlertDialog
         open={bulkDeleteDialogOpen}

@@ -120,12 +120,12 @@ export function useCircuitManagement() {
   }, [allCircuits, searchQuery, searchField, statusFilter, sortBy, sortDirection]);
 
   // Selection handlers
-  const handleSelectCircuit = (circuitId: number, checked: boolean) => {
-    if (checked) {
-      setSelectedCircuits([...selectedCircuits, circuitId]);
-    } else {
-      setSelectedCircuits(selectedCircuits.filter((id) => id !== circuitId));
-    }
+  const handleSelectCircuit = (circuitId: number) => {
+    setSelectedCircuits((prev) =>
+      prev.includes(circuitId)
+        ? prev.filter((id) => id !== circuitId)
+        : [...prev, circuitId]
+    );
   };
 
   const handleSelectAll = (circuits: Circuit[]) => {

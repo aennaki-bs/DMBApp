@@ -1,201 +1,180 @@
-import { TableRow, TableCell } from "@/components/ui/table";
-import { DocumentType, TierType } from "@/models/document";
-import { Button } from "@/components/ui/button";
-import {
-  Edit,
-  Trash2,
-  Eye,
-  MoreHorizontal,
-  AlertCircle,
-  ChevronRight,
-  Users,
-  UserCheck,
-  Package,
-} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { DocumentType } from "@/models/document";
+import { DocumentTypeActionsDropdown } from "./DocumentTypeActionsDropdown";
+import { FileText, Hash, AlignLeft, Layers, Files } from "lucide-react";
 
 interface DocumentTypeTableRowProps {
-  type: DocumentType;
+  type: DocumentType | undefined;
   isSelected: boolean;
-  onSelectType: (id: number, checked: boolean) => void;
-  onDeleteType: (id: number) => void;
-  onEditType: (type: DocumentType) => void;
+  onSelect: (id: number, checked: boolean) => void;
+  onEdit: (type: DocumentType) => void;
+  onDelete: (id: number) => void;
 }
 
-export const DocumentTypeTableRow = ({
+export function DocumentTypeTableRow({
   type,
   isSelected,
-  onSelectType,
-  onDeleteType,
-  onEditType,
-}: DocumentTypeTableRowProps) => {
-  const isEligibleForSelection = type.documentCounter === 0;
-  const navigate = useNavigate();
+  onSelect,
+  onEdit,
+  onDelete,
+}: DocumentTypeTableRowProps) {
+  // Safety check: if type is undefined, return null
+  if (!type) {
+    return null;
+  }
 
-  // Handle row click to navigate to subtypes page
-  const handleRowClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on checkbox, actions, or if text is selected
-    if (
-      (e.target as HTMLElement).closest(".checkbox-cell") ||
-      (e.target as HTMLElement).closest(".actions-cell") ||
-      window.getSelection()?.toString()
-    ) {
-      return;
+  const canSelect = (type.documentCounter || 0) === 0;
+
+  const handleRowClick = (event: React.MouseEvent) => {
+    // Don't trigger row selection if clicking on action buttons or links
+    const target = event.target as HTMLElement;
+    const isActionElement = target.closest(
+      'button, a, [role="button"], .dropdown-trigger'
+    );
+
+    if (!isActionElement && canSelect) {
+      onSelect(type.id!, !isSelected);
     }
-
-    navigate(`/document-types/${type.id}/subtypes`);
   };
 
-  // Helper function to render tier type with icon
-  const renderTierType = (tierType?: TierType) => {
-    switch (tierType) {
-      case TierType.Customer:
-        return (
-          <div className="flex items-center gap-1.5 text-green-400">
-            <UserCheck className="h-3.5 w-3.5" />
-            <span className="text-xs font-medium">Customer</span>
-          </div>
-        );
-      case TierType.Vendor:
-        return (
-          <div className="flex items-center gap-1.5 text-orange-400">
-            <Package className="h-3.5 w-3.5" />
-            <span className="text-xs font-medium">Vendor</span>
-          </div>
-        );
+  const handleSelectChange = (checked: boolean) => {
+    if (canSelect) {
+      onSelect(type.id!, checked);
+    }
+  };
+
+  const getTierTypeColor = (tierType: string | undefined) => {
+    switch (String(tierType || "").toLowerCase()) {
+      case "primary":
+        return "bg-blue-500/30 text-blue-400 border-blue-500/40";
+      case "secondary":
+        return "bg-green-500/30 text-green-400 border-green-500/40";
+      case "tertiary":
+        return "bg-purple-500/30 text-purple-400 border-purple-500/40";
       default:
-        return (
-          <div className="flex items-center gap-1.5 text-gray-400">
-            <Users className="h-3.5 w-3.5" />
-            <span className="text-xs">None</span>
-          </div>
-        );
+        return "bg-gray-500/30 text-gray-400 border-gray-500/40";
     }
   };
 
   return (
     <TableRow
-      className={cn(
-        "border-primary/10 hover:bg-primary/5 cursor-pointer group relative transition-colors",
-        isSelected && "bg-primary/10"
-      )}
+      className={`document-types-table-layout transition-all duration-200 cursor-pointer select-none ${
+        isSelected
+          ? "bg-primary/10 border-primary/30 shadow-sm"
+          : "hover:bg-muted/30"
+      }`}
       onClick={handleRowClick}
     >
-      <TableCell className="checkbox-cell">
+      {/* Selection Column */}
+      <TableCell className="py-4 table-cell-center">
         <Checkbox
+          enhanced={true}
+          size="sm"
           checked={isSelected}
-          onCheckedChange={(checked) => onSelectType(type.id!, !!checked)}
-          disabled={!isEligibleForSelection}
-          className="translate-y-[2px]"
+          onCheckedChange={handleSelectChange}
+          disabled={!canSelect}
+          className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
         />
       </TableCell>
-      <TableCell className="font-mono text-xs text-muted-foreground">
-        {type.typeKey || "No code"}
+
+      {/* Type Code Column */}
+      <TableCell className="py-4 table-cell-start">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="flex-shrink-0">
+            <div
+              className={`h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 flex items-center justify-center transition-all duration-200 ${
+                isSelected
+                  ? "from-primary/30 to-primary/20 border-primary/40 shadow-sm"
+                  : ""
+              }`}
+            >
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div
+              className={`text-sm font-medium truncate transition-colors duration-200 ${
+                isSelected ? "text-primary" : "text-foreground"
+              }`}
+            >
+              {type.typeKey || "N/A"}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">
+              ID: {type.id}
+            </div>
+          </div>
+        </div>
       </TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="font-medium text-foreground">
+
+      {/* Type Name Column */}
+      <TableCell className="py-4 table-cell-start">
+        <div className="flex items-center gap-2">
+          <Hash className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <span className="text-sm truncate max-w-[180px]">
             {type.typeName || "Unnamed Type"}
           </span>
         </div>
       </TableCell>
-      <TableCell className="max-w-xs">
-        <span className="text-xs text-muted-foreground line-clamp-1">
-          {type.typeAttr || "No description"}
-        </span>
-      </TableCell>
-      <TableCell>{renderTierType(type.tierType)}</TableCell>
-      <TableCell className="pl-6">
-        <div className="flex items-center">
-          <span className="text-foreground">{type.documentCounter || 0}</span>
+
+      {/* Description Column */}
+      <TableCell className="py-4 table-cell-start max-md:hidden">
+        <div className="flex items-center gap-2">
+          <AlignLeft className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          {type.typeAttr ? (
+            <span className="text-sm truncate max-w-[250px]">
+              {type.typeAttr}
+            </span>
+          ) : (
+            <span className="text-sm text-muted-foreground italic">
+              No description
+            </span>
+          )}
         </div>
       </TableCell>
-      <TableCell className="text-right actions-cell">
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-primary hover:text-primary/80 hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/document-types/${type.id}/subtypes`);
-            }}
-          >
-            View Series
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-primary/10"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-background/95 backdrop-blur-sm border-primary/20"
-            >
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditType(type);
-                }}
-                className="cursor-pointer hover:bg-primary/10"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                <span>Edit</span>
-              </DropdownMenuItem>
+      {/* Tier Type Column */}
+      <TableCell className="py-4 table-cell-center">
+        <Badge
+          variant="secondary"
+          className={`text-xs px-2 py-1 transition-colors duration-200 capitalize ${
+            isSelected
+              ? getTierTypeColor(String(type.tierType || ""))
+              : getTierTypeColor(String(type.tierType || ""))
+                  .replace("/30", "/20")
+                  .replace("/40", "/30")
+          }`}
+        >
+          <Layers className="h-3 w-3 mr-1" />
+          {type.tierType || "Unknown"}
+        </Badge>
+      </TableCell>
 
-              {isEligibleForSelection ? (
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteType(type.id!);
-                  }}
-                  className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  <span>Delete</span>
-                </DropdownMenuItem>
-              ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="relative flex cursor-not-allowed items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors opacity-50">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Delete</span>
-                        <AlertCircle className="ml-2 h-3 w-3" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Cannot delete type with associated documents</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      {/* Documents Column */}
+      <TableCell className="py-4 table-cell-center max-md:hidden">
+        <Badge
+          variant="secondary"
+          className={`text-xs px-2 py-1 transition-colors duration-200 ${
+            isSelected
+              ? "bg-green-500/30 text-green-400 border-green-500/40"
+              : "bg-green-500/20 text-green-400 border-green-500/30"
+          }`}
+        >
+          <Files className="h-3 w-3 mr-1" />
+          {type.documentCounter || 0}
+        </Badge>
+      </TableCell>
+
+      {/* Actions Column */}
+      <TableCell className="py-4 table-cell-center">
+        <DocumentTypeActionsDropdown
+          type={type}
+          onEdit={() => onEdit(type)}
+          onDelete={() => onDelete(type.id!)}
+          canDelete={canSelect}
+        />
       </TableCell>
     </TableRow>
   );
-};
+}

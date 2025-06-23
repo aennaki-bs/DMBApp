@@ -1,11 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ResponsibilityCentreTableContent } from "./table/ResponsibilityCentreTableContent";
 import { BulkActionsBar } from "./table/BulkActionsBar";
-import { EditResponsibilityCentreDialog } from "./EditResponsibilityCentreDialog";
-import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
-import { AssociateUsersDialog } from "./AssociateUsersDialog";
-import { ViewCentreDetailsDialog } from "./ViewCentreDetailsDialog";
 import {
   Select,
   SelectContent,
@@ -14,9 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useResponsibilityCentreManagement } from "./hooks/useResponsibilityCentreManagement";
-import { AlertTriangle, Filter, X, Search } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { AlertTriangle, Filter, X, Search, RefreshCw } from "lucide-react";
 import {
   Popover,
   PopoverTrigger,
@@ -24,58 +18,125 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { BulkDeleteDialog } from "./dialogs/BulkDeleteDialog";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ResponsibilityCentre } from "@/models/responsibilityCentre";
+import { EditResponsibilityCentreDialog } from "./EditResponsibilityCentreDialog";
+import { ViewCentreDetailsDialog } from "./ViewCentreDetailsDialog";
+import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
+import { AssociateUsersDialog } from "./AssociateUsersDialog";
+import { BulkDeleteDialog } from "./dialogs/BulkDeleteDialog";
 
-const DEFAULT_SEARCH_FIELDS = [
-  { id: "all", label: "All fields" },
-  { id: "code", label: "Code" },
+const DEFAULT_CENTRE_SEARCH_FIELDS = [
+  { id: "all", label: "All Fields" },
+  { id: "code", label: "Centre Code" },
   { id: "descr", label: "Description" },
 ];
 
-export function ResponsibilityCentreTable() {
-  const { t } = useTranslation();
-  const [filterOpen, setFilterOpen] = useState(false);
+interface ResponsibilityCentreTableProps {
+  onRefetchReady?: (refetchFn: () => void) => void;
+}
 
-  // Search and filter states
+export function ResponsibilityCentreTable({
+  onRefetchReady,
+}: ResponsibilityCentreTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchField, setSearchField] = useState("all");
+  const [editingCentre, setEditingCentre] =
+    useState<ResponsibilityCentre | null>(null);
+  const [viewingCentre, setViewingCentre] =
+    useState<ResponsibilityCentre | null>(null);
+  const [deletingCentre, setDeletingCentre] =
+    useState<ResponsibilityCentre | null>(null);
+  const [associatingCentre, setAssociatingCentre] =
+    useState<ResponsibilityCentre | null>(null);
+  const [deleteMultipleOpen, setDeleteMultipleOpen] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  // Dialog states
-  const [editingCentre, setEditingCentre] = useState(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deletingCentre, setDeletingCentre] = useState(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [associatingCentre, setAssociatingCentre] = useState(null);
-  const [associateDialogOpen, setAssociateDialogOpen] = useState(false);
-  const [viewingCentre, setViewingCentre] = useState(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const { t } = useTranslation();
 
   const {
-    centres,
-    filteredCentres,
     selectedCentres,
+    filteredCentres,
     isLoading,
     isError,
+    sortBy,
+    sortDirection,
     handleSelectCentre,
     handleSelectAll,
+    handleSort,
     handleEditCentre,
     handleDeleteCentre,
     handleBulkDelete,
     refreshCentres,
-    sortBy,
-    sortDirection,
-    handleSort,
+    getSelectedCount,
+    getFilteredSelectedCount,
+    clearSelectedCentres,
+    isAllFilteredSelected,
   } = useResponsibilityCentreManagement({
     searchQuery,
     searchField,
   });
 
+  // Filter popover state
+  const [filterOpen, setFilterOpen] = useState(false);
+
   // Clear all filters
   const clearAllFilters = () => {
     setSearchQuery("");
     setFilterOpen(false);
+  };
+
+  const handleDeleteMultiple = async () => {
+    try {
+      await handleBulkDelete();
+      setDeleteMultipleOpen(false);
+    } catch (error) {
+      toast.error("Failed to delete centres");
+      console.error(error);
+    }
+  };
+
+  // Pass refetch function to parent component
+  useEffect(() => {
+    if (onRefetchReady && refreshCentres) {
+      onRefetchReady(refreshCentres);
+    }
+  }, [onRefetchReady, refreshCentres]);
+
+  // Enhanced manual refresh with visual feedback
+  const handleManualRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      await refreshCentres();
+      toast.success("Responsibility centres refreshed successfully!", {
+        duration: 2000,
+      });
+    } catch (error) {
+      toast.error("Failed to refresh centres");
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  };
+
+  // Handle edit centre submission
+  const handleEditSubmit = async (centreId: number, data: any) => {
+    try {
+      await handleEditCentre(centreId, data);
+      setEditingCentre(null);
+    } catch (error) {
+      console.error("Failed to edit centre:", error);
+    }
+  };
+
+  // Handle delete centre submission
+  const handleDeleteSubmit = async (centreId: number) => {
+    try {
+      await handleDeleteCentre(centreId);
+      setDeletingCentre(null);
+    } catch (error) {
+      console.error("Failed to delete centre:", error);
+    }
   };
 
   if (isLoading) {
@@ -90,7 +151,7 @@ export function ResponsibilityCentreTable() {
     return (
       <div className="text-destructive py-10 text-center">
         <AlertTriangle className="h-10 w-10 mx-auto mb-2" />
-        {t("responsibilityCentres.errorLoading")}
+        Error loading responsibility centres
       </div>
     );
   }
@@ -100,25 +161,26 @@ export function ResponsibilityCentreTable() {
       className="h-full flex flex-col gap-5 w-full px-1"
       style={{ minHeight: "100%" }}
     >
-      {/* Search + Filter Bar */}
+      {/* Modern Search + Filter Bar */}
       <div className="p-4 rounded-xl table-glass-container shadow-lg">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
           {/* Search and field select */}
-          <div className="flex-1 flex items-center gap-2.5 min-w-0">
-            <div className="relative">
+          <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 min-w-0">
+            <div className="relative w-full sm:w-auto">
               <Select value={searchField} onValueChange={setSearchField}>
-                <SelectTrigger className="w-[130px] h-9 text-sm hover:bg-muted/50 focus:ring-1 focus:ring-primary/30 focus:border-primary/50 transition-all duration-200 shadow-sm rounded-md flex-shrink-0">
+                <SelectTrigger className="w-full sm:w-[130px] h-9 text-sm table-search-select hover:table-search-select focus:ring-1 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all duration-200 shadow-sm rounded-md flex-shrink-0">
                   <SelectValue>
-                    {DEFAULT_SEARCH_FIELDS.find((opt) => opt.id === searchField)
-                      ?.label || t("common.allFields")}
+                    {DEFAULT_CENTRE_SEARCH_FIELDS.find(
+                      (opt) => opt.id === searchField
+                    )?.label || "All Fields"}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="rounded-lg shadow-xl">
-                  {DEFAULT_SEARCH_FIELDS.map((opt) => (
+                <SelectContent className="table-search-select rounded-lg shadow-xl">
+                  {DEFAULT_CENTRE_SEARCH_FIELDS.map((opt) => (
                     <SelectItem
                       key={opt.id}
                       value={opt.id as string}
-                      className="text-xs hover:bg-muted/50 focus:bg-muted/50 rounded-md"
+                      className="text-xs hover:table-search-select focus:table-search-select rounded-md"
                     >
                       {opt.label}
                     </SelectItem>
@@ -127,41 +189,125 @@ export function ResponsibilityCentreTable() {
               </Select>
             </div>
 
-            <div className="relative flex-1 group">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-sm"></div>
+            <div className="relative flex-1 group min-w-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-purple-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-sm"></div>
               <Input
-                placeholder={t("responsibilityCentres.searchCentres")}
+                placeholder="Search responsibility centres..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="relative h-9 text-sm pl-10 pr-4 rounded-md focus:ring-1 transition-all duration-200 shadow-sm group-hover:shadow-md"
+                className="relative h-9 text-sm table-search-input pl-10 pr-4 rounded-md focus:ring-1 transition-all duration-200 shadow-sm group-hover:shadow-md w-full"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground group-hover:text-foreground transition-colors duration-200">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 table-search-icon group-hover:table-search-icon transition-colors duration-200">
                 <Search className="h-4 w-4" />
               </div>
             </div>
           </div>
 
           {/* Filter Actions */}
-          <div className="flex items-center gap-2">
-            {searchQuery && (
-              <Badge
-                variant="secondary"
-                className="text-xs px-2 py-1 cursor-pointer transition-colors duration-150"
-                onClick={clearAllFilters}
+          <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
+            {/* Manual Refresh Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManualRefresh}
+              disabled={isManualRefreshing}
+              className="h-9 px-3 text-xs table-search-text hover:table-search-text-hover transition-all duration-200"
+              title="Refresh responsibility centres"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 mr-1.5 ${
+                  isManualRefreshing ? "animate-spin" : ""
+                }`}
+              />
+              {isManualRefreshing ? "Refreshing..." : "Refresh"}
+            </Button>
+
+            {/* Filter Button */}
+            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`h-9 px-3 text-xs table-search-text hover:table-search-text-hover transition-all duration-200 ${
+                    searchQuery ? "table-glass-badge" : ""
+                  }`}
+                >
+                  <Filter className="h-3.5 w-3.5 mr-1.5" />
+                  Filter
+                  {searchQuery && (
+                    <span className="ml-1 px-1.5 py-0.5 bg-primary/20 text-primary rounded text-xs">
+                      1
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-72 p-4 table-search-select shadow-xl rounded-lg"
+                align="end"
               >
-                Search: {searchQuery}
-                <X className="h-3 w-3 ml-1" />
-              </Badge>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-sm table-search-text">
+                      Active Filters
+                    </h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearAllFilters}
+                      className="h-6 px-2 text-xs table-search-text hover:table-search-text-hover transition-colors duration-200"
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {searchQuery && (
+                      <div className="flex items-center justify-between p-2 table-search-select rounded-lg">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium table-search-text">
+                            Search Query
+                          </span>
+                          <span className="text-xs table-search-text/70 truncate max-w-[200px]">
+                            "{searchQuery}"
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSearchQuery("")}
+                          className="h-6 w-6 p-0 table-search-text hover:table-search-text-hover transition-colors duration-200"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Active Filter Badges */}
+            {searchQuery && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge
+                  variant="secondary"
+                  className="text-xs px-2 py-1 cursor-pointer transition-all duration-200 hover:bg-primary/20 hover:text-primary-foreground table-glass-badge"
+                  onClick={clearAllFilters}
+                >
+                  Search: {searchQuery}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              </div>
             )}
 
+            {/* Clear Button */}
             {searchQuery && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
-                className="h-8 px-2 text-xs hover:bg-muted/50 transition-all duration-200"
+                className="h-8 px-2 text-xs table-search-text hover:table-search-text-hover hover:table-search-select rounded-md transition-all duration-200 flex items-center gap-1.5"
               >
-                <X className="h-3.5 w-3.5 mr-1" />
+                <X className="h-3.5 w-3.5" />
                 Clear
               </Button>
             )}
@@ -169,28 +315,20 @@ export function ResponsibilityCentreTable() {
         </div>
       </div>
 
+      {/* Table Content */}
       <div className="flex-1 min-h-0">
         <ResponsibilityCentreTableContent
-          centres={filteredCentres}
+          centres={filteredCentres || []}
           selectedCentres={selectedCentres}
-          onSelectAll={() => handleSelectAll(filteredCentres || [])}
-          onSelectCentre={handleSelectCentre}
-          onEdit={(centre) => {
-            setEditingCentre(centre);
-            setEditDialogOpen(true);
+          onSelectAll={handleSelectAll}
+          onSelectCentre={(centreId: number) => {
+            const isSelected = selectedCentres.includes(centreId);
+            handleSelectCentre(centreId, !isSelected);
           }}
-          onDelete={(centre) => {
-            setDeletingCentre(centre);
-            setDeleteDialogOpen(true);
-          }}
-          onAssociateUsers={(centre) => {
-            setAssociatingCentre(centre);
-            setAssociateDialogOpen(true);
-          }}
-          onViewDetails={(centre) => {
-            setViewingCentre(centre);
-            setViewDialogOpen(true);
-          }}
+          onEdit={setEditingCentre}
+          onViewDetails={setViewingCentre}
+          onDelete={setDeletingCentre}
+          onAssociateUsers={setAssociatingCentre}
           sortBy={sortBy}
           sortDirection={sortDirection}
           onSort={handleSort}
@@ -200,66 +338,61 @@ export function ResponsibilityCentreTable() {
         />
       </div>
 
-      {selectedCentres.length > 0 && (
+      {/* Bulk Actions Bar - positioned at bottom of screen */}
+      {getSelectedCount() > 0 && (
         <BulkActionsBar
-          selectedCount={selectedCentres.length}
-          onDelete={() => setBulkDeleteDialogOpen(true)}
+          selectedCount={getSelectedCount()}
+          totalCount={filteredCentres?.length || 0}
+          onDelete={() => setDeleteMultipleOpen(true)}
+          onClearSelection={clearSelectedCentres}
         />
       )}
 
-      {/* Edit Dialog */}
-      <EditResponsibilityCentreDialog
-        centre={editingCentre}
-        isOpen={editDialogOpen}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setEditingCentre(null);
-        }}
-        onSave={handleEditCentre}
-      />
+      {/* Dialogs */}
+      {editingCentre && (
+        <EditResponsibilityCentreDialog
+          centre={editingCentre}
+          isOpen={true}
+          onClose={() => setEditingCentre(null)}
+          onSave={handleEditSubmit}
+        />
+      )}
 
-      {/* Delete Dialog */}
-      <DeleteConfirmDialog
-        centre={deletingCentre}
-        isOpen={deleteDialogOpen}
-        onClose={() => {
-          setDeleteDialogOpen(false);
-          setDeletingCentre(null);
-        }}
-        onConfirm={handleDeleteCentre}
-      />
+      {viewingCentre && (
+        <ViewCentreDetailsDialog
+          centre={viewingCentre}
+          isOpen={true}
+          onClose={() => setViewingCentre(null)}
+        />
+      )}
 
-      {/* Associate Users Dialog */}
-      <AssociateUsersDialog
-        centre={associatingCentre}
-        isOpen={associateDialogOpen}
-        onClose={() => {
-          setAssociateDialogOpen(false);
-          setAssociatingCentre(null);
-        }}
-        onSuccess={refreshCentres}
-      />
+      {deletingCentre && (
+        <DeleteConfirmDialog
+          centre={deletingCentre}
+          isOpen={true}
+          onClose={() => setDeletingCentre(null)}
+          onConfirm={() => handleDeleteSubmit(deletingCentre.id)}
+        />
+      )}
 
-      {/* View Details Dialog */}
-      <ViewCentreDetailsDialog
-        centre={viewingCentre}
-        isOpen={viewDialogOpen}
-        onClose={() => {
-          setViewDialogOpen(false);
-          setViewingCentre(null);
-        }}
-      />
+      {associatingCentre && (
+        <AssociateUsersDialog
+          centre={associatingCentre}
+          isOpen={true}
+          onClose={() => setAssociatingCentre(null)}
+          onSuccess={refreshCentres}
+        />
+      )}
 
       {/* Bulk Delete Dialog */}
-      <BulkDeleteDialog
-        selectedCount={selectedCentres.length}
-        isOpen={bulkDeleteDialogOpen}
-        onClose={() => setBulkDeleteDialogOpen(false)}
-        onConfirm={() => {
-          handleBulkDelete();
-          setBulkDeleteDialogOpen(false);
-        }}
-      />
+      {deleteMultipleOpen && (
+        <BulkDeleteDialog
+          selectedCount={getSelectedCount()}
+          isOpen={deleteMultipleOpen}
+          onClose={() => setDeleteMultipleOpen(false)}
+          onConfirm={handleDeleteMultiple}
+        />
+      )}
     </div>
   );
 }

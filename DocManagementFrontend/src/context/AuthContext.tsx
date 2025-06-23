@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("Auth initialization - stored data:", {
           hasToken: !!storedToken,
           hasUser: !!storedUser,
-          hasRefreshToken: !!storedRefreshToken
+          hasRefreshToken: !!storedRefreshToken,
         });
 
         if (storedToken && storedUser) {
@@ -85,17 +85,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             if (validToken) {
               setToken(validToken);
               setUser(parsedUser);
-              console.log("Token refreshed successfully, using stored user data");
-              
+              console.log(
+                "Token refreshed successfully, using stored user data"
+              );
+
               // Optionally verify user info in background (don't block initialization)
-              authService.getUserInfo()
-                .then(userInfo => {
+              authService
+                .getUserInfo()
+                .then((userInfo) => {
                   console.log("User info verified in background:", userInfo);
                   setUser(userInfo);
                   localStorage.setItem("user", JSON.stringify(userInfo));
                 })
-                .catch(error => {
-                  console.warn("Background user info verification failed:", error);
+                .catch((error) => {
+                  console.warn(
+                    "Background user info verification failed:",
+                    error
+                  );
                   // Keep using stored user data
                 });
             } else {
@@ -106,7 +112,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               setToken(null);
             }
           } catch (error) {
-            console.error("Error parsing stored user data or refreshing token:", error);
+            console.error(
+              "Error parsing stored user data or refreshing token:",
+              error
+            );
             authService.clearTokens();
             setUser(null);
             setToken(null);
@@ -277,14 +286,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Handle the case where role might be a string or an object with roleName property
     const userRole =
       typeof user.role === "string"
-        ? user.role
-        : (user.role as unknown as RoleType)?.roleName || "";
+        ? user.role.toLowerCase()
+        : (user.role as unknown as RoleType)?.roleName?.toLowerCase() || "";
 
     if (Array.isArray(roles)) {
-      return roles.includes(userRole);
+      return roles.some((role) => role.toLowerCase() === userRole);
     }
 
-    return userRole === roles;
+    return roles.toLowerCase() === userRole;
   };
 
   const authValue = {
@@ -299,12 +308,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     updateUserProfile,
     hasRole,
   };
-
-  console.log("Auth context current state:", {
-    isAuthenticated: !!user && !!token,
-    user,
-    isLoading,
-  });
 
   return (
     <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>

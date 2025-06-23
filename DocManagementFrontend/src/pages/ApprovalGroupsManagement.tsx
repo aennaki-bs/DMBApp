@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { UserPlus, Users } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -10,6 +10,9 @@ const ApprovalGroupsManagement = () => {
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const { t } = useTranslation();
 
+  // Ref to hold the table's refetch function
+  const tableRefetchRef = useRef<(() => void) | null>(null);
+
   const pageActions = [
     {
       label: "New Approval Group",
@@ -19,6 +22,15 @@ const ApprovalGroupsManagement = () => {
     },
   ];
 
+  const handleCreateSuccess = () => {
+    setIsCreateGroupOpen(false);
+    // Trigger immediate table refresh
+    if (tableRefetchRef.current) {
+      tableRefetchRef.current();
+      // Don't show redundant toast here since the dialog already shows success message
+    }
+  };
+
   return (
     <PageLayout
       title="Approval Groups"
@@ -26,14 +38,15 @@ const ApprovalGroupsManagement = () => {
       icon={Users}
       actions={pageActions}
     >
-      <ApprovalGroupTable />
+      <ApprovalGroupTable
+        onRefetchReady={(refetchFn) => {
+          tableRefetchRef.current = refetchFn;
+        }}
+      />
       <ApprovalGroupCreateDialog
         open={isCreateGroupOpen}
         onOpenChange={setIsCreateGroupOpen}
-        onSuccess={() => {
-          setIsCreateGroupOpen(false);
-          // The table will automatically refetch via the hook
-        }}
+        onSuccess={handleCreateSuccess}
       />
     </PageLayout>
   );

@@ -1,21 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { CircuitTableContent } from "./table/CircuitTableContent";
-import { BulkActionsBar } from "@/components/admin/table/BulkActionsBar";
+import { CircuitsWorkingTable } from "./CircuitsWorkingTable";
+import { BulkActionsBar } from "@/components/responsibility-centre/table/BulkActionsBar";
 import { SmartDeleteDialog } from "./dialogs/SmartDeleteDialog";
 import EditCircuitDialog from "./EditCircuitDialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCircuitManagement } from "./hooks/useCircuitManagement";
 import { useSmartDelete } from "./hooks/useSmartDelete";
-import { AlertTriangle, Filter, X } from "lucide-react";
+import { AlertTriangle, Filter, X, Search, RefreshCw } from "lucide-react";
 import {
   Popover,
   PopoverTrigger,
@@ -23,18 +16,29 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import {
   circuitDeleteService,
   type DeleteOptions,
 } from "@/services/circuitDeleteService";
+import { CircuitTableContent } from "./table/CircuitTableContent";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { BulkDeleteDialog } from "./dialogs/BulkDeleteDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const DEFAULT_CIRCUIT_SEARCH_FIELDS = [
   { id: "all", label: "All Fields" },
-  { id: "code", label: "Circuit Code" },
+  { id: "circuitKey", label: "Circuit Code" },
   { id: "title", label: "Title" },
-  { id: "description", label: "Description" },
+  { id: "descriptif", label: "Description" },
 ];
 
 const STATUS_OPTIONS = [
@@ -43,113 +47,123 @@ const STATUS_OPTIONS = [
   { id: "inactive", value: "inactive", label: "Inactive" },
 ];
 
-export function CircuitTable() {
+interface CircuitTableProps {
+  onRefetchReady?: (refetchFn: () => void) => void;
+}
+
+export function CircuitTable({ onRefetchReady }: CircuitTableProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isSimpleUser = user?.role === "SimpleUser";
   const { deleteCircuits } = useSmartDelete();
 
   const {
+    circuits: filteredCircuits,
     selectedCircuits,
+    isLoading,
+    isError,
+    refetch,
     editingCircuit,
+    setEditingCircuit,
     deletingCircuit,
+    setDeletingCircuit,
     deleteMultipleOpen,
+    setDeleteMultipleOpen,
     searchQuery,
     setSearchQuery,
     searchField,
     setSearchField,
     statusFilter,
     setStatusFilter,
-    circuits: filteredCircuits,
-    isLoading,
-    isError,
-    apiError,
-    refetch,
-    setEditingCircuit,
-    setDeletingCircuit,
-    setDeleteMultipleOpen,
-    handleSort,
     sortBy,
     sortDirection,
     handleSelectCircuit,
     handleSelectAll,
-    handleCircuitEdited,
-    handleMultipleDeleted,
-    clearSelectedCircuits,
+    handleSort,
     handleToggleActive,
     handleDelete,
     handleBulkDelete,
     handleStatusChange,
-    clearAllFilters,
+    clearSelectedCircuits,
     loadingCircuits,
   } = useCircuitManagement();
 
   // Filter popover state
   const [filterOpen, setFilterOpen] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   // Dialog states
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
-  const handleEditCircuit = (circuit: Circuit) => {
-    setEditingCircuit(circuit);
-    setEditOpen(true);
+  // Pass refetch function to parent component
+  useEffect(() => {
+    if (onRefetchReady && refetch) {
+      onRefetchReady(refetch);
+    }
+  }, [onRefetchReady, refetch]);
+
+  // Enhanced manual refresh with visual feedback
+  const handleManualRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      await refetch();
+      toast.success("Circuits refreshed successfully!", {
+        duration: 2000,
+      });
+    } catch (error) {
+      toast.error("Failed to refresh circuits");
+    } finally {
+      setIsManualRefreshing(false);
+    }
   };
 
-  const handleViewCircuit = (circuit: Circuit) => {
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSearchField("all");
+    setStatusFilter("any");
+    setFilterOpen(false);
+  };
+
+  const handleDeleteMultiple = async () => {
+    try {
+      await handleBulkDelete();
+      setDeleteMultipleOpen(false);
+    } catch (error) {
+      toast.error("Failed to delete circuits");
+      console.error(error);
+    }
+  };
+
+  // Handle delete circuit submission
+  const handleDeleteSubmit = async (circuit: any) => {
+    try {
+      await handleDelete(circuit);
+      setDeletingCircuit(null);
+    } catch (error) {
+      console.error("Failed to delete circuit:", error);
+    }
+  };
+
+  // Handle view circuit
+  const handleViewCircuit = (circuit: any) => {
     navigate(`/circuits/${circuit.id}/steps`);
   };
 
-  const handleViewStatuses = (circuit: Circuit) => {
+  // Handle view statuses
+  const handleViewStatuses = (circuit: any) => {
     navigate(`/circuits/${circuit.id}/statuses`);
   };
 
-  const handleDeleteCircuit = (circuit: Circuit) => {
-    setDeletingCircuit(circuit);
-    setDeleteOpen(true);
+  // Handle select all wrapper
+  const handleSelectAllWrapper = () => {
+    handleSelectAll(filteredCircuits);
   };
 
-  const confirmDelete = async (options: DeleteOptions) => {
-    if (!deletingCircuit) return;
-
-    try {
-      await deleteCircuits([deletingCircuit], options, () => {
-        refetch(); // Refresh the circuits list
-        setDeleteOpen(false);
-        setDeletingCircuit(null);
-      });
-    } catch (error) {
-      console.error("Delete failed:", error);
-    }
-  };
-
-  const confirmBulkDelete = async (options: DeleteOptions) => {
-    if (selectedCircuits.length === 0) return;
-
-    try {
-      const circuitsToDelete =
-        filteredCircuits?.filter((c) => selectedCircuits.includes(c.id)) || [];
-      await deleteCircuits(circuitsToDelete, options, () => {
-        refetch(); // Refresh the circuits list
-        setBulkDeleteOpen(false);
-        clearSelectedCircuits();
-      });
-    } catch (error) {
-      console.error("Bulk delete failed:", error);
-    }
-  };
-
-  const handleDeleteDialogClose = (open: boolean) => {
-    setDeleteOpen(open);
-    if (!open) {
-      setDeletingCircuit(null);
-    }
-  };
-
-  const handleBulkDeleteDialogClose = (open: boolean) => {
-    setBulkDeleteOpen(open);
-  };
+  // Get selected count
+  const getSelectedCount = () => selectedCircuits.length;
 
   if (isLoading) {
     return (
@@ -170,29 +184,17 @@ export function CircuitTable() {
 
   return (
     <div
-      className="h-full flex flex-col gap-3 sm:gap-5 w-full px-2 sm:px-1"
+      className="h-full flex flex-col gap-5 w-full px-1"
       style={{ minHeight: "100%" }}
     >
-      {/* API Error Alert */}
-      {apiError && (
-        <Alert
-          variant="destructive"
-          className="mb-4 border-red-800 bg-red-950/50 text-red-300"
-        >
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{apiError}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Compact Search + Filter Bar */}
-      <div className="p-3 sm:p-4 rounded-xl table-glass-container shadow-lg">
+      {/* Modern Search + Filter Bar */}
+      <div className="p-4 rounded-xl table-glass-container shadow-lg">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
           {/* Search and field select */}
           <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 min-w-0">
             <div className="relative w-full sm:w-auto">
               <Select value={searchField} onValueChange={setSearchField}>
-                <SelectTrigger className="w-full sm:w-[130px] h-9 text-sm table-search-select hover:table-search-select focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all duration-200 shadow-sm rounded-md flex-shrink-0">
+                <SelectTrigger className="w-full sm:w-[130px] h-9 text-sm table-search-select hover:table-search-select focus:ring-1 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all duration-200 shadow-sm rounded-md flex-shrink-0">
                   <SelectValue>
                     {DEFAULT_CIRCUIT_SEARCH_FIELDS.find(
                       (opt) => opt.id === searchField
@@ -214,7 +216,7 @@ export function CircuitTable() {
             </div>
 
             <div className="relative flex-1 group min-w-0">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-sm"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-purple-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-sm"></div>
               <Input
                 placeholder="Search circuits..."
                 value={searchQuery}
@@ -222,104 +224,174 @@ export function CircuitTable() {
                 className="relative h-9 text-sm table-search-input pl-10 pr-4 rounded-md focus:ring-1 transition-all duration-200 shadow-sm group-hover:shadow-md w-full"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 table-search-icon group-hover:table-search-icon transition-colors duration-200">
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                <Search className="h-4 w-4" />
               </div>
             </div>
           </div>
-          {/* Filter popover */}
+
+          {/* Filter Actions */}
           <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
+            {/* Manual Refresh Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManualRefresh}
+              disabled={isManualRefreshing}
+              className="h-9 px-3 text-xs table-search-text hover:table-search-text-hover transition-all duration-200"
+              title="Refresh circuits"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 mr-1.5 ${
+                  isManualRefreshing ? "animate-spin" : ""
+                }`}
+              />
+              {isManualRefreshing ? "Refreshing..." : "Refresh"}
+            </Button>
+
+            {/* Filter Button */}
             <Popover open={filterOpen} onOpenChange={setFilterOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full sm:w-auto h-9 px-4 text-sm table-search-select hover:table-search-select shadow-sm rounded-md flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-md whitespace-nowrap"
+                  className={`h-9 px-3 text-xs table-search-text hover:table-search-text-hover transition-all duration-200 ${
+                    statusFilter !== "any" || searchQuery
+                      ? "table-glass-badge"
+                      : ""
+                  }`}
                 >
-                  <Filter className="h-3.5 w-3.5" />
+                  <Filter className="h-3.5 w-3.5 mr-1.5" />
                   Filter
-                  {statusFilter !== "any" && (
-                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                  {(statusFilter !== "any" || searchQuery) && (
+                    <span className="ml-1 px-1.5 py-0.5 bg-primary/20 text-primary rounded text-xs">
+                      {
+                        [statusFilter !== "any", searchQuery].filter(Boolean)
+                          .length
+                      }
+                    </span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-72 table-search-select rounded-lg shadow-xl p-4">
-                <div className="mb-3 table-search-text font-semibold text-sm flex items-center gap-2">
-                  <Filter className="h-4 w-4 table-search-icon" />
-                  Advanced Filters
-                </div>
-                <div className="flex flex-col gap-3">
-                  {/* Status Filter */}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs table-search-text font-medium">
-                      Status
-                    </span>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={handleStatusChange}
-                    >
-                      <SelectTrigger className="w-full h-8 text-xs table-search-select focus:ring-1 transition-colors duration-200 shadow-sm rounded-md">
-                        <SelectValue>
-                          {
-                            STATUS_OPTIONS.find(
-                              (opt) => opt.value === statusFilter
-                            )?.label
-                          }
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="table-search-select">
-                        {STATUS_OPTIONS.map((opt) => (
-                          <SelectItem
-                            key={opt.id}
-                            value={opt.value}
-                            className="text-xs hover:table-search-select"
-                          >
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex justify-end mt-4">
-                  {(statusFilter !== "any" || searchQuery) && (
+              <PopoverContent
+                className="w-72 p-4 table-search-select shadow-xl rounded-lg"
+                align="end"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-sm table-search-text">
+                      Active Filters
+                    </h4>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 px-2 text-xs table-search-text hover:table-search-text-hover hover:table-search-select rounded-md transition-all duration-200 flex items-center gap-1.5"
                       onClick={clearAllFilters}
+                      className="h-6 px-2 text-xs table-search-text hover:table-search-text-hover transition-colors duration-200"
                     >
-                      <X className="h-3 w-3" /> Clear All
+                      Clear All
                     </Button>
-                  )}
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Status Filter */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs table-search-text font-medium">
+                        Status
+                      </span>
+                      <Select
+                        value={statusFilter}
+                        onValueChange={handleStatusChange}
+                      >
+                        <SelectTrigger className="w-full h-8 text-xs table-search-select focus:ring-1 transition-colors duration-200 shadow-sm rounded-md">
+                          <SelectValue>
+                            {
+                              STATUS_OPTIONS.find(
+                                (opt) => opt.value === statusFilter
+                              )?.label
+                            }
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="table-search-select">
+                          {STATUS_OPTIONS.map((opt) => (
+                            <SelectItem
+                              key={opt.id}
+                              value={opt.value}
+                              className="text-xs hover:table-search-select"
+                            >
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {searchQuery && (
+                      <div className="flex items-center justify-between p-2 table-search-select rounded-lg">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium table-search-text">
+                            Search Query
+                          </span>
+                          <span className="text-xs table-search-text/70 truncate max-w-[200px]">
+                            "{searchQuery}"
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSearchQuery("")}
+                          className="h-6 w-6 p-0 table-search-text hover:table-search-text-hover transition-colors duration-200"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
+
+            {/* Active Filter Badges */}
+            {searchQuery && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge
+                  variant="secondary"
+                  className="text-xs px-2 py-1 cursor-pointer transition-all duration-200 hover:bg-primary/20 hover:text-primary-foreground table-glass-badge"
+                  onClick={clearAllFilters}
+                >
+                  Search: {searchQuery}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              </div>
+            )}
+
+            {/* Clear Button */}
+            {(statusFilter !== "any" || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="h-8 px-2 text-xs table-search-text hover:table-search-text-hover hover:table-search-select rounded-md transition-all duration-200 flex items-center gap-1.5"
+              >
+                <X className="h-3.5 w-3.5" />
+                Clear
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Table Content */}
       <div className="flex-1 min-h-0">
         <CircuitTableContent
-          circuits={filteredCircuits}
+          circuits={filteredCircuits || []}
           selectedCircuits={selectedCircuits}
-          onSelectAll={() => handleSelectAll(filteredCircuits || [])}
+          onSelectAll={handleSelectAllWrapper}
           onSelectCircuit={handleSelectCircuit}
-          onEdit={handleEditCircuit}
+          onEdit={setEditingCircuit}
           onView={handleViewCircuit}
           onViewStatuses={handleViewStatuses}
-          onDelete={handleDeleteCircuit}
+          onDelete={setDeletingCircuit}
           onToggleActive={handleToggleActive}
           sortBy={sortBy}
           sortDirection={sortDirection}
@@ -332,51 +404,52 @@ export function CircuitTable() {
         />
       </div>
 
-      {selectedCircuits.length > 0 && !isSimpleUser && (
+      {/* Bulk Actions Bar - positioned at bottom of screen */}
+      {getSelectedCount() > 0 && !isSimpleUser && (
         <BulkActionsBar
-          selectedCount={selectedCircuits.length}
-          onChangeRole={() => {
-            // Not applicable for circuits, but required by interface
-          }}
-          onDelete={() => setBulkDeleteOpen(true)}
+          selectedCount={getSelectedCount()}
+          totalCount={filteredCircuits?.length || 0}
+          onDelete={() => setDeleteMultipleOpen(true)}
+          onClearSelection={clearSelectedCircuits}
         />
       )}
 
-      {/* Edit Circuit Dialog */}
+      {/* Dialogs */}
       {editingCircuit && (
         <EditCircuitDialog
           circuit={editingCircuit}
-          open={editOpen}
-          onOpenChange={setEditOpen}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setEditingCircuit(null);
+          }}
           onSuccess={() => {
-            handleCircuitEdited();
-            setEditOpen(false);
             setEditingCircuit(null);
+            refetch();
           }}
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
       {deletingCircuit && (
-        <SmartDeleteDialog
-          open={deleteOpen}
-          onOpenChange={handleDeleteDialogClose}
-          onConfirm={confirmDelete}
-          circuits={[deletingCircuit]}
-          isBulk={false}
+        <DeleteConfirmDialog
+          title="Delete Circuit"
+          description={`Are you sure you want to delete the circuit "${deletingCircuit.title}"? This action cannot be undone.`}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setDeletingCircuit(null);
+          }}
+          onConfirm={() => handleDelete(deletingCircuit)}
+          confirmText="Delete"
+          destructive={true}
         />
       )}
 
-      {/* Bulk Delete Confirmation Dialog */}
-      {selectedCircuits.length > 0 && filteredCircuits && (
-        <SmartDeleteDialog
-          open={bulkDeleteOpen}
-          onOpenChange={handleBulkDeleteDialogClose}
-          onConfirm={confirmBulkDelete}
-          circuits={filteredCircuits.filter((c) =>
-            selectedCircuits.includes(c.id)
-          )}
-          isBulk={true}
+      {/* Bulk Delete Dialog */}
+      {deleteMultipleOpen && (
+        <BulkDeleteDialog
+          selectedCount={getSelectedCount()}
+          isOpen={deleteMultipleOpen}
+          onClose={() => setDeleteMultipleOpen(false)}
+          onConfirm={handleDeleteMultiple}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { toast } from "sonner";
 import { UserCog, UserPlus } from "lucide-react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ApproversTable } from "@/components/approvers/ApproversTable";
@@ -6,6 +7,9 @@ import ApproverCreateWizard from "@/components/approval/ApproverCreateWizard";
 
 export default function ApproversManagement() {
   const [isCreateApproverOpen, setIsCreateApproverOpen] = useState(false);
+
+  // Ref to hold the table's refetch function
+  const tableRefetchRef = useRef<(() => void) | null>(null);
 
   const pageActions = [
     {
@@ -16,6 +20,15 @@ export default function ApproversManagement() {
     },
   ];
 
+  const handleCreateSuccess = () => {
+    setIsCreateApproverOpen(false);
+    // Trigger immediate table refresh
+    if (tableRefetchRef.current) {
+      tableRefetchRef.current();
+      // Don't show redundant toast here since the dialog already shows success message
+    }
+  };
+
   return (
     <PageLayout
       title="Approvers Management"
@@ -23,14 +36,15 @@ export default function ApproversManagement() {
       icon={UserCog}
       actions={pageActions}
     >
-      <ApproversTable />
+      <ApproversTable
+        onRefetchReady={(refetchFn) => {
+          tableRefetchRef.current = refetchFn;
+        }}
+      />
       <ApproverCreateWizard
         open={isCreateApproverOpen}
         onOpenChange={setIsCreateApproverOpen}
-        onSuccess={() => {
-          setIsCreateApproverOpen(false);
-          // The table will automatically refetch via the hook
-        }}
+        onSuccess={handleCreateSuccess}
       />
     </PageLayout>
   );

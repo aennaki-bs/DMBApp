@@ -14,10 +14,12 @@ import { Loader2 } from "lucide-react";
 interface ApprovalGroupTableContentProps {
   groups: ApprovalGroup[];
   selectedGroups: number[];
-  onSelectGroup: (id: number) => void;
+  onSelectGroup: (groupId: number, checked: boolean) => void;
   onSelectAll: () => void;
   onEditGroup: (group: ApprovalGroup) => void;
+  onViewGroup: (group: ApprovalGroup) => void;
   onDeleteGroup: (group: ApprovalGroup) => void;
+  onManageApprovers: (group: ApprovalGroup) => void;
   sortBy: SortField;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
@@ -29,7 +31,9 @@ export function ApprovalGroupTableContent({
   onSelectGroup,
   onSelectAll,
   onEditGroup,
+  onViewGroup,
   onDeleteGroup,
+  onManageApprovers,
   sortBy,
   sortDirection,
   onSort,
@@ -62,14 +66,14 @@ export function ApprovalGroupTableContent({
       // Deselect all groups on current page
       currentPageGroupIds.forEach((groupId) => {
         if (selectedGroups.includes(groupId)) {
-          onSelectGroup(groupId);
+          onSelectGroup(groupId, false);
         }
       });
     } else {
       // Select all groups on current page only
       currentPageGroupIds.forEach((groupId) => {
         if (!selectedGroups.includes(groupId)) {
-          onSelectGroup(groupId);
+          onSelectGroup(groupId, true);
         }
       });
     }
@@ -82,8 +86,8 @@ export function ApprovalGroupTableContent({
           <div className="relative h-full flex flex-col z-10">
             {/* Fixed Header - Never Scrolls */}
             <div className="flex-shrink-0 overflow-x-auto table-glass-header">
-              <div className="min-w-[960px]">
-                <Table className="table-fixed w-full">
+              <div className="min-w-max">
+                <Table className="w-full border-collapse">
                   <ApprovalGroupTableHeader
                     groups={paginatedGroups}
                     selectedGroups={selectedGroups.filter((id) =>
@@ -104,14 +108,16 @@ export function ApprovalGroupTableContent({
               style={{ maxHeight: "calc(100vh - 280px)" }}
             >
               <ScrollArea className="h-full w-full">
-                <div className="min-w-[960px] pb-2">
-                  <Table className="table-fixed w-full">
+                <div className="min-w-max pb-2">
+                  <Table className="w-full border-collapse">
                     <ApprovalGroupTableBody
                       groups={paginatedGroups}
                       selectedGroups={selectedGroups}
                       onSelectGroup={onSelectGroup}
                       onEditGroup={onEditGroup}
+                      onViewGroup={onViewGroup}
                       onDeleteGroup={onDeleteGroup}
+                      onManageApprovers={onManageApprovers}
                     />
                   </Table>
                 </div>
