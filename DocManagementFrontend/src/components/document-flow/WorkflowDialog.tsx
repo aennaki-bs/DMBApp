@@ -80,7 +80,7 @@ export function WorkflowDialog({
   const handleMoveToStatus = (statusId: number) => {
     if (workflowStatus && statusId) {
       // Find the status title from available transitions
-      let targetStatus = workflowStatus.availableStatusTransitions?.find(
+      const targetStatus = workflowStatus.availableStatusTransitions?.find(
         s => s.statusId === statusId
       );
       let targetStatusTitle = targetStatus?.title;

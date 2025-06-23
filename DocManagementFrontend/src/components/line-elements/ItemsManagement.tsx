@@ -171,7 +171,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   };
 
   const filteredAndSortedItems = useMemo(() => {
-    let filtered = items.filter((item) => {
+    const filtered = items.filter((item) => {
       // Search filter
       const searchValue = searchQuery.toLowerCase();
       let matchesSearch = true;

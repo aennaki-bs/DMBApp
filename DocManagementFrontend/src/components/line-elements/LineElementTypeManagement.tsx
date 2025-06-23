@@ -172,7 +172,7 @@ const LineElementTypeManagement = ({
 
   // Filtered and sorted data calculation
   const filteredAndSortedElementTypes = useMemo(() => {
-    let filtered = elementTypes.filter((elementType) => {
+    const filtered = elementTypes.filter((elementType) => {
       // Search filter
       const searchValue = searchQuery.toLowerCase();
       let matchesSearch = true;

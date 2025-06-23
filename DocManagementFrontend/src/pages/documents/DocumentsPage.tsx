@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDocumentsData } from "./hooks/useDocumentsData";
-import DocumentsHeader from "./components/DocumentsHeader";
-import { DocumentsWorkingTable } from "./components/DocumentsWorkingTable";
-import DocumentsEmptyState from "./components/DocumentsEmptyState";
-import SelectedDocumentsBar from "./components/SelectedDocumentsBar";
+import { DocumentTable } from "@/components/documents/DocumentTable";
 import DeleteConfirmDialog from "./components/DeleteConfirmDialog";
 import { Document } from "@/models/document";
 
@@ -12,44 +9,8 @@ import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PageLayout } from "@/components/layout/PageLayout";
-import {
-  FileText,
-  Plus,
-  GitBranch,
-  Trash2,
-  AlertCircle,
-  Filter,
-  Search,
-  X,
-  RefreshCw,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AnimatePresence, motion } from "framer-motion";
+import { FileText, Plus } from "lucide-react";
 import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
-import { useDocumentsFilter } from "./hooks/useDocumentsFilter";
-import SmartPagination from "@/components/shared/SmartPagination";
-import { usePagination } from "@/hooks/usePagination";
-import {
-  DEFAULT_STATUS_FILTERS,
-  DEFAULT_TYPE_FILTERS,
-  DEFAULT_DOCUMENT_SEARCH_FIELDS,
-} from "@/components/table";
-import { BulkActionsBar } from "@/components/responsibility-centre/table/BulkActionsBar";
 
 const DocumentsPage = () => {
   const { t, tWithParams } = useTranslation();
@@ -59,7 +20,6 @@ const DocumentsPage = () => {
 
   const {
     documents,
-    filteredItems,
     isLoading,
     fetchDocuments,
     deleteDocument,
@@ -70,15 +30,6 @@ const DocumentsPage = () => {
     requestSort,
   } = useDocumentsData();
 
-  // Get filter state to check if filters are applied
-  const {
-    searchQuery,
-    setSearchQuery,
-    activeFilters,
-    applyFilters,
-    resetFilters,
-  } = useDocumentsFilter();
-
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
@@ -88,36 +39,20 @@ const DocumentsPage = () => {
   );
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  // Check if any filters are applied
-  const hasActiveFilters =
-    activeFilters.searchQuery !== "" ||
-    activeFilters.statusFilter !== "any" ||
-    activeFilters.typeFilter !== "any" ||
-    activeFilters.dateRange !== undefined;
-
-  const handleRefresh = async () => {
-    try {
-      await fetchDocuments();
-      toast.success("Documents refreshed successfully");
-    } catch (error) {
-      toast.error("Failed to refresh documents");
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedDocuments.length === filteredItems.length) {
-      setSelectedDocuments([]);
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedDocuments(documents.map((doc) => doc.id));
     } else {
-      setSelectedDocuments(filteredItems.map((doc) => doc.id));
+      setSelectedDocuments([]);
     }
   };
 
-  const handleClearSelection = () => {
-    setSelectedDocuments([]);
-  };
-
-  const openDeleteDialog = () => {
-    setDeleteDialogOpen(true);
+  const handleSelectDocument = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedDocuments((prev) => [...prev, id]);
+    } else {
+      setSelectedDocuments((prev) => prev.filter((docId) => docId !== id));
+    }
   };
 
   const openDeleteSingleDialog = (documentId: number) => {
@@ -170,7 +105,7 @@ const DocumentsPage = () => {
 
   const handleBulkDelete = () => {
     if (selectedDocuments.length > 0) {
-      openDeleteDialog();
+      setDeleteDialogOpen(true);
     }
   };
 
@@ -206,59 +141,22 @@ const DocumentsPage = () => {
       icon={FileText}
       actions={pageActions}
     >
-      <div className="h-full flex flex-col w-full">
-        {/* Main Content */}
-        <div className="flex-1 min-h-0">
-          {isLoading ? (
-            <div className="h-full flex items-center justify-center rounded-2xl table-glass-container shadow-lg backdrop-blur-md">
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="relative">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20"></div>
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent absolute top-0 left-0"></div>
-                </div>
-                <p className="text-foreground/80 mt-6 text-lg font-medium">
-                  {t("common.loading")}
-                </p>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  Fetching documents...
-                </p>
-              </div>
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <DocumentsEmptyState
-              canManageDocuments={canManageDocuments}
-              onDocumentCreated={fetchDocuments}
-              hasFilters={hasActiveFilters}
-              onClearFilters={resetFilters}
-            />
-          ) : (
-            <DocumentsWorkingTable
-              documents={filteredItems}
-              selectedDocuments={selectedDocuments}
-              onSelectDocument={(id: number, checked: boolean) => {
-                if (checked) {
-                  setSelectedDocuments((prev) => [...prev, id]);
-                } else {
-                  setSelectedDocuments((prev) =>
-                    prev.filter((docId) => docId !== id)
-                  );
-                }
-              }}
-              onSelectAll={handleSelectAll}
-              onDeleteDocument={openDeleteSingleDialog}
-              onBulkDelete={handleBulkDelete}
-              onEditDocument={(document: Document) => {
-                // This would open an edit modal - for now just log
-                console.log("Edit document:", document);
-              }}
-              onAssignCircuit={openAssignCircuitDialog}
-              canManageDocuments={canManageDocuments}
-              isLoading={false}
-              onRefresh={handleRefresh}
-            />
-          )}
-        </div>
-      </div>
+      <DocumentTable
+        documents={documents}
+        selectedDocuments={selectedDocuments}
+        onSelectDocument={handleSelectDocument}
+        onSelectAll={handleSelectAll}
+        onDeleteDocument={openDeleteSingleDialog}
+        onBulkDelete={handleBulkDelete}
+        onEditDocument={(document: Document) => {
+          // This would open an edit modal - for now just log
+          console.log("Edit document:", document);
+        }}
+        onAssignCircuit={openAssignCircuitDialog}
+        canManageDocuments={canManageDocuments}
+        isLoading={isLoading}
+        onRefresh={fetchDocuments}
+      />
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog

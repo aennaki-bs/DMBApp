@@ -154,7 +154,7 @@ export default function CustomerTable() {
 
   // Filtered and sorted customers
   const filteredCustomers = useMemo(() => {
-    let filtered = customers.filter((customer) => {
+    const filtered = customers.filter((customer) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();

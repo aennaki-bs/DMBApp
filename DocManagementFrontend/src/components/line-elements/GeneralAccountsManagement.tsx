@@ -166,7 +166,7 @@ const GeneralAccountsManagement = ({
   };
 
   const filteredAndSortedAccounts = useMemo(() => {
-    let filtered = accounts.filter((account) => {
+    const filtered = accounts.filter((account) => {
       // Search filter
       const searchValue = searchQuery.toLowerCase();
       let matchesSearch = true;

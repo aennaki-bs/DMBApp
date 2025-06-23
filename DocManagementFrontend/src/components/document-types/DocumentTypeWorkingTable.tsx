@@ -272,7 +272,7 @@ export function DocumentTypeWorkingTable({
       </div>
 
       {/* Results Summary */}
-      <div className="flex items-center gap-2 text-muted-foreground">
+      {/* <div className="flex items-center gap-2 text-muted-foreground">
         <FileText className="h-4 w-4" />
         <span className="text-sm">
           Showing {paginatedTypes.length} of {sortedTypes.length} document types
@@ -283,7 +283,7 @@ export function DocumentTypeWorkingTable({
             </span>
           )}
         </span>
-      </div>
+      </div> */}
 
       {/* Table */}
       <div className="flex-1 relative overflow-hidden rounded-2xl table-glass-container min-h-0 shadow-xl">

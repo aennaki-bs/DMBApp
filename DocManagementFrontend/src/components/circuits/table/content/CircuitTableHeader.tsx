@@ -65,11 +65,11 @@ export function CircuitTableHeader({
       <TableRow className="border-border/20 hover:bg-muted/30 transition-colors duration-200 circuit-table-layout">
         {/* Checkbox Column */}
         <TableHead className="py-3 table-cell-center">
-          <Checkbox
+            <Checkbox
             enhanced={true}
             size="sm"
-            checked={isAllSelected}
-            onCheckedChange={onSelectAll}
+              checked={isAllSelected}
+              onCheckedChange={onSelectAll}
             aria-label="Select all"
             className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             ref={(el) => {

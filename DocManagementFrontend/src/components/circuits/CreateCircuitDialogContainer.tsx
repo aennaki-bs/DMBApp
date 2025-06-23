@@ -111,7 +111,7 @@ export default function CreateCircuitDialogContainer({
       onSuccess();
     } catch (error) {
       toast.error("Failed to create circuit");
-      // eslint-disable-next-line no-console
+       
       console.error(error);
     } finally {
       setIsSubmitting(false);

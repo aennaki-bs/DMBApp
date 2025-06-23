@@ -323,7 +323,7 @@ const UniteCodesManagement = ({
   }, [editForm.watch("code"), selectedUniteCode]);
 
   const filteredAndSortedUniteCodes = useMemo(() => {
-    let filtered = uniteCodes.filter((uniteCode) => {
+    const filtered = uniteCodes.filter((uniteCode) => {
       // Search filter
       const searchValue = searchQuery.toLowerCase();
       let matchesSearch = true;

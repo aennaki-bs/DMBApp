@@ -225,7 +225,7 @@ const CreateLigneDialog = ({
       if (selectedElement && selectedType) {
         // Generate suggested code based on element type and selected element
         const typePrefix = selectedType.typeElement === 'Item' ? 'ITM' : 'ACC';
-        let baseSuggestedCode = `${typePrefix}_${selectedElement.code}`;
+        const baseSuggestedCode = `${typePrefix}_${selectedElement.code}`;
         
         // Ensure uniqueness by checking against existing lignes
         let suggestedCode = baseSuggestedCode;

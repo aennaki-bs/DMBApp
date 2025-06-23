@@ -1082,6 +1082,67 @@
     transform: scale(1.1);
 }
 
+.table-search-text {
+    color: var(--table-search-text);
+    transition: color 0.3s ease;
+}
+
+.table-search-text-hover {
+    color: var(--table-search-text-hover);
+}
+
+.table-glass-badge {
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.2);
+}
+
+.documents-table-row {
+    min-height: 60px;
+}
+
+.documents-table-cell {
+    vertical-align: middle;
+}
+
+/* Enhanced checkbox styling for selection */
+.documents-checkbox-selected {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+}
+
+.documents-checkbox-selected:hover {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+/* Row selection styling */
+.documents-row-selected {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border-left: 4px solid #3b82f6 !important;
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.15);
+}
+
+.documents-row-selected:hover {
+    background: rgba(59, 130, 246, 0.12) !important;
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+/* Avatar selection styling */
+.documents-avatar-selected {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.2)) !important;
+    color: #2563eb !important;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Text selection styling */
+.documents-text-selected {
+    color: #2563eb !important;
+    font-weight: 600 !important;
+}
+
 .table-container {
     background: var(--table-container-bg);
     border-color: var(--table-container-border);
@@ -2490,4 +2551,259 @@ html {
     background: rgba(0, 0, 0, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== VENDOR MANAGEMENT ENHANCED LAYOUT ===== */
+
+/* Main container with proper height calculations */
+.vendor-management-container {
+    height: 100%;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Search container optimization */
+.vendor-search-container {
+    flex-shrink: 0;
+    margin-bottom: 0.75rem;
+}
+
+/* Table container with better height management */
+.vendor-table-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Enhanced Fixed Header for Vendor Table */
+.vendor-fixed-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(var(--background), 0.98);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(var(--border), 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    height: 56px;
+}
+
+.dark .vendor-fixed-header {
+    background: rgba(var(--background), 0.98);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Scrollable Body for Vendors */
+.vendor-scrollable-body {
+    flex: 1;
+    overflow: hidden;
+    height: calc(100% - 56px);
+    min-height: 0;
+}
+
+.vendor-scrollable-body .table-scroll-area {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for vendor table */
+.vendor-scrollable-body ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.vendor-scrollable-body ::-webkit-scrollbar-track {
+    background: rgba(var(--muted), 0.3);
+    border-radius: 4px;
+}
+
+.vendor-scrollable-body ::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary), 0.6);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.vendor-scrollable-body ::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--primary), 0.8);
+}
+
+/* Better pagination spacing */
+.vendor-pagination-container {
+    flex-shrink: 0;
+    padding: 0.75rem;
+    min-height: 60px;
+}
+
+/* Enhanced table row height for better readability */
+.vendor-table-row {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+}
+
+/* Smooth scrolling with hardware acceleration */
+.vendor-table-container .table-scroll-area {
+    will-change: scroll-position;
+    transform: translateZ(0);
+}
+
+/* Fixed table layout for consistent column widths */
+.vendor-table-layout {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 930px;
+}
+
+/* Column width optimization */
+.vendor-col-checkbox {
+    width: 48px;
+}
+
+.vendor-col-vendor {
+    width: 140px;
+}
+
+.vendor-col-name {
+    width: 200px;
+}
+
+.vendor-col-country {
+    width: 120px;
+}
+
+.vendor-col-location {
+    width: 150px;
+}
+
+.vendor-col-actions {
+    width: 64px;
+}
+
+/* Ensure pagination is always visible */
+.table-glass-pagination {
+    flex-shrink: 0 !important;
+    min-height: 60px;
+    z-index: 5;
+    position: relative;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Improved mobile responsiveness for vendor management */
+@media (max-width: 768px) {
+    .vendor-management-container {
+        min-height: 400px;
+    }
+
+    .vendor-search-container {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .vendor-pagination-container {
+        padding: 0.5rem;
+        min-height: 50px;
+    }
+
+    .table-glass-pagination {
+        min-height: 50px;
+    }
+
+    /* Hide certain columns on mobile */
+    .vendor-col-country,
+    .vendor-col-location {
+        display: none;
+    }
+
+    .vendor-table-layout {
+        min-width: 600px;
+    }
+}
+
+/* Enhanced table cell padding and alignment */
+.vendor-table-cell {
+    padding: 12px 8px;
+    vertical-align: middle;
+}
+
+/* Better hover states for vendor rows */
+.vendor-table-row:hover {
+    background-color: rgba(var(--primary), 0.05);
+    transition: background-color 0.2s ease;
+}
+
+/* Enhanced selection states */
+.vendor-row-selected {
+    background-color: rgba(var(--primary), 0.1);
+    border-left: 4px solid rgba(var(--primary), 0.6);
+}
+
+.vendor-row-selected:hover {
+    background-color: rgba(var(--primary), 0.15);
+}
+
+/* Sticky actions column for horizontal scroll */
+.vendor-actions-sticky {
+    position: sticky;
+    right: 0;
+    background: inherit;
+    z-index: 5;
+}
+
+/* Loading state improvements */
+.vendor-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--background), 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+/* Error state improvements */
+.vendor-error-container {
+    padding: 2rem;
+    text-align: center;
+    color: var(--destructive);
+}
+
+/* Empty state improvements */
+.vendor-empty-container {
+    padding: 3rem;
+    text-align: center;
+    color: var(--muted-foreground);
+}
+
+/* Accessibility improvements */
+.vendor-table-container:focus-within {
+    outline: 2px solid rgba(var(--primary), 0.5);
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .vendor-management-container {
+        height: auto;
+        min-height: auto;
+    }
+
+    .vendor-table-container {
+        height: auto;
+        overflow: visible;
+    }
+
+    .vendor-pagination-container {
+        display: none;
+    }
 }

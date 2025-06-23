@@ -413,7 +413,7 @@ const Documents = () => {
   };
 
   const sortedItems = useMemo(() => {
-    let sortableItems = [...documents];
+    const sortableItems = [...documents];
 
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {

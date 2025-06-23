@@ -134,7 +134,7 @@ export function SubTypeFilterBar({
               <span>Date Filters</span>
               {hasFilters && (
                 <span className="flex items-center justify-center bg-blue-600 text-white w-5 h-5 rounded-full text-xs font-medium">
-                  {(!!startDateFilter ? 1 : 0) + (!!endDateFilter ? 1 : 0)}
+                  {(startDateFilter ? 1 : 0) + (endDateFilter ? 1 : 0)}
                 </span>
               )}
             </Button>

@@ -396,7 +396,7 @@ const circuitService = {
       ]);
       
       // Find target status info from available transitions
-      let targetStatus = availableTransitions.find(status => status.statusId === targetStatusId);
+      const targetStatus = availableTransitions.find(status => status.statusId === targetStatusId);
       let targetStatusTitle = targetStatus?.title;
       
       // If not found in available transitions, try to get from circuit statuses
