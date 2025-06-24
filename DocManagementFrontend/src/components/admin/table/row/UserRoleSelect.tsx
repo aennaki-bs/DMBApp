@@ -4,51 +4,58 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectSeparator,
 } from "@/components/ui/select";
-import { Shield, ShieldCheck, ShieldAlert, ShieldQuestion } from "lucide-react";
+import { Shield, ShieldCheck, ShieldAlert } from "lucide-react";
 
 interface UserRoleSelectProps {
   currentRole: string;
   onRoleChange: (roleName: string) => void;
 }
 
-function getAvailableRoles(currentRole: string): string[] {
-  const allRoles = ["Admin", "FullUser", "SimpleUser"];
-  return allRoles.filter((role) => role !== currentRole);
-}
-
 function getRoleIcon(role: string) {
   switch (role) {
     case "Admin":
       return (
-        <ShieldAlert className="h-3.5 w-3.5 text-red-500 dark:text-red-400 mr-1.5" />
+        <ShieldAlert className="h-3.5 w-3.5 text-red-500 dark:text-red-400 mr-2" />
       );
     case "FullUser":
       return (
-        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 mr-1.5" />
+        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 mr-2" />
       );
     case "SimpleUser":
       return (
-        <Shield className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 mr-1.5" />
+        <Shield className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 mr-2" />
       );
     default:
       return (
-        <ShieldQuestion className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400 mr-1.5" />
+        <Shield className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400 mr-2" />
       );
   }
 }
 
-function getRoleColor(role: string) {
+function getRoleDisplayName(role: string) {
   switch (role) {
     case "Admin":
-      return "text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/20 border-red-300 dark:border-red-500/30";
+      return "Admin";
     case "FullUser":
-      return "text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-500/30";
+      return "Full User";
     case "SimpleUser":
-      return "text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/20 border-blue-300 dark:border-blue-500/30";
+      return "Simple User";
     default:
-      return "text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-900/20 border-gray-300 dark:border-gray-500/30";
+      return role;
+  }
+}
+
+function getRoleTriggerColor(role: string) {
+  switch (role) {
+    case "Admin":
+      return "border-red-500/40 bg-red-500/10 text-red-400 hover:border-red-400/60 hover:bg-red-500/20";
+    case "FullUser":
+      return "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:border-emerald-400/60 hover:bg-emerald-500/20";
+    case "SimpleUser":
+      return "border-blue-500/40 bg-blue-500/10 text-blue-400 hover:border-blue-400/60 hover:bg-blue-500/20";
+    default:
+      return "border-gray-500/40 bg-gray-500/10 text-gray-400 hover:border-gray-400/60 hover:bg-gray-500/20";
   }
 }
 
@@ -59,39 +66,37 @@ export function UserRoleSelect({
   return (
     <Select value={currentRole} onValueChange={onRoleChange}>
       <SelectTrigger
-        className={`w-[130px] bg-blue-900/40 backdrop-blur-md border-blue-700/40 text-blue-100 hover:border-blue-600/50 hover:bg-blue-800/50 transition-all duration-150 shadow-sm ${
-          currentRole === "Admin"
-            ? "border-red-500/40"
-            : currentRole === "FullUser"
-            ? "border-emerald-500/40"
-            : "border-blue-500/40"
-        }`}
+        className={`w-[120px] h-8 text-xs font-medium backdrop-blur-sm transition-all duration-200 ${getRoleTriggerColor(
+          currentRole
+        )}`}
       >
         <div className="flex items-center">
           {getRoleIcon(currentRole)}
-          <SelectValue placeholder={currentRole} />
+          <span className="truncate">{getRoleDisplayName(currentRole)}</span>
         </div>
       </SelectTrigger>
-      <SelectContent className="bg-blue-950/95 backdrop-blur-xl border-blue-800/30 text-blue-100 rounded-lg shadow-lg animate-in fade-in-0 zoom-in-95 duration-100">
-        <SelectItem
-          key={currentRole}
-          value={currentRole}
-          className={`flex items-center ${getRoleColor(
-            currentRole
-          )} border-l-2 rounded-md mb-1`}
-        >
-          {/* {getRoleIcon(currentRole)} */}
-          {currentRole}
-        </SelectItem>
-        <SelectSeparator className="bg-blue-700/30 my-1" />
-        {getAvailableRoles(currentRole).map((role) => (
+      <SelectContent
+        className="bg-background/95 backdrop-blur-sm border border-border/50 rounded-lg shadow-xl z-[200] min-w-[160px]"
+        position="popper"
+        sideOffset={5}
+      >
+        {["Admin", "FullUser", "SimpleUser"].map((role) => (
           <SelectItem
             key={role}
             value={role}
-            className="flex items-center text-blue-100 hover:bg-blue-800/40 hover:text-blue-50 rounded-md"
+            className={`flex items-center px-3 py-2 cursor-pointer transition-colors duration-200 ${
+              role === currentRole
+                ? "bg-primary/20 text-primary font-medium"
+                : "hover:bg-muted/50"
+            }`}
           >
-            {/* {getRoleIcon(role)} */}
-            {role}
+            <div className="flex items-center w-full">
+              {getRoleIcon(role)}
+              <span>{getRoleDisplayName(role)}</span>
+              {role === currentRole && (
+                <div className="ml-auto w-2 h-2 rounded-full bg-primary"></div>
+              )}
+            </div>
           </SelectItem>
         ))}
       </SelectContent>

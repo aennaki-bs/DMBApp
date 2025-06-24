@@ -9,7 +9,7 @@ declare module 'axios' {
 }
 
 const port = 5205;
-const address = '192.168.1.94';
+const address = '192.168.1.54';
 // let address = '192.168.0.150';
 // let address = 'localhost';
 // let address = '172.20.10.4';

@@ -47,7 +47,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DocumentStatus } from "@/models/documentCircuit";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { BulkActionsBar } from "@/components/admin/table/BulkActionsBar";
+import { BulkActionsBar } from "@/components/responsibility-centre/table/BulkActionsBar";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { Table } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -544,8 +544,10 @@ export default function CircuitStatusesPage() {
         {selectedStatuses.length > 0 && !isSimpleUser && !circuit?.isActive && (
           <BulkActionsBar
             selectedCount={selectedStatuses.length}
-            onChangeRole={() => {}} // Not applicable for statuses
+            totalCount={filteredStatuses?.length}
+            onClearSelection={() => setSelectedStatuses([])}
             onDelete={handleBulkDelete}
+            itemName="status"
           />
         )}
 

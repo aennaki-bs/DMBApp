@@ -37,16 +37,29 @@ export function UserTableHeader({
     ${sortBy === field ? "opacity-100" : ""}
   `;
 
+  const isAllSelected = selectedCount > 0 && selectedCount === totalCount;
+  const isIndeterminate = selectedCount > 0 && selectedCount < totalCount;
+
   return (
     <TableHeader className="table-glass-header">
       <TableRow className="table-glass-header-row h-10">
         <TableHead className="w-[40px] py-2">
           <div className="flex items-center justify-center">
             <Checkbox
-              checked={selectedCount > 0 && selectedCount === totalCount}
+              enhanced={true}
+              size="sm"
+              checked={isAllSelected}
               onCheckedChange={onSelectAll}
+              className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               aria-label="Select all"
-              className="h-3.5 w-3.5"
+              ref={(el) => {
+                if (el && el.querySelector) {
+                  const input = el.querySelector(
+                    'input[type="checkbox"]'
+                  ) as HTMLInputElement;
+                  if (input) input.indeterminate = isIndeterminate;
+                }
+              }}
             />
           </div>
         </TableHead>

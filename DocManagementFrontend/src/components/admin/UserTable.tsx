@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import adminService from "@/services/adminService";
 import { UserTableHeader } from "./table/UserTableHeader";
 import { UserTableContent } from "./table/UserTableContent";
-import { BulkActionsBar } from "./table/BulkActionsBar";
+import { UserBulkActionsBar } from "./table/UserBulkActionsBar";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import { DirectEditUserModal } from "./DirectEditUserModal";
 import { DirectEditUserEmailModal } from "./DirectEditUserEmailModal";
@@ -144,10 +144,12 @@ export function UserTable() {
           count: selectedUsers.length,
         })
       );
-      refetch();
+
+      // Refresh data and clear state
+      await refetch();
       setRoleChangeOpen(false);
       setSelectedRole("");
-      clearSelectedUsers(); // Clear selected users after successful update
+      clearSelectedUsers();
     } catch (error) {
       console.error("Bulk role update failed:", error);
       toast.error(t("userManagement.failedToUpdateRoles"));
@@ -439,10 +441,13 @@ export function UserTable() {
       </div>
 
       {selectedUsers.length > 0 && (
-        <BulkActionsBar
+        <UserBulkActionsBar
           selectedCount={selectedUsers.length}
+          totalCount={filteredUsers?.length}
+          onClearSelection={clearSelectedUsers}
           onChangeRole={() => setRoleChangeOpen(true)}
           onDelete={() => setDeleteMultipleOpen(true)}
+          hidden={roleChangeOpen}
         />
       )}
 
@@ -510,7 +515,13 @@ export function UserTable() {
       {roleChangeOpen && (
         <BulkRoleChangeDialog
           open={roleChangeOpen}
-          onOpenChange={setRoleChangeOpen}
+          onOpenChange={(open) => {
+            setRoleChangeOpen(open);
+            if (!open) {
+              // Reset selected role when dialog is cancelled
+              setSelectedRole("");
+            }
+          }}
           onConfirm={handleBulkRoleChange}
           selectedCount={selectedUsers.length}
           selectedRole={selectedRole}
