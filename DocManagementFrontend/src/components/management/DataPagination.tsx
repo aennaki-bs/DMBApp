@@ -6,7 +6,6 @@ interface DataPaginationProps {
   currentPage: number;
   totalPages: number;
   pageSize: number;
-  totalItems: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   pageSizeOptions?: number[];
@@ -18,14 +17,13 @@ export function DataPagination({
   currentPage,
   totalPages,
   pageSize,
-  totalItems,
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 15, 25, 50, 100],
   className,
   isVisible = true,
 }: DataPaginationProps) {
-  if (!isVisible || totalItems === 0) return null;
+  if (!isVisible || totalPages <= 1) return null;
 
   return (
     <div className={cn("flex-shrink-0 mt-3", className)}>
@@ -33,7 +31,6 @@ export function DataPagination({
         currentPage={currentPage}
         totalPages={totalPages}
         pageSize={pageSize}
-        totalItems={totalItems}
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
         pageSizeOptions={pageSizeOptions}

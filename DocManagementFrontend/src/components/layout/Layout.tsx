@@ -123,19 +123,7 @@ export function Layout() {
         {/* Main layout structure - elevated above overlay */}
         <div className="relative flex w-full min-h-full">
           {/* Sidebar - responsive with mobile overlay */}
-          <aside
-            className={`h-full ${
-              isMobile
-                ? "fixed inset-y-0 left-0 z-50 w-64 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:w-64"
-                : "w-56 sm:w-60 lg:w-64 xl:w-64 flex-shrink-0"
-            } ${
-              isStandardTheme
-                ? "glass-sidebar"
-                : "bg-card/15 backdrop-blur-xl border-r border-border"
-            } transition-all duration-300 ease-in-out shadow-lg overflow-hidden`}
-          >
-            <SidebarNav />
-          </aside>
+          <SidebarNav />
 
           {/* Main content area */}
           <div className="flex-1 flex flex-col min-h-full min-w-0">
@@ -170,7 +158,7 @@ export function Layout() {
 
             {/* Main content with responsive padding */}
             <main
-              className="flex-1 overflow-hidden p-2 sm:p-4 lg:p-6 relative"
+              className="flex-1 overflow-hidden relative"
               style={{
                 minHeight: isMobile
                   ? "calc(100vh - 3.5rem)"
@@ -185,7 +173,7 @@ export function Layout() {
                 } shadow-lg transition-all duration-300 relative`}
                 style={{ minHeight: "100%" }}
               >
-                <div className="h-full overflow-hidden p-3 sm:p-4 lg:p-6 relative">
+                <div className="h-full overflow-hidden p-2 relative">
                   <Outlet />
                 </div>
               </div>

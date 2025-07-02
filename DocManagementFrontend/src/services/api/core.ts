@@ -66,7 +66,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 404) {
       console.warn('API endpoint not found:', error.config.url);
     }
-    
+
     // Prevent infinite retries
     if (error.config) {
       // If we've already retried, don't retry again
@@ -74,12 +74,12 @@ api.interceptors.response.use(
         console.warn('Already retried request, giving up');
         return Promise.reject(error);
       }
-      
+
       // Mark this request as having been retried
       error.config._retryCount = (error.config._retryCount || 0) + 1;
       error.config._retry = true;
     }
-    
+
     return Promise.reject(error);
   }
 );

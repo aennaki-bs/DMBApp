@@ -13,9 +13,13 @@ export default function VendorManagementPage() {
     null
   );
 
-  const handleHeaderRefresh = () => {
+  const handleHeaderRefresh = async () => {
     if (refetchFunction) {
-      refetchFunction();
+      try {
+        await refetchFunction();
+      } catch (error) {
+        console.error("Error refreshing vendor data:", error);
+      }
     }
   };
 

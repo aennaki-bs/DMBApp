@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import adminService from "@/services/adminService";
 import { UserTableHeader } from "./table/UserTableHeader";
 import { UserTableContent } from "./table/UserTableContent";
-import { UserBulkActionsBar } from "./table/UserBulkActionsBar";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import { DirectEditUserModal } from "./DirectEditUserModal";
 import { DirectEditUserEmailModal } from "./DirectEditUserEmailModal";
@@ -437,19 +436,13 @@ export function UserTable() {
           onClearFilters={clearAllFilters}
           isLoading={isLoading}
           isError={isError}
+          // Bulk actions props
+          onBulkDelete={() => setDeleteMultipleOpen(true)}
+          onBulkChangeRole={() => setRoleChangeOpen(true)}
+          onClearSelection={clearSelectedUsers}
+          totalCount={filteredUsers?.length}
         />
       </div>
-
-      {selectedUsers.length > 0 && (
-        <UserBulkActionsBar
-          selectedCount={selectedUsers.length}
-          totalCount={filteredUsers?.length}
-          onClearSelection={clearSelectedUsers}
-          onChangeRole={() => setRoleChangeOpen(true)}
-          onDelete={() => setDeleteMultipleOpen(true)}
-          hidden={roleChangeOpen}
-        />
-      )}
 
       {/* Direct Edit Modal */}
       <DirectEditUserModal

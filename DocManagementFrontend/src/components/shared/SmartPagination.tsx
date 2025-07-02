@@ -19,7 +19,6 @@ interface SmartPaginationProps {
   currentPage: number;
   totalPages: number;
   pageSize: number;
-  totalItems: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   className?: string;
@@ -32,7 +31,6 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
   currentPage,
   totalPages,
   pageSize,
-  totalItems,
   onPageChange,
   onPageSizeChange,
   className = "",
@@ -85,148 +83,122 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
     return pages;
   };
 
-  const startItem = Math.min((currentPage - 1) * pageSize + 1, totalItems);
-  const endItem = Math.min(currentPage * pageSize, totalItems);
-
   const visiblePages = getVisiblePages();
+
+  if (totalPages <= 1) return null;
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-2.5 pagination-container rounded-lg shadow-md ${className}`}
+      className={`flex items-center justify-between gap-3 px-4 py-2.5 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${className}`}
     >
       {/* Left section: Page size selector */}
       <div className="flex items-center gap-2">
-        <span className="text-xs pagination-text font-medium whitespace-nowrap">
+        <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
           Show
         </span>
         <Select
           value={pageSize.toString()}
           onValueChange={(value) => onPageSizeChange(Number(value))}
         >
-          <SelectTrigger className="w-[60px] h-7 text-xs pagination-button focus:ring-1 transition-all duration-200 shadow-sm rounded-md">
+          <SelectTrigger className="w-[60px] h-7 text-xs bg-background/95 focus:ring-1 transition-all duration-200 shadow-sm rounded-md">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="pagination-button rounded-lg shadow-xl">
+          <SelectContent className="bg-background/95 rounded-lg shadow-xl">
             {pageSizeOptions.map((size) => (
               <SelectItem
                 key={size}
                 value={size.toString()}
-                className="text-xs hover:pagination-button focus:pagination-button rounded-md"
+                className="text-xs hover:bg-accent focus:bg-accent rounded-md"
               >
                 {size}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <span className="text-xs pagination-text font-medium whitespace-nowrap">
+        <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
           entries
         </span>
       </div>
 
-      {/* Center section: Entry count display */}
-      <div className="text-xs pagination-info font-medium px-2 py-1 rounded-md">
-        {totalItems > 0 ? (
-          <>
-            Showing{" "}
-            <span className="pagination-info-accent font-semibold">
-              {startItem}
-            </span>{" "}
-            to{" "}
-            <span className="pagination-info-accent font-semibold">
-              {endItem}
-            </span>{" "}
-            of{" "}
-            <span className="pagination-info-accent font-semibold">
-              {totalItems}
-            </span>{" "}
-            entries
-          </>
-        ) : (
-          <span className="pagination-info">No entries found</span>
+      {/* Right section: Page navigation */}
+      <div className="flex items-center gap-0.5">
+        {showFirstLast && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onPageChange(1)}
+            disabled={currentPage === 1}
+            className="h-7 w-7 p-0 text-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+            title="First page"
+          >
+            <ChevronsLeft className="h-3 w-3" />
+          </Button>
+        )}
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="h-7 w-7 p-0 text-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+          title="Previous page"
+        >
+          <ChevronLeft className="h-3 w-3" />
+        </Button>
+
+        {visiblePages.map((page, index) => {
+          if (page === "ellipsis") {
+            return (
+              <div
+                key={`ellipsis-${index}`}
+                className="h-7 w-7 flex items-center justify-center text-muted-foreground"
+              >
+                <MoreHorizontal className="h-3 w-3" />
+              </div>
+            );
+          }
+
+          return (
+            <Button
+              key={page}
+              variant={page === currentPage ? "default" : "ghost"}
+              size="sm"
+              onClick={() => onPageChange(page)}
+              className={
+                page === currentPage
+                  ? "h-7 min-w-[28px] px-1.5 text-xs bg-primary text-primary-foreground font-semibold"
+                  : "h-7 min-w-[28px] px-1.5 text-xs transition-all duration-200"
+              }
+            >
+              {page}
+            </Button>
+          );
+        })}
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="h-7 w-7 p-0 text-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+          title="Next page"
+        >
+          <ChevronRight className="h-3 w-3" />
+        </Button>
+
+        {showFirstLast && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onPageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className="h-7 w-7 p-0 text-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+            title="Last page"
+          >
+            <ChevronsRight className="h-3 w-3" />
+          </Button>
         )}
       </div>
-
-      {/* Right section: Page navigation */}
-      {totalPages > 1 && (
-        <div className="flex items-center gap-0.5">
-          {showFirstLast && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(1)}
-              disabled={currentPage === 1}
-              className="h-7 w-7 p-0 text-xs pagination-button disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
-              title="First page"
-            >
-              <ChevronsLeft className="h-3 w-3" />
-            </Button>
-          )}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="h-7 w-7 p-0 text-xs pagination-button disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
-            title="Previous page"
-          >
-            <ChevronLeft className="h-3 w-3" />
-          </Button>
-
-          {visiblePages.map((page, index) => {
-            if (page === "ellipsis") {
-              return (
-                <div
-                  key={`ellipsis-${index}`}
-                  className="h-7 w-7 flex items-center justify-center pagination-text"
-                >
-                  <MoreHorizontal className="h-3 w-3" />
-                </div>
-              );
-            }
-
-            return (
-              <Button
-                key={page}
-                variant={page === currentPage ? "default" : "outline"}
-                size="sm"
-                onClick={() => onPageChange(page)}
-                className={
-                  page === currentPage
-                    ? "h-7 min-w-[28px] px-1.5 text-xs pagination-button-active shadow-md font-semibold"
-                    : "h-7 min-w-[28px] px-1.5 text-xs pagination-button transition-all duration-200 shadow-sm"
-                }
-              >
-                {page}
-              </Button>
-            );
-          })}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="h-7 w-7 p-0 text-xs pagination-button disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
-            title="Next page"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </Button>
-
-          {showFirstLast && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(totalPages)}
-              disabled={currentPage === totalPages}
-              className="h-7 w-7 p-0 text-xs pagination-button disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
-              title="Last page"
-            >
-              <ChevronsRight className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
-      )}
     </div>
   );
 };

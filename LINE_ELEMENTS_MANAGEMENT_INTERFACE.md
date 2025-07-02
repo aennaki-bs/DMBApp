@@ -85,18 +85,18 @@ The Line Elements Management interface provides a comprehensive solution for man
 ### Layout Structure
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Line Elements Management                                     │
+│ Line Elements Management                                    │
 ├─────────────────────────────────────────────────────────────┤
 │ [Search Box]                                                │
 ├─────────────────────────────────────────────────────────────┤
-│ [Items: 25] [Unit Codes: 8] [General Accounts: 15]        │
+│ [Items: 25] [Unit Codes: 8] [General Accounts: 15]          │
 ├─────────────────────────────────────────────────────────────┤
-│ [Items Tab] [Unit Codes Tab] [General Accounts Tab]       │
+│ [Items Tab] [Unit Codes Tab] [General Accounts Tab]         │
 ├─────────────────────────────────────────────────────────────┤
-│ Tab Content:                                               │
-│ - Search and Filter Controls                               │
-│ - Data Table with Actions                                  │
-│ - Create/Edit Dialogs                                      │
+│ Tab Content:                                                │
+│ - Search and Filter Controls                                │
+│ - Data Table with Actions                                   │
+│ - Create/Edit Dialogs                                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 

@@ -34,7 +34,7 @@ export default function VendorManagementContent({
   });
 
   const {
-    data: vendors = [],
+    data: vendors,
     isLoading,
     isError,
     isFetching,
@@ -43,6 +43,9 @@ export default function VendorManagementContent({
     queryKey: ["vendors"],
     queryFn: vendorService.getAll,
   });
+
+  // Safely handle vendors data
+  const safeVendors = vendors || [];
 
   const updateMutation = useMutation({
     mutationFn: ({
@@ -88,7 +91,7 @@ export default function VendorManagementContent({
     clearAllFilters,
     filteredVendors,
     countries,
-  } = useVendorFilters(vendors);
+  } = useVendorFilters(safeVendors);
 
   const {
     selectedVendors,
@@ -130,12 +133,22 @@ export default function VendorManagementContent({
   const { isAllSelected, isIndeterminate } =
     getSelectionState(paginatedVendors);
 
-  // Pass refetch function to parent component
+  // Pass refetch function to parent component with error handling
   useEffect(() => {
-    if (onRefetchReady && refetch) {
-      onRefetchReady(refetch);
+    if (onRefetchReady && refetch && !isLoading) {
+      const safeRefetch = async () => {
+        try {
+          const result = await refetch();
+          return result;
+        } catch (error) {
+          console.error("Error during vendor refetch:", error);
+          // Don't re-throw to prevent component crashes
+          return null;
+        }
+      };
+      onRefetchReady(safeRefetch);
     }
-  }, [onRefetchReady, refetch]);
+  }, [onRefetchReady, refetch, isLoading]);
 
   const resetEditFormData = () => {
     setEditFormData({ name: "", address: "", city: "", country: "" });
