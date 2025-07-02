@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2, Network, MoreHorizontal } from "lucide-react";
+import { Eye, Edit, Trash2, Network, MoreHorizontal, CheckCircle2, GitBranch } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -39,6 +39,11 @@ export function CircuitListActions({
     navigate(`/circuits/${circuit.id}/statuses`);
   };
 
+  // Function to navigate to the circuit steps page
+  const goToCircuitSteps = () => {
+    navigate(`/circuits/${circuit.id}/steps`);
+  };
+
   // For simple users or small screens, use dropdown menu
   return (
     <>
@@ -52,36 +57,35 @@ export function CircuitListActions({
                 className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
                 onClick={goToCircuitStatuses}
               >
-                <Eye className="h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-              <p>View Circuit Statuses</p>
+              <p>View Statuses</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
+                onClick={goToCircuitSteps}
+              >
+                <GitBranch className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
+              <p>View Steps</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
         {!isSimpleUser && (
           <>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                    asChild
-                  >
-                    <Link to={`/circuit/${circuit.id}/steps`}>
-                      <Network className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                  <p>Circuit Steps</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
 
             <TooltipProvider>
               <Tooltip>

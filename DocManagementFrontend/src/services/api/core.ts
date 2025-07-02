@@ -8,17 +8,19 @@ declare module 'axios' {
   }
 }
 
-const port = 5205;
-const address = '192.168.1.54';
+let port = 5205;
+// let address = '192.168.1.54';
 // let address = '192.168.0.150';
-// let address = 'localhost';
+let address = 'localhost';
 // let address = '172.20.10.4';
 
-const apiUrl = `http://${address}:${port}/api`;
+let apiUrl = `http://${address}:${port}/api`;
 
 // Create axios instance with default configuration
 const api = axios.create({
   // Use the correct port for the API (5205) as seen in the network tab
+  // baseURL: import.meta.env.VITE_API_URL || 'http://192.168.1.54:5205/api',
+  // baseURL: import.meta.env.VITE_API_URL || 'http://172.20.10.4:5205/api',
   baseURL: import.meta.env.VITE_API_URL || apiUrl,
   headers: {
     'Content-Type': 'application/json',
@@ -35,19 +37,7 @@ api.interceptors.request.use(
       config._retryCount = 0;
     }
 
-    // Ensure URL is properly formed
-    if (config.url && !config.url.startsWith('/') && !config.url.startsWith('http')) {
-      config.url = '/' + config.url;
-    }
-
-    // Only reject truly invalid URLs (undefined, null, or empty string)
-    // Root path '/' is valid for health checks
-    if (!config.url) {
-      console.error('Empty or invalid URL detected:', config.url);
-      return Promise.reject(new Error('Invalid API endpoint'));
-    }
-
-    console.log('API Request URL:', config.baseURL + config.url);
+    // You can add auth token here if needed
     return config;
   },
   (error) => {
@@ -66,7 +56,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 404) {
       console.warn('API endpoint not found:', error.config.url);
     }
-
+    
     // Prevent infinite retries
     if (error.config) {
       // If we've already retried, don't retry again
@@ -74,12 +64,12 @@ api.interceptors.response.use(
         console.warn('Already retried request, giving up');
         return Promise.reject(error);
       }
-
+      
       // Mark this request as having been retried
       error.config._retryCount = (error.config._retryCount || 0) + 1;
       error.config._retry = true;
     }
-
+    
     return Promise.reject(error);
   }
 );

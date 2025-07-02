@@ -38,14 +38,22 @@ namespace DocManagementBackend.Models {
         [ForeignKey("LocationCode")]
         public Location? Location { get; set; }
         
+        // Unit of measure support - only applicable when LignesElementType is Item
+        [MaxLength(50)]
+        public string? UnitCode { get; set; } // Foreign key to UnitOfMeasure
+        [ForeignKey("UnitCode")]
+        public UnitOfMeasure? Unit { get; set; }
+        
         [Column(TypeName = "decimal(18,4)")]
         public decimal Quantity { get; set; } = 1;
         [Column(TypeName = "decimal(18,4)")]
-        public decimal PriceHT { get; set; } = 0;
+        public decimal PriceHT { get; set; } = 0; // Adjusted price (unit price * ratio)
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal OriginalPriceHT { get; set; } = 0; // Original unit price (before conversion)
         [Column(TypeName = "decimal(5,4)")]
         public decimal DiscountPercentage { get; set; } = 0;
         [Column(TypeName = "decimal(18,4)")]
-        public decimal? DiscountAmount { get; set; }
+        public decimal DiscountAmount { get; set; } = 0; // Calculated discount amount
         [Column(TypeName = "decimal(5,4)")]
         public decimal VatPercentage { get; set; } = 0;
         
@@ -57,16 +65,22 @@ namespace DocManagementBackend.Models {
         public GeneralAccounts? GeneralAccount { get; private set; }
         
         [NotMapped]
-        public UniteCode? UniteCode => Item?.UniteCodeNavigation;
+        public UnitOfMeasure? UniteCode => Item?.UniteCodeNavigation;
+        
+        // Note: AmountHT, AmountVAT, and AmountTTC calculations are now handled by LigneCalculations utility
+        // These properties are marked as obsolete and will be removed in future versions
+        // Use LigneCalculations.CalculateAmountsForLigneAsync() instead for accurate calculations with unit conversion
         
         [NotMapped]
+        [Obsolete("Use LigneCalculations.CalculateAmountsForLigneAsync() for accurate calculations with unit conversion")]
         public decimal AmountHT
         {
             get
             {
-                if (DiscountAmount.HasValue)
+                // Legacy calculation - does not include unit conversion
+                if (DiscountAmount > 0)
                 {
-                    return PriceHT * Quantity - DiscountAmount.Value;
+                    return PriceHT * Quantity - DiscountAmount;
                 }
                 else
                 {
@@ -74,22 +88,33 @@ namespace DocManagementBackend.Models {
                 }
             }
         }
+        
         [NotMapped]
+        [Obsolete("Use LigneCalculations.CalculateAmountsForLigneAsync() for accurate calculations with unit conversion")]
         public decimal AmountVAT
         {
             get
             {
+                // Legacy calculation - does not include unit conversion
                 return AmountHT * VatPercentage;
             }
         }
+        
         [NotMapped]
+        [Obsolete("Use LigneCalculations.CalculateAmountsForLigneAsync() for accurate calculations with unit conversion")]
         public decimal AmountTTC
         {
             get
             {
+                // Legacy calculation - does not include unit conversion
                 return AmountHT + AmountVAT;
             }
         }
+        
+        // ERP Integration field
+        [MaxLength(100)]
+        public string? ERPLineCode { get; set; }
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         [JsonIgnore]
@@ -143,7 +168,7 @@ namespace DocManagementBackend.Models {
             if (PriceHT < 0) return false;
             if (DiscountPercentage < 0 || DiscountPercentage > 1) return false;
             if (VatPercentage < 0 || VatPercentage > 1) return false;
-            if (DiscountAmount.HasValue && DiscountAmount.Value < 0) return false;
+            if (DiscountAmount < 0) return false;
             
             // Validate that ElementId corresponds to the appropriate reference table
             if (Type.HasValue && !string.IsNullOrEmpty(ElementId) && LignesElementType != null)

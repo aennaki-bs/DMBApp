@@ -466,6 +466,10 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ERPDocumentCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<bool>("IsCircuitCompleted")
                         .HasColumnType("bit");
 
@@ -511,6 +515,10 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("CurrentStepId");
 
                     b.HasIndex("CustomerOrVendor");
+
+                    b.HasIndex("ERPDocumentCode")
+                        .IsUnique()
+                        .HasFilter("[ERPDocumentCode] IS NOT NULL");
 
                     b.HasIndex("ResponsibilityCentreId");
 
@@ -672,6 +680,9 @@ namespace DocManagementBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TypeNumber")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("DocumentTypes");
@@ -683,6 +694,10 @@ namespace DocManagementBackend.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("AccountType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -693,10 +708,6 @@ namespace DocManagementBackend.Migrations
 
                     b.Property<int>("LinesCount")
                         .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -740,6 +751,43 @@ namespace DocManagementBackend.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("DocManagementBackend.Models.ItemUnitOfMeasure", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("QtyPerUnitOfMeasure")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<string>("UnitOfMeasureCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UnitOfMeasureCode");
+
+                    b.HasIndex("ItemCode", "UnitOfMeasureCode")
+                        .IsUnique();
+
+                    b.ToTable("ItemUnitOfMeasures");
+                });
+
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
                 {
                     b.Property<int>("Id")
@@ -755,7 +803,7 @@ namespace DocManagementBackend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal?>("DiscountAmount")
+                    b.Property<decimal>("DiscountAmount")
                         .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("DiscountPercentage")
@@ -763,6 +811,10 @@ namespace DocManagementBackend.Migrations
 
                     b.Property<int>("DocumentId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ERPLineCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("ElementId")
                         .HasMaxLength(50)
@@ -778,6 +830,9 @@ namespace DocManagementBackend.Migrations
                     b.Property<string>("LocationCode")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("OriginalPriceHT")
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("PriceHT")
                         .HasColumnType("decimal(18,4)");
@@ -798,6 +853,10 @@ namespace DocManagementBackend.Migrations
                     b.Property<int?>("Type")
                         .HasColumnType("int");
 
+                    b.Property<string>("UnitCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -806,11 +865,15 @@ namespace DocManagementBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DocumentId");
-
                     b.HasIndex("LignesElementTypeId");
 
                     b.HasIndex("LocationCode");
+
+                    b.HasIndex("UnitCode");
+
+                    b.HasIndex("DocumentId", "ERPLineCode")
+                        .IsUnique()
+                        .HasFilter("[ERPLineCode] IS NOT NULL");
 
                     b.ToTable("Lignes");
                 });
@@ -1245,7 +1308,7 @@ namespace DocManagementBackend.Migrations
                     b.ToTable("TypeCounter");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.UniteCode", b =>
+            modelBuilder.Entity("DocManagementBackend.Models.UnitOfMeasure", b =>
                 {
                     b.Property<string>("Code")
                         .HasMaxLength(50)
@@ -1270,7 +1333,7 @@ namespace DocManagementBackend.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("UniteCodes");
+                    b.ToTable("UnitOfMeasures");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.User", b =>
@@ -1737,12 +1800,31 @@ namespace DocManagementBackend.Migrations
 
             modelBuilder.Entity("DocManagementBackend.Models.Item", b =>
                 {
-                    b.HasOne("DocManagementBackend.Models.UniteCode", "UniteCodeNavigation")
+                    b.HasOne("DocManagementBackend.Models.UnitOfMeasure", "UniteCodeNavigation")
                         .WithMany("Items")
                         .HasForeignKey("Unite")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("UniteCodeNavigation");
+                });
+
+            modelBuilder.Entity("DocManagementBackend.Models.ItemUnitOfMeasure", b =>
+                {
+                    b.HasOne("DocManagementBackend.Models.Item", "Item")
+                        .WithMany("ItemUnitOfMeasures")
+                        .HasForeignKey("ItemCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DocManagementBackend.Models.UnitOfMeasure", "UnitOfMeasure")
+                        .WithMany("ItemUnitOfMeasures")
+                        .HasForeignKey("UnitOfMeasureCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("UnitOfMeasure");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.Ligne", b =>
@@ -1762,11 +1844,17 @@ namespace DocManagementBackend.Migrations
                         .WithMany()
                         .HasForeignKey("LocationCode");
 
+                    b.HasOne("DocManagementBackend.Models.UnitOfMeasure", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitCode");
+
                     b.Navigation("Document");
 
                     b.Navigation("LignesElementType");
 
                     b.Navigation("Location");
+
+                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("DocManagementBackend.Models.LignesElementType", b =>
@@ -1974,6 +2062,8 @@ namespace DocManagementBackend.Migrations
 
             modelBuilder.Entity("DocManagementBackend.Models.Item", b =>
                 {
+                    b.Navigation("ItemUnitOfMeasures");
+
                     b.Navigation("LignesElementTypes");
                 });
 
@@ -2004,8 +2094,10 @@ namespace DocManagementBackend.Migrations
                     b.Navigation("Documents");
                 });
 
-            modelBuilder.Entity("DocManagementBackend.Models.UniteCode", b =>
+            modelBuilder.Entity("DocManagementBackend.Models.UnitOfMeasure", b =>
                 {
+                    b.Navigation("ItemUnitOfMeasures");
+
                     b.Navigation("Items");
                 });
 

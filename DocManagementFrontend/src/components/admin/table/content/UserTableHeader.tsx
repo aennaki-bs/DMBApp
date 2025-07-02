@@ -25,47 +25,34 @@ export function UserTableHeader({
   const renderSortIcon = (field: string) => {
     if (sortBy !== field) return null;
     return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3 w-3" />
+      <ArrowUp className="ml-1 h-3.5 w-3.5 text-primary" />
     ) : (
-      <ArrowDown className="ml-1 h-3 w-3" />
+      <ArrowDown className="ml-1 h-3.5 w-3.5 text-primary" />
     );
   };
 
   const headerClass = (field: string) => `
-    font-medium cursor-pointer select-none text-xs
-    hover:opacity-80 transition-colors duration-150
-    ${sortBy === field ? "opacity-100" : ""}
+    text-foreground font-medium cursor-pointer select-none
+    hover:text-primary transition-colors duration-150
+    ${sortBy === field ? "text-primary" : ""}
   `;
 
-  const isAllSelected = selectedCount > 0 && selectedCount === totalCount;
-  const isIndeterminate = selectedCount > 0 && selectedCount < totalCount;
-
   return (
-    <TableHeader className="table-glass-header">
-      <TableRow className="table-glass-header-row h-10">
-        <TableHead className="w-[40px] py-2">
+    <TableHeader className="bg-muted/20 backdrop-blur-sm">
+      <TableRow className="border-border/30 hover:bg-transparent">
+        <TableHead className="w-[48px]">
           <div className="flex items-center justify-center">
             <Checkbox
-              enhanced={true}
-              size="sm"
-              checked={isAllSelected}
+              checked={selectedCount > 0 && selectedCount === totalCount}
               onCheckedChange={onSelectAll}
-              className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               aria-label="Select all"
-              ref={(el) => {
-                if (el && el.querySelector) {
-                  const input = el.querySelector(
-                    'input[type="checkbox"]'
-                  ) as HTMLInputElement;
-                  if (input) input.indeterminate = isIndeterminate;
-                }
-              }}
+              className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
           </div>
         </TableHead>
-        <TableHead className="w-[40px] py-2"></TableHead>
+        <TableHead className="w-[48px]"></TableHead>
         <TableHead
-          className={`${headerClass("firstName")} w-[180px] py-2`}
+          className={`${headerClass("firstName")} w-[200px]`}
           onClick={() => onSort("firstName")}
         >
           <div className="flex items-center">
@@ -73,7 +60,7 @@ export function UserTableHeader({
           </div>
         </TableHead>
         <TableHead
-          className={`${headerClass("email")} w-[250px] py-2`}
+          className={`${headerClass("email")} w-[280px]`}
           onClick={() => onSort("email")}
         >
           <div className="flex items-center">
@@ -81,7 +68,7 @@ export function UserTableHeader({
           </div>
         </TableHead>
         <TableHead
-          className={`${headerClass("role")} w-[130px] py-2`}
+          className={`${headerClass("role")} w-[150px]`}
           onClick={() => onSort("role")}
         >
           <div className="flex items-center">
@@ -89,17 +76,17 @@ export function UserTableHeader({
           </div>
         </TableHead>
         <TableHead
-          className={`${headerClass("isActive")} w-[100px] py-2`}
+          className={`${headerClass("isActive")} w-[120px]`}
           onClick={() => onSort("isActive")}
         >
           <div className="flex items-center">
             {t("userManagement.status")} {renderSortIcon("isActive")}
           </div>
         </TableHead>
-        <TableHead className="font-medium w-[80px] py-2 text-xs">
+        <TableHead className="text-foreground font-medium w-[100px]">
           {t("userManagement.block")}
         </TableHead>
-        <TableHead className="w-[70px] font-medium text-right pr-3 py-2 text-xs">
+        <TableHead className="w-[80px] text-foreground font-medium text-right pr-4">
           {t("userManagement.actions")}
         </TableHead>
       </TableRow>

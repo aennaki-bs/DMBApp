@@ -53,7 +53,7 @@ export function useCircuitList({ onApiError, searchQuery, statusFilter = 'any' }
   const sortedCircuits = useMemo(() => {
     if (!circuits) return [];
     
-    const sortableItems = [...circuits];
+    let sortableItems = [...circuits];
     
     if (sortConfig) {
       sortableItems.sort((a, b) => {

@@ -34,6 +34,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Code = ga.Code,
                     Description = ga.Description,
+                    AccountType = ga.AccountType,
                     CreatedAt = ga.CreatedAt,
                     UpdatedAt = ga.UpdatedAt,
                     LignesCount = _context.Lignes.Count(l => l.ElementId == ga.Code)
@@ -79,6 +80,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Code = ga.Code,
                     Description = ga.Description,
+                    AccountType = ga.AccountType,
                     CreatedAt = ga.CreatedAt,
                     UpdatedAt = ga.UpdatedAt,
                     LignesCount = _context.Lignes.Count(l => l.ElementId == ga.Code)
@@ -133,7 +135,6 @@ namespace DocManagementBackend.Controllers
             {
                 Code = request.Code.ToUpper().Trim(),
                 Description = request.Description.Trim(),
-                Type = GeneralAccountType.Expense, // Default to Expense type
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -148,6 +149,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Code = account.Code,
                     Description = account.Description,
+                    AccountType = account.AccountType,
                     CreatedAt = account.CreatedAt,
                     UpdatedAt = account.UpdatedAt,
                     LignesCount = 0

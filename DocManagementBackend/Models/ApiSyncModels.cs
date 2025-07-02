@@ -50,13 +50,14 @@ namespace DocManagementBackend.Models
     {
         public string No { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Base_Unit_of_Measure { get; set; } = string.Empty;
+        public string BaseUnitofMeasure { get; set; } = string.Empty;
     }
 
     public class BcGeneralAccountDto
     {
         public string No { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public string IncomeBalance { get; set; } = string.Empty;
     }
 
     public class BcCustomerDto
@@ -83,6 +84,26 @@ namespace DocManagementBackend.Models
         public string Description { get; set; } = string.Empty;
     }
 
+    public class BcResponsibilityCentreDto
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    public class BcUnitOfMeasureDto
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    public class BcItemUnitOfMeasureDto
+    {
+        public string ItemNo { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public decimal QtyperUnitofMeasure { get; set; } = 1;
+    }
+
     // Sync result models
     public class SyncResult
     {
@@ -99,11 +120,14 @@ namespace DocManagementBackend.Models
     // API endpoint configuration
     public enum ApiEndpointType
     {
-        Items,
+        UnitOfMeasures,        // Must sync first - referenced by Items
+        Items,                 // Depends on UnitOfMeasures
         GeneralAccounts,
         Customers,
         Vendors,
-        Locations
+        Locations,
+        ResponsibilityCentres,
+        ItemUnitOfMeasures     // Must sync last - depends on both Items and UnitOfMeasures
     }
 
     public class ApiEndpointConfig

@@ -100,7 +100,17 @@ export default function CreateDocumentWizard({
 
   // Check if user has a responsibility centre
   const userHasResponsibilityCentre =
-    user?.responsibilityCentre?.id !== undefined;
+    user?.responsibilityCentre?.id !== undefined || user?.responsibilityCenter?.id !== undefined;
+
+  // Get user's responsibility centre ID
+  const getUserResponsibilityCentreId = () => {
+    return user?.responsibilityCentre?.id || user?.responsibilityCenter?.id || null;
+  };
+
+  // Get user's responsibility centre name  
+  const getUserResponsibilityCentreName = () => {
+    return user?.responsibilityCentre?.descr || user?.responsibilityCenter?.descr || user?.responsibilityCentre?.code || user?.responsibilityCenter?.code || null;
+  };
 
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
@@ -119,9 +129,7 @@ export default function CreateDocumentWizard({
     circuitName: "",
     isExternal: false,
     externalReference: "",
-    responsibilityCentreId: userHasResponsibilityCentre
-      ? user?.responsibilityCentre?.id || null
-      : null,
+    responsibilityCentreId: getUserResponsibilityCentreId(),
     // Customer/Vendor fields
     selectedCustomerVendor: null,
     customerVendorName: "",
@@ -186,33 +194,48 @@ export default function CreateDocumentWizard({
       setFormData(initialFormData);
       setIsLoading(true);
 
-      // Check if user has a responsibility center
-      api
-        .get("/Account/user-info")
-        .then((response) => {
-          console.log("User info from API:", response.data);
-          // API uses "responsibilityCenter" (with "Center")
-          if (response.data?.responsibilityCenter?.id) {
-            console.log(
-              "Found responsibility center in user data:",
-              response.data.responsibilityCenter
-            );
-            // User has a responsibility center, use it
-            setFormData((prev) => ({
-              ...prev,
-              responsibilityCentreId: response.data.responsibilityCenter.id,
-            }));
-            setIsLoading(false);
-          } else {
-            // User doesn't have an assigned center, fetch available centers
-            fetchResponsibilityCentres();
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to fetch user info:", error);
-          // Try to fetch responsibility centres anyway
-          fetchResponsibilityCentres();
+      // Check if user has a responsibility center from auth context first
+      if (userHasResponsibilityCentre) {
+        console.log("User has responsibility centre from auth context:", {
+          id: getUserResponsibilityCentreId(),
+          name: getUserResponsibilityCentreName()
         });
+        // User has a responsibility center, use it immediately
+        setFormData((prev) => ({
+          ...prev,
+          responsibilityCentreId: getUserResponsibilityCentreId(),
+        }));
+        setIsLoading(false);
+      } else {
+        // User doesn't have an assigned center in context, check API and fetch available centers
+        api
+          .get("/Account/user-info")
+          .then((response) => {
+            console.log("User info from API:", response.data);
+            // API uses both "responsibilityCenter" and "responsibilityCentre"
+            const responsibilityCentreId = response.data?.responsibilityCenter?.id || response.data?.responsibilityCentre?.id;
+            if (responsibilityCentreId) {
+              console.log(
+                "Found responsibility center in API user data:",
+                response.data.responsibilityCenter || response.data.responsibilityCentre
+              );
+              // User has a responsibility center, use it
+              setFormData((prev) => ({
+                ...prev,
+                responsibilityCentreId: responsibilityCentreId,
+              }));
+              setIsLoading(false);
+            } else {
+              // User doesn't have an assigned center, fetch available centers
+              fetchResponsibilityCentres();
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to fetch user info:", error);
+            // Try to fetch responsibility centres anyway
+            fetchResponsibilityCentres();
+          });
+      }
 
       // Fetch other required data
       fetchDocumentTypes();
@@ -496,12 +519,22 @@ export default function CreateDocumentWizard({
 
     // Filter subtypes based on date range
     const docDate = new Date(selectedDate);
+    docDate.setHours(0, 0, 0, 0); // Normalize time
+    
     return allSubtypes.filter((subtype) => {
       const startDate = new Date(subtype.startDate);
       const endDate = new Date(subtype.endDate);
+      
+      // Normalize dates to avoid timezone issues
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
 
+      const isValid = docDate >= startDate && docDate <= endDate;
+      
+      console.log(`[DEBUG] Fallback filter - ${subtype.subTypeKey}: docDate=${docDate.toISOString()}, start=${startDate.toISOString()}, end=${endDate.toISOString()}, valid=${isValid}`);
+      
       // Check if document date falls within the subtype's valid date range
-      return docDate >= startDate && docDate <= endDate;
+      return isValid;
     });
   };
 
@@ -609,12 +642,22 @@ export default function CreateDocumentWizard({
       const startDate = new Date(selectedSubType.startDate);
       const endDate = new Date(selectedSubType.endDate);
 
+      // Normalize dates to avoid timezone issues
+      docDate.setHours(0, 0, 0, 0);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+
+      console.log('[DEBUG] Date validation:', {
+        docDate: docDate.toISOString(),
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        isValid: docDate >= startDate && docDate <= endDate
+      });
+
       if (docDate < startDate || docDate > endDate) {
         setSubTypeError("Subtype not valid for selected date");
-        toast.error("Subtype not valid for selected date", {
-          description: `The selected subtype is only valid from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}.`,
-          duration: 4000,
-        });
+        // Remove duplicate toast - this validation is also called elsewhere
+        console.log('[DEBUG] Date validation failed in wizard');
         return false;
       }
     } catch (error) {
@@ -673,9 +716,7 @@ export default function CreateDocumentWizard({
     }
 
     // Require a responsibility centre selection for users without an assigned center
-    setResponsibilityCentreError(
-      t("documents.pleaseSelectResponsibilityCentre")
-    );
+    setResponsibilityCentreError(t("documents.pleaseSelectResponsibilityCentre"));
     toast.error(t("documents.responsibilityCentreRequired"), {
       description: t("documents.pleaseSelectResponsibilityCentreToContinue"),
       duration: 3000,
@@ -685,15 +726,12 @@ export default function CreateDocumentWizard({
 
   const validateCustomerVendorStep = (): boolean => {
     // Get the selected document type
-    const selectedType = documentTypes.find(
-      (t) => t.id === formData.selectedTypeId
-    );
-
+    const selectedType = documentTypes.find(t => t.id === formData.selectedTypeId);
+    
     // If document type requires customer or vendor
-    if (selectedType?.tierType === 1 || selectedType?.tierType === 2) {
-      // Customer = 1, Vendor = 2
+    if (selectedType?.tierType === 1 || selectedType?.tierType === 2) { // Customer = 1, Vendor = 2
       if (!formData.selectedCustomerVendor) {
-        const tierName = selectedType.tierType === 1 ? "customer" : "vendor";
+        const tierName = selectedType.tierType === 1 ? 'customer' : 'vendor';
         toast.error(`Please select a ${tierName}`);
         return false;
       }
@@ -763,18 +801,16 @@ export default function CreateDocumentWizard({
       // Helper function to get the correct code property based on tier type
       const getCustomerVendorCode = (): string | null => {
         if (!formData.selectedCustomerVendor) return null;
-
+        
         // For customers, use 'code' property
-        if (selectedType.tierType === 1) {
-          // TierType.Customer = 1
+        if (selectedType.tierType === 1) { // TierType.Customer = 1
           return formData.selectedCustomerVendor.code || null;
         }
         // For vendors, use 'vendorCode' property
-        else if (selectedType.tierType === 2) {
-          // TierType.Vendor = 2
+        else if (selectedType.tierType === 2) { // TierType.Vendor = 2
           return formData.selectedCustomerVendor.vendorCode || null;
         }
-
+        
         return null;
       };
 
@@ -921,12 +957,60 @@ export default function CreateDocumentWizard({
       console.log("CreateDocumentWizard: Fetching responsibility centres");
       setIsLoading(true);
 
-      // Try to fetch from the service method directly
-      const centres = await responsibilityCentreService.getSimple();
-      console.log("CreateDocumentWizard: Fetched centres:", centres);
+      // Check API connectivity first
+      const isApiConnected = await checkApiConnection();
+      if (!isApiConnected) {
+        console.error(
+          "API is not connected - cannot fetch responsibility centres"
+        );
+        toast.error("Cannot connect to server", {
+          description: "Please check your internet connection and try again.",
+          duration: 4000,
+        });
+        setResponsibilityCentres([]);
+        return;
+      }
 
-      // Always set the centres, even if empty
-      setResponsibilityCentres(centres || []);
+      // Try to fetch from the API directly first for more reliable results
+      try {
+        const response = await api.get("/ResponsibilityCentre/simple");
+        const centres = response.data;
+
+        console.log("CreateDocumentWizard: Fetched centres:", centres);
+
+        if (centres && centres.length > 0) {
+          setResponsibilityCentres(centres);
+        } else {
+          console.warn(
+            "CreateDocumentWizard: No responsibility centres returned from API"
+          );
+          toast.error("No responsibility centres available", {
+            description:
+              "Please contact your administrator to set up responsibility centres.",
+            duration: 4000,
+          });
+          setResponsibilityCentres([]);
+        }
+      } catch (directApiError) {
+        console.error(
+          "Direct API call failed, trying service:",
+          directApiError
+        );
+
+        // Fallback to the service method
+        const centres =
+          await responsibilityCentreService.getSimpleResponsibilityCentres();
+        if (centres && centres.length > 0) {
+          setResponsibilityCentres(centres);
+        } else {
+          setResponsibilityCentres([]);
+          toast.error("No responsibility centres available", {
+            description:
+              "Please contact your administrator to set up responsibility centres.",
+            duration: 4000,
+          });
+        }
+      }
     } catch (error) {
       console.error(
         "CreateDocumentWizard: Failed to fetch responsibility centres:",
@@ -951,12 +1035,23 @@ export default function CreateDocumentWizard({
 
   // Get the name of the selected responsibility centre
   const getSelectedResponsibilityCentreName = (): string | undefined => {
-    if (user?.responsibilityCentre) {
-      return `${user.responsibilityCentre.code} - ${user.responsibilityCentre.descr}`;
+    // First check if user has an assigned responsibility centre
+    if (userHasResponsibilityCentre) {
+      const userCentre = user?.responsibilityCentre || user?.responsibilityCenter;
+      if (userCentre) {
+        return userCentre.code && userCentre.descr 
+          ? `${userCentre.code} - ${userCentre.descr}`
+          : userCentre.descr || userCentre.code;
+      }
     }
-    return responsibilityCentres.find(
+    
+    // Otherwise, look up in the available responsibility centres
+    const selectedCentre = responsibilityCentres.find(
       (centre) => centre.id === formData.responsibilityCentreId
-    )?.descr;
+    );
+    return selectedCentre?.code && selectedCentre?.descr
+      ? `${selectedCentre.code} - ${selectedCentre.descr}`
+      : selectedCentre?.descr;
   };
 
   const renderStepContent = () => {
@@ -978,15 +1073,15 @@ export default function CreateDocumentWizard({
             transition={{ duration: 0.2 }}
           >
             <div className="space-y-4 py-4">
-              <ResponsibilityCentreStep
-                selectedCentreId={formData.responsibilityCentreId || undefined}
-                onCentreChange={handleResponsibilityCentreChange}
-                userHasCentre={!!formData.responsibilityCentreId}
-                userCentreName={getSelectedResponsibilityCentreName()}
-                isLoading={isLoading}
-                responsibilityCentres={responsibilityCentres}
-                onRetryFetch={retryFetchResponsibilityCentres}
-              />
+                          <ResponsibilityCentreStep
+              selectedCentreId={formData.responsibilityCentreId || undefined}
+              onCentreChange={handleResponsibilityCentreChange}
+              userHasCentre={userHasResponsibilityCentre}
+              userCentreName={getSelectedResponsibilityCentreName()}
+              isLoading={isLoading}
+              responsibilityCentres={responsibilityCentres}
+              onRetryFetch={retryFetchResponsibilityCentres}
+            />
             </div>
           </MotionDiv>
         );
@@ -1193,7 +1288,7 @@ export default function CreateDocumentWizard({
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl text-blue-100">
             {currentStep === 1
-              ? t("documents.responsibilityCentre")
+                              ? t("documents.responsibilityCentre")
               : currentStep === 2
               ? t("documents.documentDate")
               : currentStep === 3
@@ -1335,14 +1430,13 @@ export default function CreateDocumentWizard({
                 disabled={isSubmitting}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                {isSubmitting ? (
+                                  {isSubmitting ? (
                   <>
                     <div className="spinner mr-2" /> {t("documents.creating")}
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />{" "}
-                    {t("documents.createDocument")}
+                    <Save className="mr-2 h-4 w-4" /> {t("documents.createDocument")}
                   </>
                 )}
               </Button>

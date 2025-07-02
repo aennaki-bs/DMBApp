@@ -13,6 +13,9 @@ namespace DocManagementBackend.Services
         Task<BcApiResponse<BcCustomerDto>?> GetCustomersAsync();
         Task<BcApiResponse<BcVendorDto>?> GetVendorsAsync();
         Task<BcApiResponse<BcLocationDto>?> GetLocationsAsync();
+        Task<BcApiResponse<BcResponsibilityCentreDto>?> GetResponsibilityCentresAsync();
+        Task<BcApiResponse<BcUnitOfMeasureDto>?> GetUnitOfMeasuresAsync();
+        Task<BcApiResponse<BcItemUnitOfMeasureDto>?> GetItemUnitOfMeasuresAsync();
         Task<T?> GetDataAsync<T>(string endpoint) where T : class;
     }
 
@@ -31,21 +34,21 @@ namespace DocManagementBackend.Services
             _logger = logger;
             
             // Get authentication details from environment variables or configuration
-            _username = Environment.GetEnvironmentVariable("BC_USERNAME") ?? 
+            _username = Environment.GetEnvironmentVariable("USERNAME") ?? 
                        configuration["BcApi:Username"] ?? 
-                       throw new InvalidOperationException("BC_USERNAME not found in environment variables or configuration");
+                       throw new InvalidOperationException("USERNAME not found in environment variables or configuration");
             
-            _password = Environment.GetEnvironmentVariable("BC_PASSWORD") ?? 
+            _password = Environment.GetEnvironmentVariable("PASSWORD") ?? 
                        configuration["BcApi:Password"] ?? 
-                       throw new InvalidOperationException("BC_PASSWORD not found in environment variables or configuration");
+                       throw new InvalidOperationException("PASSWORD not found in environment variables or configuration");
             
-            _domain = Environment.GetEnvironmentVariable("BC_DOMAIN") ?? 
+            _domain = Environment.GetEnvironmentVariable("DOMAIN") ?? 
                      configuration["BcApi:Domain"] ?? 
-                     "DESKTOP-8FCE015"; // Default from screenshot
+                     "DESKTOP-8FCE015";
             
-            _workstation = Environment.GetEnvironmentVariable("BC_WORKSTATION") ?? 
+            _workstation = Environment.GetEnvironmentVariable("WORKSTATION") ?? 
                           configuration["BcApi:Workstation"] ?? 
-                          "localhost"; // Default from screenshot
+                          "localhost";
 
             ConfigureHttpClient();
         }
@@ -100,6 +103,24 @@ namespace DocManagementBackend.Services
             return await GetDataAsync<BcApiResponse<BcLocationDto>>(endpoint);
         }
 
+        public async Task<BcApiResponse<BcResponsibilityCentreDto>?> GetResponsibilityCentresAsync()
+        {
+            const string endpoint = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/responsibilityCenters";
+            return await GetDataAsync<BcApiResponse<BcResponsibilityCentreDto>>(endpoint);
+        }
+
+        public async Task<BcApiResponse<BcUnitOfMeasureDto>?> GetUnitOfMeasuresAsync()
+        {
+            const string endpoint = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/UnitofMeasures";
+            return await GetDataAsync<BcApiResponse<BcUnitOfMeasureDto>>(endpoint);
+        }
+
+        public async Task<BcApiResponse<BcItemUnitOfMeasureDto>?> GetItemUnitOfMeasuresAsync()
+        {
+            const string endpoint = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/itemnitofMeasures";
+            return await GetDataAsync<BcApiResponse<BcItemUnitOfMeasureDto>>(endpoint);
+        }
+
         public async Task<T?> GetDataAsync<T>(string endpoint) where T : class
         {
             try
@@ -119,8 +140,8 @@ namespace DocManagementBackend.Services
                         endpoint, content.Length);
                     
                     // Log first 200 characters of response for debugging
-                    var preview = content.Length > 200 ? content.Substring(0, 200) + "..." : content;
-                    _logger.LogDebug("Response preview: {Preview}", preview);
+                    // var preview = content.Length > 200 ? content.Substring(0, 200) + "..." : content;
+                    // _logger.LogDebug("Response preview: {Preview}", preview);
 
                     var options = new JsonSerializerOptions
                     {

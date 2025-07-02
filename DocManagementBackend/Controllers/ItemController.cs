@@ -112,6 +112,40 @@ namespace DocManagementBackend.Controllers
             return Ok(item);
         }
 
+        // GET: api/Item/ABC123/units
+        [HttpGet("{code}/units")]
+        public async Task<ActionResult<IEnumerable<ItemUnitOfMeasureDto>>> GetItemUnits(string code)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // First verify the item exists
+            var itemExists = await _context.Items
+                .AnyAsync(i => i.Code == code);
+
+            if (!itemExists)
+                return NotFound("Item not found.");
+
+            var itemUnits = await _context.ItemUnitOfMeasures
+                .Include(ium => ium.UnitOfMeasure)
+                .Where(ium => ium.ItemCode == code)
+                .Select(ium => new ItemUnitOfMeasureDto
+                {
+                    Id = ium.Id,
+                    ItemCode = ium.ItemCode,
+                    UnitOfMeasureCode = ium.UnitOfMeasureCode,
+                    UnitOfMeasureDescription = ium.UnitOfMeasure.Description,
+                    QtyPerUnitOfMeasure = ium.QtyPerUnitOfMeasure,
+                    CreatedAt = ium.CreatedAt,
+                    UpdatedAt = ium.UpdatedAt
+                })
+                .OrderBy(ium => ium.UnitOfMeasureCode)
+                .ToListAsync();
+
+            return Ok(itemUnits);
+        }
+
         // POST: api/Item/validate-code
         [HttpPost("validate-code")]
         public async Task<IActionResult> ValidateCode([FromBody] CreateItemRequest request)
@@ -151,7 +185,7 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("An item with this code already exists.");
 
             // Validate Unite code exists
-            var uniteExists = await _context.UniteCodes
+            var uniteExists = await _context.UnitOfMeasures
                 .AnyAsync(uc => uc.Code == request.Unite);
             
             if (!uniteExists)
@@ -172,8 +206,8 @@ namespace DocManagementBackend.Controllers
             {
                 await _context.SaveChangesAsync();
 
-                // Increment the ItemsCount for the associated UniteCode
-                var uniteCode = await _context.UniteCodes.FindAsync(request.Unite.Trim());
+                // Increment the ItemsCount for the associated UnitOfMeasure
+                var uniteCode = await _context.UnitOfMeasures.FindAsync(request.Unite.Trim());
                 if (uniteCode != null)
                 {
                     uniteCode.ItemsCount++;
@@ -232,7 +266,7 @@ namespace DocManagementBackend.Controllers
                 else
                 {
                     // Validate Unite code exists
-                    var uniteExists = await _context.UniteCodes
+                    var uniteExists = await _context.UnitOfMeasures
                         .AnyAsync(uc => uc.Code == request.Unite);
                     
                     if (!uniteExists)
@@ -248,13 +282,13 @@ namespace DocManagementBackend.Controllers
             {
                 await _context.SaveChangesAsync();
 
-                // Update ItemsCount for UniteCodes if unit changed
+                // Update ItemsCount for UnitOfMeasures if unit changed
                 if (request.Unite != null && originalUnite != item.Unite)
                 {
                     // Decrement count for old unit
                     if (!string.IsNullOrEmpty(originalUnite))
                     {
-                        var oldUniteCode = await _context.UniteCodes.FindAsync(originalUnite);
+                        var oldUniteCode = await _context.UnitOfMeasures.FindAsync(originalUnite);
                         if (oldUniteCode != null)
                         {
                             oldUniteCode.ItemsCount = Math.Max(0, oldUniteCode.ItemsCount - 1);
@@ -263,7 +297,7 @@ namespace DocManagementBackend.Controllers
                     }
 
                     // Increment count for new unit
-                    var newUniteCode = await _context.UniteCodes.FindAsync(item.Unite);
+                    var newUniteCode = await _context.UnitOfMeasures.FindAsync(item.Unite);
                     if (newUniteCode != null)
                     {
                         newUniteCode.ItemsCount++;
@@ -309,10 +343,10 @@ namespace DocManagementBackend.Controllers
             {
                 await _context.SaveChangesAsync();
 
-                // Decrement ItemsCount for the associated UniteCode
+                // Decrement ItemsCount for the associated UnitOfMeasure
                 if (!string.IsNullOrEmpty(itemUnite))
                 {
-                    var uniteCode = await _context.UniteCodes.FindAsync(itemUnite);
+                    var uniteCode = await _context.UnitOfMeasures.FindAsync(itemUnite);
                     if (uniteCode != null)
                     {
                         uniteCode.ItemsCount = Math.Max(0, uniteCode.ItemsCount - 1);

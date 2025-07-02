@@ -126,17 +126,17 @@ export function StepTable({
   return (
     <DndProvider backend={HTML5Backend}>
       <div className={cn("w-full space-y-4", className)}>
-        <div className="rounded-xl border border-slate-800/50 overflow-hidden bg-slate-900/30 backdrop-blur-sm shadow-xl">
+        <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
           {steps.length === 0 ? (
             <div className="h-[400px] flex items-center justify-center">
-              <div className="text-center text-slate-300">
+              <div className="text-center text-blue-300">
                 <p className="text-sm">No steps found</p>
               </div>
             </div>
           ) : (
             <>
               {/* Fixed Header - Never Scrolls */}
-              <div className="min-w-[1000px] border-b border-slate-700/50">
+              <div className="min-w-[1000px] border-b border-blue-900/30">
                 <Table className="table-fixed w-full">
                   <StepTableHeader
                     onSelectAll={onSelectAll}

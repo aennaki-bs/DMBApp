@@ -1,7 +1,5 @@
 import {
   ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   Tag,
   FileText,
   Filter,
@@ -53,159 +51,130 @@ export default function DocumentsTable({
   requestSort,
 }: DocumentsTableProps) {
   const { t } = useTranslation();
-
-  const isAllSelected =
-    documents.length > 0 && selectedDocuments.length === documents.length;
-  const isIndeterminate =
-    selectedDocuments.length > 0 && selectedDocuments.length < documents.length;
-
-  const renderSortIcon = (field: string) => {
-    if (sortConfig?.key !== field) {
-      return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
+  const getSortIndicator = (columnKey: string) => {
+    if (sortConfig && sortConfig.key === columnKey) {
+      return sortConfig.direction === "ascending" ? "↑" : "↓";
     }
-    return sortConfig.direction === "ascending" ? (
-      <ArrowUp className="ml-1 h-3 w-3 text-primary" />
-    ) : (
-      <ArrowDown className="ml-1 h-3 w-3 text-primary" />
-    );
+    return null;
   };
 
-  const getSortButton = (
-    field: string,
+  const renderSortableHeader = (
     label: string,
-    icon?: React.ReactNode
+    key: string,
+    icon: React.ReactNode
   ) => (
-    <button
-      className="h-8 px-2 -ml-2 text-xs font-medium hover:bg-accent/50 flex items-center gap-1 rounded-md transition-all duration-200 hover:shadow-sm"
-      onClick={() => requestSort(field)}
+    <div
+      className="flex items-center gap-1 cursor-pointer select-none group"
+      onClick={() => requestSort(key)}
     >
-      {icon && <span className="mr-1">{icon}</span>}
-      {label}
-      {renderSortIcon(field)}
-    </button>
+      <span className="text-blue-400 group-hover:text-blue-300 transition-colors">
+        {icon}
+      </span>
+      <span className="group-hover:text-blue-200 transition-colors">
+        {label}
+      </span>
+      <div className="ml-1 w-4 text-center">
+        {getSortIndicator(key) ? (
+          <span className="text-blue-300">{getSortIndicator(key)}</span>
+        ) : (
+          <ArrowUpDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+        )}
+      </div>
+    </div>
   );
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Fixed Header */}
-      <div className="flex-shrink-0 border-b border-border/10">
-        <Table className="table-fixed w-full min-w-[1200px]">
-          <TableHeader className="sticky top-0 z-10">
-            <TableRow className="border-border/20 hover:bg-muted/30 transition-colors duration-200 documents-table-layout">
-              {/* Checkbox Column */}
-              <TableHead className="py-3 table-cell-center w-[50px]">
+    <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+      {/* Fixed Header - Never Scrolls */}
+      <div className="min-w-[1200px] border-b border-blue-900/30">
+        <Table className="table-fixed w-full">
+          <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
+            <TableRow className="border-blue-900/50 hover:bg-transparent">
+              <TableHead className="w-[50px] text-blue-300 font-medium">
                 {canManageDocuments ? (
                   <Checkbox
-                    enhanced={true}
-                    size="sm"
-                    checked={isAllSelected}
+                    checked={
+                      selectedDocuments.length === documents.length &&
+                      documents.length > 0
+                    }
                     onCheckedChange={handleSelectAll}
-                    aria-label="Select all"
-                    className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    ref={(el) => {
-                      if (el && el.querySelector) {
-                        const input = el.querySelector(
-                          'input[type="checkbox"]'
-                        ) as HTMLInputElement;
-                        if (input) input.indeterminate = isIndeterminate;
-                      }
-                    }}
+                    className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
                   />
                 ) : (
-                  <span className="text-xs font-medium text-muted-foreground">
-                    #
-                  </span>
+                  <span>#</span>
                 )}
               </TableHead>
-
-              {/* Document Code Column */}
-              <TableHead className="py-3 table-cell-start w-[160px]">
-                {getSortButton(
-                  "documentKey",
+              <TableHead className="w-[160px] text-blue-300 font-medium">
+                {renderSortableHeader(
                   t("documents.documentCode"),
-                  <Tag className="h-3.5 w-3.5" />
+                  "documentKey",
+                  <Tag className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
-
-              {/* Title Column */}
-              <TableHead className="py-3 table-cell-start w-[250px]">
-                {getSortButton(
-                  "title",
+              <TableHead className="w-[250px] text-blue-300 font-medium">
+                {renderSortableHeader(
                   t("common.title"),
-                  <FileText className="h-3.5 w-3.5" />
+                  "title",
+                  <FileText className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
-
-              {/* Status Column */}
-              <TableHead className="py-3 table-cell-center w-[120px]">
-                {getSortButton(
-                  "status",
+              <TableHead className="w-[120px] text-blue-300 font-medium">
+                {renderSortableHeader(
                   t("common.status"),
-                  <AlertCircle className="h-3.5 w-3.5" />
+                  "status",
+                  <AlertCircle className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
-
-              {/* Type Column */}
-              <TableHead className="py-3 table-cell-start w-[150px]">
-                {getSortButton(
-                  "documentType",
+              <TableHead className="w-[150px] text-blue-300 font-medium">
+                {renderSortableHeader(
                   t("common.type"),
-                  <Filter className="h-3.5 w-3.5" />
+                  "documentType",
+                  <Filter className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
-
-              {/* Date Column */}
-              <TableHead className="py-3 table-cell-center w-[140px]">
-                {getSortButton(
-                  "docDate",
+              <TableHead className="w-[140px] text-blue-300 font-medium">
+                {renderSortableHeader(
                   t("documents.documentDate"),
-                  <CalendarDays className="h-3.5 w-3.5" />
+                  "docDate",
+                  <CalendarDays className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
-
-              {/* Created By Column */}
-              <TableHead className="py-3 table-cell-start w-[150px]">
-                {getSortButton(
-                  "createdBy",
+              <TableHead className="w-[150px] text-blue-300 font-medium">
+                {renderSortableHeader(
                   t("documents.createdBy"),
-                  <User className="h-3.5 w-3.5" />
+                  "createdBy",
+                  <User className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
-
-              {/* Actions Column */}
-              <TableHead className="py-3 table-cell-center w-[100px]">
-                <span className="text-xs font-medium text-muted-foreground">
-                  {t("common.actions")}
-                </span>
+              <TableHead className="w-[100px] text-right text-blue-300 font-medium">
+                {t("common.actions")}
               </TableHead>
             </TableRow>
           </TableHeader>
         </Table>
       </div>
 
-      {/* Scrollable Body */}
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full w-full">
-          <div className="min-w-[1200px]">
-            <Table className="table-fixed w-full">
-              <TableBody>
-                {documents.map((document, index) => (
-                  <DocumentsTableRow
-                    key={document.id}
-                    document={document}
-                    index={index + (page - 1) * pageSize}
-                    isSelected={selectedDocuments.includes(document.id)}
-                    canManageDocuments={canManageDocuments}
-                    onSelect={() => handleSelectDocument(document.id)}
-                    onDelete={() => openDeleteDialog(document.id)}
-                    onAssignCircuit={() => openAssignCircuitDialog(document)}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </ScrollArea>
-      </div>
+      {/* Scrollable Body - Only Content Scrolls */}
+      <ScrollArea className="h-[calc(100vh-380px)] min-h-[300px]">
+        <div className="min-w-[1200px]">
+          <Table className="table-fixed w-full">
+            <TableBody>
+              {documents.map((document, index) => (
+                <DocumentsTableRow
+                  key={document.id}
+                  document={document}
+                  index={index + (page - 1) * pageSize}
+                  isSelected={selectedDocuments.includes(document.id)}
+                  canManageDocuments={canManageDocuments}
+                  onSelect={() => handleSelectDocument(document.id)}
+                  onDelete={() => openDeleteDialog(document.id)}
+                  onAssignCircuit={() => openAssignCircuitDialog(document)}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </ScrollArea>
     </div>
   );
 }

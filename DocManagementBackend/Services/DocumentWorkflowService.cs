@@ -12,10 +12,17 @@ namespace DocManagementBackend.Services
     public class DocumentWorkflowService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IDocumentErpArchivalService _erpArchivalService;
+        private readonly ILogger<DocumentWorkflowService> _logger;
 
-        public DocumentWorkflowService(ApplicationDbContext context)
+        public DocumentWorkflowService(
+            ApplicationDbContext context, 
+            IDocumentErpArchivalService erpArchivalService,
+            ILogger<DocumentWorkflowService> logger)
         {
             _context = context;
+            _erpArchivalService = erpArchivalService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -594,7 +601,7 @@ namespace DocManagementBackend.Services
                                     ApprovalWritingId = approvalWritingId,
                                     UserId = nextUser.UserId,
                                     IsApproved = true,
-                                    Comments = "Auto-approved as original requester when their turn arrived in sequence",
+                                    Comments = "Auto-approved as original requester",
                                     ResponseDate = DateTime.UtcNow
                                 };
                                 
@@ -910,6 +917,29 @@ namespace DocManagementBackend.Services
                 document.Status = 2; // Completed status
                 document.UpdatedAt = DateTime.UtcNow;
                 document.UpdatedByUserId = userId; // Track who completed the circuit
+                
+                // Trigger ERP archival asynchronously
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        _logger.LogInformation("Document {DocumentId} reached final status. Triggering ERP archival.", documentId);
+                        var archivalSuccess = await _erpArchivalService.ArchiveDocumentToErpAsync(documentId);
+                        
+                        if (archivalSuccess)
+                        {
+                            _logger.LogInformation("Document {DocumentId} successfully archived to ERP", documentId);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to archive document {DocumentId} to ERP", documentId);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during ERP archival for document {DocumentId}: {Error}", documentId, ex.Message);
+                    }
+                });
             }
 
             // Create history entry
@@ -1073,6 +1103,29 @@ namespace DocManagementBackend.Services
                     document.Status = 2; // Completed status
                     document.UpdatedAt = DateTime.UtcNow;
                     document.UpdatedByUserId = userId; // Track who completed the circuit
+                    
+                    // Trigger ERP archival asynchronously
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            _logger.LogInformation("Document {DocumentId} final status completed. Triggering ERP archival.", documentId);
+                            var archivalSuccess = await _erpArchivalService.ArchiveDocumentToErpAsync(documentId);
+                            
+                            if (archivalSuccess)
+                            {
+                                _logger.LogInformation("Document {DocumentId} successfully archived to ERP", documentId);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Failed to archive document {DocumentId} to ERP", documentId);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error during ERP archival for document {DocumentId}: {Error}", documentId, ex.Message);
+                        }
+                    });
                 }
             }
             else
@@ -1356,6 +1409,184 @@ namespace DocManagementBackend.Services
         }
 
         /// <summary>
+        /// Deletes multiple documents efficiently with proper counter management
+        /// </summary>
+        public async Task<(int SuccessCount, List<int> FailedIds)> DeleteMultipleDocumentsAsync(List<int> documentIds)
+        {
+            var successCount = 0;
+            var failedIds = new List<int>();
+
+            if (!documentIds.Any())
+                return (0, failedIds);
+
+            // Use a single transaction for all deletions to prevent counter inconsistencies
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
+            {
+                // Get all documents to check which ones can be deleted
+                var allDocuments = await _context.Documents
+                    .Where(d => documentIds.Contains(d.Id))
+                    .Select(d => new { d.Id, d.TypeId, d.ERPDocumentCode, d.DocumentKey, d.Status })
+                    .ToListAsync();
+
+                if (!allDocuments.Any())
+                {
+                    await transaction.RollbackAsync();
+                    return (0, documentIds);
+                }
+
+                // Enhanced debug logging in workflow service
+                Console.WriteLine($"[DEBUG WorkflowService] Processing {allDocuments.Count} documents for deletion");
+                foreach (var doc in allDocuments)
+                {
+                    var isErpArchived = !string.IsNullOrEmpty(doc.ERPDocumentCode);
+                    Console.WriteLine($"[DEBUG WorkflowService] Document {doc.Id} ({doc.DocumentKey}) - Status: {doc.Status}, ERPCode: '{doc.ERPDocumentCode ?? "NULL"}', IsErpArchived: {isErpArchived}");
+                }
+
+                // Filter out documents that are archived to ERP
+                var documentsToDelete = allDocuments
+                    .Where(d => string.IsNullOrEmpty(d.ERPDocumentCode))
+                    .ToList();
+                
+                var erpArchivedDocuments = allDocuments
+                    .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode))
+                    .Select(d => d.Id)
+                    .ToList();
+                
+                Console.WriteLine($"[DEBUG WorkflowService] {documentsToDelete.Count} documents can be deleted, {erpArchivedDocuments.Count} are ERP-archived");
+                
+                // Add ERP archived documents to failed list
+                failedIds.AddRange(erpArchivedDocuments);
+                
+                if (erpArchivedDocuments.Any())
+                {
+                    _logger.LogWarning("Attempted to delete {Count} ERP-archived documents. Document IDs: {DocumentIds}", 
+                        erpArchivedDocuments.Count, string.Join(", ", erpArchivedDocuments));
+                }
+
+                if (!documentsToDelete.Any())
+                {
+                    await transaction.RollbackAsync();
+                    return (0, documentIds);
+                }
+
+                // Group documents by TypeId to batch counter updates
+                var documentsByType = documentsToDelete.GroupBy(d => d.TypeId);
+
+                // Update document type counters in batch
+                foreach (var typeGroup in documentsByType)
+                {
+                    var typeId = typeGroup.Key;
+                    var documentsCount = typeGroup.Count();
+                    
+                    var docType = await _context.DocumentTypes.FindAsync(typeId);
+                    if (docType != null)
+                    {
+                        // Ensure counter doesn't go negative
+                        docType.DocumentCounter = Math.Max(0, docType.DocumentCounter - documentsCount);
+                    }
+                }
+
+                // Delete all related records for these documents
+                var documentIdsArray = documentsToDelete.Select(d => d.Id).ToArray();
+
+                // Delete document statuses
+                var documentStatuses = await _context.DocumentStatus
+                    .Where(ds => documentIdsArray.Contains(ds.DocumentId))
+                    .ToListAsync();
+                _context.DocumentStatus.RemoveRange(documentStatuses);
+
+                // Delete circuit history
+                var circuitHistory = await _context.DocumentCircuitHistory
+                    .Where(h => documentIdsArray.Contains(h.DocumentId))
+                    .ToListAsync();
+                _context.DocumentCircuitHistory.RemoveRange(circuitHistory);
+
+                // Delete step history
+                var stepHistory = await _context.DocumentStepHistory
+                    .Where(h => documentIdsArray.Contains(h.DocumentId))
+                    .ToListAsync();
+                _context.DocumentStepHistory.RemoveRange(stepHistory);
+
+                // Delete approval writings and responses
+                var approvalWritings = await _context.ApprovalWritings
+                    .Where(aw => documentIdsArray.Contains(aw.DocumentId))
+                    .ToListAsync();
+                
+                if (approvalWritings.Any())
+                {
+                    var writingIds = approvalWritings.Select(aw => aw.Id).ToArray();
+                    var responses = await _context.ApprovalResponses
+                        .Where(ar => writingIds.Contains(ar.ApprovalWritingId))
+                        .ToListAsync();
+                    _context.ApprovalResponses.RemoveRange(responses);
+                    _context.ApprovalWritings.RemoveRange(approvalWritings);
+                }
+
+                // Delete sous lignes
+                var ligneIds = await _context.Lignes
+                    .Where(l => documentIdsArray.Contains(l.DocumentId))
+                    .Select(l => l.Id)
+                    .ToArrayAsync();
+
+                if (ligneIds.Any())
+                {
+                    var sousLignes = await _context.SousLignes
+                        .Where(sl => ligneIds.Contains(sl.LigneId))
+                        .ToListAsync();
+                    _context.SousLignes.RemoveRange(sousLignes);
+                }
+
+                // Delete lignes
+                var lignes = await _context.Lignes
+                    .Where(l => documentIdsArray.Contains(l.DocumentId))
+                    .ToListAsync();
+                _context.Lignes.RemoveRange(lignes);
+
+                // Delete the documents
+                var documents = await _context.Documents
+                    .Where(d => documentIdsArray.Contains(d.Id))
+                    .ToListAsync();
+                _context.Documents.RemoveRange(documents);
+                
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                
+                successCount = documents.Count;
+                
+                // Identify any documents that weren't found
+                var foundIds = documents.Select(d => d.Id).ToHashSet();
+                failedIds = documentIds.Where(id => !foundIds.Contains(id)).ToList();
+                
+                return (successCount, failedIds);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                
+                // If bulk operation fails, try individual deletions as fallback
+                foreach (var docId in documentIds)
+                {
+                    try
+                    {
+                        var success = await DeleteDocumentAsync(docId);
+                        if (success)
+                            successCount++;
+                        else
+                            failedIds.Add(docId);
+                    }
+                    catch
+                    {
+                        failedIds.Add(docId);
+                    }
+                }
+                
+                return (successCount, failedIds);
+            }
+        }
+
+        /// <summary>
         /// Deletes a document and all related records
         /// </summary>
         public async Task<bool> DeleteDocumentAsync(int documentId)
@@ -1370,11 +1601,27 @@ namespace DocManagementBackend.Services
                 if (document == null)
                     return false; // Document not found
                 
-                // Update the document type counter first (within transaction)
-                var type = await _context.DocumentTypes.FindAsync(document.TypeId);
-                if (type != null && type.DocumentCounter > 0)
+                // Check if document is archived to ERP
+                if (!string.IsNullOrEmpty(document.ERPDocumentCode))
                 {
-                    type.DocumentCounter--;
+                    _logger.LogWarning("Attempted to delete ERP-archived document {DocumentId} with ERP code: {ERPCode}", 
+                        documentId, document.ERPDocumentCode);
+                    await transaction.RollbackAsync();
+                    return false; // Cannot delete ERP-archived documents
+                }
+                
+                // Update the document type counter first (within transaction)
+                // Refresh the entity to get the latest counter value to prevent lost updates
+                var type = await _context.DocumentTypes.FindAsync(document.TypeId);
+                if (type != null)
+                {
+                    // Refresh the entity to get the latest value from database
+                    await _context.Entry(type).ReloadAsync();
+                    
+                    if (type.DocumentCounter > 0)
+                    {
+                        type.DocumentCounter--;
+                    }
                 }
 
                 // Delete document status records

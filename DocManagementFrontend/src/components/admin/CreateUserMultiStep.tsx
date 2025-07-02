@@ -40,7 +40,6 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useTheme } from "@/context/ThemeContext";
 
 // Import step components
 import { UserTypeStep } from "./steps/UserTypeStep";
@@ -123,6 +122,7 @@ interface CreateUserMultiStepProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Step configuration
 interface Step {
   id: number;
   title: string;
@@ -145,7 +145,6 @@ export function CreateUserMultiStep({
   const [emailChecking, setEmailChecking] = useState(false);
   const [direction, setDirection] = useState(0);
   const { t } = useTranslation();
-  const { theme } = useTheme();
 
   // Define steps for the form
   const steps: Step[] = [
@@ -193,157 +192,7 @@ export function CreateUserMultiStep({
     },
   ];
 
-  // Get theme colors based on current theme
-  const getThemeColors = () => {
-    const themeVariant = theme.variant;
-    const isDark = theme.mode === "dark";
-
-    switch (themeVariant) {
-      case "ocean-blue":
-        return {
-          gradient: isDark
-            ? "linear-gradient(135deg, rgba(30, 64, 175, 0.95) 0%, rgba(59, 130, 246, 0.95) 100%)"
-            : "linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(96, 165, 250, 0.95) 100%)",
-          border: isDark
-            ? "rgba(96, 165, 250, 0.3)"
-            : "rgba(59, 130, 246, 0.3)",
-          headerGradient: isDark
-            ? "linear-gradient(90deg, rgba(30, 64, 175, 0.8) 0%, rgba(59, 130, 246, 0.8) 100%)"
-            : "linear-gradient(90deg, rgba(59, 130, 246, 0.8) 0%, rgba(96, 165, 250, 0.8) 100%)",
-          stepActive: isDark ? "#3b82f6" : "#2563eb",
-          stepCompleted: isDark ? "#10b981" : "#059669",
-          stepInactive: isDark
-            ? "rgba(59, 130, 246, 0.3)"
-            : "rgba(59, 130, 246, 0.2)",
-          text: isDark ? "rgb(219, 234, 254)" : "rgb(30, 58, 138)",
-          textSecondary: isDark ? "rgb(147, 197, 253)" : "rgb(59, 130, 246)",
-          buttonPrimary: isDark ? "#3b82f6" : "#2563eb",
-          buttonSecondary: isDark
-            ? "rgba(59, 130, 246, 0.2)"
-            : "rgba(59, 130, 246, 0.1)",
-        };
-
-      case "emerald-green":
-        return {
-          gradient: isDark
-            ? "linear-gradient(135deg, rgba(6, 78, 59, 0.95) 0%, rgba(16, 185, 129, 0.95) 100%)"
-            : "linear-gradient(135deg, rgba(5, 150, 105, 0.95) 0%, rgba(16, 185, 129, 0.95) 100%)",
-          border: isDark
-            ? "rgba(52, 211, 153, 0.3)"
-            : "rgba(16, 185, 129, 0.3)",
-          headerGradient: isDark
-            ? "linear-gradient(90deg, rgba(6, 78, 59, 0.8) 0%, rgba(16, 185, 129, 0.8) 100%)"
-            : "linear-gradient(90deg, rgba(5, 150, 105, 0.8) 0%, rgba(16, 185, 129, 0.8) 100%)",
-          stepActive: isDark ? "#10b981" : "#059669",
-          stepCompleted: isDark ? "#3b82f6" : "#2563eb",
-          stepInactive: isDark
-            ? "rgba(16, 185, 129, 0.3)"
-            : "rgba(16, 185, 129, 0.2)",
-          text: isDark ? "rgb(209, 250, 229)" : "rgb(6, 78, 59)",
-          textSecondary: isDark ? "rgb(167, 243, 208)" : "rgb(5, 150, 105)",
-          buttonPrimary: isDark ? "#10b981" : "#059669",
-          buttonSecondary: isDark
-            ? "rgba(16, 185, 129, 0.2)"
-            : "rgba(16, 185, 129, 0.1)",
-        };
-
-      case "purple-haze":
-        return {
-          gradient: isDark
-            ? "linear-gradient(135deg, rgba(59, 7, 100, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%)"
-            : "linear-gradient(135deg, rgba(107, 33, 168, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%)",
-          border: isDark
-            ? "rgba(196, 181, 253, 0.3)"
-            : "rgba(124, 58, 237, 0.3)",
-          headerGradient: isDark
-            ? "linear-gradient(90deg, rgba(59, 7, 100, 0.8) 0%, rgba(124, 58, 237, 0.8) 100%)"
-            : "linear-gradient(90deg, rgba(107, 33, 168, 0.8) 0%, rgba(124, 58, 237, 0.8) 100%)",
-          stepActive: isDark ? "#8b5cf6" : "#7c3aed",
-          stepCompleted: isDark ? "#10b981" : "#059669",
-          stepInactive: isDark
-            ? "rgba(139, 92, 246, 0.3)"
-            : "rgba(124, 58, 237, 0.2)",
-          text: isDark ? "rgb(237, 233, 254)" : "rgb(59, 7, 100)",
-          textSecondary: isDark ? "rgb(221, 214, 254)" : "rgb(107, 33, 168)",
-          buttonPrimary: isDark ? "#8b5cf6" : "#7c3aed",
-          buttonSecondary: isDark
-            ? "rgba(139, 92, 246, 0.2)"
-            : "rgba(124, 58, 237, 0.1)",
-        };
-
-      case "orange-sunset":
-        return {
-          gradient: isDark
-            ? "linear-gradient(135deg, rgba(154, 52, 18, 0.95) 0%, rgba(234, 88, 12, 0.95) 100%)"
-            : "linear-gradient(135deg, rgba(234, 88, 12, 0.95) 0%, rgba(251, 146, 60, 0.95) 100%)",
-          border: isDark ? "rgba(251, 146, 60, 0.3)" : "rgba(234, 88, 12, 0.3)",
-          headerGradient: isDark
-            ? "linear-gradient(90deg, rgba(154, 52, 18, 0.8) 0%, rgba(234, 88, 12, 0.8) 100%)"
-            : "linear-gradient(90deg, rgba(234, 88, 12, 0.8) 0%, rgba(251, 146, 60, 0.8) 100%)",
-          stepActive: isDark ? "#fb923c" : "#ea580c",
-          stepCompleted: isDark ? "#10b981" : "#059669",
-          stepInactive: isDark
-            ? "rgba(251, 146, 60, 0.3)"
-            : "rgba(234, 88, 12, 0.2)",
-          text: isDark ? "rgb(255, 237, 213)" : "rgb(124, 45, 18)",
-          textSecondary: isDark ? "rgb(254, 215, 170)" : "rgb(194, 65, 12)",
-          buttonPrimary: isDark ? "#fb923c" : "#ea580c",
-          buttonSecondary: isDark
-            ? "rgba(251, 146, 60, 0.2)"
-            : "rgba(234, 88, 12, 0.1)",
-        };
-
-      case "dark-neutral":
-        return {
-          gradient: isDark
-            ? "linear-gradient(135deg, rgba(23, 23, 23, 0.95) 0%, rgba(64, 64, 64, 0.95) 100%)"
-            : "linear-gradient(135deg, rgba(64, 64, 64, 0.95) 0%, rgba(115, 115, 115, 0.95) 100%)",
-          border: isDark ? "rgba(115, 115, 115, 0.3)" : "rgba(64, 64, 64, 0.3)",
-          headerGradient: isDark
-            ? "linear-gradient(90deg, rgba(23, 23, 23, 0.8) 0%, rgba(64, 64, 64, 0.8) 100%)"
-            : "linear-gradient(90deg, rgba(64, 64, 64, 0.8) 0%, rgba(115, 115, 115, 0.8) 100%)",
-          stepActive: isDark ? "#737373" : "#404040",
-          stepCompleted: isDark ? "#10b981" : "#059669",
-          stepInactive: isDark
-            ? "rgba(115, 115, 115, 0.3)"
-            : "rgba(64, 64, 64, 0.2)",
-          text: isDark ? "rgb(245, 245, 245)" : "rgb(23, 23, 23)",
-          textSecondary: isDark ? "rgb(212, 212, 212)" : "rgb(38, 38, 38)",
-          buttonPrimary: isDark ? "#737373" : "#404040",
-          buttonSecondary: isDark
-            ? "rgba(115, 115, 115, 0.2)"
-            : "rgba(64, 64, 64, 0.1)",
-        };
-
-      default: // standard theme
-        return {
-          gradient: isDark
-            ? "linear-gradient(135deg, rgba(30, 64, 175, 0.95) 0%, rgba(59, 130, 246, 0.95) 100%)"
-            : "linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(96, 165, 250, 0.95) 100%)",
-          border: isDark
-            ? "rgba(96, 165, 250, 0.3)"
-            : "rgba(59, 130, 246, 0.3)",
-          headerGradient: isDark
-            ? "linear-gradient(90deg, rgba(30, 64, 175, 0.8) 0%, rgba(59, 130, 246, 0.8) 100%)"
-            : "linear-gradient(90deg, rgba(59, 130, 246, 0.8) 0%, rgba(96, 165, 250, 0.8) 100%)",
-          stepActive: isDark ? "#3b82f6" : "#2563eb",
-          stepCompleted: isDark ? "#10b981" : "#059669",
-          stepInactive: isDark
-            ? "rgba(59, 130, 246, 0.3)"
-            : "rgba(59, 130, 246, 0.2)",
-          text: isDark ? "rgb(219, 234, 254)" : "rgb(30, 58, 138)",
-          textSecondary: isDark ? "rgb(147, 197, 253)" : "rgb(59, 130, 246)",
-          buttonPrimary: isDark ? "#3b82f6" : "#2563eb",
-          buttonSecondary: isDark
-            ? "rgba(59, 130, 246, 0.2)"
-            : "rgba(59, 130, 246, 0.1)",
-        };
-    }
-  };
-
-  const colors = getThemeColors();
-
-  // Form setup
+  // Form initialization
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -361,66 +210,61 @@ export function CreateUserMultiStep({
       passwordHash: "",
       roleName: "SimpleUser",
     },
+    mode: "onChange",
   });
 
+  // Watch for values
   const userType = form.watch("userType");
+  const username = form.watch("username");
+  const email = form.watch("email");
 
   // Username availability check
-  const checkUsernameAvailability = async (username: string) => {
-    if (username.length < 3) {
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    if (username && username.length >= 3) {
       setUsernameAvailable(null);
-      return;
+      setUsernameChecking(true);
+
+      timeoutId = setTimeout(async () => {
+        try {
+          const isAvailable = await authService.validateUsername(username);
+          setUsernameAvailable(isAvailable);
+        } catch (error) {
+          console.error("Error checking username:", error);
+          setUsernameAvailable(false);
+        } finally {
+          setUsernameChecking(false);
+        }
+      }, 500);
     }
 
-    setUsernameChecking(true);
-    try {
-      // For now, we'll assume the username is available
-      // In a real implementation, you'd call an API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
-      setUsernameAvailable(true);
-    } catch (error) {
-      setUsernameAvailable(false);
-    } finally {
-      setUsernameChecking(false);
-    }
-  };
+    return () => clearTimeout(timeoutId);
+  }, [username]);
 
   // Email availability check
-  const checkEmailAvailability = async (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setEmailAvailable(null);
-      return;
-    }
-
-    setEmailChecking(true);
-    try {
-      // For now, we'll assume the email is available
-      // In a real implementation, you'd call an API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
-      setEmailAvailable(true);
-    } catch (error) {
-      setEmailAvailable(false);
-    } finally {
-      setEmailChecking(false);
-    }
-  };
-
-  // Username field watch
   useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === "username") {
-        const username = value.username || "";
-        checkUsernameAvailability(username);
-      }
-      if (name === "email") {
-        const email = value.email || "";
-        checkEmailAvailability(email);
-      }
-    });
+    let timeoutId: NodeJS.Timeout;
 
-    return () => subscription.unsubscribe();
-  }, [form]);
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailAvailable(null);
+      setEmailChecking(true);
+
+      timeoutId = setTimeout(async () => {
+        try {
+          const isAvailable = await authService.validateEmail(email);
+          setEmailAvailable(isAvailable);
+        } catch (error) {
+          console.error("Error checking email:", error);
+          setEmailAvailable(false);
+        } finally {
+          setEmailChecking(false);
+        }
+      }, 500);
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [email]);
 
   // Helper functions
   const togglePasswordVisibility = () => {
@@ -591,144 +435,74 @@ export function CreateUserMultiStep({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="p-0 overflow-hidden sm:max-w-[700px] max-h-[90vh] flex flex-col border rounded-xl shadow-2xl"
-        style={{
-          background: colors.gradient,
-          borderColor: colors.border,
-          boxShadow: `0 25px 50px -12px ${colors.border}, 0 0 0 1px ${colors.border}`,
-        }}
-      >
-        {/* Modern Header with Gradient */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="relative px-6 py-6 border-b flex-shrink-0"
-          style={{
-            background: colors.headerGradient,
-            borderBottomColor: colors.border,
-          }}
-        >
-          <div className="flex items-center gap-4">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-              className="p-3 rounded-xl backdrop-blur-sm"
-              style={{ backgroundColor: `${colors.buttonSecondary}80` }}
-            >
-              <UserPlus className="h-6 w-6" style={{ color: colors.text }} />
-            </motion.div>
-            <div>
-              <DialogTitle
-                className="text-2xl font-bold"
-                style={{ color: colors.text }}
-              >
-                {t("userManagement.createUserTitle")}
-              </DialogTitle>
-              <DialogDescription
-                className="text-sm mt-1"
-                style={{ color: colors.textSecondary }}
-              >
-                {t("userManagement.createUserSubtitle")}
-              </DialogDescription>
+      <DialogContent className="bg-gradient-to-b from-[#1a2c6b]/95 to-[#0a1033]/95 backdrop-blur-md border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] rounded-xl p-0 overflow-hidden sm:max-w-[620px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="p-6 border-b border-blue-900/30 flex-shrink-0">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2 rounded-full bg-blue-500/10 text-blue-400">
+              <UserPlus className="h-5 w-5" />
             </div>
+            <DialogTitle className="text-xl text-blue-100">
+              {t("userManagement.createUserTitle")}
+            </DialogTitle>
           </div>
+          <DialogDescription className="text-blue-300">
+            {t("userManagement.createUserSubtitle")}
+          </DialogDescription>
+        </DialogHeader>
 
-          {/* Modern Step Indicator */}
-          <div className="mt-6">
-            <div className="flex justify-between items-center relative">
-              {/* Progress Line */}
-              <div
-                className="absolute top-5 left-0 h-0.5 rounded-full transition-all duration-500"
-                style={{
-                  backgroundColor: colors.stepInactive,
-                  width: "100%",
-                }}
-              >
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: colors.stepActive }}
-                  initial={{ width: "0%" }}
-                  animate={{
-                    width: `${(currentStep / (steps.length - 1)) * 100}%`,
-                  }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                />
-              </div>
-
-              {steps.map((step, index) => (
-                <motion.div
-                  key={step.id}
-                  className="relative flex flex-col items-center"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <motion.div
-                    className="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 backdrop-blur-sm"
-                    style={{
-                      backgroundColor:
-                        currentStep === step.id
-                          ? colors.stepActive
-                          : currentStep > step.id
-                          ? colors.stepCompleted
-                          : colors.stepInactive,
-                      borderColor:
-                        currentStep === step.id
-                          ? colors.stepActive
-                          : currentStep > step.id
-                          ? colors.stepCompleted
-                          : colors.stepInactive,
-                      color:
-                        currentStep >= step.id ? "white" : colors.textSecondary,
-                    }}
-                    animate={{
-                      scale: currentStep === step.id ? 1.1 : 1,
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {currentStep > step.id ? (
-                      <Check className="h-5 w-5" />
-                    ) : (
-                      step.icon
-                    )}
-                  </motion.div>
-
-                  {/* Step Label - only show for current step */}
-                  <AnimatePresence>
-                    {currentStep === step.id && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-12 text-center"
-                      >
-                        <span
-                          className="text-xs font-medium px-2 py-1 rounded-md backdrop-blur-sm"
-                          style={{
-                            color: colors.text,
-                            backgroundColor: `${colors.buttonSecondary}80`,
-                          }}
-                        >
-                          {step.title}
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Form Content */}
+        {/* Form content */}
         <div className="flex-1 overflow-y-auto">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {/* Step indicators */}
+              <div className="px-6 pt-6 pb-0">
+                <div className="flex justify-between items-center">
+                  {steps.map((step) => (
+                    <div key={step.id} className="flex flex-col items-center">
+                      <div
+                        className={`relative flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-300 ${
+                          currentStep === step.id
+                            ? "bg-blue-600 border-blue-400 text-white scale-110"
+                            : currentStep > step.id
+                            ? "bg-green-600/30 border-green-400/50 text-green-300"
+                            : "bg-blue-900/30 border-blue-900/50 text-blue-300/50"
+                        }`}
+                      >
+                        {currentStep > step.id ? (
+                          <Check className="h-5 w-5" />
+                        ) : (
+                          step.icon
+                        )}
+
+                        {/* Connecting line */}
+                        {step.id < steps.length - 1 && (
+                          <div
+                            className={`absolute top-1/2 left-full w-[calc(100%-10px)] h-[2px] -translate-y-1/2 transition-all duration-300 ${
+                              currentStep > step.id
+                                ? "bg-green-500/50"
+                                : "bg-blue-900/50"
+                            }`}
+                          ></div>
+                        )}
+                      </div>
+
+                      {/* Step label only shows for current step */}
+                      {currentStep === step.id && (
+                        <motion.span
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="absolute mt-12 text-xs text-blue-300 font-medium text-center w-20"
+                        >
+                          {step.title}
+                        </motion.span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Dynamic step content */}
-              <div className="px-6 py-6 min-h-[400px]">
+              <div className="px-6 space-y-6 min-h-[300px]">
                 <AnimatePresence mode="wait" initial={false} custom={direction}>
                   <motion.div
                     key={currentStep}
@@ -742,62 +516,32 @@ export function CreateUserMultiStep({
                       opacity: { duration: 0.2 },
                     }}
                   >
-                    <div className="space-y-6">
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                      >
-                        <h3
-                          className="text-xl font-semibold mb-2"
-                          style={{ color: colors.text }}
-                        >
-                          {steps[currentStep].title}
-                        </h3>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.textSecondary }}
-                        >
-                          {steps[currentStep].description}
-                        </p>
-                      </motion.div>
+                    <div className="py-2">
+                      <h3 className="text-lg font-semibold mb-1 text-blue-100">
+                        {steps[currentStep].title}
+                      </h3>
+                      <p className="text-sm text-blue-300 mb-4">
+                        {steps[currentStep].description}
+                      </p>
 
                       {/* Render step content */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        {renderStepContent()}
-                      </motion.div>
+                      {renderStepContent()}
                     </div>
                   </motion.div>
                 </AnimatePresence>
               </div>
 
-              {/* Modern Navigation Footer */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="px-6 py-4 border-t flex justify-between items-center flex-shrink-0"
-                style={{ borderTopColor: colors.border }}
-              >
+              {/* Navigation buttons */}
+              <div className="px-6 pb-6 pt-2 border-t border-blue-900/30 flex justify-between items-center">
                 <Button
                   type="button"
                   onClick={prevStep}
                   disabled={currentStep === 0}
-                  variant="outline"
-                  className="border transition-all duration-200 flex items-center gap-2"
-                  style={{
-                    backgroundColor:
-                      currentStep === 0
-                        ? colors.stepInactive
-                        : colors.buttonSecondary,
-                    borderColor: colors.border,
-                    color:
-                      currentStep === 0 ? colors.textSecondary : colors.text,
-                  }}
+                  className={`border border-blue-900/50 transition-all duration-200 flex items-center gap-2 ${
+                    currentStep === 0
+                      ? "opacity-50 bg-blue-950/30 text-blue-300/50"
+                      : "bg-blue-900/50 hover:bg-blue-800/50 text-blue-300"
+                  }`}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   {t("userManagement.back")}
@@ -807,11 +551,7 @@ export function CreateUserMultiStep({
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className="transition-all duration-200 flex items-center gap-2 text-white"
-                    style={{
-                      backgroundColor: colors.buttonPrimary,
-                      borderColor: colors.buttonPrimary,
-                    }}
+                    className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
                   >
                     {t("userManagement.next")}
                     <ArrowRight className="h-4 w-4" />
@@ -820,19 +560,13 @@ export function CreateUserMultiStep({
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="transition-all duration-200 flex items-center gap-2 text-white"
-                    style={{
-                      backgroundColor: colors.buttonPrimary,
-                      borderColor: colors.buttonPrimary,
-                    }}
+                    className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
                   >
-                    {isSubmitting
-                      ? t("userManagement.creating")
-                      : t("userManagement.createUserButton")}
+                    {isSubmitting ? t("userManagement.creating") : t("userManagement.createUserButton")}
                     <UserPlus className="h-4 w-4" />
                   </Button>
                 )}
-              </motion.div>
+              </div>
             </form>
           </Form>
         </div>

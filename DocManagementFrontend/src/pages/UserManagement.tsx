@@ -30,6 +30,14 @@ const UserManagement = () => {
   }, [isAuthenticated, user, navigate, t]);
 
   const pageActions = [
+    // {
+    //   label: "Export Users",
+    //   variant: "outline" as const,
+    //   icon: Users,
+    //   onClick: () => {
+    //     // Export functionality
+    //   },
+    // },
     {
       label: t("userManagement.createUser"),
       variant: "default" as const,

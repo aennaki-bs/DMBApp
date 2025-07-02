@@ -41,32 +41,7 @@ interface DocumentsTableRowProps {
   onAssignCircuit: () => void;
 }
 
-const getStatusBadge = (status: number) => {
-  const { t } = useTranslation();
-  switch (status) {
-    case 0:
-      return (
-        <Badge
-          variant="secondary"
-          className="bg-orange-500/20 text-orange-600 border-orange-500/30 hover:bg-orange-500/30 transition-colors"
-        >
-          {t("documents.statusDraft")}
-        </Badge>
-      );
-    case 1:
-      return (
-        <Badge
-          variant="secondary"
-          className="bg-green-500/20 text-green-600 border-green-500/30 hover:bg-green-500/30 transition-colors"
-        >
-          {t("documents.statusInProgress")}
-        </Badge>
-      );
-    default:
-      return <Badge variant="outline">{t("common.unknown")}</Badge>;
-  }
-};
-
+// Document Actions Dropdown component
 const DocumentActionsDropdown = ({
   document,
   canManageDocuments,
@@ -80,8 +55,6 @@ const DocumentActionsDropdown = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-
-  // Check if document is already assigned to a circuit
   const isAssignedToCircuit = !!document.circuitId;
 
   return (
@@ -89,62 +62,79 @@ const DocumentActionsDropdown = ({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 hover:bg-muted/50 transition-colors duration-200"
+          size="icon"
+          className="h-8 w-8 p-0 rounded-full hover:bg-blue-800/30 transition-colors"
         >
-          <MoreVertical className="h-4 w-4" />
+          <MoreVertical className="h-4 w-4 text-blue-400" />
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent
         align="end"
-        className="bg-background/95 border-border/40 shadow-xl rounded-xl backdrop-blur-md"
+        className="bg-[#1a2c6b] border-blue-900/60 text-blue-100 rounded-lg shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200"
       >
-        <DropdownMenuLabel className="text-sm font-medium text-foreground">
-          {t("common.actions")}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-border/30" />
+        <DropdownMenuLabel className="text-blue-300">{t("common.actions")}</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-blue-900/60" />
 
         <DropdownMenuItem
+          className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
           onClick={() => navigate(`/documents/${document.id}`)}
-          className="text-sm focus:bg-primary/10 hover:bg-primary/5 rounded-lg transition-colors cursor-pointer"
         >
-          <ExternalLink className="mr-2 h-4 w-4" />
-          {t("common.view")}
+          <ExternalLink className="mr-2 h-4 w-4 text-blue-400" />
+          {t("documents.viewDocument")}
         </DropdownMenuItem>
 
         {canManageDocuments && (
           <>
-            <DropdownMenuItem
-              onClick={() => navigate(`/documents/${document.id}/edit`)}
-              className="text-sm focus:bg-primary/10 hover:bg-primary/5 rounded-lg transition-colors cursor-pointer"
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              {t("common.edit")}
-            </DropdownMenuItem>
+            {/* Show Document Flow if assigned to circuit */}
+            {isAssignedToCircuit && (
+              <DropdownMenuItem
+                className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
+                onClick={() => navigate(`/documents/${document.id}/flow`)}
+              >
+                <GitBranch className="mr-2 h-4 w-4 text-blue-400" />
+                {t("documents.documentFlow")}
+              </DropdownMenuItem>
+            )}
+
+            {/* Show Assign to Circuit if not assigned */}
+            {!isAssignedToCircuit && (
+              <DropdownMenuItem
+                className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
+                onClick={onAssignCircuit}
+              >
+                <GitBranch className="mr-2 h-4 w-4 text-blue-400" />
+                {t("documents.assignToCircuit")}
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuItem
-              onClick={onAssignCircuit}
-              disabled={isAssignedToCircuit}
-              className="text-sm focus:bg-primary/10 hover:bg-primary/5 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
+              asChild
             >
-              <GitBranch className="mr-2 h-4 w-4" />
-              {isAssignedToCircuit
-                ? "Already Assigned"
-                : t("documents.assignCircuit")}
-              {isAssignedToCircuit && (
-                <CheckCircle className="ml-auto h-4 w-4 text-green-500" />
-              )}
+              <Link to={`/documents/${document.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4 text-blue-400" />
+                {t("common.edit")}
+              </Link>
             </DropdownMenuItem>
 
-            <DropdownMenuSeparator className="bg-border/30" />
+            <DropdownMenuSeparator className="bg-blue-900/60" />
+
             <DropdownMenuItem
+              className="text-red-400 hover:bg-red-900/30 hover:text-red-300 focus:bg-red-900/30 focus:text-red-300 cursor-pointer"
               onClick={onDelete}
-              className="text-sm focus:bg-destructive/10 hover:bg-destructive/5 text-destructive rounded-lg transition-colors cursor-pointer"
             >
               <Trash className="mr-2 h-4 w-4" />
               {t("common.delete")}
             </DropdownMenuItem>
           </>
+        )}
+
+        {!canManageDocuments && (
+          <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
+            <Edit className="mr-2 h-4 w-4" />
+            {t("documents.requiresPermissions")}
+          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -163,182 +153,66 @@ export default function DocumentsTableRow({
   // Check if document is already assigned to a circuit
   const isAssignedToCircuit = !!document.circuitId;
 
-  const handleRowClick = (event: React.MouseEvent) => {
-    // Don't trigger row selection if clicking on action buttons or links
-    const target = event.target as HTMLElement;
-    const isActionElement = target.closest(
-      'button, a, [role="button"], .dropdown-trigger'
-    );
-
-    if (!isActionElement && canManageDocuments) {
-      onSelect();
-    }
-  };
-
   return (
-    <TableRow
-      className={`
-        documents-table-layout transition-all duration-200 cursor-pointer select-none relative
-        ${
-          isSelected
-            ? "bg-primary/10 border-primary/30 shadow-sm"
-            : "hover:bg-muted/30"
-        }
-        border-b border-border/5
-      `}
-      onClick={handleRowClick}
-      style={
-        isSelected
-          ? {
-              borderLeft: "4px solid hsl(var(--primary))",
-              background:
-                "linear-gradient(90deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.05) 100%)",
-            }
-          : {}
-      }
+    <motion.tr
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.02 }}
+      className={`border-blue-900/30 hover:bg-blue-900/20 transition-all duration-200 ${
+        isSelected ? "bg-blue-900/30 border-l-4 border-l-blue-500" : ""
+      }`}
     >
-      {/* Selection/Index Column */}
-      <TableCell className="py-4 table-cell-center w-[50px]">
+      <TableCell className="w-[50px] py-3">
         {canManageDocuments ? (
           <Checkbox
-            enhanced={true}
-            size="sm"
             checked={isSelected}
             onCheckedChange={onSelect}
-            onClick={(e) => e.stopPropagation()}
-            className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
           />
         ) : (
-          <span className="text-sm text-muted-foreground font-medium">
-            {index + 1}
-          </span>
+          <span className="text-sm text-gray-500">{index + 1}</span>
         )}
       </TableCell>
-
-      {/* Document Code Column */}
-      <TableCell className="py-4 table-cell-start w-[160px]">
-        <div className="flex items-center space-x-3 min-w-0">
-          <div className="flex-shrink-0">
-            <div
-              className={`h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 flex items-center justify-center transition-all duration-200 ${
-                isSelected
-                  ? "from-primary/30 to-primary/20 border-primary/40 shadow-sm"
-                  : ""
-              }`}
-            >
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          <div className="min-w-0 flex-1">
-            <Link
-              to={`/documents/${document.id}`}
-              className={`text-sm font-medium truncate transition-colors duration-200 hover:text-primary ${
-                isSelected ? "text-primary" : "text-foreground"
-              }`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {document.documentKey}
-            </Link>
-            <div className="text-xs text-muted-foreground truncate">
-              ID: {document.id}
-            </div>
-          </div>
-        </div>
-      </TableCell>
-
-      {/* Title Column */}
-      <TableCell className="py-4 table-cell-start w-[250px]">
+      <TableCell className="w-[160px] font-mono text-sm py-3">
         <Link
           to={`/documents/${document.id}`}
-          className={`text-sm font-medium truncate transition-colors duration-200 hover:text-primary ${
-            isSelected ? "text-primary" : "text-foreground"
-          }`}
-          onClick={(e) => e.stopPropagation()}
+          className="text-blue-300 hover:text-blue-200 hover:underline transition-colors flex items-center gap-1"
+        >
+          <FileText className="h-3.5 w-3.5 opacity-70" />
+          {document.documentKey}
+        </Link>
+      </TableCell>
+      <TableCell className="w-[250px] py-3">
+        <Link
+          to={`/documents/${document.id}`}
+          className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
         >
           {document.title}
         </Link>
       </TableCell>
-
-      {/* Status Column */}
-      <TableCell className="py-4 table-cell-center w-[120px]">
-        <Badge
-          variant="secondary"
-          className={`text-xs px-2 py-1 transition-colors duration-200 ${
-            document.status === 0
-              ? isSelected
-                ? "bg-orange-500/30 text-orange-400 border-orange-500/40"
-                : "bg-orange-500/20 text-orange-600 border-orange-500/30"
-              : document.status === 1
-              ? isSelected
-                ? "bg-green-500/30 text-green-400 border-green-500/40"
-                : "bg-green-500/20 text-green-600 border-green-500/30"
-              : "bg-muted/50 text-muted-foreground border-muted/30"
-          }`}
-        >
-          {document.status === 0
-            ? "Draft"
-            : document.status === 1
-            ? "In Progress"
-            : "Unknown"}
-        </Badge>
+      <TableCell className="w-[120px] py-3">
+        {getStatusBadge(document.status)}
       </TableCell>
-
-      {/* Type Column */}
-      <TableCell className="py-4 table-cell-start w-[150px]">
-        <div
-          className={`text-sm truncate transition-colors duration-200 ${
-            isSelected ? "text-primary" : "text-muted-foreground"
-          }`}
-        >
-          {document.documentType.typeName}
-        </div>
+      <TableCell className="w-[150px] text-blue-100 py-3">
+        {document.documentType.typeName}
       </TableCell>
-
-      {/* Date Column */}
-      <TableCell className="py-4 table-cell-center w-[140px]">
-        <div
-          className={`text-sm transition-colors duration-200 ${
-            isSelected ? "text-primary" : "text-muted-foreground"
-          }`}
-        >
-          {new Date(document.docDate).toLocaleDateString()}
-        </div>
+      <TableCell className="w-[140px] text-blue-100/70 text-sm py-3">
+        {new Date(document.docDate).toLocaleDateString()}
       </TableCell>
-
-      {/* Created By Column */}
-      <TableCell className="py-4 table-cell-start w-[150px]">
+      <TableCell className="w-[150px] py-3">
         <div className="flex items-center gap-2">
-          <Avatar
-            className={`h-8 w-8 border-2 transition-all duration-200 ${
-              isSelected ? "border-primary/40 shadow-sm" : "border-border/30"
-            }`}
-          >
-            <AvatarFallback
-              className={`text-xs font-medium transition-colors duration-200 ${
-                isSelected
-                  ? "bg-primary/20 text-primary"
-                  : "bg-muted/50 text-muted-foreground"
-              }`}
-            >
+          <Avatar className="h-6 w-6 border border-blue-700/50">
+            <AvatarFallback className="bg-gradient-to-br from-blue-800 to-blue-900 text-xs text-blue-100">
               {document.createdBy.firstName[0]}
               {document.createdBy.lastName[0]}
             </AvatarFallback>
           </Avatar>
-          <span
-            className={`text-sm truncate transition-colors duration-200 ${
-              isSelected ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
+          <span className="text-sm text-blue-100/80">
             {document.createdBy.username}
           </span>
         </div>
       </TableCell>
-
-      {/* Actions Column */}
-      <TableCell
-        className="py-4 table-cell-center w-[100px]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <TableCell className="w-[100px] text-right py-3">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -351,12 +225,41 @@ export default function DocumentsTableRow({
                 />
               </div>
             </TooltipTrigger>
-            <TooltipContent className="bg-background/95 border-border/40 shadow-xl rounded-lg backdrop-blur-md">
+            <TooltipContent className="bg-[#1a2c6b] border-blue-900/60 text-blue-100">
               Document Actions
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </TableCell>
-    </TableRow>
+    </motion.tr>
   );
+}
+
+function getStatusBadge(status: number) {
+  switch (status) {
+    case 0:
+      return (
+        <Badge className="bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 border-amber-500/30 px-3 py-1 text-xs font-medium">
+          Draft
+        </Badge>
+      );
+    case 1:
+      return (
+        <Badge className="bg-green-600/20 text-green-500 hover:bg-green-600/30 border-green-500/30 px-3 py-1 text-xs font-medium">
+          In progress
+        </Badge>
+      );
+    case 2:
+      return (
+        <Badge className="bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 border-blue-500/30 px-3 py-1 text-xs font-medium">
+          Completed
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="px-3 py-1 text-xs font-medium">
+          Unknown
+        </Badge>
+      );
+  }
 }

@@ -72,133 +72,74 @@ export function UserTableRow({
     onEdit(user);
   };
 
-  const handleRowClick = (event: React.MouseEvent) => {
-    // Don't trigger row selection if clicking on action buttons, links, or switches
-    const target = event.target as HTMLElement;
-    const isActionElement = target.closest(
-      'button, a, [role="button"], .dropdown-trigger, .switch, select, input'
-    );
-
-    if (!isActionElement) {
-      onSelect(user.id);
-    }
-  };
-
-  const handleSelectChange = (checked: boolean) => {
-    onSelect(user.id);
-  };
-
   return (
     <>
       <TableRow
-        className={`transition-all duration-200 cursor-pointer select-none h-12 ${
+        className={`border-blue-200 dark:border-blue-900/30 transition-all duration-150 ${
           isSelected
-            ? "bg-primary/10 border-primary/30 shadow-sm"
-            : "hover:bg-muted/30"
+            ? "bg-blue-100 dark:bg-blue-900/30 border-l-4 border-l-blue-600 dark:border-l-blue-500"
+            : "hover:bg-blue-50 dark:hover:bg-blue-900/20"
         }`}
-        onClick={handleRowClick}
-        style={
-          isSelected
-            ? {
-                borderLeft: "4px solid hsl(var(--primary))",
-                background:
-                  "linear-gradient(90deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.05) 100%)",
-              }
-            : {}
-        }
       >
-        <TableCell className="w-[40px] py-2">
+        <TableCell className="w-[48px]">
           <div className="flex items-center justify-center">
             <Checkbox
-              enhanced={true}
-              size="sm"
               checked={isSelected}
-              onCheckedChange={handleSelectChange}
-              onClick={(e) => e.stopPropagation()}
-              className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-auto"
+              onCheckedChange={() => onSelect(user.id)}
               aria-label={`Select user ${user.username}`}
+              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
             />
           </div>
         </TableCell>
-        <TableCell className="w-[40px] py-2">
-          <Avatar className="border border-border/40 h-7 w-7">
+        <TableCell className="w-[48px]">
+          <Avatar className="border-2 border-blue-300 dark:border-blue-900/50 h-9 w-9">
             <AvatarImage src={user.profilePicture} alt={user.username} />
-            <AvatarFallback
-              className={`text-xs transition-all duration-200 ${
-                isSelected
-                  ? "bg-gradient-to-br from-primary/30 to-primary/20 text-primary-foreground"
-                  : "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground"
-              }`}
-            >
+            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
               {user.firstName.charAt(0)}
               {user.lastName.charAt(0)}
             </AvatarFallback>
           </Avatar>
         </TableCell>
-        <TableCell className="w-[180px] py-2">
-          <div
-            className={`font-medium text-sm leading-tight transition-colors duration-200 ${
-              isSelected ? "text-primary" : "text-foreground"
-            }`}
-          >
+        <TableCell className="w-[200px]">
+          <div className="font-medium text-blue-900 dark:text-blue-100">
             {user.firstName} {user.lastName}
           </div>
-          <div className="text-[10px] text-muted-foreground leading-tight">
+          <div className="text-xs text-blue-600 dark:text-blue-400">
             @{user.username}
           </div>
         </TableCell>
-        <TableCell className="w-[250px] py-2">
-          <span
-            className={`block truncate text-sm transition-colors duration-200 ${
-              isSelected ? "text-primary/90" : "text-foreground"
-            }`}
-          >
-            {user.email}
-          </span>
+        <TableCell className="w-[280px] text-blue-800 dark:text-blue-200">
+          <span className="block truncate">{user.email}</span>
         </TableCell>
 
-        <TableCell
-          className="w-[130px] py-2"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <TableCell className="w-[150px]">
           <UserRoleSelect
             currentRole={currentRole}
             onRoleChange={(role) => onRoleChange(user.id, role)}
           />
         </TableCell>
 
-        <TableCell className="w-[100px] py-2">
+        <TableCell className="w-[120px]">
           {user.isActive ? (
             <Badge
               variant="secondary"
-              className={`text-xs px-2 py-0.5 h-5 transition-colors duration-200 ${
-                isSelected
-                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
-                  : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
-              }`}
+              className="bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/30"
             >
-              <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
               {t("userManagement.active")}
             </Badge>
           ) : (
             <Badge
               variant="destructive"
-              className={`text-xs px-2 py-0.5 h-5 transition-colors duration-200 ${
-                isSelected
-                  ? "bg-red-500/20 text-red-400 border-red-500/40"
-                  : "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
-              }`}
+              className="bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-900/30"
             >
-              <XCircle className="w-2.5 h-2.5 mr-1" />
+              <XCircle className="w-3.5 h-3.5 mr-1" />
               {t("userManagement.inactive")}
             </Badge>
           )}
         </TableCell>
 
-        <TableCell
-          className="w-[80px] py-2"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <TableCell className="w-[100px]">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -206,27 +147,25 @@ export function UserTableRow({
                   <Switch
                     checked={user.isActive}
                     onCheckedChange={handleStatusToggle}
-                    className={`h-4 w-7 transition-all duration-200 ${
+                    className={
                       user.isActive
                         ? "bg-emerald-600 data-[state=checked]:bg-emerald-600"
                         : "bg-red-600 data-[state=unchecked]:bg-red-600"
-                    }`}
+                    }
                   />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                {user.isActive
-                  ? t("userManagement.blockUser")
-                  : t("userManagement.unblockUser")}
+              <TooltipContent
+                side="top"
+                className="bg-white dark:bg-blue-900/90 text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-500/30"
+              >
+                {user.isActive ? t("userManagement.blockUser") : t("userManagement.unblockUser")}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </TableCell>
 
-        <TableCell
-          className="w-[70px] text-right py-2 pr-3"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <TableCell className="w-[80px] text-right">
           <UserActionsDropdown
             user={user}
             onEdit={handleEdit}

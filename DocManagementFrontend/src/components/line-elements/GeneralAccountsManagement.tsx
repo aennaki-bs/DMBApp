@@ -111,6 +111,7 @@ const GENERAL_ACCOUNT_SEARCH_FIELDS = [
   { id: "all", label: "All fields" },
   { id: "code", label: "Code" },
   { id: "description", label: "Description" },
+  { id: "accountType", label: "Account Type" },
 ];
 
 interface GeneralAccountsManagementProps {
@@ -166,7 +167,7 @@ const GeneralAccountsManagement = ({
   };
 
   const filteredAndSortedAccounts = useMemo(() => {
-    const filtered = accounts.filter((account) => {
+    let filtered = accounts.filter((account) => {
       // Search filter
       const searchValue = searchQuery.toLowerCase();
       let matchesSearch = true;
@@ -181,10 +182,14 @@ const GeneralAccountsManagement = ({
               .toLowerCase()
               .includes(searchValue);
             break;
+          case "accountType":
+            matchesSearch = (account.accountType || "").toLowerCase().includes(searchValue);
+            break;
           default: // 'all'
             matchesSearch =
               account.code.toLowerCase().includes(searchValue) ||
-              account.description.toLowerCase().includes(searchValue);
+              account.description.toLowerCase().includes(searchValue) ||
+              (account.accountType || "").toLowerCase().includes(searchValue);
         }
       }
 
@@ -192,7 +197,8 @@ const GeneralAccountsManagement = ({
       if (searchTerm && !searchValue) {
         matchesSearch =
           account.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          account.description.toLowerCase().includes(searchTerm.toLowerCase());
+          account.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (account.accountType || "").toLowerCase().includes(searchTerm.toLowerCase());
       }
 
       return matchesSearch;
@@ -211,6 +217,10 @@ const GeneralAccountsManagement = ({
         case "description":
           aValue = a.description;
           bValue = b.description;
+          break;
+        case "accountType":
+          aValue = a.accountType || "";
+          bValue = b.accountType || "";
           break;
         case "createdAt":
           aValue = new Date(a.createdAt).getTime();
@@ -495,6 +505,7 @@ const GeneralAccountsManagement = ({
           <Button
             onClick={() => setIsCreateDialogOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+            disabled
           >
             <Plus className="h-4 w-4" />
             Create General Account
@@ -503,11 +514,11 @@ const GeneralAccountsManagement = ({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
+      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden  dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
         {filteredAndSortedAccounts.length > 0 ? (
           <>
             {/* Fixed Header - Never Scrolls */}
-            <div className="min-w-[800px] border-b border-blue-200 dark:border-blue-900/30">
+            <div className="min-w-[1000px] border-b border-blue-200 dark:border-blue-900/30">
               <Table className="table-fixed w-full">
                 <TableHeader className="bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
                   <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
@@ -535,11 +546,19 @@ const GeneralAccountsManagement = ({
                       </div>
                     </TableHead>
                     <TableHead
-                      className={`${headerClass("description")} w-[450px]`}
+                      className={`${headerClass("description")} w-[350px]`}
                       onClick={() => handleSort("description")}
                     >
                       <div className="flex items-center">
                         Description {renderSortIcon("description")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className={`${headerClass("accountType")} w-[200px]`}
+                      onClick={() => handleSort("accountType")}
+                    >
+                      <div className="flex items-center">
+                        Account Type {renderSortIcon("accountType")}
                       </div>
                     </TableHead>
                     <TableHead className="w-[150px] text-blue-800 dark:text-blue-200 font-medium text-right pr-4">
@@ -552,7 +571,7 @@ const GeneralAccountsManagement = ({
 
             {/* Scrollable Body - Only Content Scrolls */}
             <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
-              <div className="min-w-[800px]">
+              <div className="min-w-[1000px]">
                 <Table className="table-fixed w-full">
                   <TableBody>
                     {paginatedAccounts.map((account) => (
@@ -575,8 +594,11 @@ const GeneralAccountsManagement = ({
                         <TableCell className="w-[150px] font-mono text-blue-900 dark:text-blue-100 font-semibold">
                           {account.code}
                         </TableCell>
-                        <TableCell className="w-[450px] text-blue-800 dark:text-blue-200">
+                        <TableCell className="w-[350px] text-blue-800 dark:text-blue-200">
                           <div className="truncate">{account.description}</div>
+                        </TableCell>
+                        <TableCell className="w-[200px] text-blue-800 dark:text-blue-200">
+                          <div className="truncate">{account.accountType || "N/A"}</div>
                         </TableCell>
                         <TableCell className="w-[150px] text-right">
                           <div className="flex items-center justify-end gap-1">
@@ -594,17 +616,8 @@ const GeneralAccountsManagement = ({
                               variant="ghost"
                               size="sm"
                               onClick={() => openEditDialog(account)}
-                              disabled={account.lignesCount > 0}
-                              className={`h-8 w-8 p-0 ${
-                                account.lignesCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
-                                  : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30"
-                              }`}
-                              title={
-                                account.lignesCount > 0
-                                  ? "Cannot edit: Account is used in document lines"
-                                  : "Edit general account"
-                              }
+                              className="h-8 w-8 p-0 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30"
+                              title="Edit general account"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -612,17 +625,9 @@ const GeneralAccountsManagement = ({
                               variant="ghost"
                               size="sm"
                               onClick={() => openDeleteDialog(account)}
-                              disabled={account.lignesCount > 0}
-                              className={`h-8 w-8 p-0 ${
-                                account.lignesCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
-                                  : "text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
-                              }`}
-                              title={
-                                account.lignesCount > 0
-                                  ? "Cannot delete: Account is used in document lines"
-                                  : "Delete general account"
-                              }
+                              disabled
+                              className="h-8 w-8 p-0 opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                              title="Delete functionality disabled"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -703,6 +708,7 @@ const GeneralAccountsManagement = ({
                     size="sm"
                     className="bg-red-900/40 border-red-500/40 text-red-200 hover:text-red-100 hover:bg-red-900/60 hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
                     onClick={() => setIsBulkDeleteDialogOpen(true)}
+                    disabled
                   >
                     <Trash2 className="w-4 h-4 mr-1.5" />
                     Delete
@@ -746,34 +752,19 @@ const GeneralAccountsManagement = ({
                 name="code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-blue-200">
-                      Code
-                      {selectedAccount?.lignesCount > 0 && (
-                        <span className="text-amber-400 text-xs ml-2">
-                          (Cannot edit: Account is in use)
-                        </span>
-                      )}
-                    </FormLabel>
+                    <FormLabel className="text-blue-200">Code</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter account code"
                         {...field}
-                        disabled={selectedAccount?.lignesCount > 0}
-                        className={`bg-blue-950/30 border-blue-800/30 ${
-                          selectedAccount?.lignesCount > 0
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-blue-100"
-                        }`}
+                        disabled
+                        className="bg-blue-950/30 border-blue-800/30 text-gray-400 cursor-not-allowed opacity-50"
                       />
                     </FormControl>
                     <FormMessage />
-                    {selectedAccount?.lignesCount > 0 && (
-                      <p className="text-amber-400 text-xs mt-1">
-                        Code cannot be changed because this account is used in{" "}
-                        {selectedAccount.lignesCount} document line
-                        {selectedAccount.lignesCount !== 1 ? "s" : ""}.
-                      </p>
-                    )}
+                    <p className="text-blue-400 text-xs mt-1">
+                      Code cannot be edited
+                    </p>
                   </FormItem>
                 )}
               />

@@ -154,28 +154,22 @@ export default function ApprovalGroupCreateDialog({
         return true;
       case 3: // Select Users
         if (formData.selectedUsers.length === 0) {
-          if (formData.ruleType === "Sequential") {
-            toast.error(
-              "Sequential approval requires at least one user to define the approval order"
-            );
-          } else {
-            toast.error("Please select at least one user");
-          }
+          toast.error("Please select at least 2 users for the approval group");
+          return false;
+        }
+        if (formData.selectedUsers.length < 2) {
+          toast.error("Approval groups require a minimum of 2 users to be effective");
           return false;
         }
         return true;
       case 4: // Review
         // Final validation before submission
         if (formData.selectedUsers.length === 0) {
-          if (formData.ruleType === "Sequential") {
-            toast.error(
-              "Cannot create sequential approval group without users"
-            );
-          } else {
-            toast.error(
-              "Please select at least one user for the approval group"
-            );
-          }
+          toast.error("Please select at least 2 users for the approval group");
+          return false;
+        }
+        if (formData.selectedUsers.length < 2) {
+          toast.error("Cannot create approval group with less than 2 users");
           return false;
         }
         return true;
@@ -201,8 +195,8 @@ export default function ApprovalGroupCreateDialog({
     if (!validateCurrentStep()) return;
 
     // Final validation before API call
-    if (formData.selectedUsers.length === 0) {
-      toast.error("Cannot create an approval group without members");
+    if (formData.selectedUsers.length < 2) {
+      toast.error("Cannot create an approval group with less than 2 members");
       return;
     }
 
@@ -223,35 +217,11 @@ export default function ApprovalGroupCreateDialog({
       // Call the API to create the group
       await approvalService.createApprovalGroup(requestData);
 
-      // Enhanced success feedback
-      toast.success(`Approval group "${formData.name}" created successfully!`, {
-        description:
-          "The table will refresh automatically to show your new group.",
-        duration: 4000,
-      });
-
-      // Close dialog and trigger refresh
-      onSuccess(); // Notify parent component for auto-refresh
-
-      // Reset form for next use
-      setFormData({
-        name: "",
-        comment: "",
-        selectedUsers: [],
-        ruleType: ApprovalRuleType.Any,
-      });
-      setCurrentStep(1);
+      onSuccess(); // Notify parent component
+      toast.success("Approval group created successfully!");
     } catch (error) {
       console.error("Failed to create approval group:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to create approval group";
-
-      toast.error("Failed to create approval group", {
-        description: errorMessage,
-        duration: 5000,
-      });
+      toast.error("Failed to create approval group");
     } finally {
       setIsSubmitting(false);
     }
@@ -446,8 +416,14 @@ export default function ApprovalGroupCreateDialog({
               <Button
                 type="button"
                 onClick={nextStep}
-                className="bg-blue-600 hover:bg-blue-700 h-8 px-3 py-1"
+                disabled={currentStep === 3 && formData.selectedUsers.length < 2}
+                className="bg-blue-600 hover:bg-blue-700 h-8 px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 size="sm"
+                title={
+                  currentStep === 3 && formData.selectedUsers.length < 2
+                    ? "Select at least 2 users to continue"
+                    : ""
+                }
               >
                 Next
                 <ArrowRight className="w-3 h-3 ml-1" />

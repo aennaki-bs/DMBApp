@@ -82,6 +82,10 @@ namespace DocManagementBackend.Models
         [MaxLength(100)]
         public string? CustomerVendorCountry { get; set; }
         
+        // ERP Integration field
+        [MaxLength(100)]
+        public string? ERPDocumentCode { get; set; }
+        
         [JsonIgnore]
         public ICollection<Ligne> Lignes { get; set; } = new List<Ligne>();
     }
@@ -90,6 +94,7 @@ namespace DocManagementBackend.Models
     {
         [Key]
         public int Id { get; set; }
+        public int TypeNumber { get; set; }
         public string TypeKey { get; set; } = string.Empty;
         public string TypeName { get; set; } = string.Empty;
         public string TypeAttr { get; set; } = string.Empty;

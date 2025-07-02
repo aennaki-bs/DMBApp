@@ -26,7 +26,8 @@ namespace DocManagementBackend.Data
         // Line element reference tables
         public DbSet<LignesElementType> LignesElementTypes { get; set; }
         public DbSet<Item> Items { get; set; }
-        public DbSet<UniteCode> UniteCodes { get; set; }
+        public DbSet<UnitOfMeasure> UnitOfMeasures { get; set; } // Renamed from UniteCodes
+        public DbSet<ItemUnitOfMeasure> ItemUnitOfMeasures { get; set; } // New table
         public DbSet<GeneralAccounts> GeneralAccounts { get; set; }
 
         // New reference tables
@@ -362,7 +363,7 @@ namespace DocManagementBackend.Data
                 .HasIndex(i => i.Code)
                 .IsUnique();
 
-            // Item -> UniteCode relationship
+            // Item -> UnitOfMeasure relationship (renamed from UniteCode)
             modelBuilder.Entity<Item>()
                 .HasOne(i => i.UniteCodeNavigation)
                 .WithMany(uc => uc.Items)
@@ -370,20 +371,33 @@ namespace DocManagementBackend.Data
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
-            // UniteCode unique constraint on Code
-            modelBuilder.Entity<UniteCode>()
+            // UnitOfMeasure unique constraint on Code (renamed from UniteCode)
+            modelBuilder.Entity<UnitOfMeasure>()
                 .HasIndex(uc => uc.Code)
+                .IsUnique();
+
+            // ItemUnitOfMeasure relationships and constraints
+            modelBuilder.Entity<ItemUnitOfMeasure>()
+                .HasOne(ium => ium.Item)
+                .WithMany(i => i.ItemUnitOfMeasures)
+                .HasForeignKey(ium => ium.ItemCode)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ItemUnitOfMeasure>()
+                .HasOne(ium => ium.UnitOfMeasure)
+                .WithMany(uom => uom.ItemUnitOfMeasures)
+                .HasForeignKey(ium => ium.UnitOfMeasureCode)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ItemUnitOfMeasure unique constraint: no duplication per item and unit
+            modelBuilder.Entity<ItemUnitOfMeasure>()
+                .HasIndex(ium => new { ium.ItemCode, ium.UnitOfMeasureCode })
                 .IsUnique();
 
             // GeneralAccounts unique constraint on Code
             modelBuilder.Entity<GeneralAccounts>()
                 .HasIndex(ga => ga.Code)
                 .IsUnique();
-
-            // Configure GeneralAccount Type as enum
-            modelBuilder.Entity<GeneralAccounts>()
-                .Property(e => e.Type)
-                .HasConversion<string>();
 
             // Backward compatibility: Ligne -> LignesElementType relationship via LignesElementTypeId
             modelBuilder.Entity<Ligne>()
@@ -417,6 +431,18 @@ namespace DocManagementBackend.Data
             modelBuilder.Entity<DocumentType>()
                 .Property(dt => dt.TierType)
                 .HasConversion<string>();
+
+            // ERP Integration fields unique constraints (optional but unique if provided)
+            modelBuilder.Entity<Document>()
+                .HasIndex(d => d.ERPDocumentCode)
+                .IsUnique()
+                .HasFilter("[ERPDocumentCode] IS NOT NULL");
+
+            // ERPLineCode should be unique per document, not globally unique
+            modelBuilder.Entity<Ligne>()
+                .HasIndex(l => new { l.DocumentId, l.ERPLineCode })
+                .IsUnique()
+                .HasFilter("[ERPLineCode] IS NOT NULL");
 
             // Document -> Customer relationship (conditional based on DocumentType.TierType)
             // Note: These are manual navigation properties that need to be resolved in application logic

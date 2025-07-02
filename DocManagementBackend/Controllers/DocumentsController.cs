@@ -8,6 +8,7 @@ using DocManagementBackend.Mappings;
 using DocManagementBackend.Services;
 // using DocManagementBackend.ModelsDtos;
 using DocManagementBackend.Utils;
+using System.Text;
 
 namespace DocManagementBackend.Controllers
 {
@@ -19,12 +20,14 @@ namespace DocManagementBackend.Controllers
         private readonly ApplicationDbContext _context;
         private readonly DocumentWorkflowService _workflowService;
         private readonly UserAuthorizationService _authService;
+        private readonly IDocumentErpArchivalService _erpArchivalService;
         
-        public DocumentsController(ApplicationDbContext context, DocumentWorkflowService workflowService, UserAuthorizationService authService) 
+        public DocumentsController(ApplicationDbContext context, DocumentWorkflowService workflowService, UserAuthorizationService authService, IDocumentErpArchivalService erpArchivalService) 
         { 
             _context = context;
             _workflowService = workflowService;
             _authService = authService;
+            _erpArchivalService = erpArchivalService;
         }
 
         [HttpGet]
@@ -213,9 +216,14 @@ namespace DocManagementBackend.Controllers
                 if (subType.DocumentTypeId != request.TypeId)
                     return BadRequest("Selected SubType does not belong to the selected Document Type!");
 
-                var documentDate = request.DocDate ?? DateTime.UtcNow;
-                if (documentDate < subType.StartDate || documentDate > subType.EndDate)
-                    return BadRequest($"Document date ({documentDate:d}) must be within the selected SubType date range ({subType.StartDate:d} to {subType.EndDate:d})");
+                var documentDate = (request.DocDate ?? DateTime.UtcNow).Date;
+                var subTypeStartDate = subType.StartDate.Date;
+                var subTypeEndDate = subType.EndDate.Date;
+                
+                Console.WriteLine($"[DEBUG] Document creation validation: docDate={documentDate:yyyy-MM-dd}, subTypeStart={subTypeStartDate:yyyy-MM-dd}, subTypeEnd={subTypeEndDate:yyyy-MM-dd}");
+                
+                if (documentDate < subTypeStartDate || documentDate > subTypeEndDate)
+                    return BadRequest($"Document date ({documentDate:d}) must be within the selected SubType date range ({subTypeStartDate:d} to {subTypeEndDate:d})");
             }
 
             var docDate = request.DocDate ?? DateTime.UtcNow;
@@ -347,6 +355,10 @@ namespace DocManagementBackend.Controllers
             if (document == null)
                 return NotFound("Document not found.");
 
+            // Check if document is archived to ERP
+            if (!string.IsNullOrEmpty(document.ERPDocumentCode))
+                return BadRequest("This document has been archived to the ERP system and cannot be modified.");
+
             // Update basic document fields
             document.Content = request.Content ?? document.Content;
             document.Title = request.Title ?? document.Title;
@@ -398,8 +410,14 @@ namespace DocManagementBackend.Controllers
                 }
 
                 // Verify DocDate falls within SubType date range
-                if (document.DocDate < subType.StartDate || document.DocDate > subType.EndDate)
-                    return BadRequest($"Document date ({document.DocDate:d}) must be within the selected SubType date range ({subType.StartDate:d} to {subType.EndDate:d})");
+                var docDate = document.DocDate.Date;
+                var subTypeStartDate = subType.StartDate.Date;
+                var subTypeEndDate = subType.EndDate.Date;
+                
+                Console.WriteLine($"[DEBUG] Document update validation: docDate={docDate:yyyy-MM-dd}, subTypeStart={subTypeStartDate:yyyy-MM-dd}, subTypeEnd={subTypeEndDate:yyyy-MM-dd}");
+                
+                if (docDate < subTypeStartDate || docDate > subTypeEndDate)
+                    return BadRequest($"Document date ({docDate:d}) must be within the selected SubType date range ({subTypeStartDate:d} to {subTypeEndDate:d})");
 
                 document.SubTypeId = request.SubTypeId;
                 document.SubType = subType;
@@ -541,6 +559,11 @@ namespace DocManagementBackend.Controllers
 
             var userId = authResult.UserId;
             var user = authResult.User!;
+            
+            // Check if document is archived to ERP before allowing deletion
+            var documentToCheck = await _context.Documents.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
+            if (documentToCheck != null && !string.IsNullOrEmpty(documentToCheck.ERPDocumentCode))
+                return BadRequest("This document has been archived to the ERP system and cannot be deleted.");
 
             try
             {
@@ -685,7 +708,6 @@ namespace DocManagementBackend.Controllers
                 var type = await _context.DocumentTypes.FirstOrDefaultAsync(t => t.TypeName.ToLower() == typeName);
                 if (type != null && type.Id != ThisType.Id)
                     return BadRequest("TypeName already exist");
-                // if ()
                 ThisType.TypeName = request.TypeName;
             }
             if (!string.IsNullOrEmpty(request.TypeAttr))
@@ -720,24 +742,71 @@ namespace DocManagementBackend.Controllers
                 if (documentCount > 0)
                     return BadRequest($"This document type cannot be deleted. There are {documentCount} document(s) using this type.");
 
-                // Check if there are subtypes using this document type
-                var subTypeCount = await _context.SubTypes.CountAsync(st => st.DocumentTypeId == id);
-                if (subTypeCount > 0)
-                    return BadRequest($"This document type cannot be deleted. There are {subTypeCount} serie(s) associated with this type.");
-
                 // Check if there are circuits using this document type
                 var circuitCount = await _context.Circuits.CountAsync(c => c.DocumentTypeId == id);
                 if (circuitCount > 0)
                     return BadRequest($"This document type cannot be deleted. There are {circuitCount} circuit(s) associated with this type.");
 
-                // Update the document counter to match actual count (for data consistency)
-                type.DocumentCounter = documentCount;
+                // Get associated subtypes for cascade deletion
+                var subTypes = await _context.SubTypes
+                    .Where(st => st.DocumentTypeId == id)
+                    .ToListAsync();
 
-                // Safe to delete
-                _context.DocumentTypes.Remove(type);
-                await _context.SaveChangesAsync();
+                // Begin transaction for cascade deletion
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                
+                try
+                {
+                    // Delete associated subtypes first
+                    if (subTypes.Any())
+                    {
+                        _context.SubTypes.RemoveRange(subTypes);
+                        await _context.SaveChangesAsync();
+                        
+                        // Log subtype deletions
+                        var subTypeLogEntry = new LogHistory
+                        {
+                            UserId = userId,
+                            User = user,
+                            Timestamp = DateTime.UtcNow,
+                            ActionType = 6, // Delete action
+                            Description = $"{user.Username} deleted {subTypes.Count} series as part of document type '{type.TypeName}' deletion"
+                        };
+                        _context.LogHistories.Add(subTypeLogEntry);
+                    }
 
-                return Ok("Document type deleted successfully!");
+                    // Update the document counter to match actual count (for data consistency)
+                    type.DocumentCounter = documentCount;
+
+                    // Delete the document type
+                    _context.DocumentTypes.Remove(type);
+                    await _context.SaveChangesAsync();
+
+                    // Log document type deletion
+                    var typeLogEntry = new LogHistory
+                    {
+                        UserId = userId,
+                        User = user,
+                        Timestamp = DateTime.UtcNow,
+                        ActionType = 6, // Delete action
+                        Description = $"{user.Username} deleted document type '{type.TypeName}' and {subTypes.Count} associated series"
+                    };
+                    _context.LogHistories.Add(typeLogEntry);
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    var message = subTypes.Any() 
+                        ? $"Document type deleted successfully! Also removed {subTypes.Count} associated series."
+                        : "Document type deleted successfully!";
+
+                    return Ok(message);
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
             catch (DbUpdateException ex)
             {
@@ -754,6 +823,555 @@ namespace DocManagementBackend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"An unexpected error occurred while deleting document type: {ex.Message}");
+            }
+        }
+
+        [HttpPost("bulk-delete")]
+        public async Task<IActionResult> BulkDeleteDocuments([FromBody] List<int> documentIds)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
+
+            if (documentIds == null || !documentIds.Any())
+                return BadRequest("No document IDs provided");
+
+            try
+            {
+                // Check for ERP-archived documents before attempting deletion
+                var documentsToCheck = await _context.Documents
+                    .Where(d => documentIds.Contains(d.Id))
+                    .Select(d => new { d.Id, d.ERPDocumentCode, d.DocumentKey, d.Status })
+                    .ToListAsync();
+
+                var erpArchivedDocs = documentsToCheck
+                    .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode))
+                    .ToList();
+
+                // Enhanced debug logging
+                Console.WriteLine($"[DEBUG] Bulk delete request for {documentIds.Count} documents");
+                foreach (var doc in documentsToCheck)
+                {
+                    var isErpArchived = !string.IsNullOrEmpty(doc.ERPDocumentCode);
+                    Console.WriteLine($"[DEBUG] Document {doc.Id} ({doc.DocumentKey}) - Status: {doc.Status}, ERPCode: '{doc.ERPDocumentCode ?? "NULL"}', IsErpArchived: {isErpArchived}");
+                }
+                Console.WriteLine($"[DEBUG] Found {erpArchivedDocs.Count} ERP-archived documents out of {documentsToCheck.Count} total");
+
+                // Log the bulk deletion attempt
+                var logEntry = new LogHistory
+                {
+                    UserId = userId,
+                    User = user,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 6,
+                    Description = $"{user.Username} attempted to delete {documentIds.Count} documents in bulk"
+                };
+                _context.LogHistories.Add(logEntry);
+                await _context.SaveChangesAsync();
+
+                // Use the workflow service's bulk delete method
+                var (successCount, failedIds) = await _workflowService.DeleteMultipleDocumentsAsync(documentIds);
+
+                // Categorize failed documents
+                var erpArchivedFailedDocs = erpArchivedDocs
+                    .Where(d => failedIds.Contains(d.Id))
+                    .ToList();
+
+                var otherFailedIds = failedIds
+                    .Where(id => !erpArchivedFailedDocs.Any(d => d.Id == id))
+                    .ToList();
+
+                // Build detailed message
+                var messageBuilder = new StringBuilder();
+                if (successCount > 0)
+                {
+                    messageBuilder.Append($"Successfully deleted {successCount} documents");
+                }
+
+                if (erpArchivedFailedDocs.Any())
+                {
+                    if (messageBuilder.Length > 0) messageBuilder.Append(". ");
+                    messageBuilder.Append($"{erpArchivedFailedDocs.Count} documents could not be deleted because they are archived to ERP");
+                }
+
+                if (otherFailedIds.Any())
+                {
+                    if (messageBuilder.Length > 0) messageBuilder.Append(". ");
+                    messageBuilder.Append($"{otherFailedIds.Count} documents failed for other reasons");
+                }
+
+                // Log the result with detailed information
+                var resultLogEntry = new LogHistory
+                {
+                    UserId = userId,
+                    User = user,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 6,
+                    Description = $"{user.Username} bulk delete completed: {successCount} successful, {erpArchivedFailedDocs.Count} ERP-archived (protected), {otherFailedIds.Count} other failures"
+                };
+                _context.LogHistories.Add(resultLogEntry);
+                await _context.SaveChangesAsync();
+
+                if (failedIds.Any())
+                {
+                    return Ok(new 
+                    { 
+                        message = messageBuilder.ToString(),
+                        successCount = successCount,
+                        failedIds = failedIds,
+                        erpArchivedCount = erpArchivedFailedDocs.Count,
+                        erpArchivedDocuments = erpArchivedFailedDocs.Select(d => new { 
+                            id = d.Id, 
+                            documentKey = d.DocumentKey, 
+                            erpCode = d.ERPDocumentCode 
+                        }),
+                        otherFailedCount = otherFailedIds.Count,
+                        totalRequested = documentIds.Count
+                    });
+                }
+
+                return Ok(new 
+                { 
+                    message = $"Successfully deleted {successCount} documents",
+                    successCount = successCount,
+                    totalRequested = documentIds.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred during bulk deletion: {ex.Message}");
+            }
+        }
+
+        [HttpPost("recalculate-counters")]
+        public async Task<IActionResult> RecalculateDocumentCounters()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
+
+            try
+            {
+                // Get all document types
+                var documentTypes = await _context.DocumentTypes.ToListAsync();
+                var updatedTypes = new List<object>();
+
+                foreach (var docType in documentTypes)
+                {
+                    // Calculate actual document count for this type
+                    var actualCount = await _context.Documents.CountAsync(d => d.TypeId == docType.Id);
+                    var oldCounter = docType.DocumentCounter;
+                    
+                    // Update the counter to match actual count
+                    docType.DocumentCounter = actualCount;
+                    
+                    if (oldCounter != actualCount)
+                    {
+                        updatedTypes.Add(new 
+                        {
+                            TypeId = docType.Id,
+                            TypeName = docType.TypeName,
+                            OldCounter = oldCounter,
+                            NewCounter = actualCount,
+                            Difference = actualCount - oldCounter
+                        });
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Log the recalculation
+                var logEntry = new LogHistory
+                {
+                    UserId = userId,
+                    User = user,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 5, // Update action
+                    Description = $"{user.Username} recalculated document type counters. Updated {updatedTypes.Count} types."
+                };
+                _context.LogHistories.Add(logEntry);
+                await _context.SaveChangesAsync();
+
+                return Ok(new 
+                {
+                    message = $"Successfully recalculated counters for {documentTypes.Count} document types",
+                    updatedTypes = updatedTypes,
+                    totalTypesChecked = documentTypes.Count,
+                    typesUpdated = updatedTypes.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while recalculating counters: {ex.Message}");
+            }
+        }
+
+        [HttpPost("Types/bulk-delete")]
+        public async Task<IActionResult> BulkDeleteDocumentTypes([FromBody] List<int> typeIds)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
+
+            if (typeIds == null || !typeIds.Any())
+                return BadRequest("No document type IDs provided");
+
+            var results = new
+            {
+                successful = new List<object>(),
+                failed = new List<object>()
+            };
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
+            {
+                foreach (var typeId in typeIds)
+                {
+                    try
+                    {
+                        var type = await _context.DocumentTypes.FindAsync(typeId);
+                        if (type == null)
+                        {
+                            results.failed.Add(new { id = typeId, error = "Document type not found" });
+                            continue;
+                        }
+
+                        // Check if there are documents using this type
+                        var documentCount = await _context.Documents.CountAsync(d => d.TypeId == typeId);
+                        if (documentCount > 0)
+                        {
+                            results.failed.Add(new { 
+                                id = typeId, 
+                                name = type.TypeName,
+                                error = $"Cannot delete - {documentCount} document(s) are using this type" 
+                            });
+                            continue;
+                        }
+
+                        // Check if there are circuits using this document type
+                        var circuitCount = await _context.Circuits.CountAsync(c => c.DocumentTypeId == typeId);
+                        if (circuitCount > 0)
+                        {
+                            results.failed.Add(new { 
+                                id = typeId, 
+                                name = type.TypeName,
+                                error = $"Cannot delete - {circuitCount} circuit(s) are associated with this type" 
+                            });
+                            continue;
+                        }
+
+                        // Get associated subtypes for cascade deletion
+                        var subTypes = await _context.SubTypes
+                            .Where(st => st.DocumentTypeId == typeId)
+                            .ToListAsync();
+
+                        // Delete associated subtypes first
+                        if (subTypes.Any())
+                        {
+                            _context.SubTypes.RemoveRange(subTypes);
+                        }
+
+                        // Delete the document type
+                        _context.DocumentTypes.Remove(type);
+
+                        results.successful.Add(new { 
+                            id = typeId, 
+                            name = type.TypeName,
+                            deletedSeries = subTypes.Count 
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        results.failed.Add(new { 
+                            id = typeId, 
+                            error = $"Unexpected error: {ex.Message}" 
+                        });
+                    }
+                }
+
+                // Save all changes in the transaction
+                await _context.SaveChangesAsync();
+
+                // Log the bulk operation
+                var logEntry = new LogHistory
+                {
+                    UserId = userId,
+                    User = user,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 6, // Delete action
+                    Description = $"{user.Username} bulk deleted {results.successful.Count} document types, {results.failed.Count} failed"
+                };
+                _context.LogHistories.Add(logEntry);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                var message = results.failed.Any() 
+                    ? $"Partially completed: {results.successful.Count} deleted, {results.failed.Count} failed"
+                    : $"Successfully deleted {results.successful.Count} document types";
+
+                return Ok(new 
+                {
+                    message = message,
+                    successful = results.successful,
+                    failed = results.failed,
+                    totalRequested = typeIds.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"An error occurred during bulk deletion: {ex.Message}");
+            }
+        }
+
+        // Test endpoint for manual ERP archival
+        [HttpPost("{id}/archive-to-erp")]
+        public async Task<IActionResult> ManualErpArchival(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var document = await _context.Documents.FindAsync(id);
+                if (document == null)
+                    return NotFound("Document not found");
+
+                // Check if already archived
+                if (!string.IsNullOrEmpty(document.ERPDocumentCode))
+                    return BadRequest($"Document is already archived to ERP with code: {document.ERPDocumentCode}");
+
+                // Trigger ERP archival
+                var success = await _erpArchivalService.ArchiveDocumentToErpAsync(id);
+                
+                if (success)
+                {
+                    // Refresh document to get updated ERP code
+                    await _context.Entry(document).ReloadAsync();
+                    return Ok(new { 
+                        message = "Document successfully archived to ERP", 
+                        erpDocumentCode = document.ERPDocumentCode 
+                    });
+                }
+                else
+                {
+                    return StatusCode(500, new { 
+                        message = "Failed to archive document to ERP. Check logs for details.",
+                        errorType = "ErpArchivalError"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error during ERP archival: {ex.Message}");
+            }
+        }
+
+        // Test endpoint for manual ERP line creation
+        [HttpPost("{id}/create-lines-in-erp")]
+        public async Task<IActionResult> ManualErpLineCreation(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var document = await _context.Documents
+                    .Include(d => d.Lignes)
+                    .FirstOrDefaultAsync(d => d.Id == id);
+                    
+                if (document == null)
+                    return NotFound("Document not found");
+
+                // Check if document is archived to ERP
+                if (string.IsNullOrEmpty(document.ERPDocumentCode))
+                    return BadRequest("Document must be archived to ERP first before creating lines");
+
+                if (!document.Lignes.Any())
+                    return BadRequest("Document has no lines to create in ERP");
+
+                // Trigger ERP line creation
+                var success = await _erpArchivalService.CreateDocumentLinesInErpAsync(id);
+                
+                if (success)
+                {
+                    // Refresh document lines to get updated ERP line codes
+                    await _context.Entry(document).ReloadAsync();
+                    await _context.Entry(document).Collection(d => d.Lignes).LoadAsync();
+                    
+                    var lineResults = document.Lignes.Select(l => new {
+                        ligneId = l.Id,
+                        title = l.Title,
+                        erpLineCode = l.ERPLineCode,
+                        isCreated = !string.IsNullOrEmpty(l.ERPLineCode)
+                    }).ToList();
+                    
+                    return Ok(new { 
+                        message = "Document lines successfully processed in ERP", 
+                        erpDocumentCode = document.ERPDocumentCode,
+                        totalLines = document.Lignes.Count,
+                        createdLines = lineResults.Count(l => l.isCreated),
+                        lines = lineResults
+                    });
+                }
+                else
+                {
+                    return StatusCode(500, new { 
+                        message = "Failed to create some or all document lines in ERP. Check logs for details.",
+                        errorType = "ErpLineCreationError"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error during ERP line creation: {ex.Message}");
+            }
+        }
+
+        // Endpoint to fix archived documents that don't have their lines created in ERP
+        [HttpPost("fix-missing-erp-lines")]
+        public async Task<IActionResult> FixMissingErpLines()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                // Find documents that are archived to ERP but have lines without ERPLineCode
+                var documentsNeedingLineFix = await _context.Documents
+                    .Include(d => d.Lignes)
+                    .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode) && 
+                               d.Lignes.Any(l => string.IsNullOrEmpty(l.ERPLineCode)))
+                    .ToListAsync();
+
+                if (!documentsNeedingLineFix.Any())
+                {
+                    return Ok(new { 
+                        message = "No documents found that need line fixes",
+                        documentsProcessed = 0
+                    });
+                }
+
+                var successCount = 0;
+                var errorCount = 0;
+                var results = new List<object>();
+
+                foreach (var document in documentsNeedingLineFix)
+                {
+                    try
+                    {
+                        var linesNeedingCreation = document.Lignes.Where(l => string.IsNullOrEmpty(l.ERPLineCode)).Count();
+                        
+                        if (linesNeedingCreation > 0)
+                        {
+                            var success = await _erpArchivalService.CreateDocumentLinesInErpAsync(document.Id);
+                            
+                            if (success)
+                            {
+                                successCount++;
+                                
+                                // Refresh to get updated line codes
+                                await _context.Entry(document).ReloadAsync();
+                                await _context.Entry(document).Collection(d => d.Lignes).LoadAsync();
+                                
+                                var createdLines = document.Lignes.Count(l => !string.IsNullOrEmpty(l.ERPLineCode));
+                                
+                                results.Add(new {
+                                    documentId = document.Id,
+                                    documentKey = document.DocumentKey,
+                                    erpDocumentCode = document.ERPDocumentCode,
+                                    status = "success",
+                                    totalLines = document.Lignes.Count,
+                                    createdLines = createdLines
+                                });
+                            }
+                            else
+                            {
+                                errorCount++;
+                                results.Add(new {
+                                    documentId = document.Id,
+                                    documentKey = document.DocumentKey,
+                                    erpDocumentCode = document.ERPDocumentCode,
+                                    status = "failed",
+                                    error = "Failed to create lines in ERP"
+                                });
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        results.Add(new {
+                            documentId = document.Id,
+                            documentKey = document.DocumentKey,
+                            erpDocumentCode = document.ERPDocumentCode,
+                            status = "error",
+                            error = ex.Message
+                        });
+                    }
+                }
+
+                return Ok(new {
+                    message = $"Processed {documentsNeedingLineFix.Count} documents with missing ERP lines",
+                    documentsProcessed = documentsNeedingLineFix.Count,
+                    successCount = successCount,
+                    errorCount = errorCount,
+                    results = results
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error during bulk ERP line fix: {ex.Message}");
+            }
+        }
+
+        // Debug endpoint to check ERP archival status
+        [HttpPost("check-erp-status")]
+        public async Task<IActionResult> CheckErpStatus([FromBody] List<int> documentIds)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var documents = await _context.Documents
+                    .Where(d => documentIds.Contains(d.Id))
+                    .Select(d => new { 
+                        d.Id, 
+                        d.DocumentKey, 
+                        d.Status, 
+                        d.ERPDocumentCode,
+                        IsErpArchived = !string.IsNullOrEmpty(d.ERPDocumentCode),
+                        d.IsCircuitCompleted,
+                        d.UpdatedAt
+                    })
+                    .ToListAsync();
+
+                return Ok(new { 
+                    message = "ERP archival status check",
+                    requestedCount = documentIds.Count,
+                    foundCount = documents.Count,
+                    documents = documents
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error checking ERP status: {ex.Message}");
             }
         }
     }

@@ -45,9 +45,11 @@ namespace DocManagementBackend.Controllers
                     IsActive = st.IsActive,
                     DocumentType = new DocumentTypeDto
                     {
+                        TypeNumber = st.DocumentType!.TypeNumber,
                         TypeKey = st.DocumentType!.TypeKey,
                         TypeName = st.DocumentType.TypeName,
-                        TypeAttr = st.DocumentType.TypeAttr
+                        TypeAttr = st.DocumentType.TypeAttr,
+                        TierType = st.DocumentType.TierType
                     }
                 })
                 .ToListAsync();
@@ -77,9 +79,11 @@ namespace DocManagementBackend.Controllers
                     IsActive = st.IsActive,
                     DocumentType = new DocumentTypeDto
                     {
+                        TypeNumber = st.DocumentType!.TypeNumber,
                         TypeKey = st.DocumentType!.TypeKey,
                         TypeName = st.DocumentType.TypeName,
-                        TypeAttr = st.DocumentType.TypeAttr
+                        TypeAttr = st.DocumentType.TypeAttr,
+                        TierType = st.DocumentType.TierType
                     }
                 })
                 .FirstOrDefaultAsync();
@@ -112,9 +116,11 @@ namespace DocManagementBackend.Controllers
                     IsActive = st.IsActive,
                     DocumentType = new DocumentTypeDto
                     {
+                        TypeNumber = st.DocumentType!.TypeNumber,
                         TypeKey = st.DocumentType!.TypeKey,
                         TypeName = st.DocumentType.TypeName,
-                        TypeAttr = st.DocumentType.TypeAttr
+                        TypeAttr = st.DocumentType.TypeAttr,
+                        TierType = st.DocumentType.TierType
                     }
                 })
                 .ToListAsync();
@@ -129,12 +135,29 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var subTypes = await _context.SubTypes
+            // Normalize the input date to avoid timezone issues
+            var normalizedDate = date.Date; // This strips the time component
+            
+            Console.WriteLine($"[DEBUG] Series for-date endpoint: docTypeId={docTypeId}, inputDate={date:yyyy-MM-dd HH:mm:ss}, normalizedDate={normalizedDate:yyyy-MM-dd}");
+
+            // First get all series for the document type to see what's available
+            var allSubTypes = await _context.SubTypes
                 .Include(st => st.DocumentType)
-                .Where(st => st.DocumentTypeId == docTypeId &&
-                             st.IsActive &&
-                             st.StartDate <= date &&
-                             st.EndDate >= date)
+                .Where(st => st.DocumentTypeId == docTypeId && st.IsActive)
+                .ToListAsync();
+                
+            Console.WriteLine($"[DEBUG] Found {allSubTypes.Count} active series for docType {docTypeId}:");
+            foreach (var st in allSubTypes)
+            {
+                var isValid = st.StartDate <= normalizedDate && st.EndDate >= normalizedDate;
+                Console.WriteLine($"[DEBUG]   - {st.SubTypeKey}: {st.StartDate:yyyy-MM-dd} to {st.EndDate:yyyy-MM-dd} | Valid: {isValid}");
+            }
+
+            var validSubTypes = allSubTypes
+                .Where(st => st.StartDate <= normalizedDate && st.EndDate >= normalizedDate)
+                .ToList();
+
+            var subTypes = validSubTypes
                 .Select(st => new SubTypeDto
                 {
                     Id = st.Id,
@@ -147,12 +170,14 @@ namespace DocManagementBackend.Controllers
                     IsActive = st.IsActive,
                     DocumentType = new DocumentTypeDto
                     {
+                        TypeNumber = st.DocumentType!.TypeNumber,
                         TypeKey = st.DocumentType!.TypeKey,
                         TypeName = st.DocumentType.TypeName,
-                        TypeAttr = st.DocumentType.TypeAttr
+                        TypeAttr = st.DocumentType.TypeAttr,
+                        TierType = st.DocumentType.TierType
                     }
                 })
-                .ToListAsync();
+                .ToList();
 
             return Ok(subTypes);
         }
@@ -253,9 +278,11 @@ namespace DocManagementBackend.Controllers
                 IsActive = subType.IsActive,
                 DocumentType = new DocumentTypeDto
                 {
+                    TypeNumber = documentType.TypeNumber,
                     TypeKey = documentType.TypeKey,
                     TypeName = documentType.TypeName,
-                    TypeAttr = documentType.TypeAttr
+                    TypeAttr = documentType.TypeAttr,
+                    TierType = documentType.TierType
                 }
             };
 

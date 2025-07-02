@@ -126,19 +126,74 @@ const documentTypeService = {
 
   deleteDocumentType: async (id: number): Promise<void> => {
     try {
-      await api.delete(`/Documents/Types/${id}`);
+      const response = await api.delete(`/Documents/Types/${id}`);
+      
+      // Show appropriate success message based on response
+      if (response.data && typeof response.data === 'string') {
+        if (response.data.includes('associated series')) {
+          toast.success(response.data);
+        } else {
+          toast.success('Document type deleted successfully');
+        }
+      } else {
+        toast.success('Document type deleted successfully');
+      }
     } catch (error) {
       console.error(`Error deleting document type with ID ${id}:`, error);
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          toast.error(error.response.data);
+        } else if (error.response.data.message) {
+          toast.error(error.response.data.message);
+        } else {
+          toast.error('Failed to delete document type');
+        }
+      } else {
+        toast.error('Failed to delete document type');
+      }
+      
       throw error;
     }
   },
   
   deleteMultipleDocumentTypes: async (ids: number[]): Promise<void> => {
     try {
-      // Since the API doesn't support bulk deletion, we'll delete one by one
-      await Promise.all(ids.map(id => api.delete(`/Documents/Types/${id}`)));
+      // Use the new bulk delete endpoint that handles cascade deletion
+      const response = await api.post('/Documents/Types/bulk-delete', ids);
+      
+      // Handle the response and show appropriate messages
+      if (response.data.successful?.length > 0) {
+        const successfulDeletes = response.data.successful;
+        const totalSeries = successfulDeletes.reduce((sum, item) => sum + (item.deletedSeries || 0), 0);
+        
+        if (totalSeries > 0) {
+          toast.success(`Successfully deleted ${successfulDeletes.length} document types and ${totalSeries} associated series`);
+        } else {
+          toast.success(`Successfully deleted ${successfulDeletes.length} document types`);
+        }
+      }
+      
+      // Handle partial failures
+      if (response.data.failed?.length > 0) {
+        const failures = response.data.failed;
+        console.warn('Some deletions failed:', failures);
+        
+        // Show specific error messages
+        failures.forEach(failure => {
+          toast.error(`Failed to delete ${failure.name || `ID ${failure.id}`}: ${failure.error}`);
+        });
+      }
+      
     } catch (error) {
       console.error('Error deleting multiple document types:', error);
+      
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to delete document types');
+      }
+      
       throw error;
     }
   },

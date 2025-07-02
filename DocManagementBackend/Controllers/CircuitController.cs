@@ -54,9 +54,11 @@ namespace DocManagementBackend.Controllers
                 DocumentTypeId = c.DocumentTypeId ?? 0,
                 DocumentType = c.DocumentType != null ? new DocumentTypeDto
                 {
+                    TypeNumber = c.DocumentType.TypeNumber,
                     TypeKey = c.DocumentType.TypeKey,
                     TypeName = c.DocumentType.TypeName,
-                    TypeAttr = c.DocumentType.TypeAttr
+                    TypeAttr = c.DocumentType.TypeAttr,
+                    TierType = c.DocumentType.TierType
                 } : null,
                 Statuses = c.Statuses.Select(s => new StatusDto
                 {
@@ -145,9 +147,11 @@ namespace DocManagementBackend.Controllers
                 DocumentTypeId = circuit.DocumentTypeId ?? 0,
                 DocumentType = circuit.DocumentType != null ? new DocumentTypeDto
                 {
+                    TypeNumber = circuit.DocumentType.TypeNumber,
                     TypeKey = circuit.DocumentType.TypeKey,
                     TypeName = circuit.DocumentType.TypeName,
-                    TypeAttr = circuit.DocumentType.TypeAttr
+                    TypeAttr = circuit.DocumentType.TypeAttr,
+                    TierType = circuit.DocumentType.TierType
                 } : null,
                 Statuses = circuit.Statuses.Select(s => new StatusDto
                 {
@@ -244,9 +248,11 @@ namespace DocManagementBackend.Controllers
                     DocumentTypeId = createdCircuit.DocumentTypeId ?? 0,
                     DocumentType = new DocumentTypeDto
                     {
+                        TypeNumber = documentType.TypeNumber,
                         TypeKey = documentType.TypeKey,
                         TypeName = documentType.TypeName,
-                        TypeAttr = documentType.TypeAttr
+                        TypeAttr = documentType.TypeAttr,
+                        TierType = documentType.TierType
                     },
                     Statuses = new List<StatusDto>(),
                     Steps = new List<StepDto>()

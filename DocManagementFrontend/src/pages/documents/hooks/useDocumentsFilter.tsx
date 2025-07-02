@@ -180,10 +180,112 @@ export function DocumentsFilterProvider({ children }: { children: ReactNode }) {
 export function useDocumentsFilter() {
   const context = useContext(DocumentsFilterContext);
 
+  // If used outside provider, create a local state
   if (!context) {
-    throw new Error(
-      "useDocumentsFilter must be used within a DocumentsFilterProvider"
+    const savedFilters = getSavedFilters();
+
+    const [searchQuery, setSearchQuery] = useState(
+      savedFilters?.searchQuery || ""
     );
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(
+      savedFilters?.dateRange
+    );
+    const [activeFilters, setActiveFilters] = useState<FilterState>(
+      savedFilters || initialFilterState
+    );
+
+    // Debounced search to avoid too many filter updates
+    const debouncedSetSearchQuery = useCallback(
+      debounce((query: string) => {
+        setSearchQuery(query);
+        setActiveFilters((prev) => ({
+          ...prev,
+          searchQuery: query,
+        }));
+
+        // Save to local storage
+        try {
+          const updatedFilters = {
+            ...activeFilters,
+            searchQuery: query,
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFilters));
+        } catch (error) {
+          console.error("Error saving filters:", error);
+        }
+      }, 300),
+      [activeFilters]
+    );
+
+    // Calculate if any filters are active
+    const isFilterActive = useMemo(() => {
+      return (
+        activeFilters.searchQuery !== "" ||
+        activeFilters.statusFilter !== "any" ||
+        activeFilters.typeFilter !== "any" ||
+        activeFilters.dateRange !== undefined
+      );
+    }, [activeFilters]);
+
+    // Count active filters
+    const activeFilterCount = useMemo(() => {
+      return Object.values(activeFilters).filter(
+        (val) => val !== "any" && val !== undefined && val !== ""
+      ).length;
+    }, [activeFilters]);
+
+    const applyFilters = useCallback(
+      (filters: FilterState) => {
+        // Update local state for UI components
+        if (filters.searchQuery !== undefined) {
+          setSearchQuery(filters.searchQuery);
+        }
+        if (filters.dateRange !== undefined) {
+          setDateRange(filters.dateRange);
+        }
+
+        // Update the full filter state
+        const updatedFilters = {
+          ...activeFilters,
+          ...filters,
+        };
+
+        setActiveFilters(updatedFilters);
+
+        // Save to local storage for persistence
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFilters));
+        } catch (error) {
+          console.error("Error saving filters:", error);
+        }
+      },
+      [activeFilters]
+    );
+
+    const resetFilters = useCallback(() => {
+      setActiveFilters(initialFilterState);
+      setDateRange(undefined);
+      setSearchQuery("");
+
+      // Clear saved filters
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (error) {
+        console.error("Error clearing saved filters:", error);
+      }
+    }, []);
+
+    return {
+      searchQuery,
+      setSearchQuery: debouncedSetSearchQuery,
+      dateRange,
+      setDateRange,
+      activeFilters,
+      applyFilters,
+      resetFilters,
+      isFilterActive,
+      activeFilterCount,
+    };
   }
 
   return context;

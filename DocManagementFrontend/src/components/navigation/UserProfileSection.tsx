@@ -37,8 +37,8 @@ export function UserProfileSection() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      {/* Professional profile card with sidebar-matching background */}
-      <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-xl border border-border/40 shadow-lg overflow-hidden">
+      {/* Professional profile card with semantic theming */}
+      <div className="bg-gradient-to-br from-card to-muted/50 rounded-xl border border-border shadow-lg overflow-hidden backdrop-blur-sm">
         {/* User avatar and basic info */}
         <div className="p-4 pb-3">
           <div className="flex items-center space-x-3">
@@ -82,7 +82,7 @@ export function UserProfileSection() {
         </div>
 
         {/* Professional responsibility centre section */}
-        <div className="px-4 py-3 border-t border-border/40">
+        <div className="px-4 py-3 bg-muted/30 border-t border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <div className="flex-shrink-0">
@@ -145,7 +145,7 @@ export function UserProfileSection() {
       {/* Professional center info card */}
       {responsibilityCenter && (
         <motion.div
-          className="mt-3 p-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-lg border border-border/40"
+          className="mt-3 p-3 bg-gradient-to-r from-muted/50 to-accent/30 rounded-lg border border-border"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}

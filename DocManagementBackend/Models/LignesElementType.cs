@@ -10,16 +10,6 @@ namespace DocManagementBackend.Models
         GeneralAccounts
     }
 
-    public enum GeneralAccountType
-    {
-        // TODO: Define specific values based on business rules
-        Revenue,
-        Expense,
-        Asset,
-        Liability,
-        Equity
-    }
-
     public class LignesElementType
     {
         [Key]
@@ -100,8 +90,8 @@ namespace DocManagementBackend.Models
         [MaxLength(500)]
         public string Description { get; set; } = string.Empty;
         
-        [Required]
-        public GeneralAccountType Type { get; set; } // ENUM type as specified
+        [MaxLength(100)]
+        public string? AccountType { get; set; } // Stores IncomeBalance from BC API
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -124,7 +114,7 @@ namespace DocManagementBackend.Models
         [MaxLength(500)]
         public string Description { get; set; } = string.Empty;
         
-        // Foreign key to UniteCode
+        // Foreign key to UnitOfMeasure (renamed from UniteCode)
         [MaxLength(50)]
         public string? Unite { get; set; }
         
@@ -133,14 +123,47 @@ namespace DocManagementBackend.Models
         
         // Navigation properties
         [ForeignKey("Unite")]
-        public UniteCode? UniteCodeNavigation { get; set; }
+        public UnitOfMeasure? UniteCodeNavigation { get; set; }
         
         // Backward compatibility navigation
         [JsonIgnore]
         public ICollection<LignesElementType> LignesElementTypes { get; set; } = new List<LignesElementType>();
+        
+        // Navigation to ItemUnitOfMeasure
+        [JsonIgnore]
+        public ICollection<ItemUnitOfMeasure> ItemUnitOfMeasures { get; set; } = new List<ItemUnitOfMeasure>();
     }
 
-    public class UniteCode
+    // New table for item-specific unit of measure mappings and conversion ratios
+    public class ItemUnitOfMeasure
+    {
+        [Key]
+        public int Id { get; set; }
+        
+        [Required]
+        [MaxLength(50)]
+        public string ItemCode { get; set; } = string.Empty; // Foreign key to Item.Code
+        
+        [Required]
+        [MaxLength(50)]
+        public string UnitOfMeasureCode { get; set; } = string.Empty; // Foreign key to UnitOfMeasure.Code
+        
+        [Required]
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal QtyPerUnitOfMeasure { get; set; } = 1; // Conversion ratio from the default unit to this unit
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        [ForeignKey("ItemCode")]
+        public Item Item { get; set; } = null!;
+        
+        [ForeignKey("UnitOfMeasureCode")]
+        public UnitOfMeasure UnitOfMeasure { get; set; } = null!;
+    }
+
+    public class UnitOfMeasure // Renamed from UniteCode
     {
         [Key]
         [MaxLength(50)]
@@ -159,6 +182,10 @@ namespace DocManagementBackend.Models
         // Navigation properties
         [JsonIgnore]
         public ICollection<Item> Items { get; set; } = new List<Item>();
+        
+        // Navigation to ItemUnitOfMeasure
+        [JsonIgnore]
+        public ICollection<ItemUnitOfMeasure> ItemUnitOfMeasures { get; set; } = new List<ItemUnitOfMeasure>();
     }
 
     // Tier Type enum for DocumentType

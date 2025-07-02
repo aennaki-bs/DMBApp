@@ -66,6 +66,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Code = let.GeneralAccount.Code,
                     Description = let.GeneralAccount.Description,
+                    AccountType = let.GeneralAccount.AccountType,
                     CreatedAt = let.GeneralAccount.CreatedAt,
                     UpdatedAt = let.GeneralAccount.UpdatedAt,
                     LignesCount = let.GeneralAccount.LignesElementTypes.Count()
@@ -172,6 +173,7 @@ namespace DocManagementBackend.Controllers
                 {
                     Code = elementType.GeneralAccount.Code,
                     Description = elementType.GeneralAccount.Description,
+                    AccountType = elementType.GeneralAccount.AccountType,
                     CreatedAt = elementType.GeneralAccount.CreatedAt,
                     UpdatedAt = elementType.GeneralAccount.UpdatedAt,
                     LignesCount = elementType.GeneralAccount.LignesElementTypes.Count()

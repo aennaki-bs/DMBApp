@@ -173,11 +173,11 @@ namespace DocManagementBackend.Services
             {
                 var configuration = serviceProvider.GetRequiredService<IConfiguration>();
                 
-                var username = Environment.GetEnvironmentVariable("BC_USERNAME") ?? 
+                var username = Environment.GetEnvironmentVariable("USERNAME") ?? 
                               configuration["BcApi:Username"] ?? "ENNAKI";
-                var password = Environment.GetEnvironmentVariable("BC_PASSWORD") ?? 
+                var password = Environment.GetEnvironmentVariable("PASSWORD") ?? 
                               configuration["BcApi:Password"] ?? "Allahislam@12";
-                var domain = Environment.GetEnvironmentVariable("BC_DOMAIN") ?? 
+                var domain = Environment.GetEnvironmentVariable("DOMAIN") ?? 
                             configuration["BcApi:Domain"] ?? "DESKTOP-8FCE015";
 
                 var handler = new HttpClientHandler()

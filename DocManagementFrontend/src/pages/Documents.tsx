@@ -206,10 +206,10 @@ const Documents = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t, tWithParams } = useTranslation();
-
+  
   // Debug: Check if translations are working
-  console.log("Documents page translation test:", t("documents.title"));
-
+  console.log('Documents page translation test:', t('documents.title'));
+  
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -352,17 +352,48 @@ const Documents = () => {
             prev.filter((doc) => !selectedDocuments.includes(doc.id))
           );
           toast.success(
-            tWithParams("documents.documentsDeletedSimulated", {
-              count: selectedDocuments.length,
-            })
+            tWithParams("documents.documentsDeletedSimulated", { count: selectedDocuments.length })
           );
         } else {
-          await documentService.deleteMultipleDocuments(selectedDocuments);
-          toast.success(
-            tWithParams("documents.documentsDeleted", {
-              count: selectedDocuments.length,
-            })
-          );
+          try {
+            await documentService.deleteMultipleDocuments(selectedDocuments);
+            toast.success(
+              tWithParams("documents.documentsDeleted", { count: selectedDocuments.length })
+            );
+          } catch (error: any) {
+            // Handle partial success with detailed information
+            if (error.results) {
+              const { successful, failed, erpArchivedCount = 0, erpArchivedDocuments = [] } = error.results;
+              
+              // Show success message if any documents were deleted
+              if (successful.length > 0) {
+                toast.success(
+                  tWithParams("documents.documentsDeleted", { count: successful.length })
+                );
+              }
+              
+              // Show specific error for ERP-archived documents
+              if (erpArchivedCount > 0) {
+                toast.error(
+                  `${erpArchivedCount} document${erpArchivedCount !== 1 ? 's' : ''} could not be deleted because they are archived to ERP`,
+                  { duration: 6000 }
+                );
+              }
+              
+              // Show generic error for other failures
+              const otherFailures = failed.length - erpArchivedCount;
+              if (otherFailures > 0) {
+                toast.error(
+                  `${otherFailures} document${otherFailures !== 1 ? 's' : ''} failed to delete for other reasons`,
+                  { duration: 4000 }
+                );
+              }
+            } else {
+              // Generic error message
+              toast.error(error.message || t("documents.failedToDelete"));
+            }
+            throw error; // Re-throw to be caught by outer catch block
+          }
         }
         setSelectedDocuments([]);
       }
@@ -372,9 +403,12 @@ const Documents = () => {
       } else {
         setTotalPages(Math.ceil(documents.length / pageSize));
       }
-    } catch (error) {
-      console.error("Failed to delete document(s):", error);
-      toast.error(t("documents.failedToDelete"));
+    } catch (error: any) {
+      // Only show generic error if we haven't already shown specific errors above
+      if (!error.results) {
+        console.error("Failed to delete document(s):", error);
+        toast.error(t("documents.failedToDelete"));
+      }
     } finally {
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
@@ -413,7 +447,7 @@ const Documents = () => {
   };
 
   const sortedItems = useMemo(() => {
-    const sortableItems = [...documents];
+    let sortableItems = [...documents];
 
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
@@ -690,6 +724,8 @@ const Documents = () => {
           openAssignCircuitDialog(selectedDoc);
         }
       },
+      className:
+        "bg-blue-900/30 border-blue-500/30 text-blue-200 hover:text-blue-100 hover:bg-blue-800/50 hover:border-blue-400/50 transition-all duration-200 shadow-md",
     });
   }
 
@@ -699,6 +735,8 @@ const Documents = () => {
     icon: <Trash className="h-4 w-4" />,
     onClick: () => openDeleteDialog(),
     variant: "destructive",
+    className:
+      "bg-red-900/30 border-red-500/30 text-red-300 hover:text-red-200 hover:bg-red-900/50 hover:border-red-400/50 transition-all duration-200 shadow-md",
   });
 
   // Search fields
@@ -712,9 +750,7 @@ const Documents = () => {
   return (
     <div className="space-y-6 p-6">
       <PageHeader
-        title={`TEST TRANSLATION: ${t(
-          "documents.title"
-        )} - ${new Date().toLocaleTimeString()}`}
+        title={`TEST TRANSLATION: ${t("documents.title")} - ${new Date().toLocaleTimeString()}`}
         description={`SUBTITLE TEST: ${t("documents.subtitle")}`}
         icon={<FileText className="h-6 w-6 text-blue-400" />}
         actions={
@@ -744,8 +780,7 @@ const Documents = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button className="bg-blue-600 hover:bg-blue-700" disabled>
-                      <Plus className="mr-2 h-4 w-4" />{" "}
-                      {t("documents.newDocument")}
+                      <Plus className="mr-2 h-4 w-4" /> {t("documents.newDocument")}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
@@ -968,9 +1003,7 @@ const Documents = () => {
                         <Users className="h-4 w-4" />
                       )}
                     </TableHead>
-                    <TableHead className="text-blue-300">
-                      {t("common.status")}
-                    </TableHead>
+                    <TableHead className="text-blue-300">{t("common.status")}</TableHead>
                     <TableHead className="text-blue-300 text-right">
                       {t("common.actions")}
                     </TableHead>
@@ -1107,7 +1140,9 @@ const Documents = () => {
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>{t("documents.onlyAdminCanEdit")}</p>
+                                  <p>
+                                    {t("documents.onlyAdminCanEdit")}
+                                  </p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -1133,9 +1168,7 @@ const Documents = () => {
                 : t("documents.createFirstDocument")
             }
             actionLabel={
-              canManageDocuments && !searchQuery
-                ? t("documents.createDocument")
-                : undefined
+              canManageDocuments && !searchQuery ? t("documents.createDocument") : undefined
             }
             actionIcon={
               canManageDocuments && !searchQuery ? (
@@ -1211,9 +1244,7 @@ const Documents = () => {
             <DialogDescription className="text-blue-300">
               {documentToDelete
                 ? t("documents.deleteConfirmMessage")
-                : tWithParams("documents.deleteMultipleConfirmMessage", {
-                    count: selectedDocuments.length,
-                  })}
+                : tWithParams("documents.deleteMultipleConfirmMessage", { count: selectedDocuments.length })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

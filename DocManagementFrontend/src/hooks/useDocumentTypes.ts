@@ -66,11 +66,7 @@ export const useDocumentTypes = () => {
   };
 
   return {
-    // Return the full filtered and sorted dataset for table operations
-    types: filteredAndSortedTypes,
-    // Also provide paginated types if needed
-    paginatedTypes,
-    allTypes: types, // The original unfiltered dataset
+    types: paginatedTypes,
     isLoading,
     searchQuery,
     setSearchQuery,

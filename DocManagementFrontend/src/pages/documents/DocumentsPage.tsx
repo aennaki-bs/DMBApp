@@ -1,16 +1,40 @@
 import { useState, useEffect } from "react";
 import { useDocumentsData } from "./hooks/useDocumentsData";
-import { DocumentTable } from "@/components/documents/DocumentTable";
+import DocumentsHeader from "./components/DocumentsHeader";
+import DocumentsTable from "./components/DocumentsTable";
+import DocumentsEmptyState from "./components/DocumentsEmptyState";
+import DocumentsFilterBar from "./components/DocumentsFilterBar";
+import SelectedDocumentsBar from "./components/SelectedDocumentsBar";
 import DeleteConfirmDialog from "./components/DeleteConfirmDialog";
 import { Document } from "@/models/document";
-
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { PageLayout } from "@/components/layout/PageLayout";
-import { FileText, Plus } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { PageHeader } from "@/components/shared/PageHeader";
+import {
+  FileText,
+  Plus,
+  GitBranch,
+  Trash2,
+  AlertCircle,
+  FilterX,
+  SlidersHorizontal,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AnimatePresence, motion } from "framer-motion";
+import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
 import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
+import { useDocumentsFilter } from "./hooks/useDocumentsFilter";
 
 const DocumentsPage = () => {
   const { t, tWithParams } = useTranslation();
@@ -20,6 +44,7 @@ const DocumentsPage = () => {
 
   const {
     documents,
+    filteredItems,
     isLoading,
     fetchDocuments,
     deleteDocument,
@@ -30,29 +55,63 @@ const DocumentsPage = () => {
     requestSort,
   } = useDocumentsData();
 
+  // Get filter state to check if filters are applied
+  const { activeFilters, resetFilters } = useDocumentsFilter();
+
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize] = useState(10);
   const [assignCircuitDialogOpen, setAssignCircuitDialogOpen] = useState(false);
   const [documentToAssign, setDocumentToAssign] = useState<Document | null>(
     null
   );
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedDocuments(documents.map((doc) => doc.id));
-    } else {
+  useEffect(() => {
+    setTotalPages(Math.ceil(filteredItems.length / pageSize));
+    setPage(1); // Reset to first page when filters change
+  }, [filteredItems, pageSize]);
+
+  // Check if any filters are applied
+  const hasActiveFilters =
+    activeFilters.searchQuery !== "" ||
+    activeFilters.statusFilter !== "any" ||
+    activeFilters.typeFilter !== "any" ||
+    activeFilters.dateRange !== undefined;
+
+  const getPageDocuments = () => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredItems.slice(start, end);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleSelectDocument = (documentId: number) => {
+    setSelectedDocuments((prev) => {
+      if (prev.includes(documentId)) {
+        return prev.filter((id) => id !== documentId);
+      } else {
+        return [...prev, documentId];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDocuments.length === getPageDocuments().length) {
       setSelectedDocuments([]);
+    } else {
+      setSelectedDocuments(getPageDocuments().map((doc) => doc.id));
     }
   };
 
-  const handleSelectDocument = (id: number, checked: boolean) => {
-    if (checked) {
-      setSelectedDocuments((prev) => [...prev, id]);
-    } else {
-      setSelectedDocuments((prev) => prev.filter((docId) => docId !== id));
-    }
+  const openDeleteDialog = () => {
+    setDeleteDialogOpen(true);
   };
 
   const openDeleteSingleDialog = (documentId: number) => {
@@ -62,50 +121,97 @@ const DocumentsPage = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      if (documentToDelete) {
-        // Single document deletion
+      if (documentToDelete !== null) {
+        // Single document delete
         await deleteDocument(documentToDelete);
-        toast.success("Document deleted successfully");
-        setDocumentToDelete(null);
+        toast.success(t("documents.documentDeleted"));
       } else if (selectedDocuments.length > 0) {
-        // Bulk deletion
-        await deleteMultipleDocuments(selectedDocuments);
-        toast.success(
-          `${selectedDocuments.length} document${
-            selectedDocuments.length > 1 ? "s" : ""
-          } deleted successfully`
-        );
-        setSelectedDocuments([]);
+        // Multiple documents delete with improved error handling
+        try {
+          const results = await deleteMultipleDocuments(selectedDocuments);
+
+          // All deletions were successful
+          if (results.successful.length === selectedDocuments.length) {
+            toast.success(
+              tWithParams("documents.documentsDeleted", { count: results.successful.length })
+            );
+          }
+        } catch (error: any) {
+          // Handle partial success/failure with enhanced ERP archival information
+          if (error.results) {
+            const { successful, failed, erpArchivedCount = 0, erpArchivedDocuments = [] } = error.results;
+
+            if (successful.length > 0 && failed.length > 0) {
+              // Partial success
+              toast.success(
+                tWithParams("documents.documentsDeleted", { count: successful.length })
+              );
+              
+              // Show specific error for ERP-archived documents
+              if (erpArchivedCount > 0) {
+                toast.error(
+                  `${erpArchivedCount} document${erpArchivedCount !== 1 ? 's' : ''} could not be deleted because they are archived to ERP`,
+                  { duration: 6000 }
+                );
+              }
+              
+              // Show generic error for other failures
+              const otherFailures = failed.length - erpArchivedCount;
+              if (otherFailures > 0) {
+                toast.error(
+                  `${otherFailures} document${otherFailures !== 1 ? 's' : ''} failed to delete for other reasons`,
+                  { duration: 4000 }
+                );
+              }
+            } else if (successful.length === 0) {
+              // Complete failure - categorize the failures
+              if (erpArchivedCount === failed.length) {
+                // All failures were due to ERP archival
+                toast.error(
+                  `Cannot delete ${erpArchivedCount} document${erpArchivedCount !== 1 ? 's' : ''} - they are archived to ERP`,
+                  { duration: 6000 }
+                );
+              } else if (erpArchivedCount > 0) {
+                // Mixed failure reasons
+                toast.error(
+                  `${erpArchivedCount} document${erpArchivedCount !== 1 ? 's' : ''} are archived to ERP, ${failed.length - erpArchivedCount} failed for other reasons`,
+                  { duration: 6000 }
+                );
+              } else {
+                // No ERP archival issues, generic failure
+                toast.error(
+                  tWithParams("documents.failedToDeleteAll", { count: failed.length })
+                );
+              }
+            }
+          } else {
+            // Generic error - check if it mentions ERP archival
+            const errorMessage = error.message || t("documents.deleteError");
+            if (errorMessage.includes('archived to ERP')) {
+              toast.error(errorMessage, { duration: 6000 });
+            } else {
+              toast.error(errorMessage);
+            }
+          }
+
+          // Don't return early - we still want to clean up the UI state
+        }
       }
+
+      // Clean up UI state regardless of success/failure
+      setSelectedDocuments([]);
       setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
+
+      // Fetch documents to refresh the list (this will show what was actually deleted)
       fetchDocuments();
     } catch (error) {
       console.error("Error deleting document(s):", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "An unexpected error occurred";
+      toast.error(t("documents.deleteError"));
 
-      if (errorMessage.includes("foreign key constraint")) {
-        toast.error(
-          "Cannot delete document(s) because they are referenced by other records."
-        );
-      } else if (errorMessage.includes("not found")) {
-        toast.error(
-          "Document(s) not found. They may have already been deleted."
-        );
-        // Refresh the list to reflect current state
-        fetchDocuments();
-      } else if (errorMessage.includes("permission")) {
-        toast.error("You don't have permission to delete these document(s).");
-      } else {
-        toast.error(`Failed to delete document(s): ${errorMessage}`);
-      }
+      // Still clean up UI state on error
       setDeleteDialogOpen(false);
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (selectedDocuments.length > 0) {
-      setDeleteDialogOpen(true);
+      setDocumentToDelete(null);
     }
   };
 
@@ -118,45 +224,157 @@ const DocumentsPage = () => {
     setAssignCircuitDialogOpen(false);
     setDocumentToAssign(null);
     fetchDocuments();
+    toast.success(t("documents.circuitAssigned"));
   };
 
-  // Page actions for the header
-  const pageActions = [
-    ...(canManageDocuments
-      ? [
-          {
-            label: t("documents.newDocument"),
-            variant: "default" as const,
-            icon: Plus,
-            onClick: () => setCreateModalOpen(true),
-          },
-        ]
-      : []),
-  ];
-
   return (
-    <PageLayout
-      title={t("documents.title")}
-      subtitle={t("documents.subtitle")}
-      icon={FileText}
-      actions={pageActions}
-    >
-      <DocumentTable
-        documents={documents}
-        selectedDocuments={selectedDocuments}
-        onSelectDocument={handleSelectDocument}
-        onSelectAll={handleSelectAll}
-        onDeleteDocument={openDeleteSingleDialog}
-        onBulkDelete={handleBulkDelete}
-        onEditDocument={(document: Document) => {
-          // This would open an edit modal - for now just log
-          console.log("Edit document:", document);
-        }}
-        onAssignCircuit={openAssignCircuitDialog}
-        canManageDocuments={canManageDocuments}
-        isLoading={isLoading}
-        onRefresh={fetchDocuments}
+    <div className="container mx-auto px-4 py-6">
+      <PageHeader
+        title={t("documents.title")}
+        description={t("documents.subtitle")}
+        icon={<FileText className="h-6 w-6 text-blue-500" />}
+        actions={
+          <>
+            {canManageDocuments ? (
+              <>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                  onClick={() => setCreateModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4" /> {t("documents.newDocument")}
+                </Button>
+
+                {selectedDocuments.length === 1 && (
+                  <Button
+                    variant="outline"
+                    className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20"
+                    onClick={() =>
+                      openAssignCircuitDialog(
+                        documents.find((d) => d.id === selectedDocuments[0])!
+                      )
+                    }
+                  >
+                    <GitBranch className="mr-2 h-4 w-4" /> {t("documents.assignToCircuit")}
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Button className="bg-blue-600 hover:bg-blue-700" disabled>
+                <Plus className="mr-2 h-4 w-4" /> {t("documents.newDocument")}
+              </Button>
+            )}
+          </>
+        }
       />
+
+      {/* Filter Bar */}
+      <DocumentsFilterBar />
+
+      {/* Selected Documents Bar */}
+      <AnimatePresence>
+        {selectedDocuments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <BulkActionsBar
+              selectedCount={selectedDocuments.length}
+              entityName="document"
+              icon={<FileText className="h-4 w-4 text-blue-400" />}
+              actions={[
+                {
+                  id: "delete",
+                  label: t("documents.deleteSelected"),
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: openDeleteDialog,
+                  variant: "destructive",
+                },
+              ]}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <Card className="mt-6 border-gray-800 bg-[#0d1117]/60 backdrop-blur-sm shadow-md">
+        {isLoading ? (
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+              <p className="text-gray-400">{t("documents.loading")}</p>
+            </div>
+          </CardContent>
+        ) : filteredItems.length === 0 ? (
+          <DocumentsEmptyState
+            canManageDocuments={canManageDocuments}
+            onDocumentCreated={fetchDocuments}
+            hasFilters={hasActiveFilters}
+            onClearFilters={resetFilters}
+          />
+        ) : (
+          <>
+            <CardContent className="p-0">
+              <DocumentsTable
+                documents={getPageDocuments()}
+                selectedDocuments={selectedDocuments}
+                canManageDocuments={canManageDocuments}
+                handleSelectDocument={handleSelectDocument}
+                handleSelectAll={handleSelectAll}
+                openDeleteDialog={openDeleteSingleDialog}
+                openAssignCircuitDialog={openAssignCircuitDialog}
+                sortConfig={sortConfig}
+                requestSort={requestSort}
+                page={page}
+                pageSize={pageSize}
+              />
+            </CardContent>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center py-4 border-t border-gray-800">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => handlePageChange(Math.max(1, page - 1))}
+                        className={
+                          page === 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(i + 1)}
+                          isActive={page === i + 1}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          handlePageChange(Math.min(totalPages, page + 1))
+                        }
+                        className={
+                          page === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
+        )}
+      </Card>
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
@@ -184,7 +402,7 @@ const DocumentsPage = () => {
         onOpenChange={setCreateModalOpen}
         onSuccess={fetchDocuments}
       />
-    </PageLayout>
+    </div>
   );
 };
 

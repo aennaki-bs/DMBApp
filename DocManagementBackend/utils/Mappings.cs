@@ -72,6 +72,7 @@ namespace DocManagementBackend.Mappings
             {
                 Code = l.GeneralAccount.Code,
                 Description = l.GeneralAccount.Description,
+                AccountType = l.GeneralAccount.AccountType,
                 CreatedAt = l.GeneralAccount.CreatedAt,
                 UpdatedAt = l.GeneralAccount.UpdatedAt,
                 LignesCount = l.GeneralAccount.LignesElementTypes.Count()
@@ -79,6 +80,7 @@ namespace DocManagementBackend.Mappings
             {
                 Code = l.LignesElementType.GeneralAccount.Code,
                 Description = l.LignesElementType.GeneralAccount.Description,
+                AccountType = l.LignesElementType.GeneralAccount.AccountType,
                 CreatedAt = l.LignesElementType.GeneralAccount.CreatedAt,
                 UpdatedAt = l.LignesElementType.GeneralAccount.UpdatedAt,
                 LignesCount = l.LignesElementType.GeneralAccount.LignesElementTypes.Count()
@@ -94,6 +96,17 @@ namespace DocManagementBackend.Mappings
                 UpdatedAt = l.Location.UpdatedAt
             },
             
+            // Unit of measure reference (only for Item types)
+            UnitCode = l.UnitCode,
+            Unit = l.Unit == null ? null : new UniteCodeDto
+            {
+                Code = l.Unit.Code,
+                Description = l.Unit.Description,
+                CreatedAt = l.Unit.CreatedAt,
+                UpdatedAt = l.Unit.UpdatedAt,
+                ItemsCount = l.Unit.Items.Count()
+            },
+            
             // Pricing fields
             Quantity = l.Quantity,
             PriceHT = l.PriceHT,
@@ -105,6 +118,9 @@ namespace DocManagementBackend.Mappings
             AmountHT = l.AmountHT,
             AmountVAT = l.AmountVAT,
             AmountTTC = l.AmountTTC,
+            
+            // ERP Integration field
+            ERPLineCode = l.ERPLineCode,
             
             CreatedAt = l.CreatedAt,
             UpdatedAt = l.UpdatedAt,
@@ -121,6 +137,7 @@ namespace DocManagementBackend.Mappings
                     ? null
                     : new DocumentTypeDto
                     {
+                        TypeNumber = l.Document.DocumentType.TypeNumber,
                         TypeKey = l.Document.DocumentType.TypeKey,
                         TypeName = l.Document.DocumentType.TypeName,
                         TypeAttr = l.Document.DocumentType.TypeAttr,
@@ -209,6 +226,7 @@ namespace DocManagementBackend.Mappings
                 {
                     Code = s.Ligne.LignesElementType.GeneralAccount.Code,
                     Description = s.Ligne.LignesElementType.GeneralAccount.Description,
+                    AccountType = s.Ligne.LignesElementType.GeneralAccount.AccountType,
                     CreatedAt = s.Ligne.LignesElementType.GeneralAccount.CreatedAt,
                     UpdatedAt = s.Ligne.LignesElementType.GeneralAccount.UpdatedAt,
                     LignesCount = s.Ligne.LignesElementType.GeneralAccount.LignesElementTypes.Count()
@@ -222,6 +240,17 @@ namespace DocManagementBackend.Mappings
                     Description = s.Ligne.Location.Description,
                     CreatedAt = s.Ligne.Location.CreatedAt,
                     UpdatedAt = s.Ligne.Location.UpdatedAt
+                },
+                
+                // Unit of measure reference (only for Item types)
+                UnitCode = s.Ligne.UnitCode,
+                Unit = s.Ligne.Unit == null ? null : new UniteCodeDto
+                {
+                    Code = s.Ligne.Unit.Code,
+                    Description = s.Ligne.Unit.Description,
+                    CreatedAt = s.Ligne.Unit.CreatedAt,
+                    UpdatedAt = s.Ligne.Unit.UpdatedAt,
+                    ItemsCount = s.Ligne.Unit.Items.Count()
                 },
                 
                 // Pricing fields
@@ -251,6 +280,7 @@ namespace DocManagementBackend.Mappings
                         ? null
                         : new DocumentTypeDto
                         {
+                            TypeNumber = s.Ligne.Document.DocumentType.TypeNumber,
                             TypeKey = s.Ligne.Document.DocumentType.TypeKey,
                             TypeName = s.Ligne.Document.DocumentType.TypeName,
                             TypeAttr = s.Ligne.Document.DocumentType.TypeAttr,
@@ -296,6 +326,7 @@ namespace DocManagementBackend.Mappings
             TypeId = d.TypeId,
             DocumentType = new DocumentTypeDto
             {
+                TypeNumber = d.DocumentType!.TypeNumber,
                 TypeKey = d.DocumentType!.TypeKey,
                 TypeName = d.DocumentType!.TypeName,
                 TypeAttr = d.DocumentType.TypeAttr,
@@ -350,7 +381,10 @@ namespace DocManagementBackend.Mappings
             CustomerVendorName = d.CustomerVendorName,
             CustomerVendorAddress = d.CustomerVendorAddress,
             CustomerVendorCity = d.CustomerVendorCity,
-            CustomerVendorCountry = d.CustomerVendorCountry
+            CustomerVendorCountry = d.CustomerVendorCountry,
+            
+            // ERP Integration
+            ERPDocumentCode = d.ERPDocumentCode
         };
     }
 

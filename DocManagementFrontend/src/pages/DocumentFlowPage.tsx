@@ -83,7 +83,7 @@ const DocumentFlowPage = () => {
   const handleMoveToStatus = (statusId: number) => {
     if (workflowStatus && statusId) {
       // Find the status title from available transitions
-      const targetStatus = workflowStatus.availableStatusTransitions?.find(
+      let targetStatus = workflowStatus.availableStatusTransitions?.find(
         s => s.statusId === statusId
       );
       let targetStatusTitle = targetStatus?.title;

@@ -29,7 +29,7 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var uniteCodes = await _context.UniteCodes
+            var uniteCodes = await _context.UnitOfMeasures
                 .Select(uc => new UniteCodeDto
                 {
                     Code = uc.Code,
@@ -53,7 +53,7 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
             
-            var uniteCodes = await _context.UniteCodes
+            var uniteCodes = await _context.UnitOfMeasures
                 .Select(uc => new UniteCodeSimpleDto
                 {
                     Code = uc.Code,
@@ -73,7 +73,7 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
             
-            var uniteCode = await _context.UniteCodes
+            var uniteCode = await _context.UnitOfMeasures
                 .Where(uc => uc.Code == code)
                 .Select(uc => new UniteCodeDto
                 {
@@ -102,7 +102,7 @@ namespace DocManagementBackend.Controllers
             if (string.IsNullOrWhiteSpace(request.Code))
                 return BadRequest("Code is required.");
 
-            var query = _context.UniteCodes.AsQueryable();
+            var query = _context.UnitOfMeasures.AsQueryable();
             
             // Exclude the current code if provided (for edit scenarios)
             if (!string.IsNullOrWhiteSpace(request.ExcludeCode))
@@ -130,13 +130,13 @@ namespace DocManagementBackend.Controllers
                 return BadRequest("Description is required.");
 
             // Check if code already exists
-            var existingCode = await _context.UniteCodes
+            var existingCode = await _context.UnitOfMeasures
                 .AnyAsync(uc => uc.Code.ToUpper() == request.Code.ToUpper());
 
             if (existingCode)
                 return BadRequest("A unite code with this code already exists.");
 
-            var uniteCode = new UniteCode
+            var uniteCode = new UnitOfMeasure
             {
                 Code = request.Code.ToUpper().Trim(),
                 Description = request.Description.Trim(),
@@ -144,7 +144,7 @@ namespace DocManagementBackend.Controllers
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _context.UniteCodes.Add(uniteCode);
+            _context.UnitOfMeasures.Add(uniteCode);
 
             try
             {
@@ -178,7 +178,7 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var uniteCode = await _context.UniteCodes
+            var uniteCode = await _context.UnitOfMeasures
                 .Include(uc => uc.Items)
                 .FirstOrDefaultAsync(uc => uc.Code == code);
                 
@@ -192,7 +192,7 @@ namespace DocManagementBackend.Controllers
                 var newCode = request.Code.ToUpper().Trim();
                 
                 // Check for uniqueness
-                var existingCode = await _context.UniteCodes
+                var existingCode = await _context.UnitOfMeasures
                     .AnyAsync(uc => uc.Code.ToUpper() == newCode);
 
                 if (existingCode)
@@ -201,8 +201,8 @@ namespace DocManagementBackend.Controllers
                 using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    // Create new UniteCode entity
-                    var newUniteCode = new UniteCode
+                    // Create new UnitOfMeasure entity
+                    var newUniteCode = new UnitOfMeasure
                     {
                         Code = newCode,
                         Description = !string.IsNullOrWhiteSpace(request.Description) 
@@ -213,7 +213,7 @@ namespace DocManagementBackend.Controllers
                         ItemsCount = uniteCode.ItemsCount
                     };
 
-                    _context.UniteCodes.Add(newUniteCode);
+                    _context.UnitOfMeasures.Add(newUniteCode);
                     await _context.SaveChangesAsync();
 
                     // Update all Items that reference the old code
@@ -227,8 +227,8 @@ namespace DocManagementBackend.Controllers
                         item.UpdatedAt = DateTime.UtcNow;
                     }
 
-                    // Remove the old UniteCode
-                    _context.UniteCodes.Remove(uniteCode);
+                    // Remove the old UnitOfMeasure
+                    _context.UnitOfMeasures.Remove(uniteCode);
                     
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
@@ -267,7 +267,7 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
 
-            var uniteCode = await _context.UniteCodes
+            var uniteCode = await _context.UnitOfMeasures
                 .Include(uc => uc.Items)
                 .FirstOrDefaultAsync(uc => uc.Code == code);
 
@@ -278,7 +278,7 @@ namespace DocManagementBackend.Controllers
             if (uniteCode.Items.Any())
                 return BadRequest("Cannot delete unite code. There are items associated with it.");
 
-            _context.UniteCodes.Remove(uniteCode);
+            _context.UnitOfMeasures.Remove(uniteCode);
 
             try
             {

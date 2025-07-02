@@ -21,6 +21,7 @@ import {
   Calendar,
   Loader2,
   FileWarning,
+  Check,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -71,8 +72,16 @@ export const TypeSelectionWithDateFilterStep = ({
   // Custom select state
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [subtypeDropdownOpen, setSubtypeDropdownOpen] = useState(false);
+  const [hasShownDateError, setHasShownDateError] = useState(false);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
   const typeDropdownRef = useRef<HTMLDivElement>(null);
   const subtypeDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Reset flags when date or type changes (but not when subtype changes to avoid infinite loops)
+  useEffect(() => {
+    setHasShownDateError(false);
+    setHasAutoSelected(false);
+  }, [documentDate, selectedTypeId]);
 
   const selectedType = selectedTypeId
     ? documentTypes.find((type) => type.id === selectedTypeId)
@@ -264,6 +273,21 @@ export const TypeSelectionWithDateFilterStep = ({
             if (activeSeries.length > 0) {
               setFilteredSubTypes(activeSeries);
               setNoSubTypesAvailable(false);
+
+              // Auto-select if there's only one active series (and we haven't already auto-selected)
+              if (activeSeries.length === 1 && !selectedSubTypeId && !hasAutoSelected) {
+                const autoSelectedSeries = activeSeries[0];
+                console.log('Auto-selecting single available series:', autoSelectedSeries.subTypeKey);
+                setHasAutoSelected(true); // Set flag before calling onSubTypeChange to prevent re-triggering
+                onSubTypeChange(autoSelectedSeries.id?.toString() || "");
+                toast.success(
+                  `Series "${autoSelectedSeries.subTypeKey}" automatically selected`,
+                  {
+                    description: "This is the only valid series available for the selected type and date.",
+                    duration: 4000,
+                  }
+                );
+              }
             } else {
               setFilteredSubTypes([]);
               setNoSubTypesAvailable(true);
@@ -277,18 +301,7 @@ export const TypeSelectionWithDateFilterStep = ({
               );
             }
 
-            // If the currently selected series is not valid for this date, clear it
-            if (
-              selectedSubTypeId &&
-              !activeSeries.find((s) => s.id === selectedSubTypeId)
-            ) {
-              onSubTypeChange("");
-              toast.info("Selected series is not valid for the chosen date", {
-                description:
-                  "Your selection has been reset. Please choose from available series.",
-                duration: 3000,
-              });
-            }
+            // Note: Invalid subtype handling is now done in a separate useEffect to avoid infinite loops
           } else {
             console.error("Invalid response format:", response.data);
             setFilteredSubTypes([]);
@@ -314,7 +327,30 @@ export const TypeSelectionWithDateFilterStep = ({
       setFilteredSubTypes([]);
       setNoSubTypesAvailable(false);
     }
-  }, [selectedTypeId, documentDate, selectedSubTypeId, onSubTypeChange]);
+  }, [selectedTypeId, documentDate, onSubTypeChange, hasAutoSelected]);
+
+  // Handle invalid subtype selection separately to avoid infinite loops
+  useEffect(() => {
+    if (
+      selectedSubTypeId &&
+      filteredSubTypes.length > 0 &&
+      !filteredSubTypes.find((s) => s.id === selectedSubTypeId)
+    ) {
+      onSubTypeChange("");
+      // Only show error if we haven't shown it recently
+      if (!hasShownDateError) {
+        setHasShownDateError(true);
+        toast.error("Subtype not valid for selected date", {
+          description:
+            "The selected subtype is only valid for a different date range.",
+          duration: 6000,
+        });
+        
+        // Reset the flag after a delay to allow showing the error again if needed
+        setTimeout(() => setHasShownDateError(false), 10000);
+      }
+    }
+  }, [selectedSubTypeId, filteredSubTypes, hasShownDateError, onSubTypeChange]);
 
   const handleTypeSelect = (typeId: string) => {
     onTypeChange(typeId);
@@ -548,9 +584,46 @@ export const TypeSelectionWithDateFilterStep = ({
                 </div>
               </CardContent>
             </Card>
+          ) : filteredSubTypes.length === 1 ? (
+            // Show confirmation card when there's only one series (auto-selected)
+            <Card className="bg-green-900/20 border-green-800/40">
+              <CardContent className="p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="h-5 w-5 mt-0.5 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
+                    <Check className="h-3 w-3 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    {/* <h4 className="text-sm font-medium text-green-400 mb-2">
+                      Series Automatically Selected
+                    </h4> */}
+                    <div className="bg-gray-800/50 rounded-md p-3 border border-gray-700">
+                      <div className="font-medium text-white">
+                        {selectedSubType?.subTypeKey}
+                      </div>
+                      {selectedSubType?.name && (
+                        <div className="text-sm text-gray-300 mt-1">
+                          {selectedSubType.name}
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-400 flex items-center mt-2">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Valid: {selectedSubType && format(new Date(selectedSubType.startDate), "MMM d, yyyy")} -{" "}
+                        {selectedSubType && format(new Date(selectedSubType.endDate), "MMM d, yyyy")}
+                      </div>
+                    </div>
+                    <p className="text-sm text-green-300 mt-2">
+                      This is the only valid series for <strong>{selectedType?.typeName}</strong> on the selected date.
+                    </p>
+                    <p className="text-xs text-gray-400 mt-3">
+                      You can proceed to the next step or change the document type if needed.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             <>
-              {/* Custom Series Select */}
+              {/* Custom Series Select - Only show when there are multiple options */}
               <div className="relative" ref={subtypeDropdownRef}>
                 <button
                   type="button"
@@ -620,16 +693,18 @@ export const TypeSelectionWithDateFilterStep = ({
               {subTypeError}
             </p>
           )}
-          <p className="text-sm text-gray-400">
-            Only showing{" "}
-            <span className="text-green-400 font-medium">active</span> series
-            valid for the selected date
-          </p>
+          {filteredSubTypes.length > 1 && (
+            <p className="text-sm text-gray-400">
+              Only showing{" "}
+              <span className="text-green-400 font-medium">active</span> series
+              valid for the selected date
+            </p>
+          )}
         </div>
       )}
 
-      {/* Show selected series details */}
-      {selectedSubType && (
+      {/* Show selected series details - only for multiple series selection */}
+      {selectedSubType && filteredSubTypes.length > 1 && (
         <Card className="bg-blue-900/20 border-blue-800/40 mt-4">
           <CardContent className="p-4">
             <div className="flex items-start gap-2">

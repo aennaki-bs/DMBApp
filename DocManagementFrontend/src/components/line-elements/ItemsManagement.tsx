@@ -171,7 +171,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   };
 
   const filteredAndSortedItems = useMemo(() => {
-    const filtered = items.filter((item) => {
+    let filtered = items.filter((item) => {
       // Search filter
       const searchValue = searchQuery.toLowerCase();
       let matchesSearch = true;
@@ -533,6 +533,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
           <Button
             onClick={() => setIsCreateDialogOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+            disabled
           >
             <Plus className="h-4 w-4" />
             Create Item
@@ -541,13 +542,13 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
+      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden  dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
         {filteredAndSortedItems.length > 0 ? (
           <>
             {/* Fixed Header - Never Scrolls */}
             <div className="min-w-[900px] border-b border-blue-200 dark:border-blue-900/30">
               <Table className="table-fixed w-full">
-                <TableHeader className=" dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
+                <TableHeader className="bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
                   <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
                     <TableHead className="w-[50px]">
                       <div className="flex items-center justify-center">
@@ -604,7 +605,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                     {paginatedItems.map((item) => (
                       <TableRow
                         key={item.code}
-                        className=" dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/20 transition-colors duration-150"
+                        className="border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/20 transition-colors duration-150"
                       >
                         <TableCell className="w-[50px]">
                           <div className="flex items-center justify-center">
@@ -654,17 +655,8 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                               variant="ghost"
                               size="sm"
                               onClick={() => openEditDialog(item)}
-                              disabled={item.elementTypesCount > 0}
-                              className={`h-8 w-8 p-0 ${
-                                item.elementTypesCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
-                                  : "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30"
-                              }`}
-                              title={
-                                item.elementTypesCount > 0
-                                  ? "Cannot edit: Item is used in document lines"
-                                  : "Edit item"
-                              }
+                              className="h-8 w-8 p-0 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30"
+                              title="Edit item"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -672,17 +664,9 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                               variant="ghost"
                               size="sm"
                               onClick={() => openDeleteDialog(item)}
-                              disabled={item.elementTypesCount > 0}
-                              className={`h-8 w-8 p-0 ${
-                                item.elementTypesCount > 0
-                                  ? "opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
-                                  : "text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
-                              }`}
-                              title={
-                                item.elementTypesCount > 0
-                                  ? "Cannot delete: Item is used in document lines"
-                                  : "Delete item"
-                              }
+                              disabled
+                              className="h-8 w-8 p-0 opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                              title="Delete functionality disabled"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -760,6 +744,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                     size="sm"
                     className="bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-500/40 text-red-700 dark:text-red-200 hover:text-red-800 dark:hover:text-red-100 hover:bg-red-200 dark:hover:bg-red-900/60 hover:border-red-400 dark:hover:border-red-400/60 transition-all duration-200 shadow-lg min-w-[80px] font-medium"
                     onClick={() => setIsBulkDeleteDialogOpen(true)}
+                    disabled
                   >
                     <Trash2 className="w-4 h-4 mr-1.5" />
                     Delete

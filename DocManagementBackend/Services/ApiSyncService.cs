@@ -11,6 +11,9 @@ namespace DocManagementBackend.Services
         Task<SyncResult> SyncCustomersAsync();
         Task<SyncResult> SyncVendorsAsync();
         Task<SyncResult> SyncLocationsAsync();
+        Task<SyncResult> SyncResponsibilityCentresAsync();
+        Task<SyncResult> SyncUnitOfMeasuresAsync();
+        Task<SyncResult> SyncItemUnitOfMeasuresAsync();
         Task<List<SyncResult>> SyncAllAsync();
         Task<SyncResult> SyncEndpointAsync(ApiEndpointType endpointType);
         Task InitializeConfigurationAsync();
@@ -41,9 +44,12 @@ namespace DocManagementBackend.Services
             {
                 new() { Name = "Items", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/items", Type = ApiEndpointType.Items, DefaultPollingIntervalMinutes = 60 },
                 new() { Name = "GeneralAccounts", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/accounts", Type = ApiEndpointType.GeneralAccounts, DefaultPollingIntervalMinutes = 60 },
-                new() { Name = "Customers", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/customers", Type = ApiEndpointType.Customers, DefaultPollingIntervalMinutes = 30 },
-                new() { Name = "Vendors", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/vendors", Type = ApiEndpointType.Vendors, DefaultPollingIntervalMinutes = 30 },
-                new() { Name = "Locations", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/locations", Type = ApiEndpointType.Locations, DefaultPollingIntervalMinutes = 60 }
+                new() { Name = "Customers", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/customers", Type = ApiEndpointType.Customers, DefaultPollingIntervalMinutes = 60 },
+                new() { Name = "Vendors", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/vendors", Type = ApiEndpointType.Vendors, DefaultPollingIntervalMinutes = 60 },
+                new() { Name = "Locations", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/locations", Type = ApiEndpointType.Locations, DefaultPollingIntervalMinutes = 60 },
+                new() { Name = "ResponsibilityCentres", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/responsibilityCenters", Type = ApiEndpointType.ResponsibilityCentres, DefaultPollingIntervalMinutes = 60 },
+                new() { Name = "UnitOfMeasures", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/UnitofMeasures", Type = ApiEndpointType.UnitOfMeasures, DefaultPollingIntervalMinutes = 60 },
+                new() { Name = "ItemUnitOfMeasures", Url = "http://localhost:25048/BC250/api/bslink/docverse/v1.0/itemnitofMeasures", Type = ApiEndpointType.ItemUnitOfMeasures, DefaultPollingIntervalMinutes = 30 }
             };
 
             foreach (var endpoint in endpoints)
@@ -99,6 +105,21 @@ namespace DocManagementBackend.Services
             return await SyncEndpointAsync(ApiEndpointType.Locations);
         }
 
+        public async Task<SyncResult> SyncResponsibilityCentresAsync()
+        {
+            return await SyncEndpointAsync(ApiEndpointType.ResponsibilityCentres);
+        }
+
+        public async Task<SyncResult> SyncUnitOfMeasuresAsync()
+        {
+            return await SyncEndpointAsync(ApiEndpointType.UnitOfMeasures);
+        }
+
+        public async Task<SyncResult> SyncItemUnitOfMeasuresAsync()
+        {
+            return await SyncEndpointAsync(ApiEndpointType.ItemUnitOfMeasures);
+        }
+
         public async Task<List<SyncResult>> SyncAllAsync()
         {
             var results = new List<SyncResult>();
@@ -142,6 +163,15 @@ namespace DocManagementBackend.Services
                     case ApiEndpointType.Locations:
                         await SyncLocationsInternalAsync(result);
                         break;
+                    case ApiEndpointType.ResponsibilityCentres:
+                        await SyncResponsibilityCentresInternalAsync(result);
+                        break;
+                    case ApiEndpointType.UnitOfMeasures:
+                        await SyncUnitOfMeasuresInternalAsync(result);
+                        break;
+                    case ApiEndpointType.ItemUnitOfMeasures:
+                        await SyncItemUnitOfMeasuresInternalAsync(result);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(endpointType), endpointType, null);
                 }
@@ -177,8 +207,8 @@ namespace DocManagementBackend.Services
 
             result.RecordsProcessed = apiResponse.Value.Count;
 
-            // Get all existing UniteCodes to check foreign key constraints
-            var existingUnitCodes = await _context.UniteCodes
+                            // Get all existing UnitOfMeasures to check foreign key constraints
+                var existingUnitCodes = await _context.UnitOfMeasures
                 .Select(uc => uc.Code)
                 .ToHashSetAsync();
 
@@ -197,27 +227,11 @@ namespace DocManagementBackend.Services
                     var existingItem = await _context.Items.FindAsync(bcItem.No);
                     if (existingItem == null)
                     {
-                        // Determine Unite value - use Base_Unit_of_Measure if it exists in UniteCodes
-                        string? uniteValue = null;
-                        if (!string.IsNullOrWhiteSpace(bcItem.Base_Unit_of_Measure))
-                        {
-                            var trimmedUnit = bcItem.Base_Unit_of_Measure.Trim();
-                            if (existingUnitCodes.Contains(trimmedUnit))
-                            {
-                                uniteValue = trimmedUnit;
-                            }
-                            else
-                            {
-                                _logger.LogWarning("Unit code '{UnitCode}' for item '{ItemCode}' not found in UniteCodes table, setting Unite to null", 
-                                    trimmedUnit, bcItem.No);
-                            }
-                        }
-
                         var newItem = new Item
                         {
                             Code = bcItem.No.Trim(),
-                            Description = (bcItem.Description ?? "Unknown Item").Trim(),
-                            Unite = uniteValue, // Will be null if unit doesn't exist or is empty
+                            Description = (bcItem.Description ?? "").Trim(),
+                            Unite = (bcItem.BaseUnitofMeasure ?? "").Trim(),
                             CreatedAt = DateTime.UtcNow,
                             UpdatedAt = DateTime.UtcNow
                         };
@@ -277,8 +291,8 @@ namespace DocManagementBackend.Services
                         var newAccount = new GeneralAccounts
                         {
                             Code = bcAccount.No.Trim(),
-                            Description = (bcAccount.Name ?? "Unknown Account").Trim(),
-                            Type = GeneralAccountType.Asset, // Default value since we don't have this info from BC API
+                            Description = (bcAccount.Name ?? "").Trim(),
+                            AccountType = (bcAccount.IncomeBalance ?? "").Trim(),
                             LinesCount = 0,
                             CreatedAt = DateTime.UtcNow,
                             UpdatedAt = DateTime.UtcNow
@@ -339,7 +353,7 @@ namespace DocManagementBackend.Services
                         var newCustomer = new Customer
                         {
                             Code = bcCustomer.No.Trim(),
-                            Name = (bcCustomer.Name ?? "Unknown Customer").Trim(),
+                            Name = (bcCustomer.Name ?? "").Trim(),
                             Address = (bcCustomer.Address ?? string.Empty).Trim(),
                             City = (bcCustomer.City ?? string.Empty).Trim(),
                             Country = (bcCustomer.Country ?? string.Empty).Trim(),
@@ -403,7 +417,7 @@ namespace DocManagementBackend.Services
                         var newVendor = new Vendor
                         {
                             VendorCode = bcVendor.No.Trim(),
-                            Name = (bcVendor.Name ?? "Unknown Vendor").Trim(),
+                            Name = (bcVendor.Name ?? "").Trim(),
                             Address = (bcVendor.Address ?? string.Empty).Trim(),
                             City = (bcVendor.City ?? string.Empty).Trim(),
                             Country = (bcVendor.Country ?? string.Empty).Trim(),
@@ -494,6 +508,243 @@ namespace DocManagementBackend.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving locations to database: {Error}", ex.Message);
+                throw;
+            }
+        }
+
+        private async Task SyncResponsibilityCentresInternalAsync(SyncResult result)
+        {
+            var apiResponse = await _bcApiClient.GetResponsibilityCentresAsync();
+            if (apiResponse?.Value == null)
+            {
+                throw new InvalidOperationException("Failed to fetch responsibility centres from BC API");
+            }
+
+            result.RecordsProcessed = apiResponse.Value.Count;
+
+            foreach (var bcResponsibilityCentre in apiResponse.Value)
+            {
+                try
+                {
+                    // Skip records with missing required fields
+                    if (string.IsNullOrWhiteSpace(bcResponsibilityCentre.Code))
+                    {
+                        _logger.LogWarning("Skipping responsibility centre with missing Code field");
+                        result.RecordsSkipped++;
+                        continue;
+                    }
+
+                    var existingCentre = await _context.ResponsibilityCentres
+                        .FirstOrDefaultAsync(rc => rc.Code == bcResponsibilityCentre.Code);
+                    if (existingCentre == null)
+                    {
+                        var newCentre = new ResponsibilityCentre
+                        {
+                            Code = bcResponsibilityCentre.Code.Trim(),
+                            Descr = (!string.IsNullOrWhiteSpace(bcResponsibilityCentre.Name) 
+                                    ? bcResponsibilityCentre.Name 
+                                    : bcResponsibilityCentre.Description ?? "Unknown Centre").Trim(),
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+
+                        _context.ResponsibilityCentres.Add(newCentre);
+                        result.RecordsInserted++;
+                    }
+                    else
+                    {
+                        // Update description if it has changed
+                        var newDescription = (!string.IsNullOrWhiteSpace(bcResponsibilityCentre.Name) 
+                                            ? bcResponsibilityCentre.Name 
+                                            : bcResponsibilityCentre.Description ?? "Unknown Centre").Trim();
+                        if (existingCentre.Descr != newDescription)
+                        {
+                            existingCentre.Descr = newDescription;
+                            existingCentre.UpdatedAt = DateTime.UtcNow;
+                        }
+                        result.RecordsSkipped++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing responsibility centre {Code}: {Error}", 
+                        bcResponsibilityCentre.Code ?? "Unknown", ex.Message);
+                    result.RecordsSkipped++;
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving responsibility centres to database: {Error}", ex.Message);
+                throw;
+            }
+        }
+
+        private async Task SyncUnitOfMeasuresInternalAsync(SyncResult result)
+        {
+            var apiResponse = await _bcApiClient.GetUnitOfMeasuresAsync();
+            if (apiResponse?.Value == null)
+            {
+                throw new InvalidOperationException("Failed to fetch units of measure from BC API");
+            }
+
+            result.RecordsProcessed = apiResponse.Value.Count;
+
+            foreach (var bcUnitOfMeasure in apiResponse.Value)
+            {
+                try
+                {
+                    // Skip records with missing required fields
+                    if (string.IsNullOrWhiteSpace(bcUnitOfMeasure.Code))
+                    {
+                        _logger.LogWarning("Skipping unit of measure with missing Code field");
+                        result.RecordsSkipped++;
+                        continue;
+                    }
+
+                    var existingUnit = await _context.UnitOfMeasures.FindAsync(bcUnitOfMeasure.Code);
+                    if (existingUnit == null)
+                    {
+                        var newUnit = new UnitOfMeasure
+                        {
+                            Code = bcUnitOfMeasure.Code.Trim(),
+                            Description = (bcUnitOfMeasure.Description ?? "Unknown Unit").Trim(),
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow,
+                            ItemsCount = 0
+                        };
+
+                        _context.UnitOfMeasures.Add(newUnit);
+                        result.RecordsInserted++;
+                    }
+                    else
+                    {
+                        // Update description if it has changed
+                        var newDescription = (bcUnitOfMeasure.Description ?? "Unknown Unit").Trim();
+                        if (existingUnit.Description != newDescription)
+                        {
+                            existingUnit.Description = newDescription;
+                            existingUnit.UpdatedAt = DateTime.UtcNow;
+                        }
+                        result.RecordsSkipped++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing unit of measure {Code}: {Error}", 
+                        bcUnitOfMeasure.Code ?? "Unknown", ex.Message);
+                    result.RecordsSkipped++;
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving units of measure to database: {Error}", ex.Message);
+                throw;
+            }
+        }
+
+        private async Task SyncItemUnitOfMeasuresInternalAsync(SyncResult result)
+        {
+            var apiResponse = await _bcApiClient.GetItemUnitOfMeasuresAsync();
+            if (apiResponse?.Value == null)
+            {
+                throw new InvalidOperationException("Failed to fetch item units of measure from BC API");
+            }
+
+            result.RecordsProcessed = apiResponse.Value.Count;
+
+            // Get all existing items and units of measure to validate foreign keys
+            var existingItems = await _context.Items
+                .Select(i => i.Code)
+                .ToHashSetAsync();
+
+            var existingUnits = await _context.UnitOfMeasures
+                .Select(u => u.Code)
+                .ToHashSetAsync();
+
+            foreach (var bcItemUnitOfMeasure in apiResponse.Value)
+            {
+                try
+                {
+                    // Skip records with missing required fields
+                    if (string.IsNullOrWhiteSpace(bcItemUnitOfMeasure.ItemNo) || 
+                        string.IsNullOrWhiteSpace(bcItemUnitOfMeasure.Code))
+                    {
+                        _logger.LogWarning("Skipping item unit of measure with missing ItemNo or Code field");
+                        result.RecordsSkipped++;
+                        continue;
+                    }
+
+                    // Validate foreign key constraints
+                    if (!existingItems.Contains(bcItemUnitOfMeasure.ItemNo))
+                    {
+                        _logger.LogWarning("Item '{ItemNo}' for item unit of measure not found in Items table, skipping",
+                            bcItemUnitOfMeasure.ItemNo);
+                        result.RecordsSkipped++;
+                        continue;
+                    }
+
+                    if (!existingUnits.Contains(bcItemUnitOfMeasure.Code))
+                    {
+                        _logger.LogWarning("Unit '{Code}' for item unit of measure not found in UnitOfMeasures table, skipping",
+                            bcItemUnitOfMeasure.Code);
+                        result.RecordsSkipped++;
+                        continue;
+                    }
+
+                    var existingItemUnit = await _context.ItemUnitOfMeasures
+                        .FirstOrDefaultAsync(ium => ium.ItemCode == bcItemUnitOfMeasure.ItemNo && 
+                                                   ium.UnitOfMeasureCode == bcItemUnitOfMeasure.Code);
+                    
+                    if (existingItemUnit == null)
+                    {
+                        var newItemUnit = new ItemUnitOfMeasure
+                        {
+                            ItemCode = bcItemUnitOfMeasure.ItemNo.Trim(),
+                            UnitOfMeasureCode = bcItemUnitOfMeasure.Code.Trim(),
+                            QtyPerUnitOfMeasure = bcItemUnitOfMeasure.QtyperUnitofMeasure,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+
+                        _context.ItemUnitOfMeasures.Add(newItemUnit);
+                        result.RecordsInserted++;
+                    }
+                    else
+                    {
+                        // Update quantity if it has changed
+                        if (existingItemUnit.QtyPerUnitOfMeasure != bcItemUnitOfMeasure.QtyperUnitofMeasure)
+                        {
+                            existingItemUnit.QtyPerUnitOfMeasure = bcItemUnitOfMeasure.QtyperUnitofMeasure;
+                            existingItemUnit.UpdatedAt = DateTime.UtcNow;
+                        }
+                        result.RecordsSkipped++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing item unit of measure {ItemNo}-{Code}: {Error}", 
+                        bcItemUnitOfMeasure.ItemNo ?? "Unknown", bcItemUnitOfMeasure.Code ?? "Unknown", ex.Message);
+                    result.RecordsSkipped++;
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving item units of measure to database: {Error}", ex.Message);
                 throw;
             }
         }

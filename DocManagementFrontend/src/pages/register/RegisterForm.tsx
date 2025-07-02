@@ -477,10 +477,10 @@ const RegisterForm: React.FC = () => {
                 strokeLinecap="round"
               />
             </svg>
-                  </div>
+          </div>
           <h3 className="text-sm font-medium text-blue-300">
             Enterprise Resource Platform
-                    </h3>
+          </h3>
           <p className="text-xs text-blue-400 mt-1">
             Document Management System
           </p>
@@ -601,7 +601,7 @@ const RegisterForm: React.FC = () => {
               </div>
               {steps[currentStep].title}
               <span className="ml-auto px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded-full border border-blue-800/30">
-                Step {currentStep + 1} of 8
+                Step {currentStep + 1} of 7
               </span>
             </h1>
             <p className="text-blue-300 relative z-10">

@@ -65,16 +65,41 @@ export function DirectEditUserEmailModal({
 
     try {
       setIsCheckingEmail(true);
-      // Replace with your actual API call to check email
-      const exists = await adminService
-        .checkEmailExists(email)
-        .catch(() => false);
+      const exists = await adminService.checkEmailExists(email);
 
       if (exists) {
         setEmailError("This email is already registered in the system");
+      } else {
+        // Clear any previous error if email is available
+        if (emailError === "This email is already registered in the system") {
+          setEmailError("");
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error checking email:", error);
+      
+      // Handle specific errors from checkEmailExists
+      if (error.message) {
+        if (error.message.includes('Email is required') || 
+            error.message.includes('valid email address')) {
+          // These are validation errors - let the validateEmailFormat handle them
+          return;
+        } else if (error.message.includes('connect to server') || 
+                   error.message.includes('internet connection')) {
+          setEmailError("Unable to verify email availability. Please check your connection and try again.");
+        } else if (error.message.includes('Server error') || 
+                   error.message.includes('service not available')) {
+          setEmailError("Email verification service temporarily unavailable. You may continue, but please ensure the email is correct.");
+        } else if (error.message.includes('Authentication required') || 
+                   error.message.includes('permission')) {
+          setEmailError("Unable to verify email availability due to permissions. Please contact your administrator.");
+        } else {
+          // Generic error message for other cases
+          setEmailError("Unable to verify email availability. Please ensure the email is correct.");
+        }
+      } else {
+        setEmailError("Unable to verify email availability. Please ensure the email is correct.");
+      }
     } finally {
       setIsCheckingEmail(false);
     }
@@ -166,32 +191,80 @@ export function DirectEditUserEmailModal({
     } catch (error: any) {
       console.error("Failed to update email:", error);
 
-      // Show meaningful error based on error code or message
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "An unknown error occurred";
+      // Extract comprehensive error message from response
+      let errorMessage = "An unknown error occurred";
+      
+      if (error.response?.data) {
+        // Backend returns error message directly as string in response.data
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
 
-      setFormError(`Failed to update email: ${errorMessage}`);
+      // Map common error codes to user-friendly messages
+      if (error.response?.status) {
+        switch (error.response.status) {
+          case 400:
+            if (!errorMessage || errorMessage.includes("Request failed")) {
+              if (errorMessage.includes("Email is already in use") || errorMessage.includes("Email already in use")) {
+                errorMessage = "This email address is already registered in the system. Please choose a different email.";
+              } else {
+                errorMessage = "Invalid request. Please check the email format and try again.";
+              }
+            }
+            break;
+          case 401:
+            errorMessage = "You are not authorized to perform this action. Please log in again.";
+            break;
+          case 403:
+            errorMessage = "You don't have permission to update this user's email.";
+            break;
+          case 404:
+            errorMessage = "User not found. The user may have been deleted.";
+            break;
+          case 409:
+            errorMessage = "This email address is already registered in the system. Please choose a different email.";
+            break;
+          case 500:
+            errorMessage = "Server error occurred while updating the email. Please try again later.";
+            break;
+          case 503:
+            errorMessage = "Service temporarily unavailable. Please try again in a few moments.";
+            break;
+        }
+      }
 
-      // Enhanced error toast
+      setFormError(errorMessage);
+
+      // Enhanced error toast with more detailed message
       toast.custom(
         (t) => (
-          <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-4 rounded-lg shadow-lg border border-red-500/30 flex items-start gap-3">
+          <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-4 rounded-lg shadow-lg border border-red-500/30 flex items-start gap-3 max-w-md">
             <XCircle className="h-6 w-6 text-red-200 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <h3 className="font-medium mb-1">Email Update Failed</h3>
-              <p className="text-sm text-red-100">{errorMessage}</p>
+              <p className="text-sm text-red-100 break-words">{errorMessage}</p>
+              {error.response?.status && (
+                <p className="text-xs text-red-200 mt-1 opacity-75">
+                  Error Code: {error.response.status}
+                </p>
+              )}
             </div>
             <button
               onClick={() => toast.dismiss(t)}
-              className="ml-auto text-red-200 hover:text-white"
+              className="ml-auto text-red-200 hover:text-white flex-shrink-0"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         ),
-        { duration: 7000 }
+        { duration: 8000 }
       );
     } finally {
       setIsSubmitting(false);

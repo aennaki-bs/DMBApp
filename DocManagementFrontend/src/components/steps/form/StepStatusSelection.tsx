@@ -1,6 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useStepForm } from "./StepFormProvider";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, ArrowRight, RefreshCw } from "lucide-react";
 import api from "@/services/api/core";
 import { Label } from "@/components/ui/label";
@@ -40,7 +47,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export const StepStatusSelection = () => {
-  const { formData, setFormData, registerStepForm } = useStepForm();
+  const { formData, setFormData, registerStepForm, isEditMode, editStep } = useStepForm();
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [isLoadingStatuses, setIsLoadingStatuses] = useState(false);
   const [nextStatusOptions, setNextStatusOptions] = useState<Status[]>([]);
@@ -53,7 +60,7 @@ export const StepStatusSelection = () => {
       currentStatusId: formData.currentStatusId?.toString() || "",
       nextStatusId: formData.nextStatusId?.toString() || "",
     },
-    mode: "onChange",
+    mode: "onChange", // Validate on change for immediate feedback
   });
 
   // Define fetchStatuses with useCallback to avoid dependency cycle
@@ -64,6 +71,7 @@ export const StepStatusSelection = () => {
     setFetchError(null);
 
     try {
+      // Use the correct API endpoint for fetching statuses - remove duplicate /api prefix
       const response = await api.get(`/Circuit/${formData.circuitId}/statuses`);
 
       if (response.data && Array.isArray(response.data)) {
@@ -74,6 +82,7 @@ export const StepStatusSelection = () => {
       }
     } catch (error: any) {
       console.error("Error fetching statuses:", error);
+      // More detailed error message
       const errorMessage =
         error?.response?.status === 404
           ? "Status data not found for this circuit."
@@ -90,22 +99,47 @@ export const StepStatusSelection = () => {
       validate: async () => {
         const result = await form.trigger();
 
+        // If form is valid, check for duplicate steps
         if (result && formData.currentStatusId && formData.nextStatusId) {
           setIsCheckingDuplicate(true);
           try {
-            const exists = await stepService.checkStepExists(
-              formData.circuitId,
-              formData.currentStatusId,
-              formData.nextStatusId
-            );
+            if (isEditMode) {
+              // In edit mode, get all steps and check manually excluding the current step
+              const stepsResponse = await api.get(`/Circuit/${formData.circuitId}`);
+              const circuitData = stepsResponse.data;
+              
+              if (circuitData && circuitData.steps) {
+                const conflictingStep = circuitData.steps.find((step: any) => 
+                  step.id !== editStep?.id && // Exclude the current step being edited
+                  step.currentStatusId === formData.currentStatusId &&
+                  step.nextStatusId === formData.nextStatusId
+                );
+                
+                if (conflictingStep) {
+                  form.setError("nextStatusId", {
+                    type: "manual",
+                    message: "A step with these status transitions already exists",
+                  });
+                  setIsCheckingDuplicate(false);
+                  return false;
+                }
+              }
+            } else {
+              // For new steps, use the existing service function
+              const exists = await stepService.checkStepExists(
+                formData.circuitId,
+                formData.currentStatusId,
+                formData.nextStatusId
+              );
 
-            if (exists) {
-              form.setError("nextStatusId", {
-                type: "manual",
-                message: "A step with these status transitions already exists",
-              });
-              setIsCheckingDuplicate(false);
-              return false;
+              if (exists) {
+                form.setError("nextStatusId", {
+                  type: "manual",
+                  message: "A step with these status transitions already exists",
+                });
+                setIsCheckingDuplicate(false);
+                return false;
+              }
             }
           } catch (error) {
             console.error("Error checking step existence:", error);
@@ -117,7 +151,7 @@ export const StepStatusSelection = () => {
       },
       getValues: () => form.getValues(),
     });
-  }, [registerStepForm, form, formData]);
+  }, [registerStepForm, form, formData, isEditMode]);
 
   // Fetch statuses when component mounts or circuitId changes
   useEffect(() => {
@@ -129,6 +163,7 @@ export const StepStatusSelection = () => {
   // Update next status options when current status changes
   useEffect(() => {
     if (formData.currentStatusId) {
+      // Filter out the current status from next status options
       const filteredStatuses = statuses.filter(
         (status) => status.statusId !== formData.currentStatusId
       );
@@ -139,9 +174,8 @@ export const StepStatusSelection = () => {
   }, [formData.currentStatusId, statuses]);
 
   const handleCurrentStatusChange = (value: string) => {
-    const numericValue = parseInt(value, 10);
     form.setValue("currentStatusId", value);
-    setFormData({ currentStatusId: numericValue });
+    setFormData({ currentStatusId: parseInt(value, 10) });
 
     // Clear next status when current status changes
     form.setValue("nextStatusId", "");
@@ -149,9 +183,8 @@ export const StepStatusSelection = () => {
   };
 
   const handleNextStatusChange = (value: string) => {
-    const numericValue = parseInt(value, 10);
     form.setValue("nextStatusId", value);
-    setFormData({ nextStatusId: numericValue });
+    setFormData({ nextStatusId: parseInt(value, 10) });
   };
 
   const getStatusById = (statusId?: number): Status | undefined => {
@@ -159,32 +192,24 @@ export const StepStatusSelection = () => {
     return statuses.find((status) => status.statusId === statusId);
   };
 
+  // Render status badges for initial/final states
   const renderStatusBadges = (status?: Status) => {
     if (!status) return null;
 
     return (
       <div className="flex gap-1.5 mt-1">
         {status.isInitial && (
-          <Badge
-            variant="default"
-            className="px-1.5 py-0.5 bg-green-900/30 text-green-400 border-green-500/30"
-          >
+          <Badge variant="success" size="sm" className="px-1.5 py-0.5">
             Initial
           </Badge>
         )}
         {status.isFinal && (
-          <Badge
-            variant="destructive"
-            className="px-1.5 py-0.5 bg-red-900/30 text-red-400 border-red-500/30"
-          >
+          <Badge variant="destructive" size="sm" className="px-1.5 py-0.5">
             Final
           </Badge>
         )}
         {status.isRequired && !status.isInitial && !status.isFinal && (
-          <Badge
-            variant="secondary"
-            className="px-1.5 py-0.5 bg-blue-900/30 text-blue-400 border-blue-500/30"
-          >
+          <Badge variant="secondary" size="sm" className="px-1.5 py-0.5">
             Required
           </Badge>
         )}
@@ -192,15 +217,33 @@ export const StepStatusSelection = () => {
     );
   };
 
-  const renderStatusOption = (status: Status) => (
-    <option key={status.statusId} value={status.statusId.toString()}>
-      {status.title}
-      {status.isInitial ? " (Initial)" : ""}
-      {status.isFinal ? " (Final)" : ""}
-      {status.isRequired && !status.isInitial && !status.isFinal
-        ? " (Required)"
-        : ""}
-    </option>
+  const renderStatusItem = (status: Status) => (
+    <SelectItem
+      key={status.statusId}
+      value={status.statusId.toString()}
+      className="text-xs py-2"
+    >
+      <div>
+        <div className="flex items-center">
+          <span>{status.title}</span>
+          {status.isInitial && (
+            <span className="ml-1.5 text-[10px] bg-green-900/30 text-green-400 px-1 py-0.5 rounded">
+              Initial
+            </span>
+          )}
+          {status.isFinal && (
+            <span className="ml-1.5 text-[10px] bg-red-900/30 text-red-400 px-1 py-0.5 rounded">
+              Final
+            </span>
+          )}
+        </div>
+        {status.description && (
+          <div className="text-[10px] text-blue-300/70 mt-0.5">
+            {status.description}
+          </div>
+        )}
+      </div>
+    </SelectItem>
   );
 
   if (fetchError) {
@@ -234,28 +277,31 @@ export const StepStatusSelection = () => {
                   <FormLabel className="text-gray-300 text-xs font-medium">
                     Current Status
                   </FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        handleCurrentStatusChange(e.target.value);
-                      }}
-                      disabled={isLoadingStatuses}
-                      className="w-full bg-[#0d1541]/70 border border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md h-8 text-xs px-3 py-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <option value="" disabled>
-                        Select current status
-                      </option>
+                  <Select
+                    onValueChange={handleCurrentStatusChange}
+                    value={field.value}
+                    disabled={isLoadingStatuses}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md h-8 text-xs">
+                        <SelectValue placeholder="Select current status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-[#0d1541] border-blue-900/50 text-white max-h-[300px]">
                       {isLoadingStatuses ? (
-                        <option disabled>Loading statuses...</option>
+                        <div className="flex items-center justify-center p-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-500 mr-2" />
+                          <span className="text-xs">Loading statuses...</span>
+                        </div>
                       ) : statuses.length === 0 ? (
-                        <option disabled>No statuses available</option>
+                        <div className="p-2 text-center text-xs text-blue-300/70">
+                          No statuses available for this circuit
+                        </div>
                       ) : (
-                        statuses.map(renderStatusOption)
+                        statuses.map(renderStatusItem)
                       )}
-                    </select>
-                  </FormControl>
+                    </SelectContent>
+                  </Select>
                   <FormMessage className="text-red-400 text-xs" />
                 </FormItem>
               )}
@@ -273,34 +319,39 @@ export const StepStatusSelection = () => {
                   <FormLabel className="text-gray-300 text-xs font-medium">
                     Next Status
                   </FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        handleNextStatusChange(e.target.value);
-                      }}
-                      disabled={
-                        isLoadingStatuses ||
-                        !formData.currentStatusId ||
-                        isCheckingDuplicate
-                      }
-                      className="w-full bg-[#0d1541]/70 border border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md h-8 text-xs px-3 py-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <option value="" disabled>
-                        Select next status
-                      </option>
-                      {isLoadingStatuses ? (
-                        <option disabled>Loading statuses...</option>
-                      ) : !formData.currentStatusId ? (
-                        <option disabled>Select current status first</option>
+                  <Select
+                    onValueChange={handleNextStatusChange}
+                    value={field.value}
+                    disabled={
+                      isLoadingStatuses ||
+                      !formData.currentStatusId ||
+                      isCheckingDuplicate
+                    }
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md h-8 text-xs">
+                        <SelectValue placeholder="Select next status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-[#0d1541] border-blue-900/50 text-white max-h-[300px]">
+                      {isLoadingStatuses || !formData.currentStatusId ? (
+                        <div className="flex items-center justify-center p-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-500 mr-2" />
+                          <span className="text-xs">
+                            {isLoadingStatuses
+                              ? "Loading statuses..."
+                              : "Select current status first"}
+                          </span>
+                        </div>
                       ) : nextStatusOptions.length === 0 ? (
-                        <option disabled>No available next statuses</option>
+                        <div className="p-2 text-center text-xs text-blue-300/70">
+                          No available next statuses
+                        </div>
                       ) : (
-                        nextStatusOptions.map(renderStatusOption)
+                        nextStatusOptions.map(renderStatusItem)
                       )}
-                    </select>
-                  </FormControl>
+                    </SelectContent>
+                  </Select>
                   <FormMessage className="text-red-400 text-xs" />
                 </FormItem>
               )}
