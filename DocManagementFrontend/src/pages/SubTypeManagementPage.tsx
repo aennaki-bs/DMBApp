@@ -77,7 +77,7 @@ export default function SubTypeManagementPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/document-types/${id}`)}
+            onClick={() => navigate(`/document-types/`)}
             className="border-blue-500/30 text-blue-400 hover:bg-blue-900/30"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />

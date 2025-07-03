@@ -1,4 +1,3 @@
-
 import DocumentTypesHeader from '../DocumentTypesHeader';
 
 interface DocumentTypesHeaderSectionProps {
@@ -9,6 +8,8 @@ interface DocumentTypesHeaderSectionProps {
   onSearchChange: (query: string) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
+  onSmartFilterClick?: () => void;
+  onSmartSelectClick?: () => void;
 }
 
 const DocumentTypesHeaderSection = ({
@@ -18,7 +19,9 @@ const DocumentTypesHeaderSection = ({
   searchQuery,
   onSearchChange,
   showFilters,
-  onToggleFilters
+  onToggleFilters,
+  onSmartFilterClick,
+  onSmartSelectClick
 }: DocumentTypesHeaderSectionProps) => {
   return (
     <DocumentTypesHeader
@@ -29,6 +32,8 @@ const DocumentTypesHeaderSection = ({
       onSearchChange={onSearchChange}
       showFilters={showFilters}
       onToggleFilters={onToggleFilters}
+      onSmartFilterClick={onSmartFilterClick}
+      onSmartSelectClick={onSmartSelectClick}
     />
   );
 };

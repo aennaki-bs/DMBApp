@@ -9,7 +9,7 @@ export function useDocumentsData() {
   const [isLoading, setIsLoading] = useState(true);
   const [useFakeData, setUseFakeData] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' } | null>(null);
-  
+
   const { searchQuery, dateRange, activeFilters } = useDocumentsFilter();
 
   const fetchDocuments = useCallback(async () => {
@@ -57,26 +57,26 @@ export function useDocumentsData() {
     } else {
       try {
         const results = await documentService.deleteMultipleDocuments(ids);
-        
+
         // If we get here, either all succeeded or some failed but we have detailed results
         if (results.successful.length > 0) {
           fetchDocuments(); // Refresh the document list
         }
-        
+
         return results;
       } catch (error: any) {
         // Handle the error with detailed results if available
         if (error.results) {
           const { successful, failed } = error.results;
-          
+
           if (successful.length > 0) {
             fetchDocuments(); // Refresh the document list for successful deletions
           }
-          
+
           // Re-throw with the structured results
           throw error;
         }
-        
+
         // If no structured results, throw the original error
         throw error;
       }
@@ -136,24 +136,24 @@ export function useDocumentsData() {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const searchField = activeFilters.searchField || 'all';
-        
+
         if (searchField === 'all') {
-          matchesSearch = 
-            (doc.title && doc.title.toLowerCase().includes(query)) || 
+          matchesSearch =
+            (doc.title && doc.title.toLowerCase().includes(query)) ||
             (doc.documentKey && doc.documentKey.toLowerCase().includes(query)) ||
             (doc.documentType && doc.documentType.typeName && doc.documentType.typeName.toLowerCase().includes(query)) ||
             (doc.createdBy && doc.createdBy.username && doc.createdBy.username.toLowerCase().includes(query));
         } else if (searchField === 'documentType.typeName') {
-          matchesSearch = doc.documentType && doc.documentType.typeName && 
+          matchesSearch = doc.documentType && doc.documentType.typeName &&
             doc.documentType.typeName.toLowerCase().includes(query);
         } else if (searchField === 'createdBy.username') {
-          matchesSearch = doc.createdBy && doc.createdBy.username && 
+          matchesSearch = doc.createdBy && doc.createdBy.username &&
             doc.createdBy.username.toLowerCase().includes(query);
         } else {
           // Handle nested properties with dot notation
           const fieldParts = searchField.split('.');
           let fieldValue: any = doc;
-          
+
           for (const part of fieldParts) {
             if (!fieldValue || typeof fieldValue !== 'object') {
               fieldValue = undefined;
@@ -161,31 +161,61 @@ export function useDocumentsData() {
             }
             fieldValue = fieldValue[part];
           }
-          
+
           matchesSearch = fieldValue && String(fieldValue).toLowerCase().includes(query);
         }
       }
-      
+
       // Status filter
       let matchesStatus = true;
       if (activeFilters.statusFilter && activeFilters.statusFilter !== 'any') {
         matchesStatus = doc.status.toString() === activeFilters.statusFilter;
       }
-      
-      // Type filter
+
+      // Type filter - match by type name or ID based on typeFilterField
       let matchesType = true;
       if (activeFilters.typeFilter && activeFilters.typeFilter !== 'any') {
-        matchesType = doc.documentType && doc.documentType.id && 
-          doc.documentType.id.toString() === activeFilters.typeFilter;
+        if (doc.documentType) {
+          // Choose which field to filter by based on typeFilterField
+          const filterField = activeFilters.typeFilterField || 'typeName';
+
+          if (filterField === 'typeName') {
+            // Filter by type name
+            matchesType = doc.documentType.typeName === activeFilters.typeFilter;
+          } else if (filterField === 'id') {
+            // Filter by type ID
+            matchesType = doc.documentType.id &&
+              doc.documentType.id.toString() === activeFilters.typeFilter;
+          }
+        } else {
+          matchesType = false;
+        }
       }
-      
-      // Date range filter
+
+      // Date range filter - use the selected date field
       let matchesDateRange = true;
       if (activeFilters.dateRange && activeFilters.dateRange.from) {
-        const docDate = new Date(doc.docDate);
+        // Get the date field to filter by
+        const dateField = activeFilters.dateFilterField || 'docDate';
+
+        // Get the document's date based on the selected field
+        let docDate: Date;
+        if (dateField === 'docDate') {
+          docDate = new Date(doc.docDate);
+        } else if (dateField === 'comptableDate' && doc.comptableDate) {
+          docDate = new Date(doc.comptableDate);
+        } else if (dateField === 'createdAt') {
+          docDate = new Date(doc.createdAt);
+        } else if (dateField === 'updatedAt') {
+          docDate = new Date(doc.updatedAt);
+        } else {
+          // Fallback to document date if the selected field doesn't exist
+          docDate = new Date(doc.docDate);
+        }
+
         const fromDate = new Date(activeFilters.dateRange.from);
         fromDate.setHours(0, 0, 0, 0);
-        
+
         if (activeFilters.dateRange.to) {
           const toDate = new Date(activeFilters.dateRange.to);
           toDate.setHours(23, 59, 59, 999);
@@ -194,7 +224,7 @@ export function useDocumentsData() {
           matchesDateRange = docDate >= fromDate;
         }
       }
-      
+
       return matchesSearch && matchesStatus && matchesType && matchesDateRange;
     });
   }, [sortedItems, searchQuery, activeFilters]);

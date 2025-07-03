@@ -8,7 +8,8 @@ import {
   useMemo,
 } from "react";
 import { DateRange } from "react-day-picker";
-import { FilterState } from "@/components/table";
+// Remove or comment out the FilterState import
+// import { FilterState } from "@/components/table";
 import { debounce } from "lodash";
 
 interface DocumentsFilterContextType {
@@ -23,12 +24,25 @@ interface DocumentsFilterContextType {
   activeFilterCount: number;
 }
 
+interface FilterState {
+  searchQuery: string;
+  searchField: string;
+  statusFilter: string;
+  typeFilter: string;
+  typeFilterField: string;
+  dateRange: DateRange | undefined;
+  dateFilterField: string;
+  customFilters?: Record<string, any>;
+}
+
 const initialFilterState: FilterState = {
   searchQuery: "",
   searchField: "all",
   statusFilter: "any",
   typeFilter: "any",
+  typeFilterField: "typeName",
   dateRange: undefined,
+  dateFilterField: "docDate",
 };
 
 // Use local storage key to persist filters between sessions

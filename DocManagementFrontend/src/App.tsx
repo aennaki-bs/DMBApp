@@ -39,7 +39,6 @@ import Settings from "./pages/Settings";
 import { SettingsProvider } from "./context/SettingsContext";
 import SubTypeManagementPage from "./pages/SubTypeManagementPage";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
-import DocumentTypeDetail from "./pages/DocumentTypeDetail";
 import ApprovalGroupsManagement from "./pages/ApprovalGroupsManagement";
 import ApproversManagement from "./pages/ApproversManagement";
 import ButtonShowcasePage from "./pages/ButtonShowcase";
@@ -138,7 +137,7 @@ const App = () => (
                   />
 
                   {/* Document Type Detail route */}
-                  <Route
+                  {/* <Route
                     path="/document-types/:id"
                     element={
                       <ProtectedRoute
@@ -148,7 +147,7 @@ const App = () => (
                         <DocumentTypeDetail />
                       </ProtectedRoute>
                     }
-                  />
+                  /> */}
 
                   {/* Line Elements Management route */}
                   <Route

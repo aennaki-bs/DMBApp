@@ -5,6 +5,8 @@ import {
   Search,
   Filter,
   Layers,
+  CheckSquare,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -20,6 +22,8 @@ interface DocumentTypesHeaderProps {
   onSearchChange: (query: string) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
+  onSmartFilterClick?: () => void;
+  onSmartSelectClick?: () => void;
 }
 
 const DocumentTypesHeader = ({
@@ -30,6 +34,8 @@ const DocumentTypesHeader = ({
   onSearchChange,
   showFilters,
   onToggleFilters,
+  onSmartFilterClick,
+  onSmartSelectClick,
 }: DocumentTypesHeaderProps) => {
   const handleViewModeChange = (value: string) => {
     if (value === "table" || value === "grid") {
@@ -72,6 +78,30 @@ const DocumentTypesHeader = ({
           onFilterOpenChange={onToggleFilters}
           additionalControls={
             <div className="flex gap-2">
+              {onSmartFilterClick && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onSmartFilterClick}
+                  className="border-blue-500/50 bg-blue-900/20 hover:bg-blue-800/30 text-blue-300 hover:text-blue-100"
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-1" />
+                  Smart Filter
+                </Button>
+              )}
+              
+              {onSmartSelectClick && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onSmartSelectClick}
+                  className="border-blue-500/50 bg-blue-900/20 hover:bg-blue-800/30 text-blue-300 hover:text-blue-100"
+                >
+                  <CheckSquare className="h-4 w-4 mr-1" />
+                  Smart Select
+                </Button>
+              )}
+              
               <ToggleGroup
                 type="single"
                 value={viewMode}

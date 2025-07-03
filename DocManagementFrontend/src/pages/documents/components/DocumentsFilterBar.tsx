@@ -56,6 +56,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslation } from "@/hooks/useTranslation";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 const DATE_PRESETS = [
   {
@@ -124,9 +125,23 @@ export default function DocumentsFilterBar() {
   const [typeFilter, setTypeFilter] = useState(
     activeFilters.typeFilter || "any"
   );
+  const [typeFilterField, setTypeFilterField] = useState("typeName");
   const [advancedDateRange, setAdvancedDateRange] = useState<
     DateRange | undefined
   >(dateRange);
+
+  // Date filter state
+  const [dateFilterField, setDateFilterField] = useState(
+    activeFilters.dateFilterField || "docDate"
+  );
+
+  // Date field options
+  const dateFieldOptions = [
+    { id: "docDate", label: "Document Date" },
+    { id: "comptableDate", label: "Contability Date" },
+    { id: "createdAt", label: "Created Date" },
+    { id: "updatedAt", label: "Updated Date" }
+  ];
 
   // Fetch document types for the filter
   const { data: documentTypes } = useQuery({
@@ -140,23 +155,34 @@ export default function DocumentsFilterBar() {
 
     if (documentTypes && documentTypes.length > 0) {
       documentTypes.forEach((type) => {
-        baseOptions.push({
-          id: type.id || 0,
-          label: type.typeName,
-          value: String(type.id),
-        });
+        // Add options based on the selected filter field
+        if (typeFilterField === "typeName") {
+          baseOptions.push({
+            id: type.id || 0,
+            label: type.typeName,
+            value: type.typeName, // Use typeName as the filter value
+          });
+        } else if (typeFilterField === "id") {
+          baseOptions.push({
+            id: type.id || 0,
+            label: `${type.typeName} (ID: ${type.id})`,
+            value: String(type.id), // Use ID as the filter value
+          });
+        }
       });
     }
 
     return baseOptions;
-  }, [documentTypes]);
+  }, [documentTypes, typeFilterField]);
 
   // Update local state when activeFilters change
   useEffect(() => {
     setSearchField(activeFilters.searchField || "all");
     setStatusFilter(activeFilters.statusFilter || "any");
     setTypeFilter(activeFilters.typeFilter || "any");
+    setTypeFilterField(activeFilters.typeFilterField || "typeName");
     setAdvancedDateRange(activeFilters.dateRange);
+    setDateFilterField(activeFilters.dateFilterField || "docDate");
 
     // Determine if a date preset is active
     if (activeFilters.dateRange) {
@@ -201,12 +227,31 @@ export default function DocumentsFilterBar() {
     });
   };
 
+  const handleTypeFilterFieldChange = (value: string) => {
+    setTypeFilterField(value);
+    setTypeFilter("any");
+    applyFilters({
+      ...activeFilters,
+      typeFilter: "any",
+      typeFilterField: value,
+    });
+  };
+
+  const handleDateFieldChange = (value: string) => {
+    setDateFilterField(value);
+    applyFilters({
+      ...activeFilters,
+      dateFilterField: value,
+    });
+  };
+
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setAdvancedDateRange(range);
     setDateRange(range);
     applyFilters({
       ...activeFilters,
       dateRange: range,
+      dateFilterField: dateFilterField,
     });
   };
 
@@ -223,6 +268,8 @@ export default function DocumentsFilterBar() {
   const clearAllFilters = () => {
     setStatusFilter("any");
     setTypeFilter("any");
+    setTypeFilterField("typeName");
+    setDateFilterField("docDate");
     setAdvancedDateRange(undefined);
     setSelectedDatePreset("custom");
     resetFilters();
@@ -585,25 +632,39 @@ export default function DocumentsFilterBar() {
                   {/* Document Type filter */}
                   <div>
                     <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                      <FileText className="h-4 w-4 mr-2 text-blue-400" />
+                      <Tag className="h-4 w-4 mr-2 text-blue-400" />
                       Document Type
                     </label>
+                    <div className="flex gap-2 mb-2">
+                      <div className="flex-1">
+                        <Select
+                          value={typeFilterField}
+                          onValueChange={handleTypeFilterFieldChange}
+                        >
+                          <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                            <SelectValue>
+                              {typeFilterField === "typeName" ? "By Name" : "By ID"}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                            <SelectItem value="typeName" className="hover:bg-blue-800/40">By Name</SelectItem>
+                            <SelectItem value="id" className="hover:bg-blue-800/40">By ID</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     <Select value={typeFilter} onValueChange={handleTypeChange}>
                       <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                        <SelectValue>
-                          {typeFilterOptions.find(
-                            (opt) => opt.value === typeFilter
-                          )?.label || "Any Type"}
-                        </SelectValue>
+                        <SelectValue placeholder="Select document type" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 max-h-[200px]">
-                        {typeFilterOptions.map((type) => (
+                      <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                        {typeFilterOptions.map((option) => (
                           <SelectItem
-                            key={type.value}
-                            value={type.value}
+                            key={option.id}
+                            value={option.value}
                             className="hover:bg-blue-800/40"
                           >
-                            {type.label}
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -639,42 +700,44 @@ export default function DocumentsFilterBar() {
                     </div>
                   </div>
 
-                  {/* Calendar date picker */}
-                  {selectedDatePreset === "custom" && (
-                    <div className="border border-blue-900/40 rounded-md p-3 bg-blue-900/20">
-                      <label className="text-sm font-medium text-blue-200 block mb-2">
-                        Select Custom Date Range
-                      </label>
-                      <div className="flex justify-center">
-                        <CalendarComponent
-                          mode="range"
-                          selected={advancedDateRange}
-                          onSelect={handleDateRangeChange}
-                          className="bg-[#22306e] border border-blue-900/40 rounded-md shadow-md"
-                          classNames={{
-                            day_selected: "bg-blue-600 text-white",
-                            day_today: "bg-blue-900/40 text-blue-200",
-                          }}
-                        />
-                      </div>
-                      <div className="mt-2 text-xs text-blue-300">
-                        {advancedDateRange?.from ? (
-                          advancedDateRange.to ? (
-                            <>
-                              <span>
-                                {format(advancedDateRange.from, "PPP")} -{" "}
-                                {format(advancedDateRange.to, "PPP")}
-                              </span>
-                            </>
-                          ) : (
-                            <span>{format(advancedDateRange.from, "PPP")}</span>
-                          )
-                        ) : (
-                          <span>Select a date range</span>
-                        )}
-                      </div>
+                  {/* Date Range */}
+                  <div>
+                    <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
+                      <CalendarRange className="h-4 w-4 mr-2 text-blue-400" />
+                      Date Filter
+                    </label>
+                    
+                    {/* Date field selector */}
+                    <div className="mb-2">
+                      <Select
+                        value={dateFilterField}
+                        onValueChange={handleDateFieldChange}
+                      >
+                        <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                          <SelectValue>
+                            {dateFieldOptions.find(opt => opt.id === dateFilterField)?.label || "Document Date"}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                          {dateFieldOptions.map((option) => (
+                            <SelectItem
+                              key={option.id}
+                              value={option.id}
+                              className="hover:bg-blue-800/40"
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
+                    
+                    <DateRangePicker
+                      date={advancedDateRange}
+                      onDateChange={handleDateRangeChange}
+                      className="w-full"
+                    />
+                  </div>
 
                   <div className="mt-2">
                     <div className="bg-blue-900/20 p-2 rounded-md border border-blue-900/40">
@@ -784,11 +847,10 @@ export default function DocumentsFilterBar() {
                 variant="outline"
                 className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
               >
-                <FileText className="h-3 w-3 text-blue-400" />
+                <Tag className="h-3 w-3 text-blue-400" />
                 <span className="text-xs">
-                  {typeFilterOptions.find(
-                    (t) => t.value === activeFilters.typeFilter
-                  )?.label || "Type"}
+                  {activeFilters.typeFilterField === "typeName" ? "Type: " : "Type ID: "}
+                  {activeFilters.typeFilter}
                 </span>
                 <button
                   onClick={() => {
@@ -805,20 +867,20 @@ export default function DocumentsFilterBar() {
               </Badge>
             )}
 
-            {activeFilters.dateRange && (
+            {/* Date filter badge */}
+            {activeFilters.dateRange && activeFilters.dateRange.from && (
               <Badge
                 variant="outline"
                 className="bg-blue-900/30 text-blue-100 border-blue-800/50 flex items-center gap-1 h-6 px-2 py-0"
               >
-                <Calendar className="h-3 w-3 text-blue-400" />
+                <CalendarRange className="h-3 w-3 text-blue-400" />
                 <span className="text-xs">
+                  {dateFieldOptions.find(opt => opt.id === activeFilters.dateFilterField)?.label || "Date"}: {" "}
                   {formatDateRangeDisplay(activeFilters.dateRange)}
                 </span>
                 <button
                   onClick={() => {
                     setDateRange(undefined);
-                    setAdvancedDateRange(undefined);
-                    setSelectedDatePreset("custom");
                     applyFilters({
                       ...activeFilters,
                       dateRange: undefined,

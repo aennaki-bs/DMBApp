@@ -9,9 +9,9 @@ declare module 'axios' {
 }
 
 let port = 5205;
-// let address = '192.168.1.54';
+let address = '192.168.1.54';
 // let address = '192.168.0.150';
-let address = 'localhost';
+// let address = 'localhost';
 // let address = '172.20.10.4';
 
 let apiUrl = `http://${address}:${port}/api`;
@@ -64,7 +64,7 @@ api.interceptors.response.use(
         console.warn('Already retried request, giving up');
         return Promise.reject(error);
       }
-      
+
       // Mark this request as having been retried
       error.config._retryCount = (error.config._retryCount || 0) + 1;
       error.config._retry = true;

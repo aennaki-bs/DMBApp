@@ -4,7 +4,7 @@ import { DocumentType } from '@/models/document';
 import documentService from '@/services/documentService';
 
 // Import our new utilities
-import { useDocumentTypeFiltering } from './document-types/useDocumentTypeFiltering';
+import { useDocumentTypeFiltering, SmartFilterConfig } from './document-types/useDocumentTypeFiltering';
 import { useDocumentTypeSorting } from './document-types/useDocumentTypeSorting';
 import { useDocumentTypeSelection } from './document-types/useDocumentTypeSelection';
 import { useDocumentTypePagination } from './document-types/useDocumentTypePagination';
@@ -39,19 +39,29 @@ export const useDocumentTypes = () => {
     fetchTypes();
   }, []);
 
-  // Use our new utilities
-  const { searchQuery, setSearchQuery, filteredTypes } = useDocumentTypeFiltering(types);
+  // Use our new utilities with smart filtering
+  const {
+    searchQuery,
+    setSearchQuery,
+    filteredTypes,
+    smartFilterConfig,
+    applySmartFilter,
+    clearSmartFilter,
+    isSmartFilterActive,
+    toggleSmartFilter
+  } = useDocumentTypeFiltering(types);
+
   const { sortField, sortDirection, handleSort, sortedTypes } = useDocumentTypeSorting(filteredTypes);
   const { selectedTypes, setSelectedTypes, handleSelectType, handleSelectAll } = useDocumentTypeSelection(sortedTypes);
-  
+
   // Store the result of applying filtering and sorting for pagination and other operations
   const filteredAndSortedTypes = useMemo(() => sortedTypes, [sortedTypes]);
-  
-  const { 
-    currentPage, 
-    setCurrentPage, 
-    paginatedTypes, 
-    totalPages 
+
+  const {
+    currentPage,
+    setCurrentPage,
+    paginatedTypes,
+    totalPages
   } = useDocumentTypePagination(filteredAndSortedTypes, itemsPerPage);
 
   // Additional props for document types management
@@ -91,6 +101,12 @@ export const useDocumentTypes = () => {
     setAppliedFilters,
     filterBadges,
     setFilterBadges,
-    documentTypesProps
+    documentTypesProps,
+    // Add smart filter properties
+    smartFilterConfig,
+    applySmartFilter,
+    clearSmartFilter,
+    isSmartFilterActive,
+    toggleSmartFilter
   };
 };

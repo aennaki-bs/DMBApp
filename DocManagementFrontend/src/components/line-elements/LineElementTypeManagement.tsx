@@ -133,7 +133,7 @@ const ELEMENT_TYPE_SEARCH_FIELDS = [
   { id: "code", label: "Code" },
   { id: "typeElement", label: "Type Element" },
   { id: "description", label: "Description" },
-  { id: "tableName", label: "Table Name" },
+  // { id: "tableName", label: "Table Name" },
 ];
 
 interface LineElementTypeManagementProps {
@@ -810,7 +810,7 @@ const LineElementTypeManagement = ({
                             {renderSortIcon("description")}
                           </div>
                         </TableHead>
-                        <TableHead
+                        {/* <TableHead
                           onClick={() => handleSort("tableName")}
                           className={`w-[200px] text-blue-800 dark:text-blue-300 font-semibold py-4 px-6 text-left cursor-pointer hover:text-blue-900 dark:hover:text-blue-200 ${headerClass(
                             "tableName"
@@ -820,7 +820,7 @@ const LineElementTypeManagement = ({
                             Table Name
                             {renderSortIcon("tableName")}
                           </div>
-                        </TableHead>
+                        </TableHead> */}
                         <TableHead className="w-[120px] text-blue-800 dark:text-blue-300 font-semibold py-4 px-6 text-center">
                           <span className="text-sm font-medium">Actions</span>
                         </TableHead>
@@ -888,11 +888,11 @@ const LineElementTypeManagement = ({
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell className="w-[200px] py-4 px-6 align-middle">
+                              {/* <TableCell className="w-[200px] py-4 px-6 align-middle">
                                 <div className="font-mono text-blue-700 dark:text-blue-200 text-sm">
                                   {elementType.tableName}
                                 </div>
-                              </TableCell>
+                              </TableCell> */}
                               <TableCell className="w-[120px] py-4 px-6 text-center align-middle">
                                 <div className="flex justify-center items-center gap-1">
                                   <Button
@@ -1252,7 +1252,7 @@ const LineElementTypeManagement = ({
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label className="text-sm font-medium text-blue-300">
                     Table Name
                   </Label>
@@ -1261,7 +1261,7 @@ const LineElementTypeManagement = ({
                       {selectedElementType.tableName}
                     </span>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Associated Item or Account */}
                 {(selectedElementType.item ||

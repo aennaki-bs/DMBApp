@@ -72,6 +72,8 @@ import circuitService from "@/services/circuitService";
 import { Link, useNavigate } from "react-router-dom";
 import { usePagination } from "@/hooks/usePagination";
 import SmartPagination from "@/components/shared/SmartPagination";
+import { useQuery } from "@tanstack/react-query";
+import documentTypeService from "@/services/documentTypeService";
 
 export default function CircuitsPage() {
   const { user } = useAuth();
@@ -79,6 +81,7 @@ export default function CircuitsPage() {
   const [apiError, setApiError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("any");
+  const [typeFilter, setTypeFilter] = useState("any");
   const [searchField, setSearchField] = useState("all");
   const [selectedCircuits, setSelectedCircuits] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<string>("");
@@ -130,30 +133,63 @@ export default function CircuitsPage() {
     fetchCircuits();
   };
 
+  // Fetch all document types for the filter dropdown
+  const { data: documentTypes, isLoading: isTypesLoading } = useQuery({
+    queryKey: ["documentTypes"],
+    queryFn: () => documentTypeService.getAllDocumentTypes(),
+  });
+
+  // Build type filter options from database
+  const circuitTypeOptions = [
+    { id: "any", label: "All Types", value: "any" },
+    ...(documentTypes || []).map((type) => ({
+      id: type.id,
+      label: type.typeName,
+      value: String(type.id),
+    })),
+  ];
+
+  // Search field options
+  const searchFields = [
+    { id: "all", label: "All fields" },
+    { id: "code", label: "Circuit Code" },
+    { id: "name", label: "Name" },
+    { id: "title", label: "Title" },
+    { id: "description", label: "Description" },
+  ];
+
   // Filter circuits
   const filteredCircuits = circuits.filter((circuit) => {
+    // Type filter (from DB)
+    if (typeFilter !== "any" && String(circuit.documentTypeId) !== typeFilter) return false;
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        (searchField === "all" &&
-          (circuit.circuitKey?.toLowerCase().includes(query) ||
-            circuit.title?.toLowerCase().includes(query) ||
-            circuit.descriptif?.toLowerCase().includes(query))) ||
-        (searchField === "code" &&
-          circuit.circuitKey?.toLowerCase().includes(query)) ||
-        (searchField === "title" &&
-          circuit.title?.toLowerCase().includes(query)) ||
-        (searchField === "description" &&
-          circuit.descriptif?.toLowerCase().includes(query));
-
+      let matchesSearch = false;
+      switch (searchField) {
+        case "code":
+          matchesSearch = circuit.circuitKey?.toLowerCase().includes(query);
+          break;
+        case "name":
+        case "title":
+          matchesSearch = circuit.title?.toLowerCase().includes(query);
+          break;
+        case "description":
+          matchesSearch = circuit.descriptif?.toLowerCase().includes(query);
+          break;
+        case "all":
+        default:
+          matchesSearch =
+            (circuit.circuitKey?.toLowerCase().includes(query)) ||
+            (circuit.title?.toLowerCase().includes(query)) ||
+            (circuit.descriptif?.toLowerCase().includes(query));
+          break;
+      }
       if (!matchesSearch) return false;
     }
-
     // Status filter
     if (statusFilter === "active" && !circuit.isActive) return false;
     if (statusFilter === "inactive" && circuit.isActive) return false;
-
     return true;
   });
 
@@ -295,29 +331,9 @@ export default function CircuitsPage() {
     );
   };
 
-  // Define actions for PageLayout
-  const actions = !isSimpleUser
-    ? [
-        {
-          label: "New Circuit",
-          onClick: () => setCreateOpen(true),
-          icon: Plus,
-          variant: "default" as const,
-        },
-      ]
-    : [];
-
   // Professional filter/search bar styling (matching UserTable)
   const filterCardClass =
     "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
-
-  // Search field options
-  const searchFields = [
-    { id: "all", label: "All fields" },
-    { id: "code", label: "Circuit Code" },
-    { id: "title", label: "Title" },
-    { id: "description", label: "Description" },
-  ];
 
   // Status options
   const statusOptions = [
@@ -375,7 +391,14 @@ export default function CircuitsPage() {
             : "Create and manage document workflow circuits"
         }
         icon={GitBranch}
-        actions={actions}
+        actions={[
+          {
+            label: "New Circuit",
+            onClick: () => setCreateOpen(true),
+            variant: "default",
+            icon: Plus,
+          },
+        ]}
       >
         <div className="space-y-4">
           <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
@@ -401,7 +424,14 @@ export default function CircuitsPage() {
             : "Create and manage document workflow circuits"
         }
         icon={GitBranch}
-        actions={actions}
+        actions={[
+          {
+            label: "New Circuit",
+            onClick: () => setCreateOpen(true),
+            variant: "default",
+            icon: Plus,
+          },
+        ]}
       >
         <div className="space-y-4">
           <div className="relative overflow-hidden rounded-2xl border border-destructive/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
@@ -430,7 +460,14 @@ export default function CircuitsPage() {
           : "Create and manage document workflow circuits"
       }
       icon={GitBranch}
-      actions={actions}
+      actions={[
+        {
+          label: "New Circuit",
+          onClick: () => setCreateOpen(true),
+          variant: "default",
+          icon: Plus,
+        },
+      ]}
     >
       {/* Dialogs */}
       <CreateCircuitDialog
@@ -516,126 +553,107 @@ export default function CircuitsPage() {
         className="h-full flex flex-col gap-6 w-full"
         style={{ minHeight: "100%" }}
       >
-        {/* Document-style Search + Filter Bar (exactly like UserTable) */}
-        <div className={filterCardClass}>
+        {/* Filter bar */}
+        <div className="flex flex-col md:flex-row gap-2 mb-4 items-center">
           {/* Search and field select */}
           <div className="flex-1 flex items-center gap-4 min-w-0">
             <div className="relative">
               <Select value={searchField} onValueChange={setSearchField}>
-                <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
-                  <SelectValue>
-                    {searchFields.find((opt) => opt.id === searchField)
-                      ?.label || "All fields"}
+                <SelectTrigger className="w-[130px] bg-blue-900/20 border-blue-800/30 text-white">
+                  <SelectValue placeholder="All fields">
+                    {searchFields.find((opt) => opt.id === searchField)?.label || "All fields"}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                <SelectContent>
                   {searchFields.map((opt) => (
-                    <SelectItem
-                      key={opt.id}
-                      value={opt.id}
-                      className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
-                    >
+                    <SelectItem key={opt.id} value={opt.id}>
                       {opt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="relative flex-1 group">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+            <div className="relative flex-1 min-w-0">
               <Input
-                placeholder="Search circuits..."
+                placeholder={`Search ${searchFields.find((opt) => opt.id === searchField)?.label?.toLowerCase() || "circuits"}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
+                className="pl-9 pr-4 py-2 h-10 bg-blue-900/20 border-blue-800/30 text-white"
               />
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              <span className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400">
+                <Filter className="h-4 w-4" />
+              </span>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-300"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
-
           {/* Filter popover */}
-          <div className="flex items-center gap-3">
-            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
-                >
-                  <Filter className="h-5 w-5" />
-                  Filter
-                  {statusFilter !== "any" && (
-                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl p-6">
-                <div className="mb-4 text-foreground font-bold text-lg flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-primary" />
-                  Filter Circuits
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-blue-500/50 bg-blue-900/20 hover:bg-blue-800/30 text-blue-300 hover:text-blue-100"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[260px] p-4 bg-[#0a1033] border border-blue-900/30">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm text-blue-100">Filter Circuits</h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStatusFilter("any");
+                      setTypeFilter("any");
+                    }}
+                    className="h-8 px-2 text-xs text-blue-400"
+                  >
+                    Clear all
+                  </Button>
                 </div>
-                <div className="flex flex-col gap-4">
-                  {/* Status Filter */}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm text-popover-foreground">
-                      Status
-                    </span>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={handleStatusChange}
-                    >
-                      <SelectTrigger className="w-full bg-background/50 backdrop-blur-sm text-foreground border border-border focus:ring-primary focus:border-primary transition-colors duration-200 hover:bg-background/70 shadow-sm rounded-md">
-                        <SelectValue>
-                          {
-                            statusOptions.find(
-                              (opt) => opt.value === statusFilter
-                            )?.label
-                          }
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover/95 backdrop-blur-lg text-popover-foreground border border-border">
-                        {statusOptions.map((opt) => (
-                          <SelectItem
-                            key={opt.id}
-                            value={opt.value}
-                            className="hover:bg-accent hover:text-accent-foreground"
-                          >
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Type filter dropdown (moved here) */}
+                <div className="space-y-2">
+                  <label className="text-xs text-blue-300 block">Type</label>
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="bg-blue-900/20 border-blue-800/30 text-white">
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {circuitTypeOptions.map((option) => (
+                        <SelectItem key={option.id} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="flex justify-end mt-6">
-                  {statusFilter !== "any" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all duration-200 flex items-center gap-2"
-                      onClick={clearAllFilters}
-                    >
-                      <X className="h-4 w-4" /> Clear All
-                    </Button>
-                  )}
+                {/* Status filter dropdown */}
+                <div className="space-y-2">
+                  <label className="text-xs text-blue-300 block">Status</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="bg-blue-900/20 border-blue-800/30 text-white">
+                      <SelectValue placeholder="Any Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Any Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Table Container (exactly like UserTableContent) */}

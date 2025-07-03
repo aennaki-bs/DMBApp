@@ -29,9 +29,11 @@ export function DateRangePicker({
   children,
   disabled = false,
 }: DateRangePickerProps) {
+  const [open, setOpen] = React.useState(false);
+  
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild disabled={disabled}>
           {children || (
             <Button
@@ -85,10 +87,15 @@ export function DateRangePicker({
             </Button>
             <Button
               size="sm"
-              onClick={() => document.body.click()}
+              onClick={() => {
+                // Force close with timeout
+                setTimeout(() => {
+                  setOpen(false);
+                }, 0);
+              }}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              Apply
+              Close
             </Button>
           </div>
         </PopoverContent>

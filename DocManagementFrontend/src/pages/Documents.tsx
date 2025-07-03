@@ -206,10 +206,10 @@ const Documents = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t, tWithParams } = useTranslation();
-  
+
   // Debug: Check if translations are working
-  console.log('Documents page translation test:', t('documents.title'));
-  
+  console.log("Documents page translation test:", t("documents.title"));
+
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -352,39 +352,54 @@ const Documents = () => {
             prev.filter((doc) => !selectedDocuments.includes(doc.id))
           );
           toast.success(
-            tWithParams("documents.documentsDeletedSimulated", { count: selectedDocuments.length })
+            tWithParams("documents.documentsDeletedSimulated", {
+              count: selectedDocuments.length,
+            })
           );
         } else {
           try {
             await documentService.deleteMultipleDocuments(selectedDocuments);
             toast.success(
-              tWithParams("documents.documentsDeleted", { count: selectedDocuments.length })
+              tWithParams("documents.documentsDeleted", {
+                count: selectedDocuments.length,
+              })
             );
           } catch (error: any) {
             // Handle partial success with detailed information
             if (error.results) {
-              const { successful, failed, erpArchivedCount = 0, erpArchivedDocuments = [] } = error.results;
-              
+              const {
+                successful,
+                failed,
+                erpArchivedCount = 0,
+                erpArchivedDocuments = [],
+              } = error.results;
+
               // Show success message if any documents were deleted
               if (successful.length > 0) {
                 toast.success(
-                  tWithParams("documents.documentsDeleted", { count: successful.length })
+                  tWithParams("documents.documentsDeleted", {
+                    count: successful.length,
+                  })
                 );
               }
-              
+
               // Show specific error for ERP-archived documents
               if (erpArchivedCount > 0) {
                 toast.error(
-                  `${erpArchivedCount} document${erpArchivedCount !== 1 ? 's' : ''} could not be deleted because they are archived to ERP`,
+                  `${erpArchivedCount} document${
+                    erpArchivedCount !== 1 ? "s" : ""
+                  } could not be deleted because they are archived to ERP`,
                   { duration: 6000 }
                 );
               }
-              
+
               // Show generic error for other failures
               const otherFailures = failed.length - erpArchivedCount;
               if (otherFailures > 0) {
                 toast.error(
-                  `${otherFailures} document${otherFailures !== 1 ? 's' : ''} failed to delete for other reasons`,
+                  `${otherFailures} document${
+                    otherFailures !== 1 ? "s" : ""
+                  } failed to delete for other reasons`,
                   { duration: 4000 }
                 );
               }
@@ -668,19 +683,13 @@ const Documents = () => {
   }
 
   if (typeFilter !== "any") {
+    const selectedTypeDoc = documents.find(
+      (doc) => String(doc.documentType.id) === typeFilter
+    );
     filterBadges.push({
       id: "type",
       label: t("common.type"),
-      value:
-        typeFilter === "1"
-          ? t("documents.typeProposal")
-          : typeFilter === "2"
-          ? t("documents.typeReport")
-          : typeFilter === "3"
-          ? t("documents.typeMinutes")
-          : typeFilter === "4"
-          ? t("documents.typeSpecifications")
-          : t("documents.typeStrategy"),
+      value: selectedTypeDoc?.documentType.typeName || `Type ${typeFilter}`,
       icon: <Tag className="h-3.5 w-3.5" />,
       onRemove: () => setTypeFilter("any"),
     });
@@ -750,7 +759,9 @@ const Documents = () => {
   return (
     <div className="space-y-6 p-6">
       <PageHeader
-        title={`TEST TRANSLATION: ${t("documents.title")} - ${new Date().toLocaleTimeString()}`}
+        title={`TEST TRANSLATION: ${t(
+          "documents.title"
+        )} - ${new Date().toLocaleTimeString()}`}
         description={`SUBTITLE TEST: ${t("documents.subtitle")}`}
         icon={<FileText className="h-6 w-6 text-blue-400" />}
         actions={
@@ -780,7 +791,8 @@ const Documents = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button className="bg-blue-600 hover:bg-blue-700" disabled>
-                      <Plus className="mr-2 h-4 w-4" /> {t("documents.newDocument")}
+                      <Plus className="mr-2 h-4 w-4" />{" "}
+                      {t("documents.newDocument")}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
@@ -848,21 +860,27 @@ const Documents = () => {
                     <SelectItem value="any" className="hover:bg-blue-800/40">
                       {t("documents.anyType")}
                     </SelectItem>
-                    <SelectItem value="1" className="hover:bg-blue-800/40">
-                      {t("documents.typeProposal")}
-                    </SelectItem>
-                    <SelectItem value="2" className="hover:bg-blue-800/40">
-                      {t("documents.typeReport")}
-                    </SelectItem>
-                    <SelectItem value="3" className="hover:bg-blue-800/40">
-                      {t("documents.typeMinutes")}
-                    </SelectItem>
-                    <SelectItem value="4" className="hover:bg-blue-800/40">
-                      {t("documents.typeSpecifications")}
-                    </SelectItem>
-                    <SelectItem value="5" className="hover:bg-blue-800/40">
-                      {t("documents.typeStrategy")}
-                    </SelectItem>
+                    {/* Dynamically generate document type options from actual documents */}
+                    {Array.from(
+                      new Set(documents.map((doc) => doc.documentType.typeName))
+                    )
+                      .sort()
+                      .map((typeName, index) => {
+                        const docWithType = documents.find(
+                          (doc) => doc.documentType.typeName === typeName
+                        );
+                        return (
+                          <SelectItem
+                            key={docWithType?.documentType.id || index}
+                            value={String(
+                              docWithType?.documentType.id || index
+                            )}
+                            className="hover:bg-blue-800/40"
+                          >
+                            {typeName}
+                          </SelectItem>
+                        );
+                      })}
                   </SelectContent>
                 </Select>
               </div>
@@ -1003,7 +1021,9 @@ const Documents = () => {
                         <Users className="h-4 w-4" />
                       )}
                     </TableHead>
-                    <TableHead className="text-blue-300">{t("common.status")}</TableHead>
+                    <TableHead className="text-blue-300">
+                      {t("common.status")}
+                    </TableHead>
                     <TableHead className="text-blue-300 text-right">
                       {t("common.actions")}
                     </TableHead>
@@ -1140,9 +1160,7 @@ const Documents = () => {
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>
-                                    {t("documents.onlyAdminCanEdit")}
-                                  </p>
+                                  <p>{t("documents.onlyAdminCanEdit")}</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -1168,7 +1186,9 @@ const Documents = () => {
                 : t("documents.createFirstDocument")
             }
             actionLabel={
-              canManageDocuments && !searchQuery ? t("documents.createDocument") : undefined
+              canManageDocuments && !searchQuery
+                ? t("documents.createDocument")
+                : undefined
             }
             actionIcon={
               canManageDocuments && !searchQuery ? (
@@ -1244,7 +1264,9 @@ const Documents = () => {
             <DialogDescription className="text-blue-300">
               {documentToDelete
                 ? t("documents.deleteConfirmMessage")
-                : tWithParams("documents.deleteMultipleConfirmMessage", { count: selectedDocuments.length })}
+                : tWithParams("documents.deleteMultipleConfirmMessage", {
+                    count: selectedDocuments.length,
+                  })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

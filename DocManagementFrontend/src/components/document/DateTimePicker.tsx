@@ -96,7 +96,10 @@ export function DateTimePicker({
     newDate.setMinutes(minutes);
 
     onDateChange(newDate);
-    setIsPopoverOpen(false);
+    // Force close the popover
+    setTimeout(() => {
+      setIsPopoverOpen(false);
+    }, 0);
   };
 
   // Handle quick date selection
@@ -470,7 +473,7 @@ export function DateTimePicker({
                         className="bg-blue-600 hover:bg-blue-700 text-white"
                         onClick={applyTimeToDate}
                       >
-                        <Check className="h-4 w-4 mr-1" /> Apply
+                        <Check className="h-4 w-4 mr-1" /> Close
                       </Button>
                     </div>
                   </div>
