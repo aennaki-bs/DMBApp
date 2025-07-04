@@ -1,533 +1,538 @@
-# DocManagementFrontend
+# DocuVerse - Document Management Frontend
 
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.2.4-purple.svg)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.11-teal.svg)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Vite](https://img.shields.io/badge/Vite-6.2.4-green.svg)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.11-blue.svg)](https://tailwindcss.com/)
+[![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-Latest-black.svg)](https://ui.shadcn.com/)
 
-A modern, enterprise-grade **Document Management System Frontend** built with React 18, TypeScript, and cutting-edge web technologies. Featuring a beautiful UI with shadcn/ui components, comprehensive document workflow management, and seamless integration with the DocManagement backend.
-
-## 🚀 Key Features
-
-- **📱 Modern React Architecture**: Built with React 18, TypeScript, and modern hooks
-- **🎨 Beautiful UI/UX**: shadcn/ui components with Radix UI primitives and Tailwind CSS
-- **📄 Document Management**: Complete document lifecycle from creation to approval
-- **🔄 Workflow Systems**: Visual circuit-based approval workflows with drag-and-drop
-- **👥 User Management**: Role-based access control with comprehensive user administration
-- **📊 Interactive Dashboard**: Real-time analytics with beautiful charts (Recharts)
-- **🔍 Advanced Search**: Powerful filtering and search capabilities
-- **📱 Responsive Design**: Mobile-first design that works on all devices
-- **🌙 Dark/Light Mode**: Complete theming system with multiple color schemes
-- **🔐 Secure Authentication**: JWT-based authentication with protected routes
-- **⚡ Performance Optimized**: Vite for fast builds, React Query for efficient data fetching
-- **🎭 Animations**: Smooth animations with Framer Motion
-- **🌐 Internationalization**: Multi-language support with translation system
+A modern, responsive frontend application for the DocuVerse document management system, built with React 18, TypeScript, and a comprehensive UI component library.
 
 ## 📋 Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Installation](#installation)
-3. [Development Setup](#development-setup)
-4. [Project Structure](#project-structure)
-5. [Technology Stack](#technology-stack)
-6. [Features Overview](#features-overview)
-7. [Development Guide](#development-guide)
-8. [Component Library](#component-library)
-9. [State Management](#state-management)
-10. [Styling & Theming](#styling--theming)
-11. [Building & Deployment](#building--deployment)
-12. [Troubleshooting](#troubleshooting)
-13. [Contributing](#contributing)
-14. [Support](#support)
+- [Overview](#overview)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Development](#development)
+- [Project Structure](#project-structure)
+- [Components](#components)
+- [Pages & Features](#pages--features)
+- [API Integration](#api-integration)
+- [Styling & Theming](#styling--theming)
+- [Authentication](#authentication)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [Troubleshooting](#troubleshooting)
 
-## 🛠 Prerequisites
+## 🌟 Overview
 
-Before setting up the DocManagementFrontend, ensure you have the following installed:
+DocuVerse Frontend is a sophisticated single-page application (SPA) that provides a complete user interface for document management workflows. The application features a modern design system, comprehensive document lifecycle management, and seamless integration with the DocuVerse backend API.
 
-- **Node.js** 18+ or **Bun** 1.0+ ([Download Node.js](https://nodejs.org/) | [Download Bun](https://bun.sh/))
-- **npm** 9+, **yarn** 1.22+, or **bun** (package managers)
-- **Git** for version control
-- **VS Code** (recommended) with suggested extensions
+### Key Capabilities
 
-### Recommended VS Code Extensions
+- **Modern React Architecture**: Built with React 18, TypeScript, and modern hooks
+- **Comprehensive UI**: 60+ reusable components with consistent design
+- **Document Management**: Complete document workflow interface
+- **User Experience**: Responsive design with accessibility features
+- **Real-time Updates**: Live data synchronization with backend
+- **Multi-tenant Support**: Role-based access and responsibility centers
 
+## ✨ Features
+
+### Core Document Management
+- ✅ Document creation, editing, and viewing
+- ✅ Document type and subtype management
+- ✅ File upload and attachment handling
+- ✅ Advanced search and filtering
+- ✅ Bulk operations and batch processing
+- ✅ Document version control
+- ✅ Print and export functionality
+
+### Workflow & Approval System
+- ✅ Circuit-based approval workflows
+- ✅ Visual workflow designer
+- ✅ Step-by-step approval process
+- ✅ Approval delegation and routing
+- ✅ Real-time approval notifications
+- ✅ Workflow history and audit trails
+- ✅ Custom approval rules
+
+### User Interface
+- ✅ Modern, responsive design
+- ✅ Dark/light theme support
+- ✅ Accessibility compliance (WCAG 2.1)
+- ✅ Mobile-first responsive layout
+- ✅ Advanced data tables with sorting/filtering
+- ✅ Interactive charts and dashboards
+- ✅ Real-time notifications
+
+### Administration
+- ✅ User management and roles
+- ✅ Responsibility center administration
+- ✅ System configuration
+- ✅ Analytics and reporting
+- ✅ Reference data management
+- ✅ ERP integration monitoring
+
+### Developer Experience
+- ✅ TypeScript for type safety
+- ✅ Component documentation
+- ✅ Hot module replacement
+- ✅ ESLint and code formatting
+- ✅ Modular architecture
+- ✅ Custom hooks and utilities
+
+## 🛠 Technology Stack
+
+### Core Framework
+- **React 18.3.1**: Modern React with concurrent features
+- **TypeScript 5.5.3**: Static type checking
+- **Vite 6.2.4**: Fast build tool and dev server
+- **React Router 6.26.2**: Client-side routing
+
+### UI & Styling
+- **Tailwind CSS 3.4.11**: Utility-first CSS framework
+- **shadcn/ui**: High-quality React components
+- **Radix UI**: Unstyled, accessible components
+- **Framer Motion 12.11.0**: Animations and gestures
+- **Lucide React**: Beautiful icons
+
+### State Management & Data
+- **TanStack Query 5.56.2**: Server state management
+- **React Hook Form 7.53.0**: Form handling
+- **Zod 3.23.8**: Schema validation
+- **Axios 1.8.4**: HTTP client
+
+### Development Tools
+- **ESLint**: Code linting
+- **PostCSS**: CSS processing
+- **Lovable Tagger**: Component tagging
+- **TypeScript Config**: Strict type checking
+
+### Key Dependencies
 ```json
 {
-  "recommendations": [
-    "bradlc.vscode-tailwindcss",
-    "esbenp.prettier-vscode",
-    "ms-vscode.vscode-typescript-next",
-    "usernamehw.errorlens",
-    "christian-kohler.path-intellisense",
-    "ms-vscode.vscode-json"
-  ]
+  "@hookform/resolvers": "^3.9.0",
+  "@tanstack/react-query": "^5.56.2",
+  "axios": "^1.8.4",
+  "class-variance-authority": "^0.7.1",
+  "clsx": "^2.1.1",
+  "cmdk": "^1.1.1",
+  "date-fns": "^3.6.0",
+  "embla-carousel-react": "^8.3.0",
+  "framer-motion": "^12.11.0",
+  "lucide-react": "^0.462.0",
+  "next-themes": "^0.3.0",
+  "react-router-dom": "^6.26.2",
+  "recharts": "^2.12.7",
+  "sonner": "^1.5.0",
+  "tailwind-merge": "^2.5.2",
+  "zod": "^3.23.8"
 }
 ```
 
-### System Requirements
+## 🏗 Architecture
 
-- **OS**: Windows 10/11, macOS 10.15+, or Linux
-- **RAM**: Minimum 4GB, Recommended 8GB+
-- **Storage**: At least 1GB free space
-- **Browser**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-
-## 🚀 Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/your-repo/DMBApp.git
-cd DMBApp/DocManagementFrontend
+### Application Structure
+```
+Frontend Architecture
+┌─────────────────────────────┐
+│      Presentation Layer     │  Pages, Components, UI
+├─────────────────────────────┤
+│     Application Layer       │  Hooks, Context, Routing
+├─────────────────────────────┤
+│      Service Layer          │  API Services, Utilities
+├─────────────────────────────┤
+│       Data Layer           │  State Management, Cache
+└─────────────────────────────┘
 ```
 
-### 2. Install Dependencies
+### Core Patterns
 
-Choose your preferred package manager:
+#### Component Architecture
+- **Atomic Design**: Components organized by complexity
+- **Compound Components**: Complex UI patterns
+- **Render Props**: Flexible component composition
+- **Custom Hooks**: Reusable business logic
+
+#### State Management
+- **Server State**: TanStack Query for API data
+- **Client State**: React Context for app state
+- **Form State**: React Hook Form for forms
+- **URL State**: React Router for navigation state
+
+#### Data Flow
+- **Unidirectional**: Props down, events up
+- **Context Providers**: Global state management
+- **Custom Hooks**: Encapsulated logic
+- **Service Layer**: API abstraction
+
+## ⚙️ Installation
+
+### Prerequisites
+
+- **Node.js**: Version 18.0.0 or later
+- **npm**: Version 9.0.0 or later (or Bun 1.0.0+)
+- **Git**: For version control
+
+### Quick Start
 
 ```bash
-# Using npm
+# Clone the repository
+git clone <your-repository-url>
+cd DocManagementFrontend
+
+# Install dependencies (using npm)
 npm install
 
-# Using yarn
-yarn install
-
-# Using bun (recommended for faster installs)
+# Or using Bun (faster)
 bun install
+
+# Start development server
+npm run dev
+# or
+bun run dev
+
+# Open browser to http://localhost:3000
 ```
 
-### 3. Environment Configuration
+### Environment Setup
 
 Create a `.env.local` file in the root directory:
 
 ```env
 # API Configuration
-VITE_API_BASE_URL=http://localhost:5001
+VITE_API_BASE_URL=http://localhost:5000/api
 VITE_API_TIMEOUT=30000
 
 # Authentication
-VITE_JWT_EXPIRY_MINUTES=180
+VITE_JWT_STORAGE_KEY=docuverse_token
+VITE_REFRESH_TOKEN_KEY=docuverse_refresh
 
-# Firebase Configuration (Optional)
-VITE_FIREBASE_API_KEY=your-firebase-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
+# Features
+VITE_ENABLE_ANALYTICS=true
+VITE_ENABLE_DEBUG=false
 
-# Feature Flags
-VITE_ENABLE_MOCK_DATA=false
-VITE_ENABLE_DEBUG_MODE=false
-
-# External Services
-VITE_SENTRY_DSN=your-sentry-dsn
-VITE_ANALYTICS_ID=your-analytics-id
+# Theme
+VITE_DEFAULT_THEME=light
+VITE_ENABLE_THEME_SWITCHER=true
 ```
 
-## 🏗️ Development Setup
+## 💻 Development
 
-### Start Development Server
+### Development Scripts
 
 ```bash
-# Using npm
+# Start development server with hot reload
 npm run dev
 
-# Using yarn
-yarn dev
+# Build for production
+npm run build
 
-# Using bun
-bun dev
+# Build for development (with source maps)
+npm run build:dev
+
+# Lint code
+npm run lint
+
+# Preview production build
+npm run preview
 ```
 
-The application will be available at:
-- **Frontend**: `http://localhost:3000`
-- **Backend API**: `http://localhost:5001` (make sure backend is running)
+### Development Server Configuration
 
-### Available Scripts
-
-```bash
-# Development
-npm run dev          # Start development server
-npm run dev:host     # Start with network access
-
-# Building
-npm run build        # Production build
-npm run build:dev    # Development build
-npm run preview      # Preview production build
-
-# Code Quality
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint errors
-npm run type-check   # TypeScript type checking
-
-# Testing
-npm run test         # Run tests
-npm run test:ui      # Run tests with UI
-npm run test:coverage # Run tests with coverage
+```typescript
+// vite.config.ts
+export default defineConfig({
+  server: {
+    host: "::",
+    port: 3000,
+    hmr: { overlay: false }
+  },
+  resolve: {
+    alias: { "@": path.resolve(__dirname, "./src") }
+  }
+});
 ```
+
+### Code Style & Standards
+
+#### TypeScript Configuration
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] },
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "strictNullChecks": false
+  }
+}
+```
+
+#### ESLint Rules
+- React Hooks rules enforced
+- TypeScript strict mode
+- Import order organization
+- Consistent code formatting
+
+#### Naming Conventions
+- **Components**: PascalCase (`DocumentCard.tsx`)
+- **Files**: kebab-case for utils, PascalCase for components
+- **Variables**: camelCase
+- **Constants**: UPPER_SNAKE_CASE
+- **Types/Interfaces**: PascalCase with descriptive names
 
 ## 📁 Project Structure
 
 ```
 DocManagementFrontend/
-├── 📁 public/                    # Static assets
-│   ├── favicon.ico              # App favicon
-│   ├── robots.txt               # SEO robots file
-│   └── placeholder.svg          # Placeholder images
-├── 📁 src/                      # Source code
-│   ├── 📁 components/           # React components
-│   │   ├── 📁 ui/              # Base UI components (shadcn/ui)
-│   │   │   ├── button.tsx      # Button component
-│   │   │   ├── dialog.tsx      # Dialog/Modal component
-│   │   │   ├── form.tsx        # Form components
-│   │   │   └── ...             # Other UI primitives
-│   │   ├── 📁 admin/           # Admin-specific components
-│   │   ├── 📁 approval/        # Approval system components
-│   │   ├── 📁 circuits/        # Workflow circuit components
-│   │   ├── 📁 dashboard/       # Dashboard components
-│   │   ├── 📁 document/        # Document management components
-│   │   ├── 📁 document-flow/   # Document workflow components
-│   │   ├── 📁 navigation/      # Navigation components
-│   │   └── ...                 # Feature-specific components
-│   ├── 📁 pages/               # Page components (routes)
-│   │   ├── Dashboard.tsx       # Main dashboard
-│   │   ├── Login.tsx          # Authentication
-│   │   ├── Documents.tsx      # Document management
-│   │   ├── Admin.tsx          # Admin panel
-│   │   └── ...                # Other pages
-│   ├── 📁 hooks/               # Custom React hooks
-│   │   ├── useAuth.ts         # Authentication hook
-│   │   ├── useDocuments.ts    # Document management
-│   │   ├── useApiConnection.ts # API connection monitoring
-│   │   └── ...                # Other custom hooks
-│   ├── 📁 services/            # API services
-│   │   ├── 📁 api/            # Core API utilities
-│   │   ├── authService.ts     # Authentication API
-│   │   ├── documentService.ts # Document API
-│   │   ├── adminService.ts    # Admin API
-│   │   └── ...                # Other services
-│   ├── 📁 context/             # React contexts
-│   │   ├── AuthContext.tsx    # Authentication state
+├── public/                     # Static assets
+│   ├── favicon.ico
+│   ├── placeholder.svg
+│   └── robots.txt
+├── src/
+│   ├── components/             # Reusable UI components
+│   │   ├── ui/                # shadcn/ui components (60+ files)
+│   │   ├── admin/             # Admin-specific components
+│   │   ├── document/          # Document-related components
+│   │   ├── workflow/          # Workflow components
+│   │   ├── navigation/        # Navigation components
+│   │   ├── forms/             # Form components
+│   │   └── layout/            # Layout components
+│   ├── pages/                 # Application pages (45+ files)
+│   │   ├── documents/         # Document management pages
+│   │   ├── register/          # Registration flow
+│   │   ├── step-statuses/     # Workflow status pages
+│   │   └── *.tsx              # Individual pages
+│   ├── services/              # API services (25+ files)
+│   │   ├── api/               # Core API utilities
+│   │   ├── documents/         # Document services
+│   │   ├── document-types/    # Document type services
+│   │   └── *.ts               # Individual services
+│   ├── hooks/                 # Custom React hooks (25+ files)
+│   │   ├── document-types/    # Document type hooks
+│   │   ├── document-workflow/ # Workflow hooks
+│   │   └── *.ts               # Individual hooks
+│   ├── context/               # React context providers
+│   │   ├── AuthContext.tsx    # Authentication context
 │   │   ├── ThemeContext.tsx   # Theme management
 │   │   ├── SettingsContext.tsx # App settings
-│   │   └── ...                # Other contexts
-│   ├── 📁 models/              # TypeScript types & interfaces
-│   │   ├── auth.ts           # Authentication types
-│   │   ├── document.ts       # Document types
-│   │   ├── user.ts           # User types
-│   │   └── ...               # Other model definitions
-│   ├── 📁 lib/                 # Utility libraries
-│   │   ├── utils.ts          # General utilities
-│   │   ├── themes.ts         # Theme utilities
-│   │   └── ...               # Other utilities
-│   ├── 📁 utils/               # Helper functions
-│   │   ├── errorHandling.ts  # Error utilities
-│   │   ├── formatters.ts     # Data formatters
-│   │   └── ...               # Other utilities
-│   ├── 📁 styles/              # Global styles
-│   │   ├── globals.css       # Global CSS
-│   │   ├── components.css    # Component styles
-│   │   └── themes.css        # Theme definitions
-│   ├── 📁 translations/        # Internationalization
-│   │   └── index.ts          # Translation definitions
-│   ├── App.tsx                 # Main app component
-│   ├── main.tsx               # App entry point
-│   ├── index.css              # Global styles
-│   └── vite-env.d.ts          # Vite type definitions
-├── 📄 package.json              # Dependencies & scripts
-├── 📄 vite.config.ts           # Vite configuration
-├── 📄 tailwind.config.ts       # Tailwind CSS configuration
-├── 📄 tsconfig.json            # TypeScript configuration
-├── 📄 eslint.config.js         # ESLint configuration
-├── 📄 components.json          # shadcn/ui configuration
-└── 📄 README.md               # This file
+│   │   └── form/              # Form contexts
+│   ├── models/                # TypeScript type definitions
+│   │   ├── auth.ts            # Authentication types
+│   │   ├── document.ts        # Document types
+│   │   ├── workflow.ts        # Workflow types
+│   │   └── *.ts               # Other model types
+│   ├── lib/                   # Utilities and configuration
+│   │   ├── utils.ts           # Common utilities
+│   │   └── themes.ts          # Theme configuration
+│   ├── styles/                # Global styles
+│   │   ├── document-flow.css  # Document flow styles
+│   │   ├── form-overrides.css # Form customizations
+│   │   └── responsive.css     # Responsive utilities
+│   ├── utils/                 # Utility functions
+│   │   ├── errorHandling.ts   # Error handling utilities
+│   │   ├── erpErrorHandling.ts # ERP-specific errors
+│   │   └── formatDateForAPI.ts # Date utilities
+│   ├── translations/          # Internationalization
+│   │   └── index.ts           # Translation keys
+│   ├── App.tsx               # Main application component
+│   ├── main.tsx              # Application entry point
+│   └── index.css             # Global CSS and Tailwind
+├── docs/                     # Documentation
+│   └── ERP_ERROR_HANDLING.md # ERP integration docs
+├── supabase/                 # Supabase configuration
+├── components.json           # shadcn/ui configuration
+├── tailwind.config.ts        # Tailwind configuration
+├── tsconfig.json            # TypeScript configuration
+├── vite.config.ts           # Vite configuration
+└── package.json             # Dependencies and scripts
 ```
 
-## 🔧 Technology Stack
+## 🧩 Components
 
-### Core Technologies
+### UI Component Library
 
-- **[React 18.3.1](https://reactjs.org/)** - UI library with concurrent features
-- **[TypeScript 5.5.3](https://www.typescriptlang.org/)** - Type-safe JavaScript
-- **[Vite 6.2.4](https://vitejs.dev/)** - Next-generation frontend build tool
-- **[React Router 6.26.2](https://reactrouter.com/)** - Declarative routing
+The application uses **shadcn/ui** as the foundation with 60+ components:
 
-### UI & Styling
+#### Core Components
+- **Accordion**: Collapsible content sections
+- **Alert Dialog**: Modal confirmations
+- **Avatar**: User profile images
+- **Badge**: Status indicators
+- **Button**: Interactive buttons with variants
+- **Card**: Content containers
+- **Checkbox**: Form inputs
+- **Dialog**: Modal windows
+- **Dropdown Menu**: Context menus
+- **Form**: Form wrapper with validation
+- **Input**: Text inputs with validation
+- **Select**: Dropdown selections
+- **Table**: Data tables with sorting
+- **Toast**: Notification system
 
-- **[Tailwind CSS 3.4.11](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[shadcn/ui](https://ui.shadcn.com/)** - High-quality component library
-- **[Radix UI](https://www.radix-ui.com/)** - Unstyled, accessible components
-- **[Lucide React](https://lucide.dev/)** - Beautiful SVG icons
-- **[Framer Motion 12.11.0](https://www.framer.com/motion/)** - Production-ready motion library
-
-### State Management
-
-- **[TanStack React Query 5.56.2](https://tanstack.com/query)** - Powerful data synchronization
-- **[React Context](https://reactjs.org/docs/context.html)** - Global state management
-- **[Zustand](https://zustand-demo.pmnd.rs/)** - Lightweight state management (if needed)
-
-### Form Management
-
-- **[React Hook Form 7.53.0](https://react-hook-form.com/)** - Performant forms with easy validation
-- **[Zod 3.23.8](https://zod.dev/)** - TypeScript-first schema validation
-- **[@hookform/resolvers](https://github.com/react-hook-form/resolvers)** - Validation resolvers
-
-### Data Visualization
-
-- **[Recharts 2.12.7](https://recharts.org/)** - Composable charting library
-- **[React Flow Renderer](https://reactflow.dev/)** - Interactive node-based diagrams
-
-### Developer Experience
-
-- **[ESLint](https://eslint.org/)** - Code linting and formatting
-- **[Prettier](https://prettier.io/)** - Code formatting
-- **[TypeScript ESLint](https://typescript-eslint.io/)** - TypeScript-specific linting
-
-### Additional Libraries
-
-- **[Axios 1.8.4](https://axios-http.com/)** - HTTP client
-- **[date-fns 3.6.0](https://date-fns.org/)** - Date utility library
-- **[clsx](https://github.com/lukeed/clsx)** - Conditional className utility
-- **[Lodash 4.17.21](https://lodash.com/)** - Utility library
-- **[React DnD](https://react-dnd.github.io/react-dnd/)** - Drag and drop
-
-## 🎯 Features Overview
-
-### 🔐 Authentication & Security
-
-- **JWT-based Authentication**: Secure token-based authentication
-- **Protected Routes**: Role-based route protection
-- **Password Management**: Secure password reset and update
-- **Session Management**: Automatic token refresh and logout
-- **Multi-factor Authentication**: Email verification support
-
-**Key Components:**
-- `Login.tsx` - Login page with form validation
-- `Register.tsx` - Multi-step registration process
-- `ProtectedRoute.tsx` - Route protection wrapper
-- `AuthContext.tsx` - Authentication state management
-
-### 📄 Document Management
-
-- **Document Lifecycle**: Create, edit, view, and manage documents
-- **Document Types**: Configurable document types and sub-types
-- **Version Control**: Document versioning and history
-- **File Attachments**: Upload and manage document attachments
-- **Bulk Operations**: Select and perform bulk actions on documents
-
-**Key Components:**
-- `Documents.tsx` - Document listing and management
-- `CreateDocument.tsx` - Document creation wizard
-- `ViewDocument.tsx` - Document viewer with metadata
-- `DocumentTypes.tsx` - Document type management
-
-### 🔄 Workflow & Approvals
-
-- **Circuit-based Workflows**: Visual workflow designer
-- **Multi-level Approvals**: Configurable approval chains
-- **Approval Groups**: Manage groups of approvers
-- **Status Tracking**: Real-time workflow status updates
-- **Deadline Management**: Approval deadlines and notifications
-
-**Key Components:**
-- `Circuits.tsx` - Workflow circuit management
-- `ApprovalGroupsManagement.tsx` - Approval group configuration
-- `PendingApprovals.tsx` - Pending approval tasks
-- `WorkflowService.ts` - Workflow API integration
-
-### 👥 User Management
-
-- **User Administration**: Complete user lifecycle management
-- **Role-based Access**: Granular permission system
-- **Responsibility Centers**: Organizational structure management
-- **Bulk User Operations**: Efficient user management tools
-- **User Profiles**: Comprehensive user profile management
-
-**Key Components:**
-- `Admin.tsx` - Admin dashboard
-- `UserManagement.tsx` - User administration interface
-- `Profile.tsx` - User profile management
-- `ResponsibilityCentreManagement.tsx` - Org structure management
-
-### 📊 Dashboard & Analytics
-
-- **Real-time Metrics**: Live dashboard with key metrics
-- **Interactive Charts**: Beautiful charts with Recharts
-- **Activity Monitoring**: User and system activity tracking
-- **Custom Widgets**: Configurable dashboard widgets
-- **Export Capabilities**: Data export and reporting
-
-**Key Components:**
-- `Dashboard.tsx` - Main dashboard
-- `DashboardService.ts` - Dashboard data fetching
-- Various chart components in `dashboard/` folder
-
-### 🏢 Reference Data Management
-
-- **Customer Management**: Customer master data
-- **Vendor Management**: Vendor master data
-- **Item Management**: Product/service catalog
-- **Location Management**: Office/warehouse locations
-- **General Accounts**: Chart of accounts management
-
-**Key Components:**
-- `CustomerManagement.tsx` - Customer data management
-- `VendorManagement.tsx` - Vendor data management
-- `ItemsPage.tsx` - Item catalog management
-- `LocationsManagement.tsx` - Location management
-
-## 🎨 Component Library
-
-### Base UI Components (shadcn/ui)
-
-The application uses a comprehensive set of accessible, customizable components:
-
-```typescript
-// Button variants
-<Button variant="default | destructive | outline | secondary | ghost | link">
-  Click me
-</Button>
-
-// Form components
-<Form>
-  <FormField
-    control={form.control}
-    name="email"
-    render={({ field }) => (
-      <FormItem>
-        <FormLabel>Email</FormLabel>
-        <FormControl>
-          <Input placeholder="Enter email" {...field} />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    )}
-  />
-</Form>
-
-// Dialog/Modal
-<Dialog>
-  <DialogTrigger asChild>
-    <Button>Open Dialog</Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Dialog Title</DialogTitle>
-      <DialogDescription>Dialog description</DialogDescription>
-    </DialogHeader>
-    {/* Dialog content */}
-  </DialogContent>
-</Dialog>
-```
+#### Advanced Components
+- **Command**: Command palette interface
+- **Data Table**: Enhanced tables with filtering
+- **Date Picker**: Calendar date selection
+- **Multi-Select**: Multiple option selection
+- **Resizable Panels**: Adjustable layouts
+- **Sidebar**: Navigation sidebar
+- **Tabs**: Tabbed interfaces
+- **Tooltip**: Contextual help
 
 ### Custom Components
 
-#### Document Components
+#### Document Management
+- **DocumentCard**: Document preview cards
+- **DocumentFlow**: Workflow visualization
+- **CreateDocumentWizard**: Multi-step document creation
+- **DocumentTable**: Advanced document listing
+- **LineEditor**: Document line editing
+
+#### Workflow Components
+- **CircuitFlow**: Visual workflow designer
+- **ApprovalCard**: Approval status display
+- **StepForm**: Workflow step configuration
+- **TransitionDialog**: Step transition management
+
+#### Admin Components
+- **UserManagement**: User administration
+- **RoleAssignment**: Permission management
+- **SystemSettings**: Configuration panels
+
+## 📄 Pages & Features
+
+### Authentication Pages
+- **Login** (`Login.tsx`): JWT-based authentication
+- **Register** (`Register.tsx`): Multi-step registration
+- **ForgotPassword** (`ForgotPassword.tsx`): Password recovery
+- **EmailVerification** (`EmailVerification.tsx`): Email confirmation
+
+### Document Management
+- **Documents** (`Documents.tsx`): Document listing and management
+- **CreateDocument** (`CreateDocument.tsx`): Document creation wizard
+- **ViewDocument** (`ViewDocument.tsx`): Document details view
+- **EditDocument** (`EditDocument.tsx`): Document editing interface
+- **DocumentFlow** (`DocumentFlowPage.tsx`): Workflow visualization
+
+### Administration
+- **Admin** (`Admin.tsx`): Admin dashboard
+- **UserManagement** (`UserManagement.tsx`): User administration
+- **DocumentTypes** (`DocumentTypes.tsx`): Document type management
+- **Circuits** (`Circuits.tsx`): Workflow circuit management
+- **Settings** (`Settings.tsx`): System configuration
+
+### Workflow Management
+- **PendingApprovals** (`PendingApprovalsPage.tsx`): Approval queue
+- **CircuitSteps** (`CircuitStepsPage.tsx`): Step configuration
+- **StepStatuses** (`StepStatusesPage.tsx`): Status management
+
+### Reference Data
+- **ResponsibilityCentre** (`ResponsibilityCentreManagement.tsx`): Center management
+- **CustomerManagement** (`CustomerManagement.tsx`): Customer data
+- **VendorManagement** (`VendorManagement.tsx`): Vendor information
+- **LineElements** (`LineElementsManagement.tsx`): Element configuration
+
+## 🔌 API Integration
+
+### Service Architecture
+
+The application uses a service-oriented architecture for API integration:
+
+#### Core Services
 ```typescript
-// Document card display
-<DocumentCard 
-  document={document}
-  onEdit={handleEdit}
-  onDelete={handleDelete}
-  onView={handleView}
-/>
+// Authentication Service
+authService.login(credentials)
+authService.register(userData)
+authService.refreshToken()
 
-// Document status indicator
-<DocumentStatusBadge status={document.status} />
+// Document Service
+documentService.getDocuments(filters)
+documentService.createDocument(data)
+documentService.updateDocument(id, data)
 
-// Document workflow progress
-<WorkflowProgress currentStep={step} totalSteps={total} />
+// Workflow Service
+workflowService.getCircuits()
+workflowService.processStep(stepId, action)
+workflowService.getApprovals()
 ```
 
-#### Dashboard Components
+#### API Client Configuration
 ```typescript
-// Metric cards
-<MetricCard
-  title="Total Documents"
-  value={1234}
-  change={+12}
-  icon={<FileIcon />}
-/>
-
-// Chart components
-<DocumentChart data={chartData} />
-<ApprovalChart data={approvalData} />
-```
-
-#### Form Components
-```typescript
-// Multi-step wizard
-<MultiStepWizard
-  steps={steps}
-  currentStep={currentStep}
-  onStepChange={handleStepChange}
-/>
-
-// Advanced search form
-<AdvancedSearchForm
-  onSearch={handleSearch}
-  filters={availableFilters}
-/>
-```
-
-## 🔄 State Management
-
-### React Query for Server State
-
-```typescript
-// Document queries
-const { data: documents, isLoading, error } = useQuery({
-  queryKey: ['documents', filters],
-  queryFn: () => documentService.getDocuments(filters),
-  staleTime: 5 * 60 * 1000, // 5 minutes
+// axiosInstance.ts
+const apiClient = axios.create({
+  baseURL: process.env.VITE_API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
-// Mutations with optimistic updates
-const createDocumentMutation = useMutation({
-  mutationFn: documentService.createDocument,
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['documents'] });
-    toast.success('Document created successfully');
-  },
-  onError: (error) => {
-    toast.error('Failed to create document');
-  },
+// Request interceptor for authentication
+apiClient.interceptors.request.use((config) => {
+  const token = tokenManager.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 ```
 
-### Context for Global State
+### Error Handling
+
+Comprehensive error handling with user-friendly messages:
 
 ```typescript
-// Authentication context
-const { user, isAuthenticated, login, logout } = useAuth();
-
-// Theme context
-const { theme, setTheme, themes } = useTheme();
-
-// Settings context
-const { settings, updateSettings } = useSettings();
+// utils/erpErrorHandling.ts
+export const showErpError = (error: ErpError, operation: string) => {
+  const errorInfo = extractErpError(error, operation);
+  
+  toast.error(errorInfo.title, {
+    description: errorInfo.message,
+    action: errorInfo.action
+  });
+};
 ```
 
-### Custom Hooks
+#### Error Types
+- **Network Errors**: Connection issues
+- **Authentication Errors**: Token problems
+- **Validation Errors**: Data validation failures
+- **ERP Integration Errors**: Business Central issues
+- **Permission Errors**: Access denied scenarios
+
+### React Query Integration
 
 ```typescript
-// Document management hook
-const useDocuments = (filters?: DocumentFilters) => {
-  const { data, isLoading, error } = useQuery({
+// hooks/useDocuments.ts
+export const useDocuments = (filters: DocumentFilters) => {
+  return useQuery({
     queryKey: ['documents', filters],
     queryFn: () => documentService.getDocuments(filters),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2
   });
+};
 
-  const createDocument = useMutation({
+// hooks/useCreateDocument.ts
+export const useCreateDocument = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
     mutationFn: documentService.createDocument,
-    onSuccess: () => queryClient.invalidateQueries(['documents']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['documents']);
+      toast.success('Document created successfully');
+    },
+    onError: (error) => {
+      showErpError(error, 'create document');
+    }
   });
-
-  return {
-    documents: data,
-    isLoading,
-    error,
-    createDocument: createDocument.mutate,
-    isCreating: createDocument.isPending,
-  };
 };
 ```
 
@@ -535,442 +540,370 @@ const useDocuments = (filters?: DocumentFilters) => {
 
 ### Tailwind CSS Configuration
 
-The application uses a custom Tailwind configuration with:
-
-- **Custom Color Palette**: DocuVerse brand colors
-- **Dark/Light Mode**: Complete theming system
-- **Custom Animations**: Smooth transitions and effects
-- **Responsive Breakpoints**: Mobile-first design
-
 ```typescript
-// Custom colors
-colors: {
-  docuBlue: {
-    DEFAULT: '#2563eb',
-    50: '#eff6ff',
-    100: '#dbeafe',
-    // ... full color scale
-  },
-  sidebar: {
-    DEFAULT: 'hsl(var(--sidebar-background))',
-    foreground: 'hsl(var(--sidebar-foreground))',
-    // ... sidebar color system
+// tailwind.config.ts
+export default {
+  darkMode: ["class"],
+  content: ["./src/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        // DocuVerse custom colors
+        docuBlue: {
+          DEFAULT: '#2563eb',
+          50: '#eff6ff',
+          // ... full color palette
+        },
+        // CSS variables for theme switching
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        // ... component colors
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'slide-up': 'slideUp 0.4s ease-out',
+        'shimmer': 'shimmer 2s infinite'
+      }
+    }
   }
-}
+};
 ```
 
-### CSS Custom Properties
+### Theme System
 
+#### Theme Provider
+```typescript
+// context/ThemeContext.tsx
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark');
+  };
+  
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+```
+
+#### CSS Variables
 ```css
+/* src/index.css */
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  /* ... other CSS variables */
+  --primary: 222.2 47.4% 11.2%;
+  /* ... */
 }
 
-[data-theme="dark"] {
+.dark {
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
-  /* ... dark theme variables */
+  --primary: 210 40% 98%;
+  /* ... */
 }
 ```
 
-### Theme Usage
+### Component Styling
 
+#### Class Variance Authority
 ```typescript
-// Theme selector component
-<ThemeSelector
-  themes={['light', 'dark', 'system']}
-  value={currentTheme}
-  onValueChange={setTheme}
-/>
-
-// Conditional styling based on theme
-<div className={cn(
-  "bg-background text-foreground",
-  "dark:bg-gray-900 dark:text-white",
-  "transition-colors duration-200"
-)}>
-  Content
-</div>
+// Button component variants
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-md text-sm font-medium",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground",
+        outline: "border border-input bg-background hover:bg-accent",
+        // ... more variants
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+      }
+    }
+  }
+);
 ```
 
 ### Responsive Design
 
-```typescript
-// Mobile-first responsive classes
-<div className={cn(
-  "grid grid-cols-1",      // Mobile: 1 column
-  "md:grid-cols-2",        // Tablet: 2 columns
-  "lg:grid-cols-3",        // Desktop: 3 columns
-  "xl:grid-cols-4",        // Large: 4 columns
-  "gap-4 p-4"
-)}>
-  {/* Content */}
-</div>
+```css
+/* styles/responsive.css */
+@media (max-width: 768px) {
+  .document-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+  }
+}
+
+@media (max-width: 640px) {
+  .table-responsive {
+    display: block;
+    overflow-x: auto;
+  }
+}
 ```
 
-## 🔨 Development Guide
+## 🔐 Authentication
 
-### Adding New Features
+### JWT-Based Authentication
 
-#### 1. Create a New Page
-
+#### Auth Context
 ```typescript
-// src/pages/NewFeature.tsx
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// context/AuthContext.tsx
+interface AuthContextType {
+  user: User | null;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
+  hasRole: (role: string) => boolean;
+}
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Auto-login on app start
+  useEffect(() => {
+    const token = tokenManager.getToken();
+    if (token && !tokenManager.isTokenExpired(token)) {
+      validateAndSetUser(token);
+    }
+    setLoading(false);
+  }, []);
+  
+  return (
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+```
+
+#### Protected Routes
+```typescript
+// components/ProtectedRoute.tsx
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiredRole?: string | string[];
+  requiresManagement?: boolean;
+}
+
+export const ProtectedRoute = ({ 
+  children, 
+  requiredRole, 
+  requiresManagement 
+}) => {
+  const { user, isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (requiredRole && !hasRequiredRole(user, requiredRole)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  return <>{children}</>;
+};
+```
+
+#### Token Management
+```typescript
+// services/tokenManager.ts
+export const tokenManager = {
+  getToken: () => localStorage.getItem('docuverse_token'),
+  
+  setToken: (token: string) => {
+    localStorage.setItem('docuverse_token', token);
+  },
+  
+  removeToken: () => {
+    localStorage.removeItem('docuverse_token');
+  },
+  
+  isTokenExpired: (token: string): boolean => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  }
+};
+```
+
+### Role-Based Access Control
+
+#### User Roles
+- **Admin**: Full system access
+- **FullUser**: Document management and workflows
+- **ReadOnlyUser**: Read-only access
+- **Manager**: Management functions
+- **Approver**: Approval permissions
+
+#### Permission Checking
+```typescript
+// hooks/usePermissions.ts
+export const usePermissions = () => {
+  const { user } = useAuth();
+  
+  const canManageDocuments = useMemo(() => {
+    return user?.roles.includes('Admin') || 
+           user?.roles.includes('FullUser');
+  }, [user]);
+  
+  const canApprove = useMemo(() => {
+    return user?.roles.includes('Admin') || 
+           user?.roles.includes('Approver');
+  }, [user]);
+  
+  return { canManageDocuments, canApprove };
+};
+```
+
+## 🧪 Testing
+
+### Testing Strategy
+
+#### Unit Testing
+```bash
+# Install testing dependencies
+npm install --save-dev @testing-library/react @testing-library/jest-dom vitest
+
+# Run tests
+npm run test
+```
+
+#### Component Testing
+```typescript
+// tests/components/Button.test.tsx
+import { render, screen } from '@testing-library/react';
 import { Button } from '@/components/ui/button';
 
-const NewFeature = () => {
-  const [filters, setFilters] = useState({});
+describe('Button', () => {
+  it('renders with correct text', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button')).toHaveTextContent('Click me');
+  });
   
-  const { data, isLoading } = useQuery({
-    queryKey: ['new-feature', filters],
-    queryFn: () => newFeatureService.getData(filters),
+  it('applies variant styles correctly', () => {
+    render(<Button variant="destructive">Delete</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-destructive');
   });
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">New Feature</h1>
-        <Button>Add New</Button>
-      </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Feature Content</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Feature content */}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-export default NewFeature;
-```
-
-#### 2. Add Routes
-
-```typescript
-// src/App.tsx
-import NewFeature from './pages/NewFeature';
-
-// Add to routes
-<Route path="/new-feature" element={
-  <ProtectedRoute requiredRole="User">
-    <NewFeature />
-  </ProtectedRoute>
-} />
-```
-
-#### 3. Create API Service
-
-```typescript
-// src/services/newFeatureService.ts
-import { apiClient } from './api/core';
-
-export interface NewFeatureData {
-  id: number;
-  name: string;
-  // ... other properties
-}
-
-export const newFeatureService = {
-  getData: async (filters?: any): Promise<NewFeatureData[]> => {
-    const response = await apiClient.get('/new-feature', { params: filters });
-    return response.data;
-  },
-
-  createItem: async (data: Omit<NewFeatureData, 'id'>): Promise<NewFeatureData> => {
-    const response = await apiClient.post('/new-feature', data);
-    return response.data;
-  },
-
-  updateItem: async (id: number, data: Partial<NewFeatureData>): Promise<NewFeatureData> => {
-    const response = await apiClient.put(`/new-feature/${id}`, data);
-    return response.data;
-  },
-
-  deleteItem: async (id: number): Promise<void> => {
-    await apiClient.delete(`/new-feature/${id}`);
-  },
-};
-```
-
-#### 4. Create Custom Hook
-
-```typescript
-// src/hooks/useNewFeature.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { newFeatureService, NewFeatureData } from '@/services/newFeatureService';
-import { toast } from '@/hooks/use-toast';
-
-export const useNewFeature = (filters?: any) => {
-  const queryClient = useQueryClient();
-
-  const {
-    data,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['new-feature', filters],
-    queryFn: () => newFeatureService.getData(filters),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: newFeatureService.createItem,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['new-feature'] });
-      toast({ title: 'Success', description: 'Item created successfully' });
-    },
-    onError: () => {
-      toast({ title: 'Error', description: 'Failed to create item', variant: 'destructive' });
-    },
-  });
-
-  return {
-    data,
-    isLoading,
-    error,
-    createItem: createMutation.mutate,
-    isCreating: createMutation.isPending,
-  };
-};
-```
-
-### Code Style Guidelines
-
-#### TypeScript Best Practices
-
-```typescript
-// Use proper typing
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: 'Admin' | 'User' | 'Viewer';
-}
-
-// Use const assertions for immutable data
-const DOCUMENT_STATUSES = ['draft', 'pending', 'approved', 'rejected'] as const;
-type DocumentStatus = typeof DOCUMENT_STATUSES[number];
-
-// Use generics for reusable components
-interface TableProps<T> {
-  data: T[];
-  columns: Column<T>[];
-  onRowClick?: (item: T) => void;
-}
-
-const Table = <T,>({ data, columns, onRowClick }: TableProps<T>) => {
-  // Component implementation
-};
-```
-
-#### Component Patterns
-
-```typescript
-// Use forwardRef for components that need ref access
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
-    return (
-      <button
-        className={cn(buttonVariants({ variant, size }), className)}
-        ref={ref}
-        {...props}
-      />
-    );
-  }
-);
-
-// Use composition for flexible components
-const Card = ({ children, className, ...props }) => (
-  <div className={cn("card-base", className)} {...props}>
-    {children}
-  </div>
-);
-
-const CardHeader = ({ children, className, ...props }) => (
-  <div className={cn("card-header", className)} {...props}>
-    {children}
-  </div>
-);
-```
-
-### Testing Guidelines
-
-```typescript
-// Component testing with React Testing Library
-import { render, screen, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Button from './Button';
-
-const createTestQueryClient = () => new QueryClient({
-  defaultOptions: { queries: { retry: false } },
 });
+```
 
-test('renders button with text', () => {
-  const queryClient = createTestQueryClient();
+#### Integration Testing
+```typescript
+// tests/pages/Login.test.tsx
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/context/AuthContext';
+import Login from '@/pages/Login';
+
+const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } }
+  });
   
-  render(
+  return render(
     <QueryClientProvider client={queryClient}>
-      <Button>Click me</Button>
+      <AuthProvider>
+        {component}
+      </AuthProvider>
     </QueryClientProvider>
   );
-  
-  expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument();
-});
+};
 
-// Hook testing
-import { renderHook, waitFor } from '@testing-library/react';
-import { useDocuments } from './useDocuments';
-
-test('fetches documents successfully', async () => {
-  const { result } = renderHook(() => useDocuments());
-  
-  await waitFor(() => {
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.documents).toHaveLength(3);
+describe('Login Page', () => {
+  it('submits login form successfully', async () => {
+    renderWithProviders(<Login />);
+    
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'user@example.com' }
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'password123' }
+    });
+    
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    
+    await waitFor(() => {
+      expect(mockAuthService.login).toHaveBeenCalledWith({
+        email: 'user@example.com',
+        password: 'password123'
+      });
+    });
   });
 });
 ```
 
-## 🚀 Building & Deployment
+### Test Configuration
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    globals: true
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  }
+});
+```
+
+## 🚀 Deployment
 
 ### Production Build
 
 ```bash
-# Create production build
+# Build for production
 npm run build
 
-# Preview production build locally
-npm run preview
-
-# Analyze bundle size
-npm run build -- --analyze
+# Build output directory
+ls -la dist/
+# ├── assets/           # Bundled JS/CSS
+# ├── index.html        # Entry point
+# └── favicon.ico       # Static assets
 ```
 
-### Environment-specific Builds
+### Environment Configuration
 
-```bash
-# Development build (with debug info)
-npm run build:dev
-
-# Staging build
-VITE_APP_ENV=staging npm run build
-
-# Production build
-VITE_APP_ENV=production npm run build
+#### Production Environment Variables
+```env
+# .env.production
+VITE_API_BASE_URL=https://api.docuverse.com/api
+VITE_API_TIMEOUT=30000
+VITE_ENABLE_ANALYTICS=true
+VITE_ENABLE_DEBUG=false
 ```
 
-### Docker Deployment
+### Deployment Options
 
-#### Dockerfile
-
-```dockerfile
-# Multi-stage build for optimal image size
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine AS production
-
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-#### Docker Compose
-
-```yaml
-version: '3.8'
-services:
-  frontend:
-    build: .
-    ports:
-      - "3000:80"
-    environment:
-      - VITE_API_BASE_URL=http://api:5000
-    depends_on:
-      - api
-    networks:
-      - app-network
-
-  api:
-    image: docmanagement-backend
-    ports:
-      - "5000:80"
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
-```
-
-### Nginx Configuration
-
-```nginx
-server {
-    listen 80;
-    server_name localhost;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # Handle client-side routing
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Cache static assets
-    location /assets {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
-}
-```
-
-### Deployment Platforms
-
-#### Vercel Deployment
-
+#### Static Hosting (Netlify/Vercel)
 ```json
-// vercel.json
-{
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "env": {
-    "VITE_API_BASE_URL": "@api-url"
-  }
-}
-```
-
-#### Netlify Deployment
-
-```toml
-# netlify.toml
+// netlify.toml
 [build]
   publish = "dist"
   command = "npm run build"
@@ -979,29 +912,159 @@ server {
   from = "/*"
   to = "/index.html"
   status = 200
-
-[build.environment]
-  NODE_VERSION = "18"
 ```
 
-## 🛠️ Troubleshooting
+#### Docker Deployment
+```dockerfile
+# Dockerfile
+FROM node:18-alpine as builder
 
-### Common Development Issues
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
 
-#### Build Errors
+COPY . .
+RUN npm run build
 
-**Problem**: `Module not found` errors during build
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 ```
-Module not found: Error: Can't resolve '@/components/ui/button'
+
+#### Nginx Configuration
+```nginx
+# nginx.conf
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    location /api {
+        proxy_pass http://backend:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
 ```
 
-**Solutions**:
-1. **Check Path Aliases**: Ensure `@` alias is configured in `vite.config.ts`
-2. **Verify File Exists**: Check if the imported file exists at the specified path
-3. **Clear Cache**: Delete `node_modules` and reinstall dependencies
+### Performance Optimization
 
+#### Bundle Analysis
 ```bash
-# Clear cache and reinstall
+# Analyze bundle size
+npm install --save-dev @bundle-analyzer/webpack-analyzer
+npm run build -- --analyze
+```
+
+#### Vite Optimization
+```typescript
+// vite.config.ts
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          utils: ['axios', 'date-fns', 'lodash']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  }
+});
+```
+
+#### Performance Features
+- **Code Splitting**: Automatic route-based splitting
+- **Lazy Loading**: Component lazy loading
+- **Image Optimization**: WebP support with fallbacks
+- **Caching**: Browser caching strategies
+- **Tree Shaking**: Unused code elimination
+
+## 🤝 Contributing
+
+### Development Workflow
+
+1. **Fork the repository**
+2. **Create feature branch**: `git checkout -b feature/new-component`
+3. **Make changes**: Follow coding standards
+4. **Add tests**: Ensure component testing
+5. **Update documentation**: Component docs
+6. **Commit changes**: Use conventional commits
+7. **Push branch**: `git push origin feature/new-component`
+8. **Create Pull Request**: Detailed description
+
+### Coding Standards
+
+#### Component Development
+```typescript
+// Good component structure
+interface ComponentProps {
+  /** Component description */
+  variant?: 'default' | 'secondary';
+  /** Additional CSS classes */
+  className?: string;
+  /** Child elements */
+  children: React.ReactNode;
+}
+
+export const Component = ({ 
+  variant = 'default', 
+  className, 
+  children 
+}: ComponentProps) => {
+  return (
+    <div className={cn(componentVariants({ variant }), className)}>
+      {children}
+    </div>
+  );
+};
+```
+
+#### Custom Hooks
+```typescript
+// hooks/useDocumentActions.ts
+export const useDocumentActions = (documentId: string) => {
+  const queryClient = useQueryClient();
+  
+  const deleteDocument = useMutation({
+    mutationFn: () => documentService.deleteDocument(documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['documents']);
+      toast.success('Document deleted successfully');
+    }
+  });
+  
+  return { deleteDocument };
+};
+```
+
+### Code Review Checklist
+
+- [ ] TypeScript types properly defined
+- [ ] Components follow naming conventions
+- [ ] Accessibility attributes included
+- [ ] Error handling implemented
+- [ ] Tests written and passing
+- [ ] Documentation updated
+- [ ] Performance considerations addressed
+- [ ] Mobile responsiveness verified
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+#### 1. Build Errors
+```bash
+# Clear node_modules and reinstall
 rm -rf node_modules package-lock.json
 npm install
 
@@ -1010,343 +1073,79 @@ rm -rf .vite
 npm run dev
 ```
 
-#### TypeScript Errors
-
-**Problem**: TypeScript compilation errors
-```
-Property 'X' does not exist on type 'Y'
-```
-
-**Solutions**:
-1. **Update Type Definitions**: Ensure all types are properly defined
-2. **Check Imports**: Verify correct import paths and types
-3. **Regenerate Types**: If using generated types, regenerate them
-
+#### 2. TypeScript Errors
 ```bash
-# Type checking
-npm run type-check
+# Check TypeScript configuration
+npx tsc --noEmit
 
-# Fix auto-fixable TypeScript issues
-npx tsc --noEmit --pretty
+# Update type definitions
+npm update @types/react @types/react-dom
 ```
 
-#### Styling Issues
-
-**Problem**: Tailwind styles not applying
-```
-Class 'bg-blue-500' not working
-```
-
-**Solutions**:
-1. **Check Tailwind Config**: Ensure content paths include your files
-2. **Import Tailwind**: Verify Tailwind is imported in your CSS
-3. **Purge Issues**: Check if classes are being purged incorrectly
-
-```typescript
-// tailwind.config.ts
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  // ... rest of config
-}
-```
-
-#### API Connection Issues
-
-**Problem**: API requests failing
-```
-Network Error: Failed to fetch
-```
-
-**Solutions**:
-1. **Check API URL**: Verify `VITE_API_BASE_URL` environment variable
-2. **CORS Issues**: Ensure backend CORS is properly configured
-3. **Network Issues**: Check if backend server is running
-
+#### 3. API Connection Issues
 ```typescript
 // Check API configuration
-console.log('API Base URL:', import.meta.env.VITE_API_BASE_URL);
+console.log('API Base URL:', process.env.VITE_API_BASE_URL);
 
-// Test API connection
-const testConnection = async () => {
-  try {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/health`);
-    console.log('API Status:', response.status);
-  } catch (error) {
-    console.error('API Connection Error:', error);
-  }
-};
+// Test API connectivity
+curl -X GET "http://localhost:5000/api/health"
 ```
 
-### Performance Issues
+#### 4. Authentication Problems
+- Check JWT token in localStorage
+- Verify token expiration
+- Confirm API authentication headers
+- Check CORS configuration
 
-#### Slow Initial Load
+#### 5. Styling Issues
+```bash
+# Rebuild Tailwind classes
+npx tailwindcss -i ./src/index.css -o ./dist/output.css --watch
 
-**Problem**: App takes long time to load initially
-
-**Solutions**:
-1. **Code Splitting**: Implement lazy loading for routes
-2. **Bundle Analysis**: Analyze and optimize bundle size
-3. **Image Optimization**: Optimize images and assets
-
-```typescript
-// Lazy load routes
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Documents = lazy(() => import('./pages/Documents'));
-
-// In routes
-<Route path="/dashboard" element={
-  <Suspense fallback={<LoadingSpinner />}>
-    <Dashboard />
-  </Suspense>
-} />
-```
-
-#### Memory Leaks
-
-**Problem**: App becomes slow over time
-
-**Solutions**:
-1. **Cleanup Effects**: Properly cleanup useEffect subscriptions
-2. **Query Cleanup**: Configure React Query garbage collection
-3. **Component Optimization**: Use React.memo for expensive components
-
-```typescript
-// Proper effect cleanup
-useEffect(() => {
-  const subscription = api.subscribe(handleUpdate);
-  
-  return () => {
-    subscription.unsubscribe();
-  };
-}, []);
-
-// React Query optimization
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 5 * 60 * 1000, // 5 minutes
-      staleTime: 1 * 60 * 1000, // 1 minute
-    },
-  },
-});
-```
-
-### Browser Compatibility
-
-#### Internet Explorer Support
-
-**Problem**: App not working in older browsers
-
-**Solutions**:
-1. **Polyfills**: Add necessary polyfills for older browsers
-2. **Browser Detection**: Show upgrade message for unsupported browsers
-3. **Progressive Enhancement**: Ensure basic functionality works everywhere
-
-```typescript
-// Browser compatibility check
-const BrowserCheck = () => {
-  const isSupported = 'fetch' in window && 'Promise' in window;
-  
-  if (!isSupported) {
-    return (
-      <div className="browser-warning">
-        <h2>Browser Not Supported</h2>
-        <p>Please upgrade to a modern browser for the best experience.</p>
-      </div>
-    );
-  }
-  
-  return null;
-};
+# Check for conflicting CSS
+npm run build -- --debug
 ```
 
 ### Development Tools
 
-#### Debugging Tools
+#### Browser DevTools
+- **React Developer Tools**: Component inspection
+- **Network Tab**: API request monitoring
+- **Console**: Error tracking and debugging
+- **Application Tab**: localStorage/sessionStorage inspection
+
+#### VS Code Extensions
+- **ES7+ React/Redux/React-Native snippets**
+- **Tailwind CSS IntelliSense**
+- **TypeScript Importer**
+- **Auto Rename Tag**
+- **Prettier - Code formatter**
+
+### Performance Monitoring
 
 ```typescript
-// React Query Devtools (development only)
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-
-function App() {
-  return (
-    <>
-      {/* Your app */}
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} />
-      )}
-    </>
-  );
-}
-
-// Error Boundary for better error handling
-class ErrorBoundary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <ErrorFallback />;
+// utils/performance.ts
+export const measurePerformance = (name: string) => {
+  return {
+    start: () => performance.mark(`${name}-start`),
+    end: () => {
+      performance.mark(`${name}-end`);
+      performance.measure(name, `${name}-start`, `${name}-end`);
+      
+      const measure = performance.getEntriesByName(name)[0];
+      console.log(`${name}: ${measure.duration.toFixed(2)}ms`);
     }
-
-    return this.props.children;
-  }
-}
-```
-
-#### Performance Monitoring
-
-```typescript
-// Web Vitals monitoring
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
-
-getCLS(console.log);
-getFID(console.log);
-getFCP(console.log);
-getLCP(console.log);
-getTTFB(console.log);
-
-// React Performance Profiler
-import { Profiler } from 'react';
-
-const onRenderCallback = (id, phase, actualDuration) => {
-  console.log(`${id} (${phase}) took ${actualDuration}ms`);
-};
-
-<Profiler id="Dashboard" onRender={onRenderCallback}>
-  <Dashboard />
-</Profiler>
-```
-
-## 🤝 Contributing
-
-We welcome contributions to improve the DocManagementFrontend! Please follow these guidelines:
-
-### Development Process
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Follow** coding standards and add tests
-4. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-5. **Push** to the branch (`git push origin feature/amazing-feature`)
-6. **Open** a Pull Request
-
-### Code Standards
-
-#### Component Guidelines
-
-```typescript
-// ✅ Good: Proper component structure
-interface ButtonProps {
-  variant?: 'primary' | 'secondary';
-  size?: 'sm' | 'md' | 'lg';
-  children: React.ReactNode;
-  onClick?: () => void;
-}
-
-const Button: React.FC<ButtonProps> = ({ 
-  variant = 'primary', 
-  size = 'md',
-  children,
-  onClick 
-}) => {
-  return (
-    <button
-      className={cn(
-        'btn',
-        `btn-${variant}`,
-        `btn-${size}`
-      )}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-};
-
-// ❌ Bad: Poor component structure
-const Button = (props) => {
-  return <button style={{color: props.color}}>{props.text}</button>;
+  };
 };
 ```
 
-#### Naming Conventions
+### Support Resources
 
-- **Components**: PascalCase (`UserProfile`, `DocumentCard`)
-- **Hooks**: camelCase starting with 'use' (`useDocuments`, `useAuth`)
-- **Services**: camelCase ending with 'Service' (`documentService`, `authService`)
-- **Types/Interfaces**: PascalCase (`User`, `DocumentData`)
-- **Constants**: UPPER_SNAKE_CASE (`API_BASE_URL`, `DEFAULT_PAGE_SIZE`)
-
-#### File Organization
-
-```
-components/
-├── ui/                 # Base UI components
-├── feature-name/       # Feature-specific components
-│   ├── FeatureList.tsx
-│   ├── FeatureForm.tsx
-│   └── index.ts       # Export file
-└── shared/            # Shared components
-```
-
-### Testing Requirements
-
-- **Unit Tests**: All utility functions must have unit tests
-- **Component Tests**: Interactive components should have basic tests
-- **Integration Tests**: Key user flows should have integration tests
-- **Accessibility Tests**: Components should pass accessibility tests
-
-### Pull Request Guidelines
-
-- **Clear Description**: Explain what the PR does and why
-- **Screenshots**: Include screenshots for UI changes
-- **Tests**: Ensure all tests pass
-- **Documentation**: Update documentation if needed
-- **Small PRs**: Keep PRs focused and small for easier review
-
-## 📞 Support
-
-### Documentation
-
-- **Component Documentation**: Storybook documentation for all components
-- **API Documentation**: Complete API integration guide
-- **Setup Guide**: Detailed setup and configuration guide
-- **Troubleshooting**: Common issues and solutions
-
-### Getting Help
-
-- **GitHub Issues**: For bug reports and feature requests
-- **Discussions**: For questions and community support
-- **Wiki**: Comprehensive project documentation
-- **Email Support**: Contact the development team
-
-### Frequently Asked Questions
-
-**Q: How do I add a new page to the application?**
-A: Create a new component in `src/pages/`, add the route in `App.tsx`, and update the navigation if needed.
-
-**Q: How do I customize the theme colors?**
-A: Update the color definitions in `tailwind.config.ts` and the CSS custom properties in `src/index.css`.
-
-**Q: How do I add a new API service?**
-A: Create a new service file in `src/services/`, follow the existing pattern with proper TypeScript types, and use React Query for data fetching.
-
-**Q: Why are my Tailwind styles not working?**
-A: Check that your file is included in the `content` array in `tailwind.config.ts` and that you've imported the CSS file properly.
+- **Component Documentation**: Storybook at `/storybook`
+- **API Documentation**: Backend Swagger UI
+- **Design System**: Figma design files
+- **Issue Tracking**: GitHub Issues
+- **Team Communication**: Slack/Discord channels
 
 ---
 
@@ -1354,27 +1153,14 @@ A: Check that your file is included in the `content` array in `tailwind.config.t
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 📞 Support
 
-- **React Team** for the amazing React library
-- **Vercel** for the incredible Vite build tool
-- **shadcn** for the beautiful UI component library
-- **Tailwind Labs** for Tailwind CSS
-- **Open Source Community** for all the excellent libraries
-
----
-
-**Built with ❤️ by the DocManagement Team**
-
-For more information, visit our [Documentation](docs/) or contact our development team.
+For technical support and questions:
+- **Email**: frontend-support@docuverse.com
+- **Documentation**: [Component Docs](./docs/)
+- **GitHub Issues**: [Create an issue](https://github.com/your-org/docuverse/issues)
+- **Community**: [Discussions](https://github.com/your-org/docuverse/discussions)
 
 ---
 
-### 🎯 Quick Start Checklist
-
-- [ ] Clone the repository
-- [ ] Install dependencies (`npm install`)
-- [ ] Set up environment variables (`.env.local`)
-- [ ] Start development server (`npm run dev`)
-- [ ] Open `http://localhost:3000`
-- [ ] Start building amazing features! 🚀 
+**DocuVerse Frontend** - Modern React Interface for Advanced Document Management
