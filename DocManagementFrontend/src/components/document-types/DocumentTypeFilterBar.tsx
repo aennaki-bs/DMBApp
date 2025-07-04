@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Filter,
   Search,
@@ -123,6 +123,20 @@ export default function DocumentTypeFilterBar({
   const filterCardClass =
     "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-[#1a2c6b]/50 via-[#0a1033]/50 to-[#1a2c6b]/50 backdrop-blur-xl shadow-lg border border-blue-900/30";
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === "f") {
+        e.preventDefault();
+        setFilterOpen(true);
+      }
+      if (e.key === "Escape" && filterOpen) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [filterOpen]);
+
   return (
     <div className={filterCardClass}>
       {/* Search and field select */}
@@ -179,6 +193,7 @@ export default function DocumentTypeFilterBar({
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
+              <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
               {activeFilterCount > 0 && (
                 <Badge
                   variant="secondary"

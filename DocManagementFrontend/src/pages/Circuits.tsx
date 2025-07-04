@@ -155,7 +155,6 @@ export default function CircuitsPage() {
     { id: "code", label: "Circuit Code" },
     { id: "name", label: "Name" },
     { id: "title", label: "Title" },
-    { id: "description", label: "Description" },
   ];
 
   // Filter circuits
@@ -171,10 +170,9 @@ export default function CircuitsPage() {
           matchesSearch = circuit.circuitKey?.toLowerCase().includes(query);
           break;
         case "name":
-        case "title":
           matchesSearch = circuit.title?.toLowerCase().includes(query);
           break;
-        case "description":
+        case "title":
           matchesSearch = circuit.descriptif?.toLowerCase().includes(query);
           break;
         case "all":
@@ -380,6 +378,20 @@ export default function CircuitsPage() {
 
   // Check if we have circuits to display
   const hasCircuits = circuits && circuits.length > 0;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === "f") {
+        e.preventDefault();
+        setFilterOpen(true);
+      }
+      if (e.key === "Escape" && filterOpen) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [filterOpen]);
 
   if (isLoading) {
     return (
@@ -603,6 +615,7 @@ export default function CircuitsPage() {
               >
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
+                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-[260px] p-4 bg-[#0a1033] border border-blue-900/30">
@@ -946,15 +959,17 @@ export default function CircuitsPage() {
             )}
           </div>
 
-          {/* Smart Pagination (exactly like UserTable) - Debug: Always show */}
-          <SmartPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-          />
+          {/* Smart Pagination (exactly like UserTable) - Only show when we have circuits */}
+          {hasCircuits && filteredCircuits.length > 0 && (
+            <SmartPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
         </div>
 
         {/* Bulk Actions Bar (exactly like UserTable) */}

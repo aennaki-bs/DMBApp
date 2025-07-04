@@ -98,7 +98,7 @@ export function DateTimePicker({
     onDateChange(newDate);
     // Force close the popover
     setTimeout(() => {
-      setIsPopoverOpen(false);
+    setIsPopoverOpen(false);
     }, 0);
   };
 

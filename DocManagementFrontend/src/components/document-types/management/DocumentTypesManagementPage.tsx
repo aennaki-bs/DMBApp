@@ -29,7 +29,7 @@ const DocumentTypesManagementPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-  
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [typeToEdit, setTypeToEdit] = useState<DocumentType | null>(null);
   const [typeToDelete, setTypeToDelete] = useState<DocumentType | null>(null);
@@ -194,7 +194,7 @@ const DocumentTypesManagementPage = () => {
           isFilterActive={isFilterActive}
           activeFilterCount={activeFilterCount}
         />
-      </div>
+        </div>
 
       <DocumentTypesContent
         isLoading={isLoading}

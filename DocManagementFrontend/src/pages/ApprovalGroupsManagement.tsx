@@ -448,6 +448,20 @@ export default function ApprovalGroupsManagement() {
     </Button>
   );
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === "f") {
+        e.preventDefault();
+        setFilterOpen(true);
+      }
+      if (e.key === "Escape" && filterOpen) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [filterOpen]);
+
   return (
     <div className="space-y-6 p-6">
       {/* Header Section - styled consistently with UserManagement */}
@@ -523,6 +537,7 @@ export default function ApprovalGroupsManagement() {
               >
                 <Filter className="h-4 w-4 text-blue-400" />
                 Filter
+                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
                 {ruleTypeFilter !== "any" && (
                   <Badge className="ml-1 bg-blue-600 text-white px-1.5 py-0.5 text-xs">
                     1

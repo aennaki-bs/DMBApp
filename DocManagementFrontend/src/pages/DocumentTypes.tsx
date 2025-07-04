@@ -92,6 +92,20 @@ const DocumentTypes = () => {
     fetchTypes();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === "f") {
+        e.preventDefault();
+        setFilterOpen(true);
+      }
+      if (e.key === "Escape" && filterOpen) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [filterOpen]);
+
   const fetchTypes = async () => {
     try {
       setIsLoading(true);

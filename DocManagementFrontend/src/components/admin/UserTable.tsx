@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import adminService from "@/services/adminService";
 import { UserTableHeader } from "./table/UserTableHeader";
@@ -221,6 +221,20 @@ export function UserTable() {
     setFilterOpen(false); // Close popover after clearing
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === "f") {
+        e.preventDefault();
+        setFilterOpen(true);
+      }
+      if (e.key === "Escape" && filterOpen) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [filterOpen]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-10">
@@ -305,6 +319,7 @@ export function UserTable() {
               >
                 <Filter className="h-5 w-5" />
                 {t("userManagement.filter")}
+                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
                 {(statusFilter !== "any" || roleFilter !== "any") && (
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                 )}

@@ -58,12 +58,10 @@ export function SidebarNav() {
     );
   };
 
-  // Check if any approval-related route is active
+  // Check if any approval-related route is active (but NOT for My Approvals)
   const isApprovalActive = () => {
     return (
-      isActive("/approval-groups") ||
-      isActive("/approvers-management") ||
-      isActive("/pending-approvals")
+      (isActive("/approval-groups") || isActive("/approvers-management"))
     );
   };
 

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import LignesList from '@/components/document/LignesList';
 import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
 
 interface DocumentLinesTabProps {
   document: Document;
@@ -21,6 +22,20 @@ const DocumentLinesTab = ({
   isCreateDialogOpen,
   setIsCreateDialogOpen
 }: DocumentLinesTabProps) => {
+  // Search state
+  const [search, setSearch] = useState("");
+
+  // Filtered lines
+  const filteredLignes = useMemo(() => {
+    if (!search.trim()) return lignes;
+    const q = search.toLowerCase();
+    return lignes.filter(ligne =>
+      (ligne.ligneKey && ligne.ligneKey.toLowerCase().includes(q)) ||
+      (ligne.title && ligne.title.toLowerCase().includes(q)) ||
+      (ligne.article && ligne.article.toLowerCase().includes(q))
+    );
+  }, [lignes, search]);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -57,6 +72,8 @@ const DocumentLinesTab = ({
             type="text"
             placeholder="Search lines..."
             className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-blue-500/50 focus:ring-blue-500/30"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
           />
           <Search className="h-4 w-4 text-white/40 absolute left-3 top-1/2 transform -translate-y-1/2" />
         </div>
@@ -75,7 +92,7 @@ const DocumentLinesTab = ({
       <div className="rounded-xl overflow-hidden bg-gradient-to-b from-blue-950/30 to-indigo-950/30 border border-blue-900/30 shadow-xl">
         <LignesList
           document={document}
-          lignes={lignes}
+          lignes={filteredLignes}
           canManageDocuments={canManageDocuments}
           isCreateDialogOpen={isCreateDialogOpen}
           setIsCreateDialogOpen={setIsCreateDialogOpen}

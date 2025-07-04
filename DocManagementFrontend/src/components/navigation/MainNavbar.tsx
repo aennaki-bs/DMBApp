@@ -122,7 +122,7 @@ export function MainNavbar() {
 
       {/* Central Search Bar - Enhanced Design with Responsive Sizing */}
       <div
-        className="flex-1 mx-4 sm:mx-6 lg:mx-8 hidden md:block"
+        className="flex-1 mx-4 sm:mx-6 lg:mx-8 hidden md:block relative"
         style={{ maxWidth: "clamp(20rem, 50vw, 42rem)" }}
         ref={searchRef}
       >
@@ -178,6 +178,7 @@ export function MainNavbar() {
             isSearching={isSearching}
             onSelect={handleSelectResult}
             searchQuery={searchQuery}
+            onClose={() => setShowResults(false)}
           />
         )}
       </div>

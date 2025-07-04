@@ -157,9 +157,9 @@ export default function DocumentsFilterBar() {
       documentTypes.forEach((type) => {
         // Add options based on the selected filter field
         if (typeFilterField === "typeName") {
-          baseOptions.push({
-            id: type.id || 0,
-            label: type.typeName,
+        baseOptions.push({
+          id: type.id || 0,
+          label: type.typeName,
             value: type.typeName, // Use typeName as the filter value
           });
         } else if (typeFilterField === "id") {
@@ -167,7 +167,7 @@ export default function DocumentsFilterBar() {
             id: type.id || 0,
             label: `${type.typeName} (ID: ${type.id})`,
             value: String(type.id), // Use ID as the filter value
-          });
+        });
         }
       });
     }
@@ -641,11 +641,11 @@ export default function DocumentsFilterBar() {
                           value={typeFilterField}
                           onValueChange={handleTypeFilterFieldChange}
                         >
-                          <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                            <SelectValue>
+                      <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                        <SelectValue>
                               {typeFilterField === "typeName" ? "By Name" : "By ID"}
-                            </SelectValue>
-                          </SelectTrigger>
+                        </SelectValue>
+                      </SelectTrigger>
                           <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
                             <SelectItem value="typeName" className="hover:bg-blue-800/40">By Name</SelectItem>
                             <SelectItem value="id" className="hover:bg-blue-800/40">By ID</SelectItem>
@@ -705,7 +705,7 @@ export default function DocumentsFilterBar() {
                     <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
                       <CalendarRange className="h-4 w-4 mr-2 text-blue-400" />
                       Date Filter
-                    </label>
+                      </label>
                     
                     {/* Date field selector */}
                     <div className="mb-2">
@@ -736,8 +736,8 @@ export default function DocumentsFilterBar() {
                       date={advancedDateRange}
                       onDateChange={handleDateRangeChange}
                       className="w-full"
-                    />
-                  </div>
+                        />
+                      </div>
 
                   <div className="mt-2">
                     <div className="bg-blue-900/20 p-2 rounded-md border border-blue-900/40">
