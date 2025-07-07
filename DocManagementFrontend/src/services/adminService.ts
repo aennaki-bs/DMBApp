@@ -33,6 +33,13 @@ export interface CreateUserRequest {
   firstName: string;
   lastName: string;
   roleName: string;
+  city: string;
+  country: string;
+  address: string;
+  identity: string;
+  phoneNumber: string;
+  responsibilityCenterId: number;
+  userType: string;
 }
 
 export interface UpdateUserRequest {
@@ -43,6 +50,12 @@ export interface UpdateUserRequest {
   isActive?: boolean;
   isEmailConfirmed?: boolean;
   roleName?: string;
+  responsibilityCenterId?: number;
+  city?: string;
+  country?: string;
+  address?: string;
+  identity?: string;
+  phoneNumber?: string;
 }
 
 export interface UpdateUserEmailRequest {
@@ -81,11 +94,12 @@ const adminService = {
   createUser: async (userData: CreateUserRequest): Promise<UserDto> => {
     try {
       // Validate required fields
-      if (!userData.email || !userData.username || !userData.passwordHash || 
-          !userData.firstName || !userData.lastName || !userData.roleName) {
+      if (!userData.email || !userData.username || !userData.passwordHash ||
+        !userData.firstName || !userData.lastName || !userData.roleName ||
+        !userData.city || !userData.country || !userData.address || !userData.phoneNumber) {
         throw new Error('Missing required user data fields');
       }
-      
+
       const response = await api.post('/Admin/users', userData);
       return response.data;
     } catch (error: any) {
@@ -136,8 +150,8 @@ const adminService = {
   // Delete multiple users
   deleteMultipleUsers: async (userIds: number[]): Promise<string> => {
     try {
-      const response = await api.delete('/Admin/delete-users', { 
-        data: userIds 
+      const response = await api.delete('/Admin/delete-users', {
+        data: userIds
       });
       return response.data;
     } catch (error) {
@@ -181,7 +195,7 @@ const adminService = {
       }
 
       const response = await api.post(`/Auth/valide-email`, { email: email.trim() });
-      
+
       // Handle the response properly - API returns "True" or "False" as strings
       if (response.data === "False") {
         // Email exists (taken) - return true to indicate email exists
@@ -190,24 +204,24 @@ const adminService = {
         // Email is available - return false to indicate email doesn't exist
         return false;
       }
-      
+
       // If response format is unexpected, throw an error
       throw new Error('Unexpected response format from server');
-      
+
     } catch (error: any) {
       console.error("Error checking email existence:", error);
-      
+
       // Handle different types of errors
       if (error.message && (error.message.includes('Email is required') || error.message.includes('valid email'))) {
         // Re-throw validation errors
         throw error;
       }
-      
+
       if (error.response) {
         // Server responded with an error status
         const status = error.response.status;
         const message = error.response.data?.message || error.response.data;
-        
+
         switch (status) {
           case 400:
             throw new Error(message || 'Invalid email format');

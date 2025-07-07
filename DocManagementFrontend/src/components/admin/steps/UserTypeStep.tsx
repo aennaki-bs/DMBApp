@@ -26,16 +26,16 @@ export function UserTypeStep({ form }: UserTypeStepProps) {
               <div className="flex flex-col gap-4">
                 <div
                   className={`group cursor-pointer border rounded-xl p-5 transition-all ${
-                    field.value === "simple"
+                    field.value === "personal"
                       ? "border-blue-500 bg-blue-800/20"
                       : "border-blue-900/30 bg-blue-950/20 hover:bg-blue-900/20"
                   }`}
-                  onClick={() => field.onChange("simple")}
+                  onClick={() => field.onChange("personal")}
                 >
                   <div className="flex items-start gap-4">
                     <div
                       className={`rounded-full p-3 transition-all ${
-                        field.value === "simple"
+                        field.value === "personal"
                           ? "bg-blue-600 text-white"
                           : "bg-blue-900/30 text-blue-400 group-hover:bg-blue-800/40"
                       }`}
@@ -50,7 +50,7 @@ export function UserTypeStep({ form }: UserTypeStepProps) {
                         {t("userManagement.personalUserDesc")}
                       </p>
 
-                      {field.value === "simple" && (
+                      {field.value === "personal" && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}

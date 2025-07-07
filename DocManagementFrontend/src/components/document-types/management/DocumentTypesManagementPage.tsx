@@ -270,3 +270,5 @@ const DocumentTypesManagementPage = () => {
 };
 
 export default DocumentTypesManagementPage;
+
+// Example Value

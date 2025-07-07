@@ -22,7 +22,7 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
   return (
     <div className="space-y-5">
       <AnimatePresence mode="wait">
-        {userType === "simple" ? (
+        {userType === "personal" ? (
           <motion.div
             key="personal"
             initial={{ opacity: 0, y: 20 }}
@@ -82,7 +82,7 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
 
                 <FormField
                   control={form.control}
-                  name="cin"
+                  name="identity"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel className="text-blue-200">

@@ -43,6 +43,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 // Import step components
 import { UserTypeStep } from "./steps/UserTypeStep";
+import { ResponsibilityCentreStep } from "./steps/ResponsibilityCentreStep";
 import { AccountDetailsStep } from "./steps/AccountDetailsStep";
 import { AddressStep } from "./steps/AddressStep";
 import { UsernameEmailStep } from "./steps/UsernameEmailStep";
@@ -70,9 +71,12 @@ const passwordSchema = z
 // Form schema with all required fields
 const formSchema = z.object({
   // User type selection
-  userType: z.enum(["simple", "company"], {
+  userType: z.enum(["personal", "company"], {
     required_error: "Please select a user type.",
   }),
+
+  // Responsibility Centre (optional, default to 0)
+  responsibilityCenterId: z.number().default(0),
 
   // Account details
   firstName: z.string().min(2, {
@@ -157,36 +161,42 @@ export function CreateUserMultiStep({
     },
     {
       id: 1,
+      title: "Responsibility Centre",
+      description: "Assign to organizational unit",
+      icon: <Building2 className="h-5 w-5" />,
+    },
+    {
+      id: 2,
       title: t("userManagement.accountDetailsStep"),
       description: t("userManagement.accountDetailsStepDesc"),
       icon: <PenLine className="h-5 w-5" />,
     },
     {
-      id: 2,
+      id: 3,
       title: t("userManagement.addressStep"),
       description: t("userManagement.addressStepDesc"),
       icon: <MapPin className="h-5 w-5" />,
     },
     {
-      id: 3,
+      id: 4,
       title: t("userManagement.usernameEmailStep"),
       description: t("userManagement.usernameEmailStepDesc"),
       icon: <AtSign className="h-5 w-5" />,
     },
     {
-      id: 4,
+      id: 5,
       title: t("userManagement.passwordStep"),
       description: t("userManagement.passwordStepDesc"),
       icon: <Key className="h-5 w-5" />,
     },
     {
-      id: 5,
+      id: 6,
       title: t("userManagement.adminAccessStep"),
       description: t("userManagement.adminAccessStepDesc"),
       icon: <Shield className="h-5 w-5" />,
     },
     {
-      id: 6,
+      id: 7,
       title: t("userManagement.reviewStep"),
       description: t("userManagement.reviewStepDesc"),
       icon: <CircleCheck className="h-5 w-5" />,
@@ -197,7 +207,8 @@ export function CreateUserMultiStep({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userType: "simple",
+      userType: "personal",
+      responsibilityCenterId: 0,
       firstName: "",
       lastName: "",
       cin: "",
@@ -279,7 +290,8 @@ export function CreateUserMultiStep({
       setUsernameChecking(false);
       setEmailChecking(false);
       form.reset({
-        userType: "simple",
+        userType: "personal",
+        responsibilityCenterId: 0,
         firstName: "",
         lastName: "",
         cin: "",
@@ -311,13 +323,16 @@ export function CreateUserMultiStep({
         fieldsToValidate = ["userType"];
         break;
       case 1:
-        fieldsToValidate =
-          userType === "simple" ? ["firstName", "lastName"] : ["companyName"];
-        break;
+        // Responsibility Centre step - optional field, no validation needed
+        return true;
       case 2:
-        fieldsToValidate = ["address", "city", "country", "phoneNumber"];
+        fieldsToValidate =
+          userType === "personal" ? ["firstName", "lastName"] : ["companyName"];
         break;
       case 3:
+        fieldsToValidate = ["address", "city", "country", "phoneNumber"];
+        break;
+      case 4:
         fieldsToValidate = ["username", "email"];
         // Also check if username and email are available
         if (usernameAvailable === false) {
@@ -345,13 +360,13 @@ export function CreateUserMultiStep({
           return false;
         }
         break;
-      case 4:
+      case 5:
         fieldsToValidate = ["passwordHash"];
         break;
-      case 5:
+      case 6:
         fieldsToValidate = ["roleName"];
         break;
-      case 6:
+      case 7:
         // Review step, no validation needed
         return true;
     }
@@ -362,11 +377,15 @@ export function CreateUserMultiStep({
 
   // Navigation between steps
   const nextStep = async () => {
+    console.log("Next step clicked, current step:", currentStep);
     const isValid = await validateCurrentStep();
+    console.log("Validation result:", isValid);
 
     if (isValid) {
       setDirection(1);
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    } else {
+      console.log("Validation failed, staying on current step");
     }
   };
 
@@ -378,31 +397,28 @@ export function CreateUserMultiStep({
   // Submit the form - only called when explicitly triggered on review step
   const onSubmit = async (values: FormValues) => {
     // Only allow submission from the review step
-    if (currentStep !== 6) {
+    if (currentStep !== 7) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Prepare user data for API call
+      // Prepare user data for API call - exact match to API structure
       const userData = {
         email: values.email,
         username: values.username,
         passwordHash: values.passwordHash,
-        firstName:
-          userType === "simple" ? values.firstName : values.companyName || "",
-        lastName: userType === "simple" ? values.lastName : "",
+        firstName: userType === "personal" ? values.firstName : values.companyName || "",
+        lastName: userType === "personal" ? values.lastName : "",
         roleName: values.roleName,
-        // Additional fields from the form
-        phoneNumber: values.phoneNumber,
-        address: values.address,
         city: values.city,
         country: values.country,
-        webSite: values.webSite,
-        userType: values.userType,
-        // CIN field for personal users (optional)
-        cin: userType === "simple" ? values.cin : undefined,
+        address: values.address,
+        identity: userType === "personal" ? values.cin || "" : "",
+        phoneNumber: values.phoneNumber,
+        responsibilityCenterId: values.responsibilityCenterId || 0,
+        userType: userType === "personal" ? "personal" : "company",
       };
 
       await adminService.createUser(userData);
@@ -436,14 +452,14 @@ export function CreateUserMultiStep({
     e.preventDefault();
     
     // Only allow submission on the review step when explicitly triggered
-    if (currentStep === 6) {
+    if (currentStep === 7) {
       form.handleSubmit(onSubmit)(e);
     }
   };
 
   // Handle keyboard events - prevent Enter key from submitting form on non-review steps
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && currentStep !== 6) {
+    if (e.key === 'Enter' && currentStep !== 7) {
       e.preventDefault();
       // Trigger next step instead of form submission
       nextStep();
@@ -472,10 +488,12 @@ export function CreateUserMultiStep({
       case 0:
         return <UserTypeStep form={form} />;
       case 1:
-        return <AccountDetailsStep form={form} />;
+        return <ResponsibilityCentreStep form={form} />;
       case 2:
-        return <AddressStep form={form} />;
+        return <AccountDetailsStep form={form} />;
       case 3:
+        return <AddressStep form={form} />;
+      case 4:
         return (
           <UsernameEmailStep
             form={form}
@@ -485,7 +503,7 @@ export function CreateUserMultiStep({
             emailChecking={emailChecking}
           />
         );
-      case 4:
+      case 5:
         return (
           <PasswordStep
             form={form}
@@ -493,9 +511,9 @@ export function CreateUserMultiStep({
             togglePasswordVisibility={togglePasswordVisibility}
           />
         );
-      case 5:
-        return <RoleStep form={form} />;
       case 6:
+        return <RoleStep form={form} />;
+      case 7:
         return <ReviewStep form={form} />;
       default:
         return null;
@@ -621,6 +639,10 @@ export function CreateUserMultiStep({
                     type="button"
                     onClick={nextStep}
                     className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
+                    disabled={
+                      currentStep === 0 &&
+                      (!userType || (userType !== "personal" && userType !== "company"))
+                    }
                   >
                     {t("userManagement.next")}
                     <ArrowRight className="h-4 w-4" />

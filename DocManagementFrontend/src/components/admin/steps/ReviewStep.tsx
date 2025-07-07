@@ -7,13 +7,16 @@ import {
   AtSign,
   Key,
   Shield,
+  Edit2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ReviewStepProps {
   form: UseFormReturn<any>;
+  onEditStep?: (stepIndex: number) => void;
 }
 
-export function ReviewStep({ form }: ReviewStepProps) {
+export function ReviewStep({ form, onEditStep }: ReviewStepProps) {
   const values = form.getValues();
 
   return (
@@ -26,6 +29,9 @@ export function ReviewStep({ form }: ReviewStepProps) {
           <h3 className="text-base font-medium text-blue-200">
             Review Information
           </h3>
+          <div className="ml-auto text-xs text-blue-400">
+            Click "Edit" to modify any section
+          </div>
         </div>
 
         <div className="space-y-5">
@@ -42,6 +48,23 @@ export function ReviewStep({ form }: ReviewStepProps) {
                     : "Company Account",
               },
             ]}
+            onEdit={() => onEditStep?.(0)}
+          />
+
+          {/* Responsibility Centre */}
+          <ReviewSection
+            title="Responsibility Centre"
+            icon={<Building2 className="h-5 w-5" />}
+            items={[
+              {
+                label: "Assignment",
+                value: values.responsibilityCenterId && values.responsibilityCenterId !== 0
+                  ? `Centre ID: ${values.responsibilityCenterId}` 
+                  : "No responsibility centre assigned",
+                valueClass: values.responsibilityCenterId && values.responsibilityCenterId !== 0 ? "text-blue-300" : "text-gray-400",
+              },
+            ]}
+            onEdit={() => onEditStep?.(1)}
           />
 
           {/* Personal/Company Information */}
@@ -69,6 +92,7 @@ export function ReviewStep({ form }: ReviewStepProps) {
                   ]
                 : [{ label: "Company Name", value: values.companyName }]
             }
+            onEdit={() => onEditStep?.(2)}
           />
 
           {/* Address */}
@@ -84,6 +108,7 @@ export function ReviewStep({ form }: ReviewStepProps) {
                 ? [{ label: "Website", value: values.webSite }]
                 : []),
             ]}
+            onEdit={() => onEditStep?.(3)}
           />
 
           {/* Username & Email */}
@@ -94,6 +119,7 @@ export function ReviewStep({ form }: ReviewStepProps) {
               { label: "Username", value: values.username },
               { label: "Email", value: values.email },
             ]}
+            onEdit={() => onEditStep?.(4)}
           />
 
           {/* Password (for security, just show placeholder) */}
@@ -101,6 +127,7 @@ export function ReviewStep({ form }: ReviewStepProps) {
             title="Password"
             icon={<Key className="h-5 w-5" />}
             items={[{ label: "Password", value: "●●●●●●●●" }]}
+            onEdit={() => onEditStep?.(5)}
           />
 
           {/* Role */}
@@ -119,6 +146,7 @@ export function ReviewStep({ form }: ReviewStepProps) {
                     : "text-blue-300",
               },
             ]}
+            onEdit={() => onEditStep?.(6)}
           />
         </div>
       </div>
@@ -127,7 +155,7 @@ export function ReviewStep({ form }: ReviewStepProps) {
         <CircleCheck className="h-5 w-5 text-green-400 flex-shrink-0" />
         <p>
           Please review all information carefully before creating the user.
-          Click the "Create User" button below to proceed.
+          You can edit any section above if needed, then click "Create User" to proceed.
         </p>
       </div>
     </div>
@@ -143,14 +171,29 @@ interface ReviewSectionProps {
     value: string;
     valueClass?: string;
   }[];
+  onEdit?: () => void;
 }
 
-function ReviewSection({ title, icon, items }: ReviewSectionProps) {
+function ReviewSection({ title, icon, items, onEdit }: ReviewSectionProps) {
   return (
-    <div className="border border-blue-900/30 rounded-lg p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="text-blue-400">{icon}</div>
-        <h4 className="text-sm font-medium text-blue-200">{title}</h4>
+    <div className="border border-blue-900/30 rounded-lg p-4 hover:border-blue-800/50 transition-colors group">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="text-blue-400">{icon}</div>
+          <h4 className="text-sm font-medium text-blue-200">{title}</h4>
+        </div>
+        {onEdit && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onEdit}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 h-8 px-3"
+          >
+            <Edit2 className="h-3 w-3 mr-1" />
+            Edit
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
