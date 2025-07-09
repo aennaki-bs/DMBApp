@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { File, Plus, FilterX, Search } from "lucide-react";
-import { useDocumentsFilter } from "../hooks/useDocumentsFilter";
+import { useDocumentsFilter } from "@/hooks/documents/useDocumentsFilter";
 import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
 import { motion } from "framer-motion";
 

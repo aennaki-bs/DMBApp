@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useDocumentsFilter } from "../hooks/useDocumentsFilter";
+import { useDocumentsFilter } from "@/hooks/documents/useDocumentsFilter";
 import { Button } from "@/components/ui/button";
 import {
   Filter,

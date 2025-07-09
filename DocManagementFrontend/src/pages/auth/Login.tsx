@@ -472,7 +472,7 @@ const Login = () => {
                           Retry Connection
                         </button>
                       )}
-
+{/* 
                       {errors.type === "auth" && (
                         <>
                           {errors.general?.includes("doesn't exist") ? (
@@ -501,7 +501,7 @@ const Login = () => {
                             </Link>
                           )}
                         </>
-                      )}
+                      )} */}
 
                       {errors.type === "verification" && (
                         <Link

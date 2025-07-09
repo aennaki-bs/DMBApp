@@ -1,5 +1,5 @@
 
-import { DocumentsFilterProvider } from './hooks/useDocumentsFilter';
+import { DocumentsFilterProvider } from '@/hooks/documents/useDocumentsFilter';
 import DocumentsPage from './DocumentsPage';
 
 export default function DocumentsPageWrapper() {

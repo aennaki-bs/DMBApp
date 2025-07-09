@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useDocumentsData } from "./hooks/useDocumentsData";
-import DocumentsHeader from "./components/DocumentsHeader";
-import DocumentsTable from "./components/DocumentsTable";
-import DocumentsEmptyState from "./components/DocumentsEmptyState";
-import DocumentsFilterBar from "./components/DocumentsFilterBar";
-import SelectedDocumentsBar from "./components/SelectedDocumentsBar";
-import DeleteConfirmDialog from "./components/DeleteConfirmDialog";
+import { useDocumentsData } from "@/hooks/documents/useDocumentsData";
+import DocumentsHeader from "@/components/documents/DocumentsHeader";
+import DocumentsTable from "@/components/documents/DocumentsTable";
+import DocumentsEmptyState from "@/components/documents/DocumentsEmptyState";
+import DocumentsFilterBar from "@/components/documents/DocumentsFilterBar";
+import SelectedDocumentsBar from "@/components/documents/SelectedDocumentsBar";
+import DeleteConfirmDialog from "@/components/documents/DeleteConfirmDialog";
 import { Document } from "@/models/document";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -34,7 +34,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
 import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
-import { useDocumentsFilter } from "./hooks/useDocumentsFilter";
+import { useDocumentsFilter } from "@/hooks/documents/useDocumentsFilter";
 
 const DocumentsPage = () => {
   const { t, tWithParams } = useTranslation();
@@ -180,13 +180,13 @@ const DocumentsPage = () => {
               } else {
                 // No ERP archival issues, generic failure
                 toast.error(
-                  tWithParams("documents.failedToDeleteAll", { count: failed.length })
+                  tWithParams("documents.failedToDelete", { count: failed.length })
                 );
               }
             }
           } else {
             // Generic error - check if it mentions ERP archival
-            const errorMessage = error.message || t("documents.deleteError");
+            const errorMessage = error.message || t("documents.failedToDelete");
             if (errorMessage.includes('archived to ERP')) {
               toast.error(errorMessage, { duration: 6000 });
             } else {
@@ -207,7 +207,7 @@ const DocumentsPage = () => {
       fetchDocuments();
     } catch (error) {
       console.error("Error deleting document(s):", error);
-      toast.error(t("documents.deleteError"));
+      toast.error(t("documents.failedToDelete"));
 
       // Still clean up UI state on error
       setDeleteDialogOpen(false);
@@ -224,7 +224,7 @@ const DocumentsPage = () => {
     setAssignCircuitDialogOpen(false);
     setDocumentToAssign(null);
     fetchDocuments();
-    toast.success(t("documents.circuitAssigned"));
+    toast.success(t("documents.circuitAssignedSuccess"));
   };
 
   return (
@@ -254,7 +254,7 @@ const DocumentsPage = () => {
                       )
                     }
                   >
-                    <GitBranch className="mr-2 h-4 w-4" /> {t("documents.assignToCircuit")}
+                    <GitBranch className="mr-2 h-4 w-4" /> {t("documents.assignCircuit")}
                   </Button>
                 )}
               </>
@@ -286,7 +286,7 @@ const DocumentsPage = () => {
               actions={[
                 {
                   id: "delete",
-                  label: t("documents.deleteSelected"),
+                  label: t("common.delete"),
                   icon: <Trash2 className="h-4 w-4" />,
                   onClick: openDeleteDialog,
                   variant: "destructive",
@@ -303,7 +303,7 @@ const DocumentsPage = () => {
           <CardContent className="p-8">
             <div className="flex flex-col items-center justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-              <p className="text-gray-400">{t("documents.loading")}</p>
+              <p className="text-gray-400">{t("common.loading")}</p>
             </div>
           </CardContent>
         ) : filteredItems.length === 0 ? (

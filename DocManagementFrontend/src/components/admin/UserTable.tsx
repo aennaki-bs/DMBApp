@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUserManagement } from "./hooks/useUserManagement";
+import { useUserManagement } from "@/hooks/useUserManagement";
 import { AlertTriangle, Filter, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

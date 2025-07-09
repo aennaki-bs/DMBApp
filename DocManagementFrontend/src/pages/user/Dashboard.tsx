@@ -89,7 +89,7 @@ export default function Dashboard() {
       </div>
 
       {/* Professional charts section */}
-      <DashboardCard className="p-0 overflow-hidden">
+      {/* <DashboardCard className="p-0 overflow-hidden">
         <Tabs defaultValue="activity" className="w-full">
           <div className="flex items-center justify-between p-6 border-b border-border bg-card">
             <TabsList className="bg-muted">
@@ -153,7 +153,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
         </Tabs>
-      </DashboardCard>
+      </DashboardCard> */}
 
       {/* Professional recent documents section */}
       {recentDocuments && recentDocuments.length > 0 && (

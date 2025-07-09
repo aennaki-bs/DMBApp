@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { X } from "lucide-react"
-import { STATUS_FILTERS, TYPE_FILTERS } from "../../types/filters"
+import { STATUS_FILTERS, TYPE_FILTERS } from "@/models/documents/filters"
 
 interface AdvancedFiltersProps {
   statusFilter: string

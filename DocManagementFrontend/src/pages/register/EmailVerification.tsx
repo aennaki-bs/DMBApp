@@ -407,4 +407,4 @@ const EmailVerification = () => {
   );
 };
 
-export default EmailVerification;
+export default EmailVerification; 
