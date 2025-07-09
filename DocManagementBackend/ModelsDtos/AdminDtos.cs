@@ -10,11 +10,12 @@ namespace DocManagementBackend.Models
         public string RoleName { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
-        public string Identity { get; set; } = string.Empty;
-        public string PhoneNumber { get; set; } = string.Empty;
+        public string? Address { get; set; } = string.Empty;
+        public string? Identity { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; } = string.Empty;
         public int? ResponsibilityCenterId { get; set; }
         public string UserType { get; set; } = string.Empty;
+        public string? WebSite { get; set; } = string.Empty;
     }
     public class AdminUpdateUserRequest
     {

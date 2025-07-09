@@ -94,9 +94,7 @@ const adminService = {
   createUser: async (userData: CreateUserRequest): Promise<UserDto> => {
     try {
       // Validate required fields
-      if (!userData.email || !userData.username || !userData.passwordHash ||
-        !userData.firstName || !userData.lastName || !userData.roleName ||
-        !userData.city || !userData.country || !userData.address || !userData.phoneNumber) {
+      if (!userData.email || !userData.username || !userData.passwordHash || !userData.userType) {
         throw new Error('Missing required user data fields');
       }
 

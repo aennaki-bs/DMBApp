@@ -25,7 +25,9 @@ export function PasswordStep({
   showPassword,
   togglePasswordVisibility,
 }: PasswordStepProps) {
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const password = form.watch("passwordHash");
+  const confirmPassword = form.watch("confirmPassword");
   const { t } = useTranslation();
 
   // Password strength indicators
@@ -107,6 +109,56 @@ export function PasswordStep({
                   </div>
                 </FormControl>
                 <FormMessage className="text-red-300" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-blue-200">Confirm Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      {...field}
+                      className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50 pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 text-blue-400 hover:text-blue-300 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage className="text-red-300" />
+                {/* Password match indicator */}
+                {confirmPassword && password && (
+                  <div className="flex items-center gap-2 text-sm">
+                    {confirmPassword === password ? (
+                      <>
+                        <Check className="h-4 w-4 text-green-400" />
+                        <span className="text-green-300">Passwords match</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-4 w-4 text-red-400" />
+                        <span className="text-red-300">Passwords don't match</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </FormItem>
             )}
           />

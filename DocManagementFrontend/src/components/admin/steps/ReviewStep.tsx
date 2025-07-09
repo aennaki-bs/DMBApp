@@ -10,14 +10,30 @@ import {
   Edit2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
 
 interface ReviewStepProps {
   form: UseFormReturn<any>;
   onEditStep?: (stepIndex: number) => void;
+  responsibilityCentres?: ResponsibilityCentreSimple[];
 }
 
-export function ReviewStep({ form, onEditStep }: ReviewStepProps) {
+export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: ReviewStepProps) {
   const values = form.getValues();
+
+  // Helper function to get responsibility centre display text
+  const getResponsibilityCentreDisplay = () => {
+    if (!values.responsibilityCenterId || values.responsibilityCenterId === 0) {
+      return "No responsibility centre assigned";
+    }
+    
+    const centre = responsibilityCentres.find(c => c.id === values.responsibilityCenterId);
+    if (centre) {
+      return `${centre.code} - ${centre.descr}`;
+    }
+    
+    return `Centre ID: ${values.responsibilityCentreId}`;
+  };
 
   return (
     <div className="space-y-5">
@@ -43,7 +59,7 @@ export function ReviewStep({ form, onEditStep }: ReviewStepProps) {
               {
                 label: "User Type",
                 value:
-                  values.userType === "simple"
+                  values.userType === "personal"
                     ? "Personal User"
                     : "Company Account",
               },
@@ -58,9 +74,7 @@ export function ReviewStep({ form, onEditStep }: ReviewStepProps) {
             items={[
               {
                 label: "Assignment",
-                value: values.responsibilityCenterId && values.responsibilityCenterId !== 0
-                  ? `Centre ID: ${values.responsibilityCenterId}` 
-                  : "No responsibility centre assigned",
+                value: getResponsibilityCentreDisplay(),
                 valueClass: values.responsibilityCenterId && values.responsibilityCenterId !== 0 ? "text-blue-300" : "text-gray-400",
               },
             ]}
@@ -70,27 +84,36 @@ export function ReviewStep({ form, onEditStep }: ReviewStepProps) {
           {/* Personal/Company Information */}
           <ReviewSection
             title={
-              values.userType === "simple"
+              values.userType === "personal"
                 ? "Personal Information"
                 : "Company Information"
             }
             icon={
-              values.userType === "simple" ? (
+              values.userType === "personal" ? (
                 <User className="h-5 w-5" />
               ) : (
                 <Building2 className="h-5 w-5" />
               )
             }
             items={
-              values.userType === "simple"
+              values.userType === "personal"
                 ? [
                     { label: "First Name", value: values.firstName },
                     { label: "Last Name", value: values.lastName },
-                    ...(values.cin
-                      ? [{ label: "CIN", value: values.cin }]
-                      : []),
+                    { 
+                      label: "CIN", 
+                      value: values.cin || "Not provided",
+                      valueClass: values.cin ? "text-blue-100" : "text-gray-400"
+                    },
                   ]
-                : [{ label: "Company Name", value: values.companyName }]
+                : [
+                    { label: "Company Name", value: values.companyName },
+                    { 
+                      label: "Registration Number", 
+                      value: values.registrationNumber || "Not provided",
+                      valueClass: values.registrationNumber ? "text-blue-100" : "text-gray-400"
+                    },
+                  ]
             }
             onEdit={() => onEditStep?.(2)}
           />
@@ -100,13 +123,27 @@ export function ReviewStep({ form, onEditStep }: ReviewStepProps) {
             title="Address Information"
             icon={<MapPin className="h-5 w-5" />}
             items={[
-              { label: "Address", value: values.address },
+              { 
+                label: "Address", 
+                value: values.address || "Not provided",
+                valueClass: values.address ? "text-blue-100" : "text-gray-400"
+              },
               { label: "City", value: values.city },
               { label: "Country", value: values.country },
-              { label: "Phone Number", value: values.phoneNumber },
-              ...(values.webSite
-                ? [{ label: "Website", value: values.webSite }]
-                : []),
+              { 
+                label: "Phone Number", 
+                value: values.phoneNumber || "Not provided",
+                valueClass: values.phoneNumber ? "text-blue-100" : "text-gray-400"
+              },
+              ...(values.userType === "company"
+                ? [{ 
+                    label: "Website", 
+                    value: values.webSite || "Not provided",
+                    valueClass: values.webSite ? "text-blue-100" : "text-gray-400"
+                  }]
+                : values.webSite 
+                  ? [{ label: "Website", value: values.webSite }]
+                  : []),
             ]}
             onEdit={() => onEditStep?.(3)}
           />
@@ -154,8 +191,8 @@ export function ReviewStep({ form, onEditStep }: ReviewStepProps) {
       <div className="bg-green-900/30 rounded-lg p-4 text-sm text-green-300 border border-green-800/30 flex items-center gap-3">
         <CircleCheck className="h-5 w-5 text-green-400 flex-shrink-0" />
         <p>
-          Please review all information carefully before creating the user.
-          You can edit any section above if needed, then click "Create User" to proceed.
+          Please review all information carefully before creating the account.
+          You can edit any section above if needed, then click "Create Account" to proceed.
         </p>
       </div>
     </div>

@@ -82,7 +82,7 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
 
                 <FormField
                   control={form.control}
-                  name="identity"
+                  name="cin"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel className="text-blue-200">
@@ -122,25 +122,48 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
                 </h3>
               </div>
 
-              <FormField
-                control={form.control}
-                name="companyName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-blue-200">
-                      {t("userManagement.companyName")}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t("userManagement.companyNamePlaceholder")}
-                        {...field}
-                        className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-300" />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="companyName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-blue-200">
+                        {t("userManagement.companyName")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t("userManagement.companyNamePlaceholder")}
+                          {...field}
+                          className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="registrationNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-blue-200">
+                        Registration Number <span className="text-blue-400 text-xs">(Optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter company registration number"
+                          {...field}
+                          value={field.value || ""}
+                          className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
           </motion.div>
         )}
@@ -162,7 +185,10 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
             <path d="M12 16v-4" />
             <path d="M12 8h.01" />
           </svg>
-          {t("userManagement.identificationInfo")}
+          {userType === "personal" 
+            ? "CIN (National Identity Card) is used for user identification in the system." 
+            : "Registration Number is used for company identification in the system."
+          }
         </p>
       </div>
     </div>

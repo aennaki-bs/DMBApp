@@ -31,24 +31,6 @@ export function AddressStep({ form }: AddressStepProps) {
         </div>
 
         <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-blue-200">{t("userManagement.address")}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("userManagement.addressPlaceholder")}
-                    {...field}
-                    className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
-                  />
-                </FormControl>
-                <FormMessage className="text-red-300" />
-              </FormItem>
-            )}
-          />
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -86,37 +68,44 @@ export function AddressStep({ form }: AddressStepProps) {
               )}
             />
           </div>
-        </div>
-      </div>
 
-      <div className="rounded-lg border border-blue-800/30 bg-blue-900/10 p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-full bg-blue-800/20 text-blue-400">
-            <Phone className="h-5 w-5" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-blue-200">{t("userManagement.address")} <span className="text-blue-400 text-xs">(optional)</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t("userManagement.addressPlaceholder")}
+                      {...field}
+                      className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-300" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-blue-200">{t("userManagement.phoneNumber")} <span className="text-blue-400 text-xs">(optional)</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t("userManagement.phoneNumberPlaceholder")}
+                      {...field}
+                      className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-300" />
+                </FormItem>
+              )}
+            />
           </div>
-          <h3 className="text-base font-medium text-blue-200">
-            {t("userManagement.contactDetails")}
-          </h3>
-        </div>
-
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="phoneNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-blue-200">{t("userManagement.phoneNumber")}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("userManagement.phoneNumberPlaceholder")}
-                    {...field}
-                    className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
-                  />
-                </FormControl>
-                <FormMessage className="text-red-300" />
-              </FormItem>
-            )}
-          />
 
           {userType === "company" && (
             <FormField
