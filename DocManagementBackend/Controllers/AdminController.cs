@@ -107,6 +107,13 @@ namespace DocManagementBackend.Controllers
             if (role == null)
                 return BadRequest("Invalid RoleName.");
             
+            if (request.ResponsibilityCenterId.HasValue)
+            {
+                var responsibilityCentre = await _context.ResponsibilityCentres.FindAsync(request.ResponsibilityCenterId);
+                if (responsibilityCentre == null)
+                    return BadRequest("Invalid ResponsibilityCenterId.");
+            }
+            
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash);
             var emailVerificationCode = new Random().Next(100000, 999999).ToString();
             var newUser = new User
@@ -121,11 +128,18 @@ namespace DocManagementBackend.Controllers
                 CreatedAt = DateTime.UtcNow,
                 RoleId = roleId,
                 EmailVerificationCode = emailVerificationCode,
-                ProfilePicture = "/images/profile/default.png"
+                ProfilePicture = "/images/profile/default.png",
+                City = request.City,
+                Country = request.Country,
+                Address = request.Address,
+                Identity = request.Identity,
+                PhoneNumber = request.PhoneNumber,
+                ResponsibilityCentreId = request.ResponsibilityCenterId.HasValue ? request.ResponsibilityCenterId.Value : null,
+                UserType = request.UserType
             };
             
             string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
-            var verificationLink = $"{frontDomain}/verify/{newUser.Email}";
+            var verificationLink = $"{frontDomain}verify/{newUser.Email}";
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, newUser.EmailVerificationCode);
             
             _context.Users.Add(newUser);
@@ -154,7 +168,14 @@ namespace DocManagementBackend.Controllers
                 newUser.LastName,
                 Role = role.RoleName,
                 newUser.IsActive,
-                newUser.CreatedAt
+                newUser.CreatedAt,
+                newUser.ResponsibilityCentreId,
+                newUser.UserType,
+                newUser.City,
+                newUser.Country,
+                newUser.Address,
+                newUser.Identity,
+                newUser.PhoneNumber
             });
         }
 
@@ -191,11 +212,31 @@ namespace DocManagementBackend.Controllers
             if (!string.IsNullOrEmpty(request.LastName))
                 user.LastName = request.LastName;
             
-            if (request.IsEmailConfirmed.HasValue)
-                user.IsEmailConfirmed = request.IsEmailConfirmed.Value;
-            
             if (request.IsActive.HasValue)
                 user.IsActive = request.IsActive.Value;
+            
+            if (!string.IsNullOrEmpty(request.City))
+                user.City = request.City;
+            
+            if (!string.IsNullOrEmpty(request.Country))
+                user.Country = request.Country;
+            
+            if (!string.IsNullOrEmpty(request.Address))
+                user.Address = request.Address;
+            
+            if (!string.IsNullOrEmpty(request.Identity))
+                user.Identity = request.Identity;
+            
+            if (!string.IsNullOrEmpty(request.PhoneNumber)) 
+                user.PhoneNumber = request.PhoneNumber;
+            
+            if (request.ResponsibilityCenterId.HasValue)
+            {
+                var responsibilityCentre = await _context.ResponsibilityCentres.FindAsync(request.ResponsibilityCenterId);
+                if (responsibilityCentre == null)   
+                    return BadRequest("Invalid ResponsibilityCenterId.");
+                user.ResponsibilityCentreId = request.ResponsibilityCenterId.Value;
+            }
             
             if (!string.IsNullOrEmpty(request.RoleName))
             {
@@ -252,7 +293,7 @@ namespace DocManagementBackend.Controllers
             user.IsActive = false;
             user.IsEmailConfirmed = false;
             string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
-            var verificationLink = $"{frontDomain}/verify/{user.Email}";
+            var verificationLink = $"{frontDomain}verify/{user.Email}";
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);
             await _context.SaveChangesAsync();
             AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);
@@ -288,34 +329,35 @@ namespace DocManagementBackend.Controllers
                 return NotFound("User not found.");
 
             // Check if user has any associated data that would prevent deletion
-            var hasDocumentsAsCreator = await _context.Documents.AnyAsync(d => d.CreatedByUserId == id);
+            // var hasDocumentsAsCreator = await _context.Documents.AnyAsync(d => d.CreatedByUserId == id);
             // var hasDocumentsAsUpdater = await _context.Documents.AnyAsync(d => d.UpdatedByUserId == id);
-            var hasApprovals = await _context.ApprovalWritings.AnyAsync(aw => aw.ProcessedByUserId == id);
+            var IsApprover = await _context.Approvators.AnyAsync(aw => aw.UserId == id);
+            var IsApproverGroup = await _context.ApprovatorsGroupUsers.AnyAsync(ag => ag.UserId == id);
             // var hasCircuitHistory = await _context.DocumentCircuitHistory.AnyAsync(dch => dch.ProcessedByUserId == id);
             // var hasStepHistory = await _context.DocumentStepHistory.AnyAsync(dsh => dsh.UserId == id);
             // var hasDocumentStatusHistory = await _context.DocumentStatus.AnyAsync(ds => ds.CompletedByUserId == id);
 
-            if (hasDocumentsAsCreator || hasApprovals)
+            if (IsApprover || IsApproverGroup)
             {
                 // Instead of hard deletion, deactivate the user
-                userToDelete.IsActive = false;
-                userToDelete.Email = $"deleted_{userToDelete.Id}_{userToDelete.Email}";
-                userToDelete.Username = $"deleted_{userToDelete.Id}_{userToDelete.Username}";
+                // userToDelete.IsActive = false;
+                // userToDelete.Email = $"deleted_{userToDelete.Id}_{userToDelete.Email}";
+                // userToDelete.Username = $"deleted_{userToDelete.Id}_{userToDelete.Username}";
                 
-                await _context.SaveChangesAsync();
+                // await _context.SaveChangesAsync();
 
-                var logEntry = new LogHistory
-                {
-                    UserId = userId,
-                    User = currentUser,
-                    Timestamp = DateTime.UtcNow,
-                    ActionType = 9,
-                    Description = $"{currentUser.Username} has deactivated {userToDelete.Username}'s account (user had associated data)"
-                };
-                _context.LogHistories.Add(logEntry);
-                await _context.SaveChangesAsync();
+                // var logEntry = new LogHistory
+                // {
+                //     UserId = userId,
+                //     User = currentUser,
+                //     Timestamp = DateTime.UtcNow,
+                //     ActionType = 9,
+                //     Description = $"{currentUser.Username} has deactivated {userToDelete.Username}'s account (user had associated data)"
+                // };
+                // _context.LogHistories.Add(logEntry);
+                // await _context.SaveChangesAsync();
 
-                return Ok("User account has been deactivated due to associated data.");
+                return BadRequest("User account has associated data. \"He is an approver or assigned to an approver group\"!");
             }
 
             // Safe to delete completely
@@ -359,25 +401,26 @@ namespace DocManagementBackend.Controllers
                 return NotFound("No users found with the provided IDs.");
 
             int deletedCount = 0;
-            int deactivatedCount = 0;
+            int notDeletedCount = 0;
 
             foreach (var user in usersToDelete)
             {
                 // Check if user has any associated data that would prevent deletion
-                var hasDocumentsAsCreator = await _context.Documents.AnyAsync(d => d.CreatedByUserId == user.Id);
+                // var hasDocumentsAsCreator = await _context.Documents.AnyAsync(d => d.CreatedByUserId == user.Id);
                 // var hasDocumentsAsUpdater = await _context.Documents.AnyAsync(d => d.UpdatedByUserId == user.Id);
-                var hasApprovals = await _context.ApprovalWritings.AnyAsync(aw => aw.ProcessedByUserId == user.Id);
+                var IsApprover = await _context.Approvators.AnyAsync(aw => aw.UserId == user.Id);
+                var IsApproverGroup = await _context.ApprovatorsGroupUsers.AnyAsync(ag => ag.UserId == user.Id);
                 // var hasCircuitHistory = await _context.DocumentCircuitHistory.AnyAsync(dch => dch.ProcessedByUserId == user.Id);
                 // var hasStepHistory = await _context.DocumentStepHistory.AnyAsync(dsh => dsh.UserId == user.Id);
                 // var hasDocumentStatusHistory = await _context.DocumentStatus.AnyAsync(ds => ds.CompletedByUserId == user.Id);
 
-                if (hasDocumentsAsCreator || hasApprovals)
+                if (IsApprover || IsApproverGroup)
                 {
                     // Deactivate instead of delete
-                    user.IsActive = false;
-                    user.Email = $"deleted_{user.Id}_{user.Email}";
-                    user.Username = $"deleted_{user.Id}_{user.Username}";
-                    deactivatedCount++;
+                    // user.IsActive = false;
+                    // user.Email = $"deleted_{user.Id}_{user.Email}";
+                    // user.Username = $"deleted_{user.Id}_{user.Username}";
+                    notDeletedCount++;
                 }
                 else
                 {
@@ -395,12 +438,12 @@ namespace DocManagementBackend.Controllers
                 User = currentUser,
                 Timestamp = DateTime.UtcNow,
                 ActionType = 9,
-                Description = $"{currentUser.Username} performed bulk user cleanup: {deletedCount} deleted, {deactivatedCount} deactivated"
+                Description = $"{currentUser.Username} performed bulk user cleanup: {deletedCount} deleted"
             };
             _context.LogHistories.Add(logEntry);
             await _context.SaveChangesAsync();
 
-            var message = $"{deletedCount} users deleted, {deactivatedCount} users deactivated (had associated data).";
+            var message = $"{deletedCount} users deleted, {notDeletedCount} users not deleted (had associated data).";
             return Ok(message);
         }
 

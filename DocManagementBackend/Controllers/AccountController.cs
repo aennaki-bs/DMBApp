@@ -83,7 +83,7 @@ namespace DocManagementBackend.Controllers
                 return Unauthorized("Email Not Verified!");
             if (!user.IsActive)
                 return Unauthorized("User Account Desactivated!");
-            var verificationLink = $"{frontDomain}/update-password/{user.Email}";
+            var verificationLink = $"{frontDomain}update-password/{user.Email}";
             var emailBody = AuthHelper.createPassEmailBody(verificationLink);
             AuthHelper.SendEmail(user.Email, "Password Reset", emailBody);
             return Ok("A Link Is Sent To Your Email.");
@@ -119,7 +119,7 @@ namespace DocManagementBackend.Controllers
             var verifCode = new Random().Next(100000, 999999).ToString();
             // if (string.IsNullOrEmpty(user.EmailVerificationCode))
             user.EmailVerificationCode = verifCode;
-            var verificationLink = $"{frontDomain}/verify/{user.Email}";
+            var verificationLink = $"{frontDomain}verify/{user.Email}";
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);
             AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);
             await _context.SaveChangesAsync();
@@ -246,7 +246,7 @@ namespace DocManagementBackend.Controllers
             user.IsActive = false;
             user.IsEmailConfirmed = false;
             string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
-            var verificationLink = $"{frontDomain}/verify/{user.Email}";
+            var verificationLink = $"{frontDomain}verify/{user.Email}";
             string emailBody = AuthHelper.CreateEmailBody(verificationLink, user.EmailVerificationCode);
             await _context.SaveChangesAsync();
             AuthHelper.SendEmail(user.Email, "Email Verification", emailBody);

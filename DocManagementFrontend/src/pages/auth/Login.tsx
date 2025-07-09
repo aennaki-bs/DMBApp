@@ -757,9 +757,8 @@ const Login = () => {
                   Secure Document Management
                 </h3>
                 <p className="text-sm text-blue-300">
-                  Store and manage your documents with enterprise-grade security
-                  and encryption. Control access permissions and keep your data
-                  protected.
+                  Store and manage your documents with enterprise-grade security.
+                  Control access permissions and keep your data protected.
                 </p>
               </motion.div>
 
@@ -776,7 +775,7 @@ const Login = () => {
                   Collaborative Workflows
                 </h3>
                 <p className="text-sm text-blue-300">
-                  Work together seamlessly with team members. Share documents,
+                  Work together seamlessly with team members. Manage documents,
                   assign tasks, and track progress in real-time with our
                   intuitive interface.
                 </p>
@@ -792,7 +791,7 @@ const Login = () => {
                   <div className="p-1 rounded-full bg-blue-700/30">
                     <AlertCircle className="h-4 w-4 text-blue-300" />
                   </div>
-                  Smart Document Processing
+                  Smart Document Processing (Coming Soon)
                 </h3>
                 <p className="text-sm text-blue-300">
                   Leverage AI-powered features to organize, search, and extract
