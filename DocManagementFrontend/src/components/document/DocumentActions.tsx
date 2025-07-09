@@ -29,6 +29,9 @@ const DocumentActions = ({
 }: DocumentActionsProps) => {
   const [isAssignCircuitOpen, setIsAssignCircuitOpen] = useState(false);
 
+  // Check if document is archived to ERP (read-only)
+  const isArchivedToERP = !!(document.erpDocumentCode && document.erpDocumentCode.length > 0);
+
   // Refresh the page after circuit assignment
   const handleCircuitAssigned = () => {
     window.location.reload();
@@ -48,7 +51,7 @@ const DocumentActions = ({
         )}
 
         {/* Show Assign to Circuit button when document has no circuit and user can manage documents */}
-        {!document.circuitId && canManageDocuments && (
+        {!document.circuitId && canManageDocuments && !isArchivedToERP && (
           <Button
             variant="outline"
             className="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50 flex items-center gap-2"
@@ -58,7 +61,7 @@ const DocumentActions = ({
           </Button>
         )}
 
-        {canManageDocuments && (
+        {canManageDocuments && !isArchivedToERP && (
           <>
             <Button
               variant="outline"
@@ -77,6 +80,35 @@ const DocumentActions = ({
               <Trash className="h-4 w-4 mr-2" /> Delete
             </Button>
           </>
+        )}
+
+        {/* Show read-only message for archived documents */}
+        {isArchivedToERP && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    className="border-orange-400/30 text-orange-300 opacity-60 cursor-not-allowed flex items-center gap-2"
+                    disabled
+                  >
+                    <Edit className="h-4 w-4 mr-2" /> Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="bg-red-600/40 opacity-60 cursor-not-allowed flex items-center gap-2"
+                    disabled
+                  >
+                    <Trash className="h-4 w-4 mr-2" /> Delete
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="bg-gray-900 border-orange-500/30 text-orange-300">
+                <p>Document is archived to ERP and cannot be modified</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
 
         {!canManageDocuments && (
@@ -101,15 +133,17 @@ const DocumentActions = ({
         )}
       </div>
 
-      {/* Assign Circuit Dialog */}
-      <AssignCircuitDialog
-        documentId={document.id}
-                  documentKey={document.documentKey}
-        documentTypeId={document.typeId}
-        open={isAssignCircuitOpen}
-        onOpenChange={setIsAssignCircuitOpen}
-        onSuccess={handleCircuitAssigned}
-      />
+            {/* Assign Circuit Dialog - only show for non-archived documents */}
+      {!isArchivedToERP && (
+        <AssignCircuitDialog
+          documentId={document.id}
+          documentKey={document.documentKey}
+          documentTypeId={document.typeId}
+          open={isAssignCircuitOpen}
+          onOpenChange={setIsAssignCircuitOpen}
+          onSuccess={handleCircuitAssigned}
+        />
+      )}
     </>
   );
 };

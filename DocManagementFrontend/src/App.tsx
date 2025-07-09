@@ -19,6 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import EmailVerification from "./pages/register/EmailVerification";
 import AdminPage from "./pages/admin/Admin";
 import DocumentsPageWrapper from "./pages/documents/DocumentsPageWrapper";
+import ArchivedDocuments from "./pages/documents/ArchivedDocuments";
 // import DocumentTypes from "./pages/documents/DocumentTypes";
 import DocumentTypesManagement from "./pages/documents/DocumentTypesManagement";
 import SubTypeManagement from "./pages/reference-data/SubTypeManagement";
@@ -210,6 +211,7 @@ const App = () => (
 
                   {/* Document routes */}
                   <Route path="/documents" element={<DocumentsPageWrapper />} />
+                  <Route path="/documents/archived" element={<ArchivedDocuments />} />
                   <Route path="/documents/:id" element={<ViewDocument />} />
 
                   <Route

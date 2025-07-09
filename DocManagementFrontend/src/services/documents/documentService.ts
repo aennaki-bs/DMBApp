@@ -46,6 +46,16 @@ const documentService = {
     }
   },
 
+  getArchivedDocuments: async (): Promise<Document[]> => {
+    try {
+      const response = await api.get('/Documents/archived');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching archived documents:', error);
+      throw error;
+    }
+  },
+
   createDocument: async (document: CreateDocumentRequest): Promise<Document> => {
     try {
       const response = await api.post('/Documents', document);

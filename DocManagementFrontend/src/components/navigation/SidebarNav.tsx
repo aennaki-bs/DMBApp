@@ -24,6 +24,7 @@ import {
   Calculator,
   Truck,
   MapPin,
+  Archive,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -65,17 +66,29 @@ export function SidebarNav() {
     );
   };
 
+  // Check if any documents-related route is active
+  const isDocumentsActive = () => {
+    return (
+      isActive("/documents") || isActive("/documents/archived")
+    );
+  };
+
   // State for the approval submenu
   const [approvalMenuOpen, setApprovalMenuOpen] = useState(isApprovalActive());
   // State for the line elements submenu - open by default if on a line elements page
   const [lineElementsMenuOpen, setLineElementsMenuOpen] = useState(
     isLineElementsActive()
   );
+  // State for the documents submenu - open by default if on a documents page
+  const [documentsMenuOpen, setDocumentsMenuOpen] = useState(
+    isDocumentsActive()
+  );
 
   // Update submenu states when location changes
   useEffect(() => {
     setApprovalMenuOpen(isApprovalActive());
     setLineElementsMenuOpen(isLineElementsActive());
+    setDocumentsMenuOpen(isDocumentsActive());
   }, [location.pathname]);
 
   // Fetch pending approvals count
@@ -158,15 +171,52 @@ export function SidebarNav() {
             </li>
           )}
 
-          {/* Documents */}
+          {/* Documents Section with submenu */}
           <li>
-            <Link
-              to="/documents"
-              className={getNavItemClasses(isActive("/documents"))}
+            <button
+              onClick={() => setDocumentsMenuOpen(!documentsMenuOpen)}
+              className={`w-full ${getNavItemClasses(
+                isDocumentsActive()
+              )} justify-between`}
             >
-              <FileText className="h-5 w-5" />
-              <span>{t("nav.documents")}</span>
-            </Link>
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5" />
+                <span>{t("nav.documents")}</span>
+              </div>
+              {documentsMenuOpen ? (
+                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+              ) : (
+                <ChevronRight className="h-4 w-4 transition-transform duration-200" />
+              )}
+            </button>
+
+            {/* Professional submenu for Documents */}
+            {documentsMenuOpen && (
+              <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border pl-3">
+                <li>
+                  <Link
+                    to="/documents"
+                    className={getSubmenuItemClasses(
+                      isActive("/documents") && !isActive("/documents/archived")
+                    )}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Active Documents</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/documents/archived"
+                    className={getSubmenuItemClasses(
+                      isActive("/documents/archived")
+                    )}
+                  >
+                    <Archive className="h-4 w-4" />
+                    <span>Archived Documents</span>
+                  </Link>
+                </li>
+              </ul>
+            )}
           </li>
 
           {/* Document Types - Only for non-simple users */}

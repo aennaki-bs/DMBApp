@@ -156,6 +156,43 @@ namespace DocManagementBackend.Controllers
             return Ok(recentDocuments);
         }
 
+        [HttpGet("archived")]
+        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetArchivedDocuments()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
+
+            // Query builder for archived documents (documents with ERPDocumentCode)
+            IQueryable<Document> documentsQuery = _context.Documents
+                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.DocumentType)
+                .Include(d => d.SubType)
+                .Include(d => d.CurrentStep)
+                .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Lignes)
+                .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode)); // Only archived documents
+
+            // Filter based on user's responsibility center
+            if (user.ResponsibilityCentreId.HasValue)
+            {
+                // User has a responsibility center - show only documents from that center
+                documentsQuery = documentsQuery.Where(d => d.ResponsibilityCentreId == user.ResponsibilityCentreId.Value);
+            }
+            // If user doesn't have a responsibility center, show all documents (no filter applied)
+
+            var archivedDocuments = await documentsQuery
+                .OrderByDescending(d => d.UpdatedAt) // Sort by last update (when archived)
+                .Select(DocumentMappings.ToDocumentDto)
+                .ToListAsync();
+
+            return Ok(archivedDocuments);
+        }
+
         [HttpPost]
         public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentRequest request)
         {

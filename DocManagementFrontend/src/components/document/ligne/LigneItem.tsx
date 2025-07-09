@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import SousLignesList from "../SousLignesList";
-import AddLineToErpButton from "../AddLineToErpButton";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 
@@ -140,21 +139,6 @@ const LigneItem = ({
                 transition={{ duration: 0.2 }}
                 className="flex items-center gap-1"
               >
-                {/* Add to ERP Button - Always visible for admins and users */}
-                <div onClick={(e) => e.stopPropagation()}>
-                  <AddLineToErpButton
-                    ligneId={ligne.id}
-                    ligneTitle={ligne.title}
-                    documentErpCode={document.erpDocumentCode}
-                    lineErpCode={ligne.erpLineCode}
-                    onSuccess={(erpLineCode) => {
-                      // Update the ligne object to reflect the change
-                      ligne.erpLineCode = erpLineCode;
-                    }}
-                    className="h-8"
-                  />
-                </div>
-
                 {canManageDocuments && (
                   <>
                     <Button
