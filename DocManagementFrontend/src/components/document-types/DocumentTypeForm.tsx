@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import documentService from "@/services/documentService";
 import { DocumentType, TierType } from "@/models/document";
+import { DocumentTypeCreateRequest, DocumentTypeUpdateRequest } from "@/models/documentType";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,6 +45,8 @@ const typeSchema = z.object({
   typeName: z.string().min(2, "Type name must be at least 2 characters."),
   typeAttr: z.string().optional(),
   tierType: z.nativeEnum(TierType).optional().default(TierType.None),
+  erpType: z.string().optional(),
+  typeNumber: z.number().optional(),
 });
 
 type DocumentTypeFormProps = {
@@ -81,6 +84,8 @@ export const DocumentTypeForm = ({
       typeName: documentType?.typeName || "",
       typeAttr: documentType?.typeAttr || "",
       tierType: documentType?.tierType || TierType.None,
+      erpType: "",
+      typeNumber: undefined,
     },
   });
 
@@ -90,6 +95,8 @@ export const DocumentTypeForm = ({
         typeName: documentType.typeName || "",
         typeAttr: documentType.typeAttr || "",
         tierType: documentType.tierType || TierType.None,
+        erpType: "",
+        typeNumber: documentType.typeNumber || undefined,
       });
 
       // In edit mode, start from step 1 to allow users to review and edit all fields
@@ -117,13 +124,20 @@ export const DocumentTypeForm = ({
     },
     {
       id: 3,
-      title: "Type Details",
-      description: "Add additional info",
-      icon: <FileText className="h-4 w-4" />,
+      title: "ERP Type",
+      description: "Select ERP type",
+      icon: <FileType className="h-4 w-4" />,
       completed: currentStep > 3,
     },
     {
       id: 4,
+      title: "Type Details",
+      description: "Add additional info",
+      icon: <FileText className="h-4 w-4" />,
+      completed: currentStep > 4,
+    },
+    {
+      id: 5,
       title: "Review",
       description: "Confirm details",
       icon: <CheckCircle className="h-4 w-4" />,
@@ -132,6 +146,27 @@ export const DocumentTypeForm = ({
   ];
 
   const TOTAL_STEPS = steps.length;
+
+  // ERP Types based on tier type from data seeder
+  const erpTypes = {
+    [TierType.Customer]: [
+      { typeNumber: 0, typeName: "sales Quote", typeKey: "SQ", typeAttr: "Quote" },
+      { typeNumber: 1, typeName: "sales Order", typeKey: "SO", typeAttr: "Order" },
+      { typeNumber: 2, typeName: "sales Invoice", typeKey: "SI", typeAttr: "Invoice" },
+      { typeNumber: 3, typeName: "sales Credit Memo", typeKey: "SCM", typeAttr: "Credit Memo" },
+      { typeNumber: 4, typeName: "sales Blanket Order", typeKey: "CBO", typeAttr: "Blanket Order" },
+      { typeNumber: 5, typeName: "sales Return Order", typeKey: "CRO", typeAttr: "Return Order" },
+    ],
+    [TierType.Vendor]: [
+      { typeNumber: 10, typeName: "Purchase Quote", typeKey: "PQ", typeAttr: "Quote" },
+      { typeNumber: 11, typeName: "Purchase Order", typeKey: "PO", typeAttr: "Order" },
+      { typeNumber: 12, typeName: "Purchase Invoice", typeKey: "PI", typeAttr: "Invoice" },
+      { typeNumber: 13, typeName: "Purchase Credit Memo", typeKey: "PCM", typeAttr: "Credit Memo" },
+      { typeNumber: 14, typeName: "Purchase Blanket Order", typeKey: "PBO", typeAttr: "Blanket Order" },
+      { typeNumber: 15, typeName: "Purchase Return Order", typeKey: "VRO", typeAttr: "Return Order" },
+    ],
+    [TierType.None]: [],
+  };
 
   const validateTypeName = async (typeName: string) => {
     if (isEditMode && typeName === documentType?.typeName) {
@@ -167,11 +202,14 @@ export const DocumentTypeForm = ({
         });
       }
     } else if (currentStep === 2) {
-      // Move to Type Details step
+      // Move to ERP Type step
       setCurrentStep(3);
     } else if (currentStep === 3) {
-      // Move to review
+      // Move to Type Details step
       setCurrentStep(4);
+    } else if (currentStep === 4) {
+      // Move to review
+      setCurrentStep(5);
     }
   };
 
@@ -199,19 +237,23 @@ export const DocumentTypeForm = ({
     setIsSubmitting(true);
     try {
       if (isEditMode && documentType?.id) {
-        await documentService.updateDocumentType(documentType.id, {
+        const updateRequest: DocumentTypeUpdateRequest = {
           typeName: data.typeName,
           typeAttr: data.typeAttr || undefined,
           documentCounter: documentType.documentCounter,
           tierType: data.tierType || undefined,
-        });
+          typeNumber: data.typeNumber || undefined,
+        };
+        await documentService.updateDocumentType(documentType.id, updateRequest);
         toast.success("Document type updated successfully");
       } else {
-        await documentService.createDocumentType({
+        const createRequest: DocumentTypeCreateRequest = {
           typeName: data.typeName,
           typeAttr: data.typeAttr || undefined,
           tierType: data.tierType || undefined,
-        });
+          typeNumber: data.typeNumber || undefined,
+        };
+        await documentService.createDocumentType(createRequest);
         toast.success("Document type created successfully");
       }
       form.reset();
@@ -411,10 +453,120 @@ export const DocumentTypeForm = ({
           </MotionDiv>
         );
 
-      case 3: // Type Details
+      case 3: // ERP Type
+        const selectedTierType = form.getValues("tierType") || TierType.None;
+        const availableErpTypes = erpTypes[selectedTierType] || [];
+
         return (
           <MotionDiv
             key="step3"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-4 py-4">
+              <div className="text-center mb-6">
+                <FileType className="mx-auto h-12 w-12 text-blue-500 mb-3 p-2 bg-blue-500/10 rounded-full" />
+                <h3 className="text-lg font-medium text-blue-100">ERP Type</h3>
+                <p className="text-sm text-blue-300/70">
+                  Select the ERP document type based on your tier selection
+                </p>
+              </div>
+
+              {selectedTierType === TierType.None ? (
+                <div className="text-center py-8">
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-6">
+                    <Users className="mx-auto h-8 w-8 text-amber-500 mb-3" />
+                    <h4 className="text-lg font-medium text-amber-100 mb-2">
+                      Not Required
+                    </h4>
+                    <p className="text-sm text-amber-300/70">
+                      Please just continue to the next step. In case of None tier type there is no ERP type required.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Form {...form}>
+                  <form className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="erpType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-blue-100">
+                            ERP Type*
+                          </FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Set the corresponding type number
+                                const selectedErpType = availableErpTypes.find(
+                                  (type) => type.typeName === value
+                                );
+                                if (selectedErpType) {
+                                  form.setValue("typeNumber", selectedErpType.typeNumber);
+                                }
+                              }}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-[#111633] border-blue-900/40 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white">
+                                  <SelectValue placeholder="Select ERP type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-[#111633] border-blue-900/40 text-white max-h-60">
+                                {availableErpTypes.map((erpType) => (
+                                  <SelectItem 
+                                    key={erpType.typeNumber} 
+                                    value={erpType.typeName}
+                                  >
+                                    <div className="flex items-center justify-between w-full">
+                                      <span>{erpType.typeName}</span>
+                                      <span className="text-xs text-blue-300 ml-2">
+                                        ({erpType.typeKey})
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormDescription className="text-sm text-blue-300/70 mt-2">
+                            The type number will be automatically assigned based on your selection
+                          </FormDescription>
+                          <FormMessage className="text-sm mt-1 text-red-400" />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Display selected type number */}
+                    {/* {form.getValues("typeNumber") !== undefined && (
+                      <div className="bg-blue-900/20 p-3 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-blue-400" />
+                          <span className="text-sm text-blue-300">
+                            Assigned Type Number:
+                          </span>
+                          <span className="text-sm font-medium text-white">
+                            {form.getValues("typeNumber")}
+                          </span>
+                        </div>
+                      </div>
+                    )} */}
+                  </form>
+                </Form>
+              )}
+            </div>
+          </MotionDiv>
+        );
+
+      case 4: // Type Details
+        return (
+          <MotionDiv
+            key="step4"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -462,10 +614,10 @@ export const DocumentTypeForm = ({
           </MotionDiv>
         );
 
-      case 4: // Review
+      case 5: // Review
         return (
           <MotionDiv
-            key="step4"
+            key="step5"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -491,48 +643,100 @@ export const DocumentTypeForm = ({
                     <span className="text-white font-medium">
                       {form.getValues("typeName")}
                     </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentStep(1)}
+                      className="h-6 px-2 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                    >
+                      Edit
+                    </Button>
                   </div>
                 </div>
 
                 <div className="border-t border-blue-900/20 pt-3">
-                  <span className="text-blue-300 text-sm">Type Code</span>
-                  <div className="mt-1 text-white">
-                    <p className="text-sm text-blue-300/50 italic">
-                      Will be auto-generated
-                    </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-300 text-sm">Tier Type</span>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-blue-400" />
+                      <span className="text-white font-medium">
+                        {(() => {
+                          const tierType = form.getValues("tierType") || TierType.None;
+                          switch (tierType) {
+                            case TierType.Customer:
+                              return "Customer";
+                            case TierType.Vendor:
+                              return "Vendor";
+                            default:
+                              return "None";
+                          }
+                        })()}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCurrentStep(2)}
+                        className="h-6 px-2 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="border-t border-blue-900/20 pt-3">
-                  <span className="text-blue-300 text-sm">Tier Type</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Users className="h-4 w-4 text-blue-400" />
-                    <span className="text-white font-medium">
-                      {(() => {
-                        const tierType = form.getValues("tierType") || TierType.None;
-                        switch (tierType) {
-                          case TierType.Customer:
-                            return "Customer";
-                          case TierType.Vendor:
-                            return "Vendor";
-                          default:
-                            return "None";
-                        }
-                      })()}
-                    </span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-300 text-sm">ERP Type</span>
+                    <div className="flex items-center gap-2">
+                      <FileType className="h-4 w-4 text-blue-400" />
+                      <div className="text-right">
+                        <span className="text-white font-medium">
+                          {form.getValues("erpType") || "Not selected"}
+                        </span>
+                        {/* {form.getValues("typeNumber") !== undefined && (
+                          <div className="text-xs text-blue-300">
+                            Type Number: {form.getValues("typeNumber")}
+                          </div>
+                        )} */}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCurrentStep(3)}
+                        className="h-6 px-2 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="border-t border-blue-900/20 pt-3">
-                  <span className="text-blue-300 text-sm">Description</span>
-                  <div className="mt-1 text-white">
-                    {form.getValues("typeAttr") ? (
-                      <p className="text-sm">{form.getValues("typeAttr")}</p>
-                    ) : (
-                      <p className="text-sm text-blue-300/50 italic">
-                        No description added
-                      </p>
-                    )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-300 text-sm">Description</span>
+                    <div className="flex items-center gap-2">
+                      <div className="text-white text-right">
+                        {form.getValues("typeAttr") ? (
+                          <p className="text-sm">{form.getValues("typeAttr")}</p>
+                        ) : (
+                          <p className="text-sm text-blue-300/50 italic">
+                            No description added
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCurrentStep(4)}
+                        className="h-6 px-2 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -3,6 +3,7 @@ import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { navigateToDocumentList, getDocumentContextText } from '@/utils/navigationUtils';
 
 const DocumentNotFoundCard = () => {
   const navigate = useNavigate();
@@ -21,9 +22,9 @@ const DocumentNotFoundCard = () => {
           variant="outline" 
           size="lg" 
           className="mt-4 border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50" 
-          onClick={() => navigate('/documents')}
+          onClick={() => navigateToDocumentList(navigate)}
         >
-          Return to Documents
+          Return to {getDocumentContextText()}
         </Button>
       </CardContent>
     </Card>

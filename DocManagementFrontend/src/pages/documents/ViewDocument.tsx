@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import documentService from "@/services/documentService";
 import workflowService from "@/services/workflowService";
 import approvalService from "@/services/approvalService";
+import { navigateToDocumentList } from "@/utils/navigationUtils";
 
 // Component imports
 import DocumentTitle from "@/components/document/DocumentTitle";
@@ -106,7 +107,7 @@ const ViewDocument = () => {
     if (documentError) {
       console.error(`Failed to fetch document with ID ${id}:`, documentError);
       toast.error("Failed to load document");
-      navigate("/documents");
+      navigateToDocumentList(navigate);
     }
 
     if (lignesError) {
@@ -130,6 +131,17 @@ const ViewDocument = () => {
     }
   }, [documentError, lignesError, workflowError, approvalError, approvalHistoryError, id, navigate, document]);
 
+  // Cleanup document context when component unmounts or navigates away
+  useEffect(() => {
+    return () => {
+      // Only clear if we're actually navigating away from document pages
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith('/documents/')) {
+        sessionStorage.removeItem('documentContext');
+      }
+    };
+  }, []);
+
   const handleDelete = async () => {
     if (!canManageDocuments) {
       toast.error("You do not have permission to delete documents");
@@ -140,7 +152,7 @@ const ViewDocument = () => {
       if (document) {
         await documentService.deleteDocument(document.id);
         toast.success("Document deleted successfully");
-        navigate("/documents");
+        navigateToDocumentList(navigate);
       }
     } catch (error) {
       console.error("Failed to delete document:", error);

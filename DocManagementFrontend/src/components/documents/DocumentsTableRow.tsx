@@ -78,7 +78,10 @@ const DocumentActionsDropdown = ({
 
         <DropdownMenuItem
           className="hover:bg-blue-900/40 focus:bg-blue-900/40 cursor-pointer"
-          onClick={() => navigate(`/documents/${document.id}`)}
+          onClick={() => {
+            sessionStorage.setItem('documentContext', 'active');
+            navigate(`/documents/${document.id}`);
+          }}
         >
           <ExternalLink className="mr-2 h-4 w-4 text-blue-400" />
           {t("documents.viewDocument")}
@@ -177,6 +180,7 @@ export default function DocumentsTableRow({
         <Link
           to={`/documents/${document.id}`}
           className="text-blue-300 hover:text-blue-200 hover:underline transition-colors flex items-center gap-1"
+          onClick={() => sessionStorage.setItem('documentContext', 'active')}
         >
           <FileText className="h-3.5 w-3.5 opacity-70" />
           {document.documentKey}
@@ -186,6 +190,7 @@ export default function DocumentsTableRow({
         <Link
           to={`/documents/${document.id}`}
           className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
+          onClick={() => sessionStorage.setItem('documentContext', 'active')}
         >
           {document.title}
         </Link>

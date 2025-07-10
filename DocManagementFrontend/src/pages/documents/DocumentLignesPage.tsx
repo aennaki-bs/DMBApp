@@ -11,6 +11,7 @@ import DocumentDetailsTab from "@/components/document/DocumentDetailsTab";
 import DocumentLinesTab from "@/components/document/DocumentLinesTab";
 import DocumentLoading from "@/components/document/DocumentLoading";
 import DocumentNotFound from "@/components/document/DocumentNotFound";
+import { navigateToDocumentList } from "@/utils/navigationUtils";
 
 const DocumentLignesPage = () => {
   const { id } = useParams();
@@ -45,7 +46,7 @@ const DocumentLignesPage = () => {
   useEffect(() => {
     if (documentError) {
       toast.error("Failed to load document");
-      navigate("/documents");
+      navigateToDocumentList(navigate);
     }
 
     if (lignesError) {
@@ -58,14 +59,14 @@ const DocumentLignesPage = () => {
   }
 
   if (!document) {
-    return <DocumentNotFound onNavigateBack={() => navigate("/documents")} />;
+    return <DocumentNotFound onNavigateBack={() => navigateToDocumentList(navigate)} />;
   }
 
   return (
     <div className="min-h-screen bg-blue-25 dark:bg-[#070b28]">
       <DocumentHeader
         document={document}
-        onBack={() => navigate("/documents")}
+        onBack={() => navigateToDocumentList(navigate)}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-6">

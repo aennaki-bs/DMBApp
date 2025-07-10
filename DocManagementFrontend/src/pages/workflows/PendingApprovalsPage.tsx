@@ -83,60 +83,36 @@ export default function PendingApprovalsPage() {
     enabled: !!userIdNum,
   });
 
-  // Fetch waiting approvals (status: Open or InProgress)
+  // Fetch user-specific approval history (will be filtered by status)
   const {
-    data: waitingApprovalsData = [],
-    isLoading: isWaitingLoading,
-    isError: isWaitingError,
-    refetch: refetchWaiting,
+    data: userApprovalHistoryData = [],
+    isLoading: isUserHistoryLoading,
+    isError: isUserHistoryError,
+    refetch: refetchUserHistory,
   } = useQuery({
-    queryKey: ["waitingApprovals"],
+    queryKey: ["userApprovalHistory", userIdNum],
     queryFn: () => {
-      return approvalService.getWaitingApprovals();
+      if (!userIdNum) return [];
+      return approvalService.getUserApprovalHistory(userIdNum);
     },
-    enabled: true,
+    enabled: !!userIdNum,
   });
 
-  // Fetch accepted approvals (status: Accepted)
-  const {
-    data: acceptedApprovalsData = [],
-    isLoading: isAcceptedLoading,
-    isError: isAcceptedError,
-    refetch: refetchAccepted,
-  } = useQuery({
-    queryKey: ["acceptedApprovals"],
-    queryFn: () => {
-      return approvalService.getAcceptedApprovals();
-    },
-    enabled: true,
-  });
-
-  // Fetch rejected approvals (status: Rejected)
-  const {
-    data: rejectedApprovalsData = [],
-    isLoading: isRejectedLoading,
-    isError: isRejectedError,
-    refetch: refetchRejected,
-  } = useQuery({
-    queryKey: ["rejectedApprovals"],
-    queryFn: () => {
-      return approvalService.getRejectedApprovals();
-    },
-    enabled: true,
-  });
-
-  // Filter waiting approvals
-  const waitingApprovals = waitingApprovalsData.filter(
+  // Filter user approval history by status and search query (only those waiting for this user's response)
+  const waitingApprovals = userApprovalHistoryData.filter(
     (approval: any) =>
-      approval.documentTitle
+      (approval.status === "Open" || approval.status === "InProgress") &&
+      approval.approved === null && // No response yet from this user
+      approval.processedBy === null && // This user hasn't responded yet
+      (approval.documentTitle
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase())
+      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Filter pending approvals
+  // Filter pending approvals (keep existing logic for pending tab)
   const filteredPendingApprovals = pendingApprovals.filter(
     (approval: any) =>
       approval.documentTitle
@@ -146,26 +122,32 @@ export default function PendingApprovalsPage() {
       approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter accepted approvals
-  const acceptedApprovals = acceptedApprovalsData.filter(
+  // Filter accepted approvals from user history (only those approved by this specific user)
+  const acceptedApprovals = userApprovalHistoryData.filter(
     (approval: any) =>
-      approval.documentTitle
+      approval.status === "Accepted" &&
+      approval.approved === true &&
+      approval.processedBy !== null && // Ensure this user actually responded
+      (approval.documentTitle
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase())
+      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Filter rejected approvals
-  const rejectedApprovals = rejectedApprovalsData.filter(
+  // Filter rejected approvals from user history (only those rejected by this specific user)
+  const rejectedApprovals = userApprovalHistoryData.filter(
     (approval: any) =>
-      approval.documentTitle
+      approval.status === "Rejected" &&
+      approval.approved === false &&
+      approval.processedBy !== null && // Ensure this user actually responded
+      (approval.documentTitle
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase())
+      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const [historySubTab, setHistorySubTab] = useState("waiting");
@@ -436,7 +418,7 @@ export default function PendingApprovalsPage() {
         {/* Approval History Tab */}
         <TabsContent value="history" className="mt-4">
           <div className="rounded-xl border border-blue-200 overflow-hidden dark:border-blue-900/30 dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
-            {isWaitingLoading || isAcceptedLoading || isRejectedLoading ? (
+            {isUserHistoryLoading ? (
               <div className="p-6 space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center space-x-4">
@@ -448,22 +430,20 @@ export default function PendingApprovalsPage() {
                   </div>
                 ))}
               </div>
-            ) : isWaitingError || isAcceptedError || isRejectedError ? (
+            ) : isUserHistoryError ? (
               <div className="p-6 text-center">
                 <FileWarning className="h-16 w-16 mx-auto text-red-500 mb-2" />
                 <h3 className="text-xl font-medium text-red-600 dark:text-red-400">
                   Failed to load approval history
                 </h3>
                 <p className="text-blue-600 dark:text-gray-400">
-                  There was an error retrieving the approval history.
+                  There was an error retrieving your approval history.
                 </p>
                 <Button
                   variant="destructive"
                   className="mt-4"
                   onClick={() => {
-                    refetchWaiting();
-                    refetchAccepted();
-                    refetchRejected();
+                    refetchUserHistory();
                   }}
                 >
                   Try Again
@@ -561,7 +541,6 @@ export default function PendingApprovalsPage() {
                             (approval: any, index: number) => (
                               <div
                                 key={`waiting-${
-                                  approval.id ||
                                   approval.approvalId ||
                                   approval.documentId
                                 }-${index}`}
@@ -670,7 +649,6 @@ export default function PendingApprovalsPage() {
                             (approval: any, index: number) => (
                               <div
                                 key={`accepted-${
-                                  approval.id ||
                                   approval.approvalId ||
                                   approval.documentId
                                 }-${index}`}
@@ -738,7 +716,7 @@ export default function PendingApprovalsPage() {
                                         (response: any, idx: number) => (
                                           <div
                                             key={`response-${
-                                              approval.id || approval.approvalId
+                                              approval.approvalId
                                             }-${
                                               response.userId ||
                                               response.username
@@ -792,7 +770,6 @@ export default function PendingApprovalsPage() {
                             (approval: any, index: number) => (
                               <div
                                 key={`rejected-${
-                                  approval.id ||
                                   approval.approvalId ||
                                   approval.documentId
                                 }-${index}`}
@@ -860,7 +837,7 @@ export default function PendingApprovalsPage() {
                                         (response: any, idx: number) => (
                                           <div
                                             key={`response-${
-                                              approval.id || approval.approvalId
+                                              approval.approvalId
                                             }-${
                                               response.userId ||
                                               response.username
