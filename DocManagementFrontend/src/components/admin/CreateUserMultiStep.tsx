@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import adminService from "@/services/adminService";
 import authService from "@/services/authService";
+import responsibilityCentreService from "@/services/responsibilityCentreService";
 import {
   Building2,
   User,
@@ -38,8 +39,10 @@ import {
   CircleCheck,
   PenLine,
   UserPlus,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
 
 // Import step components
 import { UserTypeStep } from "./steps/UserTypeStep";
@@ -68,7 +71,7 @@ const passwordSchema = z
     message: "Password must contain at least one special character.",
   });
 
-// Form schema with all required fields
+// Form schema with conditional validation based on user type
 const formSchema = z.object({
   // User type selection
   userType: z.enum(["personal", "company"], {
@@ -78,29 +81,22 @@ const formSchema = z.object({
   // Responsibility Centre (optional, default to 0)
   responsibilityCenterId: z.number().default(0),
 
-  // Account details
-  firstName: z.string().min(2, {
-    message: "First name must be at least 2 characters.",
-  }),
-  lastName: z.string().min(2, {
-    message: "Last name must be at least 2 characters.",
-  }),
+  // Account details - conditional based on user type
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
   cin: z.string().optional(),
   companyName: z.string().optional(),
+  registrationNumber: z.string().optional(),
 
   // Address information
-  address: z.string().min(2, {
-    message: "Address is required.",
-  }),
+  address: z.string().optional(),
   city: z.string().min(2, {
     message: "City is required.",
   }),
   country: z.string().min(2, {
     message: "Country is required.",
   }),
-  phoneNumber: z.string().min(6, {
-    message: "Phone number is required.",
-  }),
+  phoneNumber: z.string().optional(),
   webSite: z.string().optional(),
 
   // Username & Email
@@ -113,11 +109,45 @@ const formSchema = z.object({
 
   // Password
   passwordHash: passwordSchema,
+  confirmPassword: z.string().min(1, {
+    message: "Please confirm your password.",
+  }),
 
   // Role selection
   roleName: z.enum(["Admin", "FullUser", "SimpleUser"], {
     required_error: "Please select a user role.",
   }),
+})
+.refine((data) => data.passwordHash === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+})
+.refine((data) => {
+  if (data.userType === "personal") {
+    return data.firstName && data.firstName.trim().length >= 2;
+  }
+  return true;
+}, {
+  message: "First name must be at least 2 characters.",
+  path: ["firstName"],
+})
+.refine((data) => {
+  if (data.userType === "personal") {
+    return data.lastName && data.lastName.trim().length >= 2;
+  }
+  return true;
+}, {
+  message: "Last name must be at least 2 characters.",
+  path: ["lastName"],
+})
+.refine((data) => {
+  if (data.userType === "company") {
+    return data.companyName && data.companyName.trim().length >= 2;
+  }
+  return true;
+}, {
+  message: "Company name must be at least 2 characters.",
+  path: ["companyName"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -149,6 +179,7 @@ export function CreateUserMultiStep({
   const [usernameChecking, setUsernameChecking] = useState(false);
   const [emailChecking, setEmailChecking] = useState(false);
   const [direction, setDirection] = useState(0);
+  const [responsibilityCentres, setResponsibilityCentres] = useState<ResponsibilityCentreSimple[]>([]);
   const { t } = useTranslation();
 
   // Define steps for the form
@@ -213,6 +244,7 @@ export function CreateUserMultiStep({
       lastName: "",
       cin: "",
       companyName: "",
+      registrationNumber: "",
       address: "",
       city: "",
       country: "",
@@ -221,10 +253,36 @@ export function CreateUserMultiStep({
       username: "",
       email: "",
       passwordHash: "",
+      confirmPassword: "",
       roleName: "SimpleUser",
     },
     mode: "onChange",
   });
+
+  // Debug form initialization
+  console.log("Form initialized with default values:", form.getValues());
+
+  // Fetch responsibility centres and reset form when component opens
+  useEffect(() => {
+    if (open) {
+      // Reset step to beginning
+      setCurrentStep(0);
+      setIsSubmitting(false);
+      setUsernameAvailable(null);
+      setEmailAvailable(null);
+      
+      const fetchCentres = async () => {
+        try {
+          const data = await responsibilityCentreService.getSimple();
+          setResponsibilityCentres(data || []);
+        } catch (error) {
+          console.error("Failed to fetch responsibility centres:", error);
+          setResponsibilityCentres([]);
+        }
+      };
+      fetchCentres();
+    }
+  }, [open, form]);
 
   // Watch for values
   const userType = form.watch("userType");
@@ -296,6 +354,7 @@ export function CreateUserMultiStep({
         lastName: "",
         cin: "",
         companyName: "",
+        registrationNumber: "",
         address: "",
         city: "",
         country: "",
@@ -304,6 +363,7 @@ export function CreateUserMultiStep({
         username: "",
         email: "",
         passwordHash: "",
+        confirmPassword: "",
         roleName: "SimpleUser",
       });
     }
@@ -326,11 +386,15 @@ export function CreateUserMultiStep({
         // Responsibility Centre step - optional field, no validation needed
         return true;
       case 2:
-        fieldsToValidate =
-          userType === "personal" ? ["firstName", "lastName"] : ["companyName"];
+        // Validate conditional fields based on user type
+        if (userType === "personal") {
+          fieldsToValidate = ["firstName", "lastName"];
+        } else {
+          fieldsToValidate = ["companyName"];
+        }
         break;
       case 3:
-        fieldsToValidate = ["address", "city", "country", "phoneNumber"];
+        fieldsToValidate = ["city", "country"];
         break;
       case 4:
         fieldsToValidate = ["username", "email"];
@@ -361,7 +425,13 @@ export function CreateUserMultiStep({
         }
         break;
       case 5:
-        fieldsToValidate = ["passwordHash"];
+        fieldsToValidate = ["passwordHash", "confirmPassword"];
+        // Add specific debugging for password validation
+        const passwordValue = form.getValues("passwordHash");
+        const confirmPasswordValue = form.getValues("confirmPassword");
+        console.log("Password validation - passwordHash:", passwordValue);
+        console.log("Password validation - confirmPassword:", confirmPasswordValue);
+        console.log("Passwords match:", passwordValue === confirmPasswordValue);
         break;
       case 6:
         fieldsToValidate = ["roleName"];
@@ -372,6 +442,21 @@ export function CreateUserMultiStep({
     }
 
     const result = await form.trigger(fieldsToValidate);
+    
+    // Add detailed debugging for failed validation
+    if (!result) {
+      console.log("Validation failed. Current errors:");
+      const errors = form.formState.errors;
+      fieldsToValidate.forEach(field => {
+        if (errors[field]) {
+          console.log(`${field}: ${errors[field]?.message}`);
+        }
+      });
+      
+      console.log("All form errors:", errors);
+      console.log("Form values:", form.getValues());
+    }
+    
     return result;
   };
 
@@ -394,6 +479,12 @@ export function CreateUserMultiStep({
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
+  // Handle edit step from review
+  const handleEditStep = (stepIndex: number) => {
+    setDirection(stepIndex < currentStep ? -1 : 1);
+    setCurrentStep(stepIndex);
+  };
+
   // Submit the form - only called when explicitly triggered on review step
   const onSubmit = async (values: FormValues) => {
     // Only allow submission from the review step
@@ -404,6 +495,19 @@ export function CreateUserMultiStep({
     setIsSubmitting(true);
 
     try {
+      console.log("Submitting user with values:", values);
+      console.log("User type:", userType);
+      console.log("CIN value (optional):", values.cin || "not provided");
+      console.log("Registration Number (optional):", values.registrationNumber || "not provided");
+      console.log("Website (optional):", values.webSite || "not provided");
+      console.log("Address (optional):", values.address || "not provided");
+      console.log("Phone Number (optional):", values.phoneNumber || "not provided");
+      
+      const identityValue = userType === "personal" 
+        ? values.cin || "" 
+        : values.registrationNumber || "";
+      console.log("Identity will be sent as:", identityValue);
+
       // Prepare user data for API call - exact match to API structure
       const userData = {
         email: values.email,
@@ -414,22 +518,23 @@ export function CreateUserMultiStep({
         roleName: values.roleName,
         city: values.city,
         country: values.country,
-        address: values.address,
-        identity: userType === "personal" ? values.cin || "" : "",
-        phoneNumber: values.phoneNumber,
+        address: values.address || "",
+        identity: identityValue,
+        phoneNumber: values.phoneNumber || "",
+        webSite: values.webSite || "",
         responsibilityCenterId: values.responsibilityCenterId || 0,
         userType: userType === "personal" ? "personal" : "company",
       };
 
+      console.log("Submitting user data:", userData);
+
       await adminService.createUser(userData);
-      toast.success("User created successfully");
-      form.reset();
-      setCurrentStep(0);
+      toast.success("Account created successfully");
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error creating user:", error);
 
-      let errorMessage = "Failed to create user";
+      let errorMessage = "Failed to create Account";
 
       if (error.response?.data) {
         if (typeof error.response.data === "string") {
@@ -448,12 +553,48 @@ export function CreateUserMultiStep({
   };
 
   // Handle form submission - prevent auto-submission
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Don't do anything - form submission should only happen via button click
+  };
+
+  // Handle explicit Create User button click
+  const handleCreateUserClick = async () => {
+    console.log("Create User button clicked");
+    console.log("Current form values:", form.getValues());
+    console.log("Current form errors:", form.formState.errors);
     
-    // Only allow submission on the review step when explicitly triggered
-    if (currentStep === 7) {
-      form.handleSubmit(onSubmit)(e);
+    // Run form validation
+    const isValid = await form.trigger();
+    console.log("Form validation result:", isValid);
+    
+    if (isValid) {
+      // Get the values and submit
+      const values = form.getValues();
+      await onSubmit(values);
+    } else {
+      console.log("Form errors after trigger:", form.formState.errors);
+      
+      // Create a more user-friendly error message
+      const errors = form.formState.errors;
+      const errorMessages = [];
+      
+      if (errors.firstName) errorMessages.push("First Name: " + errors.firstName.message);
+      if (errors.lastName) errorMessages.push("Last Name: " + errors.lastName.message);
+      if (errors.companyName) errorMessages.push("Company Name: " + errors.companyName.message);
+      if (errors.email) errorMessages.push("Email: " + errors.email.message);
+      if (errors.username) errorMessages.push("Username: " + errors.username.message);
+      if (errors.passwordHash) errorMessages.push("Password: " + errors.passwordHash.message);
+      if (errors.confirmPassword) errorMessages.push("Confirm Password: " + errors.confirmPassword.message);
+      if (errors.city) errorMessages.push("City: " + errors.city.message);
+      if (errors.country) errorMessages.push("Country: " + errors.country.message);
+      if (errors.roleName) errorMessages.push("Role: " + errors.roleName.message);
+      
+      if (errorMessages.length > 0) {
+        toast.error("Please fix the following errors:\n" + errorMessages.join("\n"));
+      } else {
+        toast.error("Please fill in all required fields");
+      }
     }
   };
 
@@ -514,7 +655,7 @@ export function CreateUserMultiStep({
       case 6:
         return <RoleStep form={form} />;
       case 7:
-        return <ReviewStep form={form} />;
+        return <ReviewStep form={form} onEditStep={handleEditStep} responsibilityCentres={responsibilityCentres} />;
       default:
         return null;
     }
@@ -650,12 +791,16 @@ export function CreateUserMultiStep({
                 ) : (
                   <Button
                     type="button"
-                    onClick={() => form.handleSubmit(onSubmit)()}
+                    onClick={handleCreateUserClick}
                     disabled={isSubmitting}
                     className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
                   >
-                    {isSubmitting ? t("userManagement.creating") : t("userManagement.createUserButton")}
-                    <UserPlus className="h-4 w-4" />
+                    {isSubmitting ? "Creating..." : "Create Account"}
+                    {isSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <UserPlus className="h-4 w-4" />
+                    )}
                   </Button>
                 )}
               </div>

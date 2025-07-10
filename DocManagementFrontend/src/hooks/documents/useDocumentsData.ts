@@ -131,6 +131,11 @@ export function useDocumentsData() {
   // Filter documents based on activeFilters
   const filteredItems = useMemo(() => {
     return sortedItems.filter(doc => {
+      // For Active Documents: exclude completed documents (status 2) unless they're not archived to ERP
+      // Active Documents should only show: Draft (0), In Progress (1), Rejected (3)
+      // This makes Active Documents truly "active" and excludes completed work
+      const isActiveDocument = doc.status !== 2; // Exclude completed documents
+
       // Text search filter based on search field
       let matchesSearch = true;
       if (searchQuery) {
@@ -225,7 +230,7 @@ export function useDocumentsData() {
         }
       }
 
-      return matchesSearch && matchesStatus && matchesType && matchesDateRange;
+      return isActiveDocument && matchesSearch && matchesStatus && matchesType && matchesDateRange;
     });
   }, [sortedItems, searchQuery, activeFilters]);
 

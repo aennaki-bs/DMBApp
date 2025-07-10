@@ -56,11 +56,11 @@ export function UserTypeStep({ form }: UserTypeStepProps) {
                           animate={{ opacity: 1, height: "auto" }}
                           className="text-sm text-blue-200 mt-2 border-t border-blue-700/40 pt-2"
                         >
-                          <ul className="list-disc list-inside space-y-1">
+                          {/* <ul className="list-disc list-inside space-y-1">
                             <li>{t("userManagement.accessPersonalDocs")}</li>
                             <li>{t("userManagement.basicWorkflow")}</li>
                             <li>{t("userManagement.limitedPermissions")}</li>
-                          </ul>
+                          </ul> */}
                         </motion.div>
                       )}
                     </div>
@@ -99,11 +99,11 @@ export function UserTypeStep({ form }: UserTypeStepProps) {
                           animate={{ opacity: 1, height: "auto" }}
                           className="text-sm text-blue-200 mt-2 border-t border-blue-700/40 pt-2"
                         >
-                          <ul className="list-disc list-inside space-y-1">
+                          {/* <ul className="list-disc list-inside space-y-1">
                             <li>{t("userManagement.advancedDocManagement")}</li>
                             <li>{t("userManagement.multiUserAccess")}</li>
                             <li>{t("userManagement.enhancedCollaboration")}</li>
-                          </ul>
+                          </ul> */}
                         </motion.div>
                       )}
                     </div>

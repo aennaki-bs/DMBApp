@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "framer-motion": "^12.12.1"
+  },
+  "devDependencies": {
+    "@locator/babel-jsx": "^0.4.4"
   }
 }

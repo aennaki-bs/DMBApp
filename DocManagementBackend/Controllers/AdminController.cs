@@ -107,12 +107,6 @@ namespace DocManagementBackend.Controllers
             if (role == null)
                 return BadRequest("Invalid RoleName.");
             
-            if (request.ResponsibilityCenterId.HasValue)
-            {
-                var responsibilityCentre = await _context.ResponsibilityCentres.FindAsync(request.ResponsibilityCenterId);
-                if (responsibilityCentre == null)
-                    return BadRequest("Invalid ResponsibilityCenterId.");
-            }
             
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.PasswordHash);
             var emailVerificationCode = new Random().Next(100000, 999999).ToString();
@@ -131,12 +125,24 @@ namespace DocManagementBackend.Controllers
                 ProfilePicture = "/images/profile/default.png",
                 City = request.City,
                 Country = request.Country,
-                Address = request.Address,
-                Identity = request.Identity,
-                PhoneNumber = request.PhoneNumber,
-                ResponsibilityCentreId = request.ResponsibilityCenterId.HasValue ? request.ResponsibilityCenterId.Value : null,
+                Address = request.Address ?? string.Empty,
+                Identity = request.Identity ?? string.Empty,
+                PhoneNumber = request.PhoneNumber ?? string.Empty,
+                WebSite = request.WebSite ?? string.Empty,
+                // ResponsibilityCentreId = request.ResponsibilityCenterId.HasValue ? request.ResponsibilityCenterId.Value : null,
                 UserType = request.UserType
             };
+
+            if (request.ResponsibilityCenterId.HasValue && request.ResponsibilityCenterId != 0)
+            {
+                var responsibilityCentre = await _context.ResponsibilityCentres.FindAsync(request.ResponsibilityCenterId);
+                if (responsibilityCentre == null)
+                    return BadRequest("Invalid ResponsibilityCenterId.");
+                newUser.ResponsibilityCentreId = request.ResponsibilityCenterId.Value;
+                newUser.ResponsibilityCentre = responsibilityCentre;
+            }
+            else
+                newUser.ResponsibilityCentreId = null;
             
             string? frontDomain = Environment.GetEnvironmentVariable("FRONTEND_DOMAIN");
             var verificationLink = $"{frontDomain}verify/{newUser.Email}";
@@ -175,7 +181,8 @@ namespace DocManagementBackend.Controllers
                 newUser.Country,
                 newUser.Address,
                 newUser.Identity,
-                newUser.PhoneNumber
+                newUser.PhoneNumber,
+                newUser.WebSite
             });
         }
 
@@ -329,7 +336,7 @@ namespace DocManagementBackend.Controllers
                 return NotFound("User not found.");
 
             // Check if user has any associated data that would prevent deletion
-            // var hasDocumentsAsCreator = await _context.Documents.AnyAsync(d => d.CreatedByUserId == id);
+            var hasDocumentsAsCreator = await _context.Documents.AnyAsync(d => d.CreatedByUserId == id);
             // var hasDocumentsAsUpdater = await _context.Documents.AnyAsync(d => d.UpdatedByUserId == id);
             var IsApprover = await _context.Approvators.AnyAsync(aw => aw.UserId == id);
             var IsApproverGroup = await _context.ApprovatorsGroupUsers.AnyAsync(ag => ag.UserId == id);
@@ -337,28 +344,8 @@ namespace DocManagementBackend.Controllers
             // var hasStepHistory = await _context.DocumentStepHistory.AnyAsync(dsh => dsh.UserId == id);
             // var hasDocumentStatusHistory = await _context.DocumentStatus.AnyAsync(ds => ds.CompletedByUserId == id);
 
-            if (IsApprover || IsApproverGroup)
-            {
-                // Instead of hard deletion, deactivate the user
-                // userToDelete.IsActive = false;
-                // userToDelete.Email = $"deleted_{userToDelete.Id}_{userToDelete.Email}";
-                // userToDelete.Username = $"deleted_{userToDelete.Id}_{userToDelete.Username}";
-                
-                // await _context.SaveChangesAsync();
-
-                // var logEntry = new LogHistory
-                // {
-                //     UserId = userId,
-                //     User = currentUser,
-                //     Timestamp = DateTime.UtcNow,
-                //     ActionType = 9,
-                //     Description = $"{currentUser.Username} has deactivated {userToDelete.Username}'s account (user had associated data)"
-                // };
-                // _context.LogHistories.Add(logEntry);
-                // await _context.SaveChangesAsync();
-
-                return BadRequest("User account has associated data. \"He is an approver or assigned to an approver group\"!");
-            }
+            if (IsApprover || IsApproverGroup || hasDocumentsAsCreator)
+                return BadRequest("User account has associated data. \"He is an approver or assigned to an approver group or created a document\"!");
 
             // Safe to delete completely
             _context.Users.Remove(userToDelete);
@@ -406,7 +393,7 @@ namespace DocManagementBackend.Controllers
             foreach (var user in usersToDelete)
             {
                 // Check if user has any associated data that would prevent deletion
-                // var hasDocumentsAsCreator = await _context.Documents.AnyAsync(d => d.CreatedByUserId == user.Id);
+                var hasDocumentsAsCreator = await _context.Documents.AnyAsync(d => d.CreatedByUserId == user.Id);
                 // var hasDocumentsAsUpdater = await _context.Documents.AnyAsync(d => d.UpdatedByUserId == user.Id);
                 var IsApprover = await _context.Approvators.AnyAsync(aw => aw.UserId == user.Id);
                 var IsApproverGroup = await _context.ApprovatorsGroupUsers.AnyAsync(ag => ag.UserId == user.Id);
@@ -414,12 +401,8 @@ namespace DocManagementBackend.Controllers
                 // var hasStepHistory = await _context.DocumentStepHistory.AnyAsync(dsh => dsh.UserId == user.Id);
                 // var hasDocumentStatusHistory = await _context.DocumentStatus.AnyAsync(ds => ds.CompletedByUserId == user.Id);
 
-                if (IsApprover || IsApproverGroup)
+                if (IsApprover || IsApproverGroup || hasDocumentsAsCreator)
                 {
-                    // Deactivate instead of delete
-                    // user.IsActive = false;
-                    // user.Email = $"deleted_{user.Id}_{user.Email}";
-                    // user.Username = $"deleted_{user.Id}_{user.Username}";
                     notDeletedCount++;
                 }
                 else

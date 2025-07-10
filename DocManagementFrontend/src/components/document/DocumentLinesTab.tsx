@@ -1,4 +1,4 @@
-import { FileText, Layers, Plus, Search } from 'lucide-react';
+import { FileText, Layers, Plus, Search, Archive } from 'lucide-react';
 import { Document, Ligne } from '@/models/document';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,9 @@ const DocumentLinesTab = ({
 }: DocumentLinesTabProps) => {
   // Search state
   const [search, setSearch] = useState("");
+
+  // Check if document is archived to ERP (read-only)
+  const isArchivedToERP = !!(document.erpDocumentCode && document.erpDocumentCode.length > 0);
 
   // Filtered lines
   const filteredLignes = useMemo(() => {
@@ -78,13 +81,20 @@ const DocumentLinesTab = ({
           <Search className="h-4 w-4 text-white/40 absolute left-3 top-1/2 transform -translate-y-1/2" />
         </div>
         
-        {canManageDocuments && (
+        {canManageDocuments && !isArchivedToERP && (
           <Button 
             onClick={() => setIsCreateDialogOpen(true)} 
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 border border-blue-400/20"
           >
             <Plus className="h-4 w-4 mr-2" /> Add New Line
           </Button>
+        )}
+        
+        {isArchivedToERP && (
+          <div className="flex items-center gap-2 text-orange-300 text-sm">
+            <Archive className="h-4 w-4" />
+            <span>Document is archived to ERP - lines cannot be modified</span>
+          </div>
         )}
       </div>
 
@@ -93,7 +103,7 @@ const DocumentLinesTab = ({
         <LignesList
           document={document}
           lignes={filteredLignes}
-          canManageDocuments={canManageDocuments}
+          canManageDocuments={canManageDocuments && !isArchivedToERP}
           isCreateDialogOpen={isCreateDialogOpen}
           setIsCreateDialogOpen={setIsCreateDialogOpen}
         />

@@ -368,7 +368,7 @@ export const translations = {
     users: {
       title: 'User Management',
       subtitle: 'Manage system users',
-      createUser: 'Create User',
+      createUser: 'Create Account',
       editUser: 'Edit User',
       deleteUser: 'Delete User',
       username: 'Username',
@@ -562,7 +562,7 @@ export const translations = {
     userManagement: {
       title: "User Management",
       subtitle: "Manage users and their permissions",
-      createUser: "Create User",
+      createUser: "Create Account",
       searchPlaceholder: "Search users...",
       allFields: "All fields",
       filter: "Filter",
@@ -606,7 +606,7 @@ export const translations = {
       blockUser: "Block User",
       unblockUser: "Unblock User",
       // User creation wizard
-      createUserTitle: "Create User",
+      createUserTitle: "Create Account",
       createUserSubtitle: "Create a new user with specific role and permissions",
       userTypeStep: "User Type",
       userTypeStepDesc: "Choose the type of user",
@@ -625,9 +625,9 @@ export const translations = {
       // User type selection
       selectUserType: "Select the type of user account you want to create:",
       personalUser: "Personal User",
-      personalUserDesc: "Create a standard user account for an individual with basic access to the platform.",
+      personalUserDesc: "Create a standard user account for an individual with access to the platform.",
       companyAccount: "Company Account",
-      companyAccountDesc: "Create a corporate account with enhanced permissions and capabilities.",
+      companyAccountDesc: "Create a corporate account with access to the platform.",
       // Personal user features
       accessPersonalDocs: "Access to personal documents",
       basicWorkflow: "Basic workflow features",
@@ -640,7 +640,7 @@ export const translations = {
       back: "Back",
       next: "Next",
       creating: "Creating...",
-      createUserButton: "Create User",
+      createUserButton: "Create Account",
       // Username & Email Step
       username: "Username",
       chooseUsername: "Choose a username",
