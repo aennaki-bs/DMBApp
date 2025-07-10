@@ -505,53 +505,7 @@ export function UnifiedTable<T>({
   return (
     <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-xl">
       {/* Header with title and actions */}
-      <div className="p-6 border-b border-blue-900/30 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gradient-to-r from-[#1a2c6b]/30 to-[#0a1033]/30">
-        <div className="flex-1">
-          {title && (
-            <h2 className="text-2xl font-bold text-blue-100 tracking-wide">
-              {title}
-            </h2>
-          )}
-          {subtitle && (
-            <p className="text-sm text-blue-300 mt-1 font-medium">{subtitle}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {/* View mode toggle - always show when showViewToggle is true */}
-          {showViewToggle && onViewModeChange && (
-            <div className="flex items-center bg-[#22306e]/80 rounded-lg border border-blue-900/40 shadow-md backdrop-blur-sm">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onViewModeChange("list")}
-                className={cn(
-                  "rounded-r-none h-10 px-4 transition-all duration-200",
-                  viewMode === "list"
-                    ? "bg-blue-600/60 text-blue-100 hover:bg-blue-600/70 shadow-sm"
-                    : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/50"
-                )}
-              >
-                <LayoutList className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onViewModeChange("card")}
-                className={cn(
-                  "rounded-l-none h-10 px-4 transition-all duration-200",
-                  viewMode === "card"
-                    ? "bg-blue-600/60 text-blue-100 hover:bg-blue-600/70 shadow-sm"
-                    : "text-blue-400 hover:text-blue-300 hover:bg-blue-800/50"
-                )}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
 
-          {headerAction}
-        </div>
-      </div>
 
       {/* Search and filter toolbar */}
       {(searchFields.length > 0 ||

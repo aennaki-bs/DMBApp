@@ -565,40 +565,57 @@ export default function CircuitsPage() {
         className="h-full flex flex-col gap-6 w-full"
         style={{ minHeight: "100%" }}
       >
-        {/* Filter bar */}
-        <div className="flex flex-col md:flex-row gap-2 mb-4 items-center">
+        {/* Uniform Search + Filter Bar (matches User Management) */}
+        <div className="w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10">
           {/* Search and field select */}
           <div className="flex-1 flex items-center gap-4 min-w-0">
             <div className="relative">
               <Select value={searchField} onValueChange={setSearchField}>
-                <SelectTrigger className="w-[130px] bg-blue-900/20 border-blue-800/30 text-white">
-                  <SelectValue placeholder="All fields">
+                <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+                  <SelectValue>
                     {searchFields.find((opt) => opt.id === searchField)?.label || "All fields"}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
                   {searchFields.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id}>
+                    <SelectItem
+                      key={opt.id}
+                      value={opt.id}
+                      className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="relative flex-1 min-w-0">
+            <div className="relative flex-1 group">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
               <Input
                 placeholder={`Search ${searchFields.find((opt) => opt.id === searchField)?.label?.toLowerCase() || "circuits"}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 h-10 bg-blue-900/20 border-blue-800/30 text-white"
+                className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
               />
-              <span className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400">
-                <Filter className="h-4 w-4" />
-              </span>
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/60 hover:text-primary"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -606,67 +623,99 @@ export default function CircuitsPage() {
             </div>
           </div>
           {/* Filter popover */}
-          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-            <PopoverTrigger asChild>
+          <div className="flex items-center gap-3">
+            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
+                >
+                  <Filter className="h-5 w-5" />
+                  Filter
+                  <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
+                  {(statusFilter !== "any" || typeFilter !== "any") && (
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl p-6">
+                <div className="mb-4 text-foreground font-bold text-lg flex items-center gap-2">
+                  <Filter className="h-5 w-5 text-primary" />
+                  Filter Circuits
+                </div>
+                <div className="flex flex-col gap-4">
+                  {/* Type Filter */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-popover-foreground">Type</span>
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                      <SelectTrigger className="w-full bg-background/50 backdrop-blur-sm text-foreground border border-border focus:ring-primary focus:border-primary transition-colors duration-200 hover:bg-background/70 shadow-sm rounded-md">
+                        <SelectValue>
+                          {circuitTypeOptions.find((opt) => opt.value === typeFilter)?.label || "All Types"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover/95 backdrop-blur-lg text-popover-foreground border border-border">
+                        {circuitTypeOptions.map((opt) => (
+                          <SelectItem
+                            key={opt.id}
+                            value={opt.value}
+                            className="hover:bg-accent hover:text-accent-foreground"
+                          >
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {/* Status Filter */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-popover-foreground">Status</span>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-full bg-background/50 backdrop-blur-sm text-foreground border border-border focus:ring-primary focus:border-primary transition-colors duration-200 hover:bg-background/70 shadow-sm rounded-md">
+                        <SelectValue>
+                          {statusOptions.find((opt) => opt.value === statusFilter)?.label || "Any Status"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover/95 backdrop-blur-lg text-popover-foreground border border-border">
+                        {statusOptions.map((opt) => (
+                          <SelectItem
+                            key={opt.id}
+                            value={opt.value}
+                            className="hover:bg-accent hover:text-accent-foreground"
+                          >
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex justify-end mt-6">
+                  {(statusFilter !== "any" || typeFilter !== "any") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all duration-200 flex items-center gap-2"
+                      onClick={clearAllFilters}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Clear all
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+            {(searchQuery || statusFilter !== "any" || typeFilter !== "any") && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="border-blue-500/50 bg-blue-900/20 hover:bg-blue-800/30 text-blue-300 hover:text-blue-100"
+                className="text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all duration-200 flex items-center gap-2"
+                onClick={clearAllFilters}
               >
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
+                <X className="h-4 w-4 mr-1" />
+                Clear all
               </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-[260px] p-4 bg-[#0a1033] border border-blue-900/30">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm text-blue-100">Filter Circuits</h4>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setStatusFilter("any");
-                      setTypeFilter("any");
-                    }}
-                    className="h-8 px-2 text-xs text-blue-400"
-                  >
-                    Clear all
-                  </Button>
-                </div>
-                {/* Type filter dropdown (moved here) */}
-                <div className="space-y-2">
-                  <label className="text-xs text-blue-300 block">Type</label>
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="bg-blue-900/20 border-blue-800/30 text-white">
-                      <SelectValue placeholder="Filter by type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {circuitTypeOptions.map((option) => (
-                        <SelectItem key={option.id} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Status filter dropdown */}
-                <div className="space-y-2">
-                  <label className="text-xs text-blue-300 block">Status</label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="bg-blue-900/20 border-blue-800/30 text-white">
-                      <SelectValue placeholder="Any Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+            )}
+          </div>
         </div>
 
         {/* Table Container (exactly like UserTableContent) */}

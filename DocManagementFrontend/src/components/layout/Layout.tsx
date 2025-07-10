@@ -169,7 +169,7 @@ export function Layout() {
                 } shadow-lg transition-all duration-300`}
                 style={{ minHeight: "100%" }}
               >
-                <div className="h-full overflow-auto p-6">
+                <div className="h-full overflow-auto p-4">
                   <Outlet />
                 </div>
               </div>

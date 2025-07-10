@@ -35,6 +35,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
 import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
 import { useDocumentsFilter } from "@/hooks/documents/useDocumentsFilter";
+import { DocumentsSearchBar } from "@/components/documents/DocumentsSearchBar";
 
 const DocumentsPage = () => {
   const { t, tWithParams } = useTranslation();
@@ -228,7 +229,7 @@ const DocumentsPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto p-2">
       <PageHeader
         title={t("documents.title")}
         description={t("documents.subtitle")}
@@ -267,8 +268,11 @@ const DocumentsPage = () => {
         }
       />
 
-      {/* Filter Bar */}
-      <DocumentsFilterBar />
+      {/* Search Bar with Integrated Filters */}
+      <DocumentsSearchBar 
+        hasActiveFilters={hasActiveFilters}
+        className="mb-4"
+      />
 
       {/* Selected Documents Bar */}
       <AnimatePresence>

@@ -28,13 +28,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onAddType }) => {
       </p>
 
       <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-        <Button
-          className="bg-blue-600 hover:bg-blue-700 min-w-[160px]"
-          onClick={onAddType}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Document Type
-        </Button>
+
       </div>
     </motion.div>
   );

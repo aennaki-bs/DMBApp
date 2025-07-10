@@ -68,7 +68,7 @@ export function useNavSearch() {
         id: 'line-elements-types',
         title: 'Element Types',
         description: 'Manage element types',
-        path: '/line-elements-management?tab=elementtypes',
+        path: '/element-types',
         category: t('nav.lineElements'),
         icon: 'Tag',
         keywords: ['element', 'types']
@@ -162,10 +162,10 @@ export function useNavSearch() {
       if ((page.id === 'user-management' || page.id === 'responsibility-centres') && !isAdmin) {
         return false;
       }
-      
+
       // Non-simple user pages
       if (isSimpleUser && [
-        'document-types', 'line-elements', 'line-elements-types', 
+        'document-types', 'line-elements', 'line-elements-types',
         'line-elements-items', 'line-elements-units', 'line-elements-accounts',
         'circuits', 'approval', 'approval-groups', 'approvers'
       ].includes(page.id)) {
@@ -241,7 +241,7 @@ export function useNavSearch() {
     }
 
     setIsSearching(true);
-    
+
     const query = searchQuery.toLowerCase().trim();
     const results = userSpecificPages.filter(page => {
       const searchableText = [
@@ -258,15 +258,15 @@ export function useNavSearch() {
     const sortedResults = results.sort((a, b) => {
       const aTitle = a.title.toLowerCase();
       const bTitle = b.title.toLowerCase();
-      
+
       // Exact matches first
       if (aTitle === query && bTitle !== query) return -1;
       if (bTitle === query && aTitle !== query) return 1;
-      
+
       // Title starts with query
       if (aTitle.startsWith(query) && !bTitle.startsWith(query)) return -1;
       if (bTitle.startsWith(query) && !aTitle.startsWith(query)) return 1;
-      
+
       // Alphabetical order
       return aTitle.localeCompare(bTitle);
     });

@@ -51,6 +51,7 @@ import CustomerManagementPage from "./pages/reference-data/CustomerManagement";
 import VendorManagementPage from "./pages/reference-data/VendorManagement";
 import LocationsManagementPage from "./pages/reference-data/LocationsManagement";
 import ThemeDemo from "./pages/demo/ThemeDemo";
+import ElementTypesPage from "./pages/reference-data/ElementTypesPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -233,6 +234,19 @@ const App = () => (
                         requiredRole={["Admin", "FullUser"]}
                       >
                         <SubTypeManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Line Elements Management routes */}
+                  <Route
+                    path="/element-types"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <ElementTypesPage />
                       </ProtectedRoute>
                     }
                   />

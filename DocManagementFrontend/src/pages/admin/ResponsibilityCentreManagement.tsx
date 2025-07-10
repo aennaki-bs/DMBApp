@@ -1140,9 +1140,10 @@ const ResponsibilityCentreManagement = React.memo(() => {
               <Building2 className="mr-3 h-6 w-6 text-blue-400" />{" "}
               {t("responsibilityCentres.title")}
             </h1>
-            <p className="text-sm md:text-base text-gray-400">
+            {/* Count display removed as requested */}
+            {/* <p className="text-sm md:text-base text-gray-400">
               {t("responsibilityCentres.subtitle")}
-            </p>
+            </p> */}
           </div>
           <div className="flex gap-2">
             <Button
@@ -1210,7 +1211,7 @@ const ResponsibilityCentreManagement = React.memo(() => {
       {/* Data Table */}
       <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-[#0a1033] shadow-xl">
         {/* Clean Header */}
-        <div className="p-6 border-b border-blue-900/30 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* <div className="p-6 border-b border-blue-900/30 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-white tracking-wide flex items-center gap-3">
               <Building2 className="h-6 w-6 text-blue-400" />
@@ -1236,7 +1237,7 @@ const ResponsibilityCentreManagement = React.memo(() => {
               {t("responsibilityCentres.createCentre")}
             </Button>
           </div>
-        </div>
+        </div> */}
 
         <div className="p-0">
           {isLoading ? (

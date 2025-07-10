@@ -208,11 +208,9 @@ export function SidebarNav() {
                   <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border pl-3">
                     <li>
                       <Link
-                        to="/line-elements-management?tab=elementtypes"
+                        to="/element-types"
                         className={getSubmenuItemClasses(
-                          isActive("/line-elements-management") &&
-                            new URLSearchParams(location.search).get("tab") ===
-                              "elementtypes"
+                          isActive("/element-types")
                         )}
                       >
                         <Tag className="h-4 w-4" />
