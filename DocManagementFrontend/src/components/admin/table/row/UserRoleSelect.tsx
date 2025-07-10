@@ -59,7 +59,7 @@ export function UserRoleSelect({
   return (
     <Select value={currentRole} onValueChange={onRoleChange}>
       <SelectTrigger
-        className={`w-[130px] bg-white dark:bg-gradient-to-r dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 border-blue-300 dark:border-blue-900/30 text-blue-900 dark:text-blue-100 hover:border-blue-500 dark:hover:border-blue-500/40 transition-all duration-150 shadow-sm ${
+        className={`w-[130px] dark:bg-gradient-to-r dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 border-blue-300 dark:border-blue-900/30 text-blue-900 dark:text-blue-100 hover:border-blue-500 dark:hover:border-blue-500/40 transition-all duration-150 shadow-sm ${
           currentRole === "Admin"
             ? "border-red-400 dark:border-red-500/30"
             : currentRole === "FullUser"

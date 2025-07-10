@@ -46,6 +46,23 @@ export function SidebarNav() {
     );
   };
 
+  // Special handling for document detail pages to determine source
+  const isArchivedDocumentContext = () => {
+    // Check if we're viewing a document and came from archived documents
+    if (location.pathname.match(/^\/documents\/\d+$/)) {
+      // Check URL search params for archived context
+      const searchParams = new URLSearchParams(location.search);
+      if (searchParams.get('from') === 'archived') {
+        return true;
+      }
+      
+      // Check session storage for archived context (fallback)
+      const documentContext = sessionStorage.getItem('documentContext');
+      return documentContext === 'archived';
+    }
+    return false;
+  };
+
   // Check if any line elements-related route is active
   const isLineElementsActive = () => {
     return (
@@ -197,7 +214,7 @@ export function SidebarNav() {
                   <Link
                     to="/documents"
                     className={getSubmenuItemClasses(
-                      isActive("/documents") && !isActive("/documents/archived")
+                      (isActive("/documents") && !isActive("/documents/archived") && !isArchivedDocumentContext())
                     )}
                   >
                     <FileText className="h-4 w-4" />
@@ -208,7 +225,7 @@ export function SidebarNav() {
                   <Link
                     to="/documents/archived"
                     className={getSubmenuItemClasses(
-                      isActive("/documents/archived")
+                      isActive("/documents/archived") || isArchivedDocumentContext()
                     )}
                   >
                     <Archive className="h-4 w-4" />

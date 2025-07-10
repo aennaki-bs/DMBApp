@@ -14,15 +14,18 @@ namespace DocManagementBackend.Services
         private readonly ApplicationDbContext _context;
         private readonly IDocumentErpArchivalService _erpArchivalService;
         private readonly ILogger<DocumentWorkflowService> _logger;
+        private readonly IServiceProvider _serviceProvider;
 
         public DocumentWorkflowService(
             ApplicationDbContext context, 
             IDocumentErpArchivalService erpArchivalService,
-            ILogger<DocumentWorkflowService> logger)
+            ILogger<DocumentWorkflowService> logger,
+            IServiceProvider serviceProvider)
         {
             _context = context;
             _erpArchivalService = erpArchivalService;
             _logger = logger;
+            _serviceProvider = serviceProvider;
         }
 
         /// <summary>
@@ -918,28 +921,26 @@ namespace DocManagementBackend.Services
                 document.UpdatedAt = DateTime.UtcNow;
                 document.UpdatedByUserId = userId; // Track who completed the circuit
                 
-                // Trigger ERP archival asynchronously
-                _ = Task.Run(async () =>
+                // Trigger ERP archival synchronously (safer than async Task.Run for DI scope)
+                _logger.LogInformation("Document {DocumentId} reached final status '{StatusTitle}'. Starting ERP archival process.", documentId, targetStatus.Title);
+                
+                try
                 {
-                    try
+                    var archivalSuccess = await _erpArchivalService.ArchiveDocumentToErpAsync(documentId);
+                    
+                    if (archivalSuccess)
                     {
-                        _logger.LogInformation("Document {DocumentId} reached final status. Triggering ERP archival.", documentId);
-                        var archivalSuccess = await _erpArchivalService.ArchiveDocumentToErpAsync(documentId);
-                        
-                        if (archivalSuccess)
-                        {
-                            _logger.LogInformation("Document {DocumentId} successfully archived to ERP", documentId);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Failed to archive document {DocumentId} to ERP", documentId);
-                        }
+                        _logger.LogInformation("Document {DocumentId} successfully archived to ERP", documentId);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        _logger.LogError(ex, "Error during ERP archival for document {DocumentId}: {Error}", documentId, ex.Message);
+                        _logger.LogWarning("Failed to archive document {DocumentId} to ERP", documentId);
                     }
-                });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error during ERP archival for document {DocumentId}: {Error}", documentId, ex.Message);
+                }
             }
 
             // Create history entry
@@ -1104,28 +1105,26 @@ namespace DocManagementBackend.Services
                     document.UpdatedAt = DateTime.UtcNow;
                     document.UpdatedByUserId = userId; // Track who completed the circuit
                     
-                    // Trigger ERP archival asynchronously
-                    _ = Task.Run(async () =>
+                    // Trigger ERP archival synchronously (safer than async Task.Run for DI scope)
+                    _logger.LogInformation("Document {DocumentId} final status completed. Starting ERP archival process.", documentId);
+                    
+                    try
                     {
-                        try
+                        var archivalSuccess = await _erpArchivalService.ArchiveDocumentToErpAsync(documentId);
+                        
+                        if (archivalSuccess)
                         {
-                            _logger.LogInformation("Document {DocumentId} final status completed. Triggering ERP archival.", documentId);
-                            var archivalSuccess = await _erpArchivalService.ArchiveDocumentToErpAsync(documentId);
-                            
-                            if (archivalSuccess)
-                            {
-                                _logger.LogInformation("Document {DocumentId} successfully archived to ERP", documentId);
-                            }
-                            else
-                            {
-                                _logger.LogWarning("Failed to archive document {DocumentId} to ERP", documentId);
-                            }
+                            _logger.LogInformation("Document {DocumentId} successfully archived to ERP", documentId);
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            _logger.LogError(ex, "Error during ERP archival for document {DocumentId}: {Error}", documentId, ex.Message);
+                            _logger.LogWarning("Failed to archive document {DocumentId} to ERP", documentId);
                         }
-                    });
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during ERP archival for document {DocumentId}: {Error}", documentId, ex.Message);
+                    }
                 }
             }
             else

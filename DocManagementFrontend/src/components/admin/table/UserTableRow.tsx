@@ -157,7 +157,7 @@ export function UserTableRow({
               </TooltipTrigger>
               <TooltipContent
                 side="top"
-                className="bg-white dark:bg-blue-900/90 text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-500/30"
+                className="dark:bg-blue-900/90 text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-500/30"
               >
                 {user.isActive ? t("userManagement.blockUser") : t("userManagement.unblockUser")}
               </TooltipContent>

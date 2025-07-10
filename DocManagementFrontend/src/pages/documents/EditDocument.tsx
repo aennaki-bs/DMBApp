@@ -7,6 +7,7 @@ import documentService from '@/services/documentService';
 import { Document, DocumentType, UpdateDocumentRequest } from '@/models/document';
 import DocumentEditHeader from '@/components/document/edit/DocumentEditHeader';
 import DocumentEditForm from '@/components/document/edit/DocumentEditForm';
+import { navigateToDocumentList } from '@/utils/navigationUtils';
 
 const EditDocument = () => {
   const { id } = useParams();
@@ -20,7 +21,7 @@ const EditDocument = () => {
   useEffect(() => {
     if (!id) {
       toast.error('Invalid document ID');
-      navigate('/documents');
+      navigateToDocumentList(navigate);
       return;
     }
 
@@ -37,7 +38,7 @@ const EditDocument = () => {
       } catch (error) {
         console.error(`Failed to fetch document data:`, error);
         toast.error('Failed to load document data');
-        navigate('/documents');
+        navigateToDocumentList(navigate);
       } finally {
         setIsLoading(false);
       }

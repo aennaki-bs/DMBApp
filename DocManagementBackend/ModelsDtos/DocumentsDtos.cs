@@ -87,7 +87,7 @@ namespace DocManagementBackend.Models
 
     public class DocumentTypeDto
     {
-        public int TypeNumber { get; set; }
+        public int? TypeNumber { get; set; }
         public string TypeAlias { get; set; } = string.Empty;
         public string TypeKey { get; set; } = string.Empty;
         public string TypeName { get; set; } = string.Empty;
