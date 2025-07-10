@@ -405,9 +405,9 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
     setFilterOpen(false);
   };
 
-  // Filter card class
+  // Professional filter/search bar styling (copied from User Management)
   const filterCardClass =
-    "w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-blue-50 dark:bg-[#1e2a4a] shadow-lg border border-blue-200 dark:border-blue-900/40";
+    "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
 
   // Unite filter options
   const uniteOptions = [
@@ -434,24 +434,24 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Search and Filter Bar */}
+    <div className="space-y-6">
+      {/* Search and Filter Bar - Updated to match User Management */}
       <div className={filterCardClass}>
         {/* Search and field select */}
-        <div className="flex-1 flex items-center gap-2 min-w-0">
+        <div className="flex-1 flex items-center gap-3 min-w-0">
           <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[120px] bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md">
+            <SelectTrigger className="w-[140px] h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
               <SelectValue>
                 {ITEM_SEARCH_FIELDS.find((opt) => opt.id === searchField)
                   ?.label || "All fields"}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
+            <SelectContent className="bg-background/95 backdrop-blur-xl border border-primary/20 shadow-2xl rounded-xl">
               {ITEM_SEARCH_FIELDS.map((opt) => (
                 <SelectItem
                   key={opt.id}
                   value={opt.id}
-                  className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
+                  className="hover:bg-primary/10 focus:bg-primary/10"
                 >
                   {opt.label}
                 </SelectItem>
@@ -463,36 +463,48 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm placeholder:text-blue-500 dark:placeholder:text-blue-400"
+              className="h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-10 pr-8 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg placeholder:text-muted-foreground/70"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
-          {/* Filter popover */}
+        <div className="flex items-center gap-3">
+          {/* Advanced Filters Popover */}
           <Popover open={filterOpen} onOpenChange={setFilterOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40 hover:bg-blue-50 dark:hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2"
+                className="h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-background/80 shadow-lg rounded-xl transition-all duration-300 flex items-center gap-2 px-4"
               >
-                <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <Filter className="h-4 w-4" />
                 Filter
+                <kbd className="ml-1 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-70">
+                  Alt+F
+                </kbd>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 bg-white dark:bg-[#1e2a4a] border border-blue-300 dark:border-blue-900/40 rounded-xl shadow-lg p-4">
-              <div className="mb-2 text-blue-800 dark:text-blue-200 font-semibold">
-                Advanced Filters
-              </div>
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm text-blue-700 dark:text-blue-200">
-                    Unit Code
-                  </span>
+            <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl border border-primary/20 shadow-2xl rounded-xl p-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-foreground">Advanced Filters</h4>
+                  {uniteFilter !== "any" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearAllFilters}
+                      className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Unit Code</label>
                   <Select value={uniteFilter} onValueChange={setUniteFilter}>
-                    <SelectTrigger className="w-full bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
+                    <SelectTrigger className="h-9 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-lg">
                       <SelectValue>
                         {
                           uniteOptions.find((opt) => opt.value === uniteFilter)
@@ -500,12 +512,12 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                         }
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-white dark:bg-[#22306e] text-blue-900 dark:text-blue-100 border border-blue-300 dark:border-blue-900/40">
+                    <SelectContent className="bg-background/95 backdrop-blur-xl border border-primary/20 shadow-2xl rounded-xl max-h-60">
                       {uniteOptions.map((opt) => (
                         <SelectItem
                           key={opt.id}
                           value={opt.value}
-                          className="hover:bg-blue-100 dark:hover:bg-blue-800/40"
+                          className="hover:bg-primary/10 focus:bg-primary/10"
                         >
                           {opt.label}
                         </SelectItem>
@@ -514,186 +526,156 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                   </Select>
                 </div>
               </div>
-              <div className="flex justify-end mt-4">
-                {uniteFilter !== "any" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-white flex items-center gap-1"
-                    onClick={clearAllFilters}
-                  >
-                    <X className="h-3 w-3" /> Clear All
-                  </Button>
-                )}
-              </div>
             </PopoverContent>
           </Popover>
-
-          {/* Create button */}
-          <Button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-            disabled
-          >
-            <Plus className="h-4 w-4" />
-            Create Item
-          </Button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-blue-200 dark:border-blue-900/30 overflow-hidden  dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
+      {/* Table - Updated to match User Management */}
+      <div className="bg-background/60 backdrop-blur-md border border-primary/20 rounded-xl overflow-hidden shadow-xl">
         {filteredAndSortedItems.length > 0 ? (
           <>
-            {/* Fixed Header - Never Scrolls */}
-            <div className="min-w-[900px] border-b border-blue-200 dark:border-blue-900/30">
-              <Table className="table-fixed w-full">
-                <TableHeader className="bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
-                  <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
-                    <TableHead className="w-[50px]">
-                      <div className="flex items-center justify-center">
-                        <Checkbox
-                          checked={
-                            paginatedItems.length > 0 &&
-                            paginatedItems.every((item) =>
-                              selectedItems.includes(item.code)
-                            )
-                          }
-                          onCheckedChange={handleSelectAll}
-                          aria-label="Select all"
-                          className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
-                        />
-                      </div>
+            {/* Fixed Header */}
+            <div className="border-b border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-primary/20 hover:bg-transparent">
+                    <TableHead className="w-[50px] text-center">
+                      <Checkbox
+                        checked={
+                          paginatedItems.length > 0 &&
+                          paginatedItems.every((item) =>
+                            selectedItems.includes(item.code)
+                          )
+                        }
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Select all"
+                        className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
                     </TableHead>
                     <TableHead
-                      className={`${headerClass("code")} w-[120px]`}
+                      className={`${headerClass("code")} cursor-pointer hover:bg-primary/5 transition-colors`}
                       onClick={() => handleSort("code")}
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-2">
                         Code {renderSortIcon("code")}
                       </div>
                     </TableHead>
                     <TableHead
-                      className={`${headerClass("description")} w-[300px]`}
+                      className={`${headerClass("description")} cursor-pointer hover:bg-primary/5 transition-colors`}
                       onClick={() => handleSort("description")}
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-2">
                         Description {renderSortIcon("description")}
                       </div>
                     </TableHead>
                     <TableHead
-                      className={`${headerClass("unite")} w-[200px]`}
+                      className={`${headerClass("unite")} cursor-pointer hover:bg-primary/5 transition-colors`}
                       onClick={() => handleSort("unite")}
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-2">
                         Unit Code {renderSortIcon("unite")}
                       </div>
                     </TableHead>
-                    <TableHead className="w-[130px] text-blue-800 dark:text-blue-200 font-medium text-right pr-4">
-                      Actions
-                    </TableHead>
+                    <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
               </Table>
             </div>
 
-            {/* Scrollable Body - Only Content Scrolls */}
+            {/* Scrollable Body */}
             <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
-              <div className="min-w-[900px]">
-                <Table className="table-fixed w-full">
-                  <TableBody>
-                    {paginatedItems.map((item) => (
-                      <TableRow
-                        key={item.code}
-                        className="border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/20 transition-colors duration-150"
-                      >
-                        <TableCell className="w-[50px]">
-                          <div className="flex items-center justify-center">
-                            <Checkbox
-                              checked={selectedItems.includes(item.code)}
-                              onCheckedChange={() =>
-                                handleSelectItem(item.code)
-                              }
-                              aria-label={`Select ${item.code}`}
-                              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell className="w-[120px] font-mono text-blue-900 dark:text-blue-100 font-semibold">
-                          {item.code}
-                        </TableCell>
-                        <TableCell className="w-[300px] text-blue-800 dark:text-blue-200">
-                          <div className="truncate">{item.description}</div>
-                        </TableCell>
-                        <TableCell className="w-[200px]">
-                          {item.unite ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/30"
-                            >
-                              {item.unite}
-                            </Badge>
-                          ) : (
-                            <span className="text-gray-600 dark:text-blue-400/60">
-                              No unit
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="w-[130px] text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openViewDialog(item)}
-                              className="h-8 w-8 p-0 text-blue-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/10"
-                              title="View item details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditDialog(item)}
-                              className="h-8 w-8 p-0 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30"
-                              title="Edit item"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openDeleteDialog(item)}
-                              disabled
-                              className="h-8 w-8 p-0 opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400"
-                              title="Delete functionality disabled"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <Table>
+                <TableBody>
+                  {paginatedItems.map((item) => (
+                    <TableRow
+                      key={item.code}
+                      className="border-b border-primary/10 hover:bg-primary/5 transition-all duration-200"
+                    >
+                      <TableCell className="w-[50px] text-center">
+                        <Checkbox
+                          checked={selectedItems.includes(item.code)}
+                          onCheckedChange={() => handleSelectItem(item.code)}
+                          aria-label={`Select ${item.code}`}
+                          className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono font-semibold text-foreground">
+                        {item.code}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        <div className="truncate max-w-[300px]">{item.description}</div>
+                      </TableCell>
+                      <TableCell>
+                        {item.unite ? (
+                          <Badge
+                            variant="secondary"
+                            className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                          >
+                            {item.unite}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground/60 text-sm">
+                            No unit
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openViewDialog(item)}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
+                            title="View item details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(item)}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
+                            title="Edit item"
+                            disabled
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteDialog(item)}
+                            className="h-8 w-8 p-0 text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                            title="Delete item"
+                            disabled
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </ScrollArea>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-blue-700 dark:text-blue-300">
-            <Package className="h-12 w-12 mb-4 text-blue-500 dark:text-blue-400/50" />
-            <h3 className="text-lg font-semibold mb-2">No items found</h3>
-            <p className="text-sm text-blue-600 dark:text-blue-400/70 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="rounded-full bg-primary/10 p-4 mb-4">
+              <Package className="h-8 w-8 text-primary/60" />
+            </div>
+            <h3 className="text-lg font-medium text-foreground mb-2">No items found</h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-sm">
               {searchQuery || uniteFilter !== "any"
-                ? "Try adjusting your filters or search terms."
+                ? "No items match your current filters. Try adjusting your search criteria."
                 : "Get started by creating your first item."}
             </p>
             {(searchQuery || uniteFilter !== "any") && (
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-4 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-800/30"
                 onClick={clearAllFilters}
+                className="mt-2"
               >
                 <X className="h-4 w-4 mr-2" />
                 Clear Filters
@@ -712,6 +694,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
           totalItems={totalItems}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
+          pageSizeOptions={[10, 15, 25, 50, 100]}
         />
       )}
 
@@ -917,7 +900,9 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
                 <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-300 dark:border-blue-800/30 rounded-md p-3">
                   {selectedItem.unite ? (
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30">
+                      <Badge
+                        className="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30"
+                      >
                         {selectedItem.unite}
                       </Badge>
                       {selectedItem.uniteCodeNavigation && (

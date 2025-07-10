@@ -152,7 +152,7 @@ const ArchivedDocuments = () => {
                   {searchQuery ? "No archived documents found" : "No archived documents"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {searchQuery 
+                  {searchQuery
                     ? "Try adjusting your search terms"
                     : "Documents will appear here once they complete their circuit and are archived to ERP"
                   }
@@ -193,9 +193,9 @@ const ArchivedDocuments = () => {
                               Archived to ERP
                             </Badge>
                           </div>
-                          
+
                           <h3 className="font-semibold text-xl">{document.title}</h3>
-                          
+
                           <div className="flex items-center gap-6 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <FileText className="h-4 w-4" />
@@ -216,7 +216,7 @@ const ArchivedDocuments = () => {
                               </div>
                             )}
                           </div>
-                          
+
                           {document.erpDocumentCode && (
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-muted-foreground">ERP Code:</span>
@@ -225,12 +225,12 @@ const ArchivedDocuments = () => {
                               </Badge>
                             </div>
                           )}
-                          
+
                           <div className="text-xs text-muted-foreground">
                             Archived: {formatDateTime(document.updatedAt)}
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <Button
                             variant="outline"
@@ -259,7 +259,7 @@ const ArchivedDocuments = () => {
                         className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
-                    
+
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
                       <PaginationItem key={pageNumber}>
                         <PaginationLink
@@ -271,7 +271,7 @@ const ArchivedDocuments = () => {
                         </PaginationLink>
                       </PaginationItem>
                     ))}
-                    
+
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => handlePageChange(Math.min(totalPages, page + 1))}

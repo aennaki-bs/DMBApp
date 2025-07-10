@@ -624,20 +624,20 @@ export default function CircuitsPage() {
           </div>
           {/* Filter popover */}
           <div className="flex items-center gap-3">
-            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
                   className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
-                >
+              >
                   <Filter className="h-5 w-5" />
-                  Filter
-                  <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
+                Filter
+                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
                   {(statusFilter !== "any" || typeFilter !== "any") && (
                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                   )}
-                </Button>
-              </PopoverTrigger>
+              </Button>
+            </PopoverTrigger>
               <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl p-6">
                 <div className="mb-4 text-foreground font-bold text-lg flex items-center gap-2">
                   <Filter className="h-5 w-5 text-primary" />
@@ -647,12 +647,12 @@ export default function CircuitsPage() {
                   {/* Type Filter */}
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-popover-foreground">Type</span>
-                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
                       <SelectTrigger className="w-full bg-background/50 backdrop-blur-sm text-foreground border border-border focus:ring-primary focus:border-primary transition-colors duration-200 hover:bg-background/70 shadow-sm rounded-md">
                         <SelectValue>
                           {circuitTypeOptions.find((opt) => opt.value === typeFilter)?.label || "All Types"}
                         </SelectValue>
-                      </SelectTrigger>
+                    </SelectTrigger>
                       <SelectContent className="bg-popover/95 backdrop-blur-lg text-popover-foreground border border-border">
                         {circuitTypeOptions.map((opt) => (
                           <SelectItem
@@ -661,20 +661,20 @@ export default function CircuitsPage() {
                             className="hover:bg-accent hover:text-accent-foreground"
                           >
                             {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                   {/* Status Filter */}
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-popover-foreground">Status</span>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
                       <SelectTrigger className="w-full bg-background/50 backdrop-blur-sm text-foreground border border-border focus:ring-primary focus:border-primary transition-colors duration-200 hover:bg-background/70 shadow-sm rounded-md">
                         <SelectValue>
                           {statusOptions.find((opt) => opt.value === statusFilter)?.label || "Any Status"}
                         </SelectValue>
-                      </SelectTrigger>
+                    </SelectTrigger>
                       <SelectContent className="bg-popover/95 backdrop-blur-lg text-popover-foreground border border-border">
                         {statusOptions.map((opt) => (
                           <SelectItem
@@ -685,10 +685,10 @@ export default function CircuitsPage() {
                             {opt.label}
                           </SelectItem>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
                 <div className="flex justify-end mt-6">
                   {(statusFilter !== "any" || typeFilter !== "any") && (
                     <Button
@@ -702,8 +702,8 @@ export default function CircuitsPage() {
                     </Button>
                   )}
                 </div>
-              </PopoverContent>
-            </Popover>
+            </PopoverContent>
+          </Popover>
             {(searchQuery || statusFilter !== "any" || typeFilter !== "any") && (
               <Button
                 variant="ghost"

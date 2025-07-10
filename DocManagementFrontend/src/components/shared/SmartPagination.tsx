@@ -36,7 +36,7 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
   onPageChange,
   onPageSizeChange,
   className = "",
-  pageSizeOptions = [10, 25, 50, 100],
+  pageSizeOptions = [10, 15, 25, 50, 100],
   showFirstLast = true,
   maxVisiblePages = 7,
 }) => {

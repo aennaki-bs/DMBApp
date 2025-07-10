@@ -57,7 +57,7 @@ export const translations = {
       dashboard: 'Dashboard',
       documents: 'Documents',
       documentTypes: 'Document Types',
-      lineElements: 'Line Elements',
+      lineElements: 'Basic Objects',
       circuits: 'Circuits',
       approval: 'Approval',
       responsibilityCentres: 'Responsibility Centres',
