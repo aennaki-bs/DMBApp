@@ -1,4 +1,4 @@
-import { ArrowUpDown, Tag, FileText, Info, Hash, Users } from "lucide-react";
+import { ArrowUpDown, FileText, Info, Hash, Users, Settings } from "lucide-react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
@@ -56,13 +56,6 @@ export const DocumentTypeTableHeader = ({
             className="translate-y-[2px]"
           />
         </TableHead>
-        <TableHead className="w-[140px]">
-          {renderSortableHeader(
-            "Type Code",
-            "typeKey",
-            <Tag className="h-4 w-4 mr-1 text-blue-400" />
-          )}
-        </TableHead>
         <TableHead className="w-[200px]">
           {renderSortableHeader(
             "Type Name",
@@ -84,11 +77,11 @@ export const DocumentTypeTableHeader = ({
             <Users className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="w-[120px] pl-6">
+        <TableHead className="w-[160px] pl-6">
           {renderSortableHeader(
-            "Type Number",
+            "ERP Type",
             "typeNumber",
-            <Hash className="h-4 w-4 mr-1 text-blue-400" />
+            <Settings className="h-4 w-4 mr-1 text-blue-400" />
           )}
         </TableHead>
         <TableHead className="text-right w-[140px]">Actions</TableHead>

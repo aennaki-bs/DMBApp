@@ -21,10 +21,6 @@ export const useDocumentTypeSorting = (types: DocumentType[]) => {
       let valueA: any, valueB: any;
       
       switch(sortField) {
-        case 'typeKey':
-          valueA = a.typeKey || '';
-          valueB = b.typeKey || '';
-          break;
         case 'typeName':
           valueA = a.typeName || '';
           valueB = b.typeName || '';

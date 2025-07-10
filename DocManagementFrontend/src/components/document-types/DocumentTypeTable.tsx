@@ -71,7 +71,7 @@ const DocumentTypeTable = ({
             <TableBody>
               {types.length === 0 ? (
                 <TableRow className="border-blue-900/20 hover:bg-blue-900/20">
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     <div className="flex flex-col items-center justify-center text-blue-300">
                       <AlertTriangle className="h-8 w-8 text-blue-400 mb-2" />
                       <p className="text-sm">No document types found</p>

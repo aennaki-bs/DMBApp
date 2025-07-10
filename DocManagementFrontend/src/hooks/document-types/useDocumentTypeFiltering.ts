@@ -55,8 +55,7 @@ export const useDocumentTypeFiltering = (documentTypes: DocumentType[]) => {
         switch (filterConfig.field) {
           case 'typeName':
             return type.typeName?.toLowerCase().includes(filterConfig.value!.toLowerCase());
-          case 'typeKey':
-            return type.typeKey?.toLowerCase().includes(filterConfig.value!.toLowerCase());
+          
           case 'documentCounter':
             return type.documentCounter?.toString() === filterConfig.value;
           case 'createdAt':

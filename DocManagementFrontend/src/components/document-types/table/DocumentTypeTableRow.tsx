@@ -27,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getErpTypeFromNumber } from "@/utils/erpTypeUtils";
 
 interface DocumentTypeTableRowProps {
   type: DocumentType;
@@ -103,9 +104,6 @@ export const DocumentTypeTableRow = ({
           className="translate-y-[2px]"
         />
       </TableCell>
-      <TableCell className="font-mono text-xs text-blue-300">
-        {type.typeKey || "No code"}
-      </TableCell>
       <TableCell>
         <div className="flex flex-col">
           <span className="font-medium text-blue-100">
@@ -123,7 +121,7 @@ export const DocumentTypeTableRow = ({
       </TableCell>
       <TableCell className="pl-6">
         <div className="flex items-center">
-          <span className="text-blue-200 font-mono text-sm">{type.typeNumber ?? 'N/A'}</span>
+          <span className="text-blue-200 text-sm">{getErpTypeFromNumber(type.typeNumber)}</span>
         </div>
       </TableCell>
       <TableCell className="text-right actions-cell">

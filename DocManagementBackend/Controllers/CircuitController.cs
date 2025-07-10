@@ -585,8 +585,8 @@ namespace DocManagementBackend.Controllers
             if (circuit == null)
                 return NotFound($"Circuit with ID {circuitId} not found.");
                 
-            if (!circuit.IsActive)
-                return BadRequest($"Circuit with ID {circuitId} is not active.");
+            // if (!circuit.IsActive)
+            //     return Ok($"Circuit with ID {circuitId} is not active.");
 
             // Check if there are any documents associated with this circuit
             bool hasDocuments = await _context.Documents

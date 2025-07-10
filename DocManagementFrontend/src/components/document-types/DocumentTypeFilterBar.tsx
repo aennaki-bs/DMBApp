@@ -37,7 +37,6 @@ import { Separator } from "@/components/ui/separator";
 const SEARCH_FIELDS = [
   { id: "all", label: "All fields" },
   { id: "typeName", label: "Type Name" },
-  { id: "typeKey", label: "Type Code" },
   { id: "typeAttr", label: "Description" },
 ];
 
