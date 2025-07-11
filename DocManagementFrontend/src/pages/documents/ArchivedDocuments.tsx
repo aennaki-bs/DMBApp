@@ -94,12 +94,12 @@ function ArchivedDocumentsContent() {
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious
+                <PaginationPrevious 
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
-
+              
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                 if (
                   page === 1 ||
@@ -126,9 +126,9 @@ function ArchivedDocumentsContent() {
                 }
                 return null;
               })}
-
+              
               <PaginationItem>
-                <PaginationNext
+                <PaginationNext 
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                 />

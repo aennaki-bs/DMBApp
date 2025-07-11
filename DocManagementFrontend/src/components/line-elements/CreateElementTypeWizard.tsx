@@ -65,29 +65,22 @@ const step1Schema = z.object({
   code: z
     .string()
     .min(1, "Code is required")
-    .max(50, "Code must be 50 characters or less"),
+    .max(50, "Code must be 50 characters or less")
+    .regex(/^[A-Z]+$/, "Code must contain only uppercase letters, numbers, and underscores"),
 });
 
 const step2Schema = z.object({
-  tableName: z
-    .string()
-    .min(1, "Table name is required")
-    .max(100, "Table name must be 100 characters or less"),
-  description: z
-    .string()
-    .max(255, "Description must be 255 characters or less")
-    .optional()
-    .transform((val) => val?.trim() || ""),
-});
-
-const step3Schema = z.object({
   typeElement: z.enum(["Item", "General Accounts"], {
     required_error: "Please select a type element",
   }),
 });
 
-const step4Schema = z.object({
-  selectedElementCode: z.string().min(1, "Please select an element"),
+const step3Schema = z.object({
+  description: z
+    .string()
+    .max(255, "Description must be 255 characters or less")
+    .optional()
+    .transform((val) => val?.trim() || ""),
 });
 
 // Combined schema for final validation
@@ -95,24 +88,19 @@ const finalSchema = z.object({
   code: z
     .string()
     .min(1, "Code is required")
-    .max(50, "Code must be 50 characters or less"),
-  tableName: z
-    .string()
-    .min(1, "Table name is required")
-    .max(100, "Table name must be 100 characters or less"),
+    .max(50, "Code must be 50 characters or less")
+    .regex(/^[A-Z0-9_]+$/, "Code must contain only uppercase letters, numbers, and underscores"),
+  typeElement: z.enum(["Item", "General Accounts"]),
   description: z
     .string()
     .max(255, "Description must be 255 characters or less")
     .optional()
     .transform((val) => val?.trim() || ""),
-  typeElement: z.enum(["Item", "General Accounts"]),
-  selectedElementCode: z.string().min(1, "Please select an element"),
 });
 
 type Step1Data = z.infer<typeof step1Schema>;
 type Step2Data = z.infer<typeof step2Schema>;
 type Step3Data = z.infer<typeof step3Schema>;
-type Step4Data = z.infer<typeof step4Schema>;
 type FinalData = z.infer<typeof finalSchema>;
 
 interface CreateElementTypeWizardProps {
@@ -147,15 +135,11 @@ const CreateElementTypeWizard = ({
 
   const step2Form = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
-    defaultValues: { tableName: "", description: "" },
   });
 
   const step3Form = useForm<Step3Data>({
     resolver: zodResolver(step3Schema),
-  });
-
-  const step4Form = useForm<Step4Data>({
-    resolver: zodResolver(step4Schema),
+    defaultValues: { description: "" },
   });
 
   // Reset wizard when dialog opens/closes
@@ -169,13 +153,12 @@ const CreateElementTypeWizard = ({
       step1Form.reset();
       step2Form.reset();
       step3Form.reset();
-      step4Form.reset();
     }
-  }, [open, step1Form, step2Form, step3Form, step4Form]);
+  }, [open, step1Form, step2Form, step3Form]);
 
   // Check basic code format (without API call)
   const checkBasicCodeFormat = (code: string) => {
-    const isValidFormat = code.trim().length >= 1 && code.trim().length <= 50;
+    const isValidFormat = /^[A-Z0-9_]*$/.test(code) && code.trim().length >= 1 && code.trim().length <= 50;
     setHasBasicCodeFormat(isValidFormat);
     return isValidFormat;
   };
@@ -255,14 +238,6 @@ const CreateElementTypeWizard = ({
           setCurrentStep(4);
         }
         break;
-      case 4:
-        isValid = await step4Form.trigger();
-        if (isValid) {
-          const data = step4Form.getValues();
-          setWizardData((prev) => ({ ...prev, ...data }));
-          setCurrentStep(5);
-        }
-        break;
     }
   };
 
@@ -276,9 +251,7 @@ const CreateElementTypeWizard = ({
   const handleSubmit = async () => {
     if (
       !wizardData.code ||
-      !wizardData.tableName ||
-      !wizardData.typeElement ||
-      !wizardData.selectedElementCode
+      !wizardData.typeElement
     ) {
       toast.error("Please complete all required fields");
       return;
@@ -292,16 +265,8 @@ const CreateElementTypeWizard = ({
         description:
           wizardData.description && wizardData.description.trim()
             ? wizardData.description.trim()
-            : `${wizardData.typeElement} element type for ${wizardData.tableName}`,
-        tableName: wizardData.tableName,
-        itemCode:
-          wizardData.typeElement === "Item"
-            ? wizardData.selectedElementCode
-            : undefined,
-        accountCode:
-          wizardData.typeElement === "General Accounts"
-            ? wizardData.selectedElementCode
-            : undefined,
+            : `${wizardData.typeElement} element type`,
+        tableName: wizardData.typeElement === "Item" ? "Items" : "General Accounts",
       };
 
       await lineElementsService.elementTypes.create(createRequest);
@@ -316,27 +281,11 @@ const CreateElementTypeWizard = ({
     }
   };
 
-  // Get the selected element details for review
-  const getSelectedElementDetails = () => {
-    if (!wizardData.typeElement || !wizardData.selectedElementCode) return null;
-
-    if (wizardData.typeElement === "Item") {
-      return availableItems.find(
-        (item) => item.code === wizardData.selectedElementCode
-      );
-    } else {
-      return availableGeneralAccounts.find(
-        (account) => account.code === wizardData.selectedElementCode
-      );
-    }
-  };
-
   const steps = [
     { number: 1, title: "Code Validation", icon: Tag },
-    { number: 2, title: "Basic Information", icon: FileText },
-    { number: 3, title: "Type Selection", icon: Database },
-    { number: 4, title: "Element Selection", icon: Package },
-    { number: 5, title: "Review & Submit", icon: Eye },
+    { number: 2, title: "Type Selection", icon: Database },
+    { number: 3, title: "Basic Information", icon: FileText },
+    { number: 4, title: "Review & Submit", icon: Eye },
   ];
 
   return (
@@ -358,13 +307,12 @@ const CreateElementTypeWizard = ({
           {steps.map((step, index) => (
             <div key={step.number} className="flex items-center">
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-                  currentStep > step.number
-                    ? "bg-green-600 border-green-600 text-white"
-                    : currentStep === step.number
+                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${currentStep > step.number
+                  ? "bg-green-600 border-green-600 text-white"
+                  : currentStep === step.number
                     ? "bg-blue-600 border-blue-600 text-white"
                     : "border-blue-900/50 text-blue-400 bg-[#111633]"
-                }`}
+                  }`}
               >
                 {currentStep > step.number ? (
                   <Check className="h-5 w-5" />
@@ -374,9 +322,8 @@ const CreateElementTypeWizard = ({
               </div>
               <div className="ml-3">
                 <p
-                  className={`text-sm font-medium ${
-                    currentStep >= step.number ? "text-white" : "text-blue-400"
-                  }`}
+                  className={`text-sm font-medium ${currentStep >= step.number ? "text-white" : "text-blue-400"
+                    }`}
                 >
                   {step.title}
                 </p>
@@ -418,12 +365,13 @@ const CreateElementTypeWizard = ({
                         <FormControl>
                           <div className="relative">
                             <Input
-                              placeholder="Enter unique code (e.g., ITEM_OFFICE_001)"
+                              placeholder="Enter unique code (e.g., ITEMOFFICE)"
                               {...field}
                               className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 pr-10"
                               onChange={(e) => {
-                                field.onChange(e);
-                                const value = e.target.value;
+                                // Convert to uppercase and filter valid characters
+                                const value = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                                field.onChange(value);
                                 checkBasicCodeFormat(value);
                                 setIsCodeValid(false); // Reset validation state
                               }}
@@ -465,53 +413,116 @@ const CreateElementTypeWizard = ({
                     Code Guidelines:
                   </h4>
                   <ul className="text-xs text-blue-400 space-y-1">
-                    <li>• Use uppercase letters, numbers, and underscores</li>
-                    <li>• Make it descriptive and meaningful</li>
-                    <li>• Maximum 50 characters</li>
-                    <li>• Must be unique across all element types</li>
+                    <li>• Use uppercase letters</li>
                   </ul>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Step 2: Basic Information */}
+          {/* Step 2: Type Selection */}
           {currentStep === 2 && (
             <Card className="bg-[#0f1642] border-blue-900/30">
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
-                  <FileText className="mr-2 h-5 w-5 text-blue-400" />
-                  Step 2: Basic Information
+                  <Database className="mr-2 h-5 w-5 text-blue-400" />
+                  Step 2: Type Element Selection
                 </CardTitle>
                 <CardDescription className="text-blue-300">
-                  Provide the table name and an optional description for the
-                  element type.
+                  Choose whether this element type will reference Items or
+                  General Accounts.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Form {...step2Form}>
                   <FormField
                     control={step2Form.control}
-                    name="tableName"
+                    name="typeElement"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-blue-300">
-                          Table Name *
+                          Type Element *
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Enter table name (e.g., Items, Accounts)"
-                            {...field}
-                            className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400"
-                          />
+                          <div className="grid grid-cols-2 gap-4">
+                            <Card
+                              className={`cursor-pointer transition-all border-2 ${field.value === "Item"
+                                ? "border-emerald-500 bg-emerald-900/20"
+                                : "border-blue-900/30 bg-[#111633] hover:border-blue-700/50"
+                                }`}
+                              onClick={() => field.onChange("Item")}
+                            >
+                              <CardContent className="p-4 text-center">
+                                <Package
+                                  className={`h-8 w-8 mx-auto mb-2 ${field.value === "Item"
+                                    ? "text-emerald-400"
+                                    : "text-blue-400"
+                                    }`}
+                                />
+                                <h3 className="font-medium text-white">
+                                  Items
+                                </h3>
+                                <p className="text-xs text-blue-300 mt-1">
+                                  Physical items and products
+                                </p>
+                                {field.value === "Item" && (
+                                  <Check className="h-4 w-4 text-emerald-400 mx-auto mt-2" />
+                                )}
+                              </CardContent>
+                            </Card>
+
+                            <Card
+                              className={`cursor-pointer transition-all border-2 ${field.value === "General Accounts"
+                                ? "border-violet-500 bg-violet-900/20"
+                                : "border-blue-900/30 bg-[#111633] hover:border-blue-700/50"
+                                }`}
+                              onClick={() => field.onChange("General Accounts")}
+                            >
+                              <CardContent className="p-4 text-center">
+                                <Calculator
+                                  className={`h-8 w-8 mx-auto mb-2 ${field.value === "General Accounts"
+                                    ? "text-violet-400"
+                                    : "text-blue-400"
+                                    }`}
+                                />
+                                <h3 className="font-medium text-white">
+                                  General Accounts
+                                </h3>
+                                <p className="text-xs text-blue-300 mt-1">
+                                  Accounting codes and accounts
+                                </p>
+                                {field.value === "General Accounts" && (
+                                  <Check className="h-4 w-4 text-violet-400 mx-auto mt-2" />
+                                )}
+                              </CardContent>
+                            </Card>
+                          </div>
                         </FormControl>
                         <FormMessage className="text-red-400" />
                       </FormItem>
                     )}
                   />
+                </Form>
+              </CardContent>
+            </Card>
+          )}
 
+          {/* Step 3: Basic Information */}
+          {currentStep === 3 && (
+            <Card className="bg-[#0f1642] border-blue-900/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <FileText className="mr-2 h-5 w-5 text-blue-400" />
+                  Step 3: Basic Information
+                </CardTitle>
+                <CardDescription className="text-blue-300">
+                  Provide an optional description for the element type.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Form {...step3Form}>
                   <FormField
-                    control={step2Form.control}
+                    control={step3Form.control}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
@@ -537,15 +548,11 @@ const CreateElementTypeWizard = ({
                   </h4>
                   <ul className="text-xs text-amber-400 space-y-1">
                     <li>
-                      • Table name should match the database table or entity
-                    </li>
-                    <li>
                       • Description is optional - if left empty, a description
                       will be auto-generated
                     </li>
                     <li>
-                      • Auto-generated format: "[Type Element] element type for
-                      [Table Name]"
+                      • Auto-generated format: "[Type Element] element type"
                     </li>
                   </ul>
                 </div>
@@ -553,190 +560,13 @@ const CreateElementTypeWizard = ({
             </Card>
           )}
 
-          {/* Step 3: Type Selection */}
-          {currentStep === 3 && (
-            <Card className="bg-[#0f1642] border-blue-900/30">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Database className="mr-2 h-5 w-5 text-blue-400" />
-                  Step 3: Type Element Selection
-                </CardTitle>
-                <CardDescription className="text-blue-300">
-                  Choose whether this element type will reference Items or
-                  General Accounts.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Form {...step3Form}>
-                  <FormField
-                    control={step3Form.control}
-                    name="typeElement"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-300">
-                          Type Element *
-                        </FormLabel>
-                        <FormControl>
-                          <div className="grid grid-cols-2 gap-4">
-                            <Card
-                              className={`cursor-pointer transition-all border-2 ${
-                                field.value === "Item"
-                                  ? "border-emerald-500 bg-emerald-900/20"
-                                  : "border-blue-900/30 bg-[#111633] hover:border-blue-700/50"
-                              }`}
-                              onClick={() => field.onChange("Item")}
-                            >
-                              <CardContent className="p-4 text-center">
-                                <Package
-                                  className={`h-8 w-8 mx-auto mb-2 ${
-                                    field.value === "Item"
-                                      ? "text-emerald-400"
-                                      : "text-blue-400"
-                                  }`}
-                                />
-                                <h3 className="font-medium text-white">
-                                  Items
-                                </h3>
-                                <p className="text-xs text-blue-300 mt-1">
-                                  Physical items and products
-                                </p>
-                                {field.value === "Item" && (
-                                  <Check className="h-4 w-4 text-emerald-400 mx-auto mt-2" />
-                                )}
-                              </CardContent>
-                            </Card>
-
-                            <Card
-                              className={`cursor-pointer transition-all border-2 ${
-                                field.value === "General Accounts"
-                                  ? "border-violet-500 bg-violet-900/20"
-                                  : "border-blue-900/30 bg-[#111633] hover:border-blue-700/50"
-                              }`}
-                              onClick={() => field.onChange("General Accounts")}
-                            >
-                              <CardContent className="p-4 text-center">
-                                <Calculator
-                                  className={`h-8 w-8 mx-auto mb-2 ${
-                                    field.value === "General Accounts"
-                                      ? "text-violet-400"
-                                      : "text-blue-400"
-                                  }`}
-                                />
-                                <h3 className="font-medium text-white">
-                                  General Accounts
-                                </h3>
-                                <p className="text-xs text-blue-300 mt-1">
-                                  Accounting codes and accounts
-                                </p>
-                                {field.value === "General Accounts" && (
-                                  <Check className="h-4 w-4 text-violet-400 mx-auto mt-2" />
-                                )}
-                              </CardContent>
-                            </Card>
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                </Form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 4: Element Selection */}
+          {/* Step 4: Review & Submit */}
           {currentStep === 4 && (
             <Card className="bg-[#0f1642] border-blue-900/30">
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
-                  <Package className="mr-2 h-5 w-5 text-blue-400" />
-                  Step 4: Select Specific Element
-                </CardTitle>
-                <CardDescription className="text-blue-300">
-                  Choose the specific {wizardData.typeElement?.toLowerCase()}{" "}
-                  that this element type will reference.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Form {...step4Form}>
-                  <FormField
-                    control={step4Form.control}
-                    name="selectedElementCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-blue-300">
-                          Select {wizardData.typeElement} *
-                        </FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white">
-                              <SelectValue
-                                placeholder={`Select a ${wizardData.typeElement?.toLowerCase()}`}
-                              />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[#111633] border-blue-900/50 max-h-64">
-                              {wizardData.typeElement === "Item"
-                                ? availableItems.map((item) => (
-                                    <SelectItem
-                                      key={`wizard-item-${item.id}`}
-                                      value={item.code}
-                                    >
-                                      <div className="flex items-center">
-                                        <Package className="h-4 w-4 mr-2 text-emerald-400" />
-                                        <span>
-                                          {item.code} - {item.description}
-                                        </span>
-                                      </div>
-                                    </SelectItem>
-                                  ))
-                                : availableGeneralAccounts.map((account) => (
-                                    <SelectItem
-                                      key={`wizard-account-${account.id}`}
-                                      value={account.code}
-                                    >
-                                      <div className="flex items-center">
-                                        <Calculator className="h-4 w-4 mr-2 text-violet-400" />
-                                        <span>
-                                          {account.code} - {account.description}
-                                        </span>
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage className="text-red-400" />
-                      </FormItem>
-                    )}
-                  />
-                </Form>
-
-                {wizardData.typeElement && (
-                  <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-blue-300 mb-2">
-                      Available {wizardData.typeElement}:
-                    </h4>
-                    <p className="text-xs text-blue-400">
-                      {wizardData.typeElement === "Item"
-                        ? `${availableItems.length} items available`
-                        : `${availableGeneralAccounts.length} general accounts available`}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 5: Review & Submit */}
-          {currentStep === 5 && (
-            <Card className="bg-[#0f1642] border-blue-900/30">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
                   <Eye className="mr-2 h-5 w-5 text-blue-400" />
-                  Step 5: Review & Submit
+                  Step 4: Review & Submit
                 </CardTitle>
                 <CardDescription className="text-blue-300">
                   Review the information and submit to create the element type.
@@ -756,47 +586,14 @@ const CreateElementTypeWizard = ({
 
                     <div>
                       <Label className="text-blue-300 text-sm">
-                        Table Name
-                      </Label>
-                      <div className="bg-[#111633] border border-blue-900/50 rounded-md p-2">
-                        <p className="text-white">{wizardData.tableName}</p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="text-blue-300 text-sm">
-                        Description
-                      </Label>
-                      <div className="bg-[#111633] border border-blue-900/50 rounded-md p-2">
-                        <p className="text-white">
-                          {wizardData.description &&
-                          wizardData.description.trim()
-                            ? wizardData.description
-                            : `${wizardData.typeElement} element type for ${wizardData.tableName}`}
-                        </p>
-                        {(!wizardData.description ||
-                          !wizardData.description.trim()) && (
-                          <p className="text-xs text-amber-400 mt-1">
-                            * Auto-generated description (no custom description
-                            provided)
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-blue-300 text-sm">
                         Type Element
                       </Label>
                       <div className="bg-[#111633] border border-blue-900/50 rounded-md p-2">
                         <Badge
-                          className={`${
-                            wizardData.typeElement === "Item"
-                              ? "bg-emerald-900/30 text-emerald-300 border-emerald-500/30"
-                              : "bg-violet-900/30 text-violet-300 border-violet-500/30"
-                          }`}
+                          className={`${wizardData.typeElement === "Item"
+                            ? "bg-emerald-900/30 text-emerald-300 border-emerald-500/30"
+                            : "bg-violet-900/30 text-violet-300 border-violet-500/30"
+                            }`}
                         >
                           {wizardData.typeElement === "Item" ? (
                             <Package className="h-3 w-3 mr-1" />
@@ -807,27 +604,27 @@ const CreateElementTypeWizard = ({
                         </Badge>
                       </div>
                     </div>
+                  </div>
 
+                  <div className="space-y-3">
                     <div>
                       <Label className="text-blue-300 text-sm">
-                        Selected Element
+                        Description
                       </Label>
                       <div className="bg-[#111633] border border-blue-900/50 rounded-md p-2">
-                        {(() => {
-                          const element = getSelectedElementDetails();
-                          return element ? (
-                            <div>
-                              <p className="text-white font-medium">
-                                {element.code}
-                              </p>
-                              <p className="text-blue-300 text-sm">
-                                {element.description}
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="text-gray-400">No element selected</p>
-                          );
-                        })()}
+                        <p className="text-white">
+                          {wizardData.description &&
+                            wizardData.description.trim()
+                            ? wizardData.description
+                            : `${wizardData.typeElement} element type`}
+                        </p>
+                        {(!wizardData.description ||
+                          !wizardData.description.trim()) && (
+                            <p className="text-xs text-amber-400 mt-1">
+                              * Auto-generated description (no custom description
+                              provided)
+                            </p>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -880,7 +677,7 @@ const CreateElementTypeWizard = ({
           </div>
 
           <div>
-            {currentStep < 5 ? (
+            {currentStep < 4 ? (
               <Button
                 onClick={handleNextStep}
                 disabled={currentStep === 1 && !hasBasicCodeFormat}
