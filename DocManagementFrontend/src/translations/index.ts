@@ -288,7 +288,7 @@ export const translations = {
       enterDocumentContent: 'Enter document content',
       contentDescription: 'Enter the content for your document. This will be used as the main body text.',
       externalDocument: 'External Document',
-      externalDocumentDescription: 'Enable if this is an external document (will be sent as "documentExterne" and replace the alias field)',
+      externalDocumentDescription: 'Enable if there is an external document reference',
       externalDocumentReference: 'External Document Reference',
       enterExternalDocumentReference: 'Enter external document reference',
       externalDocumentReferenceDescription: 'Enter a reference or identifier for this external document',
@@ -321,7 +321,7 @@ export const translations = {
       selectedCustomer: 'Selected Customer',
       selectedVendor: 'Selected Vendor',
       code: 'Code',
-      originalName: 'Original Name',
+      originalName: 'Name',
       modifyInformationNote: 'You can modify the information above. Changes will be saved with the document without affecting the original {{type}} record.',
       // ReviewStep
       reviewYourDocument: 'Review Your Document',

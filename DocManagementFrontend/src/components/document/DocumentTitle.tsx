@@ -21,7 +21,7 @@ const DocumentTitle = ({ document, isLoading }: DocumentTitleProps) => {
             <h1 className="text-xl sm:text-2xl font-bold text-white font-mono">
               {document?.documentKey}
             </h1>
-            {document && <DocumentStatusBadge status={document.status} />}
+            {document && <DocumentStatusBadge status={document.status} erpDocumentCode={document.erpDocumentCode} />}
             {/* {document?.erpDocumentCode && (
               <Badge className="bg-orange-600/20 text-orange-200 hover:bg-orange-600/30 border-orange-600/30">
                 <Archive className="h-3 w-3 mr-1" />

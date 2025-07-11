@@ -54,6 +54,9 @@ namespace DocManagementBackend.Data
         public DbSet<ApprovalWriting> ApprovalWritings { get; set; }
         public DbSet<ApprovalResponse> ApprovalResponses { get; set; }
         public DbSet<StepApprovalAssignment> StepApprovalAssignments { get; set; }
+        
+        // ERP Error tracking
+        public DbSet<ErpArchivalError> ErpArchivalErrors { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -447,6 +450,39 @@ namespace DocManagementBackend.Data
             // Document -> Customer relationship (conditional based on DocumentType.TierType)
             // Note: These are manual navigation properties that need to be resolved in application logic
             // We cannot use traditional foreign key constraints here due to the dynamic nature
+
+            // ErpArchivalError relationships
+            modelBuilder.Entity<ErpArchivalError>()
+                .HasOne(e => e.Document)
+                .WithMany()
+                .HasForeignKey(e => e.DocumentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ErpArchivalError>()
+                .HasOne(e => e.Ligne)
+                .WithMany()
+                .HasForeignKey(e => e.LigneId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
+            modelBuilder.Entity<ErpArchivalError>()
+                .HasOne(e => e.ResolvedBy)
+                .WithMany()
+                .HasForeignKey(e => e.ResolvedByUserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // Configure ErpErrorType as string
+            modelBuilder.Entity<ErpArchivalError>()
+                .Property(e => e.ErrorType)
+                .HasConversion<string>();
+
+            // Index for efficient queries
+            modelBuilder.Entity<ErpArchivalError>()
+                .HasIndex(e => new { e.DocumentId, e.IsResolved });
+
+            modelBuilder.Entity<ErpArchivalError>()
+                .HasIndex(e => e.OccurredAt);
 
             // Seed data
             modelBuilder.Entity<Role>().HasData(

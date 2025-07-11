@@ -1,5 +1,6 @@
 using DocManagementBackend.Data;
 using DocManagementBackend.Models;
+using DocManagementBackend.ModelsDtos;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +13,11 @@ namespace DocManagementBackend.Services
         Task<bool> ArchiveDocumentToErpAsync(int documentId);
         Task<bool> IsDocumentArchived(int documentId);
         Task<bool> CreateDocumentLinesInErpAsync(int documentId);
+        Task<DocumentErpStatusDto> GetDocumentErpStatusAsync(int documentId);
+        Task<List<ErpArchivalErrorDto>> GetDocumentErpErrorsAsync(int documentId);
+        Task<bool> ResolveErpErrorAsync(int errorId, int userId, string resolutionNotes);
+        Task<bool> RetryDocumentArchivalAsync(int documentId, int userId, string? reason = null);
+        Task<bool> RetryLineArchivalAsync(int documentId, List<int> ligneIds, int userId, string? reason = null);
     }
 
     public class DocumentErpArchivalService : IDocumentErpArchivalService
@@ -115,21 +121,62 @@ namespace DocManagementBackend.Services
                 
                 if (erpResult.IsSuccess)
                 {
-                    // Update document with ERP document code (status already set by workflow)
-                    document.ERPDocumentCode = erpResult.Value;
-                    document.UpdatedAt = DateTime.UtcNow;
+                    // Check if this ERP code already exists in another document OF THE SAME TYPE
+                    var existingDocumentWithCode = await context.Documents
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(d => d.Id != documentId && 
+                                               d.TypeId == document.TypeId && 
+                                               d.ERPDocumentCode == erpResult.Value);
                     
-                    await context.SaveChangesAsync();
+                    if (existingDocumentWithCode != null)
+                    {
+                        _logger.LogError("ERP returned duplicate document code {ErpCode} for document {DocumentId} (Type: {TypeId}). Code already exists in document {ExistingDocumentId} of the same type", 
+                            erpResult.Value, documentId, document.TypeId, existingDocumentWithCode.Id);
+                        
+                        // Record this as a business rule error
+                        await RecordErpErrorAsync(context, documentId, null, ErpErrorType.BusinessRuleError, 
+                            $"Duplicate ERP document code '{erpResult.Value}' returned by ERP system for document type", 
+                            $"ERP code '{erpResult.Value}' already exists in document ID {existingDocumentWithCode.Id} of the same document type ({document.TypeId}). This indicates a numbering issue in the ERP system for this document type.");
+                        
+                        return false;
+                    }
                     
-                    _logger.LogInformation("Document {DocumentId} successfully archived to ERP with code: {ErpCode}", 
-                        documentId, erpResult.Value);
-                    
-                    // Now create the document lines in ERP using the same scope
-                    return await CreateDocumentLinesInErpInternalAsync(documentId, context);
+                    try
+                    {
+                        // Update document with ERP document code (status already set by workflow)
+                        document.ERPDocumentCode = erpResult.Value;
+                        document.UpdatedAt = DateTime.UtcNow;
+                        
+                        await context.SaveChangesAsync();
+                        
+                        _logger.LogInformation("Document {DocumentId} successfully archived to ERP with code: {ErpCode}", 
+                            documentId, erpResult.Value);
+                        
+                        // Now create the document lines in ERP using the same scope
+                        return await CreateDocumentLinesInErpInternalAsync(documentId, context);
+                    }
+                    catch (DbUpdateException dbEx) when (dbEx.InnerException?.Message?.Contains("IX_Documents_ERPDocumentCode") == true)
+                    {
+                        // Handle the unique constraint violation specifically
+                        _logger.LogError(dbEx, "Unique constraint violation when saving ERP code {ErpCode} for document {DocumentId} (Type: {TypeId})", 
+                            erpResult.Value, documentId, document.TypeId);
+                        
+                        // Record this as a business rule error with detailed information
+                        await RecordErpErrorAsync(context, documentId, null, ErpErrorType.BusinessRuleError, 
+                            $"Duplicate ERP document code '{erpResult.Value}' - database constraint violation for document type", 
+                            $"Database unique constraint 'IX_Documents_ERPDocumentCode_TypeId' prevented saving duplicate ERP code '{erpResult.Value}' for document type {document.TypeId}. This indicates concurrent access or ERP numbering issues for this document type.");
+                        
+                        return false;
+                    }
                 }
                 
                 _logger.LogError("Failed to archive document {DocumentId} to ERP - Error: {ErrorMessage}", 
                     documentId, erpResult.ErrorMessage);
+                
+                // Record the error in database
+                await RecordErpErrorAsync(context, documentId, null, ErpErrorType.DocumentArchival, 
+                    erpResult.ErrorMessage, erpResult.ErrorDetails);
+                
                 return false;
             }
             catch (Exception ex)
@@ -223,12 +270,22 @@ namespace DocManagementBackend.Services
                             errorCount++;
                             _logger.LogError("Failed to create line {LigneId} in ERP - Error: {ErrorMessage}", 
                                 ligne.Id, erpLineResult.ErrorMessage);
+                            
+                            // Record the line error in database - use LigneKey first as it has the proper format (e.g., ITM_1000, ACC_100000)
+                            var ligneCode = !string.IsNullOrEmpty(ligne.LigneKey) ? ligne.LigneKey : ligne.Title;
+                            await RecordErpErrorAsync(context, documentId, ligne.Id, ErpErrorType.LineArchival, 
+                                erpLineResult.ErrorMessage, erpLineResult.ErrorDetails, ligneCode);
                         }
                     }
                     catch (Exception ex)
                     {
                         errorCount++;
                         _logger.LogError(ex, "Error creating line {LigneId} in ERP: {Error}", ligne.Id, ex.Message);
+                        
+                        // Record the line error in database - use LigneKey first as it has the proper format (e.g., ITM_1000, ACC_100000)
+                        var ligneCode = !string.IsNullOrEmpty(ligne.LigneKey) ? ligne.LigneKey : ligne.Title;
+                        await RecordErpErrorAsync(context, documentId, ligne.Id, ErpErrorType.LineArchival, 
+                            ex.Message, ex.ToString(), ligneCode);
                     }
                 }
 
@@ -560,6 +617,199 @@ namespace DocManagementBackend.Services
                     null,
                     "UnexpectedError"
                 );
+            }
+        }
+
+        // Error tracking and management methods
+        private async Task RecordErpErrorAsync(ApplicationDbContext context, int documentId, int? ligneId, 
+            ErpErrorType errorType, string errorMessage, string? errorDetails = null, string? ligneCode = null)
+        {
+            try
+            {
+                var error = new ErpArchivalError
+                {
+                    DocumentId = documentId,
+                    LigneId = ligneId,
+                    ErrorType = errorType,
+                    ErrorMessage = errorMessage.Length > 500 ? errorMessage.Substring(0, 500) : errorMessage,
+                    ErrorDetails = errorDetails?.Length > 2000 ? errorDetails.Substring(0, 2000) : errorDetails,
+                    LigneCode = ligneCode?.Length > 100 ? ligneCode.Substring(0, 100) : ligneCode,
+                    OccurredAt = DateTime.UtcNow,
+                    IsResolved = false
+                };
+
+                context.ErpArchivalErrors.Add(error);
+                await context.SaveChangesAsync();
+                
+                _logger.LogInformation("Recorded ERP error for document {DocumentId}, ligne {LigneId}, type {ErrorType}", 
+                    documentId, ligneId, errorType);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to record ERP error for document {DocumentId}: {Error}", documentId, ex.Message);
+            }
+        }
+
+        public async Task<DocumentErpStatusDto> GetDocumentErpStatusAsync(int documentId)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            using var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var document = await context.Documents
+                .Include(d => d.Lignes)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.Id == documentId);
+
+            if (document == null)
+            {
+                throw new KeyNotFoundException($"Document {documentId} not found");
+            }
+
+            var errors = await context.ErpArchivalErrors
+                .Include(e => e.ResolvedBy)
+                .Where(e => e.DocumentId == documentId)
+                .OrderByDescending(e => e.OccurredAt)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var ligneStatuses = new List<LigneErpStatusDto>();
+            foreach (var ligne in document.Lignes)
+            {
+                var ligneErrors = errors.Where(e => e.LigneId == ligne.Id).ToList();
+                // Use LigneKey first as it has the proper format (e.g., ITM_1000, ACC_100000)
+                var ligneCode = !string.IsNullOrEmpty(ligne.LigneKey) ? ligne.LigneKey : ligne.Title;
+                ligneStatuses.Add(new LigneErpStatusDto
+                {
+                    LigneId = ligne.Id,
+                    LigneCode = ligneCode,
+                    Title = ligne.Title,
+                    IsArchived = !string.IsNullOrEmpty(ligne.ERPLineCode),
+                    ErpLineCode = ligne.ERPLineCode,
+                    HasErrors = ligneErrors.Any(e => !e.IsResolved),
+                    Errors = ligneErrors.Select(MapToDto).ToList()
+                });
+            }
+
+            var lastArchivalAttempt = errors.Any() ? errors.Max(e => e.OccurredAt) : (DateTime?)null;
+            var unresolvedErrors = errors.Where(e => !e.IsResolved).ToList();
+
+            return new DocumentErpStatusDto
+            {
+                DocumentId = documentId,
+                DocumentKey = document.DocumentKey,
+                IsArchived = !string.IsNullOrEmpty(document.ERPDocumentCode),
+                ErpDocumentCode = document.ERPDocumentCode,
+                HasErrors = errors.Any(),
+                HasUnresolvedErrors = unresolvedErrors.Any(),
+                Errors = errors.Select(MapToDto).ToList(),
+                LigneStatuses = ligneStatuses,
+                LastArchivalAttempt = lastArchivalAttempt,
+                ArchivalStatusSummary = GenerateArchivalStatusSummary(document, ligneStatuses, unresolvedErrors)
+            };
+        }
+
+        public async Task<List<ErpArchivalErrorDto>> GetDocumentErpErrorsAsync(int documentId)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            using var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var errors = await context.ErpArchivalErrors
+                .Include(e => e.ResolvedBy)
+                .Where(e => e.DocumentId == documentId)
+                .OrderByDescending(e => e.OccurredAt)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return errors.Select(MapToDto).ToList();
+        }
+
+        public async Task<bool> ResolveErpErrorAsync(int errorId, int userId, string resolutionNotes)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            using var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var error = await context.ErpArchivalErrors.FindAsync(errorId);
+            if (error == null)
+            {
+                return false;
+            }
+
+            error.IsResolved = true;
+            error.ResolvedAt = DateTime.UtcNow;
+            error.ResolvedByUserId = userId;
+            error.ResolutionNotes = resolutionNotes;
+
+            await context.SaveChangesAsync();
+            
+            _logger.LogInformation("ERP error {ErrorId} resolved by user {UserId}", errorId, userId);
+            return true;
+        }
+
+        public async Task<bool> RetryDocumentArchivalAsync(int documentId, int userId, string? reason = null)
+        {
+            _logger.LogInformation("Retrying document archival for document {DocumentId} by user {UserId}. Reason: {Reason}", 
+                documentId, userId, reason ?? "Manual retry");
+
+            return await ArchiveDocumentToErpAsync(documentId);
+        }
+
+        public async Task<bool> RetryLineArchivalAsync(int documentId, List<int> ligneIds, int userId, string? reason = null)
+        {
+            _logger.LogInformation("Retrying line archival for document {DocumentId}, lines {LigneIds} by user {UserId}. Reason: {Reason}", 
+                documentId, string.Join(",", ligneIds), userId, reason ?? "Manual retry");
+
+            // For now, retry the entire document's line creation
+            // In the future, we could implement selective line retry
+            return await CreateDocumentLinesInErpAsync(documentId);
+        }
+
+        private ErpArchivalErrorDto MapToDto(ErpArchivalError error)
+        {
+            return new ErpArchivalErrorDto
+            {
+                Id = error.Id,
+                DocumentId = error.DocumentId,
+                LigneId = error.LigneId,
+                ErrorType = error.ErrorType.ToString(),
+                ErrorMessage = error.ErrorMessage,
+                ErrorDetails = error.ErrorDetails,
+                LigneCode = error.LigneCode,
+                OccurredAt = error.OccurredAt,
+                ResolvedAt = error.ResolvedAt,
+                IsResolved = error.IsResolved,
+                ResolutionNotes = error.ResolutionNotes,
+                ResolvedByUsername = error.ResolvedBy?.Username
+            };
+        }
+
+        private string GenerateArchivalStatusSummary(Document document, List<LigneErpStatusDto> ligneStatuses, List<ErpArchivalError> unresolvedErrors)
+        {
+            if (!string.IsNullOrEmpty(document.ERPDocumentCode))
+            {
+                var archivedLines = ligneStatuses.Count(l => l.IsArchived);
+                var totalLines = ligneStatuses.Count;
+                
+                if (totalLines == 0)
+                {
+                    return "Document archived successfully (no lines)";
+                }
+                else if (archivedLines == totalLines)
+                {
+                    return "Document and all lines archived successfully";
+                }
+                else
+                {
+                    var failedLines = totalLines - archivedLines;
+                    return $"Document archived, but {failedLines} of {totalLines} lines failed to archive";
+                }
+            }
+            else if (unresolvedErrors.Any(e => e.ErrorType == ErpErrorType.DocumentArchival))
+            {
+                return "Document archival failed";
+            }
+            else
+            {
+                return "Document not yet archived";
             }
         }
 

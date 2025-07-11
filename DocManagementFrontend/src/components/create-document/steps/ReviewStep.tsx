@@ -330,7 +330,7 @@ export const ReviewStep = ({
           <div className="flex items-center gap-2">
             <CardTitle className="text-md text-white flex items-center gap-2">
               <FileSignature className="h-4 w-4 text-blue-400" />
-              Document Details
+              Document Extern
             </CardTitle>
             {isExternal && (
               <Badge className="bg-blue-600 text-white text-xs flex items-center gap-1">
@@ -375,9 +375,7 @@ export const ReviewStep = ({
               <div className="flex items-start gap-2 bg-blue-900/20 p-2 rounded-md">
                 <ExternalLink className="h-4 w-4 mt-0.5 text-blue-400" />
                 <p className="text-xs text-gray-300">
-                  This document is marked as external. The external reference
-                  will be sent as "documentExterne" and will completely replace
-                  the alias field.
+                  This is an external reference that will be added to the document.
                 </p>
               </div>
             </div>

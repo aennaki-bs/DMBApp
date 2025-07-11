@@ -17,6 +17,7 @@ import {
   Building2,
   Archive,
 } from "lucide-react";
+import ErpArchivalStatus from "./ErpArchivalStatus";
 import { Document, TierType } from "@/models/document";
 import { WorkflowStatus } from "@/services/workflowService";
 import { ApprovalHistoryItem } from "@/services/approvalService";
@@ -188,7 +189,7 @@ const DocumentDetailsTab = ({
       )}
 
       {/* ERP Archival Status Banner */}
-      {document.erpDocumentCode && (
+      {/* {document.erpDocumentCode && (
         <div className="bg-gradient-to-r from-orange-900/20 to-amber-900/20 py-4 px-6 border-b border-orange-700/30">
           <div className="flex items-center justify-center">
             <div className="flex items-center gap-4">
@@ -212,6 +213,17 @@ const DocumentDetailsTab = ({
               </div>
             </div>
           </div>
+        </div>
+      )} */}
+
+      {/* Enhanced ERP Archival Status - Only for completed documents */}
+      {document.status === 2 && (
+        <div className="px-6 py-4 bg-[#0f1642]/95">
+          <ErpArchivalStatus 
+            documentId={document.id} 
+            documentKey={document.documentKey}
+            isCompletedDocument={true}
+          />
         </div>
       )}
 

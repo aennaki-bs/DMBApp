@@ -11,6 +11,7 @@ const combinedDocumentService = {
   getDocumentById: documentService.getDocumentById,
   getRecentDocuments: documentService.getRecentDocuments,
   getArchivedDocuments: documentService.getArchivedDocuments,
+  getCompletedNotArchivedDocuments: documentService.getCompletedNotArchivedDocuments,
   createDocument: documentService.createDocument,
   updateDocument: documentService.updateDocument,
   deleteDocument: documentService.deleteDocument,
