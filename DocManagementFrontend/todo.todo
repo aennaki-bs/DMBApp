@@ -1,0 +1,46 @@
+sgnup
+first step redendence
+username issue && email
+/ in email verif
+message in resend code
+list d'archivache
+documentType cretaion add the type number as type
+dont display the will be autogenrated
+after delete circuit
+
+role display
+documentType_> typenumber, filter.
+key->code
+mask type code
+status in series
+mask code circuit and title->description
+status filter remove flexible
+creation buttons should be one
+step2 in creation step improve the UI
+approver check
+
+impact of desactivation of a circuit
+
+line eliment -> basic data
+remove the navebar
+element type code -> should be 
+remove tablename
+remove the select step in element
+
+structure homogene
+
+approval history filter by user
+
+change the app name DocumentManagementVerse DMVerse
+ change basic objects to basic data
+ fix filters problems (all)
+ add inactive filter in series
+ nav bar duplicated user loged info (khali gir 1 o kabar image)
+ mask code from tables ather then (documents, series, responsibilityCenters, Basic data)
+ fix duplicate notifications problem
+ add button from steps to statueses
+ auto refresh after assigning approval to step
+ approval group remove rule from search
+ desactivat bulk when actions is also desactivated
+
+ 

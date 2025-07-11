@@ -1,7 +1,7 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 
 interface UserTableHeaderProps {
   selectedCount: number;
@@ -38,15 +38,17 @@ export function UserTableHeader({
   `;
 
   return (
-    <TableHeader className="bg-muted/20 backdrop-blur-sm">
-      <TableRow className="border-border/30 hover:bg-transparent">
+    <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">
+      <TableRow className="border-slate-200/50 dark:border-slate-700/50 hover:bg-transparent">
         <TableHead className="w-[48px]">
           <div className="flex items-center justify-center">
-            <Checkbox
-              checked={selectedCount > 0 && selectedCount === totalCount}
+            <ProfessionalCheckbox
+              checked={selectedCount === totalCount && totalCount > 0}
+              indeterminate={selectedCount > 0 && selectedCount < totalCount}
               onCheckedChange={onSelectAll}
-              aria-label="Select all"
-              className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              size="md"
+              variant="header"
+              className="shadow-lg"
             />
           </div>
         </TableHead>

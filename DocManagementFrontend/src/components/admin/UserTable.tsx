@@ -3,11 +3,13 @@ import { toast } from "sonner";
 import adminService from "@/services/adminService";
 import { UserTableHeader } from "./table/UserTableHeader";
 import { UserTableContent } from "./table/UserTableContent";
-import { BulkActionsBar } from "./table/BulkActionsBar";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import { DirectEditUserModal } from "./DirectEditUserModal";
 import { DirectEditUserEmailModal } from "./DirectEditUserEmailModal";
 import { ViewUserLogsDialog } from "./ViewUserLogsDialog";
+import { ProfessionalBulkActionsBar } from "@/components/shared/ProfessionalBulkActionsBar";
+import { EnhancedBulkSelection } from "@/components/shared/EnhancedBulkSelection";
+import { Trash2, UserCheck, Settings, Users as UsersIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -39,6 +41,10 @@ export function UserTable() {
 
   const {
     selectedUsers,
+    bulkSelection,
+    pagination,
+    users: filteredUsers,
+    paginatedUsers,
     editingUser,
     editEmailUser,
     viewingUserLogs,
@@ -56,7 +62,6 @@ export function UserTable() {
     setShowAdvancedFilters,
     roleChangeOpen,
     selectedRole,
-    users: filteredUsers,
     isLoading,
     isError,
     refetch,
@@ -76,6 +81,13 @@ export function UserTable() {
     handleUserEmailEdited,
     handleMultipleDeleted,
   } = useUserManagement();
+
+  // Clear bulk actions when component unmounts
+  useEffect(() => {
+    return () => {
+      // Component cleanup - no longer needed
+    };
+  }, []);
 
   const handleToggleUserStatus = async (
     userId: number,
@@ -409,10 +421,11 @@ export function UserTable() {
 
       <div className="flex-1 min-h-0">
         <UserTableContent
-          users={filteredUsers}
+          users={paginatedUsers}
+          allUsers={filteredUsers}
           selectedUsers={selectedUsers}
-          onSelectAll={() => handleSelectAll(filteredUsers || [])}
-          onSelectUser={handleSelectUser}
+          bulkSelection={bulkSelection}
+          pagination={pagination}
           onToggleStatus={handleToggleUserStatus}
           onRoleChange={handleUserRoleChange}
           onEdit={(user) => {
@@ -434,18 +447,12 @@ export function UserTable() {
           sortDirection={sortDirection}
           onSort={handleSort}
           onClearFilters={clearAllFilters}
+          onBulkRoleChange={() => setRoleChangeOpen(true)}
+          onBulkDelete={() => setDeleteMultipleOpen(true)}
           isLoading={isLoading}
           isError={isError}
         />
       </div>
-
-      {selectedUsers.length > 0 && (
-        <BulkActionsBar
-          selectedCount={selectedUsers.length}
-          onChangeRole={() => setRoleChangeOpen(true)}
-          onDelete={() => setDeleteMultipleOpen(true)}
-        />
-      )}
 
       {/* Direct Edit Modal */}
       <DirectEditUserModal

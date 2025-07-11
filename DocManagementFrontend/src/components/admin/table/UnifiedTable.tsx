@@ -27,7 +27,6 @@ import {
   Settings,
   LayoutList,
   LayoutGrid,
-  Check,
   ArrowUpDown,
   ChevronDown,
   ChevronUp,
@@ -41,6 +40,10 @@ import { cn } from "@/lib/utils";
 import { usePagination } from "@/hooks/usePagination";
 import SmartPagination from "@/components/shared/SmartPagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import { ProfessionalBulkActionsBar, ProfessionalBulkAction } from "@/components/shared/ProfessionalBulkActionsBar";
+import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
+import { ProfessionalTableRow } from "@/components/shared/ProfessionalTableRow";
 
 export interface Column<T> {
   id: string;
@@ -51,13 +54,7 @@ export interface Column<T> {
   isAction?: boolean;
 }
 
-export interface BulkAction {
-  id: string;
-  label: string;
-  icon?: React.ReactNode;
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost";
-  onClick: (selectedItems: any[]) => void;
-}
+export interface BulkAction extends ProfessionalBulkAction { }
 
 export interface FilterOption {
   id: string;
@@ -142,40 +139,15 @@ export function UnifiedTable<T>({
     initialPageSize: 25,
   });
 
-  // Handle selecting all items (for current page only)
-  const handleSelectAll = () => {
-    const currentPageKeys = paginatedData.map((item) => item[keyField]);
-    const allCurrentPageSelected = currentPageKeys.every((key) =>
-      selectedItems.includes(key)
-    );
-
-    if (allCurrentPageSelected) {
-      // Deselect all on current page
-      const newSelected = selectedItems.filter(
-        (key) => !currentPageKeys.includes(key)
-      );
-      onSelectItems?.(newSelected);
-    } else {
-      // Select all on current page
-      const newSelected = [...selectedItems];
-      currentPageKeys.forEach((key) => {
-        if (!selectedItems.includes(key)) {
-          newSelected.push(key);
-        }
-      });
-      onSelectItems?.(newSelected);
-    }
-  };
-
-  // Handle selecting an individual item
-  const handleSelectItem = (item: T) => {
-    const itemKey = item[keyField];
-    if (selectedItems.includes(itemKey)) {
-      onSelectItems?.(selectedItems.filter((key) => key !== itemKey));
-    } else {
-      onSelectItems?.([...selectedItems, itemKey]);
-    }
-  };
+  // Use enhanced bulk selection hook
+  const bulkSelection = useBulkSelection({
+    data,
+    paginatedData,
+    keyField,
+    currentPage,
+    pageSize,
+    onSelectionChange: onSelectItems,
+  });
 
   // Handle sorting
   const handleSortChange = (columnId: string) => {
@@ -265,7 +237,7 @@ export function UnifiedTable<T>({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedData.map((item, index) => {
           const itemKey = item[keyField];
-          const isSelected = selectedItems.includes(itemKey);
+          const isSelected = bulkSelection.isSelected(item);
 
           return (
             <motion.div
@@ -290,10 +262,11 @@ export function UnifiedTable<T>({
               <div className="p-6">
                 {onSelectItems && (
                   <div className="mb-4">
-                    <Checkbox
+                    <ProfessionalCheckbox
                       checked={isSelected}
-                      onCheckedChange={() => handleSelectItem(item)}
-                      className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500 transition-all duration-150"
+                      onCheckedChange={() => bulkSelection.toggleItem(item)}
+                      size="md"
+                      variant="row"
                     />
                   </div>
                 )}
@@ -340,13 +313,12 @@ export function UnifiedTable<T>({
               {onSelectItems && (
                 <TableHead className="w-[50px] text-blue-300 font-semibold py-4 px-4">
                   <div className="flex items-center justify-center">
-                    <Checkbox
-                      checked={
-                        selectedCount === paginatedData.length &&
-                        paginatedData.length > 0
-                      }
-                      onCheckedChange={handleSelectAll}
-                      className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+                    <ProfessionalCheckbox
+                      checked={bulkSelection.isCurrentPageFullySelected}
+                      indeterminate={bulkSelection.isPartialSelection}
+                      onCheckedChange={bulkSelection.toggleSelectCurrentPage}
+                      size="md"
+                      variant="header"
                     />
                   </div>
                 </TableHead>
@@ -379,8 +351,8 @@ export function UnifiedTable<T>({
                       columnWidth,
                       "text-blue-300 font-semibold py-4 px-4 text-left",
                       column.enableSorting &&
-                        onSort &&
-                        "cursor-pointer hover:text-blue-100 transition-colors duration-150"
+                      onSort &&
+                      "cursor-pointer hover:text-blue-100 transition-colors duration-150"
                     )}
                     onClick={() =>
                       column.enableSorting &&
@@ -411,7 +383,7 @@ export function UnifiedTable<T>({
             <TableBody>
               {paginatedData.map((item, rowIndex) => {
                 const itemKey = item[keyField];
-                const isSelected = selectedItems.includes(itemKey);
+                const isSelected = bulkSelection.isSelected(item);
 
                 return (
                   <TableRow
@@ -427,10 +399,11 @@ export function UnifiedTable<T>({
                     {onSelectItems && (
                       <TableCell className="w-[50px] py-4 px-4">
                         <div className="flex items-center justify-center">
-                          <Checkbox
+                          <ProfessionalCheckbox
                             checked={isSelected}
-                            onCheckedChange={() => handleSelectItem(item)}
-                            className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500 transition-all duration-150"
+                            onCheckedChange={() => bulkSelection.toggleItem(item)}
+                            size="sm"
+                            variant="row"
                           />
                         </div>
                       </TableCell>
@@ -471,7 +444,7 @@ export function UnifiedTable<T>({
                             className={cn(
                               "transition-all duration-150",
                               column.id === "comment" &&
-                                "truncate max-w-[280px]",
+                              "truncate max-w-[280px]",
                               isSelected && "text-blue-50"
                             )}
                           >
@@ -512,190 +485,168 @@ export function UnifiedTable<T>({
         filterOptions.length > 0 ||
         searchQuery !== "" ||
         onSearchChange) && (
-        <div className="p-5 border-b border-blue-900/30 bg-blue-900/20 backdrop-blur-sm">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div className="flex-1 flex items-center gap-3 min-w-0">
-              {searchFields.length > 0 && onSearchFieldChange && (
-                <Select
-                  value={searchFieldValue}
-                  onValueChange={onSearchFieldChange}
-                >
-                  <SelectTrigger className="w-[140px] bg-[#22306e]/80 text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-800/50 shadow-sm rounded-lg backdrop-blur-sm">
-                    <SelectValue>
-                      {searchFields.find(
-                        (field) => field.id === searchFieldValue
-                      )?.label || "All fields"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 backdrop-blur-md">
-                    {searchFields.map((field) => (
-                      <SelectItem
-                        key={field.id}
-                        value={field.id}
-                        className="hover:bg-blue-800/40 focus:bg-blue-800/40"
-                      >
-                        {field.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              {onSearchChange && (
-                <div className="relative flex-1">
-                  <Input
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange?.(e.target.value)}
-                    className="bg-[#22306e]/80 text-blue-100 border border-blue-900/40 pl-11 pr-10 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-800/50 shadow-sm backdrop-blur-sm h-11"
-                  />
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
-                  {searchQuery && (
-                    <button
-                      onClick={() => onSearchChange?.("")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors duration-150"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Filter button */}
-              {filterOptions.length > 0 && (
-                <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="bg-[#22306e]/80 text-blue-100 border border-blue-900/40 hover:bg-blue-800/50 shadow-sm rounded-lg flex items-center gap-2 h-11 px-4 backdrop-blur-sm transition-all duration-200"
-                    >
-                      <Filter className="h-4 w-4 text-blue-400" />
-                      Filter
-                      {filterOptions.some((opt) => opt.value !== "any") && (
-                        <Badge className="ml-1 bg-blue-600 text-white shadow-sm">
-                          {
-                            filterOptions.filter((opt) => opt.value !== "any")
-                              .length
-                          }
-                        </Badge>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 bg-[#22306e] text-blue-100 border border-blue-900/40 backdrop-blur-md shadow-xl">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-blue-100">Filters</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={clearAllFilters}
-                          className="h-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40 transition-all duration-150"
+          <div className="p-5 border-b border-blue-900/30 bg-blue-900/20 backdrop-blur-sm">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="flex-1 flex items-center gap-3 min-w-0">
+                {searchFields.length > 0 && onSearchFieldChange && (
+                  <Select
+                    value={searchFieldValue}
+                    onValueChange={onSearchFieldChange}
+                  >
+                    <SelectTrigger className="w-[140px] bg-[#22306e]/80 text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-800/50 shadow-sm rounded-lg backdrop-blur-sm">
+                      <SelectValue>
+                        {searchFields.find(
+                          (field) => field.id === searchFieldValue
+                        )?.label || "All fields"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 backdrop-blur-md">
+                      {searchFields.map((field) => (
+                        <SelectItem
+                          key={field.id}
+                          value={field.id}
+                          className="hover:bg-blue-800/40 focus:bg-blue-800/40"
                         >
-                          Clear All
-                        </Button>
-                      </div>
-
-                      <div className="space-y-4">
-                        {filterOptions.map((filter) => (
-                          <div key={filter.id} className="space-y-2">
-                            <label className="text-sm font-medium text-blue-200">
-                              {filter.label}
-                            </label>
-                            <Select
-                              value={filter.value}
-                              onValueChange={filter.onChange}
-                            >
-                              <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150">
-                                <SelectValue placeholder="Select..." />
-                              </SelectTrigger>
-                              <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 backdrop-blur-md">
-                                {filter.options.map((option) => (
-                                  <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                    className="hover:bg-blue-800/40 focus:bg-blue-800/40 transition-colors duration-150"
-                                  >
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </div>
-          </div>
-
-          {/* Show active filters */}
-          {filterOptions.some((opt) => opt.value !== "any") && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {filterOptions
-                .filter((opt) => opt.value !== "any")
-                .map((filter) => {
-                  const option = filter.options.find(
-                    (opt) => opt.value === filter.value
-                  );
-                  return (
-                    <Badge
-                      key={filter.id}
-                      className="bg-blue-800/60 text-blue-200 hover:bg-blue-700 transition-all duration-200 px-3 py-2 shadow-sm backdrop-blur-sm"
-                    >
-                      {filter.label}: {option?.label}
-                      <button
-                        className="ml-2 hover:text-white transition-colors duration-150"
-                        onClick={() => filter.onChange("any")}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  );
-                })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Bulk actions bar */}
-      {selectedItems.length > 0 && bulkActions.length > 0 && (
-        <div className="px-6 py-3 bg-blue-800/30 border-b border-blue-900/30 flex items-center justify-between backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <Check className="h-5 w-5 text-blue-400" />
-            <span className="text-blue-200 font-medium">
-              {selectedItems.length} item{selectedItems.length !== 1 && "s"}{" "}
-              selected
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            {bulkActions.map((action) => (
-              <Button
-                key={action.id}
-                variant={action.variant || "outline"}
-                size="sm"
-                onClick={() => {
-                  const selectedObjects = data.filter((item) =>
-                    selectedItems.includes(item[keyField])
-                  );
-                  action.onClick(selectedObjects);
-                }}
-                className={cn(
-                  "transition-all duration-200 shadow-sm",
-                  action.variant === "destructive"
-                    ? "bg-red-900/40 text-red-300 border-red-800/50 hover:bg-red-800/50 hover:shadow-md"
-                    : "bg-blue-900/40 text-blue-300 border-blue-800/50 hover:bg-blue-800/50 hover:shadow-md"
+                          {field.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
-              >
-                {action.icon}
-                {action.label}
-              </Button>
-            ))}
+                {onSearchChange && (
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => onSearchChange?.(e.target.value)}
+                      className="bg-[#22306e]/80 text-blue-100 border border-blue-900/40 pl-11 pr-10 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-800/50 shadow-sm backdrop-blur-sm h-11"
+                    />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+                    {searchQuery && (
+                      <button
+                        onClick={() => onSearchChange?.("")}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors duration-150"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Filter button */}
+                {filterOptions.length > 0 && (
+                  <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="bg-[#22306e]/80 text-blue-100 border border-blue-900/40 hover:bg-blue-800/50 shadow-sm rounded-lg flex items-center gap-2 h-11 px-4 backdrop-blur-sm transition-all duration-200"
+                      >
+                        <Filter className="h-4 w-4 text-blue-400" />
+                        Filter
+                        {filterOptions.some((opt) => opt.value !== "any") && (
+                          <Badge className="ml-1 bg-blue-600 text-white shadow-sm">
+                            {
+                              filterOptions.filter((opt) => opt.value !== "any")
+                                .length
+                            }
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 bg-[#22306e] text-blue-100 border border-blue-900/40 backdrop-blur-md shadow-xl">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-blue-100">Filters</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearAllFilters}
+                            className="h-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40 transition-all duration-150"
+                          >
+                            Clear All
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          {filterOptions.map((filter) => (
+                            <div key={filter.id} className="space-y-2">
+                              <label className="text-sm font-medium text-blue-200">
+                                {filter.label}
+                              </label>
+                              <Select
+                                value={filter.value}
+                                onValueChange={filter.onChange}
+                              >
+                                <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150">
+                                  <SelectValue placeholder="Select..." />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 backdrop-blur-md">
+                                  {filter.options.map((option) => (
+                                    <SelectItem
+                                      key={option.value}
+                                      value={option.value}
+                                      className="hover:bg-blue-800/40 focus:bg-blue-800/40 transition-colors duration-150"
+                                    >
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
+            </div>
+
+            {/* Show active filters */}
+            {filterOptions.some((opt) => opt.value !== "any") && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {filterOptions
+                  .filter((opt) => opt.value !== "any")
+                  .map((filter) => {
+                    const option = filter.options.find(
+                      (opt) => opt.value === filter.value
+                    );
+                    return (
+                      <Badge
+                        key={filter.id}
+                        className="bg-blue-800/60 text-blue-200 hover:bg-blue-700 transition-all duration-200 px-3 py-2 shadow-sm backdrop-blur-sm"
+                      >
+                        {filter.label}: {option?.label}
+                        <button
+                          className="ml-2 hover:text-white transition-colors duration-150"
+                          onClick={() => filter.onChange("any")}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+
+      {/* Professional Bulk Actions Bar */}
+      <ProfessionalBulkActionsBar
+        selectionState={bulkSelection}
+        actions={bulkActions}
+        onSelectCurrentPage={bulkSelection.selectCurrentPage}
+        onDeselectCurrentPage={bulkSelection.deselectCurrentPage}
+        onSelectAllPages={bulkSelection.selectAllPages}
+        onDeselectAll={bulkSelection.deselectAll}
+        onInvertCurrentPage={bulkSelection.invertCurrentPage}
+        getSelectedObjects={bulkSelection.getSelectedObjects}
+        totalItems={totalItems}
+        currentPageSize={pageSize}
+        currentPage={currentPage}
+      />
 
       {/* Table content */}
       <AnimatePresence mode="wait">

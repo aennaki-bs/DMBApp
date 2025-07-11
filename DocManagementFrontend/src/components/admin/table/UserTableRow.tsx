@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { UserDto } from "@/services/adminService";
@@ -16,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 
 interface UserTableRowProps {
   user: UserDto;
@@ -27,6 +27,7 @@ interface UserTableRowProps {
   onEditEmail: (user: UserDto) => void;
   onViewLogs: (userId: number) => void;
   onDelete: (userId: number) => void;
+  index?: number;
 }
 
 function getRoleString(
@@ -53,6 +54,7 @@ export function UserTableRow({
   onEditEmail,
   onViewLogs,
   onDelete,
+  index = 0,
 }: UserTableRowProps) {
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const currentRole = getRoleString(user.role);
@@ -75,19 +77,31 @@ export function UserTableRow({
   return (
     <>
       <TableRow
-        className={`border-blue-200 dark:border-blue-900/30 transition-all duration-150 ${
-          isSelected
-            ? "bg-blue-100 dark:bg-blue-900/30 border-l-4 border-l-blue-600 dark:border-l-blue-500"
-            : "hover:bg-blue-50 dark:hover:bg-blue-900/20"
-        }`}
+        className={`border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer group ${isSelected
+          ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-2 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
+          : "hover:shadow-sm"
+          }`}
+        onClick={(e) => {
+          // Don't trigger row selection if clicking on interactive elements
+          const target = e.target as HTMLElement;
+          if (
+            target.closest('button') ||
+            target.closest('input') ||
+            target.closest('select') ||
+            target.closest('[role="button"]')
+          ) {
+            return;
+          }
+          onSelect(user.id);
+        }}
       >
         <TableCell className="w-[48px]">
           <div className="flex items-center justify-center">
-            <Checkbox
+            <ProfessionalCheckbox
               checked={isSelected}
               onCheckedChange={() => onSelect(user.id)}
-              aria-label={`Select user ${user.username}`}
-              className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-500"
+              size="md"
+              variant="row"
             />
           </div>
         </TableCell>

@@ -111,13 +111,11 @@ export function Layout() {
         <div className="relative flex w-full min-h-full z-10">
           {/* Sidebar - clean transparent styling with responsive width */}
           <aside
-            className={`h-full ${
-              isMobile ? "hidden" : "w-56 sm:w-60 lg:w-64 xl:w-64 flex-shrink-0"
-            } ${
-              isStandardTheme
+            className={`h-full ${isMobile ? "hidden" : "w-56 sm:w-60 lg:w-64 xl:w-64 flex-shrink-0"
+              } ${isStandardTheme
                 ? "glass-sidebar"
                 : "border-r border-border bg-card/95"
-            } transition-all duration-300 ease-in-out shadow-lg z-20 overflow-hidden`}
+              } transition-all duration-300 ease-in-out shadow-lg z-20 overflow-hidden`}
           >
             <SidebarNav />
           </aside>
@@ -126,13 +124,12 @@ export function Layout() {
           <div className="flex-1 flex flex-col min-h-full">
             {/* Clean transparent header with responsive sizing */}
             <header
-              className={`${
-                isStandardTheme
+              className={`${isStandardTheme
                   ? "glass-header"
                   : isMobile
-                  ? "bg-card/95 border-b border-border"
-                  : "bg-card/90 border-b border-border"
-              } shadow-sm z-30 transition-all duration-300`}
+                    ? "bg-card/95 border-b border-border"
+                    : "bg-card/90 border-b border-border"
+                } shadow-sm z-30 transition-all duration-300`}
               style={{
                 height: "4rem",
                 flexShrink: 0,
@@ -158,15 +155,14 @@ export function Layout() {
 
             {/* Main content with clean transparent styling and responsive padding */}
             <main
-              className="flex-1 overflow-auto p-2"
+              className="flex-1 overflow-auto"
               style={{ minHeight: "calc(100vh - 4rem)" }}
             >
               <div
-                className={`h-full rounded-lg overflow-auto ${
-                  isStandardTheme
-                    ? "glass-card"
+                className={`h-full rounded-lg overflow-auto ${isStandardTheme
+                    ? ""
                     : "border border-border bg-card/85"
-                } shadow-lg transition-all duration-300`}
+                  } shadow-lg transition-all duration-300`}
                 style={{ minHeight: "100%" }}
               >
                 <div className="h-full overflow-auto p-4">

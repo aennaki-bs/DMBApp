@@ -4,15 +4,27 @@ import { UserTableHeader } from "./content/UserTableHeader";
 import { UserTableBody } from "./content/UserTableBody";
 import { UserTableEmpty } from "./UserTableEmpty";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import SmartPagination from "@/components/shared/SmartPagination";
-import { usePagination } from "@/hooks/usePagination";
-import { Loader2 } from "lucide-react";
+import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
+import { Loader2, UserCheck, Trash2 } from "lucide-react";
+import { BulkSelectionState } from "@/hooks/useBulkSelection";
 
 interface UserTableContentProps {
   users: UserDto[] | undefined;
-  selectedUsers: number[];
-  onSelectAll: () => void;
-  onSelectUser: (userId: number) => void;
+  allUsers?: UserDto[] | undefined;
+  selectedUsers: any[];
+  bulkSelection: BulkSelectionState<UserDto> & {
+    toggleItem: (item: UserDto) => void;
+    toggleSelectCurrentPage: () => void;
+    isSelected: (item: UserDto) => boolean;
+  };
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalItems: number;
+    handlePageChange: (page: number) => void;
+    handlePageSizeChange: (size: number) => void;
+  };
   onToggleStatus: (userId: number, currentStatus: boolean) => void;
   onRoleChange: (userId: number, roleName: string) => void;
   onEdit: (user: UserDto) => void;
@@ -23,15 +35,18 @@ interface UserTableContentProps {
   sortDirection: string;
   onSort: (field: string) => void;
   onClearFilters: () => void;
+  onBulkRoleChange?: () => void;
+  onBulkDelete?: () => void;
   isLoading?: boolean;
   isError?: boolean;
 }
 
 export function UserTableContent({
   users,
+  allUsers,
   selectedUsers,
-  onSelectAll,
-  onSelectUser,
+  bulkSelection,
+  pagination,
   onToggleStatus,
   onRoleChange,
   onEdit,
@@ -42,44 +57,44 @@ export function UserTableContent({
   sortDirection,
   onSort,
   onClearFilters,
+  onBulkRoleChange,
+  onBulkDelete,
   isLoading = false,
   isError = false,
 }: UserTableContentProps) {
-  // Use pagination hook
+  // Use pagination from props
   const {
     currentPage,
     pageSize,
     totalPages,
     totalItems,
-    paginatedData: paginatedUsers,
     handlePageChange,
     handlePageSizeChange,
-  } = usePagination({
-    data: users || [],
-    initialPageSize: 15,
-  });
+  } = pagination;
 
   // Check if we have users to display
   const hasUsers = users && users.length > 0;
 
-  // Handle select all for paginated data
-  const handleSelectAll = () => {
-    const currentPageUserIds = paginatedUsers.map((user) => user.id);
-    const allCurrentSelected = currentPageUserIds.every((id) =>
-      selectedUsers.includes(id)
-    );
-
-    if (allCurrentSelected) {
-      // If all current page users are selected, deselect them
-      const newSelected = selectedUsers.filter(
-        (id) => !currentPageUserIds.includes(id)
-      );
-      onSelectAll(); // This should handle the logic in parent component
-    } else {
-      // If not all current page users are selected, select them all
-      onSelectAll();
-    }
-  };
+  // Define bulk actions
+  const bulkActions: BulkAction[] = [
+    {
+      id: 'change-role',
+      label: 'Change Role',
+      icon: <UserCheck className="h-4 w-4" />,
+      variant: 'outline',
+      onClick: () => onBulkRoleChange?.(),
+      shortcut: 'R',
+    },
+    {
+      id: 'delete',
+      label: 'Delete Users',
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: 'destructive',
+      onClick: () => onBulkDelete?.(),
+      requiresConfirmation: true,
+      shortcut: 'Del',
+    },
+  ];
 
   // Loading state
   if (isLoading) {
@@ -130,13 +145,9 @@ export function UserTableContent({
               <div className="min-w-[1026px]">
                 <Table className="table-fixed w-full">
                   <UserTableHeader
-                    selectedCount={
-                      selectedUsers.filter((id) =>
-                        paginatedUsers.some((user) => user.id === id)
-                      ).length
-                    }
-                    totalCount={paginatedUsers.length}
-                    onSelectAll={handleSelectAll}
+                    selectedCount={bulkSelection.currentPageSelectedCount}
+                    totalCount={users?.length || 0}
+                    onSelectAll={bulkSelection.toggleSelectCurrentPage}
                     sortBy={sortBy}
                     sortDirection={sortDirection}
                     onSort={onSort}
@@ -154,9 +165,12 @@ export function UserTableContent({
                 <div className="min-w-[1026px] pb-4">
                   <Table className="table-fixed w-full">
                     <UserTableBody
-                      users={paginatedUsers}
+                      users={users || []}
                       selectedUsers={selectedUsers}
-                      onSelectUser={onSelectUser}
+                      onSelectUser={(userId) => {
+                        const user = users?.find(u => u.id === userId);
+                        if (user) bulkSelection.toggleItem(user);
+                      }}
                       onToggleStatus={onToggleStatus}
                       onRoleChange={onRoleChange}
                       onEdit={onEdit}
@@ -176,15 +190,17 @@ export function UserTableContent({
         )}
       </div>
 
-      {/* Smart Pagination */}
+      {/* Smart Pagination with Bulk Actions */}
       {hasUsers && (
-        <SmartPagination
+        <PaginationWithBulkActions
           currentPage={currentPage}
           totalPages={totalPages}
           pageSize={pageSize}
           totalItems={totalItems}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
+          bulkSelection={bulkSelection}
+          bulkActions={bulkActions}
         />
       )}
     </div>

@@ -85,70 +85,39 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
     return pages;
   };
 
-  const startItem = Math.min((currentPage - 1) * pageSize + 1, totalItems);
-  const endItem = Math.min(currentPage * pageSize, totalItems);
-
   const visiblePages = getVisiblePages();
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl rounded-2xl border border-primary/20 shadow-xl ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-center gap-4 p-3 bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl rounded-xl border border-primary/20 shadow-lg ${className}`}
     >
-      {/* Left section: Page size selector */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-foreground font-medium whitespace-nowrap">
+      {/* Page size selector */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-foreground font-medium whitespace-nowrap">
           Show
         </span>
         <Select
           value={pageSize.toString()}
           onValueChange={(value) => onPageSizeChange(Number(value))}
         >
-          <SelectTrigger className="w-[75px] h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+          <SelectTrigger className="w-[60px] h-8 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-md rounded-lg">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+          <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-lg shadow-xl">
             {pageSizeOptions.map((size) => (
               <SelectItem
                 key={size}
                 value={size.toString()}
-                className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-md text-sm"
               >
                 {size}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <span className="text-sm text-foreground font-medium whitespace-nowrap">
-          entries
-        </span>
       </div>
 
-      {/* Center section: Entry count display */}
-      <div className="text-sm text-blue-800 dark:text-blue-300 font-medium bg-blue-100 dark:bg-blue-900/20 px-3 py-1 rounded-md border border-blue-200 dark:border-blue-900/30">
-        {totalItems > 0 ? (
-          <>
-            Showing{" "}
-            <span className="text-blue-900 dark:text-blue-100 font-semibold">
-              {startItem}
-            </span>{" "}
-            to{" "}
-            <span className="text-blue-900 dark:text-blue-100 font-semibold">
-              {endItem}
-            </span>{" "}
-            of{" "}
-            <span className="text-blue-900 dark:text-blue-100 font-semibold">
-              {totalItems}
-            </span>{" "}
-            entries
-          </>
-        ) : (
-          <span className="text-blue-600 dark:text-blue-400">
-            No entries found
-          </span>
-        )}
-      </div>
-
-      {/* Right section: Page navigation */}
+      {/* Page navigation */}
       {totalPages > 1 && (
         <div className="flex items-center gap-1">
           {showFirstLast && (

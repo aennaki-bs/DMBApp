@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import adminService, { UserDto } from '@/services/adminService';
+import { usePagination } from './usePagination';
+import { useBulkSelection } from './useBulkSelection';
 
 export type UserSortField = 'firstName' | 'lastName' | 'username' | 'email' | 'role' | 'isActive' | 'createdAt';
 export type UserSortDirection = 'asc' | 'desc';
 
 export function useUserManagement() {
-    const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
     const [editingUser, setEditingUser] = useState<UserDto | null>(null);
     const [editEmailUser, setEditEmailUser] = useState<UserDto | null | null>(null);
     const [viewingUserLogs, setViewingUserLogs] = useState<number | null>(null);
@@ -28,22 +29,6 @@ export function useUserManagement() {
         queryFn: adminService.getAllUsers,
     });
 
-    const handleSelectUser = (userId: number) => {
-        setSelectedUsers(prev =>
-            prev.includes(userId)
-                ? prev.filter(id => id !== userId)
-                : [...prev, userId]
-        );
-    };
-
-    const handleSelectAll = (filteredUsers: UserDto[]) => {
-        if (selectedUsers.length === filteredUsers?.length) {
-            setSelectedUsers([]);
-        } else {
-            setSelectedUsers(filteredUsers?.map(user => user.id) || []);
-        }
-    };
-
     const handleUserEdited = () => {
         refetch();
         setEditingUser(null);
@@ -57,12 +42,12 @@ export function useUserManagement() {
     const handleUserDeleted = () => {
         refetch();
         setDeletingUser(null);
-        setSelectedUsers([]);
+        bulkSelection.clearSelection();
     };
 
     const handleMultipleDeleted = () => {
         refetch();
-        setSelectedUsers([]);
+        bulkSelection.clearSelection();
         setDeleteMultipleOpen(false);
     };
 
@@ -139,13 +124,41 @@ export function useUserManagement() {
         }
     };
 
+    // Use pagination hook
+    const pagination = usePagination({
+        data: sortedUsers,
+        initialPageSize: 15,
+    });
+
+    // Use enhanced bulk selection hook
+    const bulkSelection = useBulkSelection({
+        data: sortedUsers,
+        paginatedData: pagination.paginatedData,
+        keyField: 'id',
+        currentPage: pagination.currentPage,
+        pageSize: pagination.pageSize,
+    });
+
     return {
-        selectedUsers,
+        // Selection state and actions
+        selectedUsers: bulkSelection.selectedItems,
+        bulkSelection,
+
+        // Pagination
+        pagination,
+
+        // User data
+        users: sortedUsers,
+        paginatedUsers: pagination.paginatedData,
+
+        // Modal states
         editingUser,
         editEmailUser,
         viewingUserLogs,
         deletingUser,
         deleteMultipleOpen,
+
+        // Search and filters
         searchQuery,
         setSearchQuery,
         searchField,
@@ -156,12 +169,17 @@ export function useUserManagement() {
         setStatusFilter,
         showAdvancedFilters,
         setShowAdvancedFilters,
+
+        // Role change
         roleChangeOpen,
         selectedRole,
-        users: sortedUsers,
+
+        // API state
         isLoading,
         isError,
         refetch,
+
+        // Setters
         setEditingUser,
         setEditEmailUser,
         setViewingUserLogs,
@@ -169,11 +187,17 @@ export function useUserManagement() {
         setDeleteMultipleOpen,
         setRoleChangeOpen,
         setSelectedRole,
+
+        // Sorting
         handleSort,
         sortBy,
         sortDirection,
-        handleSelectUser,
-        handleSelectAll,
+
+        // Selection handlers (for backward compatibility)
+        handleSelectUser: bulkSelection.toggleItem,
+        handleSelectAll: bulkSelection.toggleSelectCurrentPage,
+
+        // Lifecycle handlers
         handleUserEdited,
         handleUserEmailEdited,
         handleUserDeleted,
