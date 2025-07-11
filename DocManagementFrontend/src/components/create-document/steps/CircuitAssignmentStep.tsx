@@ -151,30 +151,30 @@ export const CircuitAssignmentStep = ({
             onValueChange={onCircuitChange}
             className="space-y-3"
           >
-            <div className="flex text-xs font-medium text-gray-400 px-4 py-2 justify-between border-b border-gray-800">
+            {/* <div className="flex text-xs font-medium text-gray-400 px-4 py-2 justify-between border-b border-gray-800">
               <div>Circuit Code</div>
               <div>Title</div>
               <div>Description</div>
               <div>Status</div>
-            </div>
+            </div> */}
 
-            <div className="text-xs text-blue-400 mb-4 px-4 pt-2">
+            {/* <div className="text-xs text-blue-400 mb-4 px-4 pt-2">
               Select "No Circuit" (default) or choose an{" "}
               <span className="font-bold">active circuit</span> from the list
               below
-            </div>
+            </div> */}
 
             <div className="bg-blue-900/30 border border-blue-800/50 rounded-md mb-6 p-3 mx-2">
               <div className="flex items-center gap-2 text-xs text-blue-300">
                 <Info className="h-3.5 w-3.5 text-blue-400" />
                 <span>
-                  Only <span className="font-bold">active circuits</span> are
+                  Only <span className="font-bold">active circuits</span> compatible with the selected document type are
                   displayed and available for selection
                 </span>
               </div>
             </div>
 
-            <div className="bg-green-900/20 border border-green-800/40 rounded-md mb-6 p-3 mx-2">
+            {/* <div className="bg-green-900/20 border border-green-800/40 rounded-md mb-6 p-3 mx-2">
               <div className="flex items-center gap-2 text-xs text-green-300">
                 <Info className="h-3.5 w-3.5 text-green-400" />
                 <span>
@@ -182,7 +182,7 @@ export const CircuitAssignmentStep = ({
                   selected document type
                 </span>
               </div>
-            </div>
+            </div> */}
 
             <ScrollArea className="h-[360px] pr-4">
               {/* Add a "No circuit" option */}

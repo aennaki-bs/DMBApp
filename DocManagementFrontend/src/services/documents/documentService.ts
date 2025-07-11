@@ -56,6 +56,16 @@ const documentService = {
     }
   },
 
+  getCompletedNotArchivedDocuments: async (): Promise<Document[]> => {
+    try {
+      const response = await api.get('/Documents/completed-not-archived');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching completed but not archived documents:', error);
+      throw error;
+    }
+  },
+
   createDocument: async (document: CreateDocumentRequest): Promise<Document> => {
     try {
       const response = await api.post('/Documents', document);

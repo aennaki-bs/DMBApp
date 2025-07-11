@@ -7,6 +7,7 @@ import {
   User,
   Archive,
   ExternalLink,
+  FileCheck,
 } from "lucide-react";
 import { Document } from "@/models/document";
 import {
@@ -27,12 +28,14 @@ interface ArchivedDocumentsTableProps {
   documents: Document[];
   sortConfig?: { key: string; direction: "ascending" | "descending" } | null;
   onSort?: (key: string) => void;
+  showErpStatus?: boolean; // When true, shows completed status instead of archived
 }
 
 export default function ArchivedDocumentsTable({
   documents,
   sortConfig,
   onSort,
+  showErpStatus = false,
 }: ArchivedDocumentsTableProps) {
   const getSortIndicator = (columnKey: string) => {
     if (sortConfig && sortConfig.key === columnKey) {
@@ -139,9 +142,9 @@ export default function ArchivedDocumentsTable({
                   
                   <TableCell className="w-[160px] font-mono text-sm py-3">
                     <Link
-                      to={`/documents/${document.id}?from=archived`}
+                      to={`/documents/${document.id}?from=${showErpStatus ? 'completed' : 'archived'}`}
                       className="text-blue-300 hover:text-blue-200 hover:underline transition-colors flex items-center gap-1"
-                      onClick={() => sessionStorage.setItem('documentContext', 'archived')}
+                      onClick={() => sessionStorage.setItem('documentContext', showErpStatus ? 'completed' : 'archived')}
                     >
                       <FileText className="h-3.5 w-3.5 opacity-70" />
                       {document.documentKey}
@@ -150,9 +153,9 @@ export default function ArchivedDocumentsTable({
                   
                   <TableCell className="w-[250px] py-3">
                     <Link
-                      to={`/documents/${document.id}?from=archived`}
+                      to={`/documents/${document.id}?from=${showErpStatus ? 'completed' : 'archived'}`}
                       className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
-                      onClick={() => sessionStorage.setItem('documentContext', 'archived')}
+                      onClick={() => sessionStorage.setItem('documentContext', showErpStatus ? 'completed' : 'archived')}
                     >
                       {document.title}
                     </Link>
@@ -175,6 +178,10 @@ export default function ArchivedDocumentsTable({
                       <Badge variant="secondary" className="font-mono bg-orange-100 text-orange-800">
                         {document.erpDocumentCode}
                       </Badge>
+                    ) : showErpStatus ? (
+                      <Badge variant="destructive" className="text-xs">
+                        Pending
+                      </Badge>
                     ) : (
                       <span className="text-blue-100/50 text-sm">N/A</span>
                     )}
@@ -184,10 +191,22 @@ export default function ArchivedDocumentsTable({
                     <div className="flex items-center justify-end gap-1">
                       <Badge 
                         variant="outline" 
-                        className="bg-orange-50 text-orange-700 border-orange-200 text-xs"
+                        className={showErpStatus 
+                          ? "bg-amber-50 text-amber-700 border-amber-200 text-xs" 
+                          : "bg-orange-50 text-orange-700 border-orange-200 text-xs"
+                        }
                       >
-                        <Archive className="h-3 w-3 mr-1" />
-                        Archived
+                        {showErpStatus ? (
+                          <>
+                            <FileCheck className="h-3 w-3 mr-1" />
+                            Completed
+                          </>
+                        ) : (
+                          <>
+                            <Archive className="h-3 w-3 mr-1" />
+                            Archived
+                          </>
+                        )}
                       </Badge>
                       <Button
                         variant="ghost"
@@ -196,8 +215,8 @@ export default function ArchivedDocumentsTable({
                         className="h-8 w-8 p-0 rounded-full hover:bg-blue-800/30 transition-colors"
                       >
                         <Link 
-                          to={`/documents/${document.id}?from=archived`}
-                          onClick={() => sessionStorage.setItem('documentContext', 'archived')}
+                          to={`/documents/${document.id}?from=${showErpStatus ? 'completed' : 'archived'}`}
+                          onClick={() => sessionStorage.setItem('documentContext', showErpStatus ? 'completed' : 'archived')}
                         >
                           <ExternalLink className="h-4 w-4 text-blue-400" />
                         </Link>

@@ -25,6 +25,7 @@ import {
   Truck,
   MapPin,
   Archive,
+  FileCheck,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -63,6 +64,23 @@ export function SidebarNav() {
     return false;
   };
 
+  // Special handling for document detail pages to determine if from completed documents
+  const isCompletedDocumentContext = () => {
+    // Check if we're viewing a document and came from completed documents
+    if (location.pathname.match(/^\/documents\/\d+$/)) {
+      // Check URL search params for completed context
+      const searchParams = new URLSearchParams(location.search);
+      if (searchParams.get('from') === 'completed') {
+        return true;
+      }
+      
+      // Check session storage for completed context (fallback)
+      const documentContext = sessionStorage.getItem('documentContext');
+      return documentContext === 'completed';
+    }
+    return false;
+  };
+
   // Check if any line elements-related route is active
   const isLineElementsActive = () => {
     return (
@@ -86,7 +104,7 @@ export function SidebarNav() {
   // Check if any documents-related route is active
   const isDocumentsActive = () => {
     return (
-      isActive("/documents") || isActive("/documents/archived")
+      isActive("/documents") || isActive("/documents/archived") || isActive("/documents/completed-not-archived")
     );
   };
 
@@ -214,7 +232,7 @@ export function SidebarNav() {
                   <Link
                     to="/documents"
                     className={getSubmenuItemClasses(
-                      (isActive("/documents") && !isActive("/documents/archived") && !isArchivedDocumentContext())
+                      (isActive("/documents") && !isActive("/documents/archived") && !isActive("/documents/completed-not-archived") && !isArchivedDocumentContext() && !isCompletedDocumentContext())
                     )}
                   >
                     <FileText className="h-4 w-4" />
@@ -230,6 +248,17 @@ export function SidebarNav() {
                   >
                     <Archive className="h-4 w-4" />
                     <span>Archived Documents</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/documents/completed-not-archived"
+                    className={getSubmenuItemClasses(
+                      isActive("/documents/completed-not-archived") || isCompletedDocumentContext()
+                    )}
+                  >
+                    <FileCheck className="h-4 w-4" />
+                    <span>Completed Documents</span>
                   </Link>
                 </li>
               </ul>

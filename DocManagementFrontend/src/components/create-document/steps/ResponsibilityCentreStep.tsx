@@ -163,7 +163,7 @@ export const ResponsibilityCentreStep: React.FC<
                       required={true}
                     />
 
-                    {selectedCentreId && (
+                    {/* {selectedCentreId && (
                       <Card className="bg-green-900/20 border-green-800/30 mt-4">
                         <CardContent className="pt-6">
                           <div className="flex items-center justify-between">
@@ -173,13 +173,13 @@ export const ResponsibilityCentreStep: React.FC<
                                 {t("documents.documentWillBeAssignedToSelected")}
                               </span>
                             </div>
-                            {/* <div className="text-xs text-green-300 bg-green-900/30 px-2 py-1 rounded">
+                            <div className="text-xs text-green-300 bg-green-900/30 px-2 py-1 rounded">
                               You can change this selection above
-                            </div> */}
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
-                    )}
+                    )} */}
                   </>
                 )}
               </CardContent>

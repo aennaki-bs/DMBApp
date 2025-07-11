@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using DocManagementBackend.Mappings;
 using DocManagementBackend.Services;
-// using DocManagementBackend.ModelsDtos;
+using DocManagementBackend.ModelsDtos;
 using DocManagementBackend.Utils;
 using System.Text;
 
@@ -21,13 +21,15 @@ namespace DocManagementBackend.Controllers
         private readonly DocumentWorkflowService _workflowService;
         private readonly UserAuthorizationService _authService;
         private readonly IDocumentErpArchivalService _erpArchivalService;
+        private readonly ILogger<DocumentsController> _logger;
         
-        public DocumentsController(ApplicationDbContext context, DocumentWorkflowService workflowService, UserAuthorizationService authService, IDocumentErpArchivalService erpArchivalService) 
+        public DocumentsController(ApplicationDbContext context, DocumentWorkflowService workflowService, UserAuthorizationService authService, IDocumentErpArchivalService erpArchivalService, ILogger<DocumentsController> logger) 
         { 
             _context = context;
             _workflowService = workflowService;
             _authService = authService;
             _erpArchivalService = erpArchivalService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -39,7 +41,9 @@ namespace DocManagementBackend.Controllers
 
             var userId = authResult.UserId;
             var user = authResult.User!;
-            var documents = await _context.Documents
+            
+            // Query builder for active documents (exclude completed circuits and archived documents)
+            IQueryable<Document> documentsQuery = _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
@@ -47,6 +51,17 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
                 .Include(d => d.Lignes)
+                .Where(d => !d.IsCircuitCompleted); // Only active documents (not completed circuits)
+
+            // Filter based on user's responsibility center
+            if (user.ResponsibilityCentreId.HasValue)
+            {
+                // User has a responsibility center - show only documents from that center
+                documentsQuery = documentsQuery.Where(d => d.ResponsibilityCentreId == user.ResponsibilityCentreId.Value);
+            }
+            // If user doesn't have a responsibility center, show all documents (no filter applied)
+
+            var documents = await documentsQuery
                 .Select(DocumentMappings.ToDocumentDto)
                 .ToListAsync();
 
@@ -63,7 +78,7 @@ namespace DocManagementBackend.Controllers
             var userId = authResult.UserId;
             var user = authResult.User!;
 
-            // Query builder for documents
+            // Query builder for active documents (exclude completed circuits and archived documents)
             IQueryable<Document> documentsQuery = _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
@@ -71,7 +86,8 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
-                .Include(d => d.Lignes);
+                .Include(d => d.Lignes)
+                .Where(d => !d.IsCircuitCompleted); // Only active documents (not completed circuits)
 
             // Filter based on user's responsibility center
             if (user.ResponsibilityCentreId.HasValue)
@@ -191,6 +207,44 @@ namespace DocManagementBackend.Controllers
                 .ToListAsync();
 
             return Ok(archivedDocuments);
+        }
+
+        [HttpGet("completed-not-archived")]
+        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetCompletedNotArchivedDocuments()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var userId = authResult.UserId;
+            var user = authResult.User!;
+
+            // Query builder for completed but not archived documents (IsCircuitCompleted = true but ERPDocumentCode is null/empty)
+            IQueryable<Document> documentsQuery = _context.Documents
+                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
+                .Include(d => d.DocumentType)
+                .Include(d => d.SubType)
+                .Include(d => d.CurrentStep)
+                .Include(d => d.CurrentStatus)
+                .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Lignes)
+                .Where(d => d.IsCircuitCompleted && string.IsNullOrEmpty(d.ERPDocumentCode)); // Completed circuit but not archived
+
+            // Filter based on user's responsibility center
+            if (user.ResponsibilityCentreId.HasValue)
+            {
+                // User has a responsibility center - show only documents from that center
+                documentsQuery = documentsQuery.Where(d => d.ResponsibilityCentreId == user.ResponsibilityCentreId.Value);
+            }
+            // If user doesn't have a responsibility center, show all documents (no filter applied)
+
+            var completedNotArchivedDocuments = await documentsQuery
+                .OrderByDescending(d => d.UpdatedAt) // Sort by last update (when circuit was completed)
+                .Select(DocumentMappings.ToDocumentDto)
+                .ToListAsync();
+
+            return Ok(completedNotArchivedDocuments);
         }
 
         [HttpPost]
@@ -1217,6 +1271,134 @@ namespace DocManagementBackend.Controllers
             }
         }
 
+        // Get ERP archival status for a document
+        [HttpGet("{id}/erp-status")]
+        public async Task<IActionResult> GetDocumentErpStatus(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var erpStatus = await _erpArchivalService.GetDocumentErpStatusAsync(id);
+                return Ok(erpStatus);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Document not found");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrieving ERP status: {ex.Message}");
+            }
+        }
+
+        // Get ERP errors for a document
+        [HttpGet("{id}/erp-errors")]
+        public async Task<IActionResult> GetDocumentErpErrors(int id)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var errors = await _erpArchivalService.GetDocumentErpErrorsAsync(id);
+                return Ok(errors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrieving ERP errors: {ex.Message}");
+            }
+        }
+
+        // Resolve an ERP error
+        [HttpPost("erp-errors/{errorId}/resolve")]
+        public async Task<IActionResult> ResolveErpError(int errorId, [FromBody] ResolveErpErrorRequest request)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var success = await _erpArchivalService.ResolveErpErrorAsync(errorId, authResult.UserId, request.ResolutionNotes);
+                
+                if (success)
+                {
+                    return Ok(new { message = "ERP error resolved successfully" });
+                }
+                else
+                {
+                    return NotFound("ERP error not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error resolving ERP error: {ex.Message}");
+            }
+        }
+
+        // Retry document archival
+        [HttpPost("{id}/retry-archival")]
+        public async Task<IActionResult> RetryDocumentArchival(int id, [FromBody] RetryErpArchivalRequest request)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var success = await _erpArchivalService.RetryDocumentArchivalAsync(id, authResult.UserId, request.Reason);
+                
+                if (success)
+                {
+                    return Ok(new { message = "Document archival retry completed successfully" });
+                }
+                else
+                {
+                    return StatusCode(500, new { message = "Document archival retry failed" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrying document archival: {ex.Message}");
+            }
+        }
+
+        // Retry line archival
+        [HttpPost("{id}/retry-line-archival")]
+        public async Task<IActionResult> RetryLineArchival(int id, [FromBody] RetryErpArchivalRequest request)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                if (request.LigneIds == null || !request.LigneIds.Any())
+                {
+                    return BadRequest("Ligne IDs must be provided for line archival retry");
+                }
+
+                var success = await _erpArchivalService.RetryLineArchivalAsync(id, request.LigneIds, authResult.UserId, request.Reason);
+                
+                if (success)
+                {
+                    return Ok(new { message = "Line archival retry completed successfully" });
+                }
+                else
+                {
+                    return StatusCode(500, new { message = "Line archival retry failed" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrying line archival: {ex.Message}");
+            }
+        }
+
         // Test endpoint for manual ERP line creation
         [HttpPost("{id}/create-lines-in-erp")]
         public async Task<IActionResult> ManualErpLineCreation(int id)
@@ -1410,6 +1592,663 @@ namespace DocManagementBackend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error checking ERP status: {ex.Message}");
+            }
+        }
+
+        // Diagnostic endpoint to check circuit configurations for ERP archival issues
+        [HttpGet("diagnose-erp-archival")]
+        public async Task<IActionResult> DiagnoseErpArchivalIssues()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                // Get all circuits with their statuses and document types
+                var circuits = await _context.Circuits
+                    .Include(c => c.DocumentType)
+                    .Include(c => c.Statuses)
+                    .Where(c => c.IsActive)
+                    .ToListAsync();
+
+                var diagnosticResults = new List<object>();
+
+                foreach (var circuit in circuits)
+                {
+                    var finalStatuses = circuit.Statuses.Where(s => s.IsFinal).ToList();
+                    var totalStatuses = circuit.Statuses.Count;
+
+                    // Get completed documents for this circuit that are not archived
+                    var completedNotArchivedCount = await _context.Documents
+                        .Where(d => d.CircuitId == circuit.Id && 
+                                   d.IsCircuitCompleted && 
+                                   string.IsNullOrEmpty(d.ERPDocumentCode))
+                        .CountAsync();
+
+                    // Get sample completed documents
+                    var sampleCompletedDocs = await _context.Documents
+                        .Where(d => d.CircuitId == circuit.Id && 
+                                   d.IsCircuitCompleted && 
+                                   string.IsNullOrEmpty(d.ERPDocumentCode))
+                        .Include(d => d.CurrentStatus)
+                        .Take(5)
+                        .Select(d => new {
+                            d.Id,
+                            d.DocumentKey,
+                            CurrentStatusTitle = d.CurrentStatus != null ? d.CurrentStatus.Title : "None",
+                            CurrentStatusIsFinal = d.CurrentStatus != null ? d.CurrentStatus.IsFinal : false,
+                            d.IsCircuitCompleted,
+                            d.UpdatedAt
+                        })
+                        .ToListAsync();
+
+                    diagnosticResults.Add(new
+                    {
+                        CircuitId = circuit.Id,
+                        CircuitKey = circuit.CircuitKey,
+                        CircuitTitle = circuit.Title,
+                        DocumentType = circuit.DocumentType?.TypeName ?? "No Type",
+                        TotalStatuses = totalStatuses,
+                        FinalStatusCount = finalStatuses.Count,
+                        FinalStatuses = finalStatuses.Select(s => new { 
+                            s.Id, 
+                            s.Title, 
+                            s.StatusKey,
+                            s.IsFinal 
+                        }).ToList(),
+                        HasProperFinalStatus = finalStatuses.Count == 1,
+                        CompletedNotArchivedCount = completedNotArchivedCount,
+                        SampleCompletedDocuments = sampleCompletedDocs,
+                        Issue = finalStatuses.Count == 0 ? "NO_FINAL_STATUS" :
+                               finalStatuses.Count > 1 ? "MULTIPLE_FINAL_STATUS" :
+                               completedNotArchivedCount > 0 ? "COMPLETED_NOT_ARCHIVED" : "OK",
+                        Recommendation = finalStatuses.Count == 0 ? 
+                            "Mark the final status as IsFinal=true in the database" :
+                        finalStatuses.Count > 1 ? 
+                            "Only one status should be marked as IsFinal=true" :
+                        completedNotArchivedCount > 0 ? 
+                            "Check ERP archival errors for these documents" : "Circuit is properly configured"
+                    });
+                }
+
+                var summary = new
+                {
+                    TotalCircuits = circuits.Count,
+                    CircuitsWithNoFinalStatus = diagnosticResults.Count(r => ((string)((dynamic)r).Issue) == "NO_FINAL_STATUS"),
+                    CircuitsWithMultipleFinalStatus = diagnosticResults.Count(r => ((string)((dynamic)r).Issue) == "MULTIPLE_FINAL_STATUS"),
+                    CircuitsWithCompletedNotArchived = diagnosticResults.Count(r => ((string)((dynamic)r).Issue) == "COMPLETED_NOT_ARCHIVED"),
+                    CircuitsOK = diagnosticResults.Count(r => ((string)((dynamic)r).Issue) == "OK")
+                };
+
+                return Ok(new
+                {
+                    summary = summary,
+                    circuits = diagnosticResults,
+                    message = "ERP archival diagnostic complete. Check circuits with issues.",
+                    action = "Fix circuit configurations by setting IsFinal=true on final statuses"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error diagnosing ERP archival issues: {ex.Message}");
+            }
+        }
+
+        // Fix endpoint to correct circuit configurations for ERP archival
+        [HttpPost("fix-circuit-final-statuses")]
+        public async Task<IActionResult> FixCircuitFinalStatuses([FromBody] List<int> circuitIds)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
+            {
+                var results = new List<object>();
+
+                foreach (var circuitId in circuitIds)
+                {
+                    var circuit = await _context.Circuits
+                        .Include(c => c.Statuses)
+                        .Include(c => c.Steps)
+                        .FirstOrDefaultAsync(c => c.Id == circuitId);
+
+                    if (circuit == null)
+                    {
+                        results.Add(new { CircuitId = circuitId, Status = "Not Found" });
+                        continue;
+                    }
+
+                    var finalStatuses = circuit.Statuses.Where(s => s.IsFinal).ToList();
+
+                    if (finalStatuses.Count == 1)
+                    {
+                        results.Add(new { 
+                            CircuitId = circuitId, 
+                            CircuitTitle = circuit.Title,
+                            Status = "Already Configured", 
+                            FinalStatus = finalStatuses.First().Title 
+                        });
+                        continue;
+                    }
+
+                    if (finalStatuses.Count > 1)
+                    {
+                        results.Add(new { 
+                            CircuitId = circuitId, 
+                            CircuitTitle = circuit.Title,
+                            Status = "Multiple Final Statuses - Manual Fix Required", 
+                            FinalStatuses = finalStatuses.Select(s => s.Title).ToList()
+                        });
+                        continue;
+                    }
+
+                    // No final status - try to identify which one should be final
+                    // Look for statuses that are not "next status" targets (likely terminal statuses)
+                    var nextStatusIds = circuit.Steps.Select(s => s.NextStatusId).Distinct().ToHashSet();
+                    var terminalStatuses = circuit.Statuses
+                        .Where(s => !nextStatusIds.Contains(s.Id) && !s.IsInitial)
+                        .ToList();
+
+                    if (terminalStatuses.Count == 1)
+                    {
+                        // Perfect - found exactly one terminal status
+                        var terminalStatus = terminalStatuses.First();
+                        terminalStatus.IsFinal = true;
+                        
+                        results.Add(new { 
+                            CircuitId = circuitId,
+                            CircuitTitle = circuit.Title,
+                            Status = "Fixed - Marked Terminal Status as Final",
+                            MarkedFinal = terminalStatus.Title,
+                            StatusId = terminalStatus.Id
+                        });
+                    }
+                    else if (terminalStatuses.Count == 0)
+                    {
+                        // No clear terminal status - look for statuses with "final" keywords
+                        var likelyFinalStatuses = circuit.Statuses
+                            .Where(s => s.Title.ToLower().Contains("final") || 
+                                       s.Title.ToLower().Contains("complete") ||
+                                       s.Title.ToLower().Contains("approved") ||
+                                       s.Title.ToLower().Contains("closed") ||
+                                       s.Title.ToLower().Contains("finished"))
+                            .ToList();
+
+                        if (likelyFinalStatuses.Count == 1)
+                        {
+                            var finalStatus = likelyFinalStatuses.First();
+                            finalStatus.IsFinal = true;
+                            
+                            results.Add(new { 
+                                CircuitId = circuitId,
+                                CircuitTitle = circuit.Title,
+                                Status = "Fixed - Marked Likely Final Status",
+                                MarkedFinal = finalStatus.Title,
+                                StatusId = finalStatus.Id
+                            });
+                        }
+                        else
+                        {
+                            results.Add(new { 
+                                CircuitId = circuitId,
+                                CircuitTitle = circuit.Title,
+                                Status = "Cannot Auto-Fix - Manual Review Required",
+                                AvailableStatuses = circuit.Statuses.Select(s => new { s.Id, s.Title }).ToList(),
+                                Suggestion = "Please manually mark one status as IsFinal=true"
+                            });
+                        }
+                    }
+                    else
+                    {
+                        // Multiple terminal statuses
+                        results.Add(new { 
+                            CircuitId = circuitId,
+                            CircuitTitle = circuit.Title,
+                            Status = "Multiple Terminal Statuses - Manual Review Required",
+                            TerminalStatuses = terminalStatuses.Select(s => new { s.Id, s.Title }).ToList(),
+                            Suggestion = "Please manually choose which status should be marked as IsFinal=true"
+                        });
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                var summary = new
+                {
+                    TotalCircuits = circuitIds.Count,
+                    Fixed = results.Count(r => ((string)((dynamic)r).Status).Contains("Fixed")),
+                    AlreadyConfigured = results.Count(r => ((string)((dynamic)r).Status) == "Already Configured"),
+                    RequireManualReview = results.Count(r => ((string)((dynamic)r).Status).Contains("Manual"))
+                };
+
+                return Ok(new
+                {
+                    summary = summary,
+                    results = results,
+                    message = "Circuit final status fix completed",
+                    nextSteps = "Run the diagnostic endpoint again to verify fixes"
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Error fixing circuit configurations: {ex.Message}");
+            }
+        }
+
+        // Retroactively trigger ERP archival for completed documents that weren't archived
+        [HttpPost("retroactive-erp-archival")]
+        public async Task<IActionResult> RetroactiveErpArchival([FromBody] List<int>? documentIds = null)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                IQueryable<Document> query = _context.Documents;
+
+                if (documentIds != null && documentIds.Any())
+                {
+                    // Process specific documents
+                    query = query.Where(d => documentIds.Contains(d.Id));
+                }
+                else
+                {
+                    // Process all completed documents that are not archived
+                    query = query.Where(d => d.IsCircuitCompleted && string.IsNullOrEmpty(d.ERPDocumentCode));
+                }
+
+                var documentsToArchive = await query
+                    .Include(d => d.DocumentType)
+                    .Include(d => d.Circuit)
+                    .Include(d => d.CurrentStatus)
+                    .ToListAsync();
+
+                var results = new List<object>();
+                var successCount = 0;
+                var errorCount = 0;
+
+                foreach (var document in documentsToArchive)
+                {
+                    try
+                    {
+                        _logger.LogInformation("Retroactively archiving document {DocumentId} ({DocumentKey})", 
+                            document.Id, document.DocumentKey);
+
+                        var archivalSuccess = await _erpArchivalService.ArchiveDocumentToErpAsync(document.Id);
+
+                        if (archivalSuccess)
+                        {
+                            // Reload document to get updated ERP code
+                            await _context.Entry(document).ReloadAsync();
+                            
+                            results.Add(new
+                            {
+                                DocumentId = document.Id,
+                                DocumentKey = document.DocumentKey,
+                                Status = "Success",
+                                ErpDocumentCode = document.ERPDocumentCode,
+                                Message = "Successfully archived to ERP"
+                            });
+                            successCount++;
+                        }
+                        else
+                        {
+                            results.Add(new
+                            {
+                                DocumentId = document.Id,
+                                DocumentKey = document.DocumentKey,
+                                Status = "Failed",
+                                Message = "ERP archival returned false - check logs for details"
+                            });
+                            errorCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during retroactive archival for document {DocumentId}: {Error}", 
+                            document.Id, ex.Message);
+                        
+                        results.Add(new
+                        {
+                            DocumentId = document.Id,
+                            DocumentKey = document.DocumentKey,
+                            Status = "Error",
+                            Message = ex.Message
+                        });
+                        errorCount++;
+                    }
+                }
+
+                var summary = new
+                {
+                    TotalDocuments = documentsToArchive.Count,
+                    Successful = successCount,
+                    Failed = errorCount,
+                    SuccessRate = documentsToArchive.Count > 0 ? 
+                        Math.Round((double)successCount / documentsToArchive.Count * 100, 2) : 0
+                };
+
+                return Ok(new
+                {
+                    summary = summary,
+                    results = results,
+                    message = $"Retroactive ERP archival completed. {successCount} successful, {errorCount} failed."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error during retroactive ERP archival: {ex.Message}");
+            }
+        }
+
+        // Diagnose and fix duplicate ERP code issues
+        [HttpGet("diagnose-duplicate-erp-codes")]
+        public async Task<IActionResult> DiagnoseDuplicateErpCodes()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                // Find all documents with duplicate ERP codes WITHIN THE SAME DOCUMENT TYPE
+                var duplicateGroups = await _context.Documents
+                    .Include(d => d.DocumentType)
+                    .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode))
+                    .GroupBy(d => new { d.ERPDocumentCode, d.TypeId })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => new
+                    {
+                        ErpCode = g.Key.ERPDocumentCode,
+                        TypeId = g.Key.TypeId,
+                        DocumentTypeName = g.First().DocumentType != null ? g.First().DocumentType.TypeName : "Unknown",
+                        DocumentCount = g.Count(),
+                        Documents = g.Select(d => new
+                        {
+                            d.Id,
+                            d.DocumentKey,
+                            d.CreatedAt,
+                            d.UpdatedAt,
+                            d.Status,
+                            DocumentTypeName = d.DocumentType != null ? d.DocumentType.TypeName : "Unknown"
+                        }).OrderBy(d => d.CreatedAt).ToList()
+                    })
+                    .ToListAsync();
+
+                // Find documents that are completed but not archived (potential victims of duplicate code issues)
+                var completedNotArchived = await _context.Documents
+                    .Include(d => d.DocumentType)
+                    .Where(d => d.IsCircuitCompleted && string.IsNullOrEmpty(d.ERPDocumentCode))
+                    .Select(d => new
+                    {
+                        d.Id,
+                        d.DocumentKey,
+                        d.CreatedAt,
+                        d.UpdatedAt,
+                        DocumentTypeName = d.DocumentType != null ? d.DocumentType.TypeName : "Unknown",
+                        d.Status
+                    })
+                    .OrderByDescending(d => d.UpdatedAt)
+                    .Take(50) // Limit to recent ones
+                    .ToListAsync();
+
+                // Check for recent ERP archival errors related to duplicates
+                var duplicateErrors = await _context.ErpArchivalErrors
+                    .Include(e => e.Document)
+                    .Where(e => !e.IsResolved && 
+                               (e.ErrorMessage.Contains("duplicate") || 
+                                e.ErrorMessage.Contains("Duplicate") ||
+                                e.ErrorMessage.Contains("unique") ||
+                                e.ErrorMessage.Contains("IX_Documents_ERPDocumentCode") ||
+                                e.ErrorMessage.Contains("IX_Documents_ERPDocumentCode_TypeId")))
+                    .OrderByDescending(e => e.OccurredAt)
+                    .Take(20)
+                    .Select(e => new
+                    {
+                        e.Id,
+                        e.DocumentId,
+                        DocumentKey = e.Document != null ? e.Document.DocumentKey : "Unknown",
+                        e.ErrorMessage,
+                        e.ErrorDetails,
+                        e.OccurredAt,
+                        e.ErrorType
+                    })
+                    .ToListAsync();
+
+                var analysis = new
+                {
+                    DuplicateErpCodes = new
+                    {
+                        Count = duplicateGroups.Count,
+                        TotalAffectedDocuments = duplicateGroups.Sum(g => g.DocumentCount),
+                        Groups = duplicateGroups
+                    },
+                    CompletedNotArchived = new
+                    {
+                        Count = completedNotArchived.Count,
+                        Documents = completedNotArchived
+                    },
+                    RecentDuplicateErrors = new
+                    {
+                        Count = duplicateErrors.Count,
+                        Errors = duplicateErrors
+                    },
+                    Recommendations = new List<string>
+                    {
+                        duplicateGroups.Any() ? "Remove duplicate ERP codes by clearing them from newer documents" : "No duplicate ERP codes found",
+                        completedNotArchived.Any() ? $"Retry archival for {completedNotArchived.Count} completed documents" : "All completed documents are archived",
+                        duplicateErrors.Any() ? "Resolve duplicate-related ERP errors" : "No recent duplicate errors",
+                        "Check Business Central numbering series configuration",
+                        "Consider implementing ERP code uniqueness validation before saving"
+                    }
+                };
+
+                return Ok(analysis);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error diagnosing duplicate ERP codes: {ex.Message}");
+            }
+        }
+
+        // Fix duplicate ERP codes by clearing duplicates and retrying archival
+        [HttpPost("fix-duplicate-erp-codes")]
+        public async Task<IActionResult> FixDuplicateErpCodes([FromBody] FixDuplicateErpCodesRequest request)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
+            {
+                var results = new List<object>();
+                
+                // Step 1: Clear duplicate ERP codes within the same document type (keep the oldest document with each code per type)
+                var duplicateGroups = await _context.Documents
+                    .Include(d => d.DocumentType)
+                    .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode))
+                    .GroupBy(d => new { d.ERPDocumentCode, d.TypeId })
+                    .Where(g => g.Count() > 1)
+                    .ToListAsync();
+
+                foreach (var group in duplicateGroups)
+                {
+                    var documentsInGroup = group.OrderBy(d => d.CreatedAt).ToList();
+                    var keepDocument = documentsInGroup.First(); // Keep the oldest
+                    var duplicateDocuments = documentsInGroup.Skip(1).ToList();
+                    
+                    var documentTypeName = keepDocument.DocumentType?.TypeName ?? "Unknown";
+
+                    foreach (var duplicate in duplicateDocuments)
+                    {
+                        _logger.LogInformation("Clearing duplicate ERP code {ErpCode} from document {DocumentId} of type {DocumentType} (keeping in document {KeepDocumentId})", 
+                            duplicate.ERPDocumentCode, duplicate.Id, documentTypeName, keepDocument.Id);
+                        
+                        duplicate.ERPDocumentCode = null; // Clear the duplicate
+                        duplicate.UpdatedAt = DateTime.UtcNow;
+                        
+                        results.Add(new
+                        {
+                            Action = "Cleared Duplicate ERP Code",
+                            DocumentId = duplicate.Id,
+                            DocumentKey = duplicate.DocumentKey,
+                            DocumentType = documentTypeName,
+                            ClearedErpCode = group.Key.ERPDocumentCode,
+                            KeptInDocument = keepDocument.DocumentKey
+                        });
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Step 2: Retry archival for completed documents without ERP codes
+                if (request.RetryArchival)
+                {
+                    var documentsToRetry = await _context.Documents
+                        .Where(d => d.IsCircuitCompleted && string.IsNullOrEmpty(d.ERPDocumentCode))
+                        .Take(request.MaxRetryCount ?? 10)
+                        .ToListAsync();
+
+                    foreach (var document in documentsToRetry)
+                    {
+                        try
+                        {
+                            var archivalSuccess = await _erpArchivalService.ArchiveDocumentToErpAsync(document.Id);
+                            
+                            if (archivalSuccess)
+                            {
+                                // Reload to get the new ERP code
+                                await _context.Entry(document).ReloadAsync();
+                                
+                                results.Add(new
+                                {
+                                    Action = "Retry Archival Success",
+                                    DocumentId = document.Id,
+                                    DocumentKey = document.DocumentKey,
+                                    NewErpCode = document.ERPDocumentCode
+                                });
+                            }
+                            else
+                            {
+                                results.Add(new
+                                {
+                                    Action = "Retry Archival Failed",
+                                    DocumentId = document.Id,
+                                    DocumentKey = document.DocumentKey,
+                                    Message = "Check ERP archival errors for details"
+                                });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            results.Add(new
+                            {
+                                Action = "Retry Archival Error",
+                                DocumentId = document.Id,
+                                DocumentKey = document.DocumentKey,
+                                Error = ex.Message
+                            });
+                        }
+                    }
+                }
+
+                await transaction.CommitAsync();
+
+                var summary = new
+                {
+                    DuplicatesCleared = results.Count(r => ((dynamic)r).Action == "Cleared Duplicate ERP Code"),
+                    ArchivalRetries = results.Count(r => ((string)((dynamic)r).Action).StartsWith("Retry Archival")),
+                    SuccessfulRetries = results.Count(r => ((dynamic)r).Action == "Retry Archival Success"),
+                    FailedRetries = results.Count(r => ((dynamic)r).Action == "Retry Archival Failed")
+                };
+
+                return Ok(new
+                {
+                    summary = summary,
+                    results = results,
+                    message = "Duplicate ERP code fix completed",
+                    nextSteps = new[]
+                    {
+                        "Run the diagnostic again to verify fixes",
+                        "Check Business Central numbering series configuration",
+                        "Monitor for new duplicate code issues"
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Error fixing duplicate ERP codes: {ex.Message}");
+            }
+        }
+
+        // Fix existing ERP archival errors with incorrect ligne codes
+        [HttpPost("fix-erp-error-ligne-codes")]
+        public async Task<IActionResult> FixErpErrorLigneCodes()
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                // Get all ERP archival errors that have ligne IDs but potentially wrong ligne codes
+                var errorsToFix = await _context.ErpArchivalErrors
+                    .Include(e => e.Ligne)
+                    .Where(e => e.LigneId.HasValue && e.Ligne != null)
+                    .ToListAsync();
+
+                var fixedCount = 0;
+                var skippedCount = 0;
+
+                foreach (var error in errorsToFix)
+                {
+                    if (error.Ligne != null)
+                    {
+                        // Use LigneKey first as it has the proper format (e.g., ITM_1000, ACC_100000)
+                        var correctLigneCode = !string.IsNullOrEmpty(error.Ligne.LigneKey) ? 
+                            error.Ligne.LigneKey : error.Ligne.ElementId;
+                        
+                        // Only update if the code is different
+                        if (error.LigneCode != correctLigneCode)
+                        {
+                            _logger.LogInformation("Fixing ligne code for error {ErrorId}: '{OldCode}' -> '{NewCode}'", 
+                                error.Id, error.LigneCode, correctLigneCode);
+                            
+                            error.LigneCode = correctLigneCode?.Length > 100 ? 
+                                correctLigneCode.Substring(0, 100) : correctLigneCode;
+                            fixedCount++;
+                        }
+                        else
+                        {
+                            skippedCount++;
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "ERP archival error ligne codes fix completed",
+                    totalErrors = errorsToFix.Count,
+                    fixedCount = fixedCount,
+                    skippedCount = skippedCount,
+                    details = "Updated ligne codes to use proper format (e.g., ITM_1000, ACC_100000 instead of raw element IDs)"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error fixing ERP archival error ligne codes: {ex.Message}");
             }
         }
     }

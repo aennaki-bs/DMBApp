@@ -280,13 +280,13 @@ export const TypeSelectionWithDateFilterStep = ({
                 console.log('Auto-selecting single available series:', autoSelectedSeries.subTypeKey);
                 setHasAutoSelected(true); // Set flag before calling onSubTypeChange to prevent re-triggering
                 onSubTypeChange(autoSelectedSeries.id?.toString() || "");
-                toast.success(
-                  `Series "${autoSelectedSeries.subTypeKey}" automatically selected`,
-                  {
-                    description: "This is the only valid series available for the selected type and date.",
-                    duration: 4000,
-                  }
-                );
+                // toast.success(
+                //   `Series "${autoSelectedSeries.subTypeKey}" automatically selected`,
+                //   {
+                //     description: "This is the only valid series available for the selected type and date.",
+                //     duration: 4000,
+                //   }
+                // );
               }
             } else {
               setFilteredSubTypes([]);
@@ -511,11 +511,11 @@ export const TypeSelectionWithDateFilterStep = ({
             {typeError}
           </p>
         )}
-        <p className="text-sm text-gray-400">
+        {/* <p className="text-sm text-gray-400">
           Only showing document types with{" "}
           <span className="text-green-400 font-medium">active</span> series for
           the selected date
-        </p>
+        </p> */}
       </div>
 
       {/* Series Selection */}
@@ -526,7 +526,7 @@ export const TypeSelectionWithDateFilterStep = ({
             className="text-sm font-medium text-gray-200 flex items-center gap-2"
           >
             <Layers className="h-4 w-4 text-blue-400" />
-            Series*
+            Series
           </Label>
           {isLoadingSubTypes ? (
             <div className="space-y-3">
@@ -600,11 +600,11 @@ export const TypeSelectionWithDateFilterStep = ({
                       <div className="font-medium text-white">
                         {selectedSubType?.subTypeKey}
                       </div>
-                      {selectedSubType?.name && (
+                      {/* {selectedSubType?.name && (
                         <div className="text-sm text-gray-300 mt-1">
                           {selectedSubType.name}
                         </div>
-                      )}
+                      )} */}
                       <div className="text-xs text-gray-400 flex items-center mt-2">
                         <Clock className="h-3 w-3 mr-1" />
                         Valid: {selectedSubType && format(new Date(selectedSubType.startDate), "MMM d, yyyy")} -{" "}

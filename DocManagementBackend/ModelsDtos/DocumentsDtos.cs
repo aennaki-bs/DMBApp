@@ -104,4 +104,10 @@ namespace DocManagementBackend.Models
         public string? Role { get; set; } = string.Empty;
         public string UserType { get; set; } = string.Empty;
     }
+
+    public class FixDuplicateErpCodesRequest
+    {
+        public bool RetryArchival { get; set; } = true;
+        public int? MaxRetryCount { get; set; } = 10;
+    }
 }
