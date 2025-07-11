@@ -36,9 +36,7 @@ export function useDocumentTypeSmartFilter(documentTypes: DocumentType[]) {
                     case 'typeName':
                         if (!type.typeName?.toLowerCase().includes(searchLower)) return false;
                         break;
-                    case 'typeKey':
-                        if (!type.typeKey?.toLowerCase().includes(searchLower)) return false;
-                        break;
+                    
                     case 'typeAttr':
                         if (!type.typeAttr?.toLowerCase().includes(searchLower)) return false;
                         break;

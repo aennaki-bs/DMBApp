@@ -129,27 +129,28 @@ namespace DocManagementBackend.Services
 
             if (codeExists)
                 return false;
+            return true;
 
             // Validate referenced entities exist
-            switch (elementType.TypeElement)
-            {
-                case ElementType.Item:
-                    if (string.IsNullOrEmpty(elementType.ItemCode))
-                        return false;
+            // switch (elementType.TypeElement)
+            // {
+            //     case ElementType.Item:
+            //         if (string.IsNullOrEmpty(elementType.ItemCode))
+            //             return false;
                     
-                    var itemExists = await _context.Items.AnyAsync(i => i.Code == elementType.ItemCode);
-                    return itemExists;
+            //         var itemExists = await _context.Items.AnyAsync(i => i.Code == elementType.ItemCode);
+            //         return itemExists;
 
-                case ElementType.GeneralAccounts:
-                    if (string.IsNullOrEmpty(elementType.AccountCode))
-                        return false;
+            //     case ElementType.GeneralAccounts:
+            //         if (string.IsNullOrEmpty(elementType.AccountCode))
+            //             return false;
                     
-                    var accountExists = await _context.GeneralAccounts.AnyAsync(ga => ga.Code == elementType.AccountCode);
-                    return accountExists;
+            //         var accountExists = await _context.GeneralAccounts.AnyAsync(ga => ga.Code == elementType.AccountCode);
+            //         return accountExists;
 
-                default:
-                    return false;
-            }
+            //     default:
+            //         return false;
+            // }
         }
 
         /// <summary>

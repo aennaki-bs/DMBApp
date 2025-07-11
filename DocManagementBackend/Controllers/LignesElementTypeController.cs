@@ -231,8 +231,8 @@ namespace DocManagementBackend.Controllers
                 TypeElementString = request.TypeElement.Trim(),
                 Description = request.Description.Trim(),
                 TableName = request.TableName?.Trim() ?? string.Empty,
-                ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim(),
-                AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim(),
+                // ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim(),
+                // AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -254,8 +254,8 @@ namespace DocManagementBackend.Controllers
                     TypeElement = elementType.TypeElement.ToString(),
                     Description = elementType.Description,
                     TableName = elementType.TableName,
-                    ItemCode = elementType.ItemCode,
-                    AccountCode = elementType.AccountCode,
+                    // ItemCode = elementType.ItemCode,
+                    // AccountCode = elementType.AccountCode,
                     CreatedAt = elementType.CreatedAt,
                     UpdatedAt = elementType.UpdatedAt
                 };
@@ -373,8 +373,8 @@ namespace DocManagementBackend.Controllers
                 TypeElementString = !string.IsNullOrWhiteSpace(request.TypeElement) ? request.TypeElement.Trim() : elementType.TypeElementString,
                 Description = !string.IsNullOrWhiteSpace(request.Description) ? request.Description.Trim() : elementType.Description,
                 TableName = !string.IsNullOrWhiteSpace(request.TableName) ? request.TableName.Trim() : elementType.TableName,
-                ItemCode = request.ItemCode != null ? (string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim()) : elementType.ItemCode,
-                AccountCode = request.AccountCode != null ? (string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim()) : elementType.AccountCode,
+                // ItemCode = request.ItemCode != null ? (string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim()) : elementType.ItemCode,
+                // AccountCode = request.AccountCode != null ? (string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim()) : elementType.AccountCode,
                 CreatedAt = elementType.CreatedAt,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -421,11 +421,11 @@ namespace DocManagementBackend.Controllers
                 elementType.TableName = request.TableName.Trim();
 
             // Update foreign key fields only if explicitly provided and matches the type
-            if (request.ItemCode != null && elementType.TypeElementString == "Item")
-                elementType.ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim();
+            // if (request.ItemCode != null && elementType.TypeElementString == "Item")
+            //     elementType.ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim();
 
-            if (request.AccountCode != null && elementType.TypeElementString == "General Accounts")
-                elementType.AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim();
+            // if (request.AccountCode != null && elementType.TypeElementString == "General Accounts")
+            //     elementType.AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim();
 
             elementType.UpdatedAt = DateTime.UtcNow;
 
