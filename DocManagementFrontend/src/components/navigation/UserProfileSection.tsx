@@ -37,8 +37,8 @@ export function UserProfileSection() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      {/* Professional profile card with semantic theming */}
-      <div className="bg-gradient-to-br from-card to-muted/50 rounded-xl border border-border shadow-lg overflow-hidden backdrop-blur-sm">
+      {/* Professional profile card with glass morphism effects */}
+      <div className="bg-background/10 backdrop-blur-xl rounded-xl border border-border/30 shadow-lg overflow-hidden supports-[backdrop-filter]:bg-background/5">
         {/* User avatar and basic info */}
         <div className="p-4 pb-3">
           <div className="flex items-center space-x-3">
@@ -61,7 +61,7 @@ export function UserProfileSection() {
                 )}
               </div>
               <motion.div
-                className="absolute -bottom-0.5 -right-0.5 bg-green-500 h-3 w-3 rounded-full border-2 border-card shadow-sm"
+                className="absolute -bottom-0.5 -right-0.5 bg-green-500 h-3 w-3 rounded-full border-2 border-background/50 shadow-sm"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.2, type: "spring" }}
@@ -73,7 +73,7 @@ export function UserProfileSection() {
                 {user.username || "User"}
               </h3>
               <div className="mt-1">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary text-primary-foreground border border-primary/50 shadow-sm">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary/80 text-primary-foreground border border-primary/50 shadow-sm backdrop-blur-sm">
                   {user.role || "User"}
                 </span>
               </div>
@@ -82,29 +82,28 @@ export function UserProfileSection() {
         </div>
 
         {/* Professional responsibility centre section */}
-        <div className="px-4 py-3 bg-muted/30 border-t border-border">
+        <div className="px-4 py-3 bg-background/5 backdrop-blur-sm border-t border-border/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <div className="flex-shrink-0">
-                <div className="p-1.5 rounded-lg bg-primary/20 border border-primary/40">
+                <div className="p-1.5 rounded-lg bg-primary/20 border border-primary/40 backdrop-blur-sm">
                   <Building2 className="h-3.5 w-3.5 text-primary" />
                 </div>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                  <p className="text-xs font-medium text-muted-foreground/80 mb-0.5">
                     {t("navigation.responsibilityCenter")}
                   </p>
                   <button
                     onClick={handleRefreshUserInfo}
                     disabled={isRefreshing}
-                    className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-accent"
+                    className="text-muted-foreground/80 hover:text-foreground transition-colors p-1 rounded-md hover:bg-accent/50"
                     title="Refresh user information"
                   >
                     <RefreshCw
-                      className={`h-3 w-3 ${
-                        isRefreshing ? "animate-spin" : ""
-                      }`}
+                      className={`h-3 w-3 ${isRefreshing ? "animate-spin" : ""
+                        }`}
                     />
                   </button>
                 </div>
@@ -112,7 +111,7 @@ export function UserProfileSection() {
                   {responsibilityCenter ? (
                     responsibilityCenter.descr || responsibilityCenter.code
                   ) : (
-                    <span className="text-muted-foreground font-normal">
+                    <span className="text-muted-foreground/80 font-normal">
                       {t("navigation.notAssigned")}
                     </span>
                   )}
@@ -131,7 +130,7 @@ export function UserProfileSection() {
         <div className="p-2">
           <Link
             to="/profile"
-            className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-foreground hover:bg-accent rounded-lg transition-all duration-200 group"
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200 group backdrop-blur-sm"
           >
             <div className="flex items-center space-x-2">
               <Settings className="h-3.5 w-3.5" />
@@ -145,14 +144,14 @@ export function UserProfileSection() {
       {/* Professional center info card */}
       {responsibilityCenter && (
         <motion.div
-          className="mt-3 p-3 bg-gradient-to-r from-muted/50 to-accent/30 rounded-lg border border-border"
+          className="mt-3 p-3 bg-background/10 backdrop-blur-xl rounded-lg border border-border/30 supports-[backdrop-filter]:bg-background/5"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground font-medium">
+              <p className="text-xs text-muted-foreground/80 font-medium">
                 {t("navigation.centerCode")}
               </p>
               <p className="text-sm text-foreground font-mono">
@@ -160,7 +159,7 @@ export function UserProfileSection() {
               </p>
             </div>
             <div className="text-right">
-              <div className="w-6 h-6 rounded-full bg-primary/30 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-primary/30 flex items-center justify-center backdrop-blur-sm">
                 <Building2 className="h-3 w-3 text-primary" />
               </div>
             </div>

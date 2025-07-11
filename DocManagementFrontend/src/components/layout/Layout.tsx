@@ -158,7 +158,7 @@ export function Layout() {
 
             {/* Main content with clean transparent styling and responsive padding */}
             <main
-              className="flex-1 overflow-auto p-4"
+              className="flex-1 overflow-auto p-2"
               style={{ minHeight: "calc(100vh - 4rem)" }}
             >
               <div

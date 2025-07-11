@@ -55,7 +55,7 @@ export function SidebarNav() {
       if (searchParams.get('from') === 'archived') {
         return true;
       }
-      
+
       // Check session storage for archived context (fallback)
       const documentContext = sessionStorage.getItem('documentContext');
       return documentContext === 'archived';
@@ -115,30 +115,28 @@ export function SidebarNav() {
     enabled: !!user?.userId && !isSimpleUser,
   });
 
-  // Professional navigation item classes with semantic theming
+  // Professional navigation item classes with glass morphism effects
   const getNavItemClasses = (isActiveItem: boolean) => {
-    return `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-      isActiveItem
-        ? "bg-accent text-accent-foreground shadow-sm border border-border"
-        : "text-foreground hover:bg-accent/50 hover:text-accent-foreground"
-    }`;
+    return `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActiveItem
+      ? "bg-accent/50 text-accent-foreground shadow-sm border border-border/50 backdrop-blur-sm"
+      : "text-foreground/90 hover:bg-accent/30 hover:text-accent-foreground hover:backdrop-blur-sm"
+      }`;
   };
 
   const getSubmenuItemClasses = (isActiveItem: boolean) => {
-    return `flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-      isActiveItem
-        ? "bg-accent text-accent-foreground shadow-sm"
-        : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
-    }`;
+    return `flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${isActiveItem
+      ? "bg-accent/40 text-accent-foreground shadow-sm backdrop-blur-sm"
+      : "text-muted-foreground/80 hover:bg-accent/20 hover:text-foreground hover:backdrop-blur-sm"
+      }`;
   };
 
   return (
-    <div className="h-full w-full bg-card/95 border-border backdrop-blur-lg border-r overflow-y-auto">
+    <div className="h-full w-full bg-background/10 backdrop-blur-xl border-r border-border/30 overflow-y-auto supports-[backdrop-filter]:bg-background/5">
       {/* User Profile Section */}
       <UserProfileSection />
 
       <div className="px-4 py-2">
-        <p className="text-xs font-semibold text-muted-foreground px-2 py-3 uppercase tracking-wide">
+        <p className="text-xs font-semibold text-muted-foreground/80 px-2 py-3 uppercase tracking-wide">
           MAIN NAVIGATION
         </p>
         <ul className="space-y-1">
@@ -209,7 +207,7 @@ export function SidebarNav() {
 
             {/* Professional submenu for Documents */}
             {documentsMenuOpen && (
-              <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border pl-3">
+              <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border/30 pl-3">
                 <li>
                   <Link
                     to="/documents"
@@ -272,7 +270,7 @@ export function SidebarNav() {
 
                 {/* Professional submenu for Line Elements */}
                 {lineElementsMenuOpen && (
-                  <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border pl-3">
+                  <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border/30 pl-3">
                     <li>
                       <Link
                         to="/element-types"
@@ -320,11 +318,10 @@ export function SidebarNav() {
                     <li>
                       <Link
                         to="/locations-management"
-                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive("/locations-management")
-                            ? "bg-blue-700/40 text-blue-200"
-                            : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
-                        }`}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive("/locations-management")
+                          ? "bg-blue-700/40 text-blue-200"
+                          : "text-blue-100 hover:bg-blue-800/30 hover:text-blue-50"
+                          }`}
                       >
                         <MapPin className="h-4 w-4" />
                         <span>Locations</span>
@@ -388,7 +385,7 @@ export function SidebarNav() {
 
                 {/* Professional submenu for Approval */}
                 {approvalMenuOpen && (
-                  <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border pl-3">
+                  <ul className="ml-6 mt-2 space-y-1 border-l-2 border-border/30 pl-3">
                     <li>
                       <Link
                         to="/approval-groups"
