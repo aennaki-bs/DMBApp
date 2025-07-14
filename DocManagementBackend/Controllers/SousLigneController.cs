@@ -114,6 +114,17 @@ namespace DocManagementBackend.Controllers
             {
                 document.UpdatedAt = DateTime.UtcNow;
                 document.UpdatedByUserId = authResult.UserId; // Track who added the sous-ligne
+                
+                // Log the sub-line addition to LogHistory
+                var logEntry = new LogHistory
+                {
+                    UserId = authResult.UserId,
+                    User = authResult.User!,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 13, // Add sub-line
+                    Description = $"{authResult.User!.Username} added sub-line '{sousLigne.Title}' to document {document.DocumentKey}"
+                };
+                _context.LogHistories.Add(logEntry);
             }
 
             await _context.SaveChangesAsync();
@@ -156,6 +167,17 @@ namespace DocManagementBackend.Controllers
                 {
                     document.UpdatedAt = DateTime.UtcNow;
                     document.UpdatedByUserId = authResult.UserId; // Track who modified the sous-ligne
+                    
+                    // Log the sub-line update to LogHistory
+                    var logEntry = new LogHistory
+                    {
+                        UserId = authResult.UserId,
+                        User = authResult.User!,
+                        Timestamp = DateTime.UtcNow,
+                        ActionType = 14, // Update sub-line
+                        Description = $"{authResult.User!.Username} updated sub-line '{sousLigne.Title}' in document {document.DocumentKey}"
+                    };
+                    _context.LogHistories.Add(logEntry);
                 }
             }
 
@@ -187,6 +209,17 @@ namespace DocManagementBackend.Controllers
                 {
                     document.UpdatedAt = DateTime.UtcNow;
                     document.UpdatedByUserId = authResult.UserId; // Track who deleted the sous-ligne
+                    
+                    // Log the sub-line deletion to LogHistory
+                    var logEntry = new LogHistory
+                    {
+                        UserId = authResult.UserId,
+                        User = authResult.User!,
+                        Timestamp = DateTime.UtcNow,
+                        ActionType = 15, // Delete sub-line
+                        Description = $"{authResult.User!.Username} deleted sub-line '{sousLigne.Title}' from document {document.DocumentKey}"
+                    };
+                    _context.LogHistories.Add(logEntry);
                 }
             }
 

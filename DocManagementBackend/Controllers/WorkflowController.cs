@@ -988,28 +988,171 @@ namespace DocManagementBackend.Controllers
 
             try
             {
-                var history = await _context.DocumentCircuitHistory
+                var allHistoryEvents = new List<DocumentHistoryDto>();
+
+                // Get the document for basic information
+                var document = await _context.Documents
+                    .Include(d => d.CreatedBy)
+                    .Include(d => d.UpdatedBy)
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null)
+                    return NotFound("Document not found.");
+
+                // Get all document-related log entries from LogHistory table
+                // ActionType 4 = Create document, ActionType 5 = Update document, ActionType 6 = Delete document
+                // ActionType 10 = Add line, ActionType 11 = Update line, ActionType 12 = Delete line
+                // ActionType 13 = Add sub-line, ActionType 14 = Update sub-line, ActionType 15 = Delete sub-line
+                var documentLogs = await _context.LogHistories
+                    .Where(log => (log.ActionType == 4 || log.ActionType == 5 || log.ActionType == 6 || 
+                                   log.ActionType == 10 || log.ActionType == 11 || log.ActionType == 12 ||
+                                   log.ActionType == 13 || log.ActionType == 14 || log.ActionType == 15) && 
+                                  log.Description.Contains(document.DocumentKey))
+                    .Include(log => log.User)
+                    .OrderBy(log => log.Timestamp)
+                    .ToListAsync();
+
+                // Add events from LogHistory (creation, updates, deletion)
+                int logEventId = -1000; // Start from a lower negative number to avoid conflicts
+                foreach (var log in documentLogs)
+                {
+                    string eventType, stepTitle, actionTitle, statusTitle, updateDetails;
+                    
+                    switch (log.ActionType)
+                    {
+                        case 4: // Create document
+                            eventType = "Creation";
+                            stepTitle = "Document Created";
+                            actionTitle = "Create Document";
+                            statusTitle = "Created";
+                            updateDetails = null;
+                            break;
+                        case 5: // Update document
+                            eventType = "Update";
+                            stepTitle = "Document Updated";
+                            actionTitle = "Update Document";
+                            statusTitle = "Updated";
+                            updateDetails = "Document content, metadata, or lines were modified";
+                            break;
+                        case 6: // Delete document
+                            eventType = "Deletion";
+                            stepTitle = "Document Deleted";
+                            actionTitle = "Delete Document";
+                            statusTitle = "Deleted";
+                            updateDetails = "Document was permanently removed";
+                            break;
+                        case 10: // Add line
+                            eventType = "Update";
+                            stepTitle = "Line Added";
+                            actionTitle = "Add Line";
+                            statusTitle = "Line Added";
+                            updateDetails = "A new line was added to the document";
+                            break;
+                        case 11: // Update line
+                            eventType = "Update";
+                            stepTitle = "Line Updated";
+                            actionTitle = "Update Line";
+                            statusTitle = "Line Updated";
+                            updateDetails = "An existing line was modified";
+                            break;
+                        case 12: // Delete line
+                            eventType = "Update";
+                            stepTitle = "Line Deleted";
+                            actionTitle = "Delete Line";
+                            statusTitle = "Line Deleted";
+                            updateDetails = "A line was removed from the document";
+                            break;
+                        case 13: // Add sub-line
+                            eventType = "Update";
+                            stepTitle = "Sub-line Added";
+                            actionTitle = "Add Sub-line";
+                            statusTitle = "Sub-line Added";
+                            updateDetails = "A new sub-line was added to the document";
+                            break;
+                        case 14: // Update sub-line
+                            eventType = "Update";
+                            stepTitle = "Sub-line Updated";
+                            actionTitle = "Update Sub-line";
+                            statusTitle = "Sub-line Updated";
+                            updateDetails = "An existing sub-line was modified";
+                            break;
+                        case 15: // Delete sub-line
+                            eventType = "Update";
+                            stepTitle = "Sub-line Deleted";
+                            actionTitle = "Delete Sub-line";
+                            statusTitle = "Sub-line Deleted";
+                            updateDetails = "A sub-line was removed from the document";
+                            break;
+                        default:
+                            continue; // Skip unknown action types
+                    }
+
+                    allHistoryEvents.Add(new DocumentHistoryDto
+                    {
+                        Id = logEventId--,
+                        EventType = eventType,
+                        StepTitle = stepTitle,
+                        ActionTitle = actionTitle,
+                        StatusTitle = statusTitle,
+                        ProcessedBy = log.User?.Username ?? "System",
+                        ProcessedAt = log.Timestamp,
+                        Comments = log.Description,
+                        IsApproved = true,
+                        UpdateDetails = updateDetails
+                    });
+                }
+
+                // Fallback: If no creation log is found, add creation event from document data
+                var hasCreationLog = documentLogs.Any(log => log.ActionType == 4);
+                if (!hasCreationLog)
+                {
+                    allHistoryEvents.Add(new DocumentHistoryDto
+                    {
+                        Id = -1, // Fallback creation event
+                        EventType = "Creation",
+                        StepTitle = "Document Created",
+                        ActionTitle = "Create Document",
+                        StatusTitle = "Created",
+                        ProcessedBy = document.CreatedBy?.Username ?? "System",
+                        ProcessedAt = document.CreatedAt,
+                        Comments = $"Document '{document.Title}' was created",
+                        IsApproved = true,
+                        UpdateDetails = null
+                    });
+                }
+
+                // Get workflow history
+                var workflowHistory = await _context.DocumentCircuitHistory
                     .Where(h => h.DocumentId == documentId)
                     .Include(h => h.Step)
                     .Include(h => h.ProcessedBy)
                     .Include(h => h.Action)
                     .Include(h => h.Status)
-                    .OrderByDescending(h => h.ProcessedAt)
                     .ToListAsync();
 
-                var historyDtos = history.Select(h => new DocumentHistoryDto
+                // Add workflow events
+                var workflowDtos = workflowHistory.Select(h => new DocumentHistoryDto
                 {
                     Id = h.Id,
+                    EventType = "Workflow",
                     StepTitle = h.Step?.Title ?? "N/A",
                     ActionTitle = h.Action?.Title ?? "N/A",
                     StatusTitle = h.Status?.Title ?? "N/A",
                     ProcessedBy = h.ProcessedBy?.Username ?? "System",
                     ProcessedAt = h.ProcessedAt,
                     Comments = h.Comments,
-                    IsApproved = h.IsApproved
-                }).ToList();
+                    IsApproved = h.IsApproved,
+                    UpdateDetails = null
+                });
 
-                return Ok(historyDtos);
+                allHistoryEvents.AddRange(workflowDtos);
+
+                // Sort all events by date (most recent first)
+                var sortedHistory = allHistoryEvents
+                    .OrderByDescending(h => h.ProcessedAt)
+                    .ToList();
+
+                return Ok(sortedHistory);
             }
             catch (Exception ex)
             {

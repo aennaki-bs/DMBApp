@@ -236,6 +236,18 @@ namespace DocManagementBackend.Controllers
 
                 await _context.SaveChangesAsync();
 
+                // Log the line addition to LogHistory
+                var logEntry = new LogHistory
+                {
+                    UserId = authResult.UserId,
+                    User = authResult.User!,
+                    Timestamp = DateTime.UtcNow,
+                    ActionType = 10, // Add line
+                    Description = $"{authResult.User!.Username} added line '{ligne.Title}' to document {document.DocumentKey}"
+                };
+                _context.LogHistories.Add(logEntry);
+                await _context.SaveChangesAsync();
+
                 // Return the created ligne with all includes
                 var createdLigne = await _context.Lignes
                     .Include(l => l.Document!).ThenInclude(d => d.DocumentType)
@@ -479,6 +491,17 @@ namespace DocManagementBackend.Controllers
                 {
                     document.UpdatedAt = DateTime.UtcNow;
                     document.UpdatedByUserId = authResult.UserId; // Track who modified the ligne
+                    
+                    // Log the line update to LogHistory
+                    var logEntry = new LogHistory
+                    {
+                        UserId = authResult.UserId,
+                        User = authResult.User!,
+                        Timestamp = DateTime.UtcNow,
+                        ActionType = 11, // Update line
+                        Description = $"{authResult.User!.Username} updated line '{ligne.Title}' in document {document.DocumentKey}"
+                    };
+                    _context.LogHistories.Add(logEntry);
                 }
 
                 await _context.SaveChangesAsync();
@@ -530,6 +553,17 @@ namespace DocManagementBackend.Controllers
                 {
                     document.UpdatedAt = DateTime.UtcNow;
                     document.UpdatedByUserId = authResult.UserId; // Track who deleted the ligne
+                    
+                    // Log the line deletion to LogHistory
+                    var logEntry = new LogHistory
+                    {
+                        UserId = authResult.UserId,
+                        User = authResult.User!,
+                        Timestamp = DateTime.UtcNow,
+                        ActionType = 12, // Delete line
+                        Description = $"{authResult.User!.Username} deleted line '{ligne.Title}' from document {document.DocumentKey}"
+                    };
+                    _context.LogHistories.Add(logEntry);
                 }
 
                 await _context.SaveChangesAsync();
