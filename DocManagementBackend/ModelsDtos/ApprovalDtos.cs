@@ -125,12 +125,13 @@ namespace DocManagementBackend.Models
     public class ApprovatorsGroupDetailDto
     {
         public int Id { get; set; }
-        public int? StepId { get; set; }
-        public string StepTitle { get; set; } = string.Empty;
+        // public int? StepId { get; set; }
+        // public string StepTitle { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Comment { get; set; } = string.Empty;
         public string RuleType { get; set; } = "All";
         public List<ApproverInfoDto> Approvers { get; set; } = new List<ApproverInfoDto>();
+        public bool IsAssociated { get; set; }
     }
 
     public class CreateApprovatorDto
@@ -146,8 +147,9 @@ namespace DocManagementBackend.Models
         public int UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public string Comment { get; set; } = string.Empty;
-        public int? StepId { get; set; }
-        public string StepTitle { get; set; } = string.Empty;
+        // public int? StepId { get; set; }
+        // public string StepTitle { get; set; } = string.Empty;
+        public bool IsAssociated { get; set; }
     }
 
     public class StepApprovalAssignmentDto
