@@ -31,6 +31,12 @@ export const DEFAULT_USER_SEARCH_FIELDS = [
   { id: 'role.roleName', label: 'Role' }
 ];
 
+export const DEFAULT_RESPONSIBILITY_CENTRE_SEARCH_FIELDS = [
+  { id: 'all', label: 'All fields' },
+  { id: 'code', label: 'Code' },
+  { id: 'descr', label: 'Description' }
+];
+
 export const DEFAULT_STEP_SEARCH_FIELDS = [
   { id: 'all', label: 'All fields' },
   { id: 'title', label: 'Title' },

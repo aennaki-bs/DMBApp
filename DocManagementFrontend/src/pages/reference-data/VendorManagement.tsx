@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import VendorTable from "@/components/reference-tables/VendorTable";
+import { VendorTable } from "@/components/reference-tables/VendorTable";
 import CreateVendorWizard from "@/components/reference-tables/CreateVendorWizard";
-import { Button } from "@/components/ui/button";
 import { Plus, Truck } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { PageLayout } from "@/components/layout/PageLayout";
 
 const VendorManagementPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -27,38 +27,28 @@ const VendorManagementPage = () => {
     // }
   }, [isAuthenticated, user, navigate]);
 
+  const pageActions = [
+    {
+      label: "Create Vendor",
+      variant: "default" as const,
+      icon: Plus,
+      onClick: () => setIsCreateVendorOpen(true),
+    },
+  ];
+
   return (
-    <div className="space-y-6 p-6">
-      {/* Header Section - styled consistently with Element Types */}
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 mb-6 shadow-md transition-all">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-semibold mb-2 text-white flex items-center">
-              <Truck className="mr-3 h-6 w-6 text-blue-400" /> Vendors
-            </h1>
-            <p className="text-sm md:text-base text-gray-400">
-              Manage your vendor database and supplier information
-            </p>
-          </div>
-          <Button
-            onClick={() => setIsCreateVendorOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center gap-2"
-            disabled
-            title="Create functionality will be activated later"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            New Vendor
-          </Button>
-        </div>
-      </div>
-
+    <PageLayout
+      title="Vendor Management"
+      subtitle="Manage your vendor database and supplier information"
+      icon={Truck}
+      actions={pageActions}
+    >
       <VendorTable />
-
       <CreateVendorWizard
         isOpen={isCreateVendorOpen}
         onClose={() => setIsCreateVendorOpen(false)}
       />
-    </div>
+    </PageLayout>
   );
 };
 
