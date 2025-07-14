@@ -12,6 +12,7 @@ const ApproversManagement = () => {
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const [isCreateApproverOpen, setIsCreateApproverOpen] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const { t } = useTranslation();
 
     useEffect(() => {
@@ -43,13 +44,17 @@ const ApproversManagement = () => {
             icon={UserCog}
             actions={pageActions}
         >
-            <ApproversTable />
+            <ApproversTable
+                onCreateApprover={() => setIsCreateApproverOpen(true)}
+                refreshTrigger={refreshTrigger}
+            />
             <ApproverCreateWizard
                 open={isCreateApproverOpen}
                 onOpenChange={setIsCreateApproverOpen}
                 onSuccess={() => {
                     setIsCreateApproverOpen(false);
-                    // The table will refresh automatically through its own state management
+                    // Trigger table refresh by incrementing the refresh trigger
+                    setRefreshTrigger(prev => prev + 1);
                 }}
             />
         </PageLayout>

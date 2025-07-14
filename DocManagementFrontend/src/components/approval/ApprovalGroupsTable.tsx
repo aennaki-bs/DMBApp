@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { ApprovalGroup } from "@/models/approval";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { usePagination } from "@/hooks/usePagination";
-import ApprovalGroupCreateDialog from "@/components/approval/ApprovalGroupCreateDialog";
+
 import ApprovalGroupEditDialog from "@/components/approval/ApprovalGroupEditDialog";
 import ApprovalGroupViewDialog from "@/components/approval/ApprovalGroupViewDialog";
 import {
@@ -56,7 +56,12 @@ const STATUS_OPTIONS = [
   { id: "unassociated", label: "Not Associated", value: "unassociated" },
 ];
 
-export function ApprovalGroupsTable() {
+interface ApprovalGroupsTableProps {
+  onCreateGroup?: () => void;
+  refreshTrigger?: number; // Used to trigger refresh from parent
+}
+
+export function ApprovalGroupsTable({ onCreateGroup, refreshTrigger }: ApprovalGroupsTableProps = {}) {
   // State management
   const [approvalGroups, setApprovalGroups] = useState<ApprovalGroup[]>([]);
   const [filteredGroups, setFilteredGroups] = useState<ApprovalGroup[]>([]);
@@ -69,16 +74,15 @@ export function ApprovalGroupsTable() {
   const [isError, setIsError] = useState(false);
   const [sortBy, setSortBy] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
-  
+
   // Dialog states
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<ApprovalGroup | null>(null);
   const [groupToDelete, setGroupToDelete] = useState<ApprovalGroup | null>(null);
-  
+
   // Association tracking
   const [associatedGroups, setAssociatedGroups] = useState<Record<number, boolean>>({});
   const [checkingAssociation, setCheckingAssociation] = useState(false);
@@ -92,15 +96,21 @@ export function ApprovalGroupsTable() {
   // Get paginated groups
   const paginatedGroups = pagination.paginatedData;
 
-  // Bulk selection
+  // Filter out associated groups from selection data
+  const selectableGroups = approvalGroups.filter(group => !associatedGroups[group.id]);
+  const selectablePaginatedGroups = paginatedGroups?.filter(group => !associatedGroups[group.id]) || [];
+
+  // Bulk selection - only allow selection of non-associated groups
   const bulkSelection = useBulkSelection({
-    data: approvalGroups,
-    paginatedData: paginatedGroups,
+    data: selectableGroups,
+    paginatedData: selectablePaginatedGroups,
     keyField: 'id',
     currentPage: pagination.currentPage,
     pageSize: pagination.pageSize,
-    onSelectionChange: () => {}, // We'll handle this differently
+    onSelectionChange: () => { }, // We'll handle this differently
   });
+
+
 
   // Fetch approval groups on mount
   useEffect(() => {
@@ -113,6 +123,15 @@ export function ApprovalGroupsTable() {
       checkGroupAssociations();
     }
   }, [approvalGroups]);
+
+  // Refresh data when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      fetchApprovalGroups();
+    }
+  }, [refreshTrigger]);
+
+
 
   // Apply filters and search
   useEffect(() => {
@@ -143,7 +162,7 @@ export function ApprovalGroupsTable() {
             group.comment?.toLowerCase().includes(query) ||
             group.stepTitle?.toLowerCase().includes(query) ||
             group.ruleType.toLowerCase().includes(query) ||
-            group.approvers?.some(approver => 
+            group.approvers?.some(approver =>
               approver.username?.toLowerCase().includes(query)
             )
         );
@@ -159,13 +178,13 @@ export function ApprovalGroupsTable() {
         filtered = filtered.filter((group) =>
           group.ruleType.toLowerCase().includes(query)
         );
-              } else if (searchField === "approvers") {
-          filtered = filtered.filter((group) =>
-            group.approvers?.some(approver => 
-              approver.username?.toLowerCase().includes(query)
-            )
-          );
-        }
+      } else if (searchField === "approvers") {
+        filtered = filtered.filter((group) =>
+          group.approvers?.some(approver =>
+            approver.username?.toLowerCase().includes(query)
+          )
+        );
+      }
     }
 
     // Apply sorting
@@ -276,7 +295,7 @@ export function ApprovalGroupsTable() {
   };
 
   const handleBulkDelete = async () => {
-    const selectedIds = bulkSelection.selectedItems.map(group => group.id);
+    const selectedIds = bulkSelection.selectedItems; // selectedItems already contains IDs
     const eligibleIds = selectedIds.filter(id => !associatedGroups[id]);
 
     if (eligibleIds.length === 0) {
@@ -302,7 +321,7 @@ export function ApprovalGroupsTable() {
   };
 
   const handleBulkReactivate = async () => {
-    const selectedIds = bulkSelection.selectedItems.map(group => group.id);
+    const selectedIds = bulkSelection.selectedItems; // selectedItems already contains IDs
     const eligibleIds = selectedIds.filter(id => !associatedGroups[id]);
 
     if (eligibleIds.length === 0) {
@@ -341,19 +360,19 @@ export function ApprovalGroupsTable() {
       }
       if (e.altKey && e.key === "c") {
         e.preventDefault();
-        setCreateDialogOpen(true);
+        if (onCreateGroup) {
+          onCreateGroup();
+        }
       }
       if (e.key === "Escape") {
         if (filterOpen) {
           setFilterOpen(false);
-        } else if (createDialogOpen) {
-          setCreateDialogOpen(false);
         }
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [filterOpen, createDialogOpen]);
+  }, [filterOpen]);
 
   // Professional styling classes
   const filterCardClass = "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
@@ -516,14 +535,7 @@ export function ApprovalGroupsTable() {
             </PopoverContent>
           </Popover>
 
-          {/* Create Group Button */}
-          <Button
-            onClick={() => setCreateDialogOpen(true)}
-            className="h-12 px-4 bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-[1.02] font-medium"
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            New Group
-          </Button>
+
         </div>
       </div>
 
@@ -532,7 +544,7 @@ export function ApprovalGroupsTable() {
         <ApprovalGroupTableContent
           groups={paginatedGroups}
           allGroups={filteredGroups}
-          selectedGroups={bulkSelection.selectedItems.map(g => g.id)}
+          selectedGroups={bulkSelection.selectedItems} // selectedItems already contains IDs
           bulkSelection={bulkSelection}
           pagination={pagination}
           onView={handleView}
@@ -544,7 +556,7 @@ export function ApprovalGroupsTable() {
           onClearFilters={clearAllFilters}
           onBulkDelete={() => setBulkDeleteDialogOpen(true)}
           onBulkReactivate={handleBulkReactivate}
-          onCreateGroup={() => setCreateDialogOpen(true)}
+          onCreateGroup={onCreateGroup}
           isLoading={isLoading}
           isError={isError}
           associatedGroups={associatedGroups}
@@ -553,15 +565,6 @@ export function ApprovalGroupsTable() {
       </div>
 
       {/* Dialogs */}
-      <ApprovalGroupCreateDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={() => {
-          fetchApprovalGroups();
-          setCreateDialogOpen(false);
-        }}
-      />
-
       {selectedGroup && (
         <ApprovalGroupEditDialog
           open={editDialogOpen}

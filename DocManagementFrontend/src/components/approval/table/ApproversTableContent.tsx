@@ -139,7 +139,7 @@ export function ApproversTableContent({
                 <Table className="table-fixed w-full">
                   <ApproversTableHeader
                     selectedCount={bulkSelection.currentPageSelectedCount}
-                    totalCount={approvers?.length || 0}
+                    totalCount={approvers?.filter(a => !a.allAssociations || a.allAssociations.length === 0).length || 0}
                     onSelectAll={bulkSelection.toggleSelectCurrentPage}
                     sortBy={sortBy}
                     sortDirection={sortDirection}
@@ -162,7 +162,9 @@ export function ApproversTableContent({
                       selectedApprovers={selectedApprovers}
                       onSelectApprover={(approverId) => {
                         const approver = approvers?.find(a => a.id === approverId);
-                        if (approver) bulkSelection.toggleItem(approver);
+                        if (approver && (!approver.allAssociations || approver.allAssociations.length === 0)) {
+                          bulkSelection.toggleItem(approver);
+                        }
                       }}
                       onEdit={onEdit}
                       onDelete={onDelete}
@@ -174,9 +176,9 @@ export function ApproversTableContent({
           </div>
         ) : (
           <div className="relative h-full flex items-center justify-center z-10">
-            <ApproversTableEmpty 
-              onClearFilters={onClearFilters} 
-              onAddApprover={onAddApprover || (() => {})}
+            <ApproversTableEmpty
+              onClearFilters={onClearFilters}
+              onAddApprover={onAddApprover || (() => { })}
             />
           </div>
         )}

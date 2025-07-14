@@ -1,11 +1,15 @@
-import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import React, { useRef, useEffect } from "react";
 import { DocumentType } from "@/models/document";
-import { DocumentTypeTableHeader } from "./table/DocumentTypeTableHeader";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { DocumentTypeTableRow } from "./table/DocumentTypeTableRow";
-import { AlertTriangle } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import SmartPagination from "@/components/shared/SmartPagination";
-import { usePagination } from "@/hooks/usePagination";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DocumentTypeTableProps {
   types: DocumentType[];
@@ -21,7 +25,7 @@ interface DocumentTypeTableProps {
   onSearchChange: (query: string) => void;
 }
 
-const DocumentTypeTable = ({
+const DocumentTypeTable: React.FC<DocumentTypeTableProps> = ({
   types,
   selectedTypes,
   onSelectType,
@@ -33,72 +37,71 @@ const DocumentTypeTable = ({
   sortDirection,
   searchQuery,
   onSearchChange,
-}: DocumentTypeTableProps) => {
-  // Use pagination hook
-  const {
-    currentPage,
-    pageSize,
-    totalPages,
-    totalItems,
-    paginatedData: paginatedTypes,
-    handlePageChange,
-    handlePageSizeChange,
-  } = usePagination({
-    data: types,
-    initialPageSize: 25,
-  });
+}) => {
+  const allSelected = types.length > 0 && selectedTypes.length === types.length;
+  const someSelected = selectedTypes.length > 0 && selectedTypes.length < types.length;
+  const checkboxRef = useRef<HTMLButtonElement>(null);
 
-  const areAllEligibleSelected =
-    paginatedTypes.length > 0 &&
-    paginatedTypes.length === selectedTypes.filter((id) =>
-      paginatedTypes.some((type) => type.id === id)
-    ).length;
-  const hasEligibleTypes = paginatedTypes.length > 0;
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
 
   return (
-    <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
-      <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
-        <div className="min-w-[1000px]">
-          <Table className="table-fixed w-full">
-            <DocumentTypeTableHeader
-              onSelectAll={onSelectAll}
-              areAllEligibleSelected={areAllEligibleSelected}
-              hasEligibleTypes={hasEligibleTypes}
-              onSort={onSort}
-              sortField={sortField}
-              sortDirection={sortDirection}
+    <div className="rounded-xl border border-primary/10 overflow-hidden bg-background/50 backdrop-blur-xl shadow-lg">
+      <Table>
+        <TableHeader className="bg-primary/5">
+          <TableRow className="border-primary/10 hover:bg-primary/10">
+            <TableHead className="w-12 text-muted-foreground">
+              <Checkbox
+                ref={checkboxRef}
+                checked={allSelected}
+                onCheckedChange={onSelectAll}
+                aria-label="Select all"
+                className="border-primary/50"
+              />
+            </TableHead>
+            <TableHead className="text-muted-foreground font-medium">
+              <button
+                onClick={() => onSort("typeName")}
+                className="flex items-center hover:text-foreground transition-colors"
+              >
+                Type Name
+                {sortField === "typeName" && (
+                  <span className="ml-1 text-primary">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </span>
+                )}
+              </button>
+            </TableHead>
+            <TableHead className="text-muted-foreground font-medium">Description</TableHead>
+            <TableHead className="text-muted-foreground font-medium">Tier Type</TableHead>
+            <TableHead className="text-muted-foreground font-medium">ERP Type</TableHead>
+            <TableHead className="text-right text-muted-foreground font-medium">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {types.map((type) => (
+            <DocumentTypeTableRow
+              key={type.id}
+              type={type}
+              isSelected={selectedTypes.includes(type.id!)}
+              onSelectType={onSelectType}
+              onDeleteType={onDeleteType}
+              onEditType={onEditType}
             />
-            <TableBody>
-              {types.length === 0 ? (
-                <TableRow className="border-blue-900/20 hover:bg-blue-900/20">
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    <div className="flex flex-col items-center justify-center text-blue-300">
-                      <AlertTriangle className="h-8 w-8 text-blue-400 mb-2" />
-                      <p className="text-sm">No document types found</p>
-                      {searchQuery && (
-                        <p className="text-xs text-blue-400 mt-1">
-                          Try adjusting your search or filters
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                types.map((type) => (
-                  <DocumentTypeTableRow
-                    key={type.id}
-                    type={type}
-                    isSelected={selectedTypes.includes(type.id!)}
-                    onSelectType={onSelectType}
-                    onDeleteType={onDeleteType}
-                    onEditType={onEditType}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
+          ))}
+        </TableBody>
+      </Table>
+      {types.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="text-muted-foreground mb-2">No document types found</div>
+          <div className="text-sm text-muted-foreground">
+            Try adjusting your search criteria or create a new document type.
+          </div>
         </div>
-      </ScrollArea>
+      )}
     </div>
   );
 };

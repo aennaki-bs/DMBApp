@@ -1,17 +1,10 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
-import DocumentTypesSimpleHeaderSection from "./DocumentTypesSimpleHeaderSection";
-import DocumentTypesContent from "./DocumentTypesContent";
+import { DocumentType } from "@/models/document";
 import DocumentTypeDrawer from "./DocumentTypeDrawer";
 import DeleteConfirmDialog from "@/components/document-types/DeleteConfirmDialog";
-import BottomActionBar from "@/components/document-types/BottomActionBar";
-import DocumentTypeFilterBar from "@/components/document-types/DocumentTypeFilterBar";
-import { DocumentType } from "@/models/document";
 import documentService from "@/services/documentService";
-import { Tag, Trash2 } from "lucide-react";
-import { BulkActionsBar, BulkAction } from "@/components/shared/BulkActionsBar";
-import { AnimatePresence } from "framer-motion";
+import { Layers, Plus, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,57 +15,76 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDocumentTypeSmartFilter } from "@/hooks/document-types/useDocumentTypeSmartFilter";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { useDocumentTypeManagement } from "@/hooks/useDocumentTypeManagement";
+import { DocumentTypesTable } from "../DocumentTypesTable";
 
 const DocumentTypesManagementPage = () => {
-  const [types, setTypes] = useState<DocumentType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [typeToEdit, setTypeToEdit] = useState<DocumentType | null>(null);
-  const [typeToDelete, setTypeToDelete] = useState<DocumentType | null>(null);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
-  // Use our smart filter hook
+  // Use the professional management hook like user management
   const {
-    filters,
-    updateFilters,
-    resetFilters,
-    filteredTypes,
-    sortField,
-    sortDirection,
+    selectedTypes,
+    bulkSelection,
+    pagination,
+    types,
+    paginatedTypes,
+    editingType,
+    deletingType,
+    deleteMultipleOpen,
+    searchQuery,
+    setSearchQuery,
+    searchField,
+    setSearchField,
+    tierTypeFilter,
+    setTierTypeFilter,
+    hasDocumentsFilter,
+    setHasDocumentsFilter,
+    showAdvancedFilters,
+    setShowAdvancedFilters,
+    isLoading,
+    isError,
+    refetch,
+    setEditingType,
+    setDeletingType,
+    setDeleteMultipleOpen,
     handleSort,
-    isFilterActive,
-    activeFilterCount
-  } = useDocumentTypeSmartFilter(types);
+    sortBy,
+    sortDirection,
+    handleTypeEdited,
+    handleTypeDeleted,
+    handleMultipleDeleted,
+  } = useDocumentTypeManagement();
 
-  // Fetch document types
-  const fetchTypes = async () => {
-    try {
-      setIsLoading(true);
-      const data = await documentService.getAllDocumentTypes();
-      setTypes(data);
-    } catch (error) {
-      console.error('Failed to fetch document types:', error);
-      toast.error('Failed to load document types');
-    } finally {
-      setIsLoading(false);
-    }
+  // Filter state for DocumentTypeFilterBar compatibility
+  const filters = {
+    searchQuery,
+    searchField,
+    tierType: tierTypeFilter as any,
+    hasDocuments: hasDocumentsFilter as 'any' | 'yes' | 'no',
   };
 
-  const refreshTypes = async () => {
-    await fetchTypes();
+  const updateFilters = (newFilters: any) => {
+    if (newFilters.searchQuery !== undefined) setSearchQuery(newFilters.searchQuery);
+    if (newFilters.searchField !== undefined) setSearchField(newFilters.searchField);
+    if (newFilters.tierType !== undefined) setTierTypeFilter(newFilters.tierType);
+    if (newFilters.hasDocuments !== undefined) setHasDocumentsFilter(newFilters.hasDocuments);
   };
 
-  useEffect(() => {
-    fetchTypes();
-  }, []);
-
-  const handleViewModeChange = (mode: "table" | "grid") => {
-    setViewMode(mode);
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSearchField('all');
+    setTierTypeFilter('any');
+    setHasDocumentsFilter('any');
   };
+
+  const isFilterActive = searchQuery !== '' || tierTypeFilter !== 'any' || hasDocumentsFilter !== 'any';
+  const activeFilterCount = [
+    searchQuery !== '',
+    tierTypeFilter !== 'any',
+    hasDocumentsFilter !== 'any'
+  ].filter(Boolean).length;
 
   const handleEditType = (type: DocumentType) => {
     setTypeToEdit(type);
@@ -80,22 +92,19 @@ const DocumentTypesManagementPage = () => {
   };
 
   const handleDeleteType = (id: number) => {
-    const typeToDelete = types.find((type) => type.id === id);
-    if (typeToDelete) {
-      setTypeToDelete(typeToDelete);
-    }
+    setDeletingType(id);
   };
 
   const confirmDeleteType = async () => {
-    if (!typeToDelete) return;
+    if (!deletingType) return;
 
     try {
-      await documentService.deleteDocumentType(typeToDelete.id!);
+      const typeToDelete = types.find((type) => type.id === deletingType);
+      await documentService.deleteDocumentType(deletingType);
       toast.success(
-        `Document type "${typeToDelete.typeName}" deleted successfully`
+        `Document type "${typeToDelete?.typeName || 'Unknown'}" deleted successfully`
       );
-      refreshTypes();
-      setTypeToDelete(null);
+      handleTypeDeleted();
     } catch (error) {
       console.error("Error deleting document type:", error);
       toast.error("Failed to delete document type");
@@ -109,16 +118,16 @@ const DocumentTypesManagementPage = () => {
     }
 
     // Check if any selected type has documents
-    const hasDocuments = types
+    const typesWithDocuments = types
       .filter((type) => selectedTypes.includes(type.id!))
-      .some((type) => type.documentCounter! > 0);
+      .filter((type) => type.documentCounter && type.documentCounter > 0);
 
-    if (hasDocuments) {
-      toast.error("Cannot delete types with associated documents");
+    if (typesWithDocuments.length > 0) {
+      toast.error(`Cannot delete ${typesWithDocuments.length} document type(s) with associated documents. Only types without documents can be deleted.`);
       return;
     }
 
-    setBulkDeleteDialogOpen(true);
+    setDeleteMultipleOpen(true);
   };
 
   const confirmBulkDelete = async () => {
@@ -127,127 +136,89 @@ const DocumentTypesManagementPage = () => {
       toast.success(
         `${selectedTypes.length} document types deleted successfully`
       );
-      refreshTypes();
-      setSelectedTypes([]);
-      setBulkDeleteDialogOpen(false);
+      handleMultipleDeleted();
     } catch (error) {
       console.error("Error deleting document types:", error);
       toast.error("Failed to delete document types");
     }
   };
 
-  // Handle select type
-  const handleSelectType = (id: number, checked: boolean) => {
-    if (checked) {
-      setSelectedTypes((prev) => [...prev, id]);
-    } else {
-      setSelectedTypes((prev) => prev.filter((typeId) => typeId !== id));
-    }
-  };
-
-  // Handle select all
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const allIds = filteredTypes.map((type) => type.id!);
-      setSelectedTypes(allIds);
-    } else {
-      setSelectedTypes([]);
-    }
-  };
-
-  const bulkActions: BulkAction[] = [
+  const bulkActions = [
     {
       id: "delete",
       label: "Delete Selected",
       icon: <Trash2 className="h-4 w-4" />,
       onClick: handleBulkDelete,
-      variant: "destructive",
+      variant: "destructive" as const,
       className:
         "bg-red-900/30 border-red-500/30 text-red-300 hover:text-red-200 hover:bg-red-900/50 hover:border-red-400/50 transition-all duration-200 shadow-md",
     },
   ];
 
-  // Document types table props
-  const documentTypesProps = {
-    sortField,
-    sortDirection,
-    handleSort,
-    currentPage: 1,
-    setCurrentPage: () => {},
-    totalPages: 1,
-    filteredAndSortedTypes: filteredTypes
-  };
+  // Page actions for PageLayout
+  const pageActions = [
+    {
+      label: "New Type",
+      variant: "default" as const,
+      icon: Plus,
+      onClick: () => setIsDrawerOpen(true),
+    },
+  ];
 
   return (
-    <div className="space-y-4 p-6">
-      <DocumentTypesSimpleHeaderSection
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        onNewTypeClick={() => setIsDrawerOpen(true)}
-      />
+    <PageLayout
+      title="Document Types Management"
+      subtitle="Manage document types and classification system"
+      icon={Layers}
+      actions={pageActions}
+    >
+      {/* Document Types Table with Search and Filters like User Management */}
+      <DocumentTypesTable onCreateType={() => setIsDrawerOpen(true)} />
 
-      <div className="px-1">
-        <DocumentTypeFilterBar
-          filters={filters}
-          updateFilters={updateFilters}
-          resetFilters={resetFilters}
-          isFilterActive={isFilterActive}
-          activeFilterCount={activeFilterCount}
-        />
-        </div>
-
-      <DocumentTypesContent
-        isLoading={isLoading}
-        types={filteredTypes}
-        viewMode={viewMode}
-        selectedTypes={selectedTypes}
-        onDeleteType={handleDeleteType}
-        onEditType={handleEditType}
-        onSelectType={handleSelectType}
-        onSelectAll={handleSelectAll}
-        searchQuery={filters.searchQuery}
-        setSearchQuery={(query) => updateFilters({ searchQuery: query })}
-        {...documentTypesProps}
-      />
-
+      {/* Drawer for editing/creating types */}
       <DocumentTypeDrawer
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
         type={typeToEdit}
         onSuccess={() => {
-          refreshTypes();
+          refetch();
           setTypeToEdit(null);
         }}
       />
 
+      {/* Delete single type dialog */}
       <DeleteConfirmDialog
-        open={!!typeToDelete}
-        onOpenChange={(open) => !open && setTypeToDelete(null)}
+        open={!!deletingType}
+        onOpenChange={(open) => !open && setDeletingType(null)}
         onConfirm={confirmDeleteType}
         title="Delete Document Type"
         description={
-          typeToDelete
-            ? `Are you sure you want to delete "${typeToDelete.typeName}"? This action cannot be undone.`
+          deletingType
+            ? `Are you sure you want to delete this document type? This action cannot be undone.`
             : ""
         }
       />
 
-      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#0a1033] border border-blue-900/30">
+      {/* Bulk delete dialog */}
+      <AlertDialog open={deleteMultipleOpen} onOpenChange={setDeleteMultipleOpen}>
+        <AlertDialogContent className="bg-background/95 backdrop-blur-xl border-destructive/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Document Types</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Delete Document Types
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete {selectedTypes.length} document
               types? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border border-blue-900/30 text-blue-300 hover:bg-blue-900/20 hover:text-blue-100">
+            <AlertDialogCancel className="bg-background/50 border-border hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmBulkDelete}
-              className="bg-red-900/80 text-red-100 hover:bg-red-900"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
             </AlertDialogAction>
@@ -255,20 +226,9 @@ const DocumentTypesManagementPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AnimatePresence>
-        {selectedTypes.length > 0 && (
-          <BulkActionsBar
-            selectedCount={selectedTypes.length}
-            entityName="document type"
-            actions={bulkActions}
-            icon={<Tag className="w-5 h-5 text-blue-400" />}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+
+    </PageLayout>
   );
 };
 
 export default DocumentTypesManagementPage;
-
-// Example Value

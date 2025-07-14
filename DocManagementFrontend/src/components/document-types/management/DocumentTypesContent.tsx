@@ -57,7 +57,7 @@ const DocumentTypesContent = ({
   }
 
   if (types.length === 0) {
-    return <EmptyState onAddType={() => {}} />;
+    return <EmptyState onAddType={() => { }} />;
   }
 
   return (
@@ -79,7 +79,7 @@ const DocumentTypesContent = ({
           />
 
           {totalPages > 1 && (
-            <div className="border-t border-blue-900/30 bg-[#0f1642]/50 p-2 rounded-b-lg">
+            <div className="border-t border-primary/10 bg-background/50 backdrop-blur-sm p-2 rounded-b-lg">
               <DocumentTypesPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -99,7 +99,7 @@ const DocumentTypesContent = ({
           />
 
           {totalPages > 1 && (
-            <div className="border-t border-blue-900/30 bg-[#0f1642]/50 p-2 rounded-lg">
+            <div className="border-t border-primary/10 bg-background/50 backdrop-blur-sm p-2 rounded-lg">
               <DocumentTypesPagination
                 currentPage={currentPage}
                 totalPages={totalPages}

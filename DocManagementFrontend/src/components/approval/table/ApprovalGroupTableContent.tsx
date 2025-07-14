@@ -14,8 +14,17 @@ interface ApprovalGroupTableContentProps {
   selectedGroups: any[];
   bulkSelection: BulkSelectionState<ApprovalGroup> & {
     toggleItem: (item: ApprovalGroup) => void;
+    selectCurrentPage: () => void;
+    deselectCurrentPage: () => void;
+    selectAllPages: () => void;
+    deselectAll: () => void;
+    invertCurrentPage: () => void;
     toggleSelectCurrentPage: () => void;
+    clearSelection: () => void;
+    getSelectedObjects: () => ApprovalGroup[];
+    getSelectedObjectsFromCurrentPage: () => ApprovalGroup[];
     isSelected: (item: ApprovalGroup) => boolean;
+    isIndeterminate: boolean;
   };
   pagination: {
     currentPage: number;
@@ -122,8 +131,10 @@ export function ApprovalGroupTableContent({
                 <Table className="table-fixed w-full">
                   <ApprovalGroupTableHeader
                     selectedCount={bulkSelection.currentPageSelectedCount}
-                    totalCount={groups?.length || 0}
+                    totalCount={groups?.filter(g => !associatedGroups[g.id]).length || 0}
                     onSelectAll={bulkSelection.toggleSelectCurrentPage}
+                    isCurrentPageFullySelected={bulkSelection.isCurrentPageFullySelected}
+                    isPartialSelection={bulkSelection.isPartialSelection}
                     sortBy={sortBy}
                     sortDirection={sortDirection}
                     onSort={onSort}
@@ -145,7 +156,9 @@ export function ApprovalGroupTableContent({
                       selectedGroups={selectedGroups}
                       onSelectGroup={(groupId) => {
                         const group = groups?.find(g => g.id === groupId);
-                        if (group) bulkSelection.toggleItem(group);
+                        if (group && !associatedGroups[group.id]) {
+                          bulkSelection.toggleItem(group);
+                        }
                       }}
                       onView={onView}
                       onEdit={onEdit}
@@ -160,8 +173,8 @@ export function ApprovalGroupTableContent({
           </div>
         ) : (
           <div className="relative h-full flex items-center justify-center z-10">
-            <ApprovalGroupTableEmpty 
-              onClearFilters={onClearFilters} 
+            <ApprovalGroupTableEmpty
+              onClearFilters={onClearFilters}
               onCreateGroup={onCreateGroup}
             />
           </div>

@@ -125,10 +125,10 @@ export function Layout() {
             {/* Clean transparent header with responsive sizing */}
             <header
               className={`${isStandardTheme
-                  ? "glass-header"
-                  : isMobile
-                    ? "bg-card/95 border-b border-border"
-                    : "bg-card/90 border-b border-border"
+                ? "glass-header"
+                : isMobile
+                  ? "bg-card/95 border-b border-border"
+                  : "bg-card/90 border-b border-border"
                 } shadow-sm z-30 transition-all duration-300`}
               style={{
                 height: "4rem",
@@ -160,8 +160,8 @@ export function Layout() {
             >
               <div
                 className={`h-full rounded-lg overflow-auto ${isStandardTheme
-                    ? ""
-                    : "border border-border bg-card/85"
+                  ? ""
+                  : "border border-border bg-card/85"
                   } shadow-lg transition-all duration-300`}
                 style={{ minHeight: "100%" }}
               >

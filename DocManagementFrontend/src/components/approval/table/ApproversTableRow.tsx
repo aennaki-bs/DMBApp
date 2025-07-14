@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { User, MessageSquare } from "lucide-react";
+import { User, Link2 } from "lucide-react";
 import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 import { ApprovalActionsDropdown } from "@/components/approval/ApprovalActionsDropdown";
 
@@ -33,12 +33,16 @@ export function ApproversTableRow({
   index = 0,
 }: ApproversTableRowProps) {
 
+  const isAssociated = approver.allAssociations && approver.allAssociations.length > 0;
+
   const handleEdit = () => {
+    if (isAssociated) return;
     console.log("Handling edit for approver:", approver);
     onEdit(approver);
   };
 
   const handleDelete = () => {
+    if (isAssociated) return;
     console.log("Handling delete for approver:", approver);
     onDelete(approver.id);
   };
@@ -48,15 +52,16 @@ export function ApproversTableRow({
       className={`border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer group ${isSelected
         ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-2 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
         : "hover:shadow-sm"
-        }`}
+        } ${isAssociated ? "bg-slate-50/50 dark:bg-slate-800/20 opacity-75 cursor-not-allowed" : ""}`}
       onClick={(e) => {
-        // Don't trigger row selection if clicking on interactive elements
+        // Don't trigger row selection if clicking on interactive elements or if approver is associated
         const target = e.target as HTMLElement;
         if (
           target.closest('button') ||
           target.closest('input') ||
           target.closest('select') ||
-          target.closest('[role="button"]')
+          target.closest('[role="button"]') ||
+          isAssociated
         ) {
           return;
         }
@@ -67,9 +72,14 @@ export function ApproversTableRow({
         <div className="flex items-center justify-center">
           <ProfessionalCheckbox
             checked={isSelected}
-            onCheckedChange={() => onSelect(approver.id)}
+            onCheckedChange={() => {
+              if (!isAssociated) {
+                onSelect(approver.id);
+              }
+            }}
             size="md"
             variant="row"
+            disabled={isAssociated}
           />
         </div>
       </TableCell>
@@ -85,6 +95,12 @@ export function ApproversTableRow({
         <div className="font-medium text-blue-900 dark:text-blue-100 flex items-center">
           <User className="h-4 w-4 mr-2 text-blue-400" />
           {approver.username}
+          {isAssociated && (
+            <div className="ml-2 flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md">
+              <Link2 className="w-3 h-3 text-blue-500" />
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Associated</span>
+            </div>
+          )}
         </div>
         {approver.stepTitle && (
           <div className="text-xs text-blue-600 dark:text-blue-400">
@@ -94,11 +110,11 @@ export function ApproversTableRow({
       </TableCell>
       <TableCell className="w-[400px]">
         <div className="flex items-center text-blue-800 dark:text-blue-200">
-          <MessageSquare className="h-4 w-4 mr-2 text-blue-400/70" />
-          {approver.comment ? (
-            <span className="text-blue-200">{approver.comment}</span>
-          ) : (
-            <span className="text-blue-300/50 text-sm italic">No comment</span>
+          {isAssociated && approver.stepTitle && (
+            <>
+              <Link2 className="h-4 w-4 mr-2 text-blue-400" />
+              <span className="text-blue-200 text-sm">Associated with: {approver.stepTitle}</span>
+            </>
           )}
         </div>
       </TableCell>
@@ -107,9 +123,9 @@ export function ApproversTableRow({
           item={approver}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          isEditDisabled={!!approver.stepId}
-          isDeleteDisabled={!!approver.stepId}
-          disabledTooltip={approver.stepId ? `This approver is currently associated with step: ${approver.stepTitle}` : ""}
+          isEditDisabled={isAssociated}
+          isDeleteDisabled={isAssociated}
+          disabledTooltip={isAssociated ? `This approver is currently associated with a document workflow` : ""}
         />
       </TableCell>
     </TableRow>

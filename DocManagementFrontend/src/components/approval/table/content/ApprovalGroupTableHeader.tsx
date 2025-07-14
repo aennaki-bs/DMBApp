@@ -6,6 +6,8 @@ interface ApprovalGroupTableHeaderProps {
   selectedCount: number;
   totalCount: number;
   onSelectAll: () => void;
+  isCurrentPageFullySelected?: boolean;
+  isPartialSelection?: boolean;
   sortBy: string;
   sortDirection: string;
   onSort: (field: string) => void;
@@ -15,6 +17,8 @@ export function ApprovalGroupTableHeader({
   selectedCount,
   totalCount,
   onSelectAll,
+  isCurrentPageFullySelected = false,
+  isPartialSelection = false,
   sortBy,
   sortDirection,
   onSort,
@@ -40,8 +44,8 @@ export function ApprovalGroupTableHeader({
         <TableHead className="w-[48px] py-4">
           <div className="flex items-center justify-center">
             <ProfessionalCheckbox
-              checked={selectedCount === totalCount && totalCount > 0}
-              indeterminate={selectedCount > 0 && selectedCount < totalCount}
+              checked={isCurrentPageFullySelected}
+              indeterminate={isPartialSelection}
               onCheckedChange={onSelectAll}
               size="md"
               variant="header"

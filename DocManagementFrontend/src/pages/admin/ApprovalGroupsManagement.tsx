@@ -5,10 +5,13 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ApprovalGroupsTable } from "@/components/approval/ApprovalGroupsTable";
+import ApprovalGroupCreateDialog from "@/components/approval/ApprovalGroupCreateDialog";
 
 export default function ApprovalGroupsManagement() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     // Check if user is authenticated and has appropriate role
@@ -29,10 +32,7 @@ export default function ApprovalGroupsManagement() {
       label: "New Approval Group",
       variant: "default" as const,
       icon: UserPlus,
-      onClick: () => {
-        // This will be handled within the table component
-        // We could pass a callback here if needed
-      },
+      onClick: () => setCreateDialogOpen(true),
     },
   ];
 
@@ -43,7 +43,20 @@ export default function ApprovalGroupsManagement() {
       icon={UsersRound}
       actions={pageActions}
     >
-      <ApprovalGroupsTable />
+      <ApprovalGroupsTable
+        onCreateGroup={() => setCreateDialogOpen(true)}
+        refreshTrigger={refreshTrigger}
+      />
+
+      <ApprovalGroupCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={() => {
+          setCreateDialogOpen(false);
+          // Trigger table refresh by incrementing the refresh trigger
+          setRefreshTrigger(prev => prev + 1);
+        }}
+      />
     </PageLayout>
   );
 }

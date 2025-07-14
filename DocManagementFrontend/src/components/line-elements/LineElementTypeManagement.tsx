@@ -193,6 +193,56 @@ const LineElementTypeManagement = ({
     setSelectedType("any");
   };
 
+  // Clean and format the code name to handle edge cases
+  const getDisplayCodeName = (code?: string) => {
+    if (!code || code.trim() === '') {
+      return "Unnamed Element";
+    }
+
+    // Clean the code name by removing unwanted numeric suffixes
+    let cleanName = code.trim();
+
+    // Very aggressive cleaning to handle all possible patterns:
+
+    // 1. Remove numbers directly attached to the end (like "Name0", "Name123")
+    cleanName = cleanName.replace(/\d+$/, '');
+
+    // 2. Remove trailing spaces and numbers (like " 0 0", " 1 2 3", etc.)
+    cleanName = cleanName.replace(/(\s+\d+)+\s*$/, '');
+
+    // 3. Remove any remaining standalone numbers at the end
+    cleanName = cleanName.replace(/\s+\d+$/, '');
+
+    // 4. Remove multiple spaces and clean up
+    cleanName = cleanName.replace(/\s+/g, ' ');
+
+    // 5. Remove any trailing zeros specifically (with or without spaces)
+    cleanName = cleanName.replace(/\s*0+\s*$/, '');
+
+    // 6. Final cleanup of any remaining numbers at the end
+    cleanName = cleanName.replace(/[\s\d]*$/, '').trim();
+
+    // If the name is empty after cleaning, it was probably all numbers
+    if (!cleanName || cleanName.trim() === '') {
+      return "Unnamed Element";
+    }
+
+    // Final trim
+    cleanName = cleanName.trim();
+
+    // Check for numeric-only values like "00", "0", etc.
+    if (/^\d+$/.test(cleanName)) {
+      return `Element ${cleanName}`;
+    }
+
+    // Check for very short or invalid names after cleaning
+    if (cleanName.length < 2) {
+      return "Unnamed Element";
+    }
+
+    return cleanName;
+  };
+
   // Professional filter/search bar styling matching UserTable
   const filterCardClass =
     "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
@@ -360,7 +410,7 @@ const LineElementTypeManagement = ({
                             />
                           </TableCell>
                           <TableCell className="w-[200px] font-medium font-mono text-sm">
-                            {elementType.code}
+                            {getDisplayCodeName(elementType.code)}
                           </TableCell>
                           <TableCell className="w-[150px]">
                             <Badge

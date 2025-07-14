@@ -46,6 +46,56 @@ const DocumentTypes = () => {
   // Determine if user is a simple user for conditional rendering
   const isSimpleUser = user?.role === "SimpleUser";
 
+  // Clean and format the type name to handle edge cases
+  const getDisplayTypeName = (typeName?: string) => {
+    if (!typeName || typeName.trim() === '') {
+      return "Unnamed Type";
+    }
+
+    // Clean the type name by removing unwanted numeric suffixes
+    let cleanName = typeName.trim();
+
+    // Very aggressive cleaning to handle all possible patterns:
+
+    // 1. Remove numbers directly attached to the end (like "Name0", "Name123")
+    cleanName = cleanName.replace(/\d+$/, '');
+
+    // 2. Remove trailing spaces and numbers (like " 0 0", " 1 2 3", etc.)
+    cleanName = cleanName.replace(/(\s+\d+)+\s*$/, '');
+
+    // 3. Remove any remaining standalone numbers at the end
+    cleanName = cleanName.replace(/\s+\d+$/, '');
+
+    // 4. Remove multiple spaces and clean up
+    cleanName = cleanName.replace(/\s+/g, ' ');
+
+    // 5. Remove any trailing zeros specifically (with or without spaces)
+    cleanName = cleanName.replace(/\s*0+\s*$/, '');
+
+    // 6. Final cleanup of any remaining numbers at the end
+    cleanName = cleanName.replace(/[\s\d]*$/, '').trim();
+
+    // If the name is empty after cleaning, it was probably all numbers
+    if (!cleanName || cleanName.trim() === '') {
+      return "Unnamed Type";
+    }
+
+    // Final trim
+    cleanName = cleanName.trim();
+
+    // Check for numeric-only values like "00", "0", etc.
+    if (/^\d+$/.test(cleanName)) {
+      return `Type ${cleanName}`;
+    }
+
+    // Check for very short or invalid names after cleaning
+    if (cleanName.length < 2) {
+      return "Unnamed Type";
+    }
+
+    return cleanName;
+  };
+
   useEffect(() => {
     fetchTypes();
   }, []);
@@ -119,10 +169,10 @@ const DocumentTypes = () => {
       }
     } catch (error: any) {
       console.error("Failed to update document type:", error);
-      
+
       // Extract specific error message if available
       let errorMessage = "Failed to update document type";
-      
+
       if (error.response?.data) {
         if (typeof error.response.data === 'string') {
           errorMessage = error.response.data;
@@ -132,7 +182,7 @@ const DocumentTypes = () => {
           errorMessage = error.response.data.error;
         }
       }
-      
+
       toast.error(`Failed to update document type: ${errorMessage}`);
     }
   };
@@ -187,7 +237,7 @@ const DocumentTypes = () => {
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-lg text-white">
-                    {type.typeName || "Unnamed Type"}
+                    {getDisplayTypeName(type.typeName)}
                   </CardTitle>
                   {!isSimpleUser && (
                     <div className="flex items-center space-x-1">
@@ -215,11 +265,10 @@ const DocumentTypes = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className={`h-8 w-8 ${
-                                type.documentCounter && type.documentCounter > 0
-                                  ? "text-gray-500 cursor-not-allowed"
-                                  : "text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                              }`}
+                              className={`h-8 w-8 ${type.documentCounter && type.documentCounter > 0
+                                ? "text-gray-500 cursor-not-allowed"
+                                : "text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                }`}
                               onClick={() =>
                                 type.documentCounter === 0 &&
                                 openDeleteDialog(type)

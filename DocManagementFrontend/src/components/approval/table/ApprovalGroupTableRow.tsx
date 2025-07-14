@@ -111,9 +111,8 @@ export function ApprovalGroupTableRow({
     }
 
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center justify-center">
         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-        <span className="text-xs text-green-500 font-medium">Available</span>
       </div>
     );
   };
@@ -123,19 +122,19 @@ export function ApprovalGroupTableRow({
   return (
     <>
       <TableRow
-        className={`border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 hover:bg-slate-50/80 dark:hover:bg-slate-800/30 cursor-pointer group ${
-          isSelected
-            ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-4 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
-            : "hover:shadow-sm"
-        } ${isAssociated ? "bg-slate-50/50 dark:bg-slate-800/20" : ""}`}
+        className={`border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 hover:bg-slate-50/80 dark:hover:bg-slate-800/30 cursor-pointer group ${isSelected
+          ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-4 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
+          : "hover:shadow-sm"
+          } ${isAssociated ? "bg-slate-50/50 dark:bg-slate-800/20" : ""}`}
         onClick={(e) => {
-          // Don't trigger row selection if clicking on interactive elements
+          // Don't trigger row selection if clicking on interactive elements or if group is associated
           const target = e.target as HTMLElement;
           if (
             target.closest('button') ||
             target.closest('input') ||
             target.closest('select') ||
-            target.closest('[role="button"]')
+            target.closest('[role="button"]') ||
+            isAssociated
           ) {
             return;
           }
@@ -146,14 +145,18 @@ export function ApprovalGroupTableRow({
           <div className="flex items-center justify-center">
             <ProfessionalCheckbox
               checked={isSelected}
-              onCheckedChange={() => onSelect(group.id)}
+              onCheckedChange={() => {
+                if (!isAssociated) {
+                  onSelect(group.id);
+                }
+              }}
               size="md"
               variant="row"
               disabled={isAssociated}
             />
           </div>
         </TableCell>
-        
+
         <TableCell className="w-[48px] py-4">
           <div className="flex items-center justify-center">
             {getStatusIndicator()}
@@ -215,8 +218,8 @@ export function ApprovalGroupTableRow({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge 
-                      variant="secondary" 
+                    <Badge
+                      variant="secondary"
                       className="text-xs cursor-help bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
                     >
                       {approverCount === 1 ? "1 user" : `${approverCount} users`}

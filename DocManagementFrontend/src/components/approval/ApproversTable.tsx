@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import approvalService from "@/services/approvalService";
 import { ApproversTableContent } from "./table/ApproversTableContent";
-import { ProfessionalBulkActionsBar } from "@/components/shared/ProfessionalBulkActionsBar";
-import { EnhancedBulkSelection } from "@/components/shared/EnhancedBulkSelection";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import { usePagination } from "@/hooks/usePagination";
 import { Trash2, UserCheck, Settings, Filter, X } from "lucide-react";
 import {
   Select,
@@ -52,10 +52,14 @@ interface Approver {
 const DEFAULT_APPROVER_SEARCH_FIELDS = [
   { id: "all", label: "All Fields" },
   { id: "username", label: "Username" },
-  { id: "comment", label: "Comment" },
 ];
 
-export function ApproversTable() {
+interface ApproversTableProps {
+  onCreateApprover?: () => void;
+  refreshTrigger?: number;
+}
+
+export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTableProps = {}) {
   const [approvers, setApprovers] = useState<Approver[]>([]);
   const [filteredApprovers, setFilteredApprovers] = useState<Approver[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,12 +67,9 @@ export function ApproversTable() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  const [selectedApprovers, setSelectedApprovers] = useState<number[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [sortBy, setSortBy] = useState("username");
   const [sortDirection, setSortDirection] = useState("asc");
-  
+
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -76,77 +77,43 @@ export function ApproversTable() {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [approverToEdit, setApproverToEdit] = useState<Approver | null>(null);
   const [approverToDelete, setApproverToDelete] = useState<Approver | null>(null);
-  
+
   const { t, tWithParams } = useTranslation();
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredApprovers.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedApprovers = filteredApprovers.slice(startIndex, endIndex);
+  // Pagination
+  const pagination = usePagination({
+    data: filteredApprovers,
+    initialPageSize: 10,
+  });
 
-  // Bulk selection logic
-  const bulkSelection = {
-    selectedItems: selectedApprovers,
-    currentPageSelectedCount: selectedApprovers.length,
-    totalSelectedCount: selectedApprovers.length,
-    selectCurrentPage: () => {
-      const currentPageIds = paginatedApprovers.map(a => a.id);
-      setSelectedApprovers(currentPageIds);
-    },
-    deselectCurrentPage: () => {
-      setSelectedApprovers([]);
-    },
-    selectAllPages: () => {
-      const allIds = filteredApprovers.map(a => a.id);
-      setSelectedApprovers(allIds);
-    },
-    deselectAll: () => {
-      setSelectedApprovers([]);
-    },
-    toggleItem: (item: Approver) => {
-      setSelectedApprovers(prev => 
-        prev.includes(item.id) 
-          ? prev.filter(id => id !== item.id)
-          : [...prev, item.id]
-      );
-    },
-    toggleSelectCurrentPage: () => {
-      const currentPageIds = paginatedApprovers.map(a => a.id);
-      const allSelected = currentPageIds.every(id => selectedApprovers.includes(id));
-      
-      if (allSelected) {
-        setSelectedApprovers(prev => prev.filter(id => !currentPageIds.includes(id)));
-      } else {
-        setSelectedApprovers(prev => [...new Set([...prev, ...currentPageIds])]);
-      }
-    },
-    isSelected: (item: Approver) => selectedApprovers.includes(item.id),
-  };
+  // Get paginated approvers
+  const paginatedApprovers = pagination.paginatedData;
 
-  // Pagination handlers
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  // Filter out associated approvers from selection data
+  const selectableApprovers = approvers.filter(approver => !approver.allAssociations || approver.allAssociations.length === 0);
+  const selectablePaginatedApprovers = paginatedApprovers?.filter(approver => !approver.allAssociations || approver.allAssociations.length === 0) || [];
 
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
-  const pagination = {
-    currentPage,
-    pageSize,
-    totalPages,
-    totalItems: filteredApprovers.length,
-    handlePageChange,
-    handlePageSizeChange,
-  };
+  // Bulk selection - only allow selection of non-associated approvers
+  const bulkSelection = useBulkSelection({
+    data: selectableApprovers,
+    paginatedData: selectablePaginatedApprovers,
+    keyField: 'id',
+    currentPage: pagination.currentPage,
+    pageSize: pagination.pageSize,
+    onSelectionChange: () => { }, // We'll handle this differently
+  });
 
   // Fetch approvers on component mount
   useEffect(() => {
     fetchApprovers();
   }, []);
+
+  // Refresh data when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      fetchApprovers();
+    }
+  }, [refreshTrigger]);
 
   // Filter approvers based on search criteria
   useEffect(() => {
@@ -159,16 +126,11 @@ export function ApproversTable() {
       if (searchField === "all") {
         filtered = filtered.filter(
           (approver) =>
-            approver.username.toLowerCase().includes(query) ||
-            approver.comment?.toLowerCase().includes(query)
+            approver.username.toLowerCase().includes(query)
         );
       } else if (searchField === "username") {
         filtered = filtered.filter((approver) =>
           approver.username.toLowerCase().includes(query)
-        );
-      } else if (searchField === "comment") {
-        filtered = filtered.filter((approver) =>
-          approver.comment?.toLowerCase().includes(query)
         );
       }
     }
@@ -177,7 +139,7 @@ export function ApproversTable() {
     filtered.sort((a, b) => {
       const aValue = a[sortBy as keyof Approver] || "";
       const bValue = b[sortBy as keyof Approver] || "";
-      
+
       if (sortDirection === "asc") {
         return aValue.toString().localeCompare(bValue.toString());
       } else {
@@ -186,20 +148,20 @@ export function ApproversTable() {
     });
 
     setFilteredApprovers(filtered);
-    setCurrentPage(1); // Reset to first page when filtering
+    pagination.handlePageChange(1); // Reset to first page when filtering
   }, [searchQuery, searchField, approvers, sortBy, sortDirection]);
 
   const fetchApprovers = async () => {
     try {
       setIsLoading(true);
       setIsError(false);
-      
+
       // Fetch both approvers and step configurations
       const [approversResponse, stepsWithApprovalResponse] = await Promise.all([
         approvalService.getAllApprovators(),
         approvalService.getStepsWithApproval()
       ]);
-      
+
       // Validate responses
       if (!Array.isArray(approversResponse)) {
         console.warn('Invalid approvers response format:', approversResponse);
@@ -207,18 +169,28 @@ export function ApproversTable() {
         setFilteredApprovers([]);
         return;
       }
-      
+
       if (!Array.isArray(stepsWithApprovalResponse)) {
         console.warn('Invalid steps response format:', stepsWithApprovalResponse);
         // Still process approvers even if steps fail
-        setApprovers(approversResponse);
-        setFilteredApprovers(approversResponse);
+        const basicApprovers = approversResponse.map((approver: any) => ({
+          ...approver,
+          id: approver.id,
+          userId: approver.userId || approver.id,
+          username: approver.username || 'Unknown User',
+          comment: approver.comment || null,
+          stepId: null,
+          stepTitle: null,
+          allAssociations: [],
+        }));
+        setApprovers(basicApprovers);
+        setFilteredApprovers(basicApprovers);
         return;
       }
-      
+
       // Create a map of approvator ID to step associations
       const userStepAssociations = new Map();
-      
+
       // Fetch detailed approval configuration for each step
       const stepConfigPromises = stepsWithApprovalResponse
         .filter((step: any) => {
@@ -226,7 +198,7 @@ export function ApproversTable() {
           const hasValidId = step.id !== undefined && step.id !== null;
           const hasValidStepId = step.stepId !== undefined && step.stepId !== null;
           const stepId = hasValidId ? step.id : (hasValidStepId ? step.stepId : null);
-          
+
           return step.requiresApproval && stepId !== null;
         })
         .map(async (step: any) => {
@@ -234,13 +206,13 @@ export function ApproversTable() {
             // Use step.id if available, otherwise fallback to step.stepId
             const stepId = step.id !== undefined ? step.id : step.stepId;
             const stepTitle = step.title || step.stepTitle || `Step ${stepId}`;
-            
+
             // Only proceed if we have a valid step ID
             if (stepId === undefined || stepId === null) {
               console.warn('Skipping step with undefined ID:', step);
               return null;
             }
-            
+
             const stepConfig = await approvalService.getStepApprovalConfig(stepId);
             return { stepId, stepTitle, config: stepConfig };
           } catch (error) {
@@ -250,7 +222,7 @@ export function ApproversTable() {
         });
 
       const stepConfigs = await Promise.all(stepConfigPromises);
-      
+
       // Build associations map
       stepConfigs.forEach((result) => {
         if (result?.config?.groupApprovers) {
@@ -272,10 +244,10 @@ export function ApproversTable() {
           console.warn('Invalid approver data:', approver);
           return null;
         }
-        
+
         const associations = userStepAssociations.get(approver.id) || [];
         const firstAssociation = associations[0]; // Use the first association for display
-        
+
         return {
           ...approver,
           // Ensure all required properties exist
@@ -339,17 +311,30 @@ export function ApproversTable() {
 
   const handleBulkDelete = async () => {
     try {
-      const deletePromises = selectedApprovers.map((id) =>
-        approvalService.deleteApprovator(id)
-      );
-      await Promise.all(deletePromises);
-      toast.success(`Successfully deleted ${selectedApprovers.length} approvers`);
-      setBulkDeleteDialogOpen(false);
-      setSelectedApprovers([]);
+      const selectedIds = bulkSelection.selectedItems; // selectedItems already contains IDs
+      const eligibleIds = selectedIds.filter(id => {
+        const approver = approvers.find(a => a.id === id);
+        return !approver?.allAssociations || approver.allAssociations.length === 0;
+      });
+
+      if (eligibleIds.length === 0) {
+        toast.error("None of the selected approvers can be deleted");
+        return;
+      }
+
+      if (eligibleIds.length < selectedIds.length) {
+        toast.warning(`Only ${eligibleIds.length} of ${selectedIds.length} approvers will be deleted (others are associated with workflows)`);
+      }
+
+      await Promise.all(eligibleIds.map(id => approvalService.deleteApprovator(id)));
+      toast.success(`${eligibleIds.length} approvers deleted successfully`);
+      bulkSelection.clearSelection();
       fetchApprovers();
     } catch (error) {
       toast.error("Failed to delete approvers");
       console.error("Error deleting approvers:", error);
+    } finally {
+      setBulkDeleteDialogOpen(false);
     }
   };
 
@@ -374,6 +359,12 @@ export function ApproversTable() {
       if (e.altKey && e.key === "f") {
         e.preventDefault();
         setFilterOpen(true);
+      }
+      if (e.altKey && e.key === "c") {
+        e.preventDefault();
+        if (onCreateApprover) {
+          onCreateApprover();
+        }
       }
       if (e.key === "Escape" && filterOpen) {
         setFilterOpen(false);
@@ -422,7 +413,7 @@ export function ApproversTable() {
                 {DEFAULT_APPROVER_SEARCH_FIELDS.map((opt) => (
                   <SelectItem
                     key={opt.id}
-                    value={opt.id as string}
+                    value={opt.id}
                     className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
                   >
                     {opt.label}
@@ -432,72 +423,74 @@ export function ApproversTable() {
             </Select>
           </div>
 
-          <div className="relative flex-1 group">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+          <div className="relative flex-1 max-w-md">
             <Input
+              type="text"
               placeholder="Search approvers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
+              className="w-full h-12 pl-4 pr-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl placeholder:text-muted-foreground/60 shadow-lg"
             />
-            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors duration-200 rounded-lg"
+                onClick={() => setSearchQuery("")}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
-        {/* Filter popover */}
+
+        {/* Enhanced Filter Button */}
         <div className="flex items-center gap-3">
           <Popover open={filterOpen} onOpenChange={setFilterOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
+                className="h-12 px-4 bg-background/60 backdrop-blur-md border-primary/20 hover:border-primary/40 hover:bg-primary/10 text-foreground transition-all duration-300 shadow-lg rounded-xl font-medium"
               >
-                <Filter className="h-5 w-5" />
-                Filter
-                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
+                <Filter className="h-4 w-4 mr-2" />
+                Advanced Filters
+                <Badge
+                  variant="secondary"
+                  className="ml-2 bg-primary/20 text-primary border-primary/30 px-2 py-0.5 text-xs rounded-md"
+                >
+                  Alt+F
+                </Badge>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl p-6">
-              <div className="mb-4 text-foreground font-bold text-lg flex items-center gap-2">
-                <Filter className="h-5 w-5 text-primary" />
-                Filters
-              </div>
-              <div className="text-sm text-muted-foreground mt-4 text-center">
-                Additional filters will be added in future updates
-              </div>
-              <div className="flex justify-end mt-6">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all duration-200 flex items-center gap-2"
-                  onClick={clearAllFilters}
-                >
-                  <X className="h-4 w-4" /> Clear All
-                </Button>
+            <PopoverContent
+              className="w-80 bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl p-0"
+              align="end"
+            >
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-lg text-foreground">Filter Options</h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors duration-200 rounded-lg"
+                    onClick={() => setFilterOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">No additional filters available for approvers.</p>
               </div>
             </PopoverContent>
           </Popover>
         </div>
       </div>
 
+      {/* Table Content */}
       <div className="flex-1 min-h-0">
         <ApproversTableContent
           approvers={paginatedApprovers}
           allApprovers={filteredApprovers}
-          selectedApprovers={selectedApprovers}
+          selectedApprovers={bulkSelection.selectedItems}
           bulkSelection={bulkSelection as any}
           pagination={pagination}
           onEdit={handleEditApprover}
@@ -507,7 +500,7 @@ export function ApproversTable() {
           onSort={handleSort}
           onClearFilters={clearAllFilters}
           onBulkDelete={() => setBulkDeleteDialogOpen(true)}
-          onAddApprover={() => setCreateDialogOpen(true)}
+          onAddApprover={onCreateApprover}
           isLoading={isLoading}
           isError={isError}
         />
@@ -537,10 +530,9 @@ export function ApproversTable() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-background border border-primary/20 text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Delete Approver</AlertDialogTitle>
+            <AlertDialogTitle>Delete Approver</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Are you sure you want to delete the approver "
-              {approverToDelete?.username}"? This action cannot be undone.
+              Are you sure you want to delete "{approverToDelete?.username}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -551,37 +543,37 @@ export function ApproversTable() {
               onClick={handleConfirmDelete}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
-              Delete
+              Delete Approver
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Bulk Delete Confirmation Dialog */}
-             <AlertDialog
-         open={bulkDeleteDialogOpen}
-         onOpenChange={setBulkDeleteDialogOpen}
-       >
-         <AlertDialogContent className="bg-background border border-primary/20 text-foreground">
-           <AlertDialogHeader>
-             <AlertDialogTitle>Delete Approvers</AlertDialogTitle>
-             <AlertDialogDescription className="text-muted-foreground">
-               Are you sure you want to delete {selectedApprovers.length} selected approvers? This action cannot be undone.
-             </AlertDialogDescription>
-           </AlertDialogHeader>
-           <AlertDialogFooter>
-             <AlertDialogCancel className="bg-background text-foreground hover:bg-muted border border-primary/20">
-               Cancel
-             </AlertDialogCancel>
-             <AlertDialogAction
-               onClick={handleBulkDelete}
-               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-             >
-               Delete {selectedApprovers.length} Approvers
-             </AlertDialogAction>
-           </AlertDialogFooter>
-         </AlertDialogContent>
-       </AlertDialog>
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent className="bg-background border border-primary/20 text-foreground">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Approvers</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Are you sure you want to delete {bulkSelection.selectedItems.length} selected approvers? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-background text-foreground hover:bg-muted border border-primary/20">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              Delete {bulkSelection.selectedItems.length} Approvers
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 } 
