@@ -11,13 +11,14 @@ export interface SubType {
   documentTypeId: number;
   documentType?: DocumentType;
   isActive: boolean;
+  isAssigned?: boolean;
 }
 
 export interface CreateSubTypeDto {
   name: string;
   description: string;
   startDate: Date | string;
-  endDate: Date | string; 
+  endDate: Date | string;
   documentTypeId: number;
   isActive: boolean;
 }

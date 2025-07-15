@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
 import { Loader2, Edit2, Trash2 } from "lucide-react";
 import { BulkSelectionState } from "@/hooks/useBulkSelection";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 
 interface SubTypesTableContentProps {
     subTypes: SubType[] | undefined;
@@ -32,9 +33,6 @@ interface SubTypesTableContentProps {
     onCreateSeries?: () => void;
     isLoading?: boolean;
     isError?: boolean;
-    seriesUsageMap: Record<number, { isUsed: boolean; documentCount: number }>;
-    isSeriesRestricted: (seriesId: number) => boolean;
-    getSeriesDocumentCount: (seriesId: number) => number;
 }
 
 export function SubTypesTableContent({
@@ -53,9 +51,6 @@ export function SubTypesTableContent({
     onCreateSeries,
     isLoading = false,
     isError = false,
-    seriesUsageMap,
-    isSeriesRestricted,
-    getSeriesDocumentCount
 }: SubTypesTableContentProps) {
     // Use pagination from props
     const {
@@ -70,31 +65,24 @@ export function SubTypesTableContent({
     // Check if we have subTypes to display
     const hasSubTypes = subTypes && subTypes.length > 0;
 
-    // Calculate selectable vs total counts
-    const selectableSubTypes = subTypes?.filter(subType => subType.id && !isSeriesRestricted(subType.id)) || [];
-    const selectableCount = selectableSubTypes.length;
-    const selectedSelectableCount = selectedSubTypes.filter(id => !isSeriesRestricted(id)).length;
+    // Filter series into selectable and non-selectable
+    const selectableSubTypes = subTypes?.filter(subType => !subType.isAssigned) || [];
+    const nonSelectableSubTypes = subTypes?.filter(subType => subType.isAssigned) || [];
 
-    // Custom select-all handler that only selects non-restricted series
-    const handleSelectAll = () => {
-        if (selectedSelectableCount === selectableCount && selectableCount > 0) {
-            // Deselect all selectable items
-            selectableSubTypes.forEach(subType => {
-                if (selectedSubTypes.includes(subType.id)) {
-                    bulkSelection.toggleItem(subType);
-                }
-            });
-        } else {
-            // Select all selectable items that aren't already selected
-            selectableSubTypes.forEach(subType => {
-                if (!selectedSubTypes.includes(subType.id)) {
-                    bulkSelection.toggleItem(subType);
-                }
-            });
-        }
-    };
+    // Get currently selected objects from the bulk selection hook
+    const selectedObjects = bulkSelection.getSelectedObjects();
+    const selectedSelectableObjects = selectedObjects.filter(obj => !obj.isAssigned);
 
-    // Define bulk actions
+    // Create a separate bulk selection hook for only selectable items
+    const selectableBulkSelection = useBulkSelection({
+        data: allSubTypes?.filter(st => !st.isAssigned) || [],
+        paginatedData: selectableSubTypes,
+        keyField: "id" as keyof SubType,
+        currentPage: pagination.currentPage,
+        pageSize: pagination.pageSize,
+    });
+
+    // Define bulk actions that work with selected selectable items
     const bulkActions: BulkAction[] = [
         {
             id: 'edit',
@@ -102,14 +90,13 @@ export function SubTypesTableContent({
             icon: <Edit2 className="h-4 w-4" />,
             variant: 'outline',
             onClick: () => {
-                // Filter to only selectable series
-                const selectableIds = selectedSubTypes.filter(id => !isSeriesRestricted(id));
-                if (selectableIds.length === 0) {
-                    console.log("No selectable series available for editing");
+                const selectedItems = selectableBulkSelection.getSelectedObjects();
+                if (selectedItems.length === 0) {
+                    console.log("No series selected for editing");
                     return;
                 }
-                console.log("Bulk edit series:", selectableIds);
-                // Handle bulk edit if needed
+                console.log("Bulk edit series:", selectedItems.map(item => item.id));
+                // Handle bulk edit logic here
             },
             shortcut: 'E',
         },
@@ -119,10 +106,9 @@ export function SubTypesTableContent({
             icon: <Trash2 className="h-4 w-4" />,
             variant: 'destructive',
             onClick: () => {
-                // Filter to only selectable series
-                const selectableIds = selectedSubTypes.filter(id => !isSeriesRestricted(id));
-                if (selectableIds.length === 0) {
-                    console.log("No selectable series available for deletion");
+                const selectedItems = selectableBulkSelection.getSelectedObjects();
+                if (selectedItems.length === 0) {
+                    console.log("No series selected for deletion");
                     return;
                 }
                 onBulkDelete?.();
@@ -179,9 +165,9 @@ export function SubTypesTableContent({
                             <div className="min-w-[800px]">
                                 <Table className="table-fixed w-full">
                                     <SubTypesTableHeader
-                                        selectedCount={selectedSelectableCount}
-                                        totalCount={selectableCount}
-                                        onSelectAll={handleSelectAll}
+                                        selectedCount={selectableBulkSelection.currentPageSelectedCount}
+                                        totalCount={selectableSubTypes.length}
+                                        onSelectAll={selectableBulkSelection.toggleSelectCurrentPage}
                                         sortBy={sortBy}
                                         sortDirection={sortDirection}
                                         onSort={onSort}
@@ -200,22 +186,18 @@ export function SubTypesTableContent({
                                     <Table className="table-fixed w-full">
                                         <SubTypesTableBody
                                             subTypes={subTypes || []}
-                                            selectedSubTypes={selectedSubTypes}
+                                            selectedSubTypes={selectableBulkSelection.selectedItems}
                                             onSelectSubType={(subType) => {
-                                                // Only allow selection if series is not restricted
-                                                if (subType.id && !isSeriesRestricted(subType.id)) {
-                                                    bulkSelection.toggleItem(subType);
-                                                } else if (subType.id && isSeriesRestricted(subType.id)) {
-                                                    // Show feedback for restricted selection attempt
-                                                    const docCount = getSeriesDocumentCount(subType.id);
-                                                    console.log(`Cannot select series ${subType.subTypeKey} - used by ${docCount} document${docCount === 1 ? '' : 's'}`);
+                                                // Only allow selection if series is not assigned
+                                                if (!subType.isAssigned) {
+                                                    selectableBulkSelection.toggleItem(subType);
+                                                } else {
+                                                    // Show feedback for assigned selection attempt
+                                                    console.log(`Cannot select series ${subType.subTypeKey} - it is assigned`);
                                                 }
                                             }}
                                             onEdit={onEdit}
                                             onDelete={onDelete}
-                                            seriesUsageMap={seriesUsageMap}
-                                            isSeriesRestricted={isSeriesRestricted}
-                                            getSeriesDocumentCount={getSeriesDocumentCount}
                                         />
                                     </Table>
                                 </div>
@@ -241,7 +223,7 @@ export function SubTypesTableContent({
                     totalItems={totalItems}
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
-                    bulkSelection={bulkSelection}
+                    bulkSelection={selectableBulkSelection}
                     bulkActions={bulkActions}
                 />
             )}

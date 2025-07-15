@@ -9,9 +9,6 @@ interface SubTypesTableBodyProps {
     onSelectSubType: (subType: SubType) => void;
     onEdit: (subType: SubType) => void;
     onDelete: (id: number) => void;
-    seriesUsageMap: Record<number, { isUsed: boolean; documentCount: number }>;
-    isSeriesRestricted: (seriesId: number) => boolean;
-    getSeriesDocumentCount: (seriesId: number) => number;
 }
 
 export function SubTypesTableBody({
@@ -20,16 +17,10 @@ export function SubTypesTableBody({
     onSelectSubType,
     onEdit,
     onDelete,
-    seriesUsageMap,
-    isSeriesRestricted,
-    getSeriesDocumentCount
 }: SubTypesTableBodyProps) {
     return (
         <TableBody>
             {subTypes.map((subType, index) => {
-                const isRestricted = subType.id ? isSeriesRestricted(subType.id) : false;
-                const documentCount = subType.id ? getSeriesDocumentCount(subType.id) : 0;
-
                 return (
                     <SubTypesTableRow
                         key={subType.id}
@@ -39,8 +30,6 @@ export function SubTypesTableBody({
                         onEdit={() => onEdit(subType)}
                         onDelete={() => onDelete(subType.id)}
                         index={index}
-                        isRestricted={isRestricted}
-                        documentCount={documentCount}
                     />
                 );
             })}

@@ -60,9 +60,6 @@ export function SubTypesTable({
     setDeleteDialogOpen,
     selectedSubType,
     setSelectedSubType,
-    seriesUsageMap,
-    isSeriesRestricted,
-    getSeriesDocumentCount
   } = useSubTypes(documentType.id);
 
   // Filter states
@@ -137,30 +134,6 @@ export function SubTypesTable({
   });
 
   const paginatedSubTypes = pagination.paginatedData;
-  const selectedSubTypes = bulkSelection.selectedItems.map(item => item.id);
-
-  // Filter out restricted series from selection for display and actions
-  const selectedSelectableSubTypes = selectedSubTypes.filter(id => !isSeriesRestricted(id));
-  const hasRestrictedInSelection = selectedSubTypes.length > selectedSelectableSubTypes.length;
-
-  // Automatically remove restricted series from selection
-  useEffect(() => {
-    const restrictedInSelection = selectedSubTypes.filter(id => isSeriesRestricted(id));
-
-    if (restrictedInSelection.length > 0) {
-      // Find the actual SubType objects for the restricted items and remove them
-      const restrictedSubTypes = sortedSubTypes.filter(subType =>
-        subType.id && restrictedInSelection.includes(subType.id)
-      );
-
-      // Remove each restricted item from selection
-      restrictedSubTypes.forEach(subType => {
-        if (bulkSelection.selectedItems.some(item => item.id === subType.id)) {
-          bulkSelection.toggleItem(subType);
-        }
-      });
-    }
-  }, [selectedSubTypes, seriesUsageMap, sortedSubTypes, bulkSelection, isSeriesRestricted]);
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -209,12 +182,11 @@ export function SubTypesTable({
 
   // Handle edit
   const handleEditSubType = (subType: SubType) => {
-    // Check if series is restricted before allowing edit
-    if (subType.id && isSeriesRestricted(subType.id)) {
-      const docCount = getSeriesDocumentCount(subType.id);
-      toast.error(`Cannot edit series - it is being used by ${docCount} document(s)`, {
+    // Check if series is assigned before allowing edit
+    if (subType.isAssigned) {
+      toast.error(`Cannot edit series - it is assigned and cannot be modified`, {
         duration: 5000,
-        description: 'This series is currently in use and cannot be modified.'
+        description: 'This series is currently assigned and locked from modifications.'
       });
       return;
     }
@@ -225,44 +197,25 @@ export function SubTypesTable({
 
   // Handle delete
   const handleDeleteSubType = (id: number) => {
-    // Check if series is restricted before allowing delete
-    if (isSeriesRestricted(id)) {
-      const docCount = getSeriesDocumentCount(id);
-      toast.error(`Cannot delete series - it is being used by ${docCount} document(s)`, {
+    const subType = sortedSubTypes.find(st => st.id === id);
+    if (!subType) return;
+
+    // Check if series is assigned before allowing delete
+    if (subType.isAssigned) {
+      toast.error(`Cannot delete series - it is assigned and cannot be modified`, {
         duration: 5000,
-        description: 'Please remove or update the documents using this series first.'
+        description: 'This series is currently assigned and locked from modifications.'
       });
       return;
     }
 
-    const subType = sortedSubTypes.find(st => st.id === id);
-    if (subType) {
-      setSelectedSubType(subType);
-      setDeleteDialogOpen(true);
-    }
+    setSelectedSubType(subType);
+    setDeleteDialogOpen(true);
   };
 
-  // Handle bulk delete
+  // Handle bulk delete - now handled in SubTypesTableContent
   const handleBulkDelete = () => {
-    // Only consider selectable series for deletion
-    if (selectedSelectableSubTypes.length === 0) {
-      toast.warning("No selectable series available for deletion");
-      return;
-    }
-
-    // Double-check that none of the selected series are restricted
-    const stillRestrictedSeries = selectedSelectableSubTypes.filter(id => isSeriesRestricted(id));
-
-    if (stillRestrictedSeries.length > 0) {
-      toast.error(`Some selected series are now in use and cannot be deleted`, {
-        duration: 5000,
-        description: 'Please refresh the page and try again.'
-      });
-      return;
-    }
-
-    console.log("Bulk delete series:", selectedSelectableSubTypes);
-    toast.success(`${selectedSelectableSubTypes.length} series will be deleted (functionality to be implemented)`);
+    console.log("Bulk delete functionality moved to SubTypesTableContent");
   };
 
   if (isLoading) {
@@ -404,7 +357,7 @@ export function SubTypesTable({
         <SubTypesTableContent
           subTypes={paginatedSubTypes}
           allSubTypes={sortedSubTypes}
-          selectedSubTypes={selectedSubTypes}
+          selectedSubTypes={[]}
           bulkSelection={bulkSelection}
           pagination={pagination}
           onEdit={handleEditSubType}
@@ -417,9 +370,6 @@ export function SubTypesTable({
           onCreateSeries={handleCreateClick}
           isLoading={isLoading}
           isError={!!error}
-          seriesUsageMap={seriesUsageMap}
-          isSeriesRestricted={isSeriesRestricted}
-          getSeriesDocumentCount={getSeriesDocumentCount}
         />
       </div>
 

@@ -1459,7 +1459,8 @@ namespace DocManagementBackend.Controllers
                     UserId = u.UserId,
                     Username = u.User?.Username ?? string.Empty,
                     OrderIndex = u.OrderIndex
-                }).ToList()
+                }).ToList(),
+                IsAssociated = _context.Steps.Any(s => s.ApprovatorsGroupId == group.Id)
             };
             
             return Ok(result);
@@ -1497,7 +1498,8 @@ namespace DocManagementBackend.Controllers
                         UserId = u.UserId,
                         Username = u.User?.Username ?? string.Empty,
                         OrderIndex = u.OrderIndex
-                    }).ToList()
+                    }).ToList(),
+                    IsAssociated = _context.Steps.Any(s => s.ApprovatorsGroupId == group.Id)
                 });
             }
 
@@ -1740,15 +1742,15 @@ namespace DocManagementBackend.Controllers
 
             var approvators = await _context.Approvators
                 .Include(a => a.User)
-                .Include(a => a.Step)
                 .Select(a => new ApprovatorDetailDto
                 {
                     Id = a.Id,
                     UserId = a.UserId,
                     Username = a.User!.Username,
                     Comment = a.Comment,
-                    StepId = a.StepId,
-                    StepTitle = a.Step != null ? a.Step.Title : string.Empty
+                    // StepId = null, // Approvators can be associated with multiple steps
+                    // StepTitle = string.Empty,
+                    IsAssociated = _context.Steps.Any(s => s.ApprovatorId == a.Id)
                 })
                 .ToListAsync();
 
@@ -1776,8 +1778,9 @@ namespace DocManagementBackend.Controllers
                 UserId = approvator.UserId,
                 Username = approvator.User!.Username,
                 Comment = approvator.Comment,
-                StepId = approvator.StepId,
-                StepTitle = approvator.Step != null ? approvator.Step.Title : string.Empty
+                IsAssociated = _context.Steps.Any(s => s.ApprovatorId == approvator.Id)
+                // StepId = approvator.StepId,
+                // StepTitle = approvator.Step != null ? approvator.Step.Title : string.Empty
             };
 
             return Ok(result);
@@ -1831,10 +1834,10 @@ namespace DocManagementBackend.Controllers
                 UserId = approvator.UserId,
                 Username = user.Username,
                 Comment = approvator.Comment,
-                StepId = dto.StepId, // Return the step ID if it was associated
-                StepTitle = dto.StepId.HasValue ? 
-                    (await _context.Steps.FindAsync(dto.StepId.Value))?.Title ?? string.Empty : 
-                    string.Empty
+                // StepId = dto.StepId, // Return the step ID if it was associated
+                // StepTitle = dto.StepId.HasValue ? 
+                //     (await _context.Steps.FindAsync(dto.StepId.Value))?.Title ?? string.Empty : 
+                //     string.Empty
             };
 
             return CreatedAtAction(nameof(GetApprovator), new { id = approvator.Id }, result);

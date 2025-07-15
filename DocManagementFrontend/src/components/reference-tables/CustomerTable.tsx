@@ -1,404 +1,244 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import customerService from "@/services/customerService";
-import { CustomerTableContent } from "./table/CustomerTableContent";
-import { Customer } from "@/models/customer";
-import { AlertTriangle, Filter, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
+import { Users, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { usePagination } from "@/hooks/usePagination";
-import { useBulkSelection } from "@/hooks/useBulkSelection";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { CustomersTableContent } from "./table/CustomersTableContent";
+import { useCustomerManagement } from "@/hooks/useCustomerManagement";
+import { DEFAULT_CUSTOMER_SEARCH_FIELDS } from "@/components/table/constants/filters";
 
 export function CustomerTable() {
-  const queryClient = useQueryClient();
-  
-  // State management
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchField, setSearchField] = useState("all");
-  const [countryFilter, setCountryFilter] = useState("any");
-  const [sortBy, setSortBy] = useState("code");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(false);
-  
-  // Editing state
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    name: "",
-    address: "",
-    city: "",
-    country: "",
-  });
-
-  // Fetch customers with React Query
   const {
-    data: customers = [],
+    // Data
+    customers: filteredCustomers,
+    paginatedCustomers,
     isLoading,
     isError,
-    error,
     refetch,
-  } = useQuery({
-    queryKey: ["customers"],
-    queryFn: customerService.getAll,
-  });
 
-  // Update customer mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ code, data }: { code: string; data: any }) =>
-      customerService.update(code, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      setEditingCustomer(null);
-      setIsEditDialogOpen(false);
-      resetEditFormData();
-      toast.success("Customer updated successfully");
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update customer");
-    },
-  });
+    // Selection
+    selectedItems,
+    bulkSelection,
 
-  // Delete customer mutation
-  const deleteMutation = useMutation({
-    mutationFn: customerService.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Customer deleted successfully");
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to delete customer");
-    },
-  });
+    // Pagination
+    pagination,
 
-  // Search fields - matching UserTable pattern
-  const DEFAULT_CUSTOMER_SEARCH_FIELDS = [
-    { id: "all", label: "All Fields" },
-    { id: "code", label: "Customer Code" },
-    { id: "name", label: "Name" },
-    { id: "address", label: "Address" },
-    { id: "city", label: "City" },
-    { id: "country", label: "Country" },
-  ];
+    // Dialogs/modals
+    editingCustomer,
+    setEditingCustomer,
+    viewingCustomer,
+    setViewingCustomer,
+    deletingCustomer,
+    setDeletingCustomer,
+    deleteMultipleOpen,
+    setDeleteMultipleOpen,
 
-  // Filter and search logic
-  const filteredCustomers = customers.filter((customer) => {
-    // Country filter
-    if (countryFilter !== "any" && customer.country !== countryFilter) {
-      return false;
-    }
+    // Search and filters
+    searchQuery,
+    setSearchQuery,
+    searchField,
+    setSearchField,
+    showAdvancedFilters,
+    setShowAdvancedFilters,
 
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      const searchInField = (field: string) =>
-        field?.toLowerCase().includes(query) || false;
+    // Sorting
+    sortBy,
+    sortDirection,
+    handleSort,
 
-      if (searchField === "all") {
-        return (
-          searchInField(customer.code) ||
-          searchInField(customer.name) ||
-          searchInField(customer.address) ||
-          searchInField(customer.city) ||
-          searchInField(customer.country)
-        );
-      } else {
-        const fieldValue = customer[searchField as keyof Customer] as string;
-        return searchInField(fieldValue);
-      }
-    }
+    // Actions
+    handleSelectCustomer,
+    handleSelectAll,
+    handleCustomerEdited,
+    handleCustomerDeleted,
+    handleMultipleDeleted,
+    clearAllFilters,
+  } = useCustomerManagement();
 
-    return true;
-  });
-
-  // Sorting logic
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    const aValue = a[sortBy as keyof Customer] as string;
-    const bValue = b[sortBy as keyof Customer] as string;
-    
-    if (sortDirection === "asc") {
-      return (aValue || "").localeCompare(bValue || "");
-    } else {
-      return (bValue || "").localeCompare(aValue || "");
-    }
-  });
-
-  // Pagination hook
-  const pagination = usePagination({
-    data: sortedCustomers,
-    initialPageSize: 25,
-  });
-
-  // Bulk selection hook
-  const bulkSelection = useBulkSelection({
-    data: sortedCustomers,
-    paginatedData: pagination.paginatedData,
-    keyField: "code" as keyof Customer,
-    currentPage: pagination.currentPage,
-    pageSize: pagination.pageSize,
-  });
-
-  // Handle sorting
-  const handleSort = (field: string) => {
-    if (sortBy === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortDirection("asc");
-    }
+  // Handle customer actions (disabled)
+  const handleEditCustomer = (customer: any) => {
+    // Disabled - no action
   };
 
-  // Handle customer edit
-  const handleEditCustomer = (customer: Customer) => {
-    setEditingCustomer(customer);
-    setEditFormData({
-      name: customer.name || "",
-      address: customer.address || "",
-      city: customer.city || "",
-      country: customer.country || "",
-    });
-    setIsEditDialogOpen(true);
+  const handleViewCustomer = (customer: any) => {
+    // Disabled - no action
   };
 
-  // Handle customer delete
-  const handleDeleteCustomer = async (code: string) => {
-    try {
-      await deleteMutation.mutateAsync(code);
-    } catch (error) {
-      console.error("Failed to delete customer:", error);
-    }
+  const handleDeleteCustomer = (code: string) => {
+    // Disabled - no action
   };
 
-  // Handle bulk delete
-  const handleBulkDelete = async () => {
-    try {
-      const selectedCodes = bulkSelection.selectedItems;
-      await Promise.all(
-        selectedCodes.map((code) => deleteMutation.mutateAsync(code))
-      );
-      bulkSelection.deselectAll();
-      toast.success(`${selectedCodes.length} customers deleted successfully`);
-    } catch (error) {
-      toast.error("Failed to delete some customers");
-    }
+  const handleBulkDelete = () => {
+    // Disabled - no action
   };
 
-  // Reset edit form
-  const resetEditFormData = () => {
-    setEditFormData({
-      name: "",
-      address: "",
-      city: "",
-      country: "",
-    });
-  };
+  // Filter card styling
+  const filterCardClass = cn(
+    "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl",
+    "bg-gradient-to-r from-primary/5 via-background/50 to-primary/5",
+    "backdrop-blur-xl shadow-lg border border-primary/10",
+    "transition-all duration-300 hover:shadow-xl"
+  );
 
-  // Handle update
-  const handleUpdate = async () => {
-    if (!editingCustomer) return;
-    
-    try {
-      await updateMutation.mutateAsync({
-        code: editingCustomer.code,
-        data: editFormData,
-      });
-    } catch (error) {
-      console.error("Failed to update customer:", error);
-    }
-  };
+  // Active filters count
+  const activeFiltersCount = (searchQuery ? 1 : 0);
+  const hasActiveFilters = activeFiltersCount > 0;
 
-  // Get unique countries for filter
-  const countries = [
-    { id: "any", label: "Any Country", value: "any" },
-    ...Array.from(new Set(customers.map((c) => c.country).filter(Boolean)))
-      .sort()
-      .map((country) => ({
-        id: country,
-        label: country,
-        value: country,
-      })),
-  ];
-
-  // Clear all filters
-  const clearAllFilters = () => {
-    setCountryFilter("any");
-    setSearchQuery("");
-    setFilterOpen(false);
-  };
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key === "f") {
-        e.preventDefault();
-        setFilterOpen(true);
-      }
-      if (e.key === "Escape" && filterOpen) {
-        setFilterOpen(false);
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [filterOpen]);
-
-  // Professional filter/search bar styling - matching UserTable
-  const filterCardClass =
-    "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
-
-  if (isError) {
-    return (
-      <div className="text-destructive py-10 text-center">
-        <AlertTriangle className="h-10 w-10 mx-auto mb-2" />
-        Error loading customers
-      </div>
-    );
-  }
+  // Determine if filters should be shown - only show if there are items OR active search filters
+  const shouldShowFilters = (filteredCustomers && filteredCustomers.length > 0) || searchQuery;
 
   return (
     <div
       className="h-full flex flex-col gap-6 w-full"
       style={{ minHeight: "100%" }}
     >
-      {/* Professional Search + Filter Bar - matching UserTable exactly */}
-      <div className={filterCardClass}>
-        {/* Search and field select */}
-        <div className="flex-1 flex items-center gap-4 min-w-0">
-          <div className="relative">
-            <Select value={searchField} onValueChange={setSearchField}>
-              <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
-                <SelectValue>
-                  {DEFAULT_CUSTOMER_SEARCH_FIELDS.find(
-                    (opt) => opt.id === searchField
-                  )?.label || "All Fields"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
-                {DEFAULT_CUSTOMER_SEARCH_FIELDS.map((opt) => (
-                  <SelectItem
-                    key={opt.id}
-                    value={opt.id}
-                    className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
-                  >
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Document-style Search + Filter Bar */}
+      {shouldShowFilters && (
+        <div className={filterCardClass}>
+          {/* Search and field select */}
+          <div className="flex-1 flex items-center gap-4 min-w-0">
+            <div className="relative">
+              <Select value={searchField} onValueChange={setSearchField}>
+                <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+                  <SelectValue>
+                    {DEFAULT_CUSTOMER_SEARCH_FIELDS.find(
+                      (opt) => opt.id === searchField
+                    )?.label || "All Fields"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                  {DEFAULT_CUSTOMER_SEARCH_FIELDS.map((opt) => (
+                    <SelectItem
+                      key={opt.id}
+                      value={opt.id as string}
+                      className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="relative flex-1 min-w-0 group">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+              <Input
+                placeholder="Search customers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
+              />
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          <div className="flex-1 relative min-w-0">
-            <Input
-              placeholder="Search customers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-12 pl-4 pr-10 bg-background/60 backdrop-blur-md text-foreground placeholder:text-muted-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl"
-            />
-          </div>
-        </div>
-
-        {/* Filter Button */}
-        <div className="flex items-center gap-2">
-          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="lg"
-                className={cn(
-                  "h-12 px-4 bg-background/60 backdrop-blur-md border border-primary/20 hover:border-primary/40 hover:bg-primary/10 text-foreground shadow-lg rounded-xl transition-all duration-300",
-                  (countryFilter !== "any") &&
-                    "bg-primary/10 border-primary/40 text-primary shadow-xl"
-                )}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-                {(countryFilter !== "any") && (
-                  <Badge
-                    variant="secondary"
-                    className="ml-2 bg-primary/20 text-primary border-primary/30"
-                  >
-                    1
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-80 bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl"
-              align="end"
-            >
-              <div className="space-y-4">
-                <h4 className="font-medium text-foreground">Filter Options</h4>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="country-filter" className="text-sm font-medium text-foreground">
-                    Country
-                  </Label>
-                  <Select value={countryFilter} onValueChange={setCountryFilter}>
-                    <SelectTrigger className="bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-lg">
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
-                      {countries.map((option) => (
-                        <SelectItem
-                          key={option.id}
-                          value={option.value}
-                          className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
-                        >
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex justify-end mt-6">
-                  {countryFilter !== "any" && (
+          {/* Filter popover */}
+          <div className="flex items-center gap-2">
+            <Popover open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 shadow-lg rounded-xl transition-all duration-300 hover:bg-background/80 hover:shadow-xl",
+                    hasActiveFilters && "border-primary/50 bg-primary/5 text-primary"
+                  )}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
+                  {hasActiveFilters && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-primary text-primary-foreground text-xs"
+                    >
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                  <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                    <span className="text-xs">Alt</span>F
+                  </kbd>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-foreground">Advanced Filters</h4>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all duration-200 flex items-center gap-2"
-                      onClick={clearAllFilters}
+                      onClick={() => setShowAdvancedFilters(false)}
+                      className="h-8 w-8 p-0 hover:bg-primary/10"
                     >
-                      <X className="h-4 w-4" /> Clear All
+                      <X className="h-4 w-4" />
                     </Button>
-                  )}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+                  </div>
 
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                        Search Field
+                      </label>
+                      <Select value={searchField} onValueChange={setSearchField}>
+                        <SelectTrigger className="bg-background/80 border-primary/20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background/95 backdrop-blur-md border-primary/20">
+                          {DEFAULT_CUSTOMER_SEARCH_FIELDS.map((option) => (
+                            <SelectItem key={option.id} value={option.id}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end mt-6">
+                    {hasActiveFilters && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all duration-200 flex items-center gap-2"
+                        onClick={clearAllFilters}
+                      >
+                        <X className="h-4 w-4" /> Clear All
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
       <div className="flex-1 min-h-0">
-        <CustomerTableContent
-          customers={pagination.paginatedData}
+        <CustomersTableContent
+          customers={paginatedCustomers}
           allCustomers={filteredCustomers}
-          selectedCustomers={bulkSelection.selectedItems}
+          selectedItems={selectedItems}
           bulkSelection={bulkSelection}
           pagination={pagination}
           onEdit={handleEditCustomer}
+          onView={handleViewCustomer}
           onDelete={handleDeleteCustomer}
           sortBy={sortBy}
           sortDirection={sortDirection}
@@ -407,79 +247,11 @@ export function CustomerTable() {
           onBulkDelete={handleBulkDelete}
           isLoading={isLoading}
           isError={isError}
+          searchQuery={searchQuery}
         />
       </div>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-xl border border-primary/20">
-          <DialogHeader>
-            <DialogTitle>Edit Customer</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={editFormData.name}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, name: e.target.value })
-                }
-                className="bg-background/60 backdrop-blur-md border border-primary/20"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="address">Address</Label>
-              <Textarea
-                id="address"
-                value={editFormData.address}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, address: e.target.value })
-                }
-                className="bg-background/60 backdrop-blur-md border border-primary/20"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                value={editFormData.city}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, city: e.target.value })
-                }
-                className="bg-background/60 backdrop-blur-md border border-primary/20"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="country">Country</Label>
-              <Input
-                id="country"
-                value={editFormData.country}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, country: e.target.value })
-                }
-                className="bg-background/60 backdrop-blur-md border border-primary/20"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-              className="bg-background/50 backdrop-blur-sm border-border/50"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdate}
-              disabled={updateMutation.isPending}
-              className="bg-gradient-to-r from-primary to-primary/80"
-            >
-              {updateMutation.isPending ? "Updating..." : "Update"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
+
+export default CustomerTable;

@@ -12,7 +12,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useElementTypeManagement } from "@/hooks/useElementTypeManagement";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
     Popover,
@@ -69,13 +68,6 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
         handleMultipleDeleted,
     } = useElementTypeManagement();
 
-    // Clear bulk actions when component unmounts
-    useEffect(() => {
-        return () => {
-            // Component cleanup - no longer needed
-        };
-    }, []);
-
     const handleDeleteElementType = async (id: number) => {
         try {
             await lineElementsService.elementTypes.delete(id);
@@ -115,21 +107,21 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
         }
     };
 
-    // Professional filter/search bar styling - EXACT match with UserTable
+    // Professional filter/search bar styling
     const filterCardClass =
-        "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
+        "w-full flex flex-col md:flex-row items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
 
     // Filter popover state
     const [filterOpen, setFilterOpen] = useState(false);
 
-    // Filter options - matching UserTable pattern
+    // Filter options
     const typeOptions = [
         { id: "any", label: "Any Type", value: "any" },
         { id: "item", label: "Item", value: "Item" },
         { id: "general_account", label: "General Account", value: "GeneralAccounts" },
     ];
 
-    // Search field options - matching UserTable pattern
+    // Search field options
     const searchFields = [
         { id: "all", label: "All Fields" },
         { id: "code", label: "Code" },
@@ -137,18 +129,21 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
         { id: "description", label: "Description" },
     ];
 
-    // Apply filters immediately when changed - EXACT match with UserTable
+    // Apply filters immediately when changed
     const handleTypeChange = (value: string) => {
         setTypeFilter(value);
     };
 
-    // Clear all filters - EXACT match with UserTable
+    // Clear all filters
     const clearAllFilters = () => {
         setTypeFilter("any");
         setSearchQuery("");
         setSearchField("all");
-        setFilterOpen(false); // Close popover after clearing
+        setFilterOpen(false);
     };
+
+    // Check if any filters are active
+    const hasActiveFilters = typeFilter !== "any";
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -164,7 +159,7 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [filterOpen]);
 
-    // Loading state - EXACT match with UserTable
+    // Loading state
     if (isLoading) {
         return (
             <div className="flex justify-center py-10">
@@ -173,7 +168,7 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
         );
     }
 
-    // Error state - EXACT match with UserTable
+    // Error state
     if (isError) {
         return (
             <div className="text-destructive py-10 text-center">
@@ -185,16 +180,16 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
 
     return (
         <div
-            className="h-full flex flex-col gap-6 w-full"
+            className="h-full flex flex-col gap-4 w-full"
             style={{ minHeight: "100%" }}
         >
-            {/* Document-style Search + Filter Bar - EXACT match with UserTable */}
+            {/* Document-style Search + Filter Bar */}
             <div className={filterCardClass}>
                 {/* Search and field select */}
                 <div className="flex-1 flex items-center gap-4 min-w-0">
                     <div className="relative">
                         <Select value={searchField} onValueChange={setSearchField}>
-                            <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+                            <SelectTrigger className="w-[140px] h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
                                 <SelectValue>
                                     {searchFields.find((opt) => opt.id === searchField)?.label || "All Fields"}
                                 </SelectValue>
@@ -219,10 +214,9 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
                             placeholder="Search element types..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
+                            className="relative h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-10 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
                         />
-                        {/* EXACT search icon from UserTable */}
-                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
                             <svg
                                 className="h-5 w-5"
                                 fill="none"
@@ -239,18 +233,18 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
                         </div>
                     </div>
                 </div>
-                {/* Filter popover - EXACT match with UserTable */}
+
+                {/* Filter popover */}
                 <div className="flex items-center gap-3">
                     <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                         <PopoverTrigger asChild>
                             <Button
                                 variant="outline"
-                                className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
+                                className="h-10 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
                             >
                                 <Filter className="h-5 w-5" />
                                 Filter
-                                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
-                                {(typeFilter !== "any") && (
+                                {hasActiveFilters && (
                                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                                 )}
                             </Button>
@@ -258,13 +252,13 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
                         <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl p-6">
                             <div className="mb-4 text-foreground font-bold text-lg flex items-center gap-2">
                                 <Filter className="h-5 w-5 text-primary" />
-                                Advanced Filters
+                                Filters
                             </div>
                             <div className="flex flex-col gap-4">
                                 {/* Type Filter */}
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-sm text-popover-foreground">
-                                        Type
+                                <div className="flex flex-col gap-2">
+                                    <span className="text-sm font-medium text-popover-foreground">
+                                        Element Type
                                     </span>
                                     <Select
                                         value={typeFilter}
@@ -294,7 +288,7 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
                                 </div>
                             </div>
                             <div className="flex justify-end mt-6">
-                                {(typeFilter !== "any") && (
+                                {hasActiveFilters && (
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -310,7 +304,7 @@ export function ElementTypesTable({ isCreateWizardOpen, setIsCreateWizardOpen }:
                 </div>
             </div>
 
-            {/* Main content - EXACT match with UserTable layout */}
+            {/* Main content */}
             <div className="flex-1 min-h-0">
                 <ElementTypesTableContent
                     elementTypes={paginatedElementTypes}

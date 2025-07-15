@@ -31,6 +31,13 @@ export const DEFAULT_USER_SEARCH_FIELDS = [
   { id: 'role.roleName', label: 'Role' }
 ];
 
+export const DEFAULT_ITEM_SEARCH_FIELDS = [
+  { id: 'all', label: 'All Fields' },
+  { id: 'code', label: 'Code' },
+  { id: 'description', label: 'Description' },
+  { id: 'unite', label: 'Unit Code' }
+];
+
 export const DEFAULT_RESPONSIBILITY_CENTRE_SEARCH_FIELDS = [
   { id: 'all', label: 'All fields' },
   { id: 'code', label: 'Code' },
@@ -51,4 +58,41 @@ export const DEFAULT_CIRCUIT_SEARCH_FIELDS = [
   { id: 'title', label: 'Title' },
   { id: 'circuitKey', label: 'Circuit Key' },
   { id: 'descriptif', label: 'Description' }
+];
+
+export const DEFAULT_UNIT_CODE_SEARCH_FIELDS = [
+  { id: 'all', label: 'All Fields' },
+  { id: 'code', label: 'Code' },
+  { id: 'description', label: 'Description' }
+];
+
+export const DEFAULT_GENERAL_ACCOUNT_SEARCH_FIELDS = [
+  { id: 'all', label: 'All Fields' },
+  { id: 'code', label: 'Code' },
+  { id: 'description', label: 'Description' },
+  { id: 'accountType', label: 'Account Type' }
+];
+
+export const DEFAULT_LOCATION_SEARCH_FIELDS = [
+  { id: 'all', label: 'All Fields' },
+  { id: 'locationCode', label: 'Location Code' },
+  { id: 'description', label: 'Description' }
+];
+
+export const DEFAULT_CUSTOMER_SEARCH_FIELDS = [
+  { id: 'all', label: 'All Fields' },
+  { id: 'code', label: 'Customer Code' },
+  { id: 'name', label: 'Name' },
+  { id: 'address', label: 'Address' },
+  { id: 'city', label: 'City' },
+  { id: 'country', label: 'Country' }
+];
+
+export const DEFAULT_VENDOR_SEARCH_FIELDS = [
+  { id: 'all', label: 'All Fields' },
+  { id: 'vendorCode', label: 'Vendor Code' },
+  { id: 'name', label: 'Name' },
+  { id: 'address', label: 'Address' },
+  { id: 'city', label: 'City' },
+  { id: 'country', label: 'Country' }
 ];

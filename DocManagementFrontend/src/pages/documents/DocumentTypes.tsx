@@ -622,8 +622,8 @@ const DocumentTypes = () => {
                       variant="outline"
                       size="sm"
                       className={`border-primary/20 ${type.documentCounter && type.documentCounter > 0
-                          ? "text-primary hover:bg-primary/10 cursor-pointer"
-                          : "text-slate-400 cursor-not-allowed opacity-50"
+                        ? "text-primary hover:bg-primary/10 cursor-pointer"
+                        : "text-slate-400 cursor-not-allowed opacity-50"
                         }`}
                       onClick={() => {
                         const hasDocuments = type.documentCounter && type.documentCounter > 0;
@@ -712,8 +712,8 @@ const DocumentTypes = () => {
                               variant="outline"
                               size="sm"
                               className={`border-primary/20 ${type.documentCounter && type.documentCounter > 0
-                                  ? "text-primary hover:bg-primary/10 cursor-pointer"
-                                  : "text-slate-400 cursor-not-allowed opacity-50"
+                                ? "text-primary hover:bg-primary/10 cursor-pointer"
+                                : "text-slate-400 cursor-not-allowed opacity-50"
                                 }`}
                               onClick={() => {
                                 const hasDocuments = type.documentCounter && type.documentCounter > 0;

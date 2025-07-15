@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import lineElementsService from '@/services/lineElementsService';
 import { LignesElementType } from '@/models/lineElements';
-import { usePagination } from './usePagination';
 import { useBulkSelection } from './useBulkSelection';
+import { usePagination } from './usePagination';
 
-export type ElementTypeSortField = 'code' | 'typeElement' | 'description' | 'tableName' | 'createdAt' | 'updatedAt';
-export type ElementTypeSortDirection = 'asc' | 'desc';
+type ElementTypeSortField = 'code' | 'typeElement' | 'description' | 'createdAt';
+type ElementTypeSortDirection = 'asc' | 'desc';
 
 export function useElementTypeManagement() {
     const [editingElementType, setEditingElementType] = useState<LignesElementType | null>(null);
@@ -26,6 +25,75 @@ export function useElementTypeManagement() {
         queryFn: lineElementsService.elementTypes.getAll,
     });
 
+    // Filter element types based on search and filters - ensure we have a fallback array
+    const filteredElementTypes = (elementTypes || []).filter(et => {
+        const matchesSearch = searchQuery === "" || (
+            searchField === "all" ? (
+                et.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                et.typeElement.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                et.description.toLowerCase().includes(searchQuery.toLowerCase())
+            ) :
+                searchField === "code" ? et.code.toLowerCase().includes(searchQuery.toLowerCase()) :
+                    searchField === "type" ? et.typeElement.toLowerCase().includes(searchQuery.toLowerCase()) :
+                        searchField === "description" ? et.description.toLowerCase().includes(searchQuery.toLowerCase()) :
+                            true
+        );
+
+        const matchesType = typeFilter === "any" || et.typeElement === typeFilter;
+
+        return matchesSearch && matchesType;
+    });
+
+    // Sort the filtered element types
+    const sortedElementTypes = [...filteredElementTypes].sort((a, b) => {
+        let aValue: any, bValue: any;
+
+        switch (sortBy) {
+            case 'code':
+                aValue = a.code;
+                bValue = b.code;
+                break;
+            case 'typeElement':
+                aValue = a.typeElement;
+                bValue = b.typeElement;
+                break;
+            case 'description':
+                aValue = a.description;
+                bValue = b.description;
+                break;
+            case 'createdAt':
+                aValue = new Date(a.createdAt || 0);
+                bValue = new Date(b.createdAt || 0);
+                break;
+            default:
+                return 0;
+        }
+
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    // Pagination
+    const pagination = usePagination({
+        data: sortedElementTypes,
+        initialPageSize: 10,
+    });
+
+    const { paginatedData: paginatedElementTypes } = pagination;
+
+    // Bulk selection with correct parameters
+    const bulkSelection = useBulkSelection<LignesElementType>({
+        data: sortedElementTypes,
+        paginatedData: paginatedElementTypes,
+        keyField: 'id',
+        currentPage: pagination.currentPage,
+        pageSize: pagination.pageSize,
+    });
+
+    const { selectedItems: selectedElementTypes } = bulkSelection;
+
+    // Handler functions that depend on bulkSelection
     const handleElementTypeEdited = () => {
         refetch();
         setEditingElementType(null);
@@ -43,87 +111,52 @@ export function useElementTypeManagement() {
         setDeleteMultipleOpen(false);
     };
 
-    const filteredElementTypes = elementTypes?.filter(elementType => {
-        // Type filter
-        if (typeFilter !== 'any' && elementType.typeElement !== typeFilter) return false;
-
-        // Search filter
-        if (!searchQuery) return true;
-
-        const searchLower = searchQuery.toLowerCase();
-        switch (searchField) {
-            case 'code':
-                return elementType.code.toLowerCase().includes(searchLower);
-            case 'type':
-                return elementType.typeElement.toLowerCase().includes(searchLower);
-            case 'description':
-                return elementType.description.toLowerCase().includes(searchLower);
-            case 'all':
-            default:
-                return (
-                    elementType.code.toLowerCase().includes(searchLower) ||
-                    elementType.typeElement.toLowerCase().includes(searchLower) ||
-                    elementType.description.toLowerCase().includes(searchLower) ||
-                    elementType.tableName.toLowerCase().includes(searchLower)
-                );
-        }
-    }) || [];
-
-    const sortedElementTypes = [...filteredElementTypes].sort((a, b) => {
-        let aValue: any = a[sortBy];
-        let bValue: any = b[sortBy];
-
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-            aValue = aValue.toLowerCase();
-            bValue = bValue.toLowerCase();
-        }
-
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
-    });
-
+    // Handle sorting
     const handleSort = (field: ElementTypeSortField) => {
         if (sortBy === field) {
-            setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
         } else {
             setSortBy(field);
             setSortDirection('asc');
         }
     };
 
-    // Use pagination hook
-    const pagination = usePagination({
-        data: sortedElementTypes,
-        initialPageSize: 15,
-    });
+    const handleSelectElementType = (elementType: LignesElementType, checked: boolean) => {
+        bulkSelection.toggleItem(elementType);
+    };
 
-    // Use enhanced bulk selection hook
-    const bulkSelection = useBulkSelection({
-        data: sortedElementTypes,
-        paginatedData: pagination.paginatedData,
-        keyField: 'id',
-        currentPage: pagination.currentPage,
-        pageSize: pagination.pageSize,
-    });
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            bulkSelection.selectCurrentPage();
+        } else {
+            bulkSelection.clearSelection();
+        }
+    };
 
     return {
-        // Selection state and actions
-        selectedElementTypes: bulkSelection.selectedItems,
+        // Data
+        elementTypes: sortedElementTypes,
+        paginatedElementTypes,
+        isLoading,
+        isError,
+        refetch,
+
+        // Selection
+        selectedElementTypes,
         bulkSelection,
 
         // Pagination
         pagination,
 
-        // Element type data
-        elementTypes: sortedElementTypes,
-        paginatedElementTypes: pagination.paginatedData,
-
-        // Modal states
+        // Dialogs/modals
         editingElementType,
+        setEditingElementType,
         viewingElementType,
+        setViewingElementType,
         deletingElementType,
+        setDeletingElementType,
         deleteMultipleOpen,
+        setDeleteMultipleOpen,
 
         // Search and filters
         searchQuery,
@@ -135,27 +168,14 @@ export function useElementTypeManagement() {
         showAdvancedFilters,
         setShowAdvancedFilters,
 
-        // API state
-        isLoading,
-        isError,
-        refetch,
-
-        // Setters
-        setEditingElementType,
-        setViewingElementType,
-        setDeletingElementType,
-        setDeleteMultipleOpen,
-
         // Sorting
-        handleSort,
         sortBy,
         sortDirection,
+        handleSort,
 
-        // Selection handlers (for backward compatibility)
-        handleSelectElementType: bulkSelection.toggleItem,
-        handleSelectAll: bulkSelection.toggleSelectCurrentPage,
-
-        // Lifecycle handlers
+        // Actions
+        handleSelectElementType,
+        handleSelectAll,
         handleElementTypeEdited,
         handleElementTypeDeleted,
         handleMultipleDeleted,

@@ -466,8 +466,8 @@ const CreateLigneDialog = ({
         if (formValues.quantity <= 0) {
           newErrors.quantity = "Quantity must be greater than 0";
         }
-        if (formValues.priceHT < 0) {
-          newErrors.priceHT = "Price cannot be negative";
+        if (formValues.priceHT <= 0) {
+          newErrors.priceHT = "Price must be greater than 0";
         }
         break;
     }
@@ -1351,7 +1351,8 @@ const CreateLigneDialog = ({
                     (step === 1 && (!formValues.lignesElementTypeId || !formValues.selectedElementCode || 
                       (getSelectedElementType()?.typeElement === 'Item' && !formValues.locationCode) ||
                       (getSelectedElementType()?.typeElement === 'Item' && itemUnits.length > 0 && !formValues.unitCode))) ||
-                    (step === 2 && (codeValidation.isValidating || codeValidation.isValid !== true))
+                    (step === 2 && (codeValidation.isValidating || codeValidation.isValid !== true)) ||
+                    (step === 3 && (formValues.quantity <= 0 || formValues.priceHT <= 0))
                   }
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

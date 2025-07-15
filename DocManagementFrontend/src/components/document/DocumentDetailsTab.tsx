@@ -18,7 +18,7 @@ import {
   Archive,
 } from "lucide-react";
 import ErpArchivalStatus from "./ErpArchivalStatus";
-import { Document, TierType } from "@/models/document";
+import { Document, TierType, DocumentHistoryEvent } from "@/models/document";
 import { WorkflowStatus } from "@/services/workflowService";
 import { ApprovalHistoryItem } from "@/services/approvalService";
 import { Separator } from "@/components/ui/separator";
@@ -53,7 +53,7 @@ const DocumentDetailsTab = ({
 }: DocumentDetailsTabProps) => {
   const [circuitKey, setCircuitKey] = useState<string>("");
   const [isLoadingCircuitKey, setIsLoadingCircuitKey] = useState(false);
-  const [documentHistory, setDocumentHistory] = useState<any[]>([]);
+  const [documentHistory, setDocumentHistory] = useState<DocumentHistoryEvent[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
 
@@ -526,64 +526,111 @@ const DocumentDetailsTab = ({
                 </div>
               ) : documentHistory.length > 0 ? (
                 <div className="space-y-4">
-                  {documentHistory.map((entry, index) => (
-                    <div
-                      key={entry.id || index}
-                      className="p-4 bg-blue-900/30 rounded-lg border border-blue-800/50 transition-all hover:bg-blue-800/30 hover:border-blue-700/50"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={
-                              entry.isApproved ? "default" : "destructive"
-                            }
-                            className={`px-3 py-1.5 ${
-                              entry.isApproved
-                                ? "bg-gradient-to-r from-green-600 to-emerald-600"
-                                : "bg-gradient-to-r from-red-600 to-rose-600"
-                            }`}
-                          >
-                            {entry.isApproved ? "Approved" : "Rejected"}
-                          </Badge>
-                          <span className="text-sm font-medium text-blue-200 ml-1">
-                            {entry.stepTitle || "Unknown Step"}
+                  {documentHistory.map((entry, index) => {
+                    // Function to get event styling based on event type
+                    const getEventStyling = (eventType: string) => {
+                      switch (eventType) {
+                        case "Creation":
+                          return {
+                            badge: "bg-gradient-to-r from-blue-600 to-cyan-600",
+                            icon: "🎉",
+                            background: "bg-blue-900/30",
+                            border: "border-blue-800/50",
+                            hoverBg: "hover:bg-blue-800/30",
+                            hoverBorder: "hover:border-blue-700/50"
+                          };
+                        case "Update":
+                          return {
+                            badge: "bg-gradient-to-r from-amber-600 to-orange-600",
+                            icon: "✏️",
+                            background: "bg-amber-900/20",
+                            border: "border-amber-800/40",
+                            hoverBg: "hover:bg-amber-800/20",
+                            hoverBorder: "hover:border-amber-700/40"
+                          };
+                        case "Workflow":
+                        default:
+                          return {
+                            badge: entry.isApproved 
+                              ? "bg-gradient-to-r from-green-600 to-emerald-600"
+                              : "bg-gradient-to-r from-red-600 to-rose-600",
+                            icon: entry.isApproved ? "✅" : "❌",
+                            background: "bg-blue-900/30",
+                            border: "border-blue-800/50",
+                            hoverBg: "hover:bg-blue-800/30",
+                            hoverBorder: "hover:border-blue-700/50"
+                          };
+                      }
+                    };
+
+                    const styling = getEventStyling(entry.eventType);
+
+                    return (
+                      <div
+                        key={entry.id || index}
+                        className={`p-4 ${styling.background} rounded-lg border ${styling.border} transition-all ${styling.hoverBg} ${styling.hoverBorder}`}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{styling.icon}</span>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                className={`px-3 py-1.5 ${styling.badge}`}
+                              >
+                                {entry.eventType === "Creation" ? "Created" :
+                                 entry.eventType === "Update" ? "Updated" :
+                                 entry.isApproved ? "Approved" : "Rejected"}
+                              </Badge>
+                              <span className="text-sm font-medium text-blue-200 ml-1">
+                                {entry.stepTitle || "Unknown Step"}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded-md border border-blue-800/50">
+                            {new Date(entry.processedAt).toLocaleString()}
                           </span>
                         </div>
-                        <span className="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded-md border border-blue-800/50">
-                          {new Date(entry.processedAt).toLocaleString()}
-                        </span>
-                      </div>
 
-                      <div className="text-sm text-blue-300 mb-2 flex items-center gap-2">
-                        <div className="bg-blue-800/40 p-1 rounded-md">
-                          <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1"></span>
-                          <span className="font-medium">Status:</span>
-                        </div>
-                        <span className="text-white">
-                          {entry.statusTitle || "N/A"}
-                        </span>
-                      </div>
-
-                      <div className="text-sm text-blue-300 mb-3 flex items-center gap-2">
-                        <div className="bg-blue-800/40 p-1 rounded-md">
-                          <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1"></span>
-                          <span className="font-medium">Processed by:</span>
-                        </div>
-                        <span className="text-white">
-                          {entry.processedBy || "Unknown"}
-                        </span>
-                      </div>
-
-                      {entry.comments && (
-                        <div className="text-sm text-blue-200 bg-blue-800/30 p-3 rounded-lg border-l-2 border-blue-500/50 mt-3">
-                          <div className="flex items-center text-blue-300 mb-2">
-                            <span className="font-medium">Comments:</span>
+                        <div className="text-sm text-blue-300 mb-2 flex items-center gap-2">
+                          <div className="bg-blue-800/40 p-1 rounded-md">
+                            <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1"></span>
+                            <span className="font-medium">Status:</span>
                           </div>
-                          <p className="mt-1 text-blue-100">{entry.comments}</p>
+                          <span className="text-white">
+                            {entry.statusTitle || "N/A"}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  ))}
+
+                        <div className="text-sm text-blue-300 mb-3 flex items-center gap-2">
+                          <div className="bg-blue-800/40 p-1 rounded-md">
+                            <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1"></span>
+                            <span className="font-medium">Processed by:</span>
+                          </div>
+                          <span className="text-white">
+                            {entry.processedBy || "Unknown"}
+                          </span>
+                        </div>
+
+                        {entry.comments && (
+                          <div className="text-sm text-blue-200 bg-blue-800/30 p-3 rounded-lg border-l-2 border-blue-500/50 mt-3">
+                            <div className="flex items-center text-blue-300 mb-2">
+                              <span className="font-medium">Comments:</span>
+                            </div>
+                            <p className="mt-1 text-blue-100">{entry.comments}</p>
+                          </div>
+                        )}
+
+                        {entry.updateDetails && (
+                          <div className="text-sm text-amber-200 bg-amber-800/20 p-3 rounded-lg border-l-2 border-amber-500/50 mt-3">
+                            <div className="flex items-center text-amber-300 mb-2">
+                              <span className="font-medium">Update Details:</span>
+                            </div>
+                            <p className="mt-1 text-amber-100">{entry.updateDetails}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-16 px-6">

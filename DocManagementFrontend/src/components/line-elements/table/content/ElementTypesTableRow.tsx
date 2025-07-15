@@ -1,17 +1,18 @@
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Eye, Trash2 } from "lucide-react";
+import { MoreVertical, Edit, Eye, Trash2, Database } from "lucide-react";
 import { LignesElementType } from "@/models/lineElements";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 
 interface ElementTypesTableRowProps {
     elementType: LignesElementType;
@@ -30,65 +31,14 @@ export function ElementTypesTableRow({
     onView,
     onDelete,
 }: ElementTypesTableRowProps) {
-    // Clean and format the code name to handle edge cases
-    const getDisplayCodeName = (code?: string) => {
-        if (!code || code.trim() === '') {
-            return "Unnamed Element";
-        }
+    const getDisplayCodeName = (code: string) => {
+        if (!code) return "N/A";
 
-        // Clean the code name by removing unwanted numeric suffixes
-        let cleanName = code.trim();
-
-        // Very aggressive cleaning to handle all possible patterns:
-
-        // 1. Remove numbers directly attached to the end (like "Name0", "Name123")
-        cleanName = cleanName.replace(/\d+$/, '');
-
-        // 2. Remove trailing spaces and numbers (like " 0 0", " 1 2 3", etc.)
-        cleanName = cleanName.replace(/(\s+\d+)+\s*$/, '');
-
-        // 3. Remove any remaining standalone numbers at the end
-        cleanName = cleanName.replace(/\s+\d+$/, '');
-
-        // 4. Remove multiple spaces and clean up
-        cleanName = cleanName.replace(/\s+/g, ' ');
-
-        // 5. Remove any trailing zeros specifically (with or without spaces)
-        cleanName = cleanName.replace(/\s*0+\s*$/, '');
-
-        // 6. Final cleanup of any remaining numbers at the end
-        cleanName = cleanName.replace(/[\s\d]*$/, '').trim();
-
-        // If the name is empty after cleaning, it was probably all numbers
-        if (!cleanName || cleanName.trim() === '') {
-            return "Unnamed Element";
-        }
-
-        // Final trim
-        cleanName = cleanName.trim();
-
-        // Check for numeric-only values like "00", "0", etc.
-        if (/^\d+$/.test(cleanName)) {
-            return `Element ${cleanName}`;
-        }
-
-        // Check for very short or invalid names after cleaning
-        if (cleanName.length < 2) {
-            return "Unnamed Element";
-        }
-
-        return cleanName;
-    };
-
-    const getTypeBadgeVariant = (type: string) => {
-        switch (type) {
-            case "Item":
-                return "default";
-            case "GeneralAccounts":
-                return "secondary";
-            default:
-                return "outline";
-        }
+        // Format code name for better readability
+        const parts = code.split('_');
+        return parts.map(part =>
+            part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+        ).join(' ');
     };
 
     const getTypeLabel = (type: string) => {
@@ -102,104 +52,128 @@ export function ElementTypesTableRow({
         }
     };
 
-    const formatDate = (dateString: string) => {
-        try {
-            return format(new Date(dateString), "MMM dd, yyyy");
-        } catch {
-            return "Invalid date";
+    const getTypeBadgeVariant = (type: string): "default" | "secondary" | "destructive" | "outline" => {
+        switch (type) {
+            case "Item":
+                return "default";
+            case "GeneralAccounts":
+                return "secondary";
+            default:
+                return "outline";
         }
+    };
+
+    const handleRowClick = (e: React.MouseEvent) => {
+        // Don't trigger row selection if clicking on interactive elements
+        const target = e.target as HTMLElement;
+        if (
+            target.closest('button') ||
+            target.closest('input') ||
+            target.closest('select') ||
+            target.closest('[role="button"]') ||
+            target.closest('[data-no-row-select]') ||
+            target.classList.contains('no-row-select')
+        ) {
+            return;
+        }
+
+        onSelect();
     };
 
     return (
         <TableRow
             className={cn(
-                "border-b border-primary/10 hover:bg-primary/5 transition-colors duration-200",
-                isSelected && "bg-primary/10 hover:bg-primary/15"
+                "border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer group",
+                isSelected
+                    ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-2 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
+                    : "hover:shadow-sm"
             )}
+            onClick={handleRowClick}
         >
             {/* Selection Column */}
-            <TableCell className="w-12 px-4">
+            <TableCell className="w-[48px]">
                 <div className="flex items-center justify-center">
-                    <Checkbox
+                    <ProfessionalCheckbox
                         checked={isSelected}
                         onCheckedChange={onSelect}
-                        className="border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        aria-label={`Select element type ${getDisplayCodeName(elementType.code)}`}
+                        size="md"
+                        variant="row"
                     />
                 </div>
             </TableCell>
 
             {/* Code Column */}
-            <TableCell className="w-36 px-4">
-                <div className="font-medium text-foreground">{getDisplayCodeName(elementType.code)}</div>
+            <TableCell className="w-[200px]">
+                <div className="font-medium text-blue-900 dark:text-blue-100">
+                    {getDisplayCodeName(elementType.code)}
+                </div>
             </TableCell>
 
             {/* Type Column */}
-            <TableCell className="w-44 px-4">
-                <Badge variant={getTypeBadgeVariant(elementType.typeElement)}>
+            <TableCell className="w-[150px]">
+                <Badge
+                    variant={getTypeBadgeVariant(elementType.typeElement)}
+                    className="font-medium text-xs px-3 py-1 border"
+                >
                     {getTypeLabel(elementType.typeElement)}
                 </Badge>
             </TableCell>
 
             {/* Description Column */}
-            <TableCell className="flex-1 px-4">
-                <div className="max-w-xs truncate text-muted-foreground" title={elementType.description}>
+            <TableCell className="w-[280px] text-blue-800 dark:text-blue-200">
+                <span className="block truncate" title={elementType.description}>
                     {elementType.description}
-                </div>
-            </TableCell>
-
-            {/* Table Name Column */}
-            <TableCell className="w-40 px-4">
-                <div className="text-sm text-muted-foreground font-mono">
-                    {elementType.tableName}
-                </div>
-            </TableCell>
-
-            {/* Created Date Column */}
-            <TableCell className="w-36 px-4">
-                <div className="text-sm text-muted-foreground">
-                    {formatDate(elementType.createdAt)}
-                </div>
+                </span>
             </TableCell>
 
             {/* Actions Column */}
-            <TableCell className="w-24 px-4">
-                <div className="flex items-center justify-center">
+            <TableCell className="w-[100px] text-right">
+                <div className="flex items-center justify-end">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary transition-colors duration-200"
+                                size="icon"
+                                className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 no-row-select"
                             >
-                                <MoreHorizontal className="h-4 w-4" />
+                                <MoreVertical className="h-4 w-4" />
                                 <span className="sr-only">Open menu for {elementType.code}</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                             align="end"
-                            className="bg-background/95 backdrop-blur-xl border border-primary/20 rounded-xl shadow-2xl"
+                            className="bg-white dark:bg-gradient-to-b dark:from-[#1a2c6b] dark:to-[#0a1033] border border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-blue-100 rounded-lg shadow-lg p-1.5 animate-in fade-in-0 zoom-in-95 duration-100"
                         >
+                            <DropdownMenuLabel className="flex items-center gap-2 text-blue-800 dark:text-blue-200 px-3 py-2">
+                                <Database className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                Element Actions
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-blue-300 dark:bg-blue-800/40 my-1" />
+
                             <DropdownMenuItem
                                 onClick={onView}
-                                className="hover:bg-primary/10 hover:text-primary cursor-pointer"
+                                className="hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-md focus:bg-blue-100 dark:focus:bg-blue-800/40 px-3 py-2 cursor-pointer"
                             >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
+                                <Eye className="mr-2.5 h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                <span>View Details</span>
                             </DropdownMenuItem>
+
                             <DropdownMenuItem
                                 onClick={onEdit}
-                                className="hover:bg-primary/10 hover:text-primary cursor-pointer"
+                                className="hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-md focus:bg-blue-100 dark:focus:bg-blue-800/40 px-3 py-2 cursor-pointer"
                             >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
+                                <Edit className="mr-2.5 h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                <span>Edit</span>
                             </DropdownMenuItem>
+
+                            <DropdownMenuSeparator className="bg-blue-300 dark:bg-blue-800/40 my-1" />
+
                             <DropdownMenuItem
                                 onClick={onDelete}
-                                className="hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                                className="text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-900 dark:hover:text-red-200 rounded-md focus:bg-red-100 dark:focus:bg-red-900/30 focus:text-red-900 dark:focus:text-red-200 px-3 py-2 cursor-pointer"
                             >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
+                                <Trash2 className="mr-2.5 h-4 w-4" />
+                                <span>Delete</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

@@ -57,6 +57,19 @@ export interface Document {
   isArchived?: boolean;
 }
 
+export interface DocumentHistoryEvent {
+  id: number;
+  eventType: 'Creation' | 'Update' | 'Workflow';
+  stepTitle: string;
+  actionTitle: string;
+  statusTitle: string;
+  processedBy: string;
+  processedAt: string;
+  comments: string;
+  isApproved: boolean;
+  updateDetails?: string;
+}
+
 export interface DocumentType {
   id?: number;
   typeNumber?: number;

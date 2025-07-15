@@ -1,422 +1,271 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Calculator, Search, Filter, X, Plus } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+import { Calculator, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { motion, AnimatePresence } from "framer-motion";
-import { createPortal } from "react-dom";
-import { usePagination } from "@/hooks/usePagination";
-import SmartPagination from "@/components/shared/SmartPagination";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { GeneralAccountsTableContent } from "./table/GeneralAccountsTableContent";
-import { GeneralAccountsTableEmpty } from "./table/GeneralAccountsTableEmpty";
-import lineElementsService from "@/services/lineElementsService";
-import { GeneralAccounts } from "@/models/lineElements";
+import { useGeneralAccountManagement } from "@/hooks/useGeneralAccountManagement";
+import { DEFAULT_GENERAL_ACCOUNT_SEARCH_FIELDS } from "@/components/table/constants/filters";
 
-// Search field options
-const SEARCH_FIELDS = [
-  { id: "all", label: "All fields" },
-  { id: "code", label: "Code" },
-  { id: "description", label: "Description" },
-  { id: "accountType", label: "Account Type" },
-];
-
-export const GeneralAccountsTable: React.FC = () => {
-  // Data fetching
+export function GeneralAccountsTable() {
   const {
-    data: accounts = [],
+    // Data
+    accounts: filteredAccounts,
+    paginatedAccounts,
     isLoading,
-    error,
+    isError,
     refetch,
-  } = useQuery({
-    queryKey: ["general-accounts"],
-    queryFn: () => lineElementsService.generalAccounts.getAll(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
 
-  // State management
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchField, setSearchField] = useState("all");
-  const [sortField, setSortField] = useState<keyof GeneralAccounts>("code");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
-  const [filterOpen, setFilterOpen] = useState(false);
+    // Selection
+    selectedItems,
+    bulkSelection,
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key === "f") {
-        e.preventDefault();
-        setFilterOpen(!filterOpen);
-      }
-      if (e.key === "Escape" && filterOpen) {
-        setFilterOpen(false);
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [filterOpen]);
+    // Pagination
+    pagination,
 
-  // Data processing
-  const filteredAndSortedAccounts = useMemo(() => {
-    let filtered = accounts.filter((account) => {
-      if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      switch (searchField) {
-        case "code":
-          return account.code.toLowerCase().includes(query);
-        case "description":
-          return account.description.toLowerCase().includes(query);
-        case "accountType":
-          return (account.accountType || "").toLowerCase().includes(query);
-        default:
-          return (
-            account.code.toLowerCase().includes(query) ||
-            account.description.toLowerCase().includes(query) ||
-            (account.accountType || "").toLowerCase().includes(query)
-          );
-      }
-    });
+    // Dialogs/modals
+    editingAccount,
+    setEditingAccount,
+    viewingAccount,
+    setViewingAccount,
+    deletingAccount,
+    setDeletingAccount,
+    deleteMultipleOpen,
+    setDeleteMultipleOpen,
 
-    // Sort
-    filtered.sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
+    // Search and filters
+    searchQuery,
+    setSearchQuery,
+    searchField,
+    setSearchField,
+    showAdvancedFilters,
+    setShowAdvancedFilters,
 
-      switch (sortField) {
-        case "code":
-          aValue = a.code;
-          bValue = b.code;
-          break;
-        case "description":
-          aValue = a.description;
-          bValue = b.description;
-          break;
-        case "accountType":
-          aValue = a.accountType || "";
-          bValue = b.accountType || "";
-          break;
-        case "createdAt":
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
-          break;
-        default:
-          aValue = a.code;
-          bValue = b.code;
-      }
+    // Sorting
+    sortBy,
+    sortDirection,
+    handleSort,
 
-      if (sortDirection === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
+    // Actions
+    handleSelectAccount,
+    handleSelectAll,
+    handleAccountEdited,
+    handleAccountDeleted,
+    handleMultipleDeleted,
+    clearAllFilters,
+  } = useGeneralAccountManagement();
 
-    return filtered;
-  }, [accounts, searchQuery, searchField, sortField, sortDirection]);
-
-  const {
-    currentPage,
-    pageSize,
-    totalPages,
-    totalItems,
-    paginatedData: paginatedAccounts,
-    handlePageChange,
-    handlePageSizeChange,
-  } = usePagination({
-    data: filteredAndSortedAccounts,
-    initialPageSize: 25,
-  });
-
-  // Handlers
-  const handleSort = (field: keyof GeneralAccounts) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
+  // Handle account actions (disabled)
+  const handleEditAccount = (account: any) => {
+    // Disabled - no action
   };
 
-  const handleSelectAccount = (accountCode: string) => {
-    setSelectedAccounts((prev) =>
-      prev.includes(accountCode)
-        ? prev.filter((code) => code !== accountCode)
-        : [...prev, accountCode]
-    );
+  const handleViewAccount = (account: any) => {
+    // Disabled - no action
   };
 
-  const handleSelectAll = () => {
-    const currentPageCodes = paginatedAccounts.map((account) => account.code);
-    const selectedOnCurrentPage = selectedAccounts.filter((code) =>
-      currentPageCodes.includes(code)
-    );
-
-    if (selectedOnCurrentPage.length === currentPageCodes.length) {
-      setSelectedAccounts((prev) =>
-        prev.filter((code) => !currentPageCodes.includes(code))
-      );
-    } else {
-      setSelectedAccounts((prev) => [
-        ...prev.filter((code) => !currentPageCodes.includes(code)),
-        ...currentPageCodes,
-      ]);
-    }
+  const handleDeleteAccount = (code: string) => {
+    // Disabled - no action
   };
 
-  const handleEditAccount = (account: GeneralAccounts) => {
-    // TODO: Implement edit functionality
-    toast.info("Edit account functionality coming soon");
+  const handleBulkDelete = () => {
+    // Disabled - no action
   };
 
-  const handleDeleteAccount = (account: GeneralAccounts) => {
-    // TODO: Implement delete functionality
-    toast.info("Delete account functionality coming soon");
-  };
+  // Filter card styling
+  const filterCardClass = cn(
+    "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl",
+    "bg-gradient-to-r from-primary/5 via-background/50 to-primary/5",
+    "backdrop-blur-xl shadow-lg border border-primary/10",
+    "transition-all duration-300 hover:shadow-xl"
+  );
 
-  const handleViewAccount = (account: GeneralAccounts) => {
-    // TODO: Implement view functionality
-    toast.info("View account functionality coming soon");
-  };
+  // Active filters count
+  const activeFiltersCount = (searchQuery ? 1 : 0);
+  const hasActiveFilters = activeFiltersCount > 0;
 
-  const clearSearch = () => {
-    setSearchQuery("");
-    setSearchField("all");
-    setFilterOpen(false);
-  };
-
-  const clearSelection = () => {
-    setSelectedAccounts([]);
-  };
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          <p className="text-primary font-medium">Loading accounts...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="bg-destructive/10 rounded-full p-4">
-            <Calculator className="h-8 w-8 text-destructive" />
-          </div>
-          <p className="text-destructive font-medium">Failed to load accounts</p>
-          <Button variant="outline" onClick={() => refetch()}>
-            Try again
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Show filter only if there are items to filter or active filters
+  const showFilter = hasActiveFilters || (filteredAccounts && filteredAccounts.length > 0);
 
   return (
-    <div className="space-y-6">
-      {/* Search and Filter Bar */}
-      <div className="w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10">
-        <div className="flex-1 flex items-center gap-2 min-w-0">
-          <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[140px] bg-background/60 border-primary/20 text-foreground shadow-sm">
-              <SelectValue>
-                {SEARCH_FIELDS.find((opt) => opt.id === searchField)?.label || "All fields"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-background/95 backdrop-blur-md border-primary/20">
-              {SEARCH_FIELDS.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div
+      className="h-full flex flex-col gap-6 w-full"
+      style={{ minHeight: "100%" }}
+    >
+      {/* Document-style Search + Filter Bar */}
+      <div className={filterCardClass}>
+        {/* Search and field select */}
+        <div className="flex-1 flex items-center gap-4 min-w-0">
+          <div className="relative">
+            <Select value={searchField} onValueChange={setSearchField}>
+              <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+                <SelectValue>
+                  {DEFAULT_GENERAL_ACCOUNT_SEARCH_FIELDS.find(
+                    (opt) => opt.id === searchField
+                  )?.label || "All Fields"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                {DEFAULT_GENERAL_ACCOUNT_SEARCH_FIELDS.map((opt) => (
+                  <SelectItem
+                    key={opt.id}
+                    value={opt.id as string}
+                    className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="relative flex-1 min-w-0 group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
             <Input
               placeholder="Search accounts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-background/60 border-primary/20 text-foreground shadow-sm"
+              className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
             />
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-background/60 border-primary/20 text-foreground hover:bg-primary/5 shadow-sm"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                  <span className="text-xs">Alt</span>F
-                </kbd>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 bg-background/95 backdrop-blur-md border-primary/20">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-foreground">Search Filters</h4>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFilterOpen(false)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Search in: {SEARCH_FIELDS.find((opt) => opt.id === searchField)?.label}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {filteredAndSortedAccounts.length} of {accounts.length} accounts
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearSearch}
-                    className="flex-1"
-                  >
-                    Clear filters
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => setFilterOpen(false)}
-                    className="flex-1"
-                  >
-                    Apply
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
 
-      {/* Results summary */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="bg-primary/10 text-primary">
-            {totalItems} accounts
-          </Badge>
-          {searchQuery && (
-            <Badge variant="outline" className="border-primary/20 text-muted-foreground">
-              Filtered by: {searchQuery}
-            </Badge>
-          )}
-        </div>
-        {selectedAccounts.length > 0 && (
+        {/* Filter popover */}
+        {showFilter && (
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-primary/20 text-primary">
-              {selectedAccounts.length} selected
-            </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearSelection}
-              className="h-8 px-2 hover:bg-primary/10"
-            >
-              Clear
-            </Button>
+            <Popover open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 shadow-lg rounded-xl transition-all duration-300 hover:bg-background/80 hover:shadow-xl",
+                    hasActiveFilters && "border-primary/50 bg-primary/5 text-primary"
+                  )}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
+                  {hasActiveFilters && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-primary text-primary-foreground text-xs"
+                    >
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                  <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                    <span className="text-xs">Alt</span>F
+                  </kbd>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-foreground">Advanced Filters</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAdvancedFilters(false)}
+                      className="h-8 w-8 p-0 hover:bg-primary/10"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                        Search Field
+                      </label>
+                      <Select value={searchField} onValueChange={setSearchField}>
+                        <SelectTrigger className="bg-background/80 border-primary/20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background/95 backdrop-blur-md border-primary/20">
+                          {DEFAULT_GENERAL_ACCOUNT_SEARCH_FIELDS.map((option) => (
+                            <SelectItem key={option.id} value={option.id}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end mt-6">
+                    {hasActiveFilters && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all duration-200 flex items-center gap-2"
+                        onClick={clearAllFilters}
+                      >
+                        <X className="h-4 w-4" /> Clear All
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
       </div>
 
+      {/* Results summary */}
+      {/* <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+            <Calculator className="h-3 w-3 mr-1" />
+            {filteredAccounts?.length || 0} accounts
+          </Badge>
+          {searchQuery && (
+            <Badge variant="outline" className="border-primary/20 text-muted-foreground">
+              Filtered by: "{searchQuery}"
+            </Badge>
+          )}
+        </div>
+      </div> */}
+
       {/* Table */}
-      {filteredAndSortedAccounts.length === 0 ? (
-        <GeneralAccountsTableEmpty hasSearchQuery={!!searchQuery} onClearSearch={clearSearch} />
-      ) : (
+      <div className="flex-1 min-h-0">
         <GeneralAccountsTableContent
           accounts={paginatedAccounts}
-          sortField={sortField}
+          allAccounts={filteredAccounts}
+          selectedItems={selectedItems}
+          bulkSelection={bulkSelection}
+          pagination={pagination}
+          onEdit={handleEditAccount}
+          onView={handleViewAccount}
+          onDelete={handleDeleteAccount}
+          sortBy={sortBy}
           sortDirection={sortDirection}
           onSort={handleSort}
-          selectedAccounts={selectedAccounts}
-          onSelectAccount={handleSelectAccount}
-          onSelectAll={handleSelectAll}
-          onEditAccount={handleEditAccount}
-          onDeleteAccount={handleDeleteAccount}
-          onViewAccount={handleViewAccount}
+          onClearFilters={clearAllFilters}
+          onBulkDelete={handleBulkDelete}
+          isLoading={isLoading}
+          isError={isError}
         />
-      )}
-
-      {/* Pagination */}
-      {filteredAndSortedAccounts.length > 0 && (
-        <SmartPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          pageSizeOptions={[10, 25, 50, 100]}
-        />
-      )}
-
-      {/* Bulk Actions Bar */}
-      {createPortal(
-        <AnimatePresence>
-          {selectedAccounts.length > 0 && (
-            <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-6 right-16 transform -translate-x-1/2 z-[9999] w-[calc(100vw-4rem)] max-w-4xl mx-auto"
-            >
-              <div className="bg-gradient-to-r from-primary/95 to-primary/90 backdrop-blur-lg shadow-2xl rounded-2xl border border-primary/20 p-4 flex items-center justify-between">
-                <div className="flex items-center text-primary-foreground font-medium">
-                  <div className="bg-primary-foreground/20 p-2 rounded-xl mr-3">
-                    <Calculator className="w-5 h-5" />
-                  </div>
-                  <span>
-                    <span className="font-bold">{selectedAccounts.length}</span> account
-                    {selectedAccounts.length !== 1 ? "s" : ""} selected
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={clearSelection}
-                    className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-none"
-                  >
-                    Clear selection
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled
-                    className="bg-destructive/20 hover:bg-destructive/30 text-destructive-foreground border-none opacity-50"
-                  >
-                    Delete selected
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+      </div>
     </div>
   );
-};
+}
 
 export default GeneralAccountsTable; 

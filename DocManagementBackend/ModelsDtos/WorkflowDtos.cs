@@ -23,6 +23,7 @@ namespace DocManagementBackend.Models
     public class DocumentHistoryDto
     {
         public int Id { get; set; }
+        public string EventType { get; set; } = string.Empty; // "Creation", "Update", "Workflow"
         public string StepTitle { get; set; } = string.Empty;
         public string ActionTitle { get; set; } = string.Empty;
         public string StatusTitle { get; set; } = string.Empty;
@@ -30,6 +31,7 @@ namespace DocManagementBackend.Models
         public DateTime ProcessedAt { get; set; }
         public string Comments { get; set; } = string.Empty;
         public bool IsApproved { get; set; }
+        public string? UpdateDetails { get; set; } // Additional details for update events
     }
 
     public class DocumentWorkflowStatusDto

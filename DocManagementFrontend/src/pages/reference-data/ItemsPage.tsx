@@ -4,14 +4,16 @@ import { ItemsTable } from "@/components/reference-tables/ItemsTable";
 import { PageLayout } from "@/components/layout/PageLayout";
 
 const ItemsPage = () => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
 
   const pageActions = [
     {
-      label: "Create Item",
-      variant: "outline" as const,
+      label: "Create Item (Disabled)",
+      variant: "outline" as const, // Use outline to appear disabled
       icon: Plus,
-      onClick: () => setIsCreateModalOpen(true),
+      onClick: () => {
+        // Disabled - no action
+      },
     },
   ];
 
@@ -23,6 +25,16 @@ const ItemsPage = () => {
       actions={pageActions}
     >
       <ItemsTable />
+
+      {/* TODO: Add CreateItemWizard component when it becomes available */}
+      {/* <CreateItemWizard
+        open={isCreateWizardOpen}
+        onOpenChange={setIsCreateWizardOpen}
+        onSuccess={() => {
+          setIsCreateWizardOpen(false);
+          // The table will automatically refresh via React Query
+        }}
+      /> */}
     </PageLayout>
   );
 };

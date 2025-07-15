@@ -1,88 +1,100 @@
-import React from "react";
-import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUp, ArrowDown } from "lucide-react";
-import { GeneralAccounts } from "@/models/lineElements";
+import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 
 interface GeneralAccountsTableHeaderProps {
-  sortField: keyof GeneralAccounts;
-  sortDirection: "asc" | "desc";
-  onSort: (field: keyof GeneralAccounts) => void;
-  selectedAccounts: string[];
-  accounts: GeneralAccounts[];
+  selectedCount: number;
+  totalCount: number;
   onSelectAll: () => void;
+  sortBy: string;
+  sortDirection: string;
+  onSort: (field: string) => void;
 }
 
-export const GeneralAccountsTableHeader: React.FC<GeneralAccountsTableHeaderProps> = ({
-  sortField,
+export function GeneralAccountsTableHeader({
+  selectedCount,
+  totalCount,
+  onSelectAll,
+  sortBy,
   sortDirection,
   onSort,
-  selectedAccounts,
-  accounts,
-  onSelectAll,
-}) => {
-  const renderSortIcon = (field: keyof GeneralAccounts) => {
-    if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-    ) : (
-      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+}: GeneralAccountsTableHeaderProps) {
+  const headerClass = (field: string) => {
+    return cn(
+      "text-foreground font-medium hover:text-primary transition-colors cursor-pointer select-none",
+      sortBy === field ? "text-primary" : ""
     );
   };
 
-  const headerClass = (field: keyof GeneralAccounts) => `
-    text-blue-800 dark:text-blue-200 font-medium cursor-pointer select-none
-    hover:text-blue-900 dark:hover:text-blue-100 transition-colors duration-150
-    ${sortField === field ? "text-blue-900 dark:text-blue-100" : ""}
-  `;
+  const renderSortIcon = (field: string) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="h-4 w-4 opacity-50 ml-1" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="h-4 w-4 text-primary ml-1" />
+    ) : (
+      <ArrowDown className="h-4 w-4 text-primary ml-1" />
+    );
+  };
+
+  const isAllSelected = selectedCount === totalCount && totalCount > 0;
+  const isPartiallySelected = selectedCount > 0 && selectedCount < totalCount;
 
   return (
     <TableHeader>
-      <TableRow className="border-primary/20 hover:bg-transparent">
-        <TableHead className="w-[50px] text-center">
-          <Checkbox
-            checked={accounts.length > 0 && accounts.every((account) => selectedAccounts.includes(account.code))}
-            onCheckedChange={onSelectAll}
-            aria-label="Select all"
-            className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-          />
+      <TableRow className="border-slate-200/50 dark:border-slate-700/50 hover:bg-transparent">
+        {/* Selection Column */}
+        <TableHead className="w-[48px]">
+          <div className="flex items-center justify-center">
+            <ProfessionalCheckbox
+              checked={isAllSelected}
+              indeterminate={isPartiallySelected}
+              onCheckedChange={onSelectAll}
+              size="md"
+              variant="header"
+              className="shadow-lg"
+            />
+          </div>
         </TableHead>
+
+        {/* Code Column */}
         <TableHead
-          className={`${headerClass("code")} cursor-pointer hover:bg-primary/5 transition-colors`}
+          className={`${headerClass("code")} w-[200px]`}
           onClick={() => onSort("code")}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             Code {renderSortIcon("code")}
           </div>
         </TableHead>
+
+        {/* Description Column */}
         <TableHead
-          className={`${headerClass("description")} cursor-pointer hover:bg-primary/5 transition-colors`}
+          className={`${headerClass("description")} w-[400px]`}
           onClick={() => onSort("description")}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             Description {renderSortIcon("description")}
           </div>
         </TableHead>
+
+        {/* Account Type Column */}
         <TableHead
-          className={`${headerClass("accountType")} cursor-pointer hover:bg-primary/5 transition-colors`}
+          className={`${headerClass("accountType")} w-[150px]`}
           onClick={() => onSort("accountType")}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             Account Type {renderSortIcon("accountType")}
           </div>
         </TableHead>
-        <TableHead
-          className={`${headerClass("createdAt")} cursor-pointer hover:bg-primary/5 transition-colors`}
-          onClick={() => onSort("createdAt")}
-        >
-          <div className="flex items-center gap-2">
-            Created At {renderSortIcon("createdAt")}
-          </div>
+
+        {/* Actions Column */}
+        <TableHead className="text-foreground font-medium w-[100px] text-right">
+          Actions
         </TableHead>
-        <TableHead className="text-right pr-6">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );
-};
+}
 
 export default GeneralAccountsTableHeader; 

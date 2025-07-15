@@ -26,8 +26,6 @@ namespace DocManagementBackend.Mappings
                 TypeElement = l.LignesElementType.TypeElement.ToString(),
                 Description = l.LignesElementType.Description,
                 TableName = l.LignesElementType.TableName,
-                ItemCode = l.LignesElementType.ItemCode,
-                AccountCode = l.LignesElementType.AccountCode,
                 CreatedAt = l.LignesElementType.CreatedAt,
                 UpdatedAt = l.LignesElementType.UpdatedAt
             },
@@ -196,8 +194,6 @@ namespace DocManagementBackend.Mappings
                     TypeElement = s.Ligne.LignesElementType.TypeElement.ToString(),
                     Description = s.Ligne.LignesElementType.Description,
                     TableName = s.Ligne.LignesElementType.TableName,
-                    ItemCode = s.Ligne.LignesElementType.ItemCode,
-                    AccountCode = s.Ligne.LignesElementType.AccountCode,
                     CreatedAt = s.Ligne.LignesElementType.CreatedAt,
                     UpdatedAt = s.Ligne.LignesElementType.UpdatedAt
                 },

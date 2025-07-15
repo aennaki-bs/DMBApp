@@ -21,28 +21,30 @@ export const UnitCodesActionsDropdown: React.FC<UnitCodesActionsDropdownProps> =
       <Button
         variant="ghost"
         size="sm"
-        onClick={onView}
-        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
-        title="View unit code details"
+        onClick={() => { }} // Disabled - no action
+        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200 opacity-50 cursor-not-allowed"
+        title="View unit code details (Disabled)"
+        disabled={true}
       >
         <Eye className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        onClick={onEdit}
-        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
-        title="Edit unit code"
+        onClick={() => { }} // Disabled - no action
+        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200 opacity-50 cursor-not-allowed"
+        title="Edit unit code (Disabled)"
+        disabled={true}
       >
         <Edit className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        onClick={onDelete}
-        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
-        title="Delete unit code"
-        disabled={unitCode.itemsCount > 0}
+        onClick={() => { }} // Disabled - no action
+        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200 opacity-50 cursor-not-allowed"
+        title="Delete unit code (Disabled)"
+        disabled={true}
       >
         <Trash2 className="h-4 w-4" />
       </Button>

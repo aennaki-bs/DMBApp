@@ -14,104 +14,6 @@ namespace DocManagementBackend.Services
         }
 
         /// <summary>
-        /// Creates or gets a LignesElementType for an Item
-        /// </summary>
-        public async Task<LignesElementType> GetOrCreateItemElementTypeAsync(string itemCode)
-        {
-            if (string.IsNullOrWhiteSpace(itemCode))
-                throw new ArgumentException("Item code cannot be null or empty", nameof(itemCode));
-
-            // Check if item exists
-            var item = await _context.Items.FindAsync(itemCode);
-            if (item == null)
-                throw new InvalidOperationException($"Item with code '{itemCode}' not found");
-
-            // Check if LignesElementType already exists for this item
-            var existingElementType = await _context.LignesElementTypes
-                .FirstOrDefaultAsync(let => let.ItemCode == itemCode && let.TypeElement == ElementType.Item);
-
-            if (existingElementType != null)
-                return existingElementType;
-
-            // Create new LignesElementType for the item
-            var elementType = new LignesElementType
-            {
-                Code = $"ITEM_{itemCode}",
-                TypeElement = ElementType.Item,
-                Description = $"Line element for item: {item.Description}",
-                TableName = "Item",
-                ItemCode = itemCode,
-                AccountCode = null,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            // Ensure code uniqueness
-            var codeExists = await _context.LignesElementTypes
-                .AnyAsync(let => let.Code == elementType.Code);
-
-            if (codeExists)
-            {
-                // Generate a unique code with timestamp
-                elementType.Code = $"ITEM_{itemCode}_{DateTime.UtcNow:yyyyMMddHHmmss}";
-            }
-
-            _context.LignesElementTypes.Add(elementType);
-            await _context.SaveChangesAsync();
-
-            return elementType;
-        }
-
-        /// <summary>
-        /// Creates or gets a LignesElementType for a GeneralAccount
-        /// </summary>
-        public async Task<LignesElementType> GetOrCreateGeneralAccountElementTypeAsync(string accountCode)
-        {
-            if (string.IsNullOrWhiteSpace(accountCode))
-                throw new ArgumentException("Account code cannot be null or empty", nameof(accountCode));
-
-            // Check if general account exists
-            var account = await _context.GeneralAccounts.FindAsync(accountCode);
-            if (account == null)
-                throw new InvalidOperationException($"General account with code '{accountCode}' not found");
-
-            // Check if LignesElementType already exists for this account
-            var existingElementType = await _context.LignesElementTypes
-                .FirstOrDefaultAsync(let => let.AccountCode == accountCode && let.TypeElement == ElementType.GeneralAccounts);
-
-            if (existingElementType != null)
-                return existingElementType;
-
-            // Create new LignesElementType for the general account
-            var elementType = new LignesElementType
-            {
-                Code = $"ACCOUNT_{accountCode}",
-                TypeElement = ElementType.GeneralAccounts,
-                Description = $"Line element for account: {account.Description}",
-                TableName = "GeneralAccounts",
-                ItemCode = null,
-                AccountCode = accountCode,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            // Ensure code uniqueness
-            var codeExists = await _context.LignesElementTypes
-                .AnyAsync(let => let.Code == elementType.Code);
-
-            if (codeExists)
-            {
-                // Generate a unique code with timestamp
-                elementType.Code = $"ACCOUNT_{accountCode}_{DateTime.UtcNow:yyyyMMddHHmmss}";
-            }
-
-            _context.LignesElementTypes.Add(elementType);
-            await _context.SaveChangesAsync();
-
-            return elementType;
-        }
-
-        /// <summary>
         /// Validates a LignesElementType for consistency
         /// </summary>
         public async Task<bool> ValidateElementTypeAsync(LignesElementType elementType)
@@ -130,27 +32,6 @@ namespace DocManagementBackend.Services
             if (codeExists)
                 return false;
             return true;
-
-            // Validate referenced entities exist
-            // switch (elementType.TypeElement)
-            // {
-            //     case ElementType.Item:
-            //         if (string.IsNullOrEmpty(elementType.ItemCode))
-            //             return false;
-                    
-            //         var itemExists = await _context.Items.AnyAsync(i => i.Code == elementType.ItemCode);
-            //         return itemExists;
-
-            //     case ElementType.GeneralAccounts:
-            //         if (string.IsNullOrEmpty(elementType.AccountCode))
-            //             return false;
-                    
-            //         var accountExists = await _context.GeneralAccounts.AnyAsync(ga => ga.Code == elementType.AccountCode);
-            //         return accountExists;
-
-            //     default:
-            //         return false;
-            // }
         }
 
         /// <summary>
@@ -242,16 +123,6 @@ namespace DocManagementBackend.Services
             if (existingElementType.TypeElement != updatedElementType.TypeElement)
             {
                 return (false, "Cannot change the type element of an element type that is being used by lines");
-            }
-
-            if (existingElementType.ItemCode != updatedElementType.ItemCode)
-            {
-                return (false, "Cannot change the item code of an element type that is being used by lines");
-            }
-
-            if (existingElementType.AccountCode != updatedElementType.AccountCode)
-            {
-                return (false, "Cannot change the account code of an element type that is being used by lines");
             }
 
             // Only description and table name changes are allowed when in use

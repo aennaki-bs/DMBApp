@@ -1,8 +1,8 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 
 interface ElementTypesTableHeaderProps {
     selectedCount: number;
@@ -32,10 +32,21 @@ export function ElementTypesTableHeader({
         );
     };
 
-    const getSortButtonClass = (field: string) => {
+    const headerClass = (field: string) => {
         return cn(
-            "flex items-center gap-2 font-medium text-left hover:text-primary transition-colors duration-200",
-            sortBy === field ? "text-primary" : "text-muted-foreground"
+            "text-foreground font-medium hover:text-primary transition-colors cursor-pointer select-none",
+            sortBy === field ? "text-primary" : ""
+        );
+    };
+
+    const renderSortIcon = (field: string) => {
+        if (sortBy !== field) {
+            return <ArrowUpDown className="h-4 w-4 opacity-50 ml-1" />;
+        }
+        return sortDirection === "asc" ? (
+            <ArrowUp className="h-4 w-4 text-primary ml-1" />
+        ) : (
+            <ArrowDown className="h-4 w-4 text-primary ml-1" />
         );
     };
 
@@ -44,82 +55,54 @@ export function ElementTypesTableHeader({
 
     return (
         <TableHeader>
-            <TableRow className="border-b border-primary/10 hover:bg-primary/5">
+            <TableRow className="border-slate-200/50 dark:border-slate-700/50 hover:bg-transparent">
                 {/* Selection Column */}
-                <TableHead className="w-12 px-4">
+                <TableHead className="w-[48px]">
                     <div className="flex items-center justify-center">
-                        <Checkbox
-                            checked={isAllSelected || isPartiallySelected}
+                        <ProfessionalCheckbox
+                            checked={isAllSelected}
+                            indeterminate={isPartiallySelected}
                             onCheckedChange={onSelectAll}
-                            className="border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            aria-label={`Select all element types on this page (${selectedCount}/${totalCount} selected)`}
+                            size="md"
+                            variant="header"
+                            className="shadow-lg"
                         />
                     </div>
                 </TableHead>
 
                 {/* Code Column */}
-                <TableHead className="w-36 px-4">
-                    <Button
-                        variant="ghost"
-                        onClick={() => onSort("code")}
-                        className={getSortButtonClass("code")}
-                    >
-                        Code
-                        {getSortIcon("code")}
-                    </Button>
+                <TableHead
+                    className={`${headerClass("code")} w-[200px]`}
+                    onClick={() => onSort("code")}
+                >
+                    <div className="flex items-center">
+                        Code {renderSortIcon("code")}
+                    </div>
                 </TableHead>
 
                 {/* Type Column */}
-                <TableHead className="w-44 px-4">
-                    <Button
-                        variant="ghost"
-                        onClick={() => onSort("typeElement")}
-                        className={getSortButtonClass("typeElement")}
-                    >
-                        Type
-                        {getSortIcon("typeElement")}
-                    </Button>
+                <TableHead
+                    className={`${headerClass("typeElement")} w-[150px]`}
+                    onClick={() => onSort("typeElement")}
+                >
+                    <div className="flex items-center">
+                        Type {renderSortIcon("typeElement")}
+                    </div>
                 </TableHead>
 
                 {/* Description Column */}
-                <TableHead className="flex-1 px-4">
-                    <Button
-                        variant="ghost"
-                        onClick={() => onSort("description")}
-                        className={getSortButtonClass("description")}
-                    >
-                        Description
-                        {getSortIcon("description")}
-                    </Button>
-                </TableHead>
-
-                {/* Table Name Column */}
-                <TableHead className="w-40 px-4">
-                    <Button
-                        variant="ghost"
-                        onClick={() => onSort("tableName")}
-                        className={getSortButtonClass("tableName")}
-                    >
-                        Table
-                        {getSortIcon("tableName")}
-                    </Button>
-                </TableHead>
-
-                {/* Created Date Column */}
-                <TableHead className="w-36 px-4">
-                    <Button
-                        variant="ghost"
-                        onClick={() => onSort("createdAt")}
-                        className={getSortButtonClass("createdAt")}
-                    >
-                        Created
-                        {getSortIcon("createdAt")}
-                    </Button>
+                <TableHead
+                    className={`${headerClass("description")} w-[280px]`}
+                    onClick={() => onSort("description")}
+                >
+                    <div className="flex items-center">
+                        Description {renderSortIcon("description")}
+                    </div>
                 </TableHead>
 
                 {/* Actions Column */}
-                <TableHead className="w-24 px-4 text-center">
-                    <span className="text-muted-foreground font-medium">Actions</span>
+                <TableHead className="text-foreground font-medium w-[100px] text-right">
+                    Actions
                 </TableHead>
             </TableRow>
         </TableHeader>

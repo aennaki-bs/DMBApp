@@ -437,7 +437,7 @@ export function SidebarNav() {
                 )}
               >
                 <FileText className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                <span>Active Documents</span>
+                <span>Active</span>
               </Link>
             </li>
             <li>
@@ -448,7 +448,7 @@ export function SidebarNav() {
                 )}
               >
                 <Archive className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                <span>Archived Documents</span>
+                <span>Archived</span>
               </Link>
             </li>
             <li>
@@ -459,7 +459,7 @@ export function SidebarNav() {
                 )}
               >
                 <FileCheck className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                <span>Completed Documents</span>
+                <span>Completed</span>
               </Link>
             </li>
           </SubmenuButton>

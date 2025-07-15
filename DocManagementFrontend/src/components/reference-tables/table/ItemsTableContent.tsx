@@ -1,189 +1,186 @@
-import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Edit, Eye, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { Item } from "@/models/lineElements";
+import { Table } from "@/components/ui/table";
+import { ItemsTableHeader } from "./content/ItemsTableHeader";
+import { ItemsTableBody } from "./content/ItemsTableBody";
+import { ItemsTableEmpty } from "./ItemsTableEmpty";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
+import { Loader2, Trash2 } from "lucide-react";
 
 interface ItemsTableContentProps {
-  items: Item[];
-  sortField: keyof Item;
-  sortDirection: "asc" | "desc";
-  onSort: (field: keyof Item) => void;
-  selectedItems: string[];
-  onSelectItem: (itemCode: string) => void;
-  onSelectAll: () => void;
-  onEditItem: (item: Item) => void;
-  onDeleteItem: (item: Item) => void;
-  onViewItem: (item: Item) => void;
+  items: Item[] | undefined;
+  allItems?: Item[] | undefined;
+  selectedItems: string[]; // Array of item codes from bulk selection
+  bulkSelection: any; // Using any to match ElementTypes pattern
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalItems: number;
+    handlePageChange: (page: number) => void;
+    handlePageSizeChange: (size: number) => void;
+  };
+  onEdit: (item: Item) => void;
+  onView: (item: Item) => void;
+  onDelete: (code: string) => void;
+  sortBy: string;
+  sortDirection: string;
+  onSort: (field: string) => void;
+  onClearFilters: () => void;
+  onBulkDelete?: () => void;
+  isLoading?: boolean;
+  isError?: boolean;
 }
 
-export const ItemsTableContent: React.FC<ItemsTableContentProps> = ({
+export function ItemsTableContent({
   items,
-  sortField,
+  allItems,
+  selectedItems,
+  bulkSelection,
+  pagination,
+  onEdit,
+  onView,
+  onDelete,
+  sortBy,
   sortDirection,
   onSort,
-  selectedItems,
-  onSelectItem,
-  onSelectAll,
-  onEditItem,
-  onDeleteItem,
-  onViewItem,
-}) => {
-  const renderSortIcon = (field: keyof Item) => {
-    if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <ArrowUp className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-    ) : (
-      <ArrowDown className="ml-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+  onClearFilters,
+  onBulkDelete,
+  isLoading = false,
+  isError = false,
+}: ItemsTableContentProps) {
+  // Use pagination from props
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    handlePageChange,
+    handlePageSizeChange,
+  } = pagination;
+
+  // Check if we have items to display
+  const hasItems = items && items.length > 0;
+
+  // Define bulk actions (disabled)
+  const bulkActions: BulkAction[] = [
+    {
+      id: 'delete',
+      label: 'Delete Items (Disabled)',
+      icon: <Trash2 className="h-4 w-4 opacity-50" />,
+      variant: 'outline', // Use outline instead of destructive to appear disabled
+      onClick: () => {
+        // Disabled - no action
+      },
+      requiresConfirmation: false,
+      shortcut: 'Del',
+    },
+  ];
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading items...</p>
+            </div>
+          </div>
+        </div>
+      </div>
     );
-  };
+  }
 
-  const headerClass = (field: keyof Item) => `
-    text-blue-800 dark:text-blue-200 font-medium cursor-pointer select-none
-    hover:text-blue-900 dark:hover:text-blue-100 transition-colors duration-150
-    ${sortField === field ? "text-blue-900 dark:text-blue-100" : ""}
-  `;
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  // Error state
+  if (isError) {
+    return (
+      <div className="space-y-4">
+        <div className="relative overflow-hidden rounded-2xl border border-destructive/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                <span className="text-destructive font-bold">!</span>
+              </div>
+              <p className="text-destructive">
+                Failed to load items. Please try again.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-background/60 backdrop-blur-md border border-primary/20 rounded-xl overflow-hidden shadow-xl">
-      {/* Fixed Header */}
-      <div className="border-b border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-primary/20 hover:bg-transparent">
-              <TableHead className="w-[50px] text-center">
-                <Checkbox
-                  checked={items.length > 0 && items.every((item) => selectedItems.includes(item.code))}
-                  onCheckedChange={onSelectAll}
-                  aria-label="Select all"
-                  className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                />
-              </TableHead>
-              <TableHead
-                className={`${headerClass("code")} cursor-pointer hover:bg-primary/5 transition-colors`}
-                onClick={() => onSort("code")}
-              >
-                <div className="flex items-center gap-2">
-                  Code {renderSortIcon("code")}
+    <div className="h-full flex flex-col gap-4" style={{ minHeight: "100%" }}>
+      <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg min-h-0">
+        {/* Subtle animated background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/2 via-transparent to-primary/2 animate-pulse"></div>
+
+        {hasItems ? (
+          <div className="relative h-full flex flex-col z-10">
+            {/* Fixed Header - Never Scrolls */}
+            <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
+              <div className="min-w-[778px]">
+                <Table className="table-fixed w-full">
+                  <ItemsTableHeader
+                    selectedCount={bulkSelection.currentPageSelectedCount}
+                    totalCount={items?.length || 0} // Current page items count
+                    onSelectAll={bulkSelection.toggleSelectCurrentPage}
+                    sortBy={sortBy}
+                    sortDirection={sortDirection}
+                    onSort={onSort}
+                  />
+                </Table>
+              </div>
+            </div>
+
+            {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
+            <div
+              className="flex-1 overflow-hidden"
+              style={{ maxHeight: "calc(100vh - 300px)" }}
+            >
+              <ScrollArea className="table-scroll-area h-full w-full">
+                <div className="min-w-[778px] pb-4">
+                  <Table className="table-fixed w-full">
+                    <ItemsTableBody
+                      items={items || []}
+                      selectedItems={bulkSelection.selectedItems} // Pass keys array directly
+                      onSelectItem={(code) => {
+                        const item = items?.find(i => i.code === code);
+                        if (item) bulkSelection.toggleItem(item);
+                      }}
+                      onEdit={onEdit}
+                      onView={onView}
+                      onDelete={onDelete}
+                    />
+                  </Table>
                 </div>
-              </TableHead>
-              <TableHead
-                className={`${headerClass("description")} cursor-pointer hover:bg-primary/5 transition-colors`}
-                onClick={() => onSort("description")}
-              >
-                <div className="flex items-center gap-2">
-                  Description {renderSortIcon("description")}
-                </div>
-              </TableHead>
-              <TableHead
-                className={`${headerClass("unite")} cursor-pointer hover:bg-primary/5 transition-colors`}
-                onClick={() => onSort("unite")}
-              >
-                <div className="flex items-center gap-2">
-                  Unit Code {renderSortIcon("unite")}
-                </div>
-              </TableHead>
-              <TableHead
-                className={`${headerClass("createdAt")} cursor-pointer hover:bg-primary/5 transition-colors`}
-                onClick={() => onSort("createdAt")}
-              >
-                <div className="flex items-center gap-2">
-                  Created At {renderSortIcon("createdAt")}
-                </div>
-              </TableHead>
-              <TableHead className="text-right pr-6">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-        </Table>
+              </ScrollArea>
+            </div>
+          </div>
+        ) : (
+          <div className="relative h-full flex items-center justify-center z-10">
+            <ItemsTableEmpty hasSearchQuery={false} onClearSearch={onClearFilters} />
+          </div>
+        )}
       </div>
 
-      {/* Scrollable Body */}
-      <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
-        <Table>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow
-                key={item.code}
-                className="border-b border-primary/10 hover:bg-primary/5 transition-all duration-200"
-              >
-                <TableCell className="w-[50px] text-center">
-                  <Checkbox
-                    checked={selectedItems.includes(item.code)}
-                    onCheckedChange={() => onSelectItem(item.code)}
-                    aria-label={`Select ${item.code}`}
-                    className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                </TableCell>
-                <TableCell className="font-mono font-semibold text-foreground">
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 transition-colors">
-                    {item.code}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  <div className="truncate max-w-[300px]">{item.description}</div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {item.unite ? (
-                    <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">
-                      {item.unite}
-                    </Badge>
-                  ) : (
-                    <span className="text-muted-foreground/60 text-sm">No unit</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatDate(item.createdAt)}
-                </TableCell>
-                <TableCell className="text-right pr-6">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onViewItem(item)}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
-                      title="View item details"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEditItem(item)}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
-                      title="Edit item"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDeleteItem(item)}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
-                      title="Delete item"
-                      disabled={item.elementTypesCount > 0}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+      {/* Smart Pagination with Bulk Actions */}
+      {hasItems && (
+        <PaginationWithBulkActions
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          bulkSelection={bulkSelection}
+          bulkActions={bulkActions}
+        />
+      )}
     </div>
   );
-};
-
-export default ItemsTableContent; 
+} 

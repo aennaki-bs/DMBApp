@@ -50,7 +50,7 @@ export function SubTypesTableRow({
     };
 
     const handleSelect = () => {
-        if (!isRestricted) {
+        if (!subType.isAssigned) {
             onSelect();
         }
     };
@@ -71,27 +71,19 @@ export function SubTypesTableRow({
         );
     };
 
-    // Generate tooltip message based on restriction reason
-    const getTooltipMessage = () => {
-        if (isRestricted && documentCount > 0) {
-            return `Series is protected - used by ${documentCount} document${documentCount === 1 ? '' : 's'}`;
-        }
-        return "Series locked - Document type is in use";
-    };
-
     return (
         <TableRow
             className={cn(
-                "border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 group",
-                isRestricted
+                "border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer group",
+                subType.isAssigned
                     ? "bg-slate-50/50 dark:bg-slate-800/10 hover:bg-slate-100/50 dark:hover:bg-slate-800/20 cursor-default"
                     : isSelected
-                        ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-2 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/30"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer hover:shadow-sm"
+                        ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-2 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
+                        : "hover:shadow-sm"
             )}
             onClick={(e) => {
-                // Don't allow selection of restricted types
-                if (isRestricted) return;
+                // Don't allow selection of assigned types
+                if (subType.isAssigned) return;
 
                 // Don't trigger row selection if clicking on interactive elements
                 const target = e.target as HTMLElement;
@@ -109,7 +101,7 @@ export function SubTypesTableRow({
             {/* Selection Checkbox */}
             <TableCell className="w-[48px] text-center">
                 <div className="flex items-center justify-center">
-                    {isRestricted ? (
+                    {subType.isAssigned ? (
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -118,7 +110,7 @@ export function SubTypesTableRow({
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>{getTooltipMessage()}</p>
+                                    <p>Series is assigned and cannot be modified</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
@@ -137,7 +129,7 @@ export function SubTypesTableRow({
             <TableCell className="w-[200px] font-mono font-medium text-foreground">
                 <div className="flex items-center gap-2">
                     {subType.subTypeKey}
-                    {isRestricted && (
+                    {subType.isAssigned && (
                         <Lock className="h-3 w-3 text-slate-400" />
                     )}
                 </div>
@@ -179,35 +171,35 @@ export function SubTypesTableRow({
                             <DropdownMenuItem
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (!isRestricted) onEdit();
+                                    if (!subType.isAssigned) onEdit();
                                 }}
                                 className={cn(
                                     "rounded-lg",
-                                    isRestricted
+                                    subType.isAssigned
                                         ? "opacity-50 cursor-not-allowed text-slate-400"
                                         : "cursor-pointer hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                                 )}
-                                disabled={isRestricted}
+                                disabled={subType.isAssigned}
                             >
                                 <Edit2 className="mr-2 h-4 w-4" />
-                                <span>Edit{isRestricted ? ` (Used by ${documentCount} doc${documentCount === 1 ? '' : 's'})` : ''}</span>
+                                <span>Edit{subType.isAssigned ? ' (Assigned)' : ''}</span>
                             </DropdownMenuItem>
 
                             <DropdownMenuItem
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (!isRestricted) onDelete();
+                                    if (!subType.isAssigned) onDelete();
                                 }}
                                 className={cn(
                                     "rounded-lg",
-                                    isRestricted
+                                    subType.isAssigned
                                         ? "opacity-50 cursor-not-allowed text-slate-400"
                                         : "text-destructive hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                                 )}
-                                disabled={isRestricted}
+                                disabled={subType.isAssigned}
                             >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Delete{isRestricted ? ` (Used by ${documentCount} doc${documentCount === 1 ? '' : 's'})` : ''}</span>
+                                <span>Delete{subType.isAssigned ? ' (Assigned)' : ''}</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

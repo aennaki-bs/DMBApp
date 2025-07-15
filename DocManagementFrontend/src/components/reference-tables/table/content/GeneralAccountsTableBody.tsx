@@ -1,40 +1,43 @@
-import React from "react";
 import { TableBody } from "@/components/ui/table";
-import { GeneralAccountsTableRow } from "../GeneralAccountsTableRow";
 import { GeneralAccounts } from "@/models/lineElements";
+import { GeneralAccountsTableRow } from "./GeneralAccountsTableRow";
 
 interface GeneralAccountsTableBodyProps {
   accounts: GeneralAccounts[];
-  selectedAccounts: string[];
-  onSelectAccount: (accountCode: string) => void;
-  onEditAccount: (account: GeneralAccounts) => void;
-  onDeleteAccount: (account: GeneralAccounts) => void;
-  onViewAccount: (account: GeneralAccounts) => void;
+  selectedItems: string[]; // Array of account codes
+  onSelectItem: (code: string) => void;
+  onEdit: (account: GeneralAccounts) => void;
+  onView: (account: GeneralAccounts) => void;
+  onDelete: (code: string) => void;
 }
 
-export const GeneralAccountsTableBody: React.FC<GeneralAccountsTableBodyProps> = ({
+export function GeneralAccountsTableBody({
   accounts,
-  selectedAccounts,
-  onSelectAccount,
-  onEditAccount,
-  onDeleteAccount,
-  onViewAccount,
-}) => {
+  selectedItems,
+  onSelectItem,
+  onEdit,
+  onView,
+  onDelete,
+}: GeneralAccountsTableBodyProps) {
   return (
     <TableBody>
-      {accounts.map((account) => (
-        <GeneralAccountsTableRow
-          key={account.code}
-          account={account}
-          isSelected={selectedAccounts.includes(account.code)}
-          onSelect={() => onSelectAccount(account.code)}
-          onEdit={() => onEditAccount(account)}
-          onDelete={() => onDeleteAccount(account)}
-          onView={() => onViewAccount(account)}
-        />
-      ))}
+      {accounts.map((account) => {
+        const isSelected = selectedItems.includes(account.code); // Check if code is in selectedItems array
+
+        return (
+          <GeneralAccountsTableRow
+            key={account.code}
+            account={account}
+            isSelected={isSelected}
+            onSelect={() => onSelectItem(account.code)}
+            onEdit={() => onEdit(account)}
+            onView={() => onView(account)}
+            onDelete={() => onDelete(account.code)}
+          />
+        );
+      })}
     </TableBody>
   );
-};
+}
 
 export default GeneralAccountsTableBody; 

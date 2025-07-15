@@ -1,40 +1,41 @@
-import React from "react";
 import { TableBody } from "@/components/ui/table";
-import { LocationsTableRow } from "../LocationsTableRow";
 import { LocationDto } from "@/models/location";
+import { LocationsTableRow } from "./LocationsTableRow";
 
 interface LocationsTableBodyProps {
   locations: LocationDto[];
-  selectedLocations: string[];
-  onSelectLocation: (locationCode: string) => void;
-  onEditLocation: (location: LocationDto) => void;
-  onDeleteLocation: (location: LocationDto) => void;
-  onViewLocation: (location: LocationDto) => void;
+  selectedItems: string[]; // Array of location codes
+  onSelectLocation: (code: string) => void;
+  onEdit: (location: LocationDto) => void;
+  onView: (location: LocationDto) => void;
+  onDelete: (code: string) => void;
 }
 
-export const LocationsTableBody: React.FC<LocationsTableBodyProps> = ({
+export function LocationsTableBody({
   locations,
-  selectedLocations,
+  selectedItems,
   onSelectLocation,
-  onEditLocation,
-  onDeleteLocation,
-  onViewLocation,
-}) => {
+  onEdit,
+  onView,
+  onDelete,
+}: LocationsTableBodyProps) {
   return (
     <TableBody>
-      {locations.map((location) => (
-        <LocationsTableRow
-          key={location.locationCode}
-          location={location}
-          isSelected={selectedLocations.includes(location.locationCode)}
-          onSelect={() => onSelectLocation(location.locationCode)}
-          onEdit={() => onEditLocation(location)}
-          onDelete={() => onDeleteLocation(location)}
-          onView={() => onViewLocation(location)}
-        />
-      ))}
+      {locations.map((location) => {
+        const isSelected = selectedItems.includes(location.locationCode); // Check if code is in selectedItems array
+
+        return (
+          <LocationsTableRow
+            key={location.locationCode}
+            location={location}
+            isSelected={isSelected}
+            onSelect={() => onSelectLocation(location.locationCode)}
+            onEdit={() => onEdit(location)}
+            onView={() => onView(location)}
+            onDelete={() => onDelete(location.locationCode)}
+          />
+        );
+      })}
     </TableBody>
   );
-};
-
-export default LocationsTableBody; 
+} 
