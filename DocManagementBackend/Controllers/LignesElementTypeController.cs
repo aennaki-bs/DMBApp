@@ -43,34 +43,7 @@ namespace DocManagementBackend.Controllers
                 TypeElement = let.TypeElement.ToString(),
                 Description = let.Description,
                 TableName = let.TableName,
-                ItemCode = let.ItemCode,
-                AccountCode = let.AccountCode,
-                Item = let.Item == null ? null : new ItemDto
-                {
-                    Code = let.Item.Code,
-                    Description = let.Item.Description,
-                    Unite = let.Item.Unite,
-                    UniteCodeNavigation = let.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
-                    {
-                        Code = let.Item.UniteCodeNavigation.Code,
-                        Description = let.Item.UniteCodeNavigation.Description,
-                        CreatedAt = let.Item.UniteCodeNavigation.CreatedAt,
-                        UpdatedAt = let.Item.UniteCodeNavigation.UpdatedAt,
-                        ItemsCount = let.Item.UniteCodeNavigation.Items.Count()
-                    },
-                    CreatedAt = let.Item.CreatedAt,
-                    UpdatedAt = let.Item.UpdatedAt,
-                    ElementTypesCount = let.Item.LignesElementTypes.Count()
-                },
-                GeneralAccount = let.GeneralAccount == null ? null : new GeneralAccountsDto
-                {
-                    Code = let.GeneralAccount.Code,
-                    Description = let.GeneralAccount.Description,
-                    AccountType = let.GeneralAccount.AccountType,
-                    CreatedAt = let.GeneralAccount.CreatedAt,
-                    UpdatedAt = let.GeneralAccount.UpdatedAt,
-                    LignesCount = let.GeneralAccount.LignesElementTypes.Count()
-                },
+                IsAssigned = _context.Lignes.Any(l => l.LignesElementTypeId == let.Id),
                 CreatedAt = let.CreatedAt,
                 UpdatedAt = let.UpdatedAt
             }).ToList();
@@ -79,27 +52,27 @@ namespace DocManagementBackend.Controllers
         }
 
         // GET: api/LignesElementType/simple
-        [HttpGet("simple")]
-        // [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<LignesElementTypeSimpleDto>>> GetLignesElementTypesSimple()
-        {
-            var authResult = await _authService.AuthorizeUserAsync(User);
-            if (!authResult.IsAuthorized)
-                return authResult.ErrorResponse!;
+        // [HttpGet("simple")]
+        // // [AllowAnonymous]
+        // public async Task<ActionResult<IEnumerable<LignesElementTypeSimpleDto>>> GetLignesElementTypesSimple()
+        // {
+        //     var authResult = await _authService.AuthorizeUserAsync(User);
+        //     if (!authResult.IsAuthorized)
+        //         return authResult.ErrorResponse!;
             
-            var elementTypes = await _context.LignesElementTypes
-                .Select(let => new LignesElementTypeSimpleDto
-                {
-                    Id = let.Id,
-                    Code = let.Code,
-                    TypeElement = let.TypeElement.ToString(),
-                    Description = let.Description
-                })
-                .OrderBy(let => let.Code)
-                .ToListAsync();
+        //     var elementTypes = await _context.LignesElementTypes
+        //         .Select(let => new LignesElementTypeSimpleDto
+        //         {
+        //             Id = let.Id,
+        //             Code = let.Code,
+        //             TypeElement = let.TypeElement.ToString(),
+        //             Description = let.Description
+        //         })
+        //         .OrderBy(let => let.Code)
+        //         .ToListAsync();
 
-            return Ok(elementTypes);
-        }
+        //     return Ok(elementTypes);
+        // }
 
         // GET: api/LignesElementType/by-type/Item
         [HttpGet("by-type/{typeElement}")]
@@ -118,8 +91,7 @@ namespace DocManagementBackend.Controllers
                 TypeElement = let.TypeElement.ToString(),
                 Description = let.Description,
                 TableName = let.TableName,
-                ItemCode = let.ItemCode,
-                AccountCode = let.AccountCode,
+                IsAssigned = _context.Lignes.Any(l => l.LignesElementTypeId == let.Id),
                 CreatedAt = let.CreatedAt,
                 UpdatedAt = let.UpdatedAt
             }).ToList();
@@ -150,34 +122,7 @@ namespace DocManagementBackend.Controllers
                 TypeElement = elementType.TypeElement.ToString(),
                 Description = elementType.Description,
                 TableName = elementType.TableName,
-                ItemCode = elementType.ItemCode,
-                AccountCode = elementType.AccountCode,
-                Item = elementType.Item == null ? null : new ItemDto
-                {
-                    Code = elementType.Item.Code,
-                    Description = elementType.Item.Description,
-                    Unite = elementType.Item.Unite,
-                    UniteCodeNavigation = elementType.Item.UniteCodeNavigation == null ? null : new UniteCodeDto
-                    {
-                        Code = elementType.Item.UniteCodeNavigation.Code,
-                        Description = elementType.Item.UniteCodeNavigation.Description,
-                        CreatedAt = elementType.Item.UniteCodeNavigation.CreatedAt,
-                        UpdatedAt = elementType.Item.UniteCodeNavigation.UpdatedAt,
-                        ItemsCount = elementType.Item.UniteCodeNavigation.Items.Count()
-                    },
-                    CreatedAt = elementType.Item.CreatedAt,
-                    UpdatedAt = elementType.Item.UpdatedAt,
-                    ElementTypesCount = elementType.Item.LignesElementTypes.Count()
-                },
-                GeneralAccount = elementType.GeneralAccount == null ? null : new GeneralAccountsDto
-                {
-                    Code = elementType.GeneralAccount.Code,
-                    Description = elementType.GeneralAccount.Description,
-                    AccountType = elementType.GeneralAccount.AccountType,
-                    CreatedAt = elementType.GeneralAccount.CreatedAt,
-                    UpdatedAt = elementType.GeneralAccount.UpdatedAt,
-                    LignesCount = elementType.GeneralAccount.LignesElementTypes.Count()
-                },
+                IsAssigned = _context.Lignes.Any(l => l.LignesElementTypeId == elementType.Id),
                 CreatedAt = elementType.CreatedAt,
                 UpdatedAt = elementType.UpdatedAt
             };
@@ -186,20 +131,20 @@ namespace DocManagementBackend.Controllers
         }
 
         // GET: api/LignesElementType/5/in-use
-        [HttpGet("{id}/in-use")]
-        public async Task<ActionResult<bool>> IsLignesElementTypeInUse(int id)
-        {
-            var authResult = await _authService.AuthorizeUserAsync(User);
-            if (!authResult.IsAuthorized)
-                return authResult.ErrorResponse!;
+        // [HttpGet("{id}/in-use")]
+        // public async Task<ActionResult<bool>> IsLignesElementTypeInUse(int id)
+        // {
+        //     var authResult = await _authService.AuthorizeUserAsync(User);
+        //     if (!authResult.IsAuthorized)
+        //         return authResult.ErrorResponse!;
 
-            var elementType = await _context.LignesElementTypes.FindAsync(id);
-            if (elementType == null)
-                return NotFound("Line element type not found.");
+        //     var elementType = await _context.LignesElementTypes.FindAsync(id);
+        //     if (elementType == null)
+        //         return NotFound("Line element type not found.");
 
-            var isInUse = await _lineElementService.IsElementTypeInUseAsync(id);
-            return Ok(isInUse);
-        }
+        //     var isInUse = await _lineElementService.IsElementTypeInUseAsync(id);
+        //     return Ok(isInUse);
+        // }
 
         // POST: api/LignesElementType
         [HttpPost]
@@ -231,8 +176,6 @@ namespace DocManagementBackend.Controllers
                 TypeElementString = request.TypeElement.Trim(),
                 Description = request.Description.Trim(),
                 TableName = request.TableName?.Trim() ?? string.Empty,
-                // ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim(),
-                // AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -254,8 +197,6 @@ namespace DocManagementBackend.Controllers
                     TypeElement = elementType.TypeElement.ToString(),
                     Description = elementType.Description,
                     TableName = elementType.TableName,
-                    // ItemCode = elementType.ItemCode,
-                    // AccountCode = elementType.AccountCode,
                     CreatedAt = elementType.CreatedAt,
                     UpdatedAt = elementType.UpdatedAt
                 };
@@ -272,86 +213,86 @@ namespace DocManagementBackend.Controllers
         }
 
         // POST: api/LignesElementType/for-item/{itemCode}
-        [HttpPost("for-item/{itemCode}")]
-        public async Task<ActionResult<LignesElementTypeDto>> CreateElementTypeForItem(string itemCode)
-        {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
-            if (!authResult.IsAuthorized)
-                return authResult.ErrorResponse!;
+        // [HttpPost("for-item/{itemCode}")]
+        // public async Task<ActionResult<LignesElementTypeDto>> CreateElementTypeForItem(string itemCode)
+        // {
+        //     var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+        //     if (!authResult.IsAuthorized)
+        //         return authResult.ErrorResponse!;
 
-            try
-            {
-                var elementType = await _lineElementService.GetOrCreateItemElementTypeAsync(itemCode);
+        //     try
+        //     {
+        //         var elementType = await _lineElementService.GetOrCreateItemElementTypeAsync(itemCode);
 
-                var dto = new LignesElementTypeDto
-                {
-                    Id = elementType.Id,
-                    Code = elementType.Code,
-                    TypeElement = elementType.TypeElement.ToString(),
-                    Description = elementType.Description,
-                    TableName = elementType.TableName,
-                    ItemCode = elementType.ItemCode,
-                    AccountCode = elementType.AccountCode,
-                    CreatedAt = elementType.CreatedAt,
-                    UpdatedAt = elementType.UpdatedAt
-                };
+        //         var dto = new LignesElementTypeDto
+        //         {
+        //             Id = elementType.Id,
+        //             Code = elementType.Code,
+        //             TypeElement = elementType.TypeElement.ToString(),
+        //             Description = elementType.Description,
+        //             TableName = elementType.TableName,
+        //             ItemCode = elementType.ItemCode,
+        //             AccountCode = elementType.AccountCode,
+        //             CreatedAt = elementType.CreatedAt,
+        //             UpdatedAt = elementType.UpdatedAt
+        //         };
 
-                return Ok(dto);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
-            }
-        }
+        //         return Ok(dto);
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(ex.Message);
+        //     }
+        //     catch (InvalidOperationException ex)
+        //     {
+        //         return NotFound(ex.Message);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, $"An error occurred: {ex.Message}");
+        //     }
+        // }
 
         // POST: api/LignesElementType/for-account/{accountCode}
-        [HttpPost("for-account/{accountCode}")]
-        public async Task<ActionResult<LignesElementTypeDto>> CreateElementTypeForAccount(string accountCode)
-        {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
-            if (!authResult.IsAuthorized)
-                return authResult.ErrorResponse!;
+        // [HttpPost("for-account/{accountCode}")]
+        // public async Task<ActionResult<LignesElementTypeDto>> CreateElementTypeForAccount(string accountCode)
+        // {
+        //     var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+        //     if (!authResult.IsAuthorized)
+        //         return authResult.ErrorResponse!;
 
-            try
-            {
-                var elementType = await _lineElementService.GetOrCreateGeneralAccountElementTypeAsync(accountCode);
+        //     try
+        //     {
+        //         var elementType = await _lineElementService.GetOrCreateGeneralAccountElementTypeAsync(accountCode);
 
-                var dto = new LignesElementTypeDto
-                {
-                    Id = elementType.Id,
-                    Code = elementType.Code,
-                    TypeElement = elementType.TypeElement.ToString(),
-                    Description = elementType.Description,
-                    TableName = elementType.TableName,
-                    ItemCode = elementType.ItemCode,
-                    AccountCode = elementType.AccountCode,
-                    CreatedAt = elementType.CreatedAt,
-                    UpdatedAt = elementType.UpdatedAt
-                };
+        //         var dto = new LignesElementTypeDto
+        //         {
+        //             Id = elementType.Id,
+        //             Code = elementType.Code,
+        //             TypeElement = elementType.TypeElement.ToString(),
+        //             Description = elementType.Description,
+        //             TableName = elementType.TableName,
+        //             ItemCode = elementType.ItemCode,
+        //             AccountCode = elementType.AccountCode,
+        //             CreatedAt = elementType.CreatedAt,
+        //             UpdatedAt = elementType.UpdatedAt
+        //         };
 
-                return Ok(dto);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
-            }
-        }
+        //         return Ok(dto);
+        //     }
+        //     catch (ArgumentException ex)
+        //     {
+        //         return BadRequest(ex.Message);
+        //     }
+        //     catch (InvalidOperationException ex)
+        //     {
+        //         return NotFound(ex.Message);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, $"An error occurred: {ex.Message}");
+        //     }
+        // }
 
         // PUT: api/LignesElementType/5
         [HttpPut("{id}")]
@@ -369,12 +310,10 @@ namespace DocManagementBackend.Controllers
             var proposedElementType = new LignesElementType
             {
                 Id = elementType.Id,
-                Code = !string.IsNullOrWhiteSpace(request.Code) ? request.Code.ToUpper().Trim() : elementType.Code,
+                Code = elementType.Code,
                 TypeElementString = !string.IsNullOrWhiteSpace(request.TypeElement) ? request.TypeElement.Trim() : elementType.TypeElementString,
                 Description = !string.IsNullOrWhiteSpace(request.Description) ? request.Description.Trim() : elementType.Description,
                 TableName = !string.IsNullOrWhiteSpace(request.TableName) ? request.TableName.Trim() : elementType.TableName,
-                // ItemCode = request.ItemCode != null ? (string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim()) : elementType.ItemCode,
-                // AccountCode = request.AccountCode != null ? (string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim()) : elementType.AccountCode,
                 CreatedAt = elementType.CreatedAt,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -387,17 +326,17 @@ namespace DocManagementBackend.Controllers
             }
 
             // Update fields if provided
-            if (!string.IsNullOrWhiteSpace(request.Code))
-            {
-                // Check if new code already exists
-                var existingCode = await _context.LignesElementTypes
-                    .AnyAsync(let => let.Code.ToUpper() == request.Code.ToUpper() && let.Id != id);
+            // if (!string.IsNullOrWhiteSpace(request.Code))
+            // {
+            //     // Check if new code already exists
+            //     var existingCode = await _context.LignesElementTypes
+            //         .AnyAsync(let => let.Code.ToUpper() == request.Code.ToUpper() && let.Id != id);
 
-                if (existingCode)
-                    return BadRequest("A line element type with this code already exists.");
+            //     if (existingCode)
+            //         return BadRequest("A line element type with this code already exists.");
 
-                elementType.Code = request.Code.ToUpper().Trim();
-            }
+            //     elementType.Code = request.Code.ToUpper().Trim();
+            // }
 
             if (!string.IsNullOrWhiteSpace(request.TypeElement))
             {
@@ -419,13 +358,6 @@ namespace DocManagementBackend.Controllers
 
             if (!string.IsNullOrWhiteSpace(request.TableName))
                 elementType.TableName = request.TableName.Trim();
-
-            // Update foreign key fields only if explicitly provided and matches the type
-            // if (request.ItemCode != null && elementType.TypeElementString == "Item")
-            //     elementType.ItemCode = string.IsNullOrWhiteSpace(request.ItemCode) ? null : request.ItemCode.Trim();
-
-            // if (request.AccountCode != null && elementType.TypeElementString == "General Accounts")
-            //     elementType.AccountCode = string.IsNullOrWhiteSpace(request.AccountCode) ? null : request.AccountCode.Trim();
 
             elementType.UpdatedAt = DateTime.UtcNow;
 

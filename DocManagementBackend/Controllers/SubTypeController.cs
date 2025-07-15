@@ -43,6 +43,7 @@ namespace DocManagementBackend.Controllers
                     EndDate = st.EndDate,
                     DocumentTypeId = st.DocumentTypeId,
                     IsActive = st.IsActive,
+                    IsAssigned = _context.Documents.Any(d => d.SubTypeId == st.Id),
                     DocumentType = new DocumentTypeDto
                     {
                         TypeNumber = st.DocumentType!.TypeNumber,
@@ -77,6 +78,7 @@ namespace DocManagementBackend.Controllers
                     EndDate = st.EndDate,
                     DocumentTypeId = st.DocumentTypeId,
                     IsActive = st.IsActive,
+                    IsAssigned = _context.Documents.Any(d => d.SubTypeId == st.Id),
                     DocumentType = new DocumentTypeDto
                     {
                         TypeNumber = st.DocumentType!.TypeNumber,
@@ -114,6 +116,7 @@ namespace DocManagementBackend.Controllers
                     EndDate = st.EndDate,
                     DocumentTypeId = st.DocumentTypeId,
                     IsActive = st.IsActive,
+                    IsAssigned = _context.Documents.Any(d => d.SubTypeId == st.Id),
                     DocumentType = new DocumentTypeDto
                     {
                         TypeNumber = st.DocumentType!.TypeNumber,
@@ -168,6 +171,7 @@ namespace DocManagementBackend.Controllers
                     EndDate = st.EndDate,
                     DocumentTypeId = st.DocumentTypeId,
                     IsActive = st.IsActive,
+                    IsAssigned = _context.Documents.Any(d => d.SubTypeId == st.Id),
                     DocumentType = new DocumentTypeDto
                     {
                         TypeNumber = st.DocumentType!.TypeNumber,

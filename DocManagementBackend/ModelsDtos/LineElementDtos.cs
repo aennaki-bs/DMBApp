@@ -8,12 +8,9 @@ namespace DocManagementBackend.Models
         public string TypeElement { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string TableName { get; set; } = string.Empty;
-        public string? ItemCode { get; set; }
-        public string? AccountCode { get; set; }
-        public ItemDto? Item { get; set; }
-        public GeneralAccountsDto? GeneralAccount { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public bool IsAssigned { get; set; } = false;
     }
 
     public class CreateLignesElementTypeRequest
@@ -28,7 +25,7 @@ namespace DocManagementBackend.Models
 
     public class UpdateLignesElementTypeRequest
     {
-        public string? Code { get; set; }
+        // public string? Code { get; set; }
         public string? TypeElement { get; set; }
         public string? Description { get; set; }
         public string? TableName { get; set; }

@@ -32,5 +32,6 @@ namespace DocManagementBackend.Models
         public int DocumentTypeId { get; set; }
         public bool IsActive { get; set; }
         public DocumentTypeDto? DocumentType { get; set; }
+        public bool IsAssigned { get; set; } = false;
     }
 }
