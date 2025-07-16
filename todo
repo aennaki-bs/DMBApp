@@ -115,4 +115,48 @@ change the app name DocumentManagementVerse DMVerse
  approval group remove rule from search
  desactivat bulk when actions is also desactivated
 
+ for ahmed
  
+ circuits
+    release any circuit not used curently by docs
+    
+
+
+documents
+    remove status, add status of circuit
+    filter a revoire
+    accounting -> posting , optional -> required
+    mask code circuit in creation
+    horaire of dsvice
+    add edit customer/vendor
+    incrementation doc par serie
+    document flow -> excute step
+    in status remove optinal
+    change history button position ADD IT TO ACTION
+    IN COMPLETED AFFICHE THE MESSAGE AS COMMENT
+    active-> activeted
+    ADD CENTER TO LIST
+
+approval
+    change step by statuses
+    HANDELE HISTORY BY USER
+
+
+
+line pricing add message cotrole
+add controle in discount
+ui in editline pricing
+remove 0 in vat
+
+for maroun
+
+USER MANEGE
+    ADD FILTER IN LOGS
+filter erp type
+circuit
+    add button from step to status
+    view details -> manage status
+    steps cretaion ui
+basic objects -> basic data
+generalise auto refrech
+DocumentManagementVerse
