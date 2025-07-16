@@ -50,10 +50,9 @@ export const StepFormProgress = ({
           <div key={step} className="flex items-center">
             <div
               className={`flex items-center justify-center h-6 w-6 rounded-full transition-all duration-300
-                ${
-                  step === currentStep
-                    ? "bg-blue-600 text-white ring-1 ring-blue-600/20 shadow-sm"
-                    : step < currentStep
+                ${step === currentStep
+                  ? "bg-blue-600 text-white ring-1 ring-blue-600/20 shadow-sm"
+                  : step < currentStep
                     ? "bg-blue-600 text-white border border-blue-500"
                     : "bg-gray-800/70 text-gray-400 border border-gray-700"
                 }`}

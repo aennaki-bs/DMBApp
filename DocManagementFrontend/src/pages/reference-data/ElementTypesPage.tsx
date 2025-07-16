@@ -41,9 +41,9 @@ const ElementTypesPage = () => {
       variant: "default" as const,
       icon: Plus,
       onClick: () => {
-        // Do nothing when disabled
+        setIsCreateWizardOpen(true);
       },
-      disabled: true, // Disabled create functionality
+      disabled: false, // Disabled create functionality
     },
   ];
 

@@ -140,7 +140,7 @@ export const StepReview = () => {
         <div className="text-xs text-gray-400 mb-1">
           Approval Method:
         </div>
-        
+
         {formData.approvalType === "user" ? (
           <div className="space-y-1">
             <div className="flex items-center text-xs text-white">
@@ -186,8 +186,8 @@ export const StepReview = () => {
                         {selectedGroup.ruleType === 'Sequential' ? 'Approval sequence:' : 'Members:'}
                       </div>
                       <div className="space-y-0.5">
-                        {(isGroupMembersExpanded 
-                          ? selectedGroup.approvers 
+                        {(isGroupMembersExpanded
+                          ? selectedGroup.approvers
                           : selectedGroup.approvers.slice(0, 3)
                         ).map((approver, index) => (
                           <div key={approver.userId} className="flex items-center text-xs text-blue-300">
@@ -210,8 +210,8 @@ export const StepReview = () => {
                             }}
                             className="text-xs text-blue-400 hover:text-blue-300 transition-colors cursor-pointer underline"
                           >
-                            {isGroupMembersExpanded 
-                              ? "Show less" 
+                            {isGroupMembersExpanded
+                              ? "Show less"
                               : `+${selectedGroup.approvers.length - 3} more members`
                             }
                           </button>
@@ -291,11 +291,10 @@ export const StepReview = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <Badge
-                        className={`px-2 py-0.5 text-xs ${
-                          currentStatus?.isInitial
+                        className={`px-2 py-0.5 text-xs ${currentStatus?.isInitial
                             ? "bg-green-600 hover:bg-green-700"
                             : "bg-blue-600 hover:bg-blue-700"
-                        }`}
+                          }`}
                       >
                         {currentStatus?.title || "Unknown Status"}
                         {currentStatus?.isInitial && " (Initial)"}
@@ -309,11 +308,10 @@ export const StepReview = () => {
 
                     <div className="flex-1 text-right">
                       <Badge
-                        className={`px-2 py-0.5 text-xs ${
-                          nextStatus?.isFinal
+                        className={`px-2 py-0.5 text-xs ${nextStatus?.isFinal
                             ? "bg-purple-600 hover:bg-purple-700"
                             : "bg-blue-600 hover:bg-blue-700"
-                        }`}
+                          }`}
                       >
                         {nextStatus?.title || "Unknown Status"}
                         {nextStatus?.isFinal && " (Final)"}

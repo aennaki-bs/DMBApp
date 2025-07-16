@@ -47,7 +47,6 @@ export const DEFAULT_RESPONSIBILITY_CENTRE_SEARCH_FIELDS = [
 export const DEFAULT_STEP_SEARCH_FIELDS = [
   { id: 'all', label: 'All fields' },
   { id: 'title', label: 'Title' },
-  { id: 'stepKey', label: 'Step Code' },
   { id: 'descriptif', label: 'Description' },
   { id: 'circuit.title', label: 'Circuit' },
   { id: 'orderIndex', label: 'Order Index' }

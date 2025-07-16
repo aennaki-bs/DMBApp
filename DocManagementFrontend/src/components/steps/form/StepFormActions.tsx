@@ -29,13 +29,13 @@ export const StepFormActions = ({ onCancel }: StepFormActionsProps) => {
   const hasErrors = currentStepErrors.length > 0;
 
   // Check if all required data is present for submission
-  const canSubmit = formData.title.trim() && 
-                   formData.circuitId && 
-                   formData.currentStatusId && 
-                   formData.nextStatusId &&
-                   (!formData.requiresApproval || 
-                    (formData.approvalType === "user" && formData.approvalUserId) ||
-                    (formData.approvalType === "group" && formData.approvalGroupId));
+  const canSubmit = formData.title.trim() &&
+    formData.circuitId &&
+    formData.currentStatusId &&
+    formData.nextStatusId &&
+    (!formData.requiresApproval ||
+      (formData.approvalType === "user" && formData.approvalUserId) ||
+      (formData.approvalType === "group" && formData.approvalGroupId));
 
   const handleNext = async () => {
     if (isLastStep) {

@@ -107,14 +107,14 @@ export const StepStatusSelection = () => {
               // In edit mode, get all steps and check manually excluding the current step
               const stepsResponse = await api.get(`/Circuit/${formData.circuitId}`);
               const circuitData = stepsResponse.data;
-              
+
               if (circuitData && circuitData.steps) {
-                const conflictingStep = circuitData.steps.find((step: any) => 
+                const conflictingStep = circuitData.steps.find((step: any) =>
                   step.id !== editStep?.id && // Exclude the current step being edited
                   step.currentStatusId === formData.currentStatusId &&
                   step.nextStatusId === formData.nextStatusId
                 );
-                
+
                 if (conflictingStep) {
                   form.setError("nextStatusId", {
                     type: "manual",
@@ -389,7 +389,7 @@ export const StepStatusSelection = () => {
                   </div>
                 </div>
                 {getStatusById(formData.currentStatusId)?.description ||
-                getStatusById(formData.nextStatusId)?.description ? (
+                  getStatusById(formData.nextStatusId)?.description ? (
                   <div className="mt-2 text-xs text-gray-400">
                     {getStatusById(formData.currentStatusId)?.description && (
                       <div className="mb-1">

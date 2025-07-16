@@ -1,94 +1,93 @@
 import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  MoveRight,
-  UserCheck,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 
 interface StepTableHeaderProps {
-  onSelectAll: (checked: boolean) => void;
-  areAllEligibleSelected: boolean;
-  hasEligibleSteps: boolean;
-  onSort: (field: string) => void;
-  sortField: string | null;
+  selectedCount: number;
+  totalCount: number;
+  onSelectAll: () => void;
+  sortBy: string;
   sortDirection: "asc" | "desc";
+  onSort: (field: string) => void;
+  isCircuitActive?: boolean;
+  isSimpleUser?: boolean;
 }
 
-export const StepTableHeader = ({
+export function StepTableHeader({
+  selectedCount,
+  totalCount,
   onSelectAll,
-  areAllEligibleSelected,
-  hasEligibleSteps,
-  onSort,
-  sortField,
+  sortBy,
   sortDirection,
-}: StepTableHeaderProps) => {
-  const getSortIcon = (field: string) => {
-    if (sortField !== field) return <ArrowUpDown className="h-4 w-4 ml-1" />;
+  onSort,
+  isCircuitActive = false,
+  isSimpleUser = false,
+}: StepTableHeaderProps) {
+  const headerClass = (field: string) =>
+    `cursor-pointer select-none transition-colors hover:text-blue-300 ${sortBy === field ? "text-blue-200" : "text-blue-300/80"
+    }`;
+
+  const renderSortIcon = (field: string) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="h-3.5 w-3.5 ml-1.5 opacity-50" />;
+    }
     return sortDirection === "asc" ? (
-      <ArrowUp className="h-4 w-4 ml-1" />
+      <ArrowUp className="h-3.5 w-3.5 ml-1.5 text-blue-300" />
     ) : (
-      <ArrowDown className="h-4 w-4 ml-1" />
+      <ArrowDown className="h-3.5 w-3.5 ml-1.5 text-blue-300" />
     );
   };
 
   return (
-    <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033] sticky top-0 z-10">
-      <TableRow className="border-b border-blue-900/30 hover:bg-transparent">
-        <TableHead className="w-10 px-4 py-3">
-          <Checkbox
-            checked={hasEligibleSteps ? areAllEligibleSelected : false}
-            onCheckedChange={(checked) => onSelectAll(!!checked)}
-            disabled={!hasEligibleSteps}
-            className="border-blue-700/50"
-          />
-        </TableHead>
-        <TableHead className="hidden md:table-cell px-4 py-3 text-sm font-medium text-blue-300/80 w-[15%]">
-          Step Code
-        </TableHead>
-        <TableHead className="px-4 py-3 w-[30%]">
-          <Button
-            variant="ghost"
-            className="p-0 font-semibold flex items-center text-left hover:bg-transparent hover:text-primary text-blue-200"
-            onClick={() => onSort("title")}
-          >
-            Title {getSortIcon("title")}
-          </Button>
-        </TableHead>
-        <TableHead className="px-4 py-3 w-[15%]">
-          <Button
-            variant="ghost"
-            className="p-0 font-semibold flex items-center text-left hover:bg-transparent hover:text-primary text-blue-200"
-            onClick={() => onSort("currentStatusId")}
-          >
-            Current Status {getSortIcon("currentStatusId")}
-          </Button>
-        </TableHead>
-        <TableHead className="px-0 py-3 w-[5%] text-center">
-          <MoveRight className="h-5 w-5 mx-auto text-blue-500/50" />
-        </TableHead>
-        <TableHead className="px-4 py-3 w-[15%]">
-          <Button
-            variant="ghost"
-            className="p-0 font-semibold flex items-center text-left hover:bg-transparent hover:text-primary text-blue-200"
-            onClick={() => onSort("nextStatusId")}
-          >
-            Next Status {getSortIcon("nextStatusId")}
-          </Button>
-        </TableHead>
-        <TableHead className="px-4 py-3 w-[15%] text-blue-300/80">
-          <div className="flex items-center">
-            <UserCheck className="h-4 w-4 mr-1.5" />
-            Approval
+    <TableHeader>
+      <TableRow className="border-slate-200/50 dark:border-slate-700/50 hover:bg-transparent">
+        <TableHead className="w-[48px] text-center">
+          <div className="flex items-center justify-center">
+            <ProfessionalCheckbox
+              checked={!isCircuitActive && !isSimpleUser && selectedCount === totalCount && totalCount > 0}
+              indeterminate={!isCircuitActive && !isSimpleUser && selectedCount > 0 && selectedCount < totalCount}
+              onCheckedChange={() => {
+                if (!isCircuitActive && !isSimpleUser) {
+                  onSelectAll();
+                }
+              }}
+              size="md"
+              variant="header"
+              className="shadow-lg"
+              disabled={isCircuitActive || isSimpleUser}
+            />
           </div>
         </TableHead>
-        <TableHead className="px-4 py-3 w-14 text-blue-300/80">
+        <TableHead className="w-[60px] text-center"></TableHead>
+        <TableHead
+          className={`${headerClass("title")} w-[280px]`}
+          onClick={() => onSort("title")}
+        >
+          <div className="flex items-center">
+            Title {renderSortIcon("title")}
+          </div>
+        </TableHead>
+        <TableHead
+          className={`${headerClass("description")} flex-1 min-w-[200px]`}
+          onClick={() => onSort("description")}
+        >
+          <div className="flex items-center">
+            Description {renderSortIcon("description")}
+          </div>
+        </TableHead>
+        <TableHead
+          className={`${headerClass("orderIndex")} w-[120px] text-center`}
+          onClick={() => onSort("orderIndex")}
+        >
+          <div className="flex items-center justify-center">
+            Order {renderSortIcon("orderIndex")}
+          </div>
+        </TableHead>
+        <TableHead className="w-[90px] text-center">
           Actions
         </TableHead>
       </TableRow>
     </TableHeader>
   );
-};
+}

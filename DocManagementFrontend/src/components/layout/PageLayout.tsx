@@ -1,6 +1,12 @@
 import React from "react";
 import { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PageAction {
   label: string;
@@ -13,7 +19,8 @@ interface PageAction {
   | "ghost"
   | "link";
   icon?: LucideIcon;
-  disabled?: boolean; // Add disabled property
+  disabled?: boolean;
+  tooltip?: string;
 }
 
 interface PageLayoutProps {
@@ -52,26 +59,45 @@ export function PageLayout({
 
         {actions.length > 0 && (
           <div className="flex items-center gap-3">
-            {actions.map((action, index) => (
-              <Button
-                key={index}
-                variant={action.variant || "default"}
-                onClick={action.onClick}
-                disabled={action.disabled}
-                className={
-                  action.disabled
-                    ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-muted hover:bg-muted hover:text-muted-foreground hover:border-muted"
-                    : action.variant === "outline"
-                      ? "bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/30 transition-all duration-300"
-                      : action.variant === "default"
-                        ? "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl border border-primary/30 hover:border-primary/50 transition-all duration-300"
-                        : undefined
+            <TooltipProvider>
+              {actions.map((action, index) => {
+                const buttonElement = (
+                  <Button
+                    key={index}
+                    variant={action.variant || "default"}
+                    onClick={action.onClick}
+                    disabled={action.disabled}
+                    className={
+                      action.disabled
+                        ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-muted hover:bg-muted hover:text-muted-foreground hover:border-muted"
+                        : action.variant === "outline"
+                          ? "bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/30 transition-all duration-300"
+                          : action.variant === "default"
+                            ? "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl border border-primary/30 hover:border-primary/50 transition-all duration-300"
+                            : undefined
+                    }
+                  >
+                    {action.icon && <action.icon className="h-4 w-4 mr-2" />}
+                    {action.label}
+                  </Button>
+                );
+
+                if (action.disabled && action.tooltip) {
+                  return (
+                    <Tooltip key={index} delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        {buttonElement}
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="text-xs">{action.tooltip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
                 }
-              >
-                {action.icon && <action.icon className="h-4 w-4 mr-2" />}
-                {action.label}
-              </Button>
-            ))}
+
+                return buttonElement;
+              })}
+            </TooltipProvider>
           </div>
         )}
       </div>

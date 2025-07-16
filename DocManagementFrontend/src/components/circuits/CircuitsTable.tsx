@@ -217,15 +217,13 @@ export function CircuitsTable({
                         <PopoverTrigger asChild>
                             <Button
                                 variant="outline"
-                                size="sm"
-                                className={`h-12 px-4 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl ${isFilterActive ? "bg-primary/10 border-primary/40 text-primary" : ""}`}
+                                className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
                             >
-                                <Filter className="h-4 w-4 mr-2" />
+                                <Filter className="h-5 w-5" />
                                 Filters
+                                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
                                 {isFilterActive && (
-                                    <span className="ml-2 px-2 py-0.5 bg-primary/20 text-primary text-xs rounded-full">
-                                        {[searchQuery !== '', statusFilter !== 'any', typeFilter !== 'any'].filter(Boolean).length}
-                                    </span>
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                                 )}
                             </Button>
                         </PopoverTrigger>
@@ -234,22 +232,11 @@ export function CircuitsTable({
                             className="w-80 p-4 bg-background/95 backdrop-blur-xl border border-primary/20 rounded-xl shadow-2xl"
                         >
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="font-semibold text-foreground">Filters</h4>
-                                    {isFilterActive && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={handleClearAllFilters}
-                                            className="text-muted-foreground hover:text-foreground"
-                                        >
-                                            <X className="h-4 w-4 mr-1" />
-                                            Clear All
-                                        </Button>
-                                    )}
+                                <div className="mb-4 text-foreground font-bold text-lg flex items-center gap-2">
+                                    <Filter className="h-5 w-5 text-primary" />
+                                    Advanced Filters
                                 </div>
-
-                                <div className="space-y-3">
+                                <div className="flex flex-col gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-foreground mb-2">
                                             Status
@@ -285,6 +272,21 @@ export function CircuitsTable({
                                             </SelectContent>
                                         </Select>
                                     </div>
+
+                                    {/* Clear Filters Button */}
+                                    {isFilterActive && (
+                                        <div className="pt-4 border-t border-primary/10">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={handleClearAllFilters}
+                                                className="w-full text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                            >
+                                                <X className="h-4 w-4 mr-2" />
+                                                Clear All Filters
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </PopoverContent>

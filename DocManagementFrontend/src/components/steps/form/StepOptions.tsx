@@ -49,7 +49,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export const StepOptions = () => {
   const { formData, setFormData, registerStepForm, isEditMode } = useStepForm();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -57,8 +57,8 @@ export const StepOptions = () => {
   const initialApprovalType = formData.approvalUserId
     ? "user"
     : formData.approvalGroupId
-    ? "group"
-    : null;
+      ? "group"
+      : null;
 
   // Initialize form BEFORE any useEffect that depends on it
   const form = useForm<FormValues>({
@@ -105,12 +105,12 @@ export const StepOptions = () => {
           } else if (errors.approvalUserId) {
             setValidationError(
               errors.approvalUserId.message ||
-                "Please select an individual approver"
+              "Please select an individual approver"
             );
           } else if (errors.approvalGroupId) {
             setValidationError(
               errors.approvalGroupId.message ||
-                "Please select an approval group"
+              "Please select an approval group"
             );
           }
         }

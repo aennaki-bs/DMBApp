@@ -101,7 +101,7 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
       // Map API fields to UI fields for editing
       const approvalUserId = editStep.approvalUserId || (editStep.approvatorId ? editStep.approvatorId : undefined);
       const approvalGroupId = editStep.approvalGroupId || editStep.approvatorsGroupId;
-      
+
       return {
         title: editStep.title,
         descriptif: editStep.descriptif,
@@ -113,8 +113,8 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
         approvalType: approvalGroupId
           ? "group"
           : approvalUserId
-          ? "user"
-          : undefined,
+            ? "user"
+            : undefined,
         approvalUserId: approvalUserId,
         approvalGroupId: approvalGroupId,
         currentStatusId: editStep.currentStatusId,
@@ -153,17 +153,17 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
         try {
           const config = await approvalService.getStepApprovalConfig(editStep.id);
           console.log("Loaded step approval config:", config);
-          
+
           if (config) {
             let approvalUserId = undefined;
-            
+
             // If it's a single approver, we need to convert the approvatorId to userId
             if (config.approvalType === "Single" && config.singleApproverId) {
               try {
                 // Get all approvators to find the one with matching approvatorId
                 const approvators = await approvalService.getAllApprovators();
                 const matchingApprovator = approvators.find(a => a.id === config.singleApproverId);
-                
+
                 if (matchingApprovator) {
                   approvalUserId = matchingApprovator.userId;
                   console.log("Found matching approvator, userId:", approvalUserId);
@@ -180,9 +180,9 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
               approvalUserId: approvalUserId,
               approvalGroupId: config.approvatorsGroupId,
             };
-            
+
             console.log("Updating form data with:", newFormData);
-            
+
             // Update form data with proper approval configuration
             setFormDataState(prev => ({
               ...prev,
@@ -300,14 +300,14 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
     try {
       // Prepare the data with approval settings and map to API field names
       let approvatorId = undefined;
-      
+
       // If using individual user approval, we need to convert userId to approvatorId
       if (formData.approvalType === "user" && formData.approvalUserId) {
         try {
           // Fetch all approvators to find the one with matching userId
           const approvators = await approvalService.getAllApprovators();
           const matchingApprovator = approvators.find(a => a.userId === formData.approvalUserId);
-          
+
           if (!matchingApprovator) {
             setFormErrors((prev) => ({
               ...prev,
@@ -318,7 +318,7 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
             }));
             return false;
           }
-          
+
           approvatorId = matchingApprovator.id; // Use the approvator ID, not the user ID
         } catch (error) {
           console.error("Error fetching approvators:", error);
@@ -647,7 +647,7 @@ export const StepFormProvider: React.FC<StepFormProviderProps> = ({
     if (Object.keys(newErrors).length > 0) {
       setFormErrors(newErrors);
     }
-    
+
     return allValid;
   };
 

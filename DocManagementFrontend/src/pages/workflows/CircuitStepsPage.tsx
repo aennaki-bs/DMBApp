@@ -2,22 +2,22 @@ import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { StepFormDialog } from '@/components/steps/dialogs/StepFormDialog';
 import { DeleteStepDialog } from '@/components/steps/dialogs/DeleteStepDialog';
-import { BulkActionBar } from '@/components/steps/BulkActionBar';
-import { StepLoadingState } from '@/components/steps/StepLoadingState';
 import { useAuth } from '@/context/AuthContext';
 import { useCircuitSteps } from '@/hooks/useCircuitSteps';
-import { CircuitStepsHeader } from '@/components/circuit-steps/CircuitStepsHeader';
-import { CircuitStepsSearchBar } from '@/components/circuit-steps/CircuitStepsSearchBar';
-import { CircuitStepsContent } from '@/components/circuit-steps/CircuitStepsContent';
-import { CircuitStepsError } from '@/components/circuit-steps/CircuitStepsError';
 import { toast } from 'sonner';
 import stepService from '@/services/stepService';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { Plus, GitBranch, ArrowLeft } from 'lucide-react';
+import { CircuitStepsTableView } from '@/components/steps/CircuitStepsTableView';
+import { useNavigate } from 'react-router-dom';
+import { Step } from '@/models/step';
 
 export default function CircuitStepsPage() {
   const { circuitId = '' } = useParams<{ circuitId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const isSimpleUser = user?.role === 'SimpleUser';
-  
+
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
@@ -30,13 +30,11 @@ export default function CircuitStepsPage() {
     searchQuery,
     selectedSteps,
     apiError,
-    viewMode,
     isLoading,
     isError,
     setSearchQuery,
     handleStepSelection,
     handleSelectAll,
-    setViewMode,
     setSelectedSteps,
     refetchSteps
   } = useCircuitSteps(circuitId);
@@ -75,13 +73,12 @@ export default function CircuitStepsPage() {
       toast.error("Cannot delete steps from an active circuit");
       return;
     }
-    
+
     if (selectedSteps.length === 0) {
       toast.error("No steps selected for deletion");
       return;
     }
 
-    // Show confirmation dialog
     setBulkDeleteDialogOpen(true);
   };
 
@@ -92,6 +89,7 @@ export default function CircuitStepsPage() {
       await stepService.deleteMultipleSteps(selectedSteps);
       setSelectedSteps([]);
       refetchSteps();
+      toast.success(`Successfully deleted ${selectedSteps.length} steps`);
     } catch (error) {
       console.error('Failed to delete steps:', error);
       toast.error('Failed to delete selected steps');
@@ -100,65 +98,82 @@ export default function CircuitStepsPage() {
     }
   };
 
-  if (isLoading) {
-    return <StepLoadingState />;
-  }
+  // Page actions
+  const pageActions = [
+    {
+      label: "Back to Circuits",
+      variant: "outline" as const,
+      icon: ArrowLeft,
+      onClick: () => navigate('/circuits'),
+    },
+    {
+      label: "Add Step",
+      variant: "default" as const,
+      icon: Plus,
+      onClick: handleAddStep,
+      disabled: isSimpleUser || isCircuitActive,
+      tooltip: isSimpleUser
+        ? "You don't have permission to add steps"
+        : isCircuitActive
+          ? "Cannot add steps to an active circuit"
+          : undefined,
+    },
+  ];
 
-  if (isError) {
-    return (
-      <CircuitStepsError errorMessage={apiError} type="error" />
-    );
-  }
+  // Add bulk actions when steps are selected
+  const bulkActions = selectedSteps.length > 0 && !isCircuitActive && !isSimpleUser ? [
+    {
+      label: `Delete ${selectedSteps.length} Steps`,
+      variant: "destructive" as const,
+      onClick: handleBulkDelete,
+    }
+  ] : [];
+
+  const allActions = [...pageActions, ...bulkActions];
 
   // If circuit not found
-  if (!circuit) {
+  if (!isLoading && !isError && !circuit) {
     return (
-      <CircuitStepsError type="notFound" />
+      <PageLayout
+        title="Circuit Not Found"
+        subtitle="The requested circuit could not be found"
+        icon={GitBranch}
+        actions={pageActions.slice(0, 1)}
+      >
+        <div className="text-center py-12">
+          <div className="text-muted-foreground">
+            The circuit you're looking for doesn't exist or has been removed.
+          </div>
+        </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="container-fluid responsive-padding space-y-6 mb-8">
-      <CircuitStepsHeader 
-        circuit={circuit} 
-        onAddStep={handleAddStep} 
-        isSimpleUser={isSimpleUser} 
-      />
-      
-      {apiError && (
-        <CircuitStepsError errorMessage={apiError} type="error" />
-      )}
-      
-      <CircuitStepsSearchBar 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
-      
-      <CircuitStepsContent
+    <PageLayout
+      title={circuit ? `${circuit.title} - Steps` : "Circuit Steps"}
+      subtitle={
+        circuit
+          ? `Manage steps for circuit: ${circuit.circuitKey}${isCircuitActive ? ' (Active Circuit)' : ''}`
+          : "Loading circuit information..."
+      }
+      icon={GitBranch}
+      actions={allActions}
+    >
+      <CircuitStepsTableView
         steps={steps}
         selectedSteps={selectedSteps}
         onSelectStep={handleStepSelection}
         onSelectAll={handleSelectAll}
         onEdit={handleEditStep}
         onDelete={handleDeleteStep}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onAddStep={handleAddStep}
-        isSimpleUser={isSimpleUser}
-        circuitId={circuitId}
-        circuit={circuit}
-      />
-      
-      <BulkActionBar
-        selectedCount={selectedSteps.length}
-        onBulkDelete={handleBulkDelete}
-        disabled={isCircuitActive || isSimpleUser || isDeleting}
-        isDeleting={isDeleting}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         isCircuitActive={isCircuitActive}
         isSimpleUser={isSimpleUser}
+        circuit={circuit}
       />
-      
-      {/* Step Form Dialog - Now passing the circuit ID */}
+
       <StepFormDialog
         open={formDialogOpen}
         onOpenChange={setFormDialogOpen}
@@ -166,8 +181,7 @@ export default function CircuitStepsPage() {
         editStep={selectedStep ?? undefined}
         circuitId={parseInt(circuitId, 10)}
       />
-      
-      {/* Delete Step Dialog */}
+
       {selectedStep && (
         <DeleteStepDialog
           open={deleteDialogOpen}
@@ -178,17 +192,16 @@ export default function CircuitStepsPage() {
         />
       )}
 
-      {/* Bulk Delete Confirmation Dialog */}
       <DeleteStepDialog
         open={bulkDeleteDialogOpen}
         onOpenChange={setBulkDeleteDialogOpen}
-        stepId={0} // Not used for bulk delete
+        stepId={0}
         stepTitle={`${selectedSteps.length} selected steps`}
         onSuccess={refetchSteps}
         onConfirm={confirmBulkDelete}
         isBulk={true}
         count={selectedSteps.length}
       />
-    </div>
+    </PageLayout>
   );
 }
