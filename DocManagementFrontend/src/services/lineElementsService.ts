@@ -33,7 +33,7 @@ export const lignesElementTypeService = {
 
   getSimple: async (): Promise<LignesElementTypeSimple[]> => {
     try {
-      const response = await api.get('/LignesElementType/simple');
+      const response = await api.get('/LignesElementType');
       return response.data;
     } catch (error) {
       console.error('Error fetching simple element types:', error);

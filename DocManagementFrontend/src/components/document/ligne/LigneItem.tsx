@@ -106,11 +106,6 @@ const LigneItem = ({
                   <Clock className="h-3.5 w-3.5 mr-1.5" />
                   {format(new Date(ligne.createdAt), "MMM d, yyyy")}
                 </div>
-                
-                <div className="flex items-center text-orange-300/60">
-                  <Calculator className="h-3.5 w-3.5 mr-1.5" />
-                  Qty: {ligne.quantity}
-                </div>
               </div>
             </div>
 
@@ -237,11 +232,11 @@ const LigneItem = ({
                     </div>
                   </div>
                   
-                  {(ligne.discountPercentage > 0 || ligne.discountAmount) && (
+                  {(ligne.discountPercentage != null || ligne.discountAmount != null) && (
                     <div className="bg-orange-900/20 rounded-lg p-3">
                       <div className="text-xs text-orange-400 mb-1">Discount</div>
                       <div className="text-sm font-medium text-orange-300">
-                        {ligne.discountAmount 
+                        {ligne.discountAmount != null
                           ? formatPrice(ligne.discountAmount)
                           : formatPercentage(ligne.discountPercentage)
                         }

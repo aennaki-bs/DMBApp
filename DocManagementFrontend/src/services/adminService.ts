@@ -194,13 +194,11 @@ const adminService = {
 
       const response = await api.post(`/Auth/valide-email`, { email: email.trim() });
 
-      // Handle the response properly - API returns "True" or "False" as strings
-      if (response.data === "False") {
-        // Email exists (taken) - return true to indicate email exists
-        return true;
-      } else if (response.data === "True") {
-        // Email is available - return false to indicate email doesn't exist
-        return false;
+      // Handle the response properly - API returns { isValid: boolean, reason: string, message: string }
+      if (response.data && typeof response.data.isValid === 'boolean') {
+        // Return true if email exists (isValid = false means already registered)
+        // Return false if email is available (isValid = true means available)
+        return !response.data.isValid;
       }
 
       // If response format is unexpected, throw an error

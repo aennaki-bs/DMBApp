@@ -96,19 +96,24 @@ const PasswordForm: React.FC = () => {
       setPasswordStrength(strength);
     }
 
-    // Clear error when user types
-    if (errors[name]) {
+    // Clear error when user types (except for confirmPassword mismatch)
+    if (errors[name] && name !== "confirmPassword") {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
 
     // Check passwords match when confirm password changes
-    if (name === "confirmPassword" && value && formData.password) {
-      if (value !== formData.password) {
+    if (name === "confirmPassword") {
+      // Show "does not match" immediately if user starts typing and passwords don't match
+      if (value && value !== formData.password) {
         setErrors((prev) => ({
           ...prev,
           confirmPassword: "Passwords don't match",
         }));
-      } else {
+      } else if (value === formData.password && value.length > 0) {
+        // Clear error only when passwords actually match
+        setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+      } else if (!value) {
+        // Clear error when field is empty
         setErrors((prev) => ({ ...prev, confirmPassword: "" }));
       }
     }
@@ -368,6 +373,27 @@ const PasswordForm: React.FC = () => {
                   <span className="inline-block w-1 h-1 rounded-full bg-red-400"></span>
                   {errors.confirmPassword}
                 </motion.p>
+              )}
+              
+              {/* Real-time password match indicator */}
+              {formData.confirmPassword && formData.password && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 text-sm mt-2 ml-1"
+                >
+                  {formData.confirmPassword === formData.password ? (
+                    <>
+                      <Check className="h-4 w-4 text-green-400" />
+                      <span className="text-green-300">Passwords match</span>
+                    </>
+                  ) : (
+                    <>
+                      <X className="h-4 w-4 text-red-400" />
+                      <span className="text-red-300">Passwords don't match</span>
+                    </>
+                  )}
+                </motion.div>
               )}
             </div>
 

@@ -1294,8 +1294,10 @@ export default function CreateDocumentWizard({
               : currentStep === 3
               ? t("common.type")
               : currentStep === 4
-              ? t("documents.documentContent")
+              ? t("documents.documentCustomerVendor")
               : currentStep === 5
+              ? t("documents.documentContent")
+              : currentStep === 6
               ? t("documents.circuitAssignmentOptional")
               : t("documents.reviewDocument")}
           </DialogTitle>
@@ -1309,8 +1311,10 @@ export default function CreateDocumentWizard({
               : currentStep === 3
               ? t("documents.selectDocumentTypeAndSubtype")
               : currentStep === 4
-              ? t("documents.addContentForDocument")
+              ? t("documents.addDocumentCustomerVendor")
               : currentStep === 5
+              ? t("documents.addContentForDocument")
+              : currentStep === 6
               ? t("documents.assignCircuitOrSkipToCreateStatic")
               : t("documents.confirmDocumentDetailsBeforeCreation")}
           </DialogDescription>

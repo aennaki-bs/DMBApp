@@ -53,6 +53,12 @@ export function ViewUserLogsDialog({
       7: "Profile Create",
       8: "Profile Update",
       9: "Profile Delete",
+      10: "Line Create",
+      11: "Line Update",
+      12: "Line Delete",
+      13: "SubLine Create",
+      14: "SubLine Update",
+      15: "SubLine Delete",
     };
 
     return (

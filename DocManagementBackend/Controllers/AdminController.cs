@@ -220,7 +220,14 @@ namespace DocManagementBackend.Controllers
                 user.LastName = request.LastName;
             
             if (request.IsActive.HasValue)
+            {
+                if (request.IsActive.Value == true)
+                {
+                    if (user.IsEmailConfirmed == false)
+                        return BadRequest("User email is not confirmed. Please contact the user to confirm his email!");
+                }
                 user.IsActive = request.IsActive.Value;
+            }
             
             if (!string.IsNullOrEmpty(request.City))
                 user.City = request.City;
