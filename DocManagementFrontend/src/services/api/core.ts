@@ -11,10 +11,9 @@ declare module 'axios' {
 let port = 5205;
 let address = '0.0.0.0';
 // address = '192.168.1.19';
-address = '192.168.1.54';
-// address = 'localhost';
-
+// address = '192.168.1.54';
 // address = '192.168.0.150';
+address = 'localhost';
 // address = '172.20.10.4';
 
 let apiUrl = `http://${address}:${port}/api`;

@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import erpArchivalService from '@/services/erpArchivalService';
 import { DocumentErpStatus } from '@/models/erpArchival';
+import { useAuth } from '@/context/AuthContext';
 
 interface ErpArchivalStatusProps {
   documentId: number;
@@ -27,8 +28,12 @@ export default function ErpArchivalStatus({
   isCompletedDocument = false 
 }: ErpArchivalStatusProps) {
   const [isRetrying, setIsRetrying] = useState(false);
+  const { hasRole } = useAuth();
 
   const queryClient = useQueryClient();
+  
+  // Check if user can archive documents (Admin or FullUser, not SimpleUser)
+  const canArchiveDocuments = hasRole(['Admin', 'FullUser']);
 
   const { data: erpStatus, isLoading, error } = useQuery({
     queryKey: ['documentErpStatus', documentId],
@@ -207,7 +212,11 @@ export default function ErpArchivalStatus({
                       <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-700 p-3 rounded">
                         <div className="font-medium text-blue-900 dark:text-blue-100 mb-2">💡 Next Steps:</div>
                         <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                          <div>• Try the "Archive Now" button above to manually trigger archival</div>
+                          {canArchiveDocuments ? (
+                            <div>• Try the "Archive Now" button above to manually trigger archival</div>
+                          ) : (
+                            <div>• Contact an administrator to manually trigger archival</div>
+                          )}
                           <div>• Contact IT support if the issue persists</div>
                         </div>
                       </div>
@@ -218,8 +227,8 @@ export default function ErpArchivalStatus({
             )}
           </div>
 
-          {/* Manual Archival Section */}
-          {!isArchived && (
+          {/* Manual Archival Section - Only for Admin and FullUser */}
+          {!isArchived && canArchiveDocuments && (
             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-700 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -239,6 +248,21 @@ export default function ErpArchivalStatus({
               </div>
             </div>
           )}
+
+          {/* Information message for SimpleUser */}
+          {/* {!isArchived && !canArchiveDocuments && (
+            <div className="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 p-4 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Archive className="h-5 w-5 text-gray-500" />
+                <div className="space-y-1">
+                  <div className="font-medium text-gray-900 dark:text-gray-100">Document Archival</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Document archival is managed automatically or by administrators
+                  </div>
+                </div>
+              </div>
+            </div>
+          )} */}
 
 
 

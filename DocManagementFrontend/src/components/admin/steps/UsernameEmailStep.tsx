@@ -183,7 +183,7 @@ export function UsernameEmailStep({
                 {emailAvailable === true && (
                   <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
                     <Check className="h-3 w-3" />
-                    Email address is available and ready to use
+                    Email address is valid and ready to use
                   </p>
                 )}
                 {emailAvailable === false && (

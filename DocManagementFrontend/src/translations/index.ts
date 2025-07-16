@@ -239,7 +239,8 @@ export const translations = {
       // Create Document Wizard
       selectResponsibilityCentreForDocument: 'Select a responsibility centre for this document',
       documentWillBeAssignedToYourCentre: 'Your document will be assigned to your responsibility centre',
-      selectDocumentTypeAndSubtype: 'Select document type and subtype',
+      selectDocumentTypeAndSubtype: 'Select document type and Serie',
+      addDocumentCustomerVendor: 'Add document customer/vendor',
       addContentForDocument: 'Add content for your document',
       assignCircuitOrSkipToCreateStatic: 'Assign a circuit or skip this step to create a static document',
       confirmDocumentDetailsBeforeCreation: 'Confirm document details before creation',
@@ -255,6 +256,7 @@ export const translations = {
       addDocumentContent: 'Add document content',
       assignToWorkflowOrSkip: 'Assign to workflow or skip',
       confirmDocumentDetails: 'Confirm document details',
+      documentCustomerVendor: 'Document Customer/Vendor',
       documentContent: 'Document Content',
       circuitAssignmentOptional: 'Circuit Assignment (Optional)',
       reviewDocument: 'Review Document',
@@ -282,7 +284,7 @@ export const translations = {
       importantDateInfo: 'Only document types with active series for the selected date will be available. If you don\'t see a document type, it means there are no active series for that type on this date.',
       accountingDateDescription: 'The accounting date is used for financial reporting purposes and may differ from the document date.',
       validDateRangeFor: 'Valid Date Range for {{subType}}',
-      documentsOfThisSubtypeMustHaveDate: 'Documents of this subtype must have a date between:',
+      documentsOfThisSubtypeMustHaveDate: 'Documents of this Serie must have a date between:',
       selectedDateOutsideRange: 'The selected date is outside the valid range.',
       // ContentStep
       enterDocumentContent: 'Enter document content',
@@ -1011,7 +1013,7 @@ export const translations = {
       // Create Document Wizard
       selectResponsibilityCentreForDocument: 'Sélectionnez un centre de responsabilité pour ce document',
       documentWillBeAssignedToYourCentre: 'Votre document sera assigné à votre centre de responsabilité',
-      selectDocumentTypeAndSubtype: 'Sélectionnez le type et le sous-type de document',
+      selectDocumentTypeAndSubtype: 'Sélectionnez le type et la série de document',
       addContentForDocument: 'Ajoutez du contenu pour votre document',
       assignCircuitOrSkipToCreateStatic: 'Assignez un circuit ou passez cette étape pour créer un document statique',
       confirmDocumentDetailsBeforeCreation: 'Confirmez les détails du document avant la création',
@@ -1054,7 +1056,7 @@ export const translations = {
       importantDateInfo: 'Seuls les types de documents avec des séries actives pour la date sélectionnée seront disponibles. Si vous ne voyez pas un type de document, cela signifie qu\'il n\'y a pas de séries actives pour ce type à cette date.',
       accountingDateDescription: 'La date comptable est utilisée à des fins de reporting financier et peut différer de la date du document.',
       validDateRangeFor: 'Plage de Dates Valide pour {{subType}}',
-      documentsOfThisSubtypeMustHaveDate: 'Les documents de ce sous-type doivent avoir une date entre :',
+      documentsOfThisSubtypeMustHaveDate: 'Les documents de ce série doivent avoir une date entre :',
       selectedDateOutsideRange: 'La date sélectionnée est en dehors de la plage valide.',
       // ContentStep
       enterDocumentContent: 'Saisir le contenu du document',

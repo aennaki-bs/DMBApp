@@ -34,13 +34,28 @@ const EmailVerification = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Initialize refs array
   useEffect(() => {
     inputRefs.current = inputRefs.current.slice(0, 6);
   }, []);
+
+  // Cooldown timer for resend button
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [resendCooldown]);
 
   useEffect(() => {
     if (!email) {
@@ -63,31 +78,78 @@ const EmailVerification = () => {
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    try {
-      await authService.resendVerificationCode(email);
+    // Check if cooldown is active
+    if (resendCooldown > 0) {
       toast({
-        title: "Success",
-        description: "Verification code has been resent to your email.",
+        variant: "destructive",
+        title: "Please wait",
+        description: `Please wait ${resendCooldown} seconds before resending.`,
       });
+      return;
+    }
+
+    setIsResending(true);
+    setError(null);
+    
+    try {
+      const response = await authService.resendVerificationCode(email);
+      
+      // Success feedback
+      toast({
+        title: "✅ Code Sent Successfully!",
+        description: "A new verification code has been sent to your email. Please check your inbox.",
+        duration: 5000,
+      });
+      
       // Reset the verification code fields
       setVerificationCode(["", "", "", "", "", ""]);
+      
+      // Start cooldown (60 seconds)
+      setResendCooldown(60);
+      
       // Focus the first input after resetting
       setTimeout(() => {
         if (inputRefs.current[0]) {
           inputRefs.current[0].focus();
         }
       }, 100);
+      
     } catch (error: any) {
       console.error("Error resending verification code:", error);
+      
+      // Determine error message
+      let errorMessage = "Failed to resend verification code.";
+      let errorTitle = "❌ Resend Failed";
+      
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        if (status === 404) {
+          errorTitle = "❌ Email Not Found";
+          errorMessage = "No account found with this email address.";
+        } else if (status === 400 && data?.includes("already verified")) {
+          errorTitle = "✅ Already Verified";
+          errorMessage = "Your email is already verified. You can proceed to login.";
+        } else if (typeof data === 'string') {
+          errorMessage = data;
+        } else if (data?.message) {
+          errorMessage = data.message;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to resend verification code.",
+        title: errorTitle,
+        description: errorMessage,
+        duration: 6000,
       });
+      
+      setError(errorMessage);
     } finally {
-      setIsLoading(false);
+      setIsResending(false);
     }
   };
 
@@ -295,7 +357,7 @@ const EmailVerification = () => {
               Email Verification
             </CardTitle>
             <CardDescription className="text-blue-300">
-              Enter the verification code sent to your email
+            Please verify your email before login. You can't login without verifying your email!
             </CardDescription>
           </CardHeader>
 
@@ -359,6 +421,19 @@ const EmailVerification = () => {
                   <p className="text-red-400 text-center text-sm">{error}</p>
                 </div>
               )}
+              
+            {/* Success message when code is sent */}
+            {resendCooldown > 0 && !error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-green-900/20 backdrop-blur-md border border-green-800/50 rounded-md p-3"
+              >
+                <p className="text-green-400 text-center text-sm">
+                  ✅ New verification code sent successfully! Check your email inbox.
+                </p>
+              </motion.div>
+            )}
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-3 relative z-10 border-t border-blue-900/30 bg-blue-950/30 backdrop-blur-xl px-6 py-4">
@@ -379,26 +454,42 @@ const EmailVerification = () => {
               Verify Email
             </Button>
 
-            <div className="flex justify-between w-full">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/login")}
-                className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Back to Login
-              </Button>
-
+            <div className="flex flex-col items-center w-full space-y-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleResendCode}
-                disabled={isLoading}
-                className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
+                disabled={isLoading || isResending || resendCooldown > 0}
+                className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 disabled:opacity-50"
               >
-                Resend Code
+                {isResending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : resendCooldown > 0 ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Resend Code ({resendCooldown}s)
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Resend Code
+                  </>
+                )}
               </Button>
+              
+              {/* Status feedback */}
+              {resendCooldown > 0 && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-blue-300 text-center"
+                >
+                  Please wait before requesting another code
+                </motion.p>
+              )}
             </div>
           </CardFooter>
         </Card>
