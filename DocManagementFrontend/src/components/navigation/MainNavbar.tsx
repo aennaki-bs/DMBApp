@@ -215,12 +215,12 @@ export function MainNavbar() {
                 className="flex items-center gap-responsive text-foreground hover:bg-accent/50 transition-all duration-200 btn-responsive rounded-lg h-auto"
               >
                 <div className="hidden lg:block text-right">
-                  <p className="text-responsive-sm font-medium text-foreground leading-tight">
+                  {/* <p className="text-responsive-sm font-medium text-foreground leading-tight">
                     {user.username || "User"}
                   </p>
                   <p className="text-responsive-xs text-muted-foreground uppercase tracking-wide">
                     {user.role}
-                  </p>
+                  </p> */}
                 </div>
                 <Avatar
                   className="ring-1 ring-border"

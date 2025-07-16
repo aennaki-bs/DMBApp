@@ -32,7 +32,10 @@ const CustomerManagementPage = () => {
       label: "Create Customer",
       variant: "default" as const,
       icon: Plus,
-      onClick: () => setIsCreateCustomerOpen(true),
+      onClick: () => {
+        // Do nothing when disabled
+      },
+      disabled: true, // Disabled create functionality
     },
   ];
 

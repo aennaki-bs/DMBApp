@@ -6,13 +6,14 @@ interface PageAction {
   label: string;
   onClick: () => void;
   variant?:
-    | "default"
-    | "outline"
-    | "secondary"
-    | "destructive"
-    | "ghost"
-    | "link";
+  | "default"
+  | "outline"
+  | "secondary"
+  | "destructive"
+  | "ghost"
+  | "link";
   icon?: LucideIcon;
+  disabled?: boolean; // Add disabled property
 }
 
 interface PageLayoutProps {
@@ -56,12 +57,15 @@ export function PageLayout({
                 key={index}
                 variant={action.variant || "default"}
                 onClick={action.onClick}
+                disabled={action.disabled}
                 className={
-                  action.variant === "outline"
-                    ? "bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/30 transition-all duration-300"
-                    : action.variant === "default"
-                    ? "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl border border-primary/30 hover:border-primary/50 transition-all duration-300"
-                    : undefined
+                  action.disabled
+                    ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-muted hover:bg-muted hover:text-muted-foreground hover:border-muted"
+                    : action.variant === "outline"
+                      ? "bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/30 transition-all duration-300"
+                      : action.variant === "default"
+                        ? "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl border border-primary/30 hover:border-primary/50 transition-all duration-300"
+                        : undefined
                 }
               >
                 {action.icon && <action.icon className="h-4 w-4 mr-2" />}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -60,13 +60,13 @@ import {
   CreateLignesElementTypeRequest,
 } from "@/models/lineElements";
 
-// Validation schemas for each step
+// Validation schemas for each step - FIXED: Only uppercase letters and underscores
 const step1Schema = z.object({
   code: z
     .string()
     .min(1, "Code is required")
     .max(50, "Code must be 50 characters or less")
-    .regex(/^[A-Z]+$/, "Code must contain only uppercase letters, numbers, and underscores"),
+    .regex(/^[A-Z_]+$/, "Code must contain only uppercase letters and underscores"),
 });
 
 const step2Schema = z.object({
@@ -83,13 +83,13 @@ const step3Schema = z.object({
     .transform((val) => val?.trim() || ""),
 });
 
-// Combined schema for final validation
+// Combined schema for final validation - CONSISTENT regex pattern: only uppercase and underscores
 const finalSchema = z.object({
   code: z
     .string()
     .min(1, "Code is required")
     .max(50, "Code must be 50 characters or less")
-    .regex(/^[A-Z0-9_]+$/, "Code must contain only uppercase letters, numbers, and underscores"),
+    .regex(/^[A-Z_]+$/, "Code must contain only uppercase letters and underscores"),
   typeElement: z.enum(["Item", "General Accounts"]),
   description: z
     .string()
@@ -123,13 +123,14 @@ const CreateElementTypeWizard = ({
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasBasicCodeFormat, setHasBasicCodeFormat] = useState(false);
+  const [validationTimer, setValidationTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Form data for each step
   const [wizardData, setWizardData] = useState<Partial<FinalData>>({});
 
-  // Forms for each step
+  // Forms for each step - FIXED: Remove zodResolver to allow free typing
   const step1Form = useForm<Step1Data>({
-    resolver: zodResolver(step1Schema),
+    // Don't use zodResolver here - it causes real-time validation interference
     defaultValues: { code: "" },
   });
 
@@ -153,49 +154,30 @@ const CreateElementTypeWizard = ({
       step1Form.reset();
       step2Form.reset();
       step3Form.reset();
-    }
-  }, [open, step1Form, step2Form, step3Form]);
-
-  // Check basic code format (without API call)
-  const checkBasicCodeFormat = (code: string) => {
-    const isValidFormat = /^[A-Z0-9_]*$/.test(code) && code.trim().length >= 1 && code.trim().length <= 50;
-    setHasBasicCodeFormat(isValidFormat);
-    return isValidFormat;
-  };
-
-  // Validate code uniqueness
-  const validateCode = async (code: string) => {
-    if (!code.trim()) {
-      setIsCodeValid(false);
-      return;
-    }
-
-    setIsValidatingCode(true);
-    try {
-      // Check if code already exists in element types
-      const existingTypes = await lineElementsService.elementTypes.getAll();
-      const codeExists = existingTypes.some(
-        (type) => type.code.toLowerCase() === code.toLowerCase()
-      );
-
-      if (codeExists) {
-        step1Form.setError("code", {
-          type: "manual",
-          message: "This code already exists. Please choose a different code.",
-        });
-        setIsCodeValid(false);
-      } else {
-        step1Form.clearErrors("code");
-        setIsCodeValid(true);
+      // Clear any pending validation timer
+      if (validationTimer) {
+        clearTimeout(validationTimer);
+        setValidationTimer(null);
       }
-    } catch (error) {
-      console.error("Error validating code:", error);
-      toast.error("Failed to validate code");
-      setIsCodeValid(false);
-    } finally {
-      setIsValidatingCode(false);
     }
-  };
+  }, [open, step1Form, step2Form, step3Form, validationTimer]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (validationTimer) {
+        clearTimeout(validationTimer);
+      }
+    };
+  }, [validationTimer]);
+
+
+
+
+
+
+
+
 
   // Handle step navigation
   const handleNextStep = async () => {
@@ -203,23 +185,64 @@ const CreateElementTypeWizard = ({
 
     switch (currentStep) {
       case 1:
-        isValid = await step1Form.trigger();
-        if (isValid) {
-          const code = step1Form.getValues().code;
+        // Simple validation for step 1
+        const currentCode = step1Form.getValues().code;
 
-          // If code hasn't been validated for uniqueness, do it now
-          if (!isCodeValid && !isValidatingCode) {
-            await validateCode(code);
+        if (!currentCode || !currentCode.trim()) {
+          step1Form.setError("code", {
+            type: "manual",
+            message: "Code is required",
+          });
+          return;
+        }
+
+        // Auto-fix the code by converting to uppercase and removing invalid chars
+        const fixedCode = currentCode.toUpperCase().replace(/[^A-Z_]/g, '');
+
+        if (fixedCode.length === 0) {
+          step1Form.setError("code", {
+            type: "manual",
+            message: "Please enter a valid code with letters",
+          });
+          return;
+        }
+
+        if (fixedCode.length > 50) {
+          step1Form.setError("code", {
+            type: "manual",
+            message: "Code must be 50 characters or less",
+          });
+          return;
+        }
+
+        // Allow underscores anywhere - user requested only A-Z and _ validation
+
+        // Set the fixed code and clear errors
+        step1Form.setValue("code", fixedCode);
+        step1Form.clearErrors("code");
+
+        // Check uniqueness
+        try {
+          const existingTypes = await lineElementsService.elementTypes.getAll();
+          const codeExists = existingTypes.some(
+            (type) => type.code.toLowerCase() === fixedCode.toLowerCase()
+          );
+
+          if (codeExists) {
+            step1Form.setError("code", {
+              type: "manual",
+              message: "This code already exists. Please choose a different code.",
+            });
+            return;
           }
 
-          // Only proceed if code is unique
-          if (isCodeValid) {
-            const data = step1Form.getValues();
-            setWizardData((prev) => ({ ...prev, ...data }));
-            setCurrentStep(2);
-          } else {
-            toast.error("Please ensure the code is unique before proceeding");
-          }
+          // Success - proceed to next step
+          const data = { code: fixedCode };
+          setWizardData((prev) => ({ ...prev, ...data }));
+          setCurrentStep(2);
+        } catch (error) {
+          console.error("Error validating code uniqueness:", error);
+          toast.error("Failed to validate code. Please try again.");
         }
         break;
       case 2:
@@ -368,16 +391,66 @@ const CreateElementTypeWizard = ({
                               placeholder="Enter unique code (e.g., ITEMOFFICE)"
                               {...field}
                               className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-400 pr-10"
+                              autoComplete="off"
+                              autoCorrect="off"
+                              autoCapitalize="off"
+                              spellCheck="false"
                               onChange={(e) => {
-                                // Convert to uppercase and filter valid characters
-                                const value = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                                // Allow free typing but validate immediately
+                                const value = e.target.value;
                                 field.onChange(value);
-                                checkBasicCodeFormat(value);
-                                setIsCodeValid(false); // Reset validation state
+
+                                // Reset validation states
+                                setIsCodeValid(false);
+                                setHasBasicCodeFormat(false);
+
+                                // Clear any pending validation timers
+                                if (validationTimer) {
+                                  clearTimeout(validationTimer);
+                                  setValidationTimer(null);
+                                }
+
+                                // IMMEDIATE VALIDATION: Check if value contains only A-Z and _
+                                if (value.trim().length > 0) {
+                                  // Check for invalid characters (anything other than A-Z and _)
+                                  if (!/^[A-Z_]*$/.test(value)) {
+                                    setHasBasicCodeFormat(false);
+                                    setIsCodeValid(false);
+                                    step1Form.setError("code", {
+                                      type: "manual",
+                                      message: "⚠️ Only UPPERCASE LETTERS (A-Z) and UNDERSCORES (_) are allowed!"
+                                    });
+                                  } else if (/^[A-Z_]+$/.test(value)) {
+                                    // Valid format - only A-Z and _
+                                    setHasBasicCodeFormat(true);
+                                    setIsCodeValid(true);
+                                    step1Form.clearErrors("code");
+                                  } else {
+                                    // Clear errors if empty or partially valid
+                                    step1Form.clearErrors("code");
+                                  }
+                                } else {
+                                  // Clear errors if empty
+                                  step1Form.clearErrors("code");
+                                }
                               }}
                               onBlur={() => {
-                                if (field.value) {
-                                  validateCode(field.value);
+                                // Final validation on blur
+                                const code = field.value;
+                                if (code && code.trim().length > 0) {
+                                  // Check basic format - must be only A-Z and _
+                                  if (/^[A-Z_]+$/.test(code)) {
+                                    setHasBasicCodeFormat(true);
+                                    setIsCodeValid(true);
+                                    step1Form.clearErrors("code");
+                                  } else {
+                                    setHasBasicCodeFormat(false);
+                                    setIsCodeValid(false);
+                                    step1Form.setError("code", {
+                                      type: "manual",
+                                      message: "❌ Code must contain ONLY UPPERCASE LETTERS (A-Z) and UNDERSCORES (_)"
+                                    });
+                                  }
                                 }
                               }}
                             />
@@ -410,10 +483,14 @@ const CreateElementTypeWizard = ({
 
                 <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-blue-300 mb-2">
-                    Code Guidelines:
+                    ✅ Code Rules - ONLY THESE CHARACTERS ALLOWED:
                   </h4>
                   <ul className="text-xs text-blue-400 space-y-1">
-                    <li>• Use uppercase letters</li>
+                    <li>✅ <strong>UPPERCASE LETTERS:</strong> A B C D E F G H I J K L M N O P Q R S T U V W X Y Z</li>
+                    <li>✅ <strong>UNDERSCORES:</strong> _</li>
+                    <li>❌ <strong>NOT ALLOWED:</strong> lowercase letters, numbers (0-9), special characters (!@#$%)</li>
+                    <li>⚠️ <strong>ERROR SHOWS IMMEDIATELY</strong> if you type invalid characters</li>
+                    <li>📏 Must be 1-50 characters long</li>
                   </ul>
                 </div>
               </CardContent>
@@ -680,7 +757,7 @@ const CreateElementTypeWizard = ({
             {currentStep < 4 ? (
               <Button
                 onClick={handleNextStep}
-                disabled={currentStep === 1 && !hasBasicCodeFormat}
+                disabled={currentStep === 1 && (!step1Form.getValues().code || step1Form.getValues().code.trim().length === 0)}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Next

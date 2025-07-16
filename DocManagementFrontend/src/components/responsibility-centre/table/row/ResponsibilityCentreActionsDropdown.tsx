@@ -7,7 +7,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ResponsibilityCentre } from "@/models/responsibilityCentre";
-import { Edit, Trash2, Eye, MoreHorizontal, UserPlus, UserMinus } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  UserPlus,
+  UserMinus,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ResponsibilityCentreActionsDropdownProps {
@@ -47,31 +54,36 @@ export function ResponsibilityCentreActionsDropdown({
           <Eye className="mr-2 h-4 w-4 text-blue-500" />
           <span>View Details</span>
         </DropdownMenuItem>
-        
+
         <DropdownMenuSeparator />
-        
-        <DropdownMenuItem onClick={onEdit} className="cursor-pointer">
+
+        {/* Disabled Update Centre action */}
+        <DropdownMenuItem
+          disabled
+          className="cursor-not-allowed opacity-50"
+        >
           <Edit className="mr-2 h-4 w-4 text-green-600" />
           <span>Update Centre</span>
         </DropdownMenuItem>
-        
+
         <DropdownMenuItem onClick={onAssociateUsers} className="cursor-pointer">
           <UserPlus className="mr-2 h-4 w-4 text-blue-600" />
           <span>Associate Users</span>
         </DropdownMenuItem>
-        
+
         {onRemoveUsers && userCount > 0 && (
           <DropdownMenuItem onClick={onRemoveUsers} className="cursor-pointer">
             <UserMinus className="mr-2 h-4 w-4 text-orange-600" />
             <span>Remove Users ({userCount})</span>
           </DropdownMenuItem>
         )}
-        
+
         <DropdownMenuSeparator />
-        
-        <DropdownMenuItem 
-          onClick={onDelete}
-          className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
+
+        {/* Disabled Delete action */}
+        <DropdownMenuItem
+          disabled
+          className="cursor-not-allowed opacity-50 text-red-600"
         >
           <Trash2 className="mr-2 h-4 w-4" />
           <span>Delete</span>

@@ -8,12 +8,13 @@ const ItemsPage = () => {
 
   const pageActions = [
     {
-      label: "Create Item (Disabled)",
-      variant: "outline" as const, // Use outline to appear disabled
+      label: "Create Item",
+      variant: "outline" as const,
       icon: Plus,
       onClick: () => {
-        // Disabled - no action
+        // Do nothing when disabled
       },
+      disabled: true, // Disabled create functionality
     },
   ];
 

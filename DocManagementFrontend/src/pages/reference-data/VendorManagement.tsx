@@ -32,7 +32,10 @@ const VendorManagementPage = () => {
       label: "Create Vendor",
       variant: "default" as const,
       icon: Plus,
-      onClick: () => setIsCreateVendorOpen(true),
+      onClick: () => {
+        // Do nothing when disabled
+      },
+      disabled: true, // Disabled create functionality
     },
   ];
 

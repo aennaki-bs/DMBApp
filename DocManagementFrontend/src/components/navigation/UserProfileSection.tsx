@@ -127,7 +127,7 @@ export function UserProfileSection() {
         </div>
 
         {/* Professional manage account link */}
-        <div className="p-2">
+        {/* <div className="p-2">
           <Link
             to="/profile"
             className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200 group backdrop-blur-sm"
@@ -138,11 +138,11 @@ export function UserProfileSection() {
             </div>
             <ChevronRight className="h-3 w-3 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
           </Link>
-        </div>
+        </div> */}
       </div>
 
       {/* Professional center info card */}
-      {responsibilityCenter && (
+      {/* {responsibilityCenter && (
         <motion.div
           className="mt-3 p-3 bg-background/10 backdrop-blur-xl rounded-lg border border-border/30 supports-[backdrop-filter]:bg-background/5"
           initial={{ opacity: 0, y: 10 }}
@@ -165,7 +165,7 @@ export function UserProfileSection() {
             </div>
           </div>
         </motion.div>
-      )}
+      )} */}
     </motion.div>
   );
 }

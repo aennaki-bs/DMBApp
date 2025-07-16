@@ -27,12 +27,16 @@ const ResponsibilityCentreManagement = () => {
         }
     }, [isAuthenticated, user, navigate]);
 
+    // Create button is disabled instead of removed
     const pageActions = [
         {
             label: "Create Centre",
             variant: "default" as const,
             icon: Plus,
-            onClick: () => setIsCreateCentreOpen(true),
+            onClick: () => {
+                // Do nothing when disabled
+            },
+            disabled: true, // Disabled create functionality
         },
     ];
 
@@ -44,6 +48,7 @@ const ResponsibilityCentreManagement = () => {
             actions={pageActions}
         >
             <ResponsibilityCentreTable />
+            {/* Keep dialog for consistency but it won't be accessible since button is disabled */}
             <ResponsibilityCentreCreateDialog
                 open={isCreateCentreOpen}
                 onOpenChange={setIsCreateCentreOpen}

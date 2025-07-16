@@ -40,7 +40,10 @@ const ElementTypesPage = () => {
       label: "Create Element Type",
       variant: "default" as const,
       icon: Plus,
-      onClick: () => setIsCreateWizardOpen(true),
+      onClick: () => {
+        // Do nothing when disabled
+      },
+      disabled: true, // Disabled create functionality
     },
   ];
 

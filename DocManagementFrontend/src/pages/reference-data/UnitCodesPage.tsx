@@ -8,12 +8,13 @@ const UnitCodesPage = () => {
 
   const pageActions = [
     {
-      label: "Create Unit Code (Disabled)",
+      label: "Create Unit Code",
       variant: "outline" as const,
       icon: Plus,
       onClick: () => {
-        // Disabled - no action
+        // Do nothing when disabled
       },
+      disabled: true, // Disabled create functionality
     },
   ];
 

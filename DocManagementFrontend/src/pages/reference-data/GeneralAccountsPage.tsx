@@ -11,7 +11,10 @@ const GeneralAccountsPage = () => {
       label: "Create General Account",
       variant: "outline" as const,
       icon: Plus,
-      onClick: () => setIsCreateModalOpen(true),
+      onClick: () => {
+        // Do nothing when disabled
+      },
+      disabled: true, // Disabled create functionality
     },
   ];
 

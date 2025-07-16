@@ -33,12 +33,8 @@ export function ElementTypesTableRow({
 }: ElementTypesTableRowProps) {
     const getDisplayCodeName = (code: string) => {
         if (!code) return "N/A";
-
-        // Format code name for better readability
-        const parts = code.split('_');
-        return parts.map(part =>
-            part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
-        ).join(' ');
+        // Return code exactly as stored without any formatting
+        return code;
     };
 
     const getTypeLabel = (type: string) => {

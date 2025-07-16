@@ -1,33 +1,9 @@
-import { useParams, Link } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import circuitService from "@/services/circuitService";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import {
-  ArrowLeft,
-  Plus,
-  AlertCircle,
-  Network,
-  Filter,
-  X,
-  RefreshCw,
-  Search,
-  Trash2,
-  CheckSquare,
-  MoreHorizontal,
-} from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { StatusTable } from "@/components/statuses/StatusTable";
-import { StatusFormDialog } from "@/components/statuses/dialogs/StatusFormDialog";
-import { DeleteStatusDialog } from "@/components/statuses/dialogs/DeleteStatusDialog";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Plus, ArrowLeft, RefreshCw, FileText, Search, Filter, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -38,539 +14,444 @@ import {
 } from "@/components/ui/select";
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { StatusTableContent } from "@/components/statuses/StatusTableContent";
+import { StatusFormDialog } from "@/components/statuses/dialogs/StatusFormDialog";
+import { DeleteStatusDialog } from "@/components/statuses/dialogs/DeleteStatusDialog";
 import { DocumentStatus } from "@/models/documentCircuit";
+import circuitService from "@/services/circuitService";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import { usePagination } from "@/hooks/usePagination";
+
+const SEARCH_FIELDS = [
+  { id: "all", label: "All fields" },
+  { id: "title", label: "Title" },
+  { id: "description", label: "Description" },
+];
+
+const TYPE_OPTIONS = [
+  { id: "any", label: "Any Type", value: "any" },
+  { id: "initial", label: "Initial", value: "initial" },
+  { id: "normal", label: "Normal", value: "normal" },
+  { id: "final", label: "Final", value: "final" },
+];
 
 export default function CircuitStatusesPage() {
   const { circuitId } = useParams<{ circuitId: string }>();
-  const { user } = useAuth();
-  const isSimpleUser = user?.role === "SimpleUser";
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  const [apiError, setApiError] = useState("");
-  const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<DocumentStatus | null>(
-    null
-  );
-  const [selectedStatuses, setSelectedStatuses] = useState<number[]>([]);
-
-  // Search and filter state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchField, setSearchField] = useState("title");
-  const [statusTypeFilter, setStatusTypeFilter] = useState("any");
-  const [filterOpen, setFilterOpen] = useState(false);
-
-  // Fetch circuit details
+  // Circuit data
   const {
     data: circuit,
-    isLoading: isCircuitLoading,
-    isError: isCircuitError,
-    refetch: refetchCircuit,
+    isLoading: circuitLoading,
+    isError: circuitError,
   } = useQuery({
     queryKey: ["circuit", circuitId],
     queryFn: () => circuitService.getCircuitById(Number(circuitId)),
     enabled: !!circuitId,
   });
 
-  // Fetch statuses for the circuit
+  // Statuses data
   const {
-    data: statuses = [],
-    isLoading: isStatusesLoading,
-    isError: isStatusesError,
-    refetch: refetchStatuses,
+    data: allStatuses = [],
+    isLoading,
+    isError,
+    refetch,
   } = useQuery({
-    queryKey: ["circuit-statuses", circuitId],
+    queryKey: ["circuitStatuses", circuitId],
     queryFn: () => circuitService.getCircuitStatuses(Number(circuitId)),
     enabled: !!circuitId,
   });
 
-  // Filter and search statuses
-  const filteredStatuses = statuses.filter((status) => {
-    // Apply search filter
-    const matchesSearch =
-      searchQuery === "" ||
-      status[searchField as keyof DocumentStatus]
-        ?.toString()
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+  // State management
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchField, setSearchField] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("any");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingStatus, setEditingStatus] = useState<DocumentStatus | null>(null);
+  const [deletingStatus, setDeletingStatus] = useState<DocumentStatus | null>(null);
+  const [sortBy, setSortBy] = useState("title");
+  const [sortDirection, setSortDirection] = useState("asc");
 
-    // Apply status type filter
-    let matchesType = true;
-    if (statusTypeFilter !== "any") {
-      switch (statusTypeFilter) {
-        case "initial":
-          matchesType = status.isInitial === true;
-          break;
-        case "final":
-          matchesType = status.isFinal === true;
-          break;
-        case "normal":
-          matchesType =
-            !status.isInitial && !status.isFinal && !status.isFlexible;
-          break;
-        case "flexible":
-          matchesType = status.isFlexible === true;
-          break;
-      }
+  // Filter functions
+  const getFilteredStatuses = () => {
+    let filtered = allStatuses;
+
+    // Map statuses to ensure consistent ID field
+    filtered = filtered.map(status => ({
+      ...status,
+      id: status.id || status.statusId || status.Id // Normalize ID field
+    }));
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((status) => {
+        const searchableText = `${status.title || status.Title || ''} ${status.description || status.Description || status.descriptif || status.Descriptif || ''}`.toLowerCase();
+
+        if (searchField === "all") {
+          return searchableText.includes(query);
+        } else if (searchField === "title") {
+          return (status.title || status.Title || '').toLowerCase().includes(query);
+        } else if (searchField === "description") {
+          return (status.description || status.Description || status.descriptif || status.Descriptif || '').toLowerCase().includes(query);
+        }
+        return false;
+      });
     }
 
-    return matchesSearch && matchesType;
+    // Apply type filter
+    if (typeFilter !== "any") {
+      filtered = filtered.filter((status) => {
+        switch (typeFilter) {
+          case "initial":
+            return status.isInitial || status.IsInitial || status.type === "Initial";
+          case "final":
+            return status.isFinal || status.IsFinal || status.type === "Final";
+          case "normal":
+            return !(status.isInitial || status.IsInitial || status.isFinal || status.IsFinal) && status.type !== "Initial" && status.type !== "Final";
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  };
+
+  const filteredStatuses = getFilteredStatuses();
+
+  // Ensure all statuses have normalized ID field for bulk selection
+  const normalizedStatuses = filteredStatuses.map(status => ({
+    ...status,
+    id: status.id || status.statusId || status.Id || status.statusKey // Ensure consistent ID field
+  }));
+
+  // Pagination
+  const pagination = usePagination({
+    data: normalizedStatuses,
+    initialPageSize: 25,
   });
 
-  // Handler to refresh all data after changes
-  const handleRefreshData = async () => {
-    try {
-      // Invalidate all related queries to force a refresh
-      await queryClient.invalidateQueries({ queryKey: ["circuit", circuitId] });
-      await queryClient.invalidateQueries({
-        queryKey: ["circuit-statuses", circuitId],
-      });
+  // Bulk selection
+  const bulkSelection = useBulkSelection<any>({
+    data: normalizedStatuses,
+    paginatedData: pagination.paginatedData,
+    currentPage: pagination.currentPage,
+    pageSize: pagination.pageSize,
+    keyField: "id", // Now guaranteed to exist
+  });
 
-      // Refetch the data
-      await refetchCircuit();
-      await refetchStatuses();
+  // Ensure the selected items array uses the correct ID field
+  const selectedStatusIds = bulkSelection.selectedItems.map(status =>
+    status.id || status.statusId || status.Id
+  );
 
-      toast.success("Data refreshed successfully");
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-      toast.error("Failed to refresh data");
-    }
-  };
+  // Filter popover state
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  // Handler logic for add/edit/delete
-  const handleAddStatus = () => {
-    if (circuit?.isActive) return; // Don't allow adding statuses if circuit is active
-    setSelectedStatus(null);
-    setFormDialogOpen(true);
-  };
-
-  const handleEditStatus = (status: DocumentStatus) => {
-    if (circuit?.isActive) return; // Don't allow editing statuses if circuit is active
-    setSelectedStatus(status);
-    setFormDialogOpen(true);
-  };
-
-  const handleDeleteStatus = (status: DocumentStatus) => {
-    if (circuit?.isActive) return; // Don't allow deleting statuses if circuit is active
-    setSelectedStatus(status);
-    setDeleteDialogOpen(true);
-  };
-
-  // Handle successful operations
-  const handleOperationSuccess = () => {
-    handleRefreshData();
-    // Clear selections after operations
-    setSelectedStatuses([]);
-  };
-
-  // Handle bulk selection
-  const handleSelectStatus = (statusId: number, isSelected: boolean) => {
-    if (isSelected) {
-      setSelectedStatuses((prev) => [...prev, statusId]);
-    } else {
-      setSelectedStatuses((prev) => prev.filter((id) => id !== statusId));
-    }
-  };
-
-  const handleSelectAll = (isSelected: boolean) => {
-    if (isSelected) {
-      setSelectedStatuses(filteredStatuses.map((status) => status.statusId));
-    } else {
-      setSelectedStatuses([]);
-    }
-  };
-
-  // Handle bulk delete
-  const handleBulkDelete = async () => {
-    if (circuit?.isActive) {
-      toast.error("Cannot delete statuses in an active circuit");
-      return;
-    }
-
-    if (selectedStatuses.length === 0) {
-      toast.error("No statuses selected");
-      return;
-    }
-
-    setBulkDeleteDialogOpen(true);
-  };
-
-  const confirmBulkDelete = async () => {
-    try {
-      // Implement bulk delete logic here
-      // This would typically call an API endpoint that handles bulk deletion
-      for (const statusId of selectedStatuses) {
-        await circuitService.deleteStatus(statusId);
-      }
-
-      toast.success(`${selectedStatuses.length} statuses deleted successfully`);
-      handleOperationSuccess();
-      setBulkDeleteDialogOpen(false);
-    } catch (error) {
-      console.error("Error deleting statuses:", error);
-      toast.error("Failed to delete statuses");
-    }
-  };
+  // Professional filter/search bar styling - exact match to Circuit Management
+  const filterCardClass =
+    "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
 
   // Clear all filters
-  const clearAllFilters = () => {
+  const handleClearAllFilters = () => {
+    setTypeFilter("any");
     setSearchQuery("");
-    setStatusTypeFilter("any");
+    setSearchField("all");
     setFilterOpen(false);
   };
 
-  const isLoading = isCircuitLoading || isStatusesLoading;
-  const isError = isCircuitError || isStatusesError;
+  // Check if any filters are active
+  const isFilterActive = searchQuery !== '' || typeFilter !== 'any';
 
-  if (isLoading) {
-    return (
-      <div className="p-4 md:p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-blue-900/30 rounded w-1/3"></div>
-          <div className="h-4 bg-blue-900/30 rounded w-1/4"></div>
-          <div className="h-64 bg-blue-900/20 rounded"></div>
-        </div>
-      </div>
-    );
-  }
+  // Sorting handler
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortDirection("asc");
+    }
+  };
 
-  if (isError || !circuit) {
-    return (
-      <div className="p-4 md:p-6">
-        <Alert
-          variant="destructive"
-          className="mb-4 border-red-800 bg-red-950/50 text-red-300"
-        >
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            {apiError ||
-              "Failed to load circuit statuses. Please try again later."}
-          </AlertDescription>
-        </Alert>
-        <Button variant="outline" asChild>
-          <Link to="/circuits">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Circuits
-          </Link>
-        </Button>
-      </div>
-    );
-  }
+  // CRUD handlers
+  const handleEditStatus = (status: any) => {
+    console.log("Edit handler called with status:", status);
+    setEditingStatus(status);
+  };
 
-  // Status filter options
-  const statusTypeOptions = [
-    { id: "any", label: "Any Type", value: "any" },
-    { id: "initial", label: "Initial", value: "initial" },
-    { id: "final", label: "Final", value: "final" },
-    { id: "normal", label: "Normal", value: "normal" },
-    { id: "flexible", label: "Flexible", value: "flexible" },
+  const handleDeleteStatus = (statusId: number) => {
+    console.log("Delete handler called with statusId:", statusId);
+    console.log("Available statuses:", filteredStatuses);
+
+    const status = filteredStatuses.find(s => {
+      const sId = s.id || s.statusId || s.Id;
+      console.log("Checking status:", s, "ID:", sId);
+      return sId === statusId;
+    });
+
+    console.log("Found status:", status);
+    if (status) {
+      setDeletingStatus(status);
+    } else {
+      console.error("Status not found for ID:", statusId);
+    }
+  };
+
+  const handleStatusCreated = () => {
+    setShowCreateDialog(false);
+    refetch();
+    toast.success("Status created successfully");
+  };
+
+  const handleStatusUpdated = () => {
+    setEditingStatus(null);
+    refetch();
+    toast.success("Status updated successfully");
+  };
+
+  const handleStatusDeleted = () => {
+    setDeletingStatus(null);
+    refetch();
+    toast.success("Status deleted successfully");
+  };
+
+  const handleBulkEdit = async () => {
+    if (circuit.isActive) {
+      toast.error("Cannot edit statuses in active circuit");
+      return;
+    }
+
+    toast.info("Bulk edit functionality coming soon");
+  };
+
+  const handleBulkDelete = async () => {
+    if (circuit.isActive) {
+      toast.error("Cannot delete statuses in active circuit");
+      return;
+    }
+
+    try {
+      const selectedCount = bulkSelection.selectedItems.length;
+      for (const statusId of bulkSelection.selectedItems) {
+        await circuitService.deleteStatus(statusId);
+      }
+      bulkSelection.clearSelection();
+      refetch();
+      toast.success(`${selectedCount} statuses deleted successfully`);
+    } catch (error) {
+      console.error("Failed to delete statuses:", error);
+      toast.error("Failed to delete selected statuses");
+    }
+  };
+
+  // Page actions
+  const pageActions = [
+    {
+      label: "Back to Circuits",
+      variant: "outline" as const,
+      icon: ArrowLeft,
+      onClick: () => navigate("/circuits"),
+    },
+    {
+      label: "Circuit Steps",
+      variant: "outline" as const,
+      icon: FileText,
+      onClick: () => navigate(`/circuits/${circuitId}/steps`),
+    },
+    {
+      label: "Refresh",
+      variant: "outline" as const,
+      icon: RefreshCw,
+      onClick: () => refetch(),
+    },
+    {
+      label: "Add Status",
+      variant: "default" as const,
+      icon: Plus,
+      onClick: () => setShowCreateDialog(true),
+    },
   ];
 
-  // Search field options
-  const searchFieldOptions = [
-    { id: "title", label: "Title", value: "title" },
-    { id: "statusKey", label: "Status Key", value: "statusKey" },
-    { id: "description", label: "Description", value: "description" },
-  ];
+  if (circuitLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (circuitError || !circuit) {
+    return <div>Circuit not found</div>;
+  }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Modern header panel */}
-      <div className="bg-[#0a1033] border border-blue-900/30 rounded-lg p-6 mb-6 transition-all">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Button variant="outline" size="sm" asChild className="h-9">
-                <Link to="/circuits">
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Link>
-              </Button>
+    <PageLayout
+      title={`${circuit.title} - Statuses`}
+      subtitle={`Circuit: ${circuit.circuitKey} (${circuit.isActive ? "Active Circuit" : "Inactive Circuit"})`}
+      icon={FileText}
+      actions={pageActions}
+    >
+      <div
+        className="h-full flex flex-col gap-6 w-full"
+        style={{ minHeight: "100%" }}
+      >
+        {/* Circuit Management Style Search + Filter Bar */}
+        <div className={filterCardClass}>
+          {/* Search and field select */}
+          <div className="flex-1 flex items-center gap-4 min-w-0">
+            <div className="relative">
+              <Select value={searchField} onValueChange={setSearchField}>
+                <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+                  <SelectValue>
+                    {SEARCH_FIELDS.find((opt) => opt.id === searchField)?.label || "All fields"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                  {SEARCH_FIELDS.map((opt) => (
+                    <SelectItem
+                      key={opt.id}
+                      value={opt.id}
+                      className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <h1 className="text-2xl md:text-3xl font-semibold text-white flex items-center">
-              {circuit.title} - Statuses
-            </h1>
-            <p className="text-sm md:text-base text-gray-400 mt-1">
-              Circuit:{" "}
-              <span className="text-blue-300">{circuit.circuitKey}</span>
-              {circuit.isActive && (
-                <span className="ml-2 text-green-400 font-semibold">
-                  (Active Circuit)
-                </span>
-              )}
-            </p>
-          </div>
 
-          <div className="flex flex-wrap gap-2">
-            {/* Circuit Steps Button */}
-            {!isSimpleUser && (
-              <Button
-                variant="outline"
-                className="border-blue-500/30 text-blue-300 hover:text-blue-200"
-                asChild
-              >
-                <Link to={`/circuit/${circuit.id}/steps`}>
-                  <Network className="mr-2 h-4 w-4" /> Circuit Steps
-                </Link>
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
-              onClick={handleRefreshData}
-              className="border-blue-700/50 hover:bg-blue-900/20"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" /> Refresh
-            </Button>
-
-            {!isSimpleUser &&
-              (circuit.isActive ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="bg-blue-500/50 text-blue-200 cursor-not-allowed"
-                        disabled
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Add Status
-                        <AlertCircle className="ml-2 h-3 w-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Cannot add statuses to active circuit</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <Button
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                  onClick={handleAddStatus}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Status
-                </Button>
-              ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Search and filter bar */}
-      <div className="w-full flex flex-col md:flex-row items-center gap-2 p-4 mb-4 rounded-xl bg-[#1e2a4a] shadow-lg border border-blue-900/40">
-        {/* Search and field select */}
-        <div className="flex-1 flex items-center gap-2 min-w-0 w-full">
-          <Select value={searchField} onValueChange={setSearchField}>
-            <SelectTrigger className="w-[120px] bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm rounded-md">
-              <SelectValue>
-                {searchFieldOptions.find((opt) => opt.id === searchField)
-                  ?.label || "Title"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
-              {searchFieldOptions.map((opt) => (
-                <SelectItem
-                  key={opt.id}
-                  value={opt.id}
-                  className="hover:bg-blue-800/40"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search statuses..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#22306e] text-blue-100 border border-blue-900/40 pl-10 pr-8 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:bg-blue-800/40 shadow-sm"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Filter popover */}
-        <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={`bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 shadow-sm rounded-md flex items-center gap-2 ml-2 ${
-                statusTypeFilter !== "any" ? "border-blue-500" : ""
-              }`}
-            >
-              <Filter className="h-4 w-4 text-blue-400" />
-              Filter
-              {statusTypeFilter !== "any" && (
-                <Badge className="ml-1 bg-blue-600 text-white">1</Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-4 animate-fade-in">
-            <div className="mb-2 text-blue-200 font-semibold">
-              Filter Statuses
-            </div>
-            <div className="space-y-4">
-              {/* Status Type Filter */}
-              <div>
-                <label className="text-sm text-blue-300 mb-1 block">
-                  Status Type
-                </label>
-                <Select
-                  value={statusTypeFilter}
-                  onValueChange={setStatusTypeFilter}
-                >
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40">
-                    <SelectValue placeholder="Select status type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
-                    {statusTypeOptions.map((option) => (
-                      <SelectItem key={option.id} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="relative min-w-[300px] flex-1 group">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+              <Input
+                placeholder="Search circuits..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
+              />
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+                <Search className="h-5 w-5" />
               </div>
-
-              {/* Filter Actions */}
-              <div className="flex justify-between pt-2 border-t border-blue-900/40">
+              {searchQuery && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={clearAllFilters}
-                  className="text-blue-300 hover:text-blue-200"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-lg"
+                  onClick={() => setSearchQuery("")}
                 >
-                  Clear All
+                  <X className="h-4 w-4" />
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => setFilterOpen(false)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Apply Filters
-                </Button>
-              </div>
+              )}
             </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Bulk actions bar */}
-      {selectedStatuses.length > 0 && (
-        <div className="flex items-center justify-between p-3 bg-blue-900/30 border border-blue-900/50 rounded-lg mb-4">
-          <div className="flex items-center">
-            <CheckSquare className="h-5 w-5 text-blue-400 mr-2" />
-            <span className="text-blue-200 font-medium">
-              {selectedStatuses.length} statuses selected
-            </span>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedStatuses([])}
-              className="border-blue-900/50 hover:bg-blue-900/50"
-            >
-              Clear Selection
-            </Button>
-            {!circuit.isActive && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="bg-red-900/50 hover:bg-red-900/70 text-red-200"
-              >
-                <Trash2 className="h-4 w-4 mr-1" /> Delete Selected
-              </Button>
-            )}
+
+          {/* Filter controls */}
+          <div className="flex items-center gap-3">
+            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
+                >
+                  <Filter className="h-5 w-5" />
+                  Filters
+                  {isFilterActive && (
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl p-6">
+                <div className="mb-4 text-foreground font-bold text-lg flex items-center gap-2">
+                  <Filter className="h-5 w-5 text-primary" />
+                  Advanced Filters
+                </div>
+                <div className="flex flex-col gap-4">
+                  {/* Type Filter */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-popover-foreground">Status Type</span>
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                      <SelectTrigger className="w-full bg-background/50 backdrop-blur-sm text-foreground border border-border focus:ring-primary focus:border-primary transition-colors duration-200 hover:bg-background/70 shadow-sm rounded-md">
+                        <SelectValue>
+                          {TYPE_OPTIONS.find((opt) => opt.value === typeFilter)?.label}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover/95 backdrop-blur-lg text-popover-foreground border border-border">
+                        {TYPE_OPTIONS.map((opt) => (
+                          <SelectItem
+                            key={opt.id}
+                            value={opt.value}
+                            className="hover:bg-accent hover:text-accent-foreground"
+                          >
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Clear Filters Button */}
+                  {isFilterActive && (
+                    <Button
+                      variant="outline"
+                      onClick={handleClearAllFilters}
+                      className="w-full bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20 hover:text-destructive transition-all duration-200"
+                    >
+                      Clear All Filters
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
-      )}
 
-      {/* Content */}
-      {apiError && (
-        <Alert
-          variant="destructive"
-          className="mb-4 border-red-800 bg-red-950/50 text-red-300"
-        >
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{apiError}</AlertDescription>
-        </Alert>
-      )}
+        {/* Use UserTableContent Pattern */}
+        <div className="flex-1 min-h-0">
+          <StatusTableContent
+            statuses={pagination.paginatedData}
+            selectedStatuses={bulkSelection.selectedItems}
+            bulkSelection={bulkSelection}
+            pagination={pagination}
+            onEdit={handleEditStatus}
+            onDelete={handleDeleteStatus}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onClearFilters={handleClearAllFilters}
+            onBulkEdit={handleBulkEdit}
+            onBulkDelete={handleBulkDelete}
+            isLoading={isLoading}
+            isError={isError}
+            isCircuitActive={circuit?.isActive || false}
+          />
+        </div>
+      </div>
 
-      <StatusTable
-        statuses={filteredStatuses}
-        onEdit={handleEditStatus}
-        onDelete={handleDeleteStatus}
-        isCircuitActive={circuit.isActive}
-        selectedStatusIds={selectedStatuses}
-        onSelectStatus={handleSelectStatus}
-        onSelectAll={handleSelectAll}
+      {/* Dialogs */}
+      <StatusFormDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={handleStatusCreated}
+        circuitId={Number(circuitId)}
       />
 
-      {/* Modals */}
-      {!isSimpleUser && (
-        <>
-          <StatusFormDialog
-            open={formDialogOpen}
-            onOpenChange={setFormDialogOpen}
-            onSuccess={handleOperationSuccess}
-            status={selectedStatus}
-            circuitId={Number(circuitId)}
-          />
-          <DeleteStatusDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            onSuccess={handleOperationSuccess}
-            status={selectedStatus}
-          />
-          {/* Bulk Delete Dialog */}
-          {bulkDeleteDialogOpen && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-lg p-6 max-w-md w-full">
-                <h3 className="text-xl font-semibold text-blue-100 mb-4">
-                  Confirm Bulk Delete
-                </h3>
-                <p className="text-blue-200 mb-6">
-                  Are you sure you want to delete {selectedStatuses.length}{" "}
-                  selected statuses? This action cannot be undone.
-                </p>
-                <div className="flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setBulkDeleteDialogOpen(false)}
-                    className="border-blue-900/50 hover:bg-blue-900/20"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={confirmBulkDelete}
-                    className="bg-red-900/70 hover:bg-red-900 text-red-100"
-                  >
-                    Delete {selectedStatuses.length} Statuses
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
+      {editingStatus && (
+        <StatusFormDialog
+          status={editingStatus}
+          open={!!editingStatus}
+          onOpenChange={(open) => !open && setEditingStatus(null)}
+          onSuccess={handleStatusUpdated}
+        />
       )}
-    </div>
+
+      {deletingStatus && (
+        <DeleteStatusDialog
+          status={deletingStatus}
+          open={!!deletingStatus}
+          onOpenChange={(open) => !open && setDeletingStatus(null)}
+          onSuccess={handleStatusDeleted}
+        />
+      )}
+    </PageLayout>
   );
 }
