@@ -930,11 +930,11 @@ namespace DocManagementBackend.Services
                     
                     if (archivalSuccess)
                     {
-                        _logger.LogInformation("Document {DocumentId} successfully archived to ERP", documentId);
+                        _logger.LogInformation("Document {DocumentId} successfully processed by ERP archival service (fully archived)", documentId);
                     }
                     else
                     {
-                        _logger.LogWarning("Failed to archive document {DocumentId} to ERP", documentId);
+                        _logger.LogWarning("Document {DocumentId} ERP archival failed or partially failed (remains in Completed status)", documentId);
                     }
                 }
                 catch (Exception ex)
@@ -1114,11 +1114,11 @@ namespace DocManagementBackend.Services
                         
                         if (archivalSuccess)
                         {
-                            _logger.LogInformation("Document {DocumentId} successfully archived to ERP", documentId);
+                            _logger.LogInformation("Document {DocumentId} successfully processed by ERP archival service (fully archived)", documentId);
                         }
                         else
                         {
-                            _logger.LogWarning("Failed to archive document {DocumentId} to ERP", documentId);
+                            _logger.LogWarning("Document {DocumentId} ERP archival failed or partially failed (remains in Completed status)", documentId);
                         }
                     }
                     catch (Exception ex)
@@ -1426,7 +1426,7 @@ namespace DocManagementBackend.Services
                 // Get all documents to check which ones can be deleted
                 var allDocuments = await _context.Documents
                     .Where(d => documentIds.Contains(d.Id))
-                    .Select(d => new { d.Id, d.TypeId, d.ERPDocumentCode, d.DocumentKey, d.Status })
+                    .Select(d => new { d.Id, d.TypeId, d.ERPDocumentCode, d.DocumentKey, d.Status, d.IsArchived })
                     .ToListAsync();
 
                 if (!allDocuments.Any())
@@ -1439,29 +1439,28 @@ namespace DocManagementBackend.Services
                 Console.WriteLine($"[DEBUG WorkflowService] Processing {allDocuments.Count} documents for deletion");
                 foreach (var doc in allDocuments)
                 {
-                    var isErpArchived = !string.IsNullOrEmpty(doc.ERPDocumentCode);
-                    Console.WriteLine($"[DEBUG WorkflowService] Document {doc.Id} ({doc.DocumentKey}) - Status: {doc.Status}, ERPCode: '{doc.ERPDocumentCode ?? "NULL"}', IsErpArchived: {isErpArchived}");
+                    Console.WriteLine($"[DEBUG WorkflowService] Document {doc.Id} ({doc.DocumentKey}) - Status: {doc.Status}, ERPCode: '{doc.ERPDocumentCode ?? "NULL"}', IsArchived: {doc.IsArchived}");
                 }
 
-                // Filter out documents that are archived to ERP
+                // Filter out documents that are fully archived (IsArchived = true)
                 var documentsToDelete = allDocuments
-                    .Where(d => string.IsNullOrEmpty(d.ERPDocumentCode))
+                    .Where(d => !d.IsArchived)
                     .ToList();
                 
-                var erpArchivedDocuments = allDocuments
-                    .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode))
+                var archivedDocuments = allDocuments
+                    .Where(d => d.IsArchived)
                     .Select(d => d.Id)
                     .ToList();
                 
-                Console.WriteLine($"[DEBUG WorkflowService] {documentsToDelete.Count} documents can be deleted, {erpArchivedDocuments.Count} are ERP-archived");
+                Console.WriteLine($"[DEBUG WorkflowService] {documentsToDelete.Count} documents can be deleted, {archivedDocuments.Count} are fully archived");
                 
-                // Add ERP archived documents to failed list
-                failedIds.AddRange(erpArchivedDocuments);
+                // Add fully archived documents to failed list
+                failedIds.AddRange(archivedDocuments);
                 
-                if (erpArchivedDocuments.Any())
+                if (archivedDocuments.Any())
                 {
-                    _logger.LogWarning("Attempted to delete {Count} ERP-archived documents. Document IDs: {DocumentIds}", 
-                        erpArchivedDocuments.Count, string.Join(", ", erpArchivedDocuments));
+                    _logger.LogWarning("Attempted to delete {Count} fully archived documents. Document IDs: {DocumentIds}", 
+                        archivedDocuments.Count, string.Join(", ", archivedDocuments.Select(id => id.ToString())));
                 }
 
                 if (!documentsToDelete.Any())
@@ -1600,13 +1599,13 @@ namespace DocManagementBackend.Services
                 if (document == null)
                     return false; // Document not found
                 
-                // Check if document is archived to ERP
-                if (!string.IsNullOrEmpty(document.ERPDocumentCode))
+                // Check if document is fully archived
+                if (document.IsArchived)
                 {
-                    _logger.LogWarning("Attempted to delete ERP-archived document {DocumentId} with ERP code: {ERPCode}", 
+                    _logger.LogWarning("Attempted to delete fully archived document {DocumentId} with ERP code: {ERPCode}", 
                         documentId, document.ERPDocumentCode);
                     await transaction.RollbackAsync();
-                    return false; // Cannot delete ERP-archived documents
+                    return false; // Cannot delete fully archived documents
                 }
                 
                 // Update the document type counter first (within transaction)

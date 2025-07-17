@@ -329,7 +329,7 @@ export function WorkflowDialog({
                           >
                             {isCircuitCompleted ? "Completed" : "In Progress"}
                           </Badge>
-                          {workflowStatus && (
+                          {/* {workflowStatus && (
                             <span className="text-xs text-blue-300">
                               {
                                 workflowStatus.statuses.filter(
@@ -339,13 +339,13 @@ export function WorkflowDialog({
                               of {workflowStatus.statuses.length} steps
                               completed
                             </span>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     </div>
 
                     {/* Move Document Button - Only show if workflow completed and user has permission */}
-                    {workflowStatus?.isCircuitCompleted && !isSimpleUser && (
+                    {/* {workflowStatus?.isCircuitCompleted && !isSimpleUser && (
                       <MoveDocumentButton
                         documentId={documentId}
                         onStatusChange={handleStatusChange}
@@ -355,7 +355,7 @@ export function WorkflowDialog({
                           workflowStatus?.availableStatusTransitions || []
                         }
                       />
-                    )}
+                    )} */}
                   </CardContent>
                 </Card>
               </motion.div>

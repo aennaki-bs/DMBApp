@@ -41,8 +41,8 @@ export const DocumentsSearchBar = ({
     { id: "all", label: t("documents.allFields") },
     { id: "title", label: t("documents.documentTitle") },
     { id: "documentKey", label: t("documents.documentCode") },
-    { id: "documentType", label: t("documents.documentType") },
-    { id: "createdBy", label: t("documents.createdBy") },
+    // { id: "documentType", label: t("documents.documentType") },
+    { id: "responsibilityCentre", label: "Responsibility Center" },
   ];
 
   // Sync local state with filter state

@@ -10,7 +10,7 @@ namespace DocManagementBackend.Services
 {
     public interface IDocumentErpArchivalService
     {
-        Task<bool> ArchiveDocumentToErpAsync(int documentId);
+        Task<bool> ArchiveDocumentToErpAsync(int documentId, bool isRetry = false);
         Task<bool> IsDocumentArchived(int documentId);
         Task<bool> CreateDocumentLinesInErpAsync(int documentId);
         Task<DocumentErpStatusDto> GetDocumentErpStatusAsync(int documentId);
@@ -78,7 +78,7 @@ namespace DocManagementBackend.Services
             }
         }
 
-        public async Task<bool> ArchiveDocumentToErpAsync(int documentId)
+        public async Task<bool> ArchiveDocumentToErpAsync(int documentId, bool isRetry = false)
         {
             // Use a new scope and context to avoid Entity Framework concurrency issues
             using var scope = _serviceProvider.CreateScope();
@@ -88,17 +88,15 @@ namespace DocManagementBackend.Services
             {
                 _logger.LogInformation("Starting ERP archival for document ID: {DocumentId}", documentId);
 
-                // Check if document is already archived
+                // Check if document is already fully archived
                 var existingDocument = await context.Documents
                     .AsNoTracking()
                     .FirstOrDefaultAsync(d => d.Id == documentId);
                     
-                if (existingDocument != null && !string.IsNullOrEmpty(existingDocument.ERPDocumentCode))
+                if (existingDocument != null && existingDocument.IsArchived)
                 {
-                    _logger.LogWarning("Document {DocumentId} is already archived to ERP", documentId);
-                    
-                    // Check if lines need to be created using the same scope
-                    return await CreateDocumentLinesInErpInternalAsync(documentId, context);
+                    _logger.LogInformation("Document {DocumentId} is already fully archived to ERP", documentId);
+                    return true;
                 }
 
                 // Get document with all necessary relationships
@@ -111,6 +109,16 @@ namespace DocManagementBackend.Services
                 {
                     _logger.LogError("Document {DocumentId} not found for ERP archival", documentId);
                     return false;
+                }
+
+                // NEW LOGIC: If document already has ERP code, just proceed to line archival
+                if (!string.IsNullOrEmpty(document.ERPDocumentCode))
+                {
+                    _logger.LogInformation("Document {DocumentId} already has ERP code {ErpCode}, proceeding to line archival", 
+                        documentId, document.ERPDocumentCode);
+                    
+                    // Proceed to line archival with rollback logic
+                    return await ProcessLinesArchivalWithRollback(documentId, context, isRetry);
                 }
 
                 // Build the API request payload
@@ -138,12 +146,13 @@ namespace DocManagementBackend.Services
                             $"Duplicate ERP document code '{erpResult.Value}' returned by ERP system for document type", 
                             $"ERP code '{erpResult.Value}' already exists in document ID {existingDocumentWithCode.Id} of the same document type ({document.TypeId}). This indicates a numbering issue in the ERP system for this document type.");
                         
+                        // Document archival failed - stays "Completed" but not "Archived"
                         return false;
                     }
                     
                     try
                     {
-                        // Update document with ERP document code (status already set by workflow)
+                        // Update document with ERP document code (but not yet marked as archived)
                         document.ERPDocumentCode = erpResult.Value;
                         document.UpdatedAt = DateTime.UtcNow;
                         
@@ -152,8 +161,8 @@ namespace DocManagementBackend.Services
                         _logger.LogInformation("Document {DocumentId} successfully archived to ERP with code: {ErpCode}", 
                             documentId, erpResult.Value);
                         
-                        // Now create the document lines in ERP using the same scope
-                        return await CreateDocumentLinesInErpInternalAsync(documentId, context);
+                        // NEW LOGIC: Process lines with rollback capability
+                        return await ProcessLinesArchivalWithRollback(documentId, context, isRetry);
                     }
                     catch (DbUpdateException dbEx) when (dbEx.InnerException?.Message?.Contains("IX_Documents_ERPDocumentCode") == true)
                     {
@@ -166,6 +175,7 @@ namespace DocManagementBackend.Services
                             $"Duplicate ERP document code '{erpResult.Value}' - database constraint violation for document type", 
                             $"Database unique constraint 'IX_Documents_ERPDocumentCode_TypeId' prevented saving duplicate ERP code '{erpResult.Value}' for document type {document.TypeId}. This indicates concurrent access or ERP numbering issues for this document type.");
                         
+                        // Document archival failed - stays "Completed" but not "Archived"
                         return false;
                     }
                 }
@@ -177,6 +187,7 @@ namespace DocManagementBackend.Services
                 await RecordErpErrorAsync(context, documentId, null, ErpErrorType.DocumentArchival, 
                     erpResult.ErrorMessage, erpResult.ErrorDetails);
                 
+                // Document archival failed - stays "Completed" but not "Archived"
                 return false;
             }
             catch (Exception ex)
@@ -194,11 +205,104 @@ namespace DocManagementBackend.Services
             return await CreateDocumentLinesInErpInternalAsync(documentId, context);
         }
 
-        private async Task<bool> CreateDocumentLinesInErpInternalAsync(int documentId, ApplicationDbContext context)
+        /// <summary>
+        /// NEW METHOD: Process lines archival with rollback capability
+        /// If ALL lines succeed, mark document as IsArchived = true
+        /// If ANY line fails, rollback document archival (set ERPDocumentCode = null) and keep IsArchived = false
+        /// </summary>
+        private async Task<bool> ProcessLinesArchivalWithRollback(int documentId, ApplicationDbContext context, bool forceReprocessAllLines = false)
         {
             try
             {
-                _logger.LogInformation("Starting ERP line creation for document ID: {DocumentId}", documentId);
+                _logger.LogInformation("Processing lines archival with rollback for document {DocumentId}", documentId);
+
+                // Get the document to check if it has an ERP code
+                var document = await context.Documents
+                    .FirstOrDefaultAsync(d => d.Id == documentId);
+
+                if (document == null)
+                {
+                    _logger.LogError("Document {DocumentId} not found for lines archival", documentId);
+                    return false;
+                }
+
+                // If document doesn't have ERP code, it means document archival failed
+                if (string.IsNullOrEmpty(document.ERPDocumentCode))
+                {
+                    _logger.LogWarning("Document {DocumentId} does not have ERP code, cannot process lines", documentId);
+                    return false;
+                }
+
+                // Process document lines
+                var linesResult = await CreateDocumentLinesInErpInternalAsync(documentId, context, forceReprocessAllLines);
+
+                if (linesResult)
+                {
+                    // ALL lines succeeded - mark document as fully archived
+                    document.IsArchived = true;
+                    document.UpdatedAt = DateTime.UtcNow;
+                    
+                    await context.SaveChangesAsync();
+                    
+                    _logger.LogInformation("Document {DocumentId} and all lines successfully archived - marked as IsArchived = true", 
+                        documentId);
+                    
+                    return true;
+                }
+                else
+                {
+                    // ANY line failed - rollback document archival AND clear all line ERPLineCodes
+                    _logger.LogWarning("One or more lines failed to archive for document {DocumentId} - rolling back document archival", 
+                        documentId);
+                    
+                    // Clear the ERP document code and ensure not marked as archived
+                    document.ERPDocumentCode = null;
+                    document.IsArchived = false;
+                    document.UpdatedAt = DateTime.UtcNow;
+                    
+                    // CRITICAL FIX: Clear ERPLineCode from ALL lines in this document
+                    var allDocumentLines = await context.Lignes
+                        .Where(l => l.DocumentId == documentId)
+                        .ToListAsync();
+                    
+                    int clearedLinesCount = 0;
+                    foreach (var ligne in allDocumentLines)
+                    {
+                        if (!string.IsNullOrEmpty(ligne.ERPLineCode))
+                        {
+                            ligne.ERPLineCode = null;
+                            ligne.UpdatedAt = DateTime.UtcNow;
+                            clearedLinesCount++;
+                        }
+                    }
+                    
+                    await context.SaveChangesAsync();
+                    
+                    // Record a rollback error
+                    await RecordErpErrorAsync(context, documentId, null, ErpErrorType.BusinessRuleError, 
+                        "Document archival rolled back due to line archival failures", 
+                        $"One or more document lines failed to archive to ERP. Document archival has been rolled back and ERPDocumentCode cleared. Additionally, ERPLineCode cleared from {clearedLinesCount} lines. Document remains in Completed status and can be edited.");
+                    
+                    _logger.LogInformation("Document {DocumentId} archival rolled back - ERPDocumentCode cleared, IsArchived = false, ERPLineCode cleared from {ClearedLinesCount} lines", 
+                        documentId, clearedLinesCount);
+                    
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing lines archival with rollback for document {DocumentId}: {Error}", 
+                    documentId, ex.Message);
+                return false;
+            }
+        }
+
+        private async Task<bool> CreateDocumentLinesInErpInternalAsync(int documentId, ApplicationDbContext context, bool forceReprocessAllLines = false)
+        {
+            try
+            {
+                _logger.LogInformation("Starting ERP line creation for document ID: {DocumentId}, forceReprocessAllLines: {ForceReprocessAllLines}", 
+                    documentId, forceReprocessAllLines);
 
                 // Get document with all necessary relationships
                 var document = await context.Documents
@@ -237,13 +341,21 @@ namespace DocManagementBackend.Services
                 {
                     try
                     {
-                        // Skip if line is already in ERP
-                        if (!string.IsNullOrEmpty(ligne.ERPLineCode))
+                        // Skip if line is already in ERP (unless forced re-processing)
+                        if (!string.IsNullOrEmpty(ligne.ERPLineCode) && !forceReprocessAllLines)
                         {
                             _logger.LogInformation("Line {LigneId} already exists in ERP with code: {ErpLineCode}", 
                                 ligne.Id, ligne.ERPLineCode);
                             successCount++;
                             continue;
+                        }
+
+                        // If forcing re-processing, clear existing ERPLineCode first
+                        if (forceReprocessAllLines && !string.IsNullOrEmpty(ligne.ERPLineCode))
+                        {
+                            _logger.LogInformation("Forcing re-processing of line {LigneId} - clearing existing ERPLineCode: {ErpLineCode}", 
+                                ligne.Id, ligne.ERPLineCode);
+                            ligne.ERPLineCode = null;
                         }
 
                         // Load element data for the ligne
@@ -313,7 +425,7 @@ namespace DocManagementBackend.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync(d => d.Id == documentId);
                 
-            return !string.IsNullOrEmpty(document?.ERPDocumentCode);
+            return document?.IsArchived ?? false;
         }
 
         private async Task<object> BuildErpPayload(Document document)
@@ -697,7 +809,7 @@ namespace DocManagementBackend.Services
             {
                 DocumentId = documentId,
                 DocumentKey = document.DocumentKey,
-                IsArchived = !string.IsNullOrEmpty(document.ERPDocumentCode),
+                IsArchived = document.IsArchived,
                 ErpDocumentCode = document.ERPDocumentCode,
                 HasErrors = errors.Any(),
                 HasUnresolvedErrors = unresolvedErrors.Any(),
@@ -750,7 +862,9 @@ namespace DocManagementBackend.Services
             _logger.LogInformation("Retrying document archival for document {DocumentId} by user {UserId}. Reason: {Reason}", 
                 documentId, userId, reason ?? "Manual retry");
 
-            return await ArchiveDocumentToErpAsync(documentId);
+            // The retry uses the new archival logic which includes rollback capability
+            // Force re-processing of all lines during retry
+            return await ArchiveDocumentToErpAsync(documentId, isRetry: true);
         }
 
         public async Task<bool> RetryLineArchivalAsync(int documentId, List<int> ligneIds, int userId, string? reason = null)
@@ -758,9 +872,10 @@ namespace DocManagementBackend.Services
             _logger.LogInformation("Retrying line archival for document {DocumentId}, lines {LigneIds} by user {UserId}. Reason: {Reason}", 
                 documentId, string.Join(",", ligneIds), userId, reason ?? "Manual retry");
 
-            // For now, retry the entire document's line creation
-            // In the future, we could implement selective line retry
-            return await CreateDocumentLinesInErpAsync(documentId);
+            // Use the new archival logic which includes rollback capability
+            // This will retry the entire document archival process including lines
+            // Force re-processing of all lines during retry
+            return await ArchiveDocumentToErpAsync(documentId, isRetry: true);
         }
 
         private ErpArchivalErrorDto MapToDto(ErpArchivalError error)
@@ -784,32 +899,51 @@ namespace DocManagementBackend.Services
 
         private string GenerateArchivalStatusSummary(Document document, List<LigneErpStatusDto> ligneStatuses, List<ErpArchivalError> unresolvedErrors)
         {
-            if (!string.IsNullOrEmpty(document.ERPDocumentCode))
+            if (document.IsArchived)
             {
                 var archivedLines = ligneStatuses.Count(l => l.IsArchived);
                 var totalLines = ligneStatuses.Count;
                 
                 if (totalLines == 0)
                 {
-                    return "Document archived successfully (no lines)";
+                    return "Document fully archived (no lines)";
                 }
                 else if (archivedLines == totalLines)
                 {
-                    return "Document and all lines archived successfully";
+                    return "Document and all lines fully archived";
                 }
                 else
                 {
+                    // This shouldn't happen with new logic, but keep for safety
+                    return "Document marked as archived (inconsistent state)";
+                }
+            }
+            else if (!string.IsNullOrEmpty(document.ERPDocumentCode))
+            {
+                var archivedLines = ligneStatuses.Count(l => l.IsArchived);
+                var totalLines = ligneStatuses.Count;
                     var failedLines = totalLines - archivedLines;
-                    return $"Document archived, but {failedLines} of {totalLines} lines failed to archive";
+                
+                if (totalLines == 0)
+                {
+                    return "Document archived to ERP but not marked as fully archived";
+                }
+                else if (failedLines > 0)
+                {
+                    return $"Document archived to ERP, but {failedLines} of {totalLines} lines failed - archival rolled back";
+                }
+                else
+                {
+                    return "Document and lines archived to ERP, pending final archival status";
                 }
             }
             else if (unresolvedErrors.Any(e => e.ErrorType == ErpErrorType.DocumentArchival))
             {
-                return "Document archival failed";
+                return "Document archival failed - remains in Completed status";
             }
             else
             {
-                return "Document not yet archived";
+                return "Document not yet archived - remains in Completed status";
             }
         }
 

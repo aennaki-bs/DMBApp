@@ -590,7 +590,7 @@ namespace DocManagementBackend.Controllers
 
             // Check if there are any documents associated with this circuit
             bool hasDocuments = await _context.Documents
-                .AnyAsync(d => d.CircuitId == circuitId);
+                .AnyAsync(d => d.CircuitId == circuitId && d.IsCircuitCompleted == false);
 
             return Ok(hasDocuments);
         }

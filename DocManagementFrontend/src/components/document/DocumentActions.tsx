@@ -29,8 +29,8 @@ const DocumentActions = ({
 }: DocumentActionsProps) => {
   const [isAssignCircuitOpen, setIsAssignCircuitOpen] = useState(false);
 
-  // Check if document is archived to ERP (read-only)
-  const isArchivedToERP = !!(document.erpDocumentCode && document.erpDocumentCode.length > 0);
+  // Check if document is fully archived (read-only)
+  const isFullyArchived = document.isArchived || false;
 
   // Refresh the page after circuit assignment
   const handleCircuitAssigned = () => {
@@ -45,13 +45,13 @@ const DocumentActions = ({
             documentId={document.id}
             hasCircuit={!!document.circuitId}
             buttonClassName="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50"
-            title="Document Flow"
+            title="Execute Step"
             onWorkflowUpdate={onWorkflowUpdate}
           />
         )}
 
         {/* Show Assign to Circuit button when document has no circuit and user can manage documents */}
-        {!document.circuitId && canManageDocuments && !isArchivedToERP && (
+        {!document.circuitId && canManageDocuments && !isFullyArchived && (
           <Button
             variant="outline"
             className="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50 flex items-center gap-2"
@@ -61,7 +61,7 @@ const DocumentActions = ({
           </Button>
         )}
 
-        {canManageDocuments && !isArchivedToERP && (
+        {canManageDocuments && !isFullyArchived && (
           <>
             <Button
               variant="outline"
@@ -83,7 +83,7 @@ const DocumentActions = ({
         )}
 
         {/* Show read-only message for archived documents */}
-        {isArchivedToERP && (
+        {isFullyArchived && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -105,7 +105,7 @@ const DocumentActions = ({
                 </div>
               </TooltipTrigger>
               <TooltipContent className="bg-gray-900 border-orange-500/30 text-orange-300">
-                <p>Document is archived to ERP and cannot be modified</p>
+                <p>Document is fully archived and cannot be modified</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -134,7 +134,7 @@ const DocumentActions = ({
       </div>
 
             {/* Assign Circuit Dialog - only show for non-archived documents */}
-      {!isArchivedToERP && (
+      {!isFullyArchived && (
         <AssignCircuitDialog
           documentId={document.id}
           documentKey={document.documentKey}

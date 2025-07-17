@@ -41,7 +41,7 @@ export const ArchivedDocumentsSearchBar = ({
     { id: "all", label: "All Fields" },
     { id: "title", label: "Document Title" },
     { id: "documentKey", label: "Document Code" },
-    { id: "documentType", label: "Document Type" },
+    // { id: "documentType", label: "Document Type" },
     { id: "createdBy", label: "Created By" },
     { id: "erpDocumentCode", label: "ERP Code" },
   ];

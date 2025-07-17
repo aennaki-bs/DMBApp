@@ -537,6 +537,18 @@ namespace DocManagementBackend.Controllers
             if (ligne.SousLignes.Any())
                 return BadRequest("Cannot delete ligne. There are sous-lignes associated with it.");
 
+            // Delete any related ERP archival errors before deleting the line
+            var relatedErrors = await _context.ErpArchivalErrors
+                .Where(e => e.LigneId == id)
+                .ToListAsync();
+            
+            if (relatedErrors.Any())
+            {
+                _context.ErpArchivalErrors.RemoveRange(relatedErrors);
+                // Log archival errors cleanup for audit trail
+                Console.WriteLine($"[DEBUG] Cleaned up {relatedErrors.Count} ERP archival errors for line {id} during deletion");
+            }
+
             _context.Lignes.Remove(ligne);
 
             try

@@ -261,7 +261,7 @@ export const translations = {
       circuitAssignmentOptional: 'Circuit Assignment (Optional)',
       reviewDocument: 'Review Document',
       customerVendor: 'Customer/Vendor',
-      circuitOptional: 'Circuit (Optional)',
+      circuitOptional: 'Circuit',
       review: 'Review',
       creating: 'Creating...',
       // ResponsibilityCentreStep
@@ -278,11 +278,11 @@ export const translations = {
       retryLoading: 'Retry Loading',
       documentWillBeAssignedToSelected: 'Document will be assigned to the selected responsibility centre',
       // DateSelectionStep
-      accountingDate: 'Accounting Date',
+      accountingDate: 'Posting Date',
       dateOutsideValidRange: 'Selected date is outside the valid range for this document type',
       aboutDateSelection: 'About Date Selection',
       importantDateInfo: 'Only document types with active series for the selected date will be available. If you don\'t see a document type, it means there are no active series for that type on this date.',
-      accountingDateDescription: 'The accounting date is used for financial reporting purposes and may differ from the document date.',
+      accountingDateDescription: 'The posting date is used for financial reporting purposes and may differ from the document date.',
       validDateRangeFor: 'Valid Date Range for {{subType}}',
       documentsOfThisSubtypeMustHaveDate: 'Documents of this Serie must have a date between:',
       selectedDateOutsideRange: 'The selected date is outside the valid range.',

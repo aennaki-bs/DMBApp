@@ -437,7 +437,7 @@ export function SidebarNav() {
                 )}
               >
                 <FileText className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                <span>Active</span>
+                <span>Activated</span>
               </Link>
             </li>
             <li>

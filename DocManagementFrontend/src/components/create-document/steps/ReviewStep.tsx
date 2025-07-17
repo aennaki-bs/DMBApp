@@ -126,7 +126,7 @@ export const ReviewStep = ({
   };
 
   return (
-    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+    <div className="space-y-4 max-h-[60vh]  pr-2">
       <div className="text-center mb-3">
         <div className="inline-flex items-center justify-center p-2 bg-green-900/20 rounded-full mb-2">
           <Check className="h-5 w-5 text-green-500" />
@@ -136,6 +136,103 @@ export const ReviewStep = ({
           {t("documents.pleaseReviewDocumentDetails")}
         </p>
       </div>
+
+      {/* Responsibility Centre */}
+      {responsibilityCentreName && (
+        <Card className="bg-[#0a1033]/80 border-gray-800">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-md text-white flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-blue-400" />
+                Responsibility Centre
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                {userHasAssignedCentre
+                  ? "Automatically assigned from your profile"
+                  : "Selected for this document"}
+              </CardDescription>
+            </div>
+            {!userHasAssignedCentre && onEditResponsibilityCentreClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-400 hover:bg-blue-900/20"
+                onClick={onEditResponsibilityCentreClick}
+              >
+                <Edit className="h-4 w-4 mr-1" /> Edit
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Centre:</span>
+              <span className="font-medium">{responsibilityCentreName}</span>
+            </div>
+            {userHasAssignedCentre === true ? (
+              <div className="flex items-center space-x-2 mt-2 bg-blue-900/20 p-2 rounded">
+                <CheckCircle className="h-4 w-4 text-green-400" />
+                <span className="text-xs text-blue-300">
+                  This document is automatically assigned to your responsibility
+                  centre.
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 mt-2 bg-blue-900/20 p-2 rounded">
+                <Info className="h-4 w-4 text-blue-400" />
+                <span className="text-xs text-blue-300">
+                  You selected this responsibility centre during document
+                  creation.
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Document Date */}
+      <Card className="bg-[#0a1033]/80 border-gray-800">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-md text-white flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-blue-400" />
+              Document Dates
+            </CardTitle>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-400 hover:bg-blue-900/20"
+            onClick={onEditDateClick}
+          >
+            <Edit className="h-4 w-4 mr-1" /> Edit
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 text-blue-400 mr-2" />
+                <p className="text-xs text-gray-400">Document Date</p>
+              </div>
+              <p className="text-sm text-white">
+                {docDate ? format(new Date(docDate), "PPP") : "N/A"}
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center">
+                <Calculator className="h-4 w-4 text-green-400 mr-2" />
+                <p className="text-xs text-gray-400">Posting Date</p>
+              </div>
+              <p className="text-sm text-white">
+                {comptableDate
+                  ? format(new Date(comptableDate), "PPP")
+                  : "Not specified"}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Document Type & Subtype */}
       <Card className="bg-[#0a1033]/80 border-gray-800">
@@ -272,57 +369,7 @@ export const ReviewStep = ({
         </Card>
       )}
 
-      {/* Responsibility Centre */}
-      {responsibilityCentreName && (
-        <Card className="bg-[#0a1033]/80 border-gray-800">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-md text-white flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-400" />
-                Responsibility Centre
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                {userHasAssignedCentre
-                  ? "Automatically assigned from your profile"
-                  : "Selected for this document"}
-              </CardDescription>
-            </div>
-            {!userHasAssignedCentre && onEditResponsibilityCentreClick && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-blue-400 hover:bg-blue-900/20"
-                onClick={onEditResponsibilityCentreClick}
-              >
-                <Edit className="h-4 w-4 mr-1" /> Edit
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Centre:</span>
-              <span className="font-medium">{responsibilityCentreName}</span>
-            </div>
-            {userHasAssignedCentre === true ? (
-              <div className="flex items-center space-x-2 mt-2 bg-blue-900/20 p-2 rounded">
-                <CheckCircle className="h-4 w-4 text-green-400" />
-                <span className="text-xs text-blue-300">
-                  This document is automatically assigned to your responsibility
-                  centre.
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2 mt-2 bg-blue-900/20 p-2 rounded">
-                <Info className="h-4 w-4 text-blue-400" />
-                <span className="text-xs text-blue-300">
-                  You selected this responsibility centre during document
-                  creation.
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      
 
       {/* Document Details */}
       <Card className="bg-[#0a1033]/80 border-gray-800">
@@ -330,13 +377,13 @@ export const ReviewStep = ({
           <div className="flex items-center gap-2">
             <CardTitle className="text-md text-white flex items-center gap-2">
               <FileSignature className="h-4 w-4 text-blue-400" />
-              Document Extern
+              Document Content
             </CardTitle>
-            {isExternal && (
+            {/* {isExternal && (
               <Badge className="bg-blue-600 text-white text-xs flex items-center gap-1">
                 <ExternalLink className="h-3 w-3" /> External
               </Badge>
-            )}
+            )} */}
           </div>
           <Button
             variant="ghost"
@@ -349,8 +396,8 @@ export const ReviewStep = ({
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <p className="text-xs text-gray-400">Title</p>
-            <p className="text-sm text-white">{title || "N/A"}</p>
+            <p className="text-xs text-gray-400">Content</p>
+            <p className="text-sm text-white">{content || "N/A"}</p>
           </div>
 
           {isExternal ? (
@@ -383,50 +430,7 @@ export const ReviewStep = ({
         </CardContent>
       </Card>
 
-      {/* Document Date */}
-      <Card className="bg-[#0a1033]/80 border-gray-800">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-md text-white flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-blue-400" />
-              Document Dates
-            </CardTitle>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-blue-400 hover:bg-blue-900/20"
-            onClick={onEditDateClick}
-          >
-            <Edit className="h-4 w-4 mr-1" /> Edit
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div>
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 text-blue-400 mr-2" />
-                <p className="text-xs text-gray-400">Document Date</p>
-              </div>
-              <p className="text-sm text-white">
-                {docDate ? format(new Date(docDate), "PPP") : "N/A"}
-              </p>
-            </div>
-
-            <div>
-              <div className="flex items-center">
-                <Calculator className="h-4 w-4 text-green-400 mr-2" />
-                <p className="text-xs text-gray-400">Accounting Date</p>
-              </div>
-              <p className="text-sm text-white">
-                {comptableDate
-                  ? format(new Date(comptableDate), "PPP")
-                  : "Not specified"}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      
 
       {/* Circuit Information */}
       <Card className="bg-[#0a1033]/80 border-gray-800">
@@ -458,7 +462,7 @@ export const ReviewStep = ({
       </Card>
 
       {/* Document Content */}
-      <Card className="bg-[#0a1033]/80 border-gray-800">
+      {/* <Card className="bg-[#0a1033]/80 border-gray-800">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-md text-white flex items-center gap-2">
@@ -482,7 +486,7 @@ export const ReviewStep = ({
             </p>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };

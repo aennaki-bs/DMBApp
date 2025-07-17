@@ -131,10 +131,10 @@ export function useDocumentsData() {
   // Filter documents based on activeFilters
   const filteredItems = useMemo(() => {
     return sortedItems.filter(doc => {
-      // For Active Documents: exclude completed documents (status 2) unless they're not archived to ERP
-      // Active Documents should only show: Draft (0), In Progress (1), Rejected (3)
-      // This makes Active Documents truly "active" and excludes completed work
-      const isActiveDocument = doc.status !== 2; // Exclude completed documents
+      // For Active Documents: show documents that are NOT fully archived
+      // This includes: Draft (0), In Progress (1), Completed but not archived (2, isArchived=false), Rejected (3)
+      // Exclude only fully archived documents (isArchived=true)
+      const isActiveDocument = !doc.isArchived; // Exclude fully archived documents
 
       // Text search filter based on search field
       let matchesSearch = true;
@@ -147,13 +147,16 @@ export function useDocumentsData() {
             (doc.title && doc.title.toLowerCase().includes(query)) ||
             (doc.documentKey && doc.documentKey.toLowerCase().includes(query)) ||
             (doc.documentType && doc.documentType.typeName && doc.documentType.typeName.toLowerCase().includes(query)) ||
-            (doc.createdBy && doc.createdBy.username && doc.createdBy.username.toLowerCase().includes(query));
+            (doc.responsibilityCentre && doc.responsibilityCentre.code && doc.responsibilityCentre.code.toLowerCase().includes(query)) ||
+            (doc.responsibilityCentre && doc.responsibilityCentre.descr && doc.responsibilityCentre.descr.toLowerCase().includes(query));
         } else if (searchField === 'documentType.typeName') {
           matchesSearch = doc.documentType && doc.documentType.typeName &&
             doc.documentType.typeName.toLowerCase().includes(query);
-        } else if (searchField === 'createdBy.username') {
-          matchesSearch = doc.createdBy && doc.createdBy.username &&
-            doc.createdBy.username.toLowerCase().includes(query);
+        } else if (searchField === 'responsibilityCentre') {
+          matchesSearch = (doc.responsibilityCentre && doc.responsibilityCentre.code &&
+            doc.responsibilityCentre.code.toLowerCase().includes(query)) ||
+            (doc.responsibilityCentre && doc.responsibilityCentre.descr &&
+            doc.responsibilityCentre.descr.toLowerCase().includes(query));
         } else {
           // Handle nested properties with dot notation
           const fieldParts = searchField.split('.');

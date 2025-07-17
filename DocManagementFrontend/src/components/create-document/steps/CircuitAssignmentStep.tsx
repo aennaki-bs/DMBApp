@@ -257,12 +257,12 @@ export const CircuitAssignmentStep = ({
                         )}
                       />
 
-                      <div className="flex items-center gap-2 w-20">
+                      {/* <div className="flex items-center gap-2 w-20">
                         <FileText className="h-5 w-5 text-gray-400" />
                         <span className="font-mono text-sm">
                           {circuit.code || "CR01"}
                         </span>
-                      </div>
+                      </div> */}
 
                       <div className="flex-grow mr-4">
                         <div className="text-blue-400 font-medium">
@@ -302,8 +302,8 @@ export const CircuitAssignmentStep = ({
         <Info className="h-3.5 w-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
         <div>
           Assigning a document to a circuit determines its approval workflow.
-          Only <span className="text-green-400 font-bold">active</span> circuits
-          are available for selection.
+          {/* Only <span className="text-green-400 font-bold">active</span> circuits
+          are available for selection. */}
         </div>
       </div>
     </div>

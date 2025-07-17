@@ -17,7 +17,7 @@ const LigneEmptyState = ({ canManageDocuments, onCreateClick }: LigneEmptyStateP
       <p className="text-blue-300 max-w-md mx-auto mb-8">
         This document doesn't have any lines yet. Add your first line to get started.
       </p>
-      {canManageDocuments && (
+      {/* {canManageDocuments && (
         <Button 
           onClick={onCreateClick} 
           variant="outline" 
@@ -26,7 +26,7 @@ const LigneEmptyState = ({ canManageDocuments, onCreateClick }: LigneEmptyStateP
         >
           <Plus className="h-4 w-4 mr-2" /> Add Your First Line
         </Button>
-      )}
+      )} */}
     </div>
   );
 };

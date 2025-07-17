@@ -119,7 +119,7 @@ export default function CreateDocumentWizard({
   // Form data
   const [formData, setFormData] = useState<FormData>({
     docDate: new Date().toISOString().split("T")[0],
-    comptableDate: null,
+    comptableDate: new Date().toISOString().split("T")[0], // Auto-select today's date
     selectedTypeId: null,
     selectedSubTypeId: null,
     title: "",
@@ -172,7 +172,7 @@ export default function CreateDocumentWizard({
       // Start with no responsibility center
       const initialFormData = {
         docDate: new Date().toISOString().split("T")[0],
-        comptableDate: null,
+        comptableDate: new Date().toISOString().split("T")[0], // Auto-select today's date
         selectedTypeId: null,
         selectedSubTypeId: null,
         title: "",
@@ -248,36 +248,36 @@ export default function CreateDocumentWizard({
   const baseSteps: Step[] = [
     {
       id: 1,
-      title: t("documents.responsibilityCentre"),
-      description: t("documents.selectResponsibilityCentre"),
+      title: "",
+      description: "",
       icon: <Building2 className="h-4 w-4" />,
       completed: currentStep > 1,
     },
     {
       id: 2,
       title: t("documents.documentDate"),
-      description: t("documents.selectDocumentDate"),
+      description: "",
       icon: <Calendar className="h-4 w-4" />,
       completed: currentStep > 2,
     },
     {
       id: 3,
       title: t("common.type"),
-      description: t("documents.selectTypeAndSeries"),
+      description: "",
       icon: <Layers className="h-4 w-4" />,
       completed: currentStep > 3,
     },
     {
       id: 4,
       title: t("documents.customerVendor"),
-      description: t("documents.selectCustomerOrVendor"),
+      description: "",
       icon: <Building2 className="h-4 w-4" />,
       completed: currentStep > 4,
     },
     {
       id: 5,
       title: t("documents.content"),
-      description: t("documents.addDocumentContent"),
+      description: "",
       icon: <FileText className="h-4 w-4" />,
       completed: currentStep > 5,
     },
@@ -287,7 +287,7 @@ export default function CreateDocumentWizard({
   const circuitStep: Step = {
     id: 6,
     title: t("documents.circuitOptional"),
-    description: t("documents.assignToWorkflowOrSkip"),
+    description: "",
     icon: <Share2 className="h-4 w-4" />,
     completed: currentStep > 6,
   };
@@ -295,7 +295,7 @@ export default function CreateDocumentWizard({
   const reviewStep: Step = {
     id: 7,
     title: t("documents.review"),
-    description: t("documents.confirmDocumentDetails"),
+    description: "",
     icon: <CheckCircle className="h-4 w-4" />,
     completed: false,
   };
@@ -546,6 +546,7 @@ export default function CreateDocumentWizard({
 
     // Clear related errors when a field changes
     if (field === "docDate") setDateError(null);
+    if (field === "comptableDate") setComptableDateError(null);
     if (field === "selectedTypeId") setTypeError(null);
     if (field === "selectedSubTypeId") setSubTypeError(null);
     if (field === "title") setTitleError(null);
@@ -580,6 +581,15 @@ export default function CreateDocumentWizard({
       return false;
     }
 
+    if (!formData.comptableDate) {
+      setComptableDateError("Posting date is required");
+      toast.error("Posting date is required", {
+        description: "Please select a valid posting date to continue.",
+        duration: 3000,
+      });
+      return false;
+    }
+
     try {
       // Validate date format
       const dateObj = new Date(formData.docDate);
@@ -587,6 +597,17 @@ export default function CreateDocumentWizard({
         setDateError("Invalid date format");
         toast.error("Invalid date format", {
           description: "Please select a valid date to continue.",
+          duration: 3000,
+        });
+        return false;
+      }
+
+      // Validate posting date format
+      const comptableDateObj = new Date(formData.comptableDate);
+      if (isNaN(comptableDateObj.getTime())) {
+        setComptableDateError("Invalid posting date format");
+        toast.error("Invalid posting date format", {
+          description: "Please select a valid posting date to continue.",
           duration: 3000,
         });
         return false;
@@ -1354,7 +1375,7 @@ export default function CreateDocumentWizard({
                       : "text-gray-500 dark:text-gray-400"
                   )}
                 >
-                  {step.title}
+                  {/* {step.title} */}
                 </span>
                 <span
                   className={cn(

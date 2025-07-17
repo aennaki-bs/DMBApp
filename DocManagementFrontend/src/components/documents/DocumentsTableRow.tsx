@@ -4,7 +4,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
 import {
   Edit,
   Trash,
@@ -195,9 +195,9 @@ export default function DocumentsTableRow({
           {document.title}
         </Link>
       </TableCell>
-      <TableCell className="w-[120px] py-3">
+      {/* <TableCell className="w-[120px] py-3">
         {getStatusBadge(document.status)}
-      </TableCell>
+      </TableCell> */}
       <TableCell className="w-[150px] text-blue-100 py-3">
         {document.documentType.typeName}
       </TableCell>
@@ -206,15 +206,11 @@ export default function DocumentsTableRow({
       </TableCell>
       <TableCell className="w-[150px] py-3">
         <div className="flex items-center gap-2">
-          <Avatar className="h-6 w-6 border border-blue-700/50">
-            <AvatarFallback className="bg-gradient-to-br from-blue-800 to-blue-900 text-xs text-blue-100">
-              {document.createdBy.firstName[0]}
-              {document.createdBy.lastName[0]}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-sm text-blue-100/80">
-            {document.createdBy.username}
-          </span>
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-blue-100/80">
+              {document.responsibilityCentre?.code || 'N/A'}
+            </span>
+          </div>
         </div>
       </TableCell>
       <TableCell className="w-[100px] text-right py-3">

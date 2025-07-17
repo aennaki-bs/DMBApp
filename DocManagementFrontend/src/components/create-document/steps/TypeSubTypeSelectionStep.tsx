@@ -150,7 +150,7 @@ export const TypeSubTypeSelectionStep = ({
             </button>
 
             {typeDropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full rounded-md bg-gray-900 border border-gray-800 shadow-lg">
+              <div className="absolute z-[9999] mt-1 w-full rounded-md bg-gray-900 border border-gray-800 shadow-lg">
                 <div className="max-h-60 overflow-auto py-1">
                   {documentTypes.map((type) => (
                     <button
@@ -251,7 +251,7 @@ export const TypeSubTypeSelectionStep = ({
             </button>
 
             {subtypeDropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full rounded-md bg-gray-900 border border-gray-800 shadow-lg">
+              <div className="absolute z-[9999] mt-1 w-full rounded-md bg-gray-900 border border-gray-800 shadow-lg">
                 <div className="max-h-60 overflow-auto py-1">
                   {subTypes.map((subtype) => (
                     <button

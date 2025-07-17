@@ -36,6 +36,9 @@ namespace DocManagementBackend.Models
         public Circuit? Circuit { get; set; }
         public bool IsCircuitCompleted { get; set; } = false;
         
+        // New field to distinguish between Completed and Archived status
+        public bool IsArchived { get; set; } = false;
+        
         public int? ResponsibilityCentreId { get; set; }
         [ForeignKey("ResponsibilityCentreId")]
         [JsonIgnore]
@@ -129,6 +132,8 @@ namespace DocManagementBackend.Models
 
         [Required]
         public int DocumentTypeId { get; set; }
+
+        public int DocumentCounter { get; set; } = 0;
 
         [ForeignKey("DocumentTypeId")]
         [JsonIgnore]

@@ -81,7 +81,7 @@ export default function DocumentsEmptyState({
           </Button>
         )}
 
-        {canManageDocuments && (
+        {/* {canManageDocuments && (
           <Button
             className="bg-blue-600 hover:bg-blue-700 min-w-[160px]"
             onClick={() => setCreateModalOpen(true)}
@@ -89,7 +89,7 @@ export default function DocumentsEmptyState({
             <Plus className="mr-2 h-4 w-4" />
             Create Document
           </Button>
-        )}
+        )} */}
       </div>
 
       {/* Create Document Wizard */}

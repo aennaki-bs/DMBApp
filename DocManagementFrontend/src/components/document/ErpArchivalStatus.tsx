@@ -105,7 +105,7 @@ export default function ErpArchivalStatus({
 
   if (!erpStatus) return null;
 
-  const { isArchived, hasUnresolvedErrors, errors, archivalStatusSummary } = erpStatus;
+  const { isArchived, hasUnresolvedErrors, errors, archivalStatusSummary, erpDocumentCode } = erpStatus;
   const unresolvedErrors = errors.filter(e => !e.isResolved);
   // Remove duplicates by ligne ID and keep only unique line errors
   const lineErrors = unresolvedErrors
@@ -118,6 +118,9 @@ export default function ErpArchivalStatus({
       return unique;
     }, []);
 
+  // Document is considered successfully archived if it has an ERP Document Code
+  const isDocumentArchivedToErp = !!erpDocumentCode;
+
   return (
     <Card>
               <CardHeader>
@@ -129,31 +132,25 @@ export default function ErpArchivalStatus({
         <CardContent className="space-y-4">
           {/* Main Status Indicator */}
           <div className="flex items-center gap-3">
-            {isArchived ? (
-              hasUnresolvedErrors ? (
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
-              ) : (
+            {isDocumentArchivedToErp ? (
                 <CheckCircle className="h-5 w-5 text-green-600" />
-              )
             ) : (
               <AlertTriangle className="h-5 w-5 text-amber-600" />
             )}
             <span className="font-medium">
-              {isArchived ? 'Document successfully archived to ERP' : 'Document not yet archived'}
+              {isDocumentArchivedToErp ? 'Document successfully archived to ERP' : 'Document not yet archived'}
             </span>
           </div>
 
           {/* Detailed Process Status */}
           <div className={`p-4 rounded-lg border space-y-3 ${
-            isArchived 
-              ? hasUnresolvedErrors 
-                ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800' 
-                : 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
+            isDocumentArchivedToErp 
+              ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
               : 'bg-muted/30'
           }`}>
             <div className="font-medium">ERP Archival Process Status:</div>
             
-            {isArchived ? (
+            {isDocumentArchivedToErp ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="text-green-600">✅</span>
@@ -228,7 +225,7 @@ export default function ErpArchivalStatus({
           </div>
 
           {/* Manual Archival Section - Only for Admin and FullUser */}
-          {!isArchived && canArchiveDocuments && (
+          {!isDocumentArchivedToErp && canArchiveDocuments && (
             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-700 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -266,8 +263,8 @@ export default function ErpArchivalStatus({
 
 
 
-          {/* Line Archival Errors */}
-          {lineErrors.length > 0 && (
+          {/* Line Archival Errors - Only show when document is NOT archived to ERP */}
+          {lineErrors.length > 0 && !isDocumentArchivedToErp && (
             <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4 rounded-lg">
               <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 mb-3">
                 <AlertTriangle className="h-4 w-4" />

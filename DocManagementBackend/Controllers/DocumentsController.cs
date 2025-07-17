@@ -324,8 +324,8 @@ namespace DocManagementBackend.Controllers
                 docAlias = request.DocumentAlias.ToUpper();
 
             docType.DocumentCounter++;
-            docType.DocCounter++;
-            int counterValue = docType.DocCounter;
+            subType.DocumentCounter++;
+            int counterValue = subType.DocumentCounter;
             string paddedCounter = counterValue.ToString("D4");
 
             string documentKey;

@@ -483,8 +483,8 @@ export const TypeSelectionWithDateFilterStep = ({
                 />
               </button>
 
-              {typeDropdownOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-800 rounded-md shadow-xl max-h-60 overflow-auto animate-in fade-in-0 zoom-in-95 duration-100">
+                          {typeDropdownOpen && (
+              <div className="w-full mt-1 bg-gray-900 border border-gray-800 rounded-md shadow-xl max-h-60 overflow-auto animate-in fade-in-0 zoom-in-95 duration-100">
                   {availableTypes.map((type) => (
                     <div
                       key={type.id}
@@ -654,7 +654,7 @@ export const TypeSelectionWithDateFilterStep = ({
                 </button>
 
                 {subtypeDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-800 rounded-md shadow-xl max-h-60 overflow-auto animate-in fade-in-0 zoom-in-95 duration-100">
+                  <div className="absolute z-[9999] w-full mt-1 bg-gray-900 border border-gray-800 rounded-md shadow-xl max-h-60 overflow-auto animate-in fade-in-0 zoom-in-95 duration-100">
                     {filteredSubTypes.map((subType) => (
                       <div
                         key={subType.id}

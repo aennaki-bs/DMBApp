@@ -97,14 +97,14 @@ const documentService = {
   deleteMultipleDocuments: async (ids: number[]): Promise<{ 
     successful: number[], 
     failed: { id: number, error: string }[],
-    erpArchivedCount?: number,
-    erpArchivedDocuments?: { id: number, documentKey: string, erpCode: string }[]
+    archivedCount?: number,
+    archivedDocuments?: { id: number, documentKey: string, erpCode: string }[]
   }> => {
     const results = {
       successful: [] as number[],
       failed: [] as { id: number, error: string }[],
-      erpArchivedCount: 0,
-      erpArchivedDocuments: [] as { id: number, documentKey: string, erpCode: string }[]
+      archivedCount: 0,
+      archivedDocuments: [] as { id: number, documentKey: string, erpCode: string }[]
     };
 
     // Use the bulk delete endpoint
@@ -118,28 +118,28 @@ const documentService = {
       const {
         successCount = 0,
         failedIds = [],
-        erpArchivedCount = 0,
-        erpArchivedDocuments = [],
+        archivedCount = 0,
+        archivedDocuments = [],
         otherFailedCount = 0,
         message = ''
       } = response.data;
 
       // Mark successful ones
       results.successful = ids.filter(id => !failedIds.includes(id));
-      results.erpArchivedCount = erpArchivedCount;
-      results.erpArchivedDocuments = erpArchivedDocuments;
+      results.archivedCount = archivedCount;
+      results.archivedDocuments = archivedDocuments;
       
       // If there are failures, categorize them
       if (failedIds && failedIds.length > 0) {
         // Create detailed error messages for failed documents
-        const erpArchivedIds = erpArchivedDocuments.map(doc => doc.id);
+        const archivedIds = archivedDocuments.map(doc => doc.id);
         
         results.failed = failedIds.map((id: number) => {
-          if (erpArchivedIds.includes(id)) {
-            const erpDoc = erpArchivedDocuments.find(doc => doc.id === id);
+          if (archivedIds.includes(id)) {
+            const archivedDoc = archivedDocuments.find(doc => doc.id === id);
             return {
               id,
-              error: `Document archived to ERP (${erpDoc?.erpCode || 'unknown code'}) and cannot be deleted`
+              error: `Document fully archived (${archivedDoc?.erpCode || 'unknown code'}) and cannot be deleted`
             };
           } else {
             return {
@@ -152,10 +152,10 @@ const documentService = {
         // Create comprehensive error message
         let errorMessage = message;
         if (!errorMessage) {
-          if (erpArchivedCount > 0 && otherFailedCount > 0) {
-            errorMessage = `${successCount} documents deleted. ${erpArchivedCount} could not be deleted (ERP archived), ${otherFailedCount} failed for other reasons.`;
-          } else if (erpArchivedCount > 0) {
-            errorMessage = `${successCount} documents deleted. ${erpArchivedCount} could not be deleted because they are archived to ERP.`;
+          if (archivedCount > 0 && otherFailedCount > 0) {
+            errorMessage = `${successCount} documents deleted. ${archivedCount} could not be deleted (fully archived), ${otherFailedCount} failed for other reasons.`;
+          } else if (archivedCount > 0) {
+            errorMessage = `${successCount} documents deleted. ${archivedCount} could not be deleted because they are fully archived.`;
           } else if (otherFailedCount > 0) {
             errorMessage = `${successCount} documents deleted. ${otherFailedCount} documents failed for other reasons.`;
           } else {
@@ -167,8 +167,8 @@ const documentService = {
         const error = new Error(errorMessage) as any;
         error.results = results;
         error.isPartialFailure = true;
-        error.erpArchivedCount = erpArchivedCount;
-        error.erpArchivedDocuments = erpArchivedDocuments;
+        error.archivedCount = archivedCount;
+        error.archivedDocuments = archivedDocuments;
         throw error;
       }
       
@@ -203,9 +203,9 @@ const documentService = {
             errorMessage = error.message;
           }
           
-          // Detect ERP archival errors
-          if (errorMessage.includes('archived to the ERP system')) {
-            errorMessage = 'Document archived to ERP and cannot be deleted';
+          // Detect archival errors
+          if (errorMessage.includes('fully archived') || errorMessage.includes('archived to the ERP system')) {
+            errorMessage = 'Document fully archived and cannot be deleted';
           }
           
           results.failed.push({ id, error: errorMessage });
@@ -220,25 +220,25 @@ const documentService = {
       if (results.failed.length > 0) {
         const successCount = results.successful.length;
         const failCount = results.failed.length;
-        const erpArchivedFailures = results.failed.filter(f => f.error.includes('archived to ERP'));
+        const archivedFailures = results.failed.filter(f => f.error.includes('fully archived'));
         
         let errorMessage = '';
         if (successCount > 0) {
           errorMessage = `${successCount} documents deleted successfully. `;
         }
         
-        if (erpArchivedFailures.length > 0) {
-          errorMessage += `${erpArchivedFailures.length} documents could not be deleted (ERP archived). `;
+        if (archivedFailures.length > 0) {
+          errorMessage += `${archivedFailures.length} documents could not be deleted (fully archived). `;
         }
         
-        const otherFailures = failCount - erpArchivedFailures.length;
+        const otherFailures = failCount - archivedFailures.length;
         if (otherFailures > 0) {
           errorMessage += `${otherFailures} documents failed for other reasons.`;
         }
         
         const error = new Error(errorMessage.trim()) as any;
         error.results = results;
-        error.erpArchivedCount = erpArchivedFailures.length;
+        error.archivedCount = archivedFailures.length;
         throw error;
       }
 

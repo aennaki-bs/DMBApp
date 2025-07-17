@@ -123,7 +123,7 @@ export default function ArchivedDocumentsFilterBar({ onClose }: ArchivedDocument
   // Date field options
   const dateFieldOptions = [
     { id: "docDate", label: "Document Date" },
-    { id: "comptableDate", label: "Contability Date" },
+    { id: "comptableDate", label: "Posting Date" },
     { id: "createdAt", label: "Created Date" },
     { id: "updatedAt", label: "Updated Date" }
   ];
@@ -404,7 +404,7 @@ export default function ArchivedDocumentsFilterBar({ onClose }: ArchivedDocument
                 <Tag className="h-4 w-4 mr-2 text-blue-400" />
                 Document Type
               </label>
-              <div className="flex gap-2 mb-2">
+              {/* <div className="flex gap-2 mb-2">
                 <div className="flex-1">
                   <Select
                     value={typeFilterField}
@@ -421,7 +421,7 @@ export default function ArchivedDocumentsFilterBar({ onClose }: ArchivedDocument
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              </div> */}
               <Select value={typeFilter} onValueChange={handleTypeChange}>
                 <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
                   <SelectValue placeholder="Select document type" />
@@ -508,7 +508,7 @@ export default function ArchivedDocumentsFilterBar({ onClose }: ArchivedDocument
                   />
                 </div>
 
-            <div className="mt-2">
+            {/* <div className="mt-2">
               <div className="bg-blue-900/20 p-2 rounded-md border border-blue-900/40">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-blue-300 font-medium">
@@ -521,7 +521,7 @@ export default function ArchivedDocumentsFilterBar({ onClose }: ArchivedDocument
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
           </TabsContent>
         </ScrollArea>
       </Tabs>

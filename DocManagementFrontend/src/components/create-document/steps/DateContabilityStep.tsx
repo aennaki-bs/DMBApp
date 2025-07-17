@@ -109,7 +109,7 @@ export const DateContabilityStep = ({
               <Info className="h-5 w-5 mt-0.5 text-green-400" />
               <div>
                 <h4 className="text-sm font-medium text-green-400">
-                  Contability Enabled
+                  Posting Enabled
                 </h4>
                 <p className="text-sm text-gray-300 mt-1">
                   This document will be included in financial reports and

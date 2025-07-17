@@ -4,7 +4,7 @@ import {
   FileText,
   Filter,
   CalendarDays,
-  User,
+  Building2,
 } from "lucide-react";
 import { Document } from "@/models/document";
 import DocumentsTableRow from "./DocumentsTableRow";
@@ -124,9 +124,9 @@ export default function DocumentsTable({
               </TableHead>
               <TableHead className="w-[150px] text-blue-300 font-medium">
                 {renderSortableHeader(
-                  "Created By",
-                  "createdBy",
-                  <User className="h-4 w-4 text-blue-400" />
+                  "Responsibility Center",
+                  "responsibilityCentre.code",
+                  <Building2 className="h-4 w-4 text-blue-400" />
                 )}
               </TableHead>
               <TableHead className="w-[100px] text-right text-blue-300 font-medium">

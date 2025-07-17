@@ -44,7 +44,10 @@ export interface Document {
   lignes?: Ligne[];
   responsibilityCentreId?: number;
   responsibilityCentre?: ResponsibilityCentreSimple;
-
+  
+  // New archival status field
+  isArchived?: boolean;
+  
   // Customer/Vendor snapshot data
   customerVendorCode?: string;
   customerVendorName?: string;

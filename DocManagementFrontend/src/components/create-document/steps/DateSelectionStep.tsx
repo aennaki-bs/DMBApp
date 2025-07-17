@@ -182,8 +182,8 @@ export const DateSelectionStep = ({
             <h3 className="text-base font-medium text-white">
               {t("documents.accountingDate")}
             </h3>
-          </div>
-          <span className="text-xs text-gray-400">({t("common.optional")})</span>
+            </div>
+            <span className="text-xs text-blue-300">{t("common.required")}</span>
         </div>
         <p className="text-sm text-gray-400">
           {t("documents.accountingDateDescription")}

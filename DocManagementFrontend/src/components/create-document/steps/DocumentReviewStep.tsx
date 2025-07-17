@@ -79,7 +79,7 @@ export const ReviewStep = ({
               <div className="space-y-1">
                 <div className="text-sm text-gray-400 flex items-center gap-1.5">
                   <Calculator className="h-3.5 w-3.5 text-green-400" />
-                  Accounting Date
+                  Posting Date
                 </div>
                 <p className="text-sm font-medium text-white">
                   {formatDate(formData.comptableDate)}

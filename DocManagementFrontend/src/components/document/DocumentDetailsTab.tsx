@@ -252,7 +252,7 @@ const DocumentDetailsTab = ({
           <div className="bg-[#131f4f]/30 p-4 rounded-md border border-blue-900/20 hover:border-blue-800/40 transition-colors">
             <h3 className="text-sm font-medium text-blue-300 mb-2 flex items-center">
               <Calendar className="h-4 w-4 mr-2 text-blue-400" />
-              Accounting Date
+              Posting Date
             </h3>
             <p className="font-medium text-white">
               {new Date(document.comptableDate).toLocaleDateString()}
@@ -310,10 +310,18 @@ const DocumentDetailsTab = ({
                 </div>
               ) : workflowStatus ? (
                 <>
-                  <p className="font-medium text-white">
-                    {workflowStatus.circuitTitle}
+                  <p className="text-xs text-blue-300/70">
+                    
+                    <span className="text-white font-medium">
+                      {workflowStatus.circuitTitle}
+                    </span>
                   </p>
-                  <p className="text-xs text-blue-300/70 mt-1">
+                  <p className="font-bold text-blue-300 ">Current Status:{"  "}
+                  <span className="font-bold text-white text-sm">
+                   {workflowStatus.currentStatusTitle}
+                  </span>
+                  </p>
+                  {/* <p className="text-xs text-blue-300/70 mt-1">
                     Code:{" "}
                     {isLoadingCircuitKey ? (
                       <span className="flex items-center gap-1">
@@ -323,13 +331,7 @@ const DocumentDetailsTab = ({
                     ) : (
                       circuitKey || workflowStatus.circuitId
                     )}
-                  </p>
-                  <p className="text-xs text-blue-300/70">
-                    Current Status:{" "}
-                    <span className="text-white font-medium">
-                      {workflowStatus.currentStatusTitle || "Processing"}
-                    </span>
-                  </p>
+                  </p> */}
                 </>
               ) : (
                 <>

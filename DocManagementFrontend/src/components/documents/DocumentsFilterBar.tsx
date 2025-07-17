@@ -129,7 +129,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
   // Date field options
   const dateFieldOptions = [
     { id: "docDate", label: "Document Date" },
-    { id: "comptableDate", label: "Contability Date" },
+    { id: "comptableDate", label: "Posting Date" },
     { id: "createdAt", label: "Created Date" },
     { id: "updatedAt", label: "Updated Date" }
   ];
@@ -391,7 +391,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
 
   // Return just the filter content
   return (
-    <div className="w-[340px] sm:w-[400px] bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-xl">
+    <div className="w-full sm:w-full bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-xl">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -429,36 +429,8 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
           </TabsTrigger>
         </TabsList>
 
-        <ScrollArea className="h-[350px] overflow-auto">
+        <ScrollArea className="h-full overflow-auto">
           <TabsContent value="filters" className="p-4 space-y-4 mt-0">
-            {/* Status filter */}
-            <div>
-              <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-blue-400" />
-                Status
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {DEFAULT_STATUS_FILTERS.map((status) => (
-                  <Button
-                    key={status.value}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 h-9",
-                      statusFilter === status.value &&
-                        "bg-blue-800 border-blue-500"
-                    )}
-                    onClick={() => handleStatusChange(status.value)}
-                  >
-                    {statusFilter === status.value && (
-                      <Check className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
-                    )}
-                    {status.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
 
             {/* Document Type filter */}
             <div>
@@ -466,24 +438,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
                 <Tag className="h-4 w-4 mr-2 text-blue-400" />
                 Document Type
               </label>
-              <div className="flex gap-2 mb-2">
-                <div className="flex-1">
-                  <Select
-                    value={typeFilterField}
-                    onValueChange={handleTypeFilterFieldChange}
-                  >
-                <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                  <SelectValue>
-                        {typeFilterField === "typeName" ? "By Name" : "By ID"}
-                  </SelectValue>
-                </SelectTrigger>
-                    <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
-                      <SelectItem value="typeName" className="hover:bg-blue-800/40">By Name</SelectItem>
-                      <SelectItem value="id" className="hover:bg-blue-800/40">By ID</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              
               <Select value={typeFilter} onValueChange={handleTypeChange}>
                 <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
                   <SelectValue placeholder="Select document type" />
@@ -570,7 +525,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
                   />
                 </div>
 
-            <div className="mt-2">
+            {/* <div className="mt-2">
               <div className="bg-blue-900/20 p-2 rounded-md border border-blue-900/40">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-blue-300 font-medium">
@@ -583,7 +538,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
           </TabsContent>
         </ScrollArea>
       </Tabs>

@@ -274,12 +274,12 @@ export function DocumentFlowMindMap({
                   </h3>
 
                   <div className="flex items-center gap-2 mb-4">
-                    <Badge
+                    {/* <Badge
                       variant={currentStatus.isRequired ? "default" : "outline"}
                       className="mb-1"
                     >
                       {currentStatus.isRequired ? "Required" : "Optional"}
-                    </Badge>
+                    </Badge> */}
 
                     <Badge
                       variant={currentStatus.isComplete ? "default" : "outline"}
