@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { notifications } from "@/utils/notificationUtils";
 import {
   Check,
   X,
@@ -151,7 +151,6 @@ export default function ApproverEditWizard({
 
     try {
       setIsSubmitting(true);
-      toast.loading("Updating approver...");
 
       // Prepare the request data
       const requestData = {
@@ -162,15 +161,13 @@ export default function ApproverEditWizard({
       // Call the API to update the approver
       await approvalService.updateApprovator(approver.id, requestData);
 
-      toast.dismiss();
-      toast.success(`Approver "${formData.username}" updated successfully`);
+      notifications.success(`Approver "${formData.username}" updated successfully`);
 
       onSuccess(); // Notify parent component
       onOpenChange(false); // Close dialog
     } catch (error) {
       console.error("Failed to update approver:", error);
-      toast.dismiss();
-      toast.error("Failed to update approver");
+      notifications.error("Failed to update approver");
     } finally {
       setIsSubmitting(false);
     }
@@ -312,8 +309,8 @@ export default function ApproverEditWizard({
                     step.id === currentStep
                       ? "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500"
                       : step.completed
-                      ? "border-green-600 bg-green-600 text-white dark:border-green-500 dark:bg-green-500"
-                      : "border-gray-300 text-gray-500 dark:border-gray-700"
+                        ? "border-green-600 bg-green-600 text-white dark:border-green-500 dark:bg-green-500"
+                        : "border-gray-300 text-gray-500 dark:border-gray-700"
                   )}
                 >
                   {step.completed ? (
@@ -328,8 +325,8 @@ export default function ApproverEditWizard({
                     step.id === currentStep
                       ? "text-blue-600 dark:text-blue-500"
                       : step.completed
-                      ? "text-green-600 dark:text-green-500"
-                      : "text-gray-500 dark:text-gray-400"
+                        ? "text-green-600 dark:text-green-500"
+                        : "text-gray-500 dark:text-gray-400"
                   )}
                 >
                   {step.title}
@@ -338,7 +335,7 @@ export default function ApproverEditWizard({
                   className={cn(
                     "text-xs text-gray-500 dark:text-gray-400 hidden sm:block",
                     step.id === currentStep &&
-                      "text-blue-600 dark:text-blue-500"
+                    "text-blue-600 dark:text-blue-500"
                   )}
                 >
                   {step.description}

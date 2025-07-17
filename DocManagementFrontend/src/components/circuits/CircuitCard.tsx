@@ -130,7 +130,7 @@ export function CircuitCard({
                                                         className="hover:bg-blue-800/40 text-blue-100"
                                                     >
                                                         <Eye className="mr-2 h-4 w-4" />
-                                                        View Details
+                                                        Manage Status
                                                     </DropdownMenuItem>
 
                                                     <DropdownMenuItem

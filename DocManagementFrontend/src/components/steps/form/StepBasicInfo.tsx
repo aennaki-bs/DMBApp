@@ -12,8 +12,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { FileText, Edit3, Sparkles } from "lucide-react";
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
@@ -52,57 +54,119 @@ export const StepBasicInfo = () => {
   };
 
   return (
-    <Card className="border border-blue-900/30 bg-gradient-to-b from-[#0a1033] to-[#0d1541] shadow-md rounded-lg">
-      <CardContent className="p-3">
-        <Form {...form}>
-          <form className="space-y-3">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-gray-300 text-xs font-medium">
-                    Step Title
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter step title"
-                      {...field}
-                      onChange={(e) => handleChange("title", e.target.value)}
-                      className="bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md h-8 text-xs"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-400 text-xs" />
-                </FormItem>
-              )}
-            />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="max-w-xl mx-auto"
+    >
+      <Card className="border border-slate-800/50 bg-gradient-to-br from-slate-900/80 via-slate-800/40 to-slate-900/80 backdrop-blur-sm shadow-xl">
+        {/* Compact Header */}
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2.5">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+              className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30"
+            >
+              <FileText className="h-3.5 w-3.5 text-blue-400" />
+            </motion.div>
+            <div>
+              <h3 className="text-base font-semibold text-white">Step Information</h3>
+              <p className="text-xs text-slate-400 flex items-center gap-1">
+                <Sparkles className="h-2.5 w-2.5 text-blue-400/60" />
+                Define the basic details for your workflow step
+              </p>
+            </div>
+          </div>
+        </CardHeader>
 
-            <FormField
-              control={form.control}
-              name="descriptif"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-gray-300 text-xs font-medium">
-                    Description
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter step description"
-                      {...field}
-                      rows={3}
-                      onChange={(e) =>
-                        handleChange("descriptif", e.target.value)
-                      }
-                      className="bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md resize-none text-xs min-h-[60px]"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-400 text-xs" />
-                </FormItem>
-              )}
-            />
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+        <CardContent className="space-y-4">
+          <Form {...form}>
+            <form className="space-y-4">
+              {/* Step Title Field */}
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                      <Edit3 className="h-3 w-3 text-blue-400" />
+                      Step Title
+                      <span className="text-red-400">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <motion.div
+                        whileFocus={{ scale: 1.01 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      >
+                        <Input
+                          placeholder="Enter a descriptive title for this step..."
+                          {...field}
+                          onChange={(e) => handleChange("title", e.target.value)}
+                          className="h-9 bg-slate-800/60 border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white placeholder:text-slate-500 rounded-lg transition-all duration-200 hover:bg-slate-800/80"
+                        />
+                      </motion.div>
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                    {field.value && field.value.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-xs text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20"
+                      >
+                        ✓ Title looks good
+                      </motion.div>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              {/* Step Description Field */}
+              <FormField
+                control={form.control}
+                name="descriptif"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                      <FileText className="h-3 w-3 text-blue-400" />
+                      Description
+                      <span className="text-xs text-slate-500">(Optional)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <motion.div
+                        whileFocus={{ scale: 1.01 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      >
+                        <Textarea
+                          placeholder="Provide a detailed description of what happens in this step..."
+                          {...field}
+                          rows={3}
+                          onChange={(e) => handleChange("descriptif", e.target.value)}
+                          className="bg-slate-800/60 border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white placeholder:text-slate-500 rounded-lg resize-none transition-all duration-200 hover:bg-slate-800/80 min-h-[70px]"
+                        />
+                      </motion.div>
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-500">
+                        Help users understand the purpose of this step
+                      </span>
+                      {field.value && (
+                        <span className="text-blue-400">
+                          {field.value.length} characters
+                        </span>
+                      )}
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };

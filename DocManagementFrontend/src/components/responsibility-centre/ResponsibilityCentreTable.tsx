@@ -8,7 +8,7 @@ import { ResponsibilityCentreEditDialog } from "./dialogs/ResponsibilityCentreEd
 import { ResponsibilityCentreDetailsDialog } from "./dialogs/ResponsibilityCentreDetailsDialog";
 import { AssociateUsersDialog } from "./dialogs/AssociateUsersDialog";
 import { RemoveUsersDialog } from "./dialogs/RemoveUsersDialog";
-import { Trash2, CheckCircle, Settings, Building, RefreshCw } from "lucide-react";
+import { Trash2, CheckCircle, Settings, Building } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -17,14 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useResponsibilityCentreManagement } from "@/hooks/useResponsibilityCentreManagement";
-import { AlertTriangle, Filter, X } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_RESPONSIBILITY_CENTRE_SEARCH_FIELDS } from "@/components/table/constants/filters";
@@ -47,10 +42,6 @@ export function ResponsibilityCentreTable() {
     setSearchQuery,
     searchField,
     setSearchField,
-    statusFilter,
-    setStatusFilter,
-    showAdvancedFilters,
-    setShowAdvancedFilters,
     isLoading,
     isError,
     refetch,
@@ -98,36 +89,36 @@ export function ResponsibilityCentreTable() {
         code: c.code,
         usersCount: c.usersCount
       })));
-      
+
       // If centres already have usersCount, use that
       const hasDirectCounts = filteredCentres.some(centre => centre.usersCount !== undefined);
-      
+
       if (hasDirectCounts) {
         console.log('Using direct user counts from centres');
         const newCounts: Record<number, number> = {};
-        
+
         filteredCentres.forEach(centre => {
           newCounts[centre.id] = centre.usersCount || 0;
         });
-        
+
         console.log('Direct user counts:', newCounts);
-        
+
         // Only update state if counts actually changed
         const currentCountsStr = JSON.stringify(userCountsRef.current);
         const newCountsStr = JSON.stringify(newCounts);
-        
+
         if (currentCountsStr !== newCountsStr) {
           userCountsRef.current = newCounts;
           setUserCounts(newCounts);
         }
-        
+
         return;
       }
-      
+
       // Fall back to fetching user counts per centre
       console.log('Fetching user counts per centre');
       const newCounts: Record<number, number> = {};
-      
+
       // Fetch user count for each centre individually
       await Promise.all(
         filteredCentres.map(async (centre) => {
@@ -141,13 +132,13 @@ export function ResponsibilityCentreTable() {
           }
         })
       );
-      
+
       console.log('Fetched user counts:', newCounts);
-      
+
       // Only update state if counts actually changed
       const currentCountsStr = JSON.stringify(userCountsRef.current);
       const newCountsStr = JSON.stringify(newCounts);
-      
+
       if (currentCountsStr !== newCountsStr) {
         userCountsRef.current = newCounts;
         setUserCounts(newCounts);
@@ -192,10 +183,10 @@ export function ResponsibilityCentreTable() {
   ) => {
     try {
       const newStatus = !currentStatus;
-      await responsibilityCentreService.updateResponsibilityCentre(centreId, { 
-        code: "", 
-        descr: "", 
-        isActive: newStatus 
+      await responsibilityCentreService.updateResponsibilityCentre(centreId, {
+        code: "",
+        descr: "",
+        isActive: newStatus
       });
       toast.success(
         newStatus
@@ -216,11 +207,11 @@ export function ResponsibilityCentreTable() {
   const handleEditCentre = async (centreId: number, centreData: any) => {
     try {
       await responsibilityCentreService.updateResponsibilityCentre(centreId, centreData);
-      toast.success(t("responsibilityCentres.editSuccess"));
+      toast.success(t("common.success"));
       refetch();
       setEditingCentre(null);
     } catch (error) {
-      toast.error(t("responsibilityCentres.editFailed"));
+      toast.error(t("common.error"));
       console.error(`Failed to update centre ${centreId}:`, error);
       return Promise.reject(error);
     }
@@ -229,11 +220,11 @@ export function ResponsibilityCentreTable() {
   const handleDeleteCentre = async (centreId: number) => {
     try {
       await responsibilityCentreService.deleteResponsibilityCentre(centreId);
-      toast.success(t("responsibilityCentres.deleteSuccess"));
+      toast.success(t("common.success"));
       setDeletingCentre(null);
       refetch();
     } catch (error) {
-      toast.error(t("responsibilityCentres.deleteFailed"));
+      toast.error(t("common.error"));
       console.error(error);
     }
   };
@@ -241,20 +232,16 @@ export function ResponsibilityCentreTable() {
   const handleDeleteMultiple = async () => {
     try {
       await Promise.all(
-        selectedCentres.map(centreId => 
+        selectedCentres.map(centreId =>
           responsibilityCentreService.deleteResponsibilityCentre(centreId)
         )
       );
-      toast.success(
-        tWithParams("responsibilityCentres.deletedMultiple", {
-          count: selectedCentres.length,
-        })
-      );
+      toast.success(t("common.success"));
       bulkSelection.clearSelection();
       setDeleteMultipleOpen(false);
       refetch();
     } catch (error) {
-      toast.error(t("responsibilityCentres.deleteMultipleFailed"));
+      toast.error(t("common.error"));
       console.error(error);
     }
   };
@@ -277,45 +264,13 @@ export function ResponsibilityCentreTable() {
     updateUserCounts();
   }, [refetch, updateUserCounts]);
 
-  // Professional filter/search bar styling
-  const filterCardClass =
+  // Professional search bar styling
+  const searchCardClass =
     "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
 
-  // Filter popover state
-  const [filterOpen, setFilterOpen] = useState(false);
 
-  // Filter options
-  const statusOptions = [
-    { id: "any", label: t("responsibilityCentres.anyStatus"), value: "any" },
-    { id: "active", label: t("responsibilityCentres.active"), value: "active" },
-    { id: "inactive", label: t("responsibilityCentres.inactive"), value: "inactive" },
-  ];
 
-  // Apply filters immediately when changed
-  const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
-  };
 
-  // Clear all filters
-  const clearAllFilters = () => {
-    setStatusFilter("any");
-    setSearchQuery("");
-    setFilterOpen(false); // Close popover after clearing
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key === "f") {
-        e.preventDefault();
-        setFilterOpen(true);
-      }
-      if (e.key === "Escape" && filterOpen) {
-        setFilterOpen(false);
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [filterOpen]);
 
   if (isLoading) {
     return (
@@ -329,7 +284,7 @@ export function ResponsibilityCentreTable() {
     return (
       <div className="text-destructive py-10 text-center">
         <AlertTriangle className="h-10 w-10 mx-auto mb-2" />
-        {t("responsibilityCentres.errorLoading")}
+        {t("common.error")}
       </div>
     );
   }
@@ -339,8 +294,8 @@ export function ResponsibilityCentreTable() {
       className="h-full flex flex-col gap-6 w-full"
       style={{ minHeight: "100%" }}
     >
-      {/* Document-style Search + Filter Bar */}
-      <div className={filterCardClass}>
+      {/* Document-style Search Bar */}
+      <div className={searchCardClass}>
         {/* Search and field select */}
         <div className="flex-1 flex items-center gap-4 min-w-0">
           <div className="relative">
@@ -391,87 +346,7 @@ export function ResponsibilityCentreTable() {
             </div>
           </div>
         </div>
-        {/* Filter and Refresh buttons */}
-        <div className="flex items-center gap-3">
-          {/* Manual Refresh Button */}
-          <Button
-            variant="outline"
-            onClick={() => {
-              refetch();
-              toast.success("Data refreshed successfully");
-            }}
-            className="h-12 px-4 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-2 transition-all duration-300 hover:shadow-xl"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          
-          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
-              >
-                <Filter className="h-5 w-5" />
-                {t("responsibilityCentres.filter")}
-                <span className="ml-2 px-2 py-0.5 rounded border border-blue-700 text-xs text-blue-300 bg-blue-900/40 font-mono">Alt+F</span>
-                {(statusFilter !== "any") && (
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl p-6">
-              <div className="mb-4 text-foreground font-bold text-lg flex items-center gap-2">
-                <Filter className="h-5 w-5 text-primary" />
-                {t("responsibilityCentres.advancedFilters")}
-              </div>
-              <div className="flex flex-col gap-4">
-                {/* Status Filter */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm text-popover-foreground">
-                    {t("responsibilityCentres.status")}
-                  </span>
-                  <Select
-                    value={statusFilter}
-                    onValueChange={handleStatusChange}
-                  >
-                    <SelectTrigger className="w-full bg-background/50 backdrop-blur-sm text-foreground border border-border focus:ring-primary focus:border-primary transition-colors duration-200 hover:bg-background/70 shadow-sm rounded-md">
-                      <SelectValue>
-                        {
-                          statusOptions.find(
-                            (opt) => opt.value === statusFilter
-                          )?.label
-                        }
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover/95 backdrop-blur-lg text-popover-foreground border border-border">
-                      {statusOptions.map((opt) => (
-                        <SelectItem
-                          key={opt.id}
-                          value={opt.value}
-                          className="hover:bg-accent hover:text-accent-foreground"
-                        >
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex justify-end mt-6">
-                {(statusFilter !== "any") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all duration-200 flex items-center gap-2"
-                    onClick={clearAllFilters}
-                  >
-                    <X className="h-4 w-4" /> {t("responsibilityCentres.clearAll")}
-                  </Button>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+        {/* No additional buttons needed */}
       </div>
 
       <div className="flex-1 min-h-0">
@@ -497,7 +372,7 @@ export function ResponsibilityCentreTable() {
           sortBy={sortBy}
           sortDirection={sortDirection}
           onSort={handleSort}
-          onClearFilters={clearAllFilters}
+          onClearFilters={() => setSearchQuery("")}
           onBulkDelete={() => setDeleteMultipleOpen(true)}
           isLoading={isLoading}
           isError={isError}
@@ -514,8 +389,8 @@ export function ResponsibilityCentreTable() {
 
       {deletingCentre !== null && (
         <DeleteConfirmDialog
-          title={t("responsibilityCentres.deleteTitle")}
-          description={t("responsibilityCentres.deleteDescription")}
+          title={t("common.delete")}
+          description="Are you sure you want to delete this responsibility centre?"
           open={deletingCentre !== null}
           onOpenChange={(open) => {
             console.log("Delete dialog open change:", open, "deletingCentre:", deletingCentre);

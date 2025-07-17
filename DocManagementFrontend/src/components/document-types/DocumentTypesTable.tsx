@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { Filter, X, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { ERP_TYPE_MAPPINGS } from "@/utils/erpTypeUtils";
 
 const SEARCH_FIELDS = [
     { id: "all", label: "All fields" },
@@ -35,6 +36,15 @@ const HAS_DOCUMENTS_OPTIONS = [
     { id: "any", label: "Any", value: "any" },
     { id: "yes", label: "With Documents", value: "yes" },
     { id: "no", label: "Without Documents", value: "no" },
+];
+
+const ERP_TYPE_OPTIONS = [
+    { id: "any", label: "Any ERP Type", value: "any" },
+    ...Object.entries(ERP_TYPE_MAPPINGS).map(([typeNumber, typeName]) => ({
+        id: typeNumber,
+        label: typeName,
+        value: typeName,
+    })),
 ];
 
 interface DocumentTypesTableProps {
@@ -59,6 +69,8 @@ export function DocumentTypesTable({ onCreateType }: DocumentTypesTableProps) {
         setTierTypeFilter,
         hasDocumentsFilter,
         setHasDocumentsFilter,
+        erpTypeFilter,
+        setErpTypeFilter,
         showAdvancedFilters,
         setShowAdvancedFilters,
         isLoading,
@@ -86,12 +98,13 @@ export function DocumentTypesTable({ onCreateType }: DocumentTypesTableProps) {
     const clearAllFilters = () => {
         setTierTypeFilter("any");
         setHasDocumentsFilter("any");
+        setErpTypeFilter("any");
         setSearchQuery("");
         setFilterOpen(false);
     };
 
     // Check if any filters are active
-    const isFilterActive = searchQuery !== '' || tierTypeFilter !== 'any' || hasDocumentsFilter !== 'any';
+    const isFilterActive = searchQuery !== '' || tierTypeFilter !== 'any' || hasDocumentsFilter !== 'any' || erpTypeFilter !== 'any';
 
     // Handle keyboard shortcuts
     useEffect(() => {
@@ -252,6 +265,29 @@ export function DocumentTypesTable({ onCreateType }: DocumentTypesTableProps) {
                                         </SelectTrigger>
                                         <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
                                             {HAS_DOCUMENTS_OPTIONS.map((opt) => (
+                                                <SelectItem
+                                                    key={opt.id}
+                                                    value={opt.value}
+                                                    className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                                                >
+                                                    {opt.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* ERP Type Filter */}
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-sm text-popover-foreground">ERP Type</span>
+                                    <Select value={erpTypeFilter} onValueChange={setErpTypeFilter}>
+                                        <SelectTrigger className="h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-lg">
+                                            <SelectValue>
+                                                {ERP_TYPE_OPTIONS.find((opt) => opt.value === erpTypeFilter)?.label || "Any ERP Type"}
+                                            </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                                            {ERP_TYPE_OPTIONS.map((opt) => (
                                                 <SelectItem
                                                     key={opt.id}
                                                     value={opt.value}

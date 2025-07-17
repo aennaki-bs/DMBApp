@@ -169,6 +169,17 @@ const adminService = {
     }
   },
 
+  // Get all system logs
+  // getAllSystemLogs: async (): Promise<LogHistoryDto[]> => {
+  //   try {
+  //     const response = await api.get('/Admin/logs');
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Error fetching system logs:', error);
+  //     throw error;
+  //   }
+  // },
+
   // Get all roles
   getAllRoles: async (): Promise<Role[]> => {
     try {

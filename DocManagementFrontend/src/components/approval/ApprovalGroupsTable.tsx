@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { notifications } from "@/utils/notificationUtils";
 import approvalService from "@/services/approvalService";
 import { ApprovalGroupTableContent } from "./table/ApprovalGroupTableContent";
 import { Button } from "@/components/ui/button";
@@ -214,7 +214,7 @@ export function ApprovalGroupsTable({ onCreateGroup, refreshTrigger }: ApprovalG
     } catch (error) {
       console.error("Failed to fetch approval groups:", error);
       setIsError(true);
-      toast.error("Failed to load approval groups");
+      notifications.error("Failed to load approval groups");
     } finally {
       setIsLoading(false);
     }
@@ -259,7 +259,7 @@ export function ApprovalGroupsTable({ onCreateGroup, refreshTrigger }: ApprovalG
 
   const handleEdit = (group: ApprovalGroup) => {
     if (associatedGroups[group.id]) {
-      toast.error("Cannot edit a group that is associated with workflow steps");
+      notifications.error("Cannot edit a group that is associated with workflow steps");
       return;
     }
     setSelectedGroup(group);
@@ -271,7 +271,7 @@ export function ApprovalGroupsTable({ onCreateGroup, refreshTrigger }: ApprovalG
     if (!group) return;
 
     if (associatedGroups[groupId]) {
-      toast.error("Cannot delete a group that is associated with workflow steps");
+      notifications.error("Cannot delete a group that is associated with workflow steps");
       return;
     }
     setGroupToDelete(group);
@@ -284,10 +284,10 @@ export function ApprovalGroupsTable({ onCreateGroup, refreshTrigger }: ApprovalG
     try {
       await approvalService.deleteApprovalGroup(groupToDelete.id);
       setApprovalGroups(prev => prev.filter(g => g.id !== groupToDelete.id));
-      toast.success("Approval group deleted successfully");
+      notifications.success("Approval group deleted successfully");
     } catch (error) {
       console.error("Failed to delete approval group:", error);
-      toast.error("Failed to delete approval group");
+      notifications.error("Failed to delete approval group");
     } finally {
       setDeleteDialogOpen(false);
       setGroupToDelete(null);
@@ -299,22 +299,22 @@ export function ApprovalGroupsTable({ onCreateGroup, refreshTrigger }: ApprovalG
     const eligibleIds = selectedIds.filter(id => !associatedGroups[id]);
 
     if (eligibleIds.length === 0) {
-      toast.error("None of the selected groups can be deleted");
+      notifications.error("None of the selected groups can be deleted");
       return;
     }
 
     if (eligibleIds.length < selectedIds.length) {
-      toast.warning(`Only ${eligibleIds.length} of ${selectedIds.length} groups will be deleted (others are associated with workflows)`);
+      notifications.warning(`Only ${eligibleIds.length} of ${selectedIds.length} groups will be deleted (others are associated with workflows)`);
     }
 
     try {
       await Promise.all(eligibleIds.map(id => approvalService.deleteApprovalGroup(id)));
       setApprovalGroups(prev => prev.filter(g => !eligibleIds.includes(g.id)));
-      toast.success(`${eligibleIds.length} groups deleted successfully`);
+      notifications.success(`${eligibleIds.length} groups deleted successfully`);
       bulkSelection.clearSelection();
     } catch (error) {
       console.error("Failed to delete groups:", error);
-      toast.error("Failed to delete selected groups");
+      notifications.error("Failed to delete selected groups");
     } finally {
       setBulkDeleteDialogOpen(false);
     }
@@ -325,19 +325,19 @@ export function ApprovalGroupsTable({ onCreateGroup, refreshTrigger }: ApprovalG
     const eligibleIds = selectedIds.filter(id => !associatedGroups[id]);
 
     if (eligibleIds.length === 0) {
-      toast.error("None of the selected groups can be reactivated");
+      notifications.error("None of the selected groups can be reactivated");
       return;
     }
 
     try {
       // This would be implemented if there's a reactivate endpoint
       // await Promise.all(eligibleIds.map(id => approvalService.reactivateApprovalGroup(id)));
-      toast.success(`${eligibleIds.length} groups reactivated successfully`);
+      notifications.success(`${eligibleIds.length} groups reactivated successfully`);
       bulkSelection.clearSelection();
       fetchApprovalGroups();
     } catch (error) {
       console.error("Failed to reactivate groups:", error);
-      toast.error("Failed to reactivate selected groups");
+      notifications.error("Failed to reactivate selected groups");
     }
   };
 

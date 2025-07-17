@@ -32,25 +32,104 @@ export function useStepManagement(circuitId?: string) {
     refetchSteps,
   } = useCircuitSteps(circuitId || '');
 
+  // Professional precise search with exact matching priority (same as useCircuitSteps)
+  const createSmartSearch = (query: string, searchField: string = 'all') => {
+    if (!query || !query.trim()) return () => true;
+
+    // Clean and normalize the search query
+    const cleanQuery = query.toLowerCase().trim();
+
+    // Split into phrases (if quoted) and individual terms
+    const phrases: string[] = [];
+    const terms: string[] = [];
+
+    // Check for quoted phrases first
+    const quotedPhrases = cleanQuery.match(/"([^"]+)"/g);
+    let remainingQuery = cleanQuery;
+
+    if (quotedPhrases) {
+      quotedPhrases.forEach(phrase => {
+        phrases.push(phrase.replace(/"/g, ''));
+        remainingQuery = remainingQuery.replace(phrase, '').trim();
+      });
+    }
+
+    // Add remaining terms
+    if (remainingQuery) {
+      terms.push(...remainingQuery.split(/\s+/).filter(term => term.length > 0));
+    }
+
+    // Remove duplicates
+    const uniqueTerms = [...new Set(terms)];
+    const uniquePhrases = [...new Set(phrases)];
+
+    return (step: any) => {
+      // Create searchable content based on selected field
+      let searchContent = '';
+
+      switch (searchField) {
+        case 'title':
+          searchContent = step.title || '';
+          break;
+        case 'currentStatus':
+          searchContent = step.currentStatusTitle || '';
+          break;
+        case 'nextStatus':
+          searchContent = step.nextStatusTitle || '';
+          break;
+        case 'all':
+        default:
+          searchContent = [
+            step.title,
+            step.currentStatusTitle,
+            step.nextStatusTitle,
+            step.descriptif,
+            step.stepKey
+          ].filter(Boolean).join(' | '); // Use separator to maintain field boundaries
+          break;
+      }
+
+      const normalizedContent = searchContent.toLowerCase();
+
+      // PRIORITY 1: Exact phrase matching (highest priority)
+      if (uniquePhrases.length > 0) {
+        const phraseMatches = uniquePhrases.every(phrase => {
+          return normalizedContent.includes(phrase);
+        });
+        if (phraseMatches) return true;
+      }
+
+      // PRIORITY 2: All terms must be found (exact word matching)
+      if (uniqueTerms.length > 0) {
+        const allTermsMatch = uniqueTerms.every(term => {
+          // Exact word boundary matching - no partial words
+          const wordBoundaryRegex = new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          return wordBoundaryRegex.test(normalizedContent);
+        });
+        if (allTermsMatch) return true;
+      }
+
+      // PRIORITY 3: Exact substring matching (for compound words)
+      if (uniqueTerms.length > 0) {
+        const substringMatches = uniqueTerms.every(term => {
+          return normalizedContent.includes(term);
+        });
+        if (substringMatches) return true;
+      }
+
+      // If no exact matches found, return false (no fuzzy matching)
+      return false;
+    };
+  };
+
   // Filter and search logic
   const filteredSteps = useMemo(() => {
     if (!allSteps) return [];
 
     return allSteps.filter((step) => {
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const searchFields = {
-          all: [step.title, step.descriptif, step.stepKey].join(' ').toLowerCase(),
-          title: step.title.toLowerCase(),
-          descriptif: step.descriptif?.toLowerCase() || '',
-          stepKey: step.stepKey?.toLowerCase() || '',
-        };
-
-        const fieldToSearch = searchFields[searchField as keyof typeof searchFields] || searchFields.all;
-        if (!fieldToSearch.includes(query)) {
-          return false;
-        }
+      // Apply intelligent search filter
+      if (!createSmartSearch(searchQuery, searchField)(step)) {
+        return false;
       }
 
       // Status filter (you can customize this based on your step status logic)

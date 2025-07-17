@@ -1,9 +1,9 @@
 import { ResponsibilityCentreSimple } from './responsibilityCentre';
-import { 
-  LignesElementType, 
-  Item, 
-  UniteCode, 
-  GeneralAccounts 
+import {
+  LignesElementType,
+  Item,
+  UniteCode,
+  GeneralAccounts
 } from './lineElements';
 import { SubType } from './subtype';
 import { LocationDto } from './location';
@@ -44,14 +44,14 @@ export interface Document {
   lignes?: Ligne[];
   responsibilityCentreId?: number;
   responsibilityCentre?: ResponsibilityCentreSimple;
-  
+
   // Customer/Vendor snapshot data
   customerVendorCode?: string;
   customerVendorName?: string;
   customerVendorAddress?: string;
   customerVendorCity?: string;
   customerVendorCountry?: string;
-  
+
   // ERP Archive status
   erpDocumentCode?: string;
   isArchived?: boolean;
@@ -78,6 +78,7 @@ export interface DocumentType {
   typeAttr?: string;
   tierType?: TierType;
   documentCounter?: number;
+  erpType?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -101,7 +102,7 @@ export interface CreateDocumentRequest {
   docDate?: string;
   circuitId?: number;
   responsibilityCentreId?: number;
-  
+
   // Customer/Vendor information
   customerVendorCode?: string;
   customerVendorName?: string;
@@ -119,7 +120,7 @@ export interface UpdateDocumentRequest {
   docDate?: string;
   comptableDate?: string;
   circuitId?: number;
-  
+
   // Customer/Vendor information
   customerVendorCode?: string;
   customerVendorName?: string;
@@ -134,45 +135,45 @@ export interface Ligne {
   ligneKey: string;
   title: string;
   article: string;
-  
+
   // Legacy field
   prix: number;
-  
+
   sousLignesCount: number;
-  
+
   // Type information - FIXED field names to match backend
   lignesElementTypeId?: number;
   lignesElementType?: LignesElementType;
-  
+
   // Element references
   itemCode?: string;
   item?: Item;
   generalAccountsCode?: string;
   generalAccounts?: GeneralAccounts;
-  
+
   // Location reference (only for Item types)
   locationCode?: string;
   location?: LocationDto;
-  
+
   // Unit of measure reference (only for Item types)
   unitCode?: string;
   unit?: UniteCode;
-  
+
   // Pricing fields
   quantity: number;
   priceHT: number;
   discountPercentage: number;
   discountAmount?: number;
   vatPercentage: number;
-  
+
   // Calculated fields
   amountHT: number;
   amountVAT: number;
   amountTTC: number;
-  
+
   // ERP Integration field
   erpLineCode?: string;
-  
+
   createdAt: string;
   updatedAt: string;
   document?: Document;
@@ -184,26 +185,26 @@ export interface CreateLigneRequest {
   ligneKey?: string;
   title: string;
   article: string;
-  
+
   // Type reference - backend determines item/account automatically based on this
   lignesElementTypeId?: number;
-  
+
   // Selected element code (Item.Code or GeneralAccounts.Code)
   selectedElementCode?: string;
-  
+
   // Location code (only for Item types)
   locationCode?: string;
-  
+
   // Unit of measure code (only for Item types)
   unitCode?: string;
-  
+
   // Pricing fields (calculated by frontend)
   quantity: number;
   priceHT: number; // Unit price after conversion (adjusted price)
   discountPercentage: number;
   discountAmount: number; // Calculated discount amount
   vatPercentage: number;
-  
+
   // Original unit price (before conversion) - for reference
   originalPriceHT: number;
 }
@@ -212,26 +213,26 @@ export interface UpdateLigneRequest {
   ligneKey?: string;
   title?: string;
   article?: string;
-  
+
   // Type reference - backend determines item/account automatically based on this
   lignesElementTypeId?: number;
-  
+
   // Selected element code (Item.Code or GeneralAccounts.Code)
   selectedElementCode?: string;
-  
+
   // Location code (only for Item types)
   locationCode?: string;
-  
+
   // Unit of measure code (only for Item types)
   unitCode?: string;
-  
+
   // Pricing fields (calculated by frontend)
   quantity?: number;
   priceHT?: number; // Unit price after conversion (adjusted price)
   discountPercentage?: number;
   discountAmount?: number; // Calculated discount amount
   vatPercentage?: number;
-  
+
   // Original unit price (before conversion) - for reference
   originalPriceHT?: number;
 }

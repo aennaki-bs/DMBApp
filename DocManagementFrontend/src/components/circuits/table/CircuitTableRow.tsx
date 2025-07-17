@@ -217,7 +217,7 @@ export function CircuitTableRow({
                                 className="rounded-lg cursor-pointer hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                             >
                                 <Eye className="mr-2 h-4 w-4" />
-                                <span>View Details</span>
+                                <span>Manage Status</span>
                             </DropdownMenuItem>
 
                             {!isSimpleUser && (

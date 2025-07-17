@@ -2,7 +2,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-interface DocuVerseLogoProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface DocuVerseLogoProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 const DocuVerseLogo: React.FC<DocuVerseLogoProps> = ({ className, ...props }) => {
   return (
@@ -25,7 +25,7 @@ const DocuVerseLogo: React.FC<DocuVerseLogoProps> = ({ className, ...props }) =>
           <line x1="10" y1="9" x2="8" y2="9" />
         </svg>
         <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">
-          Docu<span className="text-docuBlue">Verse</span>
+          D.M.<span className="text-docuBlue">Verse</span>
         </span>
       </div>
     </div>

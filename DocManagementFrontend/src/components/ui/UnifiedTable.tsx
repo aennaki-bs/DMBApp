@@ -83,12 +83,12 @@ export interface BulkAction {
   icon?: React.ReactNode;
   onClick: (selectedItems: any[]) => void;
   variant?:
-    | "default"
-    | "destructive"
-    | "outline"
-    | "secondary"
-    | "ghost"
-    | "link";
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link";
   className?: string;
 }
 
@@ -588,6 +588,9 @@ export function UnifiedTable<T extends Record<string, any>>({
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
@@ -599,11 +602,14 @@ export function UnifiedTable<T extends Record<string, any>>({
                               {rowActions.map((action, index) => (
                                 <React.Fragment key={action.id}>
                                   <DropdownMenuItem
-                                    onClick={() => action.onClick(item)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      action.onClick(item);
+                                    }}
                                     className={cn(
                                       "flex items-center gap-2",
                                       action.variant === "destructive" &&
-                                        "text-destructive focus:text-destructive"
+                                      "text-destructive focus:text-destructive"
                                     )}
                                   >
                                     {action.icon}

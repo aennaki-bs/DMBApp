@@ -1,6 +1,7 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useStepManagement } from '@/hooks/useStepManagement';
 import { useState } from 'react';
+import stepService from '@/services/stepService';
+import { toast } from 'sonner';
 
 export interface DeleteStepDialogProps {
   open: boolean;
@@ -27,26 +28,32 @@ export function DeleteStepDialog({
   count = 0,
 }: DeleteStepDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const { deleteStep } = useStepManagement();
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      // If onConfirm is provided, use that, otherwise use the hook
+      // If onConfirm is provided (for bulk delete or custom logic), use that
       if (onConfirm) {
         await onConfirm();
       } else {
-        await deleteStep(stepId);
+        // Use stepService for single step deletion
+        const success = await stepService.deleteStep(stepId);
+        if (success) {
+          toast.success('Step deleted successfully');
+        }
       }
-      onSuccess();
+      onSuccess(); // Always call onSuccess to trigger refresh
       onOpenChange(false);
+    } catch (error) {
+      console.error('Error deleting step:', error);
+      toast.error('Failed to delete step');
     } finally {
       setIsDeleting(false);
     }
   };
 
   const title = isBulk ? "Delete Multiple Steps" : "Delete Step";
-  const description = isBulk 
+  const description = isBulk
     ? `Are you sure you want to delete ${count} selected steps? This action cannot be undone.`
     : `Are you sure you want to delete the step "${stepTitle}"? This action cannot be undone.`;
 
@@ -61,9 +68,9 @@ export function DeleteStepDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className="border-blue-900/30" disabled={isDeleting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={handleDelete} 
-            className="bg-red-600 hover:bg-red-700" 
+          <AlertDialogAction
+            onClick={handleDelete}
+            className="bg-red-600 hover:bg-red-700"
             disabled={isDeleting}
           >
             {isDeleting ? 'Deleting...' : 'Delete'}

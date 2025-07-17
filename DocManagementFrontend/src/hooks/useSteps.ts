@@ -4,6 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import stepService from '@/services/stepService';
 import circuitService from '@/services/circuitService';
 
+interface StepFilterOptions {
+  circuit?: number;
+  responsibleRole?: number;
+  isFinalStep?: boolean;
+}
+
 export function useSteps() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSteps, setSelectedSteps] = useState<number[]>([]);
@@ -17,6 +23,9 @@ export function useSteps() {
   const { data: steps = [], isLoading, refetch } = useQuery({
     queryKey: ['steps'],
     queryFn: stepService.getAllSteps,
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    refetchIntervalInBackground: false, // Only refresh when tab is active
+    staleTime: 10000, // Consider data stale after 10 seconds
   });
 
   // Fetch all circuits for the filter dropdown
@@ -29,31 +38,31 @@ export function useSteps() {
   const filteredAndSortedSteps = steps
     .filter((step) => {
       // Apply search filter
-      const matchesSearch = 
+      const matchesSearch =
         step.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         step.descriptif.toLowerCase().includes(searchQuery.toLowerCase()) ||
         step.stepKey.toLowerCase().includes(searchQuery.toLowerCase());
 
       // Apply other filters
-      const matchesCircuit = filterOptions.circuit 
-        ? step.circuitId === filterOptions.circuit 
+      const matchesCircuit = filterOptions.circuit
+        ? step.circuitId === filterOptions.circuit
         : true;
-      
-      const matchesRole = filterOptions.responsibleRole 
-        ? step.responsibleRoleId === filterOptions.responsibleRole 
+
+      const matchesRole = filterOptions.responsibleRole
+        ? step.responsibleRoleId === filterOptions.responsibleRole
         : true;
-        
-      const matchesFinalStep = filterOptions.isFinalStep !== undefined 
-        ? step.isFinalStep === filterOptions.isFinalStep 
+
+      const matchesFinalStep = filterOptions.isFinalStep !== undefined
+        ? step.isFinalStep === filterOptions.isFinalStep
         : true;
 
       return matchesSearch && matchesCircuit && matchesRole && matchesFinalStep;
     })
     .sort((a, b) => {
       if (!sortField) return 0;
-      
+
       let comparison = 0;
-      
+
       if (sortField === 'title') {
         comparison = a.title.localeCompare(b.title);
       } else if (sortField === 'orderIndex') {
@@ -61,7 +70,7 @@ export function useSteps() {
       } else if (sortField === 'circuitId') {
         comparison = a.circuitId - b.circuitId;
       }
-      
+
       return sortDirection === 'asc' ? comparison : -comparison;
     });
 

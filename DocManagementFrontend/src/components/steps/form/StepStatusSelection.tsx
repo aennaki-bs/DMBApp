@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useStepForm } from "./StepFormProvider";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ArrowRight, RefreshCw } from "lucide-react";
+import { Loader2, ArrowRight, RefreshCw, Workflow, AlertCircle, CheckCircle2, Clock, Flag } from "lucide-react";
 import api from "@/services/api/core";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/form";
 import stepService from "@/services/stepService";
 import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 // Define the status interface
 interface Status {
@@ -192,24 +194,32 @@ export const StepStatusSelection = () => {
     return statuses.find((status) => status.statusId === statusId);
   };
 
+  // Get status icon based on type
+  const getStatusIcon = (status?: Status) => {
+    if (!status) return <Clock className="h-3 w-3" />;
+    if (status.isInitial) return <Flag className="h-3 w-3 text-green-400" />;
+    if (status.isFinal) return <CheckCircle2 className="h-3 w-3 text-red-400" />;
+    return <Clock className="h-3 w-3 text-blue-400" />;
+  };
+
   // Render status badges for initial/final states
   const renderStatusBadges = (status?: Status) => {
     if (!status) return null;
 
     return (
-      <div className="flex gap-1.5 mt-1">
+      <div className="flex gap-1 mt-1">
         {status.isInitial && (
-          <Badge variant="success" size="sm" className="px-1.5 py-0.5">
+          <Badge className="bg-green-500/20 text-green-300 border-green-500/30 text-xs px-1.5 py-0.5">
             Initial
           </Badge>
         )}
         {status.isFinal && (
-          <Badge variant="destructive" size="sm" className="px-1.5 py-0.5">
+          <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-xs px-1.5 py-0.5">
             Final
           </Badge>
         )}
         {status.isRequired && !status.isInitial && !status.isFinal && (
-          <Badge variant="secondary" size="sm" className="px-1.5 py-0.5">
+          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs px-1.5 py-0.5">
             Required
           </Badge>
         )}
@@ -221,195 +231,276 @@ export const StepStatusSelection = () => {
     <SelectItem
       key={status.statusId}
       value={status.statusId.toString()}
-      className="text-xs py-2"
+      className="py-2 hover:bg-slate-800/50 focus:bg-slate-700/50 cursor-pointer"
     >
-      <div>
-        <div className="flex items-center">
-          <span>{status.title}</span>
-          {status.isInitial && (
-            <span className="ml-1.5 text-[10px] bg-green-900/30 text-green-400 px-1 py-0.5 rounded">
-              Initial
-            </span>
-          )}
-          {status.isFinal && (
-            <span className="ml-1.5 text-[10px] bg-red-900/30 text-red-400 px-1 py-0.5 rounded">
-              Final
-            </span>
+      <div className="flex items-center gap-2">
+        {getStatusIcon(status)}
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-white text-sm">{status.title}</span>
+            {status.isInitial && (
+              <span className="text-xs bg-green-500/20 text-green-300 px-1 py-0.5 rounded-full border border-green-500/30">
+                Initial
+              </span>
+            )}
+            {status.isFinal && (
+              <span className="text-xs bg-red-500/20 text-red-300 px-1 py-0.5 rounded-full border border-red-500/30">
+                Final
+              </span>
+            )}
+          </div>
+          {status.description && (
+            <div className="text-xs text-slate-400 mt-0.5">
+              {status.description}
+            </div>
           )}
         </div>
-        {status.description && (
-          <div className="text-[10px] text-blue-300/70 mt-0.5">
-            {status.description}
-          </div>
-        )}
       </div>
     </SelectItem>
   );
 
   if (fetchError) {
     return (
-      <Card className="border border-red-900/30 bg-gradient-to-b from-[#330a0a] to-[#41150d] shadow-md rounded-lg">
-        <CardContent className="p-3">
-          <div className="p-4 text-center">
-            <p className="text-red-300 mb-2">{fetchError}</p>
-            <button
-              className="px-3 py-1.5 bg-blue-900/30 hover:bg-blue-900/50 rounded text-blue-300 text-sm flex items-center justify-center mx-auto"
-              onClick={fetchStatuses}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" /> Retry
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-xl mx-auto"
+      >
+        <Card className="border border-red-500/30 bg-gradient-to-br from-red-950/50 via-red-900/30 to-red-950/50 backdrop-blur-sm shadow-xl">
+          <CardContent className="p-4">
+            <div className="text-center space-y-3">
+              <div className="p-2 rounded-full bg-red-500/20 border border-red-500/30 w-fit mx-auto">
+                <AlertCircle className="h-5 w-5 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-red-300 mb-1">Failed to Load Statuses</h3>
+                <p className="text-red-200/80 text-sm">{fetchError}</p>
+              </div>
+              <Button
+                onClick={fetchStatuses}
+                variant="outline"
+                className="border-red-500/30 text-red-300 hover:bg-red-500/10 h-8"
+                size="sm"
+              >
+                <RefreshCw className="h-3 w-3 mr-1.5" />
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 
   return (
-    <Card className="border border-blue-900/30 bg-gradient-to-b from-[#0a1033] to-[#0d1541] shadow-md rounded-lg">
-      <CardContent className="p-3">
-        <Form {...form}>
-          <form className="space-y-4">
-            <FormField
-              control={form.control}
-              name="currentStatusId"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-gray-300 text-xs font-medium">
-                    Current Status
-                  </FormLabel>
-                  <Select
-                    onValueChange={handleCurrentStatusChange}
-                    value={field.value}
-                    disabled={isLoadingStatuses}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md h-8 text-xs">
-                        <SelectValue placeholder="Select current status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-[#0d1541] border-blue-900/50 text-white max-h-[300px]">
-                      {isLoadingStatuses ? (
-                        <div className="flex items-center justify-center p-2">
-                          <Loader2 className="h-4 w-4 animate-spin text-blue-500 mr-2" />
-                          <span className="text-xs">Loading statuses...</span>
-                        </div>
-                      ) : statuses.length === 0 ? (
-                        <div className="p-2 text-center text-xs text-blue-300/70">
-                          No statuses available for this circuit
-                        </div>
-                      ) : (
-                        statuses.map(renderStatusItem)
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className="text-red-400 text-xs" />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex items-center justify-center py-1">
-              <ArrowRight className="h-4 w-4 text-blue-500" />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="max-w-xl mx-auto"
+    >
+      <Card className="border border-slate-800/50 bg-gradient-to-br from-slate-900/80 via-slate-800/40 to-slate-900/80 backdrop-blur-sm shadow-xl">
+        {/* Compact Header */}
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2.5">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+              className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30"
+            >
+              <Workflow className="h-3.5 w-3.5 text-blue-400" />
+            </motion.div>
+            <div>
+              <h3 className="text-base font-semibold text-white">Status Selection</h3>
+              <p className="text-xs text-slate-400">Define current and next status for this step</p>
             </div>
+          </div>
+        </CardHeader>
 
-            <FormField
-              control={form.control}
-              name="nextStatusId"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-gray-300 text-xs font-medium">
-                    Next Status
-                  </FormLabel>
-                  <Select
-                    onValueChange={handleNextStatusChange}
-                    value={field.value}
-                    disabled={
-                      isLoadingStatuses ||
-                      !formData.currentStatusId ||
-                      isCheckingDuplicate
-                    }
+        <CardContent className="space-y-4">
+          <Form {...form}>
+            <form className="space-y-4">
+              {/* Current Status Field */}
+              <FormField
+                control={form.control}
+                name="currentStatusId"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                      <Flag className="h-3 w-3 text-blue-400" />
+                      Current Status
+                      <span className="text-red-400">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={handleCurrentStatusChange}
+                      value={field.value}
+                      disabled={isLoadingStatuses}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-9 bg-slate-800/60 border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white rounded-lg transition-all duration-200 hover:bg-slate-800/80">
+                          <SelectValue placeholder="Select current status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-slate-900/95 border-slate-700/50 backdrop-blur-md">
+                        {isLoadingStatuses ? (
+                          <div className="flex items-center justify-center p-3">
+                            <Loader2 className="h-3 w-3 animate-spin text-blue-500 mr-2" />
+                            <span className="text-sm text-slate-300">Loading statuses...</span>
+                          </div>
+                        ) : statuses.length === 0 ? (
+                          <div className="p-3 text-center text-sm text-slate-400">
+                            No statuses available for this circuit
+                          </div>
+                        ) : (
+                          statuses.map(renderStatusItem)
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Status Flow Indicator */}
+              <motion.div
+                className="flex items-center justify-center py-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2 }}
+              >
+              </motion.div>
+
+              {/* Next Status Field */}
+              <FormField
+                control={form.control}
+                name="nextStatusId"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-blue-400" />
+                      Next Status
+                      <span className="text-red-400">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={handleNextStatusChange}
+                      value={field.value}
+                      disabled={
+                        isLoadingStatuses ||
+                        !formData.currentStatusId ||
+                        isCheckingDuplicate
+                      }
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-9 bg-slate-800/60 border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white rounded-lg transition-all duration-200 hover:bg-slate-800/80">
+                          <SelectValue placeholder="Select next status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-slate-900/95 border-slate-700/50 backdrop-blur-md">
+                        {isLoadingStatuses || !formData.currentStatusId ? (
+                          <div className="flex items-center justify-center p-3">
+                            <Loader2 className="h-3 w-3 animate-spin text-blue-500 mr-2" />
+                            <span className="text-sm text-slate-300">
+                              {isLoadingStatuses
+                                ? "Loading statuses..."
+                                : "Select current status first"}
+                            </span>
+                          </div>
+                        ) : nextStatusOptions.length === 0 ? (
+                          <div className="p-3 text-center text-sm text-slate-400">
+                            No available next statuses
+                          </div>
+                        ) : (
+                          nextStatusOptions.map(renderStatusItem)
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Duplicate Check Indicator */}
+              <AnimatePresence>
+                {isCheckingDuplicate && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex items-center justify-center p-2 bg-blue-500/10 rounded-lg border border-blue-500/20"
                   >
-                    <FormControl>
-                      <SelectTrigger className="bg-[#0d1541]/70 border-blue-900/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white rounded-md h-8 text-xs">
-                        <SelectValue placeholder="Select next status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-[#0d1541] border-blue-900/50 text-white max-h-[300px]">
-                      {isLoadingStatuses || !formData.currentStatusId ? (
-                        <div className="flex items-center justify-center p-2">
-                          <Loader2 className="h-4 w-4 animate-spin text-blue-500 mr-2" />
-                          <span className="text-xs">
-                            {isLoadingStatuses
-                              ? "Loading statuses..."
-                              : "Select current status first"}
+                    <Loader2 className="h-3 w-3 animate-spin text-blue-400 mr-2" />
+                    <span className="text-sm text-blue-300">Checking for duplicate steps...</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Status Transition Preview */}
+              <AnimatePresence>
+                {formData.currentStatusId && formData.nextStatusId && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="p-4 bg-gradient-to-br from-blue-500/10 via-blue-600/5 to-blue-700/10 border border-blue-500/20 rounded-lg backdrop-blur-sm"
+                  >
+                    <Label className="text-sm font-medium text-blue-300 mb-3 block flex items-center gap-1.5">
+                      <Workflow className="h-3 w-3" />
+                      Status Transition Preview
+                    </Label>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+                      {/* Current Status */}
+                      <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3 backdrop-blur-sm">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          {getStatusIcon(getStatusById(formData.currentStatusId))}
+                          <span className="text-white font-medium text-sm">
+                            {getStatusById(formData.currentStatusId)?.title || "Current"}
                           </span>
                         </div>
-                      ) : nextStatusOptions.length === 0 ? (
-                        <div className="p-2 text-center text-xs text-blue-300/70">
-                          No available next statuses
+                        {renderStatusBadges(getStatusById(formData.currentStatusId))}
+                        {getStatusById(formData.currentStatusId)?.description && (
+                          <p className="text-xs text-slate-400 mt-1">
+                            {getStatusById(formData.currentStatusId)?.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Arrow */}
+                      <div className="flex justify-center">
+                        <motion.div
+                          animate={{ x: [0, 5, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                          className="p-1.5 rounded-full bg-blue-500/20 border border-blue-400/30"
+                        >
+                          <ArrowRight className="h-3 w-3 text-blue-400" />
+                        </motion.div>
+                      </div>
+
+                      {/* Next Status */}
+                      <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3 backdrop-blur-sm">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          {getStatusIcon(getStatusById(formData.nextStatusId))}
+                          <span className="text-white font-medium text-sm">
+                            {getStatusById(formData.nextStatusId)?.title || "Next"}
+                          </span>
                         </div>
-                      ) : (
-                        nextStatusOptions.map(renderStatusItem)
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className="text-red-400 text-xs" />
-                </FormItem>
-              )}
-            />
-
-            {isCheckingDuplicate && (
-              <div className="flex items-center justify-center text-xs text-blue-400">
-                <Loader2 className="h-3 w-3 animate-spin mr-2" />
-                Checking for duplicate steps...
-              </div>
-            )}
-
-            {/* Status transition visualization */}
-            {formData.currentStatusId && formData.nextStatusId && (
-              <div className="mt-3 p-2 bg-blue-900/20 border border-blue-900/30 rounded-md">
-                <Label className="text-xs text-gray-400 mb-1 block">
-                  Status Transition:
-                </Label>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="px-2 py-1 bg-blue-900/30 rounded text-blue-300 flex-1">
-                    <div className="truncate">
-                      {getStatusById(formData.currentStatusId)?.title ||
-                        "Current"}
-                    </div>
-                    {renderStatusBadges(
-                      getStatusById(formData.currentStatusId)
-                    )}
-                  </div>
-                  <ArrowRight className="h-3 w-3 text-blue-500 mx-2 flex-shrink-0" />
-                  <div className="px-2 py-1 bg-blue-900/30 rounded text-blue-300 flex-1">
-                    <div className="truncate">
-                      {getStatusById(formData.nextStatusId)?.title || "Next"}
-                    </div>
-                    {renderStatusBadges(getStatusById(formData.nextStatusId))}
-                  </div>
-                </div>
-                {getStatusById(formData.currentStatusId)?.description ||
-                  getStatusById(formData.nextStatusId)?.description ? (
-                  <div className="mt-2 text-xs text-gray-400">
-                    {getStatusById(formData.currentStatusId)?.description && (
-                      <div className="mb-1">
-                        <span className="text-blue-400">Current: </span>
-                        {getStatusById(formData.currentStatusId)?.description}
+                        {renderStatusBadges(getStatusById(formData.nextStatusId))}
+                        {getStatusById(formData.nextStatusId)?.description && (
+                          <p className="text-xs text-slate-400 mt-1">
+                            {getStatusById(formData.nextStatusId)?.description}
+                          </p>
+                        )}
                       </div>
-                    )}
-                    {getStatusById(formData.nextStatusId)?.description && (
-                      <div>
-                        <span className="text-blue-400">Next: </span>
-                        {getStatusById(formData.nextStatusId)?.description}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };

@@ -88,7 +88,10 @@ const AdminPage = () => {
         </div>
 
         {/* Activity Logs Card */}
-        <div className="bg-white border-blue-200 dark:bg-[#0a1033] dark:border-blue-900/30 border rounded-lg p-4 md:p-6 transition-all hover:border-blue-500/50 hover:shadow-blue-500/10 hover:shadow-lg cursor-pointer">
+        <div
+          className="bg-white border-blue-200 dark:bg-[#0a1033] dark:border-blue-900/30 border rounded-lg p-4 md:p-6 transition-all hover:border-blue-500/50 hover:shadow-blue-500/10 hover:shadow-lg cursor-pointer"
+          onClick={() => navigate("/admin/activity-logs")}
+        >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-white">Activity Logs</h2>
             <Activity className="h-8 w-8 text-green-500" />

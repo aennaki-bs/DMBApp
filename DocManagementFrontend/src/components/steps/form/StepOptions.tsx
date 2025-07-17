@@ -1,8 +1,8 @@
 import { useStepForm } from "./StepFormProvider";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Info, AlertCircle } from "lucide-react";
+import { Info, AlertCircle, Settings, UserCheck, Users, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApproverSelector } from "./ApproverSelector";
@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { motion, AnimatePresence } from "framer-motion";
 
 const formSchema = z
   .object({
@@ -213,90 +214,164 @@ export const StepOptions = () => {
     return type === "user" ? "individual" : "group";
   };
 
+  const requiresApproval = form.watch("requiresApproval");
+
   return (
-    <Card className="border border-blue-900/30 bg-gradient-to-b from-[#0a1033] to-[#0d1541] shadow-md rounded-lg">
-      <CardContent className="p-3">
-        <Form {...form}>
-          <form className="space-y-4">
-            <h3 className="text-sm font-medium text-blue-300">Step Options</h3>
-            <p className="text-xs text-gray-400 mb-2">
-              Configure approval requirements for this step
-            </p>
-
-            <div className="flex items-center justify-between bg-[#0d1541]/70 border border-blue-900/30 p-2.5 rounded-md">
-              <div className="space-y-1">
-                <Label
-                  htmlFor="requiresApproval"
-                  className="text-xs font-medium text-blue-200 flex items-center"
-                >
-                  Requires Approval
-                </Label>
-                <p className="text-xs text-gray-400">
-                  Documents must be approved at this step
-                </p>
-              </div>
-              <Switch
-                id="requiresApproval"
-                checked={form.watch("requiresApproval")}
-                onCheckedChange={onRequiresApprovalChange}
-              />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="max-w-xl mx-auto"
+    >
+      <Card className="border border-slate-800/50 bg-gradient-to-br from-slate-900/80 via-slate-800/40 to-slate-900/80 backdrop-blur-sm shadow-xl">
+        {/* Compact Header */}
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2.5">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+              className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30"
+            >
+              <Settings className="h-3.5 w-3.5 text-blue-400" />
+            </motion.div>
+            <div>
+              <h3 className="text-base font-semibold text-white">Step Options</h3>
+              <p className="text-xs text-slate-400 flex items-center gap-1">
+                <Sparkles className="h-2.5 w-2.5 text-blue-400/60" />
+                Configure approval requirements for this workflow step
+              </p>
             </div>
+          </div>
+        </CardHeader>
 
-            {form.watch("requiresApproval") && (
-              <div className="space-y-3 bg-[#0d1541]/70 border border-blue-900/30 p-3 rounded-md">
-                {isLoading ? (
-                  <Skeleton className="h-48 w-full bg-blue-900/20" />
-                ) : (
-                  <FormField
-                    control={form.control}
-                    name="approvalType"
-                    render={() => (
-                      <FormItem>
-                        <ApproverSelector
-                          selectedUserId={
-                            form.watch("approvalUserId") || undefined
-                          }
-                          selectedGroupId={
-                            form.watch("approvalGroupId") || undefined
-                          }
-                          onUserSelected={onUserSelected}
-                          onGroupSelected={onGroupSelected}
-                          approvalType={getApprovalTypeForComponent()}
-                          onApprovalTypeChange={handleApprovalTypeChange}
+        <CardContent className="space-y-4">
+          <Form {...form}>
+            <form className="space-y-4">
+              {/* Compact Approval Toggle */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="p-3 bg-slate-800/60 border border-slate-700/50 rounded-lg backdrop-blur-sm hover:bg-slate-800/80 transition-all duration-200"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="requiresApproval"
+                      className="text-sm font-medium text-slate-300 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <UserCheck className="h-3.5 w-3.5 text-blue-400" />
+                      Requires Approval
+                    </Label>
+                    <p className="text-xs text-slate-400">
+                      Enable if documents need manual approval before proceeding
+                    </p>
+                  </div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Switch
+                      id="requiresApproval"
+                      checked={requiresApproval}
+                      onCheckedChange={onRequiresApprovalChange}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              {/* Compact Approval Settings */}
+              <AnimatePresence>
+                {requiresApproval && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, y: -20 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -20 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="space-y-3"
+                  >
+                    <div className="p-4 bg-gradient-to-br from-blue-500/10 via-blue-600/5 to-blue-700/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <Users className="h-3.5 w-3.5 text-blue-400" />
+                        <h4 className="text-sm font-medium text-blue-300">Approval Configuration</h4>
+                      </div>
+
+                      {isLoading ? (
+                        <Skeleton className="h-32 w-full bg-blue-900/20 rounded-lg" />
+                      ) : (
+                        <FormField
+                          control={form.control}
+                          name="approvalType"
+                          render={() => (
+                            <FormItem>
+                              <ApproverSelector
+                                selectedUserId={
+                                  form.watch("approvalUserId") || undefined
+                                }
+                                selectedGroupId={
+                                  form.watch("approvalGroupId") || undefined
+                                }
+                                onUserSelected={onUserSelected}
+                                onGroupSelected={onGroupSelected}
+                                approvalType={getApprovalTypeForComponent()}
+                                onApprovalTypeChange={handleApprovalTypeChange}
+                              />
+
+                              {validationError && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  className="mt-3"
+                                >
+                                  <Alert className="bg-red-950/20 border-red-500/30 backdrop-blur-sm">
+                                    <AlertCircle className="h-3.5 w-3.5 text-red-400" />
+                                    <AlertDescription className="text-red-300 ml-2 text-sm">
+                                      {validationError}
+                                    </AlertDescription>
+                                  </Alert>
+                                </motion.div>
+                              )}
+
+                              <FormMessage className="text-red-400 text-xs mt-1" />
+                            </FormItem>
+                          )}
                         />
-
-                        {validationError && (
-                          <Alert
-                            variant="destructive"
-                            className="mt-3 py-2 bg-red-900/20 border-red-900/30"
-                          >
-                            <AlertCircle className="h-4 w-4 text-red-400" />
-                            <AlertDescription className="text-xs text-red-300 ml-2">
-                              {validationError}
-                            </AlertDescription>
-                          </Alert>
-                        )}
-
-                        <FormMessage className="text-red-400 text-xs mt-1" />
-                      </FormItem>
-                    )}
-                  />
+                      )}
+                    </div>
+                  </motion.div>
                 )}
-              </div>
-            )}
+              </AnimatePresence>
 
-            {!form.watch("requiresApproval") && (
-              <div className="flex items-center mt-4 p-2 bg-gray-800/50 border border-gray-700 rounded-md">
-                <Info className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
-                <p className="text-xs text-gray-300">
-                  When approval is not required, documents will automatically
-                  progress to the next step.
-                </p>
-              </div>
-            )}
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              {/* Compact Info Panel */}
+              <AnimatePresence>
+                {!requiresApproval && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-3 bg-gradient-to-br from-slate-800/60 via-slate-700/40 to-slate-800/60 border border-slate-700/50 rounded-lg backdrop-blur-sm"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-1 rounded bg-blue-500/20">
+                        <Info className="h-3.5 w-3.5 text-blue-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-blue-300 mb-0.5">Automatic Processing</h4>
+                        <p className="text-xs text-slate-400">
+                          When approval is not required, documents will automatically progress to the next step without manual intervention.
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };

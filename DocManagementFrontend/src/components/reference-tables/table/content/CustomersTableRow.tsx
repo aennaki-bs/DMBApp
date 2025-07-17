@@ -124,6 +124,9 @@ export function CustomersTableRow({
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 no-row-select"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                }}
                             >
                                 <MoreVertical className="h-4 w-4" />
                                 <span className="sr-only">Open menu for {customer.name}</span>
@@ -140,7 +143,10 @@ export function CustomersTableRow({
                             <DropdownMenuSeparator className="bg-blue-300 dark:bg-blue-800/40 my-1" />
 
                             <DropdownMenuItem
-                                onClick={onView}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onView();
+                                }}
                                 className="hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-md focus:bg-blue-100 dark:focus:bg-blue-800/40 px-3 py-2 cursor-pointer opacity-50 cursor-not-allowed"
                                 disabled={true}
                             >
@@ -149,7 +155,10 @@ export function CustomersTableRow({
                             </DropdownMenuItem>
 
                             <DropdownMenuItem
-                                onClick={onEdit}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit();
+                                }}
                                 className="hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-md focus:bg-blue-100 dark:focus:bg-blue-800/40 px-3 py-2 cursor-pointer opacity-50 cursor-not-allowed"
                                 disabled={true}
                             >
@@ -160,7 +169,10 @@ export function CustomersTableRow({
                             <DropdownMenuSeparator className="bg-blue-300 dark:bg-blue-800/40 my-1" />
 
                             <DropdownMenuItem
-                                onClick={onDelete}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete();
+                                }}
                                 className="text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-900 dark:hover:text-red-200 rounded-md focus:bg-red-100 dark:focus:bg-red-900/30 focus:text-red-900 dark:focus:text-red-200 px-3 py-2 cursor-pointer opacity-50 cursor-not-allowed"
                                 disabled={true}
                             >

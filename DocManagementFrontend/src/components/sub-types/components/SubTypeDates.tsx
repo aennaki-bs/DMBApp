@@ -63,8 +63,8 @@ export const SubTypeDates = () => {
           ? formData.endDate.toISOString().split("T")[0]
           : formData.endDate
         : new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-            .toISOString()
-            .split("T")[0],
+          .toISOString()
+          .split("T")[0],
       isActive: formData.isActive ?? true,
     },
   });
@@ -131,9 +131,8 @@ export const SubTypeDates = () => {
     if (years > 0) {
       durationText += `${years} year${years > 1 ? "s" : ""}`;
       if (remainingMonths > 0)
-        durationText += ` ${remainingMonths} month${
-          remainingMonths > 1 ? "s" : ""
-        }`;
+        durationText += ` ${remainingMonths} month${remainingMonths > 1 ? "s" : ""
+          }`;
     } else if (months > 0) {
       durationText += `${months} month${months > 1 ? "s" : ""}`;
     } else {
@@ -159,11 +158,8 @@ export const SubTypeDates = () => {
             Date Range and Status
           </CardTitle>
         </CardHeader>
-        <ScrollArea
-          className="flex-grow overflow-auto"
-          style={{ minHeight: "400px" }}
-        >
-          <CardContent className="p-3">
+        <ScrollArea className="flex-grow overflow-auto">
+          <CardContent className="p-4 space-y-6">
             <Form {...form}>
               <form className="space-y-4">
                 <div className="bg-blue-900/10 rounded-md p-3 border border-blue-900/20">
@@ -282,11 +278,10 @@ export const SubTypeDates = () => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className={`mt-2 text-xs ${
-                          duration.valid
+                        className={`mt-2 text-xs ${duration.valid
                             ? "text-blue-300/80"
                             : "text-amber-400/80"
-                        } p-2 rounded bg-blue-900/20 border border-blue-900/30 flex items-center`}
+                          } p-2 rounded bg-blue-900/20 border border-blue-900/30 flex items-center`}
                       >
                         <CalendarClock className="h-3.5 w-3.5 mr-1.5" />
                         {duration.valid ? (

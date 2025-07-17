@@ -179,7 +179,7 @@ export function CircuitTableContent({
                         </div>
                     </div>
                 ) : (
-                    <div className="relative h-full flex items-center justify-center z-10">
+                <div className="relative h-full flex items-center justify-center z-10">
                         <CircuitTableEmpty
                             onClearFilters={onClearFilters}
                             onCreateCircuit={onCreateCircuit}

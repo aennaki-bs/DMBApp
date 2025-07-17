@@ -75,9 +75,8 @@ export const SubTypeReview = () => {
     if (years > 0) {
       durationText += `${years} year${years > 1 ? "s" : ""}`;
       if (remainingMonths > 0)
-        durationText += ` ${remainingMonths} month${
-          remainingMonths > 1 ? "s" : ""
-        }`;
+        durationText += ` ${remainingMonths} month${remainingMonths > 1 ? "s" : ""
+          }`;
     } else if (months > 0) {
       durationText += `${months} month${months > 1 ? "s" : ""}`;
     } else {
@@ -129,8 +128,8 @@ export const SubTypeReview = () => {
           </CardTitle>
         </CardHeader>
 
-        <ScrollArea className="flex-grow overflow-auto max-h-[calc(100vh-250px)]">
-          <CardContent className="p-4">
+        <ScrollArea className="flex-grow overflow-auto">
+          <CardContent className="p-6">
             <motion.div
               className="space-y-4"
               variants={container}
@@ -230,9 +229,8 @@ export const SubTypeReview = () => {
                     </div>
                     <div className="flex items-center">
                       <div
-                        className={`h-2.5 w-2.5 rounded-full mr-1.5 ${
-                          formData.isActive === false ? "bg-red-500" : "bg-green-500"
-                        }`}
+                        className={`h-2.5 w-2.5 rounded-full mr-1.5 ${formData.isActive === false ? "bg-red-500" : "bg-green-500"
+                          }`}
                       ></div>
                       <div className="flex items-center">
                         <Power className="h-3.5 w-3.5 mr-1.5 text-blue-400/80" />

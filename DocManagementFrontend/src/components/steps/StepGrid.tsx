@@ -50,23 +50,43 @@ export const StepGrid = ({
                 <CardTitle className="text-lg truncate">{step.title}</CardTitle>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
                       <MoreHorizontal className="h-5 w-5" />
                       <span className="sr-only">Actions</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-background border-blue-900/30">
-                    <DropdownMenuItem onClick={() => onEditStep(step)}>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditStep(step);
+                      }}
+                    >
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleManageStatuses(step)}>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleManageStatuses(step);
+                      }}
+                    >
                       <CircleCheck className="mr-2 h-4 w-4" />
                       Manage Statuses
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => onDeleteStep(step)}
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteStep(step);
+                      }}
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash className="mr-2 h-4 w-4" />
@@ -94,9 +114,9 @@ export const StepGrid = ({
               </div>
             </CardContent>
             <CardFooter className="pt-2 flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="w-full"
                 onClick={() => onEditStep(step)}
               >

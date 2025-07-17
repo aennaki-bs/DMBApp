@@ -13,6 +13,7 @@ interface Approver {
   stepId?: number;
   stepTitle?: string;
   allAssociations?: { stepId: number; stepTitle: string }[];
+  isAssociated: boolean;
 }
 
 interface ApproversTableRowProps {
@@ -33,7 +34,7 @@ export function ApproversTableRow({
   index = 0,
 }: ApproversTableRowProps) {
 
-  const isAssociated = approver.allAssociations && approver.allAssociations.length > 0;
+  const isAssociated = approver.isAssociated;
 
   const handleEdit = () => {
     if (isAssociated) return;
@@ -109,12 +110,15 @@ export function ApproversTableRow({
         )}
       </TableCell>
       <TableCell className="w-[400px]">
-        <div className="flex items-center text-blue-800 dark:text-blue-200">
-          {isAssociated && approver.stepTitle && (
-            <>
-              <Link2 className="h-4 w-4 mr-2 text-blue-400" />
-              <span className="text-blue-200 text-sm">Associated with: {approver.stepTitle}</span>
-            </>
+        <div className="flex items-center text-slate-700 dark:text-slate-300">
+          {approver.comment ? (
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              {approver.comment}
+            </span>
+          ) : (
+            <span className="text-sm text-slate-400 dark:text-slate-500 italic">
+              No description provided
+            </span>
           )}
         </div>
       </TableCell>

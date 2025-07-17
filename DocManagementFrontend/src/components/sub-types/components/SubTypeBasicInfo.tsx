@@ -95,9 +95,9 @@ export const SubTypeBasicInfo = () => {
             Enter Prefix
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-3 flex-grow" style={{ minHeight: "400px" }}>
+        <CardContent className="p-4 flex-grow overflow-y-auto">
           <Form {...form}>
-            <form className="space-y-3 h-full flex flex-col">
+            <form className="space-y-4 h-full flex flex-col">
               <FormField
                 control={form.control}
                 name="name"

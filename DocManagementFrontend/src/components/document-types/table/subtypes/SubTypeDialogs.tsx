@@ -276,17 +276,17 @@ export default function SubTypeDialogs({
           if (!open) resetCreateForm();
         }}
       >
-        <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[500px] min-h-[650px] max-h-[90vh] p-3 overflow-auto fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
-          <DialogHeader className="mb-1 pb-1 border-b border-blue-900/30">
+        <DialogContent className="bg-[#0f1642] border-blue-900/50 text-white sm:max-w-[520px] max-h-[95vh] flex flex-col overflow-hidden fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
+          <DialogHeader className="flex-shrink-0 pb-4 border-b border-blue-900/30">
             <DialogTitle className="text-lg text-white">
               Create New Series
             </DialogTitle>
-            <DialogDescription className="text-blue-300 text-xs">
+            <DialogDescription className="text-blue-300 text-sm">
               Complete each step to create a new document series
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-1 h-full overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ minHeight: "0" }}>
             <SubTypeFormProvider
               onSubmit={handleCreateSubmit}
               onClose={handleCloseCreateDialog}
@@ -415,11 +415,10 @@ export default function SubTypeDialogs({
                         setSubmitError("");
                       }
                     }}
-                    className={`h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
-                      fieldErrors.startDate
+                    className={`h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${fieldErrors.startDate
                         ? "border-red-500 focus:border-red-400"
                         : ""
-                    }`}
+                      }`}
                   />
                   {fieldErrors.startDate && (
                     <p className="text-red-400 text-xs mt-1">
@@ -464,11 +463,10 @@ export default function SubTypeDialogs({
                         setSubmitError("");
                       }
                     }}
-                    className={`h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
-                      fieldErrors.endDate
+                    className={`h-9 w-full pl-9 bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${fieldErrors.endDate
                         ? "border-red-500 focus:border-red-400"
                         : ""
-                    }`}
+                      }`}
                   />
                   {fieldErrors.endDate && (
                     <p className="text-red-400 text-xs mt-1">
@@ -504,11 +502,10 @@ export default function SubTypeDialogs({
                     setSubmitError("");
                   }
                 }}
-                className={`h-9 w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${
-                  fieldErrors.subTypeKey
+                className={`h-9 w-full bg-[#141e4d] border-blue-800/40 focus:border-blue-400/50 text-white rounded-md transition-all hover:border-blue-700/60 focus:bg-[#182154] ${fieldErrors.subTypeKey
                     ? "border-red-500 focus:border-red-400"
                     : ""
-                }`}
+                  }`}
               />
               {fieldErrors.subTypeKey && (
                 <p className="text-red-400 text-xs mt-1">

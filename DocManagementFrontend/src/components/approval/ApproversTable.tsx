@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { notifications } from "@/utils/notificationUtils";
 import approvalService from "@/services/approvalService";
 import { ApproversTableContent } from "./table/ApproversTableContent";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
@@ -46,12 +46,14 @@ interface Approver {
   stepId?: number;
   stepTitle?: string;
   allAssociations?: { stepId: number; stepTitle: string }[];
+  isAssociated: boolean;
 }
 
 // Define search fields for approvers
 const DEFAULT_APPROVER_SEARCH_FIELDS = [
   { id: "all", label: "All Fields" },
   { id: "username", label: "Username" },
+  { id: "comment", label: "Description" },
 ];
 
 interface ApproversTableProps {
@@ -89,9 +91,9 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
   // Get paginated approvers
   const paginatedApprovers = pagination.paginatedData;
 
-  // Filter out associated approvers from selection data
-  const selectableApprovers = approvers.filter(approver => !approver.allAssociations || approver.allAssociations.length === 0);
-  const selectablePaginatedApprovers = paginatedApprovers?.filter(approver => !approver.allAssociations || approver.allAssociations.length === 0) || [];
+  // Filter out associated approvers from selection data - use the isAssociated property from API
+  const selectableApprovers = approvers.filter(approver => !approver.isAssociated);
+  const selectablePaginatedApprovers = paginatedApprovers?.filter(approver => !approver.isAssociated) || [];
 
   // Bulk selection - only allow selection of non-associated approvers
   const bulkSelection = useBulkSelection({
@@ -126,11 +128,16 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
       if (searchField === "all") {
         filtered = filtered.filter(
           (approver) =>
-            approver.username.toLowerCase().includes(query)
+            approver.username.toLowerCase().includes(query) ||
+            (approver.comment && approver.comment.toLowerCase().includes(query))
         );
       } else if (searchField === "username") {
         filtered = filtered.filter((approver) =>
           approver.username.toLowerCase().includes(query)
+        );
+      } else if (searchField === "comment") {
+        filtered = filtered.filter((approver) =>
+          approver.comment && approver.comment.toLowerCase().includes(query)
         );
       }
     }
@@ -156,13 +163,10 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
       setIsLoading(true);
       setIsError(false);
 
-      // Fetch both approvers and step configurations
-      const [approversResponse, stepsWithApprovalResponse] = await Promise.all([
-        approvalService.getAllApprovators(),
-        approvalService.getStepsWithApproval()
-      ]);
+      // Fetch approvers first
+      const approversResponse = await approvalService.getAllApprovators();
 
-      // Validate responses
+      // Validate approvers response
       if (!Array.isArray(approversResponse)) {
         console.warn('Invalid approvers response format:', approversResponse);
         setApprovers([]);
@@ -170,103 +174,29 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
         return;
       }
 
-      if (!Array.isArray(stepsWithApprovalResponse)) {
-        console.warn('Invalid steps response format:', stepsWithApprovalResponse);
-        // Still process approvers even if steps fail
-        const basicApprovers = approversResponse.map((approver: any) => ({
-          ...approver,
-          id: approver.id,
-          userId: approver.userId || approver.id,
-          username: approver.username || 'Unknown User',
-          comment: approver.comment || null,
-          stepId: null,
-          stepTitle: null,
-          allAssociations: [],
-        }));
-        setApprovers(basicApprovers);
-        setFilteredApprovers(basicApprovers);
-        return;
-      }
+      // Try to fetch step associations, but don't fail if it doesn't work
+      let enrichedApprovers = approversResponse.map((approver: any) => ({
+        ...approver,
+        id: approver.id,
+        userId: approver.userId || approver.id,
+        username: approver.username || 'Unknown User',
+        comment: approver.comment || null,
+        stepId: null,
+        stepTitle: null,
+        allAssociations: [],
+        isAssociated: approver.isAssociated || false, // Preserve the isAssociated value from API
+      }));
 
-      // Create a map of approvator ID to step associations
-      const userStepAssociations = new Map();
-
-      // Fetch detailed approval configuration for each step
-      const stepConfigPromises = stepsWithApprovalResponse
-        .filter((step: any) => {
-          // Ensure step has required properties and requiresApproval is true
-          const hasValidId = step.id !== undefined && step.id !== null;
-          const hasValidStepId = step.stepId !== undefined && step.stepId !== null;
-          const stepId = hasValidId ? step.id : (hasValidStepId ? step.stepId : null);
-
-          return step.requiresApproval && stepId !== null;
-        })
-        .map(async (step: any) => {
-          try {
-            // Use step.id if available, otherwise fallback to step.stepId
-            const stepId = step.id !== undefined ? step.id : step.stepId;
-            const stepTitle = step.title || step.stepTitle || `Step ${stepId}`;
-
-            // Only proceed if we have a valid step ID
-            if (stepId === undefined || stepId === null) {
-              console.warn('Skipping step with undefined ID:', step);
-              return null;
-            }
-
-            const stepConfig = await approvalService.getStepApprovalConfig(stepId);
-            return { stepId, stepTitle, config: stepConfig };
-          } catch (error) {
-            console.error(`Error fetching config for step ${step.id || step.stepId}:`, error);
-            return null;
-          }
-        });
-
-      const stepConfigs = await Promise.all(stepConfigPromises);
-
-      // Build associations map
-      stepConfigs.forEach((result) => {
-        if (result?.config?.groupApprovers) {
-          result.config.groupApprovers.forEach((approvator: any) => {
-            if (!userStepAssociations.has(approvator.id)) {
-              userStepAssociations.set(approvator.id, []);
-            }
-            userStepAssociations.get(approvator.id).push({
-              stepId: result.stepId,
-              stepTitle: result.stepTitle,
-            });
-          });
-        }
-      });
-
-      const enrichedApprovers = approversResponse.map((approver: any) => {
-        // Ensure approver has required properties
-        if (!approver || typeof approver.id === 'undefined') {
-          console.warn('Invalid approver data:', approver);
-          return null;
-        }
-
-        const associations = userStepAssociations.get(approver.id) || [];
-        const firstAssociation = associations[0]; // Use the first association for display
-
-        return {
-          ...approver,
-          // Ensure all required properties exist
-          id: approver.id,
-          userId: approver.userId || approver.id,
-          username: approver.username || 'Unknown User',
-          comment: approver.comment || null,
-          stepId: firstAssociation?.stepId || null,
-          stepTitle: firstAssociation?.stepTitle || null,
-          allAssociations: associations,
-        };
-      }).filter(Boolean); // Remove any null entries
+      // Skip fetching step configurations since we already have isAssociated from API
+      // This avoids making 20+ individual API calls for step configurations
+      console.log('Using isAssociated property from API response, skipping step configuration calls');
 
       setApprovers(enrichedApprovers);
       setFilteredApprovers(enrichedApprovers);
     } catch (error) {
       console.error("Error fetching approvers:", error);
       setIsError(true);
-      toast.error("Failed to load approvers");
+      notifications.error("Failed to load approvers");
     } finally {
       setIsLoading(false);
     }
@@ -282,6 +212,11 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
   };
 
   const handleEditApprover = (approver: Approver) => {
+    // Block edit action if approver is associated
+    if (approver.isAssociated) {
+      notifications.warning("Cannot edit approver: Currently associated with workflows");
+      return;
+    }
     setApproverToEdit(approver);
     setEditDialogOpen(true);
   };
@@ -289,6 +224,11 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
   const handleDeleteApprover = (approverId: number) => {
     const approver = approvers.find(a => a.id === approverId);
     if (approver) {
+      // Block delete action if approver is associated
+      if (approver.isAssociated) {
+        notifications.warning("Cannot delete approver: Currently associated with workflows");
+        return;
+      }
       setApproverToDelete(approver);
       setDeleteDialogOpen(true);
     }
@@ -299,12 +239,12 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
 
     try {
       await approvalService.deleteApprovator(approverToDelete.id);
-      toast.success("Approver deleted successfully");
+      notifications.success("Approver deleted successfully");
       setDeleteDialogOpen(false);
       setApproverToDelete(null);
       fetchApprovers();
     } catch (error) {
-      toast.error("Failed to delete approver");
+      notifications.error("Failed to delete approver");
       console.error("Error deleting approver:", error);
     }
   };
@@ -314,24 +254,24 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
       const selectedIds = bulkSelection.selectedItems; // selectedItems already contains IDs
       const eligibleIds = selectedIds.filter(id => {
         const approver = approvers.find(a => a.id === id);
-        return !approver?.allAssociations || approver.allAssociations.length === 0;
+        return !approver?.isAssociated;
       });
 
       if (eligibleIds.length === 0) {
-        toast.error("None of the selected approvers can be deleted");
+        notifications.error("None of the selected approvers can be deleted");
         return;
       }
 
       if (eligibleIds.length < selectedIds.length) {
-        toast.warning(`Only ${eligibleIds.length} of ${selectedIds.length} approvers will be deleted (others are associated with workflows)`);
+        notifications.warning(`Only ${eligibleIds.length} of ${selectedIds.length} approvers will be deleted (others are associated with workflows)`);
       }
 
       await Promise.all(eligibleIds.map(id => approvalService.deleteApprovator(id)));
-      toast.success(`${eligibleIds.length} approvers deleted successfully`);
+      notifications.success(`${eligibleIds.length} approvers deleted successfully`);
       bulkSelection.clearSelection();
       fetchApprovers();
     } catch (error) {
-      toast.error("Failed to delete approvers");
+      notifications.error("Failed to delete approvers");
       console.error("Error deleting approvers:", error);
     } finally {
       setBulkDeleteDialogOpen(false);
@@ -423,7 +363,7 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
             </Select>
           </div>
 
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1">
             <Input
               type="text"
               placeholder="Search approvers..."
@@ -445,7 +385,7 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
         </div>
 
         {/* Enhanced Filter Button */}
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <Popover open={filterOpen} onOpenChange={setFilterOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -453,7 +393,7 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
                 className="h-12 px-4 bg-background/60 backdrop-blur-md border-primary/20 hover:border-primary/40 hover:bg-primary/10 text-foreground transition-all duration-300 shadow-lg rounded-xl font-medium"
               >
                 <Filter className="h-4 w-4 mr-2" />
-                Advanced Filters
+                Filter
                 <Badge
                   variant="secondary"
                   className="ml-2 bg-primary/20 text-primary border-primary/30 px-2 py-0.5 text-xs rounded-md"
@@ -482,7 +422,7 @@ export function ApproversTable({ onCreateApprover, refreshTrigger }: ApproversTa
               </div>
             </PopoverContent>
           </Popover>
-        </div>
+        </div> */}
       </div>
 
       {/* Table Content */}

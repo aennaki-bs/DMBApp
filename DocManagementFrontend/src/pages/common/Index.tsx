@@ -35,7 +35,7 @@ const Index = () => {
             <div className="text-center">
               <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl animate-slide-up">
                 <span className="block">Manage your documents</span>
-                <span className="block text-docuBlue">with DocuVerse</span>
+                <span className="block text-docuBlue">with Documnet Managment Verse</span>
               </h1>
               <p
                 className="mt-3 max-w-md mx-auto text-base text-gray-500 dark:text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl animate-fade-in"
@@ -71,14 +71,14 @@ const Index = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
-                Why Choose DocuVerse?
+                Why Choose Document Managment Verse?
               </h2>
               <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
-                Everything you need to manage your documents efficiently
+                Professional workflow automation with intelligent analytics and seamless ERP integration
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Feature 1 */}
+              {/* Feature 1 - Advanced Workflow Management */}
               <div className="bg-blue-50 dark:bg-gray-800 p-6 rounded-xl hover:shadow-lg transition-shadow">
                 <div className="bg-docuBlue-100 dark:bg-blue-900 rounded-lg p-3 inline-block mb-4">
                   <svg
@@ -92,20 +92,27 @@ const Index = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      d="M5 12l5 5L20 7"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4"
                     />
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Secure Storage
+                  Advanced Workflow Management
                 </h3>
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  Your documents are encrypted and stored securely in the cloud,
-                  accessible only by you and those you authorize.
+                  Create custom approval circuits with visual workflow designer.
+                  Automate step-by-step approvals, delegate responsibilities, and track
+                  every stage of your document lifecycle with real-time notifications.
                 </p>
               </div>
 
-              {/* Feature 2 */}
+              {/* Feature 2 - Real-time Performance Analytics */}
               <div className="bg-blue-50 dark:bg-gray-800 p-6 rounded-xl hover:shadow-lg transition-shadow">
                 <div className="bg-docuBlue-100 dark:bg-blue-900 rounded-lg p-3 inline-block mb-4">
                   <svg
@@ -119,20 +126,21 @@ const Index = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Easy Collaboration
+                  Real-time Performance Analytics
                 </h3>
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  Share documents with team members and stakeholders,
-                  controlling access permissions for each user.
+                  Monitor your team's productivity with activity scores, completion rates,
+                  and user engagement metrics. Track processing efficiency and workflow
+                  progress with comprehensive dashboards and detailed analytics.
                 </p>
               </div>
 
-              {/* Feature 3 */}
+              {/* Feature 3 - ERP Integration & Automation */}
               <div className="bg-blue-50 dark:bg-gray-800 p-6 rounded-xl hover:shadow-lg transition-shadow">
                 <div className="bg-docuBlue-100 dark:bg-blue-900 rounded-lg p-3 inline-block mb-4">
                   <svg
@@ -146,16 +154,17 @@ const Index = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
                     />
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Version Control
+                  ERP Integration & Automation
                 </h3>
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  Track changes and revert to previous versions whenever needed,
-                  ensuring you never lose important document history.
+                  Seamlessly integrate with your existing ERP systems. Automatically
+                  archive completed documents, handle posting operations, and monitor
+                  archival status with intelligent error handling and retry mechanisms.
                 </p>
               </div>
             </div>

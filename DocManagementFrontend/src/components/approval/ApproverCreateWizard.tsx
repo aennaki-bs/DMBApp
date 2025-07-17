@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { notifications } from "@/utils/notificationUtils";
 import {
   Check,
   X,
@@ -144,7 +144,7 @@ export default function ApproverCreateWizard({
       setFilteredUsers(filteredUsers);
     } catch (error) {
       console.error("Failed to fetch eligible users:", error);
-      toast.error("Failed to load eligible users");
+      notifications.error("Failed to load eligible users");
     } finally {
       setIsLoadingUsers(false);
     }
@@ -152,7 +152,7 @@ export default function ApproverCreateWizard({
 
   const handleSubmit = async () => {
     if (selectedUsers.length === 0) {
-      toast.error("Please select at least one user");
+      notifications.error("Please select at least one user");
       return;
     }
 
@@ -171,14 +171,14 @@ export default function ApproverCreateWizard({
       await Promise.all(promises);
 
       onSuccess();
-      const successMessage = selectedUsers.length === 1 
+      const successMessage = selectedUsers.length === 1
         ? `${selectedUsers[0].username} was added as an approver`
         : `${selectedUsers.length} users were added as approvers`;
-      toast.success(successMessage);
+      notifications.success(successMessage);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create approvers:", error);
-      toast.error("Failed to create approvers");
+      notifications.error("Failed to create approvers");
     } finally {
       setIsLoading(false);
     }
@@ -226,7 +226,7 @@ export default function ApproverCreateWizard({
   // Navigation functions
   const nextStep = () => {
     if (currentStep === 1 && selectedUsers.length === 0) {
-      toast.error("Please select at least one user first");
+      notifications.error("Please select at least one user first");
       return;
     }
 
@@ -489,7 +489,7 @@ export default function ApproverCreateWizard({
       <div className="bg-blue-900/20 p-2.5 rounded-md border border-blue-800/30 flex items-start">
         <Check className="h-4 w-4 text-green-400 mr-2 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-blue-300">
-          {selectedUsers.length === 1 
+          {selectedUsers.length === 1
             ? "The user will be able to approve documents once added to the approvers list."
             : `These ${selectedUsers.length} users will be able to approve documents once added to the approvers list.`
           }
@@ -543,8 +543,8 @@ export default function ApproverCreateWizard({
                       currentStep === step.id
                         ? "bg-blue-600 text-white border-2 border-blue-500"
                         : step.completed
-                        ? "bg-green-600 text-white"
-                        : "bg-blue-950 border-2 border-blue-900/40 text-blue-400"
+                          ? "bg-green-600 text-white"
+                          : "bg-blue-950 border-2 border-blue-900/40 text-blue-400"
                     )}
                   >
                     {step.completed ? <Check className="h-4 w-4" /> : step.icon}
@@ -557,8 +557,8 @@ export default function ApproverCreateWizard({
                         currentStep === step.id
                           ? "text-blue-100"
                           : step.completed
-                          ? "text-green-400"
-                          : "text-blue-400/60"
+                            ? "text-green-400"
+                            : "text-blue-400/60"
                       )}
                     >
                       {step.title}
@@ -569,8 +569,8 @@ export default function ApproverCreateWizard({
                         currentStep === step.id
                           ? "text-blue-300"
                           : step.completed
-                          ? "text-green-400/80"
-                          : "text-blue-400/40"
+                            ? "text-green-400/80"
+                            : "text-blue-400/40"
                       )}
                     >
                       {step.description}
@@ -617,8 +617,8 @@ export default function ApproverCreateWizard({
                   className={cn(
                     "bg-blue-600 hover:bg-blue-700 transition-colors h-8 px-3 text-sm",
                     currentStep === 1 &&
-                      selectedUsers.length === 0 &&
-                      "opacity-50 cursor-not-allowed"
+                    selectedUsers.length === 0 &&
+                    "opacity-50 cursor-not-allowed"
                   )}
                 >
                   Next

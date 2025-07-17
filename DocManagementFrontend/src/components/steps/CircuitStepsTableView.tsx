@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreVertical, Edit2, Trash2, Settings, FileText, ArrowRight, UserCheck, Users, User } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreVertical, Edit2, Trash2, Settings, FileText, ArrowRight, UserCheck, Users, User, Search, X, GitBranch } from "lucide-react";
+import { StepsTableEmpty } from "./StepsTableEmpty";
+import { motion } from "framer-motion";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,8 +28,8 @@ interface EnhancedStep extends Step {
 const SEARCH_FIELDS = [
     { id: "all", label: "All fields" },
     { id: "title", label: "Title" },
-    { id: "description", label: "Description" },
-    { id: "stepKey", label: "Step Key" },
+    { id: "currentStatus", label: "Current Status" },
+    { id: "nextStatus", label: "Next Status" },
 ];
 
 interface Circuit {
@@ -38,17 +40,20 @@ interface Circuit {
 }
 
 interface CircuitStepsTableViewProps {
-    steps: EnhancedStep[];
+    steps: Step[];
     selectedSteps: number[];
     onSelectStep: (id: number, checked: boolean) => void;
     onSelectAll: (checked: boolean) => void;
-    onEdit: (step: EnhancedStep) => void;
-    onDelete: (step: EnhancedStep) => void;
+    onEdit: (step: Step) => void;
+    onDelete: (step: Step) => void;
     searchQuery: string;
+    searchField?: string;
     onSearchChange: (query: string) => void;
+    onSearchFieldChange?: (field: string) => void;
     isCircuitActive?: boolean;
     isSimpleUser?: boolean;
     circuit?: Circuit;
+    searchStats?: { totalResults: number; searchTime: number };
 }
 
 export function CircuitStepsTableView({
@@ -59,65 +64,54 @@ export function CircuitStepsTableView({
     onEdit,
     onDelete,
     searchQuery,
+    searchField = "all",
     onSearchChange,
+    onSearchFieldChange,
     isCircuitActive = false,
     isSimpleUser = false,
     circuit,
+    searchStats,
 }: CircuitStepsTableViewProps) {
-    const [searchField, setSearchField] = useState("all");
     const [sortBy, setSortBy] = useState("title");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-    // Filter steps based on search
-    const filteredSteps = steps.filter((step) => {
-        if (!searchQuery) return true;
+    // Professional search result highlighting
+    const highlightSearchTerm = (text: string, searchQuery: string) => {
+        if (!searchQuery.trim() || !text) return text;
 
-        const query = searchQuery.toLowerCase();
-        const searchableFields = {
-            all: [step.title, step.descriptif, step.stepKey].filter(Boolean).join(' ').toLowerCase(),
-            title: step.title.toLowerCase(),
-            description: (step.descriptif || '').toLowerCase(),
-            stepKey: (step.stepKey || '').toLowerCase(),
-        };
+        const terms = searchQuery.toLowerCase().trim().split(' ').filter(term => term.length > 0);
+        let highlightedText = text;
 
-        const fieldToSearch = searchableFields[searchField as keyof typeof searchableFields] || searchableFields.all;
-        return fieldToSearch.includes(query);
-    });
+        terms.forEach(term => {
+            const regex = new RegExp(`(${term})`, 'gi');
+            highlightedText = highlightedText.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">$1</mark>');
+        });
 
-    // Sort steps
-    const sortedSteps = [...filteredSteps].sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
+        return highlightedText;
+    };
 
-        switch (sortBy) {
-            case 'title':
-                aValue = a.title;
-                bValue = b.title;
-                break;
-            case 'currentStatus':
-                aValue = a.currentStatusTitle || '';
-                bValue = b.currentStatusTitle || '';
-                break;
-            case 'nextStatus':
-                aValue = a.nextStatusTitle || '';
-                bValue = b.nextStatusTitle || '';
-                break;
-            case 'orderIndex':
-                aValue = a.orderIndex || 0;
-                bValue = b.orderIndex || 0;
-                break;
-            default:
-                aValue = a.title;
-                bValue = b.title;
+    // Sort steps (filtering is now handled by the hook)
+    const sortedSteps = [...steps].sort((a, b) => {
+        const aValue = sortBy === "orderIndex" ? a.orderIndex : a.title;
+        const bValue = sortBy === "orderIndex" ? b.orderIndex : b.title;
+
+        if (sortDirection === "asc") {
+            return aValue > bValue ? 1 : -1;
+        } else {
+            return aValue < bValue ? 1 : -1;
         }
-
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
     });
 
-    // Pagination
-    const pagination = usePagination({
+    // Use pagination hook
+    const {
+        currentPage,
+        pageSize,
+        totalPages,
+        totalItems,
+        paginatedData: paginatedSteps,
+        handlePageChange,
+        handlePageSizeChange,
+    } = usePagination({
         data: sortedSteps,
         initialPageSize: 25,
     });
@@ -148,7 +142,7 @@ export function CircuitStepsTableView({
     };
 
     // Check if all current page steps are selected
-    const currentPageSteps = pagination.paginatedData;
+    const currentPageSteps = paginatedSteps;
     const currentPageSelectedCount = currentPageSteps.filter(step => selectedSteps.includes(step.id)).length;
     const isAllCurrentPageSelected = currentPageSteps.length > 0 && currentPageSelectedCount === currentPageSteps.length;
     const isIndeterminate = currentPageSelectedCount > 0 && currentPageSelectedCount < currentPageSteps.length;
@@ -160,53 +154,233 @@ export function CircuitStepsTableView({
         });
     };
 
-    if (steps.length === 0) {
+    // Check if there are filtered results vs no steps at all
+    const hasSteps = steps.length > 0;
+    const isFiltered = searchQuery.trim() !== '';
+
+    // Professional filter/search bar styling - exact match to Circuit Statuses
+    const filterCardClass =
+        "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
+
+    if (steps.length === 0 && !isFiltered) {
         return (
-            <div className="h-full flex flex-col gap-4">
-                <div className="h-[400px] flex items-center justify-center">
-                    <div className="text-center text-muted-foreground">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/20 flex items-center justify-center">
-                            <Settings className="h-8 w-8 text-muted-foreground/50" />
+            <div className="h-full flex flex-col gap-6 w-full" style={{ minHeight: "100%" }}>
+                {/* Professional Search Bar - matching Circuit Statuses page exactly */}
+                <div className={filterCardClass}>
+                    {/* Search and field select */}
+                    <div className="flex-1 flex items-center gap-4 min-w-0">
+                        <div className="relative">
+                            <Select value={searchField} onValueChange={onSearchFieldChange}>
+                                <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+                                    <SelectValue>
+                                        {SEARCH_FIELDS.find((opt) => opt.id === searchField)?.label || "All fields"}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                                    {SEARCH_FIELDS.map((opt) => (
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id}
+                                            className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                                        >
+                                            {opt.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
-                        <p className="text-lg font-medium text-foreground mb-2">No steps found</p>
-                        <p className="text-sm text-muted-foreground">
-                            No steps have been created for this circuit yet.
-                        </p>
+
+                        <div className="flex-1 relative group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                            <Input
+                                placeholder="Search steps... Use quotes for exact phrases"
+                                value={searchQuery}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
+                            />
+                            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+                                <Search className="h-5 w-5" />
+                            </div>
+                            {searchQuery && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-lg"
+                                    onClick={() => onSearchChange("")}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+
+                        {/* Professional Search Results Indicator */}
+                        {searchQuery && searchStats && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="px-3 py-1 bg-background/80 backdrop-blur rounded-lg border border-primary/10">
+                                    <span className="font-medium text-primary">{searchStats.totalResults}</span> results
+                                </div>
+                                {searchStats.searchTime > 0 && (
+                                    <div className="px-2 py-1 text-xs text-muted-foreground/70">
+                                        {searchStats.searchTime.toFixed(1)}ms
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
+
+                {/* Empty State */}
+                <StepsTableEmpty
+                    searchQuery=""
+                    searchField={searchField}
+                    onClearFilters={() => onSearchChange("")}
+                    searchFields={SEARCH_FIELDS}
+                />
+            </div>
+        );
+    }
+
+    if (sortedSteps.length === 0 && isFiltered) {
+        return (
+            <div className="h-full flex flex-col gap-6 w-full" style={{ minHeight: "100%" }}>
+                {/* Professional Search Bar - matching Circuit Statuses page exactly */}
+                <div className={filterCardClass}>
+                    {/* Search and field select */}
+                    <div className="flex-1 flex items-center gap-4 min-w-0">
+                        <div className="relative">
+                            <Select value={searchField} onValueChange={onSearchFieldChange}>
+                                <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+                                    <SelectValue>
+                                        {SEARCH_FIELDS.find((opt) => opt.id === searchField)?.label || "All fields"}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                                    {SEARCH_FIELDS.map((opt) => (
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id}
+                                            className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                                        >
+                                            {opt.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex-1 relative group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                            <Input
+                                placeholder="Search steps... Use quotes for exact phrases"
+                                value={searchQuery}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
+                            />
+                            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+                                <Search className="h-5 w-5" />
+                            </div>
+                            {searchQuery && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-lg"
+                                    onClick={() => onSearchChange("")}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+
+                        {/* Professional Search Results Indicator */}
+                        {searchQuery && searchStats && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="px-3 py-1 bg-background/80 backdrop-blur rounded-lg border border-primary/10">
+                                    <span className="font-medium text-primary">{searchStats.totalResults}</span> results
+                                </div>
+                                {searchStats.searchTime > 0 && (
+                                    <div className="px-2 py-1 text-xs text-muted-foreground/70">
+                                        {searchStats.searchTime.toFixed(1)}ms
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Professional No Results State */}
+                <StepsTableEmpty
+                    searchQuery={searchQuery}
+                    searchField={searchField}
+                    onClearFilters={() => onSearchChange("")}
+                    searchFields={SEARCH_FIELDS}
+                />
             </div>
         );
     }
 
     return (
-        <div className="h-full flex flex-col gap-4">
-            {/* Search Section - Matching Statuses Page */}
-            <div className="flex gap-3 items-center bg-slate-800/90 backdrop-blur-sm border border-slate-600/70 rounded-xl p-4 shadow-lg">
-                <div className="flex-1 flex gap-3 items-center">
-                    <Select
-                        value={searchField}
-                        onValueChange={setSearchField}
-                    >
-                        <SelectTrigger className="w-[140px] bg-slate-700/50 border-slate-600/50 text-slate-200">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {SEARCH_FIELDS.map((field) => (
-                                <SelectItem key={field.id} value={field.id}>
-                                    {field.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+        <div className="h-full flex flex-col gap-6 w-full" style={{ minHeight: "100%" }}>
+            {/* Professional Search Bar - matching Circuit Statuses page exactly */}
+            <div className={filterCardClass}>
+                {/* Search and field select */}
+                <div className="flex-1 flex items-center gap-4 min-w-0">
+                    <div className="relative">
+                        <Select value={searchField} onValueChange={onSearchFieldChange}>
+                            <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+                                <SelectValue>
+                                    {SEARCH_FIELDS.find((opt) => opt.id === searchField)?.label || "All fields"}
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
+                                {SEARCH_FIELDS.map((opt) => (
+                                    <SelectItem
+                                        key={opt.id}
+                                        value={opt.id}
+                                        className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
+                                    >
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-                    <div className="flex-1 relative">
+                    <div className="relative min-w-[300px] flex-1 group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
                         <Input
                             placeholder="Search steps..."
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="bg-slate-700/50 border-slate-600/50 text-slate-200 placeholder:text-slate-400"
+                            className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-4 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
                         />
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+                            <Search className="h-5 w-5" />
+                        </div>
+                        {searchQuery && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-lg"
+                                onClick={() => onSearchChange("")}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
+
+                    {/* Professional Search Results Indicator */}
+                    {searchQuery && searchStats && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="px-3 py-1 bg-background/80 backdrop-blur rounded-lg border border-primary/10">
+                                <span className="font-medium text-primary">{searchStats.totalResults}</span> results
+                            </div>
+                            {searchStats.searchTime > 0 && (
+                                <div className="px-2 py-1 text-xs text-muted-foreground/70">
+                                    {searchStats.searchTime.toFixed(1)}ms
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -287,7 +461,7 @@ export function CircuitStepsTableView({
                             <div className="min-w-[1000px] pb-4">
                                 <Table className="table-fixed w-full">
                                     <TableBody>
-                                        {currentPageSteps.map((step) => {
+                                        {paginatedSteps.map((step) => {
                                             const isSelected = selectedSteps.includes(step.id);
                                             return (
                                                 <TableRow
@@ -375,29 +549,16 @@ export function CircuitStepsTableView({
 
                                                     <TableCell className="w-[150px] px-3 py-3">
                                                         {step.requiresApproval ? (
-                                                            <div className="flex items-center">
-                                                                {step.approvalType === 'group' ? (
-                                                                    <>
-                                                                        <Users className="h-4 w-4 mr-2 text-blue-400" />
-                                                                        <span className="text-sm text-blue-100 font-semibold truncate" title={step.approvalName}>
-                                                                            {step.approvalName || 'Approval Group'}
-                                                                        </span>
-                                                                    </>
-                                                                ) : step.approvalType === 'individual' ? (
-                                                                    <>
-                                                                        <User className="h-4 w-4 mr-2 text-green-400" />
-                                                                        <span className="text-sm text-green-100 font-semibold truncate" title={step.approvalName}>
-                                                                            {step.approvalName || 'Individual Approver'}
-                                                                        </span>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <UserCheck className="h-4 w-4 mr-2 text-blue-400" />
-                                                                        <span className="text-sm text-blue-100 font-semibold truncate">
-                                                                            Requires Approval
-                                                                        </span>
-                                                                    </>
-                                                                )}
+                                                            <div className="flex items-center gap-2">
+                                                                <Users className="h-3.5 w-3.5 text-green-300" />
+                                                                <div className="text-xs">
+                                                                    <div className="text-green-300 font-medium">
+                                                                        {(step as any).approvalType === "group" ? "Group" : "Individual"}
+                                                                    </div>
+                                                                    <div className="text-green-200/80">
+                                                                        {(step as any).approvalName || "Not assigned"}
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         ) : (
                                                             <Badge
@@ -417,6 +578,9 @@ export function CircuitStepsTableView({
                                                                         variant="ghost"
                                                                         className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                                                         disabled={isCircuitActive && !isSimpleUser}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                        }}
                                                                     >
                                                                         <span className="sr-only">Open menu</span>
                                                                         <MoreVertical className="h-4 w-4" />
@@ -465,12 +629,12 @@ export function CircuitStepsTableView({
             {/* Pagination */}
             {sortedSteps.length > 0 && (
                 <SmartPagination
-                    currentPage={pagination.currentPage}
-                    totalPages={pagination.totalPages}
-                    pageSize={pagination.pageSize}
-                    totalItems={pagination.totalItems}
-                    onPageChange={pagination.handlePageChange}
-                    onPageSizeChange={pagination.handlePageSizeChange}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    pageSize={pageSize}
+                    totalItems={totalItems}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
                 />
             )}
         </div>

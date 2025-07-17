@@ -5,6 +5,7 @@ import documentService from '@/services/documentService';
 import { DocumentType } from '@/models/document';
 import { usePagination } from './usePagination';
 import { useBulkSelection } from './useBulkSelection';
+import { getErpTypeFromNumber } from '@/utils/erpTypeUtils';
 
 export type DocumentTypeSortField = 'typeName' | 'typeAttr' | 'tierType' | 'typeNumber' | 'createdAt';
 export type DocumentTypeSortDirection = 'asc' | 'desc';
@@ -17,6 +18,7 @@ export function useDocumentTypeManagement() {
     const [searchField, setSearchField] = useState('all');
     const [tierTypeFilter, setTierTypeFilter] = useState('any');
     const [hasDocumentsFilter, setHasDocumentsFilter] = useState('any');
+    const [erpTypeFilter, setErpTypeFilter] = useState('any');
     const [sortBy, setSortBy] = useState<DocumentTypeSortField>('typeName');
     const [sortDirection, setSortDirection] = useState<DocumentTypeSortDirection>('asc');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -48,6 +50,12 @@ export function useDocumentTypeManagement() {
             if (tierTypeFilter === 'none' && type.tierType !== 0) return false;
             if (tierTypeFilter !== 'none' && type.tierType !== parseInt(tierTypeFilter)) return false;
         }
+
+        if (erpTypeFilter !== 'any') {
+            const erpTypeName = getErpTypeFromNumber(type.typeNumber);
+            if (erpTypeName !== erpTypeFilter) return false;
+        }
+
         if (hasDocumentsFilter !== 'any') {
             const hasDocuments = type.documentCounter && type.documentCounter > 0;
             if (hasDocumentsFilter === 'yes' && !hasDocuments) return false;
@@ -134,6 +142,8 @@ export function useDocumentTypeManagement() {
         setTierTypeFilter,
         hasDocumentsFilter,
         setHasDocumentsFilter,
+        erpTypeFilter,
+        setErpTypeFilter,
         showAdvancedFilters,
         setShowAdvancedFilters,
 

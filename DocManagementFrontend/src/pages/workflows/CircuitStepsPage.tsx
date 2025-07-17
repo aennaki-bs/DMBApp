@@ -7,7 +7,7 @@ import { useCircuitSteps } from '@/hooks/useCircuitSteps';
 import { toast } from 'sonner';
 import stepService from '@/services/stepService';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Plus, GitBranch, ArrowLeft } from 'lucide-react';
+import { Plus, GitBranch, ArrowLeft, List } from 'lucide-react';
 import { CircuitStepsTableView } from '@/components/steps/CircuitStepsTableView';
 import { useNavigate } from 'react-router-dom';
 import { Step } from '@/models/step';
@@ -28,15 +28,18 @@ export default function CircuitStepsPage() {
     circuit,
     steps,
     searchQuery,
+    searchField,
     selectedSteps,
     apiError,
     isLoading,
     isError,
     setSearchQuery,
+    setSearchField,
     handleStepSelection,
     handleSelectAll,
     setSelectedSteps,
-    refetchSteps
+    refetchSteps,
+    searchStats
   } = useCircuitSteps(circuitId);
 
   const isCircuitActive = circuit?.isActive || false;
@@ -48,6 +51,15 @@ export default function CircuitStepsPage() {
     }
     setSelectedStep(null);
     setFormDialogOpen(true);
+  };
+
+  const handleAddStatus = () => {
+    if (isCircuitActive) {
+      toast.error("Cannot add statuses to an active circuit");
+      return;
+    }
+    // Navigate to the statuses page
+    navigate(`/circuits/${circuitId}/statuses`);
   };
 
   const handleEditStep = (step: Step) => {
@@ -105,6 +117,12 @@ export default function CircuitStepsPage() {
       variant: "outline" as const,
       icon: ArrowLeft,
       onClick: () => navigate('/circuits'),
+    },
+    {
+      label: "Circuit Statuses",
+      variant: "outline" as const,
+      icon: List,
+      onClick: () => navigate(`/circuits/${circuitId}/statuses`),
     },
     {
       label: "Add Step",
@@ -168,10 +186,13 @@ export default function CircuitStepsPage() {
         onEdit={handleEditStep}
         onDelete={handleDeleteStep}
         searchQuery={searchQuery}
+        searchField={searchField}
         onSearchChange={setSearchQuery}
+        onSearchFieldChange={setSearchField}
         isCircuitActive={isCircuitActive}
         isSimpleUser={isSimpleUser}
         circuit={circuit}
+        searchStats={searchStats}
       />
 
       <StepFormDialog

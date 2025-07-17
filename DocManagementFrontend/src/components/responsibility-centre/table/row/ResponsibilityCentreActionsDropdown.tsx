@@ -44,13 +44,22 @@ export function ResponsibilityCentreActionsDropdown({
         <Button
           variant="ghost"
           className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           <span className="sr-only">Open menu</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={onViewDetails} className="cursor-pointer">
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails();
+          }}
+          className="cursor-pointer"
+        >
           <Eye className="mr-2 h-4 w-4 text-blue-500" />
           <span>View Details</span>
         </DropdownMenuItem>
@@ -66,13 +75,25 @@ export function ResponsibilityCentreActionsDropdown({
           <span>Update Centre</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem onClick={onAssociateUsers} className="cursor-pointer">
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            onAssociateUsers();
+          }}
+          className="cursor-pointer"
+        >
           <UserPlus className="mr-2 h-4 w-4 text-blue-600" />
           <span>Associate Users</span>
         </DropdownMenuItem>
 
         {onRemoveUsers && userCount > 0 && (
-          <DropdownMenuItem onClick={onRemoveUsers} className="cursor-pointer">
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveUsers();
+            }}
+            className="cursor-pointer"
+          >
             <UserMinus className="mr-2 h-4 w-4 text-orange-600" />
             <span>Remove Users ({userCount})</span>
           </DropdownMenuItem>

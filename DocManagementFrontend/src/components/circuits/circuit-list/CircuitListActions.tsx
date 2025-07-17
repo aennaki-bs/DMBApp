@@ -61,7 +61,7 @@ export function CircuitListActions({
               </Button>
             </TooltipTrigger>
             <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-              <p>View Statuses</p>
+              <p>Manage Status</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -93,11 +93,10 @@ export function CircuitListActions({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 p-0 ${
-                      circuit.isActive
+                    className={`h-8 w-8 p-0 ${circuit.isActive
                         ? "text-blue-400/50 cursor-not-allowed"
                         : "text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                    }`}
+                      }`}
                     onClick={() => !circuit.isActive && onEdit(circuit)}
                     disabled={circuit.isActive}
                   >
@@ -120,11 +119,10 @@ export function CircuitListActions({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 p-0 ${
-                      circuit.isActive
+                    className={`h-8 w-8 p-0 ${circuit.isActive
                         ? "text-red-400/50 cursor-not-allowed"
                         : "text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                    }`}
+                      }`}
                     onClick={() => !circuit.isActive && onDelete(circuit)}
                     disabled={circuit.isActive}
                   >

@@ -3,4 +3,5 @@ export { UserTable } from './UserTable';
 export { DeleteConfirmDialog } from './DeleteConfirmDialog';
 export { DirectEditUserModal } from './DirectEditUserModal';
 export { DirectEditUserEmailModal } from './DirectEditUserEmailModal';
-export { ViewUserLogsDialog } from './ViewUserLogsDialog'; 
+export { ViewUserLogsDialog } from './ViewUserLogsDialog';
+export { SystemActivityLogs } from './SystemActivityLogs'; 

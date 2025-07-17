@@ -55,6 +55,8 @@ const DocumentTypesManagementPage = () => {
     handleTypeEdited,
     handleTypeDeleted,
     handleMultipleDeleted,
+    erpTypeFilter,
+    setErpTypeFilter,
   } = useDocumentTypeManagement();
 
   // Filter state for DocumentTypeFilterBar compatibility
@@ -63,6 +65,7 @@ const DocumentTypesManagementPage = () => {
     searchField,
     tierType: tierTypeFilter as any,
     hasDocuments: hasDocumentsFilter as 'any' | 'yes' | 'no',
+    erpType: erpTypeFilter,
   };
 
   const updateFilters = (newFilters: any) => {
@@ -70,6 +73,7 @@ const DocumentTypesManagementPage = () => {
     if (newFilters.searchField !== undefined) setSearchField(newFilters.searchField);
     if (newFilters.tierType !== undefined) setTierTypeFilter(newFilters.tierType);
     if (newFilters.hasDocuments !== undefined) setHasDocumentsFilter(newFilters.hasDocuments);
+    if (newFilters.erpType !== undefined) setErpTypeFilter(newFilters.erpType);
   };
 
   const resetFilters = () => {
@@ -77,13 +81,15 @@ const DocumentTypesManagementPage = () => {
     setSearchField('all');
     setTierTypeFilter('any');
     setHasDocumentsFilter('any');
+    setErpTypeFilter('any');
   };
 
-  const isFilterActive = searchQuery !== '' || tierTypeFilter !== 'any' || hasDocumentsFilter !== 'any';
+  const isFilterActive = searchQuery !== '' || tierTypeFilter !== 'any' || hasDocumentsFilter !== 'any' || erpTypeFilter !== 'any';
   const activeFilterCount = [
     searchQuery !== '',
     tierTypeFilter !== 'any',
-    hasDocumentsFilter !== 'any'
+    hasDocumentsFilter !== 'any',
+    erpTypeFilter !== 'any'
   ].filter(Boolean).length;
 
   const handleEditType = (type: DocumentType) => {

@@ -11,6 +11,7 @@ import {
   Info,
   Users,
   Clock,
+  FileType,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ import { DateRange } from "react-day-picker";
 import { TierType } from "@/models/document";
 import { DocumentTypeFilterState } from "@/hooks/document-types/useDocumentTypeSmartFilter";
 import { Separator } from "@/components/ui/separator";
+import { ERP_TYPE_MAPPINGS } from "@/utils/erpTypeUtils";
 
 const SEARCH_FIELDS = [
   { id: "all", label: "All fields" },
@@ -51,6 +53,16 @@ const HAS_DOCUMENTS_OPTIONS = [
   { id: "any", label: "Any", value: "any" },
   { id: "with", label: "With Documents", value: "yes" },
   { id: "without", label: "Without Documents", value: "no" },
+];
+
+// Add ERP type options
+const ERP_TYPE_OPTIONS = [
+  { id: "any", label: "Any ERP Type", value: "any" },
+  ...Object.entries(ERP_TYPE_MAPPINGS).map(([typeNumber, typeName]) => ({
+    id: typeNumber,
+    label: typeName,
+    value: typeName,
+  })),
 ];
 
 interface DocumentTypeFilterBarProps {
@@ -96,6 +108,12 @@ export default function DocumentTypeFilterBar({
   const handleHasDocumentsChange = (value: string) => {
     updateFilters({
       hasDocuments: value as "any" | "yes" | "no"
+    });
+  };
+
+  const handleErpTypeChange = (value: string) => {
+    updateFilters({
+      erpType: value
     });
   };
 
@@ -241,6 +259,29 @@ export default function DocumentTypeFilterBar({
               </Select>
             </div>
 
+            {/* ERP Type Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                <FileType className="h-3.5 w-3.5 text-primary" />
+                ERP Type
+              </label>
+              <Select
+                value={filters.erpType || "any"}
+                onValueChange={handleErpTypeChange}
+              >
+                <SelectTrigger className="bg-background/50 border-primary/20 focus:border-primary/40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ERP_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.id} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Has Documents Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground flex items-center gap-1">
@@ -291,6 +332,21 @@ export default function DocumentTypeFilterBar({
                       size="sm"
                       className="ml-1 h-4 w-4 p-0 hover:bg-primary/20"
                       onClick={() => updateFilters({ tierType: "any" })}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                )}
+
+                {filters.erpType && filters.erpType !== "any" && (
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                    <FileType className="h-3 w-3 mr-1" />
+                    ERP: {ERP_TYPE_OPTIONS.find(t => t.value === filters.erpType)?.label.replace("Any ERP Type", "")}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-1 h-4 w-4 p-0 hover:bg-primary/20"
+                      onClick={() => updateFilters({ erpType: "any" })}
                     >
                       <X className="h-3 w-3" />
                     </Button>

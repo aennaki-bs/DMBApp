@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,6 +17,7 @@ import UpdatePassword from "./pages/auth/UpdatePassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmailVerification from "./pages/register/EmailVerification";
 import AdminPage from "./pages/admin/Admin";
+import ActivityLogsPage from "./pages/admin/ActivityLogsPage";
 import DocumentsPageWrapper from "./pages/documents/DocumentsPageWrapper";
 import ArchivedDocuments from "./pages/documents/ArchivedDocuments";
 import CompletedNotArchivedDocuments from "./pages/documents/CompletedNotArchivedDocuments";
@@ -69,7 +69,6 @@ const App = () => (
     <TooltipProvider>
       <ThemeProvider>
         <SettingsProvider>
-          <Toaster />
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
@@ -116,6 +115,15 @@ const App = () => (
                     element={
                       <ProtectedRoute requiredRole="Admin">
                         <UserManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/admin/activity-logs"
+                    element={
+                      <ProtectedRoute requiredRole="Admin">
+                        <ActivityLogsPage />
                       </ProtectedRoute>
                     }
                   />

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, RefreshCw, FileText, Search, Filter, X } from "lucide-react";
+import { Plus, ArrowLeft, FileText, Search, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -264,16 +264,12 @@ export default function CircuitStatusesPage() {
       onClick: () => navigate(`/circuits/${circuitId}/steps`),
     },
     {
-      label: "Refresh",
-      variant: "outline" as const,
-      icon: RefreshCw,
-      onClick: () => refetch(),
-    },
-    {
       label: "Add Status",
       variant: "default" as const,
       icon: Plus,
       onClick: () => setShowCreateDialog(true),
+      disabled: circuit?.isActive,
+      tooltip: circuit?.isActive ? "Cannot add statuses to an active circuit" : undefined,
     },
   ];
 

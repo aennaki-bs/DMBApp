@@ -108,7 +108,7 @@ export function StepManagementTable({
 
                     <div className="flex-1 relative">
                         <Input
-                            placeholder="Search steps..."
+                            placeholder="Search steps... Use quotes for exact phrases"
                             value={searchQuery}
                             onChange={(e) => handleSearchQueryChange(e.target.value)}
                             className="bg-slate-700/50 border-slate-600/50 text-slate-200 placeholder:text-slate-400"

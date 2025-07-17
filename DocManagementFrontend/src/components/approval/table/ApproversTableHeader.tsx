@@ -62,10 +62,11 @@ export function ApproversTableHeader({
           </div>
         </TableHead>
         <TableHead
-          className={`${headerClass("status")} w-[400px]`}
+          className={`${headerClass("comment")} w-[400px]`}
+          onClick={() => onSort("comment")}
         >
           <div className="flex items-center">
-            Association Status
+            Description {renderSortIcon("comment")}
           </div>
         </TableHead>
         <TableHead className="w-[80px] text-foreground font-medium text-right pr-4">

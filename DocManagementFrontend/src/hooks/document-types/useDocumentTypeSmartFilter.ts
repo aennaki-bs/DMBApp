@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
 import { DocumentType, TierType } from '@/models/document';
 import { DateRange } from 'react-day-picker';
+import { getErpTypeFromNumber } from '@/utils/erpTypeUtils';
 
 export interface DocumentTypeFilterState {
     searchQuery: string;
     searchField: string;
     hasDocuments: 'any' | 'yes' | 'no';
     tierType: TierType | 'any';
+    erpType: string | 'any';
     createdDateRange?: DateRange;
 }
 
@@ -15,6 +17,7 @@ const initialFilterState: DocumentTypeFilterState = {
     searchField: 'all',
     hasDocuments: 'any',
     tierType: 'any',
+    erpType: 'any',
     createdDateRange: undefined,
 };
 
@@ -36,7 +39,7 @@ export function useDocumentTypeSmartFilter(documentTypes: DocumentType[]) {
                     case 'typeName':
                         if (!type.typeName?.toLowerCase().includes(searchLower)) return false;
                         break;
-                    
+
                     case 'typeAttr':
                         if (!type.typeAttr?.toLowerCase().includes(searchLower)) return false;
                         break;
@@ -62,6 +65,20 @@ export function useDocumentTypeSmartFilter(documentTypes: DocumentType[]) {
             // Tier type filtering
             if (filters.tierType !== 'any' && type.tierType !== filters.tierType) {
                 return false;
+            }
+
+            // ERP type filtering
+            if (filters.erpType !== 'any') {
+                // First check if there's a direct erpType field
+                if (type.erpType && type.erpType === filters.erpType) {
+                    // Match found on the direct field
+                } else {
+                    // Otherwise check using the typeNumber
+                    const erpTypeName = getErpTypeFromNumber(type.typeNumber);
+                    if (erpTypeName !== filters.erpType) {
+                        return false;
+                    }
+                }
             }
 
             // Date range filtering
@@ -136,6 +153,7 @@ export function useDocumentTypeSmartFilter(documentTypes: DocumentType[]) {
             filters.searchQuery !== '' ||
             filters.hasDocuments !== 'any' ||
             filters.tierType !== 'any' ||
+            filters.erpType !== 'any' ||
             !!filters.createdDateRange
         );
     }, [filters]);
@@ -146,6 +164,7 @@ export function useDocumentTypeSmartFilter(documentTypes: DocumentType[]) {
         if (filters.searchQuery) count++;
         if (filters.hasDocuments !== 'any') count++;
         if (filters.tierType !== 'any') count++;
+        if (filters.erpType !== 'any') count++;
         if (filters.createdDateRange?.from || filters.createdDateRange?.to) count++;
         return count;
     }, [filters]);

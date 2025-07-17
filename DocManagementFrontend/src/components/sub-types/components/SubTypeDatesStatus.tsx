@@ -23,12 +23,12 @@ export const SubTypeDatesStatus = () => {
           Dates and Status
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-5">
-        <div className="grid grid-cols-1 gap-4">
-          <div className="grid gap-2">
+      <CardContent className="p-6 pt-6">
+        <div className="grid grid-cols-1 gap-6">
+          <div className="grid gap-3">
             <Label
               htmlFor="startDate"
-              className="text-blue-300 text-xs font-medium"
+              className="text-blue-300 text-sm font-medium"
             >
               Start Date *
             </Label>
@@ -37,7 +37,7 @@ export const SubTypeDatesStatus = () => {
                 <Button
                   id="startDate"
                   variant="outline"
-                  className="bg-[#0a1033] border-blue-900/50 text-white justify-start h-10"
+                  className="bg-[#0a1033] border-blue-900/50 text-white justify-start h-11"
                 >
                   <Calendar className="mr-2 h-4 w-4" />
                   {formData.startDate
@@ -59,10 +59,10 @@ export const SubTypeDatesStatus = () => {
             )}
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-3">
             <Label
               htmlFor="endDate"
-              className="text-blue-300 text-xs font-medium"
+              className="text-blue-300 text-sm font-medium"
             >
               End Date *
             </Label>
@@ -71,7 +71,7 @@ export const SubTypeDatesStatus = () => {
                 <Button
                   id="endDate"
                   variant="outline"
-                  className="bg-[#0a1033] border-blue-900/50 text-white justify-start h-10"
+                  className="bg-[#0a1033] border-blue-900/50 text-white justify-start h-11"
                 >
                   <Calendar className="mr-2 h-4 w-4" />
                   {formData.endDate
@@ -97,7 +97,7 @@ export const SubTypeDatesStatus = () => {
             <p className="text-red-500 text-sm">{errors.dateRange}</p>
           )}
 
-          <div className="flex items-center space-x-3 pt-2 mt-2 border-t border-blue-900/30">
+          <div className="flex items-center space-x-3 pt-4 mt-4 border-t border-blue-900/30">
             <Switch
               id="isActive"
               checked={formData.isActive}
