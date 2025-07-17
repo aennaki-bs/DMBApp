@@ -30,7 +30,7 @@ const DocumentActions = ({
   const [isAssignCircuitOpen, setIsAssignCircuitOpen] = useState(false);
 
   // Check if document is fully archived (read-only)
-  const isFullyArchived = document.isArchived || false;
+  const isFullyArchived = document.erpDocumentCode;
 
   // Refresh the page after circuit assignment
   const handleCircuitAssigned = () => {

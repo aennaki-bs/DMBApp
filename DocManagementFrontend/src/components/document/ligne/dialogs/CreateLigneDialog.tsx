@@ -422,6 +422,100 @@ const CreateLigneDialog = ({
     onOpenChange(false);
   };
 
+  // Helper function to validate numeric input
+  const isValidNumber = (value: string): boolean => {
+    // Allow empty string, numbers, and decimal point
+    return value === "" || /^[0-9]*\.?[0-9]*$/.test(value);
+  };
+
+  // Helper function to validate and parse numeric input
+  const handleNumericInput = (key: keyof FormValues, value: string, isInteger = false) => {
+    if (!isValidNumber(value)) {
+      setErrors(prev => ({ 
+        ...prev, 
+        [key]: `Please enter only numbers ${isInteger ? '' : 'and decimal point (.)'}`
+      }));
+      return;
+    }
+
+    let numValue: number;
+    if (value === "" || value === ".") {
+      numValue = 0;
+    } else {
+      numValue = isInteger ? parseInt(value) : parseFloat(value);
+      if (isNaN(numValue)) {
+        setErrors(prev => ({ 
+          ...prev, 
+          [key]: "Please enter a valid number"
+        }));
+        return;
+      }
+    }
+
+    // Validate negative values for price fields
+    if ((key === 'priceHT' || key === 'discountAmount') && numValue < 0) {
+      setErrors(prev => ({ 
+        ...prev, 
+        [key]: `${key === 'priceHT' ? 'Price' : 'Discount amount'} cannot be negative`
+      }));
+      return;
+    }
+
+    // Validate quantity
+    if (key === 'quantity' && numValue < 0) {
+      setErrors(prev => ({ 
+        ...prev, 
+        [key]: "Quantity cannot be negative"
+      }));
+      return;
+    }
+
+    handleFieldChange(key, numValue);
+  };
+
+  // Helper function to validate percentage input
+  const handlePercentageInput = (key: keyof FormValues, value: string) => {
+    if (!isValidNumber(value)) {
+      setErrors(prev => ({ 
+        ...prev, 
+        [key]: "Please enter only numbers and decimal point (.)"
+      }));
+      return;
+    }
+
+    let numValue: number;
+    if (value === "" || value === ".") {
+      numValue = 0;
+    } else {
+      numValue = parseFloat(value);
+      if (isNaN(numValue)) {
+        setErrors(prev => ({ 
+          ...prev, 
+          [key]: "Please enter a valid percentage"
+        }));
+        return;
+      }
+    }
+
+    if (numValue < 0) {
+      setErrors(prev => ({ 
+        ...prev, 
+        [key]: "Percentage cannot be negative"
+      }));
+      return;
+    }
+
+    if (numValue > 100) {
+      setErrors(prev => ({ 
+        ...prev, 
+        [key]: "Percentage cannot exceed 100%"
+      }));
+      return;
+    }
+
+    handleFieldChange(key, numValue / 100);
+  };
+
   const handleFieldChange = (key: keyof FormValues, value: any) => {
     setFormValues(prev => ({ ...prev, [key]: value }));
     // Clear error when user starts typing
@@ -463,11 +557,50 @@ const CreateLigneDialog = ({
         }
         break;
       case 3:
-        if (formValues.quantity <= 0) {
-          newErrors.quantity = "Quantity must be greater than 0";
+        // Validate quantity
+        if (isNaN(formValues.quantity) || formValues.quantity <= 0) {
+          newErrors.quantity = "Quantity must be a valid number greater than 0";
         }
-        if (formValues.priceHT <= 0) {
-          newErrors.priceHT = "Price must be greater than 0";
+
+        // Validate price HT
+        if (isNaN(formValues.priceHT) || formValues.priceHT <= 0) {
+          newErrors.priceHT = "Price must be a valid number greater than 0";
+        }
+        
+        // Validate discount percentage (0-100%)
+        if (!formValues.useFixedDiscount) {
+          if (isNaN(formValues.discountPercentage)) {
+            newErrors.discountPercentage = "Discount percentage must be a valid number";
+          } else {
+            const discountPercent = formValues.discountPercentage * 100;
+            if (discountPercent < 0 || discountPercent > 100) {
+              newErrors.discountPercentage = "Discount percentage must be between 0 and 100";
+            }
+          }
+        }
+        
+        // Validate discount amount (0 to unit price HT * quantity)
+        if (formValues.useFixedDiscount) {
+          if (formValues.discountAmount && isNaN(formValues.discountAmount)) {
+            newErrors.discountAmount = "Discount amount must be a valid number";
+          } else if (formValues.discountAmount && formValues.discountAmount < 0) {
+            newErrors.discountAmount = "Discount amount cannot be negative";
+          } else if (formValues.discountAmount && formValues.priceHT > 0 && formValues.quantity > 0) {
+            const maxDiscountAmount = formValues.priceHT * formValues.quantity;
+            if (formValues.discountAmount > maxDiscountAmount) {
+              newErrors.discountAmount = `Discount amount cannot exceed ${maxDiscountAmount.toFixed(2)} MAD (Unit Price × Quantity)`;
+            }
+          }
+        }
+        
+        // Validate VAT percentage (0-100%)
+        if (isNaN(formValues.vatPercentage)) {
+          newErrors.vatPercentage = "VAT percentage must be a valid number";
+        } else {
+          const vatPercent = formValues.vatPercentage * 100;
+          if (vatPercent < 0 || vatPercent > 100) {
+            newErrors.vatPercentage = "VAT percentage must be between 0 and 100";
+          }
         }
         break;
     }
@@ -946,14 +1079,15 @@ const CreateLigneDialog = ({
                       </div>
                       <Input
                         id="quantity"
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={formValues.quantity || ""}
-                        onChange={(e) => handleFieldChange("quantity", parseInt(e.target.value) || 0)}
-                        className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base"
+                        type="text"
+                        value={formValues.quantity === 0 ? "" : formValues.quantity.toString()}
+                        onChange={(e) => handleNumericInput("quantity", e.target.value, true)}
+                        className={`bg-blue-950/40 border-blue-400/20 text-white h-12 text-base ${errors.quantity ? 'border-red-500' : ''}`}
                         placeholder="Enter quantity"
                       />
+                      {errors.quantity && (
+                        <p className="text-red-400 text-sm mt-1">{errors.quantity}</p>
+                      )}
                     </div>
 
                     <div className="space-y-3 p-4 bg-green-950/20 rounded-lg border border-green-500/20">
@@ -965,14 +1099,15 @@ const CreateLigneDialog = ({
                       </div>
                       <Input
                         id="priceHT"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formValues.priceHT === 0 ? "" : formValues.priceHT}
-                        onChange={(e) => handleFieldChange("priceHT", parseFloat(e.target.value) || 0)}
-                        className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base"
+                        type="text"
+                        value={formValues.priceHT === 0 ? "" : formValues.priceHT.toString()}
+                        onChange={(e) => handleNumericInput("priceHT", e.target.value, false)}
+                        className={`bg-blue-950/40 border-blue-400/20 text-white h-12 text-base ${errors.priceHT ? 'border-red-500' : ''}`}
                         placeholder="Enter price"
                       />
+                      {errors.priceHT && (
+                        <p className="text-red-400 text-sm mt-1">{errors.priceHT}</p>
+                      )}
                     </div>
                   </div>
 
@@ -1039,15 +1174,15 @@ const CreateLigneDialog = ({
                           </Label>
                           <Input
                             id="discountPercentage"
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            value={formValues.discountPercentage === 0 ? "" : (formValues.discountPercentage * 100)}
-                            onChange={(e) => handleFieldChange("discountPercentage", (parseFloat(e.target.value) || 0) / 100)}
-                            className="bg-orange-950/40 border-orange-400/20 text-white"
+                            type="text"
+                            value={formValues.discountPercentage === 0 ? "" : (formValues.discountPercentage * 100).toString()}
+                            onChange={(e) => handlePercentageInput("discountPercentage", e.target.value)}
+                            className={`bg-orange-950/40 border-orange-400/20 text-white ${errors.discountPercentage ? 'border-red-500' : ''}`}
                             placeholder="0"
                           />
+                          {errors.discountPercentage && (
+                            <p className="text-red-400 text-sm mt-1">{errors.discountPercentage}</p>
+                          )}
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -1056,14 +1191,15 @@ const CreateLigneDialog = ({
                           </Label>
                           <Input
                             id="discountAmount"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={formValues.discountAmount === 0 ? "" : (formValues.discountAmount || "")}
-                            onChange={(e) => handleFieldChange("discountAmount", parseFloat(e.target.value) || 0)}
-                            className="bg-orange-950/40 border-orange-400/20 text-white"
+                            type="text"
+                            value={formValues.discountAmount === 0 || !formValues.discountAmount ? "" : formValues.discountAmount.toString()}
+                            onChange={(e) => handleNumericInput("discountAmount", e.target.value, false)}
+                            className={`bg-orange-950/40 border-orange-400/20 text-white ${errors.discountAmount ? 'border-red-500' : ''}`}
                             placeholder="0.00"
                           />
+                          {errors.discountAmount && (
+                            <p className="text-red-400 text-sm mt-1">{errors.discountAmount}</p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1079,15 +1215,15 @@ const CreateLigneDialog = ({
                     </div>
                     <Input
                       id="vatPercentage"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.01"
-                      value={formValues.vatPercentage * 100}
-                      onChange={(e) => handleFieldChange("vatPercentage", (parseFloat(e.target.value) || 0) / 100)}
-                      className="bg-purple-950/40 border-purple-400/20 text-white h-12 text-base"
+                      type="text"
+                      value={formValues.vatPercentage === 0 ? "" : (formValues.vatPercentage * 100).toString()}
+                      onChange={(e) => handlePercentageInput("vatPercentage", e.target.value)}
+                      className={`bg-purple-950/40 border-purple-400/20 text-white h-12 text-base ${errors.vatPercentage ? 'border-red-500' : ''}`}
                       placeholder="20"
                     />
+                    {errors.vatPercentage && (
+                      <p className="text-red-400 text-sm mt-1">{errors.vatPercentage}</p>
+                    )}
                   </div>
 
                   {/* Live Calculation Preview */}

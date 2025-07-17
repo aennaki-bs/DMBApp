@@ -1,10 +1,133 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStepForm } from './StepFormProvider';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Info, Users, ArrowRight } from 'lucide-react';
+import api from '@/services/api';
+import adminService from '@/services/adminService';
+import approvalService from '@/services/approvalService';
+
+interface StatusInfo {
+  id: number;
+  title: string;
+  name?: string;
+}
+
+interface UserInfo {
+  id: number;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface GroupInfo {
+  id: number;
+  name: string;
+}
 
 const StepReview: React.FC = () => {
   const { formData } = useStepForm();
+  
+  // State for fetched data
+  const [currentStatus, setCurrentStatus] = useState<StatusInfo | null>(null);
+  const [nextStatus, setNextStatus] = useState<StatusInfo | null>(null);
+  const [approverUser, setApproverUser] = useState<UserInfo | null>(null);
+  const [approverGroup, setApproverGroup] = useState<GroupInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch status information and user/group information
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      
+      try {
+        // Fetch status information
+        const statusPromises = [];
+        
+        if (formData.currentStatusId) {
+          statusPromises.push(
+            api.get(`/Status/${formData.currentStatusId}`)
+              .then(response => ({ type: 'current', data: response.data }))
+              .catch(() => ({ type: 'current', data: null }))
+          );
+        }
+        
+        if (formData.nextStatusId) {
+          statusPromises.push(
+            api.get(`/Status/${formData.nextStatusId}`)
+              .then(response => ({ type: 'next', data: response.data }))
+              .catch(() => ({ type: 'next', data: null }))
+          );
+        }
+
+        // Execute status fetches
+        const statusResults = await Promise.all(statusPromises);
+        
+        statusResults.forEach(result => {
+          if (result.type === 'current' && result.data) {
+            setCurrentStatus(result.data);
+          } else if (result.type === 'next' && result.data) {
+            setNextStatus(result.data);
+          }
+        });
+
+        // Fetch approval information
+        if (formData.requiresApproval) {
+          if (formData.approvalType === 'user' && formData.approvalUserId) {
+            try {
+              // Try to get from approvators first (which has both userId and username)
+              const approvators = await approvalService.getAllApprovators();
+              const approvator = approvators.find(a => a.userId === formData.approvalUserId);
+              
+              if (approvator) {
+                setApproverUser({
+                  id: approvator.userId,
+                  username: approvator.username
+                });
+              } else {
+                // Fallback to admin service
+                const user = await adminService.getUserById(formData.approvalUserId);
+                setApproverUser({
+                  id: user.id,
+                  username: user.username,
+                  firstName: user.firstName,
+                  lastName: user.lastName
+                });
+              }
+            } catch (error) {
+              console.error('Error fetching user information:', error);
+              // Set fallback with just the ID
+              setApproverUser({
+                id: formData.approvalUserId,
+                username: `User ID: ${formData.approvalUserId}`
+              });
+            }
+          } else if (formData.approvalType === 'group' && formData.approvalGroupId) {
+            try {
+              const group = await approvalService.getApprovalGroup(formData.approvalGroupId);
+              setApproverGroup({
+                id: group.id,
+                name: group.name
+              });
+            } catch (error) {
+              console.error('Error fetching group information:', error);
+              // Set fallback with just the ID
+              setApproverGroup({
+                id: formData.approvalGroupId,
+                name: `Group ID: ${formData.approvalGroupId}`
+              });
+            }
+          }
+        }
+
+      } catch (error) {
+        console.error('Error fetching step review data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [formData.currentStatusId, formData.nextStatusId, formData.approvalUserId, formData.approvalGroupId, formData.requiresApproval, formData.approvalType]);
 
   return (
     <div className="w-full max-w-xl mx-auto">
@@ -59,7 +182,15 @@ const StepReview: React.FC = () => {
               <Badge variant="outline" className="bg-green-500/20 text-green-300 border-green-500/30 text-xs px-2 py-1">
                 Current Status
               </Badge>
-              <p className="text-xs text-slate-400 mt-1">Initial</p>
+              <p className="text-xs text-slate-400 mt-1">
+                {isLoading ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : currentStatus ? (
+                  currentStatus.title || currentStatus.name
+                ) : (
+                  'Status not found'
+                )}
+              </p>
             </div>
 
             <ArrowRight className="w-4 h-4 text-slate-400 mx-2" />
@@ -68,7 +199,15 @@ const StepReview: React.FC = () => {
               <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs px-2 py-1">
                 Next Status
               </Badge>
-              <p className="text-xs text-slate-400 mt-1">Target</p>
+              <p className="text-xs text-slate-400 mt-1">
+                {isLoading ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : nextStatus ? (
+                  nextStatus.title || nextStatus.name
+                ) : (
+                  'Status not found'
+                )}
+              </p>
             </div>
           </div>
         </div>
@@ -111,7 +250,13 @@ const StepReview: React.FC = () => {
 
                     <div className="mt-1">
                       <span className="text-xs text-slate-400">
-                        Group ID: {formData.approvalGroupId}
+                        {isLoading ? (
+                          <span className="animate-pulse">Loading group...</span>
+                        ) : approverGroup ? (
+                          `Group: ${approverGroup.name}`
+                        ) : (
+                          `Group ID: ${formData.approvalGroupId}`
+                        )}
                       </span>
                     </div>
                   </div>
@@ -131,7 +276,17 @@ const StepReview: React.FC = () => {
 
                     <div className="mt-1">
                       <span className="text-xs text-slate-400">
-                        User ID: {formData.approvalUserId}
+                        {isLoading ? (
+                          <span className="animate-pulse">Loading user...</span>
+                        ) : approverUser ? (
+                          `Approver: ${approverUser.username}${
+                            approverUser.firstName && approverUser.lastName 
+                              ? ` (${approverUser.firstName} ${approverUser.lastName})` 
+                              : ''
+                          }`
+                        ) : (
+                          `User ID: ${formData.approvalUserId}`
+                        )}
                       </span>
                     </div>
                   </div>

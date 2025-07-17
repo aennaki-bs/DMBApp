@@ -338,13 +338,13 @@ export const StepStatusSelection = () => {
                       disabled={isLoadingStatuses}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-9 bg-slate-800/60 border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white rounded-lg transition-all duration-200 hover:bg-slate-800/80">
+                        <SelectTrigger className="h-15 bg-slate-800/60 border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white rounded-lg transition-all duration-200 hover:bg-slate-800/80">
                           <SelectValue placeholder="Select current status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-slate-900/95 border-slate-700/50 backdrop-blur-md">
                         {isLoadingStatuses ? (
-                          <div className="flex items-center justify-center p-3">
+                          <div className="flex items-center justify-center p-2">
                             <Loader2 className="h-3 w-3 animate-spin text-blue-500 mr-2" />
                             <span className="text-sm text-slate-300">Loading statuses...</span>
                           </div>
@@ -392,7 +392,7 @@ export const StepStatusSelection = () => {
                       }
                     >
                       <FormControl>
-                        <SelectTrigger className="h-9 bg-slate-800/60 border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white rounded-lg transition-all duration-200 hover:bg-slate-800/80">
+                        <SelectTrigger className="h-15 bg-slate-800/60 border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white rounded-lg transition-all duration-200 hover:bg-slate-800/80">
                           <SelectValue placeholder="Select next status" />
                         </SelectTrigger>
                       </FormControl>

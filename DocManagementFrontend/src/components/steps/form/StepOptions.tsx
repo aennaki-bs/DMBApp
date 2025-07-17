@@ -54,40 +54,36 @@ export const StepOptions = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Determine initial approvalType from formData
-  const initialApprovalType = formData.approvalUserId
-    ? "user"
-    : formData.approvalGroupId
-      ? "group"
-      : null;
-
-  // Initialize form BEFORE any useEffect that depends on it
+  // Initialize form with formData values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       requiresApproval: formData.requiresApproval || false,
-      approvalType: initialApprovalType,
+      approvalType: formData.approvalType || null,
       approvalUserId: formData.approvalUserId || null,
       approvalGroupId: formData.approvalGroupId || null,
     },
     mode: "onChange",
   });
 
-  // Sync form values with context data when formData changes (especially in edit mode)
+  // Only sync form on mount or when entering edit mode
   useEffect(() => {
-    if (isEditMode && formData.requiresApproval) {
-      form.setValue("requiresApproval", formData.requiresApproval);
-      if (formData.approvalType) {
-        form.setValue("approvalType", formData.approvalType);
+    if (isEditMode) {
+      // Determine approval type from formData
+      let approvalType = formData.approvalType;
+      if (!approvalType && formData.approvalUserId) {
+        approvalType = "user";
+      } else if (!approvalType && formData.approvalGroupId) {
+        approvalType = "group";
       }
-      if (formData.approvalUserId) {
-        form.setValue("approvalUserId", formData.approvalUserId);
-      }
-      if (formData.approvalGroupId) {
-        form.setValue("approvalGroupId", formData.approvalGroupId);
-      }
+
+      // Set form values without resetting
+      form.setValue("requiresApproval", formData.requiresApproval || false);
+      form.setValue("approvalType", approvalType);
+      form.setValue("approvalUserId", formData.approvalUserId || null);
+      form.setValue("approvalGroupId", formData.approvalGroupId || null);
     }
-  }, [formData, isEditMode, form]);
+  }, [isEditMode]); // Only run when entering edit mode
 
   // Register this form with the parent provider for validation
   useEffect(() => {
@@ -124,28 +120,20 @@ export const StepOptions = () => {
 
   const handleApprovalTypeChange = (type: "individual" | "group") => {
     const approvalType = type === "individual" ? "user" : "group";
-    console.log("Changing approval type to:", approvalType);
 
+    // Update form values
     form.setValue("approvalType", approvalType);
     setValidationError(null);
 
-    // Reset the previous values when changing type
-    if (type === "individual") {
-      form.setValue("approvalGroupId", null);
-    } else {
-      form.setValue("approvalUserId", null);
-    }
-
+    // Update formData
     setFormData({
       approvalType,
-      approvalUserId:
-        type === "individual" ? formData.approvalUserId : undefined,
+      approvalUserId: type === "individual" ? formData.approvalUserId : undefined,
       approvalGroupId: type === "group" ? formData.approvalGroupId : undefined,
     });
   };
 
-  const onRequiresApprovalChange = (checked: boolean) => {
-    console.log("Requires approval changed:", checked);
+  const onRequiresApprovalChange = (checked: boolean) => {    
     form.setValue("requiresApproval", checked);
     setValidationError(null);
 
@@ -154,7 +142,6 @@ export const StepOptions = () => {
       form.setValue("approvalUserId", null);
       form.setValue("approvalGroupId", null);
 
-      // Update form data when turning off approval
       setFormData({
         requiresApproval: checked,
         approvalType: undefined,
@@ -162,46 +149,32 @@ export const StepOptions = () => {
         approvalGroupId: undefined,
       });
     } else {
-      // When turning on approval, ensure there's a default approval type
-      const currentType = form.getValues("approvalType");
-      if (!currentType) {
-        form.setValue("approvalType", "user");
-        setFormData({
-          requiresApproval: checked,
-          approvalType: "user",
-        });
-      } else {
-        setFormData({
-          requiresApproval: checked,
-          approvalType: currentType,
-        });
-      }
+      const currentType = formData.approvalType || "user";
+      form.setValue("approvalType", currentType);
+      setFormData({
+        requiresApproval: checked,
+        approvalType: currentType,
+        approvalUserId: currentType === "user" ? formData.approvalUserId : undefined,
+        approvalGroupId: currentType === "group" ? formData.approvalGroupId : undefined,
+      });
     }
   };
 
-  const onUserSelected = (userId: number | undefined) => {
-    console.log("User selected in parent:", userId);
+  const onUserSelected = (userId: number | undefined) => {    
     form.setValue("approvalUserId", userId || null);
-    // Use the updated form state to set form data
     setFormData({
       approvalUserId: userId,
-      // Explicitly set approvalType to make sure it's updated
       approvalType: "user",
-      // Clear any group selection
       approvalGroupId: undefined,
     });
     setValidationError(null);
   };
 
-  const onGroupSelected = (groupId: number | undefined) => {
-    console.log("Group selected in parent:", groupId);
+  const onGroupSelected = (groupId: number | undefined) => {    
     form.setValue("approvalGroupId", groupId || null);
-    // Use the updated form state to set form data
     setFormData({
       approvalGroupId: groupId,
-      // Explicitly set approvalType to make sure it's updated
       approvalType: "group",
-      // Clear any user selection
       approvalUserId: undefined,
     });
     setValidationError(null);
@@ -210,8 +183,9 @@ export const StepOptions = () => {
   // Convert approval type from form format to component format
   const getApprovalTypeForComponent = () => {
     const type = form.watch("approvalType");
-    console.log("Current approval type:", type);
-    return type === "user" ? "individual" : "group";
+    if (type === "user") return "individual";
+    if (type === "group") return "group";
+    return "individual"; // Default fallback
   };
 
   const requiresApproval = form.watch("requiresApproval");
@@ -317,6 +291,7 @@ export const StepOptions = () => {
                                 onGroupSelected={onGroupSelected}
                                 approvalType={getApprovalTypeForComponent()}
                                 onApprovalTypeChange={handleApprovalTypeChange}
+                                disabled={false}
                               />
 
                               {validationError && (

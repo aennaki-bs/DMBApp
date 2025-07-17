@@ -207,11 +207,11 @@ export function DocumentFlowMindMap({
                     </div>
                   </CardContent>
                 </Card>
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-10">
+                {/* <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-10">
                   <div className="w-6 h-6 rounded-full bg-blue-900 flex items-center justify-center">
                     <ChevronRight className="h-4 w-4 text-blue-300" />
                   </div>
-                </div>
+                </div> */}
               </motion.div>
             ))
           ) : (
@@ -298,7 +298,7 @@ export function DocumentFlowMindMap({
                         : currentStatus.isComplete 
                         ? (requiresApproval || hasPendingApprovals) 
                           ? "Waiting for Approval" 
-                          : "In Progress" 
+                          : (nextSteps.length === 0 ? "Complete" : "In Progress")
                         : "In Progress"}
                     </Badge>
                   </div>
