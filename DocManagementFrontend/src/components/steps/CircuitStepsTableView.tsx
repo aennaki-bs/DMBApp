@@ -15,9 +15,12 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
-import SmartPagination from "@/components/shared/SmartPagination";
+import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
 import { usePagination } from "@/hooks/usePagination";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { Step } from "@/models/step";
+import stepService from "@/services/stepService";
+import { toast } from "sonner";
 
 // Enhanced step type with approval display information
 interface EnhancedStep extends Step {
@@ -41,9 +44,6 @@ interface Circuit {
 
 interface CircuitStepsTableViewProps {
     steps: Step[];
-    selectedSteps: number[];
-    onSelectStep: (id: number, checked: boolean) => void;
-    onSelectAll: (checked: boolean) => void;
     onEdit: (step: Step) => void;
     onDelete: (step: Step) => void;
     searchQuery: string;
@@ -54,13 +54,11 @@ interface CircuitStepsTableViewProps {
     isSimpleUser?: boolean;
     circuit?: Circuit;
     searchStats?: { totalResults: number; searchTime: number };
+    onRefetch: () => void;
 }
 
 export function CircuitStepsTableView({
     steps,
-    selectedSteps,
-    onSelectStep,
-    onSelectAll,
     onEdit,
     onDelete,
     searchQuery,
@@ -71,6 +69,7 @@ export function CircuitStepsTableView({
     isSimpleUser = false,
     circuit,
     searchStats,
+    onRefetch,
 }: CircuitStepsTableViewProps) {
     const [sortBy, setSortBy] = useState("title");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -116,6 +115,25 @@ export function CircuitStepsTableView({
         initialPageSize: 25,
     });
 
+    // Use bulk selection hook
+    const bulkSelection = useBulkSelection<Step>({
+        data: sortedSteps,
+        paginatedData: paginatedSteps,
+        currentPage,
+        pageSize,
+        keyField: "id",
+    });
+
+    // Debug logging to help identify selection issues
+    console.log("CircuitStepsTableView - Selection Debug:", {
+        selectedCount: bulkSelection.selectedCount,
+        currentPageSelectedCount: bulkSelection.currentPageSelectedCount,
+        isCurrentPageFullySelected: bulkSelection.isCurrentPageFullySelected,
+        isIndeterminate: bulkSelection.isIndeterminate,
+        paginatedStepsLength: paginatedSteps.length,
+        selectedItems: bulkSelection.selectedItems,
+    });
+
     // Handle sorting
     const handleSort = (field: string) => {
         if (sortBy === field) {
@@ -139,19 +157,6 @@ export function CircuitStepsTableView({
         ) : (
             <ArrowDown className="h-3.5 w-3.5 ml-1.5 text-blue-300" />
         );
-    };
-
-    // Check if all current page steps are selected
-    const currentPageSteps = paginatedSteps;
-    const currentPageSelectedCount = currentPageSteps.filter(step => selectedSteps.includes(step.id)).length;
-    const isAllCurrentPageSelected = currentPageSteps.length > 0 && currentPageSelectedCount === currentPageSteps.length;
-    const isIndeterminate = currentPageSelectedCount > 0 && currentPageSelectedCount < currentPageSteps.length;
-
-    const handleSelectAllCurrentPage = () => {
-        const allSelected = isAllCurrentPageSelected;
-        currentPageSteps.forEach(step => {
-            onSelectStep(step.id, !allSelected);
-        });
     };
 
     // Check if there are filtered results vs no steps at all
@@ -318,6 +323,41 @@ export function CircuitStepsTableView({
         );
     }
 
+    // Handle bulk delete
+    const handleBulkDelete = async () => {
+        if (isCircuitActive) {
+            toast.error("Cannot delete steps from an active circuit");
+            return;
+        }
+
+        try {
+            const selectedObjects = bulkSelection.getSelectedObjects();
+            const selectedCount = selectedObjects.length;
+            const selectedStepIds = selectedObjects.map(step => step.id);
+            
+            await stepService.deleteMultipleSteps(selectedStepIds);
+            bulkSelection.clearSelection();
+            onRefetch();
+            toast.success(`${selectedCount} steps deleted successfully`);
+        } catch (error) {
+            console.error("Failed to delete steps:", error);
+            toast.error("Failed to delete selected steps");
+        }
+    };
+
+    // Define bulk actions - hide completely when circuit is active or user is SimpleUser
+    const bulkActions: BulkAction[] = (isCircuitActive || isSimpleUser) ? [] : [
+        {
+            id: 'delete',
+            label: 'Delete Steps',
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive',
+            onClick: handleBulkDelete,
+            requiresConfirmation: true,
+            shortcut: 'Del',
+        },
+    ];
+
     return (
         <div className="h-full flex flex-col gap-6 w-full" style={{ minHeight: "100%" }}>
             {/* Professional Search Bar - matching Circuit Statuses page exactly */}
@@ -399,9 +439,9 @@ export function CircuitStepsTableView({
                                         <TableHead className="w-[48px] text-center">
                                             <div className="flex items-center justify-center">
                                                 <ProfessionalCheckbox
-                                                    checked={!isCircuitActive && !isSimpleUser && isAllCurrentPageSelected}
-                                                    indeterminate={!isCircuitActive && !isSimpleUser && isIndeterminate}
-                                                    onCheckedChange={handleSelectAllCurrentPage}
+                                                    checked={!isCircuitActive && !isSimpleUser && bulkSelection.isCurrentPageFullySelected}
+                                                    indeterminate={!isCircuitActive && !isSimpleUser && bulkSelection.isIndeterminate}
+                                                    onCheckedChange={bulkSelection.toggleSelectCurrentPage}
                                                     size="md"
                                                     variant="header"
                                                     className="shadow-lg"
@@ -462,7 +502,7 @@ export function CircuitStepsTableView({
                                 <Table className="table-fixed w-full">
                                     <TableBody>
                                         {paginatedSteps.map((step) => {
-                                            const isSelected = selectedSteps.includes(step.id);
+                                            const isSelected = bulkSelection.isSelected(step);
                                             return (
                                                 <TableRow
                                                     key={step.id}
@@ -475,7 +515,7 @@ export function CircuitStepsTableView({
                                                                 checked={isSelected}
                                                                 onCheckedChange={(checked) => {
                                                                     if (!isCircuitActive && !isSimpleUser) {
-                                                                        onSelectStep(step.id, !!checked);
+                                                                        bulkSelection.toggleItem(step);
                                                                     }
                                                                 }}
                                                                 size="md"
@@ -626,15 +666,17 @@ export function CircuitStepsTableView({
                 </div>
             </div>
 
-            {/* Pagination */}
+            {/* Pagination with Bulk Actions */}
             {sortedSteps.length > 0 && (
-                <SmartPagination
+                <PaginationWithBulkActions
                     currentPage={currentPage}
                     totalPages={totalPages}
                     pageSize={pageSize}
                     totalItems={totalItems}
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
+                    bulkSelection={bulkSelection}
+                    bulkActions={bulkActions}
                 />
             )}
         </div>

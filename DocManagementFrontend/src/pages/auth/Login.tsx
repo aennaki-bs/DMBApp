@@ -737,7 +737,9 @@ const Login = () => {
         >
           <div className="h-full bg-gradient-to-br from-[#122259]/20 to-[#0f1642]/20 backdrop-blur-sm border border-blue-900/20 rounded-xl p-8 flex flex-col justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-blue-100">DocuVerse</h2>
+              <h2 className="text-2xl font-bold text-blue-100">
+                Document Management <span className="text-docuBlue">Verse</span>
+              </h2>
               <p className="text-blue-300 mt-2">
                 Your complete document management solution
               </p>

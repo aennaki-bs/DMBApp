@@ -186,8 +186,8 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
             <path d="M12 8h.01" />
           </svg>
           {userType === "personal" 
-            ? "CIN (National Identity Card) is used for user identification in the system." 
-            : "Registration Number is used for company identification in the system."
+            ? "CIN (National Identity Card)" 
+            : "Registration Number is used for company identification."
           }
         </p>
       </div>

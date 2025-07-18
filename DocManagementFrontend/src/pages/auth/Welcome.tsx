@@ -138,7 +138,7 @@ const Welcome = () => {
               )}
 
               <p className="text-blue-600 dark:text-blue-200/80 text-center text-sm px-4">
-                Thank you for joining DocuVerse! You can now sign in to your
+                Thank you for joining DMV! You can now sign in to your
                 account and start managing your documents securely.
               </p>
             </div>
@@ -157,7 +157,7 @@ const Welcome = () => {
         </Card>
 
         <div className="mt-4 text-center text-blue-400/50 text-xs relative z-10">
-          DocuVerse Enterprise ERP System &copy; {new Date().getFullYear()}
+          DMV. Document Management Verse &copy; {new Date().getFullYear()}
         </div>
       </div>
     </div>

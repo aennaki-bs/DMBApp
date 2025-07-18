@@ -25,7 +25,7 @@ const DocuVerseLogo: React.FC<DocuVerseLogoProps> = ({ className, ...props }) =>
           <line x1="10" y1="9" x2="8" y2="9" />
         </svg>
         <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">
-          D.M.<span className="text-docuBlue">Verse</span>
+          DM<span className="text-docuBlue">V</span>
         </span>
       </div>
     </div>

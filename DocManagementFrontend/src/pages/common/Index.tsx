@@ -179,7 +179,7 @@ const Index = () => {
             <div className="mb-4 md:mb-0">
               <DocuVerseLogo className="h-8 w-auto" />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                &copy; 2023 DocuVerse. All rights reserved.
+                &copy; 2025 DMV. All rights reserved.
               </p>
             </div>
             <div className="flex space-x-6">

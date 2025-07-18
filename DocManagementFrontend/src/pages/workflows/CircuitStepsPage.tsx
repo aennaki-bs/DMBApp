@@ -20,7 +20,6 @@ export default function CircuitStepsPage() {
 
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [selectedStep, setSelectedStep] = useState<Step | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -29,15 +28,11 @@ export default function CircuitStepsPage() {
     steps,
     searchQuery,
     searchField,
-    selectedSteps,
     apiError,
     isLoading,
     isError,
     setSearchQuery,
     setSearchField,
-    handleStepSelection,
-    handleSelectAll,
-    setSelectedSteps,
     refetchSteps,
     searchStats
   } = useCircuitSteps(circuitId);
@@ -80,36 +75,6 @@ export default function CircuitStepsPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleBulkDelete = async () => {
-    if (isCircuitActive) {
-      toast.error("Cannot delete steps from an active circuit");
-      return;
-    }
-
-    if (selectedSteps.length === 0) {
-      toast.error("No steps selected for deletion");
-      return;
-    }
-
-    setBulkDeleteDialogOpen(true);
-  };
-
-  const confirmBulkDelete = async () => {
-    try {
-      setIsDeleting(true);
-      setBulkDeleteDialogOpen(false);
-      await stepService.deleteMultipleSteps(selectedSteps);
-      setSelectedSteps([]);
-      refetchSteps();
-      toast.success(`Successfully deleted ${selectedSteps.length} steps`);
-    } catch (error) {
-      console.error('Failed to delete steps:', error);
-      toast.error('Failed to delete selected steps');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   // Page actions
   const pageActions = [
     {
@@ -138,16 +103,9 @@ export default function CircuitStepsPage() {
     },
   ];
 
-  // Add bulk actions when steps are selected
-  const bulkActions = selectedSteps.length > 0 && !isCircuitActive && !isSimpleUser ? [
-    {
-      label: `Delete ${selectedSteps.length} Steps`,
-      variant: "destructive" as const,
-      onClick: handleBulkDelete,
-    }
-  ] : [];
-
-  const allActions = [...pageActions, ...bulkActions];
+  // Remove bulk actions from top - they'll be in the bottom bulk action bar now
+  
+  const allActions = [...pageActions];
 
   // If circuit not found
   if (!isLoading && !isError && !circuit) {
@@ -180,9 +138,6 @@ export default function CircuitStepsPage() {
     >
       <CircuitStepsTableView
         steps={steps}
-        selectedSteps={selectedSteps}
-        onSelectStep={handleStepSelection}
-        onSelectAll={handleSelectAll}
         onEdit={handleEditStep}
         onDelete={handleDeleteStep}
         searchQuery={searchQuery}
@@ -193,6 +148,7 @@ export default function CircuitStepsPage() {
         isSimpleUser={isSimpleUser}
         circuit={circuit}
         searchStats={searchStats}
+        onRefetch={refetchSteps}
       />
 
       <StepFormDialog
@@ -212,17 +168,6 @@ export default function CircuitStepsPage() {
           onSuccess={refetchSteps}
         />
       )}
-
-      <DeleteStepDialog
-        open={bulkDeleteDialogOpen}
-        onOpenChange={setBulkDeleteDialogOpen}
-        stepId={0}
-        stepTitle={`${selectedSteps.length} selected steps`}
-        onSuccess={refetchSteps}
-        onConfirm={confirmBulkDelete}
-        isBulk={true}
-        count={selectedSteps.length}
-      />
     </PageLayout>
   );
 }

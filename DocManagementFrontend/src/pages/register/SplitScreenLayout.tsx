@@ -409,10 +409,10 @@ const SplitScreenLayout = () => {
               className="mb-8"
             >
               <h2 className="text-3xl font-bold text-white mb-3">
-                Welcome to DocuVerse
+                Welcome to DM<span className="text-docuBlue">V</span>
               </h2>
               <p className="text-xl text-blue-200">
-                Document Management System
+                Document Management Verse
               </p>
               <motion.div
                 className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500 mt-4 rounded-full"

@@ -67,7 +67,7 @@ export function RoleStep({ form }: RoleStepProps) {
                       features={[
                         t("userManagement.documentCreation"),
                         t("userManagement.workflowApproval"),
-                        t("userManagement.reportingAccess")
+                        // t("userManagement.reportingAccess")
                       ]}
                       icon={<Users className="h-5 w-5" />}
                       color="bg-emerald-900/20 border-emerald-800/30 hover:bg-emerald-900/30"
@@ -85,7 +85,7 @@ export function RoleStep({ form }: RoleStepProps) {
                       description={t("userManagement.simpleUserDescription")}
                       features={[
                         t("userManagement.viewEditDocs"),
-                        t("userManagement.basicWorkflowParticipation"),
+                        // t("userManagement.basicWorkflowParticipation"),
                         t("userManagement.limitedFeatureAccess")
                       ]}
                       icon={<User className="h-5 w-5" />}

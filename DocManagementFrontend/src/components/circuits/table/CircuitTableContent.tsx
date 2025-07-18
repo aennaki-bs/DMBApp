@@ -5,7 +5,7 @@ import { CircuitTableBody } from "./CircuitTableBody";
 import { CircuitTableEmpty } from "./CircuitTableEmpty";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
-import { Loader2, Edit, Trash2, GitBranch } from "lucide-react";
+import { Loader2, Trash2, GitBranch } from "lucide-react";
 import { BulkSelectionState } from "@/hooks/useBulkSelection";
 
 interface CircuitTableContentProps {
@@ -30,7 +30,6 @@ interface CircuitTableContentProps {
     sortDirection: string;
     onSort: (field: string) => void;
     onClearFilters: () => void;
-    onBulkEdit?: () => void;
     onBulkDelete?: () => void;
     onCreateCircuit?: () => void;
     isLoading?: boolean;
@@ -53,7 +52,6 @@ export function CircuitTableContent({
     sortDirection,
     onSort,
     onClearFilters,
-    onBulkEdit,
     onBulkDelete,
     onCreateCircuit,
     isLoading = false,
@@ -73,16 +71,8 @@ export function CircuitTableContent({
     // Check if we have circuits to display
     const hasCircuits = circuits && circuits.length > 0;
 
-    // Define bulk actions
+    // Define bulk actions - only delete, no edit
     const bulkActions: BulkAction[] = [
-        {
-            id: 'edit',
-            label: 'Edit Circuits',
-            icon: <Edit className="h-4 w-4" />,
-            variant: 'outline',
-            onClick: () => onBulkEdit?.(),
-            shortcut: 'E',
-        },
         {
             id: 'delete',
             label: 'Delete Circuits',

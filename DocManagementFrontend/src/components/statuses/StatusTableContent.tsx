@@ -4,7 +4,7 @@ import { StatusTableBody } from "./StatusTableBody";
 import { StatusTableEmpty } from "./StatusTableEmpty";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
-import { Loader2, Edit, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { BulkSelectionState } from "@/hooks/useBulkSelection";
 
 interface StatusTableContentProps {
@@ -25,7 +25,6 @@ interface StatusTableContentProps {
     sortDirection: string;
     onSort: (field: string) => void;
     onClearFilters: () => void;
-    onBulkEdit?: () => void;
     onBulkDelete?: () => void;
     isLoading?: boolean;
     isError?: boolean;
@@ -43,7 +42,6 @@ export function StatusTableContent({
     sortDirection,
     onSort,
     onClearFilters,
-    onBulkEdit,
     onBulkDelete,
     isLoading = false,
     isError = false,
@@ -64,14 +62,6 @@ export function StatusTableContent({
 
     // Define bulk actions - hide completely when circuit is active
     const bulkActions: BulkAction[] = isCircuitActive ? [] : [
-        {
-            id: 'edit',
-            label: 'Bulk Edit',
-            icon: <Edit className="h-4 w-4" />,
-            variant: 'outline',
-            onClick: () => onBulkEdit?.(),
-            shortcut: 'E',
-        },
         {
             id: 'delete',
             label: 'Delete Statuses',

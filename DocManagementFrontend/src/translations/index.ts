@@ -744,7 +744,7 @@ export const translations = {
       // Simple User role
       simpleUserRole: "Simple User",
       simpleUserDescription: "Basic access with limited permissions",
-      viewEditDocs: "View and edit own documents",
+      viewEditDocs: "View documents and workflows",
       basicWorkflowParticipation: "Basic workflow participation",
       limitedFeatureAccess: "Limited feature access",
       // Account Details Step

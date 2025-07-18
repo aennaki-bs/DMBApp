@@ -220,15 +220,6 @@ export default function CircuitStatusesPage() {
     toast.success("Status deleted successfully");
   };
 
-  const handleBulkEdit = async () => {
-    if (circuit.isActive) {
-      toast.error("Cannot edit statuses in active circuit");
-      return;
-    }
-
-    toast.info("Bulk edit functionality coming soon");
-  };
-
   const handleBulkDelete = async () => {
     if (circuit.isActive) {
       toast.error("Cannot delete statuses in active circuit");
@@ -414,7 +405,6 @@ export default function CircuitStatusesPage() {
             sortDirection={sortDirection}
             onSort={handleSort}
             onClearFilters={handleClearAllFilters}
-            onBulkEdit={handleBulkEdit}
             onBulkDelete={handleBulkDelete}
             isLoading={isLoading}
             isError={isError}

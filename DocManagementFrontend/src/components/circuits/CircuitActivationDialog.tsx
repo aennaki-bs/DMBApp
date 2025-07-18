@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, ChevronRight } from "lucide-react";
 import circuitService from "@/services/circuitService";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CircuitActivationDialogProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ const CircuitActivationDialog = ({
   circuit,
   onActivate,
 }: CircuitActivationDialogProps) => {
+  const queryClient = useQueryClient();
   const [circuitStatuses, setCircuitStatuses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -57,9 +59,12 @@ const CircuitActivationDialog = ({
     setIsLoading(true);
     try {
       await circuitService.toggleCircuitActivation(circuit);
+      
+      // Invalidate circuits query to trigger automatic refresh
+      await queryClient.invalidateQueries({ queryKey: ['circuits'] });
+      
       toast.success("Circuit activated successfully");
-      onActivate();
-      onClose();
+      onActivate(); // This will trigger refresh in parent component
     } catch (error) {
       console.error("Error activating circuit:", error);
       toast.error(
@@ -67,6 +72,7 @@ const CircuitActivationDialog = ({
       );
     } finally {
       setIsLoading(false);
+      onClose(); // Close dialog after operation (success or failure)
     }
   };
 

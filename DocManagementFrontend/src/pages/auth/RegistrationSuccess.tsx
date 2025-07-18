@@ -108,7 +108,7 @@ const RegistrationSuccess = () => {
 
           <div className="space-y-4 mb-6 w-full">
             <p className="text-blue-300 text-center">
-              Thank you for joining DocuVerse Enterprise ERP System!
+              Thank you for joining DMV. Document Management Verse!
             </p>
 
             <div className="bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-lg p-4 text-sm text-blue-300 shadow-lg">

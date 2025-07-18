@@ -142,7 +142,7 @@ export function PasswordStep({
                     </Button>
                   </div>
                 </FormControl>
-                <FormMessage className="text-red-300" />
+                {/* <FormMessage className="text-red-300" /> */}
                 {/* Password match indicator */}
                 {confirmPassword && password && (
                   <div className="flex items-center gap-2 text-sm">

@@ -43,9 +43,9 @@ export function ResponsibilityCentreStep({ form }: ResponsibilityCentreStepProps
                     className="w-full"
                   />
                 </FormControl>
-                <FormDescription className="text-blue-400/80 text-sm">
+                {/* <FormDescription className="text-blue-400/80 text-sm">
                   Assign the user to a specific responsibility centre. This determines their access scope and organizational context. You can leave this empty if no specific assignment is needed.
-                </FormDescription>
+                </FormDescription> */}
                 <FormMessage />
               </FormItem>
             )}
@@ -53,7 +53,7 @@ export function ResponsibilityCentreStep({ form }: ResponsibilityCentreStepProps
         </div>
       </div>
 
-      <div className="bg-blue-900/30 rounded-lg p-4 text-sm text-blue-300 border border-blue-800/30 flex items-start gap-3">
+      {/* <div className="bg-blue-900/30 rounded-lg p-4 text-sm text-blue-300 border border-blue-800/30 flex items-start gap-3">
         <Info className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
         <div>
           <p className="font-medium mb-1">About Responsibility Centres</p>
@@ -64,7 +64,7 @@ export function ResponsibilityCentreStep({ form }: ResponsibilityCentreStepProps
             based on their role permissions.
           </p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 } 

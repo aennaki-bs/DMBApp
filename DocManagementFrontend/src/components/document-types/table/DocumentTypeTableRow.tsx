@@ -236,12 +236,7 @@ export const DocumentTypeTableRow = ({
                     <span className="underline-offset-4 group-hover:underline">
                       {getDisplayTypeName(type.typeName)}
                     </span>
-                    {/* Show document count if there are documents */}
-                    {type.documentCounter && type.documentCounter > 0 && (
-                      <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded-full">
-                        {type.documentCounter}
-                      </span>
-                    )}
+
                   </span>
                 </Button>
               </TooltipTrigger>
