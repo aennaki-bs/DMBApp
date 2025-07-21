@@ -3,6 +3,7 @@ import { GitBranch, Plus } from "lucide-react";
 import { useState } from "react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import CreateCircuitDialog from "@/components/circuits/CreateCircuitDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CircuitEmptyStateProps {
   searchQuery?: string;
@@ -15,12 +16,22 @@ export function CircuitEmptyState({
   statusFilter,
   isSimpleUser,
 }: CircuitEmptyStateProps) {
+  const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const hasFilters = searchQuery || (statusFilter && statusFilter !== "any");
 
-  const handleCircuitCreated = () => {
-    // This will trigger a refresh in the parent component
-    window.location.reload();
+  const handleCircuitCreated = async () => {
+    // Use React Query cache invalidation for automatic refresh
+    await queryClient.invalidateQueries({
+      queryKey: ['circuits'],
+      exact: false
+    });
+
+    // Also refetch for immediate UI update
+    await queryClient.refetchQueries({
+      queryKey: ['circuits'],
+      exact: false
+    });
   };
 
   return (

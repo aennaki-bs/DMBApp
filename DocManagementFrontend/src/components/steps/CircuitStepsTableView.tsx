@@ -433,7 +433,7 @@ export function CircuitStepsTableView({
                     {/* Fixed Header - Never Scrolls */}
                     <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
                         <div className="min-w-[1000px]">
-                            <Table className="table-fixed w-full">
+                            <Table className="table-fixed w-full table-compact">
                                 <TableHeader>
                                     <TableRow className="border-slate-200/50 dark:border-slate-700/50 hover:bg-transparent">
                                         <TableHead className="w-[48px] text-center">
@@ -499,7 +499,7 @@ export function CircuitStepsTableView({
                     >
                         <ScrollArea className="table-scroll-area h-full w-full">
                             <div className="min-w-[1000px] pb-4">
-                                <Table className="table-fixed w-full">
+                                <Table className="table-fixed w-full table-compact">
                                     <TableBody>
                                         {paginatedSteps.map((step) => {
                                             const isSelected = bulkSelection.isSelected(step);

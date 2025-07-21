@@ -1,46 +1,24 @@
-sgnup
-first step redendence
-username issue && email
-/ in email verif
-message in resend code
-list d'archivache
-documentType cretaion add the type number as type
-dont display the will be autogenrated
-after delete circuit
-
-role display
-documentType_> typenumber, filter.
-key->code
-mask type code
-status in series
-mask code circuit and title->description
-status filter remove flexible
-creation buttons should be one
-step2 in creation step improve the UI
-approver check
-
-impact of desactivation of a circuit
-
-line eliment -> basic data
-remove the navebar
-element type code -> should be 
-remove tablename
-remove the select step in element
-
-structure homogene
-
-approval history filter by user
-
-change the app name DocumentManagementVerse DMVerse
- change basic objects to basic data
- fix filters problems (all)
- add inactive filter in series
- nav bar duplicated user loged info (khali gir 1 o kabar image)
- mask code from tables ather then (documents, series, responsibilityCenters, Basic data)
- fix duplicate notifications problem
- add button from steps to statueses
- auto refresh after assigning approval to step
- approval group remove rule from search
- desactivat bulk when actions is also desactivated
-
  
+☐ add search in create lines
+☐ * option thol bach tchof kamlin fi sign up to see all data
+☐ * add info for the id/user name in edit action --usermanagment
+☐ * show pagination (all) option .
+☐ * the ui fixing table lines be smaller.
+☐ * propose the type tier in creation document type () .
+☐ * add role in any control count of user that nesseserly approve (count )
+☐ * add role that nesseserly approve by specefic approbatur(s) ()
+☐ * assign circuit in creation 
+☐ * controle for lines befor go to the next status and in approvment also need to check the doc berof approve
+☐ * the document will be untouchable when i wait for the improvment
+☐ * VAT -> auto by item () and the auther data (prix ...)
+☐ * choisire the element and fill data pricing in same form without split it
+☐ * add in approval requested / pinding approvales
+
+
+☐ * show the curent step in header
+☐ * add bulk to lines ==> add option that make it list
+☐ * make the ui better to view all easy
+☐ * make the colors auminimum
+☐ * approvation par center de gestion
+✔ * auto refresh - circuit @done(25-07-21 14:45)
+☐ * amelioration in creation and select the filed obligatoir

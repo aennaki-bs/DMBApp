@@ -135,8 +135,8 @@ export function ApproversTableContent({
           <div className="relative h-full flex flex-col z-10">
             {/* Fixed Header - Never Scrolls */}
             <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
-              <div className="min-w-[876px]">
-                <Table className="table-fixed w-full">
+              <div className="min-w-[1000px]">
+                <Table className="table-fixed w-full table-compact">
                   <ApproversTableHeader
                     selectedCount={bulkSelection.currentPageSelectedCount}
                     totalCount={approvers?.filter(a => !a.allAssociations || a.allAssociations.length === 0).length || 0}
@@ -152,11 +152,11 @@ export function ApproversTableContent({
             {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
             <div
               className="flex-1 overflow-hidden"
-              style={{ maxHeight: "calc(100vh - 300px)" }}
+              style={{ maxHeight: "calc(100vh - 260px)" }}
             >
               <ScrollArea className="table-scroll-area h-full w-full">
-                <div className="min-w-[876px] pb-4">
-                  <Table className="table-fixed w-full">
+                <div className="min-w-[1000px] pb-4">
+                  <Table className="table-fixed w-full table-compact">
                     <ApproversTableBody
                       approvers={approvers || []}
                       selectedApprovers={selectedApprovers}

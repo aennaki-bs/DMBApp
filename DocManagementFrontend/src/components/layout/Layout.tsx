@@ -12,6 +12,7 @@ import { useSettings } from "@/context/SettingsContext";
 import ConnectionStatusIndicator from "@/components/shared/ConnectionStatusIndicator";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useTheme } from "@/context/ThemeContext";
+import { toast } from "sonner";
 
 // Predefined background options (same as in Settings)
 const backgroundOptions = [
@@ -83,6 +84,35 @@ export function Layout() {
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("backgroundChanged", handleCustomEvent);
+    };
+  }, []);
+
+  // Add session monitoring
+  useEffect(() => {
+    // Listen for token expiration events
+    const handleTokenExpired = (event: CustomEvent) => {
+      toast.error(event.detail.message || 'Your session has expired. Please log in again.', {
+        duration: 5000,
+        position: 'top-center',
+      });
+    };
+
+    // Listen for token refresh events
+    const handleTokenRefreshed = () => {
+      toast.success('Session refreshed successfully', {
+        duration: 2000,
+        position: 'bottom-right',
+      });
+    };
+
+    // Add event listeners
+    window.addEventListener('auth:tokenExpired', handleTokenExpired as EventListener);
+    window.addEventListener('auth:tokenRefreshed', handleTokenRefreshed);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('auth:tokenExpired', handleTokenExpired as EventListener);
+      window.removeEventListener('auth:tokenRefreshed', handleTokenRefreshed);
     };
   }, []);
 

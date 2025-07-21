@@ -82,7 +82,7 @@ export function StatusTable({
       {/* Fixed Header - Never Scrolls */}
       <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
         <div className="min-w-[700px]">
-          <Table className={cn("table-fixed w-full", className)}>
+          <Table className={cn("table-fixed w-full table-compact", className)}>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-primary/10">
                 {onSelectStatus && onSelectAll && (
@@ -121,9 +121,9 @@ export function StatusTable({
       </div>
 
       {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="flex-1 min-h-0" style={{ maxHeight: "calc(100vh - 260px)" }}>
         <div className="min-w-[700px]">
-          <Table className={cn("table-fixed w-full", className)}>
+          <Table className={cn("table-fixed w-full table-compact", className)}>
             <TableBody>
               {paginatedStatuses.map((status) => (
                 <TableRow

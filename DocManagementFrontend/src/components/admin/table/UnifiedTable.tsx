@@ -349,7 +349,7 @@ export function UnifiedTable<T>({
                     key={column.id}
                     className={cn(
                       columnWidth,
-                      "text-blue-300 font-semibold py-4 px-4 text-left",
+                      "text-blue-300 font-semibold py-2 px-3 text-left",
                       column.enableSorting &&
                       onSort &&
                       "cursor-pointer hover:text-blue-100 transition-colors duration-150"
@@ -377,7 +377,7 @@ export function UnifiedTable<T>({
       </div>
 
       {/* Scrollable Body - Only Content Scrolls */}
-      <ScrollArea className="h-[calc(100vh-420px)] min-h-[350px]">
+      <ScrollArea className="h-[calc(100vh-380px)] min-h-[400px]">
         <div className="min-w-[1200px]">
           <Table className="table-fixed w-full">
             <TableBody>
@@ -397,7 +397,7 @@ export function UnifiedTable<T>({
                     )}
                   >
                     {onSelectItems && (
-                      <TableCell className="w-[50px] py-4 px-4">
+                      <TableCell className="w-[50px] py-2 px-3">
                         <div className="flex items-center justify-center">
                           <ProfessionalCheckbox
                             checked={isSelected}
@@ -434,7 +434,7 @@ export function UnifiedTable<T>({
                           key={column.id}
                           className={cn(
                             columnWidth,
-                            "py-4 px-4 text-blue-100 align-middle",
+                            "py-2 px-3 text-blue-100 align-middle",
                             column.id === "actions"
                               ? "text-center"
                               : "text-left"

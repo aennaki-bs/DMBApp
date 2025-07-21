@@ -643,7 +643,7 @@ const DocumentTypes = () => {
           ) : (
             <div className="rounded-xl border border-primary/10 overflow-hidden bg-background/50 backdrop-blur-xl shadow-lg">
               <div className="overflow-x-auto">
-                <Table>
+                <Table className="table-compact">
                   <TableHeader className="bg-primary/5 sticky top-0 z-10">
                     <TableRow className="border-primary/10 hover:bg-primary/10">
                       {!isSimpleUser && (

@@ -326,7 +326,7 @@ const LineElementTypeManagement = ({
             {/* Fixed Header - Never Scrolls */}
             <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
               <div className="min-w-[800px]">
-                <Table className="table-fixed w-full">
+                <Table className="table-fixed w-full table-compact">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-none">
                       <TableHead className="w-12 text-foreground font-semibold">
@@ -354,7 +354,7 @@ const LineElementTypeManagement = ({
             <div className="flex-1 overflow-hidden" style={{ maxHeight: "calc(100vh - 300px)" }}>
               <ScrollArea className="h-full w-full">
                 <div className="min-w-[800px] pb-4">
-                  <Table className="table-fixed w-full">
+                  <Table className="table-fixed w-full table-compact">
                     <TableBody>
                       {paginatedElementTypes.map((elementType) => (
                         <TableRow

@@ -134,7 +134,7 @@ export function CustomersTableContent({
                         {/* Fixed Header - Never Scrolls */}
                         <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
                             <div className="min-w-[1088px]">
-                                <Table className="table-fixed w-full">
+                                <Table className="table-fixed w-full table-compact">
                                     <CustomersTableHeader
                                         selectedCount={bulkSelection.currentPageSelectedCount}
                                         totalCount={customers?.length || 0} // Current page items count
@@ -150,11 +150,11 @@ export function CustomersTableContent({
                         {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
                         <div
                             className="flex-1 overflow-hidden"
-                            style={{ maxHeight: "calc(100vh - 300px)" }}
+                            style={{ maxHeight: "calc(100vh - 260px)" }}
                         >
                             <ScrollArea className="table-scroll-area h-full w-full">
                                 <div className="min-w-[1088px] pb-4">
-                                    <Table className="table-fixed w-full">
+                                    <Table className="table-fixed w-full table-compact">
                                         <CustomersTableBody
                                             customers={customers || []}
                                             selectedItems={bulkSelection.selectedItems} // Pass keys array directly

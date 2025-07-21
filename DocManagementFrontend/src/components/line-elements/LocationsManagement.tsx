@@ -285,7 +285,7 @@ const LocationsManagement = ({ searchTerm = "" }: LocationsManagementProps) => {
             <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
               {/* Fixed Header - Never Scrolls */}
               <div className="min-w-[850px] border-b border-blue-900/30">
-                <Table className="table-fixed w-full">
+                <Table className="table-fixed w-full table-compact">
                   <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
                     <TableRow className="border-blue-500/20 hover:bg-transparent">
                       <TableHead className="w-[50px]">
@@ -311,7 +311,7 @@ const LocationsManagement = ({ searchTerm = "" }: LocationsManagementProps) => {
               {/* Scrollable Body - Only Content Scrolls */}
               <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
                 <div className="min-w-[850px]">
-                  <Table className="table-fixed w-full">
+                  <Table className="table-fixed w-full table-compact">
                     <TableBody>
                       {filteredLocations.map((location) => (
                         <TableRow

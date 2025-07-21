@@ -133,7 +133,7 @@ export function ResponsibilityCentreTableContent({
             {/* Fixed Header - Never Scrolls */}
             <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
               <div className="min-w-[800px]">
-                <Table className="table-fixed w-full">
+                <Table className="table-fixed w-full table-compact">
                   <ResponsibilityCentreTableHeader
                     selectedCount={bulkSelection.currentPageSelectedCount}
                     totalCount={centres?.length || 0}
@@ -149,11 +149,11 @@ export function ResponsibilityCentreTableContent({
             {/* Scrollable Body - Only Content Scrolls */}
             <div
               className="flex-1 overflow-hidden"
-              style={{ maxHeight: "calc(100vh - 300px)" }}
+              style={{ maxHeight: "calc(100vh - 260px)" }}
             >
               <ScrollArea className="table-scroll-area h-full w-full">
                 <div className="min-w-[800px] pb-4">
-                  <Table className="table-fixed w-full">
+                  <Table className="table-fixed w-full table-compact">
                     <ResponsibilityCentreTableBody
                       centres={centres || []}
                       selectedCentres={selectedCentres}

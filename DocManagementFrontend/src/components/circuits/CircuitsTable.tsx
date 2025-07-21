@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CircuitTableContent } from "./table/CircuitTableContent";
 import { useCircuitManagement } from "@/hooks/useCircuitManagement";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,7 @@ export function CircuitsTable({
     onManageSteps
 }: CircuitsTableProps) {
     const { user } = useAuth();
+    const queryClient = useQueryClient();
     const isSimpleUser = user?.role === "SimpleUser";
 
     const {
@@ -154,16 +156,33 @@ export function CircuitsTable({
         try {
             const circuitToDelete = filteredCircuits.find((circuit) => circuit.id === deletingCircuit);
             await circuitService.deleteCircuit(deletingCircuit);
+
+            // Use React Query cache invalidation for consistent behavior
+            await queryClient.invalidateQueries({
+                queryKey: ['circuits'],
+                exact: false
+            });
+
+            // Also refetch for immediate UI update
+            await queryClient.refetchQueries({
+                queryKey: ['circuits'],
+                exact: false
+            });
+
             toast.success(
-                `Circuit "${circuitToDelete?.title || 'Unknown'}" deleted successfully`
+                `Circuit "${circuitToDelete?.title || 'Unknown'}" deleted successfully`,
+                {
+                    description: "The circuit list has been updated automatically.",
+                    duration: 3000,
+                }
             );
             handleCircuitDeleted();
         } catch (error: any) {
             console.error("Error deleting circuit:", error);
-            
+
             // Extract specific error message if available
             let errorMessage = "Failed to delete circuit";
-            
+
             if (error.response?.data) {
                 if (typeof error.response.data === 'string') {
                     errorMessage = error.response.data;
@@ -175,8 +194,10 @@ export function CircuitsTable({
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
-            toast.error(errorMessage);
+
+            toast.error(errorMessage, {
+                description: "Please try again or contact support if the problem persists.",
+            });
         }
     };
 
@@ -185,7 +206,7 @@ export function CircuitsTable({
         console.log("handleBulkDelete called");
         console.log("selectedItems:", selectedItems);
         console.log("selectedItems length:", selectedItems.length);
-        
+
         if (selectedItems.length === 0) {
             toast.error("No circuits selected");
             return;
@@ -210,19 +231,35 @@ export function CircuitsTable({
     const confirmBulkDelete = async () => {
         console.log("confirmBulkDelete called");
         console.log("selectedItems for deletion:", selectedItems);
-        
+
         try {
             // For now, delete circuits one by one
             // TODO: Implement bulk delete API when available
             await Promise.all(selectedItems.map(id => circuitService.deleteCircuit(id)));
-            toast.success(`${selectedItems.length} circuits deleted successfully`);
+
+            // Use React Query cache invalidation for consistent behavior
+            await queryClient.invalidateQueries({
+                queryKey: ['circuits'],
+                exact: false
+            });
+
+            // Also refetch for immediate UI update
+            await queryClient.refetchQueries({
+                queryKey: ['circuits'],
+                exact: false
+            });
+
+            toast.success(`${selectedItems.length} circuits deleted successfully`, {
+                description: "The circuit list has been updated automatically.",
+                duration: 3000,
+            });
             handleMultipleDeleted();
         } catch (error: any) {
             console.error("Error deleting circuits:", error);
-            
+
             // Extract specific error message if available
             let errorMessage = "Failed to delete circuits";
-            
+
             if (error.response?.data) {
                 if (typeof error.response.data === 'string') {
                     errorMessage = error.response.data;
@@ -234,8 +271,10 @@ export function CircuitsTable({
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
-            toast.error(errorMessage);
+
+            toast.error(errorMessage, {
+                description: "Please try again or contact support if the problem persists.",
+            });
         }
     };
 

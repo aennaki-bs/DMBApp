@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import circuitService from "@/services/circuitService";
 import {
   Dialog,
@@ -33,6 +34,7 @@ export default function CreateCircuitDialogContainer({
   onOpenChange,
   onSuccess,
 }: CreateCircuitDialogContainerProps) {
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formValues, setFormValues] = useState<FormValues>({
@@ -104,15 +106,34 @@ export default function CreateCircuitDialogContainer({
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-      toast.success("Circuit created successfully");
+
+      // Invalidate and refetch circuit-related queries
+      await queryClient.invalidateQueries({
+        queryKey: ['circuits'],
+        exact: false // This will invalidate all queries that start with 'circuits'
+      });
+
+      // Also refetch any circuit-related data immediately for better UX
+      await queryClient.refetchQueries({
+        queryKey: ['circuits'],
+        exact: false
+      });
+
+      toast.success("Circuit created successfully", {
+        description: "The circuit list has been updated automatically.",
+        duration: 3000,
+      });
+
       setFormValues({ title: "", descriptif: "", documentTypeId: undefined });
       setStep(1);
       onOpenChange(false);
       onSuccess();
     } catch (error) {
-      toast.error("Failed to create circuit");
+      toast.error("Failed to create circuit", {
+        description: "Please try again or contact support if the problem persists.",
+      });
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.error("Circuit creation error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -139,11 +160,10 @@ export default function CreateCircuitDialogContainer({
           <div className="flex justify-between mb-6">
             <div className="flex items-center gap-2">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step >= 1
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1
                     ? "bg-blue-600 text-white"
                     : "bg-blue-900/50 text-blue-300"
-                }`}
+                  }`}
               >
                 1
               </div>
@@ -153,18 +173,16 @@ export default function CreateCircuitDialogContainer({
             </div>
             <div className="flex-1 mx-2 mt-4">
               <div
-                className={`h-0.5 ${
-                  step >= 2 ? "bg-blue-600" : "bg-blue-900/50"
-                }`}
+                className={`h-0.5 ${step >= 2 ? "bg-blue-600" : "bg-blue-900/50"
+                  }`}
               ></div>
             </div>
             <div className="flex items-center gap-2">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step >= 2
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2
                     ? "bg-blue-600 text-white"
                     : "bg-blue-900/50 text-blue-300"
-                }`}
+                  }`}
               >
                 2
               </div>
@@ -174,18 +192,16 @@ export default function CreateCircuitDialogContainer({
             </div>
             <div className="flex-1 mx-2 mt-4">
               <div
-                className={`h-0.5 ${
-                  step >= 3 ? "bg-blue-600" : "bg-blue-900/50"
-                }`}
+                className={`h-0.5 ${step >= 3 ? "bg-blue-600" : "bg-blue-900/50"
+                  }`}
               ></div>
             </div>
             <div className="flex items-center gap-2">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step >= 3
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3
                     ? "bg-blue-600 text-white"
                     : "bg-blue-900/50 text-blue-300"
-                }`}
+                  }`}
               >
                 3
               </div>
@@ -195,18 +211,16 @@ export default function CreateCircuitDialogContainer({
             </div>
             <div className="flex-1 mx-2 mt-4">
               <div
-                className={`h-0.5 ${
-                  step >= 4 ? "bg-blue-600" : "bg-blue-900/50"
-                }`}
+                className={`h-0.5 ${step >= 4 ? "bg-blue-600" : "bg-blue-900/50"
+                  }`}
               ></div>
             </div>
             <div className="flex items-center gap-2">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step >= 4
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 4
                     ? "bg-blue-600 text-white"
                     : "bg-blue-900/50 text-blue-300"
-                }`}
+                  }`}
               >
                 4
               </div>

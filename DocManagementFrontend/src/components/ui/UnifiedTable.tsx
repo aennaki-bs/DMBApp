@@ -499,7 +499,7 @@ export function UnifiedTable<T extends Record<string, any>>({
         {/* Fixed Header */}
         <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-primary/5">
           <div style={{ minWidth: `${minTableWidth}px` }}>
-            <Table>
+            <Table className="table-compact">
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b-primary/10">
                   {onSelectItems && (
@@ -546,11 +546,11 @@ export function UnifiedTable<T extends Record<string, any>>({
         {/* Scrollable Body */}
         <div
           className="flex-1 overflow-hidden"
-          style={{ maxHeight: "calc(100vh - 400px)" }}
+          style={{ maxHeight: "calc(100vh - 360px)" }}
         >
           <ScrollArea className="h-full w-full">
             <div style={{ minWidth: `${minTableWidth}px` }} className="pb-4">
-              <Table>
+              <Table className="table-compact">
                 <TableBody>
                   {paginatedData.map((item) => (
                     <TableRow

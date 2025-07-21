@@ -163,7 +163,7 @@ export function SubTypesTableContent({
                         {/* Fixed Header - Never Scrolls */}
                         <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
                             <div className="min-w-[800px]">
-                                <Table className="table-fixed w-full">
+                                <Table className="table-fixed w-full table-compact">
                                     <SubTypesTableHeader
                                         selectedCount={selectableBulkSelection.currentPageSelectedCount}
                                         totalCount={selectableSubTypes.length}
@@ -179,11 +179,11 @@ export function SubTypesTableContent({
                         {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
                         <div
                             className="flex-1 overflow-hidden"
-                            style={{ maxHeight: "calc(100vh - 300px)" }}
+                            style={{ maxHeight: "calc(100vh - 260px)" }}
                         >
                             <ScrollArea className="table-scroll-area h-full w-full">
                                 <div className="min-w-[800px] pb-4">
-                                    <Table className="table-fixed w-full">
+                                    <Table className="table-fixed w-full table-compact">
                                         <SubTypesTableBody
                                             subTypes={subTypes || []}
                                             selectedSubTypes={selectableBulkSelection.selectedItems}

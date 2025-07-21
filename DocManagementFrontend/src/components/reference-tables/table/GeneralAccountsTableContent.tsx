@@ -123,8 +123,8 @@ export function GeneralAccountsTableContent({
           <div className="relative h-full flex flex-col z-10">
             {/* Fixed Header - Never Scrolls */}
             <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
-              <div className="min-w-[750px]">
-                <Table className="table-fixed w-full">
+              <div className="min-w-[778px]">
+                <Table className="table-fixed w-full table-compact">
                   <GeneralAccountsTableHeader
                     selectedCount={bulkSelection.currentPageSelectedCount}
                     totalCount={accounts?.length || 0} // Current page items count
@@ -140,11 +140,11 @@ export function GeneralAccountsTableContent({
             {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
             <div
               className="flex-1 overflow-hidden"
-              style={{ maxHeight: "calc(100vh - 300px)" }}
+              style={{ maxHeight: "calc(100vh - 260px)" }}
             >
               <ScrollArea className="table-scroll-area h-full w-full">
-                <div className="min-w-[750px] pb-4">
-                  <Table className="table-fixed w-full">
+                <div className="min-w-[778px] pb-4">
+                  <Table className="table-fixed w-full table-compact">
                     <GeneralAccountsTableBody
                       accounts={accounts || []}
                       selectedItems={bulkSelection.selectedItems} // Pass keys array directly

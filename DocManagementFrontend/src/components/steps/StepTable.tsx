@@ -137,7 +137,7 @@ export function StepTable({
             <>
               {/* Fixed Header - Never Scrolls */}
               <div className="min-w-[1000px] border-b border-blue-900/30">
-                <Table className="table-fixed w-full">
+                <Table className="table-fixed w-full table-compact">
                   <StepTableHeader
                     onSelectAll={onSelectAll}
                     areAllEligibleSelected={areAllEligibleSelected}
@@ -152,7 +152,7 @@ export function StepTable({
               {/* Scrollable Body - Only Content Scrolls */}
               <ScrollArea className="h-[calc(100vh-380px)] min-h-[300px]">
                 <div className="min-w-[1000px]">
-                  <Table className="table-fixed w-full">
+                  <Table className="table-fixed w-full table-compact">
                     <TableBody>
                       {paginatedSteps.map((step, index) => {
                         const circuitInfo = circuitInfoMap[step.circuitId] || {

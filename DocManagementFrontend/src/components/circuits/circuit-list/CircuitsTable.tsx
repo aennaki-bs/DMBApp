@@ -38,6 +38,7 @@ import CircuitDeactivationDialog from "../CircuitDeactivationDialog";
 import { usePagination } from "@/hooks/usePagination";
 import SmartPagination from "@/components/shared/SmartPagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CircuitsTableProps {
   circuits: Circuit[];
@@ -143,14 +144,14 @@ const CircuitTableHeader = ({
             <FileText className="h-4 w-4 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="w-[130px] text-blue-300 font-medium">
+        <TableHead className="w-[130px] text-blue-300 font-medium text-center">
           {renderSortableHeader(
             "Status",
             "isActive",
             <ToggleLeft className="h-4 w-4 text-blue-400" />
           )}
         </TableHead>
-        <TableHead className="w-[150px] text-blue-300 font-medium text-right">
+        <TableHead className="w-[150px] text-blue-300 font-medium text-center">
           Actions
         </TableHead>
       </TableRow>
@@ -186,57 +187,64 @@ const CircuitTableRow = ({
 }) => {
   return (
     <TableRow
-      className={`border-blue-900/30 hover:bg-blue-900/20 transition-colors cursor-pointer ${
-        isSelected ? "bg-blue-900/30 border-l-4 border-l-blue-500" : ""
-      }`}
+      className={`border-blue-900/30 hover:bg-blue-900/20 transition-colors cursor-pointer ${isSelected ? "bg-blue-900/30 border-l-4 border-l-blue-500" : ""
+        }`}
     >
       {!isSimpleUser && (
-        <TableCell className="w-[50px]" onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onSelectCircuit(circuit.id)}
-            className="border-blue-500/50"
-          />
+        <TableCell className="w-[50px] align-middle" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onSelectCircuit(circuit.id)}
+              className="border-blue-500/50"
+            />
+          </div>
         </TableCell>
       )}
       <TableCell
-        className="w-[120px] font-medium text-blue-100"
+        className="w-[120px] font-medium text-blue-100 align-middle"
         onClick={() => onCircuitClick(circuit.id)}
       >
-        {circuit.circuitKey}
+        <div className="flex items-center">
+          <span className="truncate">{circuit.circuitKey}</span>
+        </div>
       </TableCell>
       <TableCell
-        className="w-[200px] text-blue-100"
+        className="w-[200px] text-blue-100 align-middle"
         onClick={() => onCircuitClick(circuit.id)}
       >
-        {circuit.title}
+        <div className="flex items-center">
+          <span className="truncate">{circuit.title}</span>
+        </div>
       </TableCell>
       <TableCell
-        className="w-[250px] max-w-xs truncate text-blue-200/70"
+        className="w-[250px] text-blue-200/70 align-middle"
         onClick={() => onCircuitClick(circuit.id)}
       >
-        {circuit.descriptif || "No description"}
+        <div className="flex items-center">
+          <span className="truncate">{circuit.descriptif || "No description"}</span>
+        </div>
       </TableCell>
       <TableCell
-        className="w-[200px] text-blue-200/70"
+        className="w-[200px] text-blue-200/70 align-middle"
         onClick={() => onCircuitClick(circuit.id)}
       >
         {circuit.documentType ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-start gap-2">
             <Badge
               variant="secondary"
-              className="bg-blue-800/40 text-blue-200 text-xs"
+              className="bg-blue-800/40 text-blue-200 text-xs flex-shrink-0"
             >
               {circuit.documentType.typeKey || "N/A"}
             </Badge>
-            <span className="text-sm">{circuit.documentType.typeName}</span>
+            <span className="text-sm truncate">{circuit.documentType.typeName}</span>
           </div>
         ) : (
           <span className="text-gray-400 italic">No document type</span>
         )}
       </TableCell>
-      <TableCell className="w-[130px]" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2">
+      <TableCell className="w-[130px] text-center align-middle" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center gap-2">
           {loadingCircuits.includes(circuit.id) ? (
             <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />
           ) : (
@@ -245,7 +253,7 @@ const CircuitTableRow = ({
               onCheckedChange={(checked) => {
                 // Create a synthetic event to match the existing function signature
                 const syntheticEvent = {
-                  stopPropagation: () => {},
+                  stopPropagation: () => { },
                 } as React.MouseEvent;
                 onToggleActive(circuit, syntheticEvent);
               }}
@@ -256,26 +264,27 @@ const CircuitTableRow = ({
             />
           )}
           <span
-            className={`text-sm ${
-              circuit.isActive ? "text-green-500" : "text-gray-400"
-            }`}
+            className={`text-sm font-medium ${circuit.isActive ? "text-green-500" : "text-gray-400"
+              }`}
           >
             {circuit.isActive ? "Active" : "Inactive"}
           </span>
         </div>
       </TableCell>
       <TableCell
-        className="w-[150px] text-right space-x-1"
+        className="w-[150px] text-center align-middle"
         onClick={(e) => e.stopPropagation()}
       >
-        <CircuitListActions
-          circuit={circuit}
-          isSimpleUser={isSimpleUser}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onViewDetails={onViewDetails}
-          onCircuitUpdated={refetch}
-        />
+        <div className="flex items-center justify-center">
+          <CircuitListActions
+            circuit={circuit}
+            isSimpleUser={isSimpleUser}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onViewDetails={onViewDetails}
+            onCircuitUpdated={refetch}
+          />
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -297,6 +306,7 @@ export function CircuitsTable({
 }: CircuitsTableProps) {
   const navigate = useNavigate();
   const [loadingCircuits, setLoadingCircuits] = useState<number[]>([]);
+  const queryClient = useQueryClient();
 
   // Navigate to the circuit statuses page when clicking on a circuit
   const handleCircuitClick = (circuitId: number) => {
@@ -372,16 +382,29 @@ export function CircuitsTable({
     try {
       // Toggle activation
       await circuitService.toggleCircuitActivation(circuit);
-      toast.success("Circuit activated successfully");
 
-      // Refresh the list
-      if (refetch) {
-        await refetch();
-      }
+      // Use React Query cache invalidation for consistent behavior
+      await queryClient.invalidateQueries({
+        queryKey: ['circuits'],
+        exact: false
+      });
+
+      // Also refetch for immediate UI update
+      await queryClient.refetchQueries({
+        queryKey: ['circuits'],
+        exact: false
+      });
+
+      toast.success("Circuit activated successfully", {
+        description: "The circuit list has been updated automatically.",
+        duration: 3000,
+      });
     } catch (error: any) {
       const errorMessage =
         error?.message || "Failed to activate circuit";
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        description: "Please try again or contact support if the problem persists.",
+      });
     } finally {
       setLoadingCircuits((prev) => prev.filter((id) => id !== circuit.id));
     }
@@ -393,16 +416,29 @@ export function CircuitsTable({
     try {
       // Toggle deactivation
       await circuitService.toggleCircuitActivation(circuit);
-      toast.success("Circuit deactivated successfully");
 
-      // Refresh the list
-      if (refetch) {
-        await refetch();
-      }
+      // Use React Query cache invalidation for consistent behavior
+      await queryClient.invalidateQueries({
+        queryKey: ['circuits'],
+        exact: false
+      });
+
+      // Also refetch for immediate UI update
+      await queryClient.refetchQueries({
+        queryKey: ['circuits'],
+        exact: false
+      });
+
+      toast.success("Circuit deactivated successfully", {
+        description: "The circuit list has been updated automatically.",
+        duration: 3000,
+      });
     } catch (error: any) {
       const errorMessage =
         error?.message || "Failed to deactivate circuit";
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        description: "Please try again or contact support if the problem persists.",
+      });
     } finally {
       setLoadingCircuits((prev) => prev.filter((id) => id !== circuit.id));
     }
@@ -445,7 +481,7 @@ export function CircuitsTable({
       <>
         {/* Fixed Header - Never Scrolls */}
         <div className="min-w-[1200px] border-b border-blue-900/30">
-          <Table className="table-fixed w-full">
+          <Table className="table-fixed w-full table-compact">
             <CircuitTableHeader
               isSimpleUser={isSimpleUser}
               selectedCount={selectedCount}
@@ -460,7 +496,7 @@ export function CircuitsTable({
         {/* Scrollable Body - Only Content Scrolls */}
         <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
           <div className="min-w-[1200px]">
-            <Table className="table-fixed w-full">
+            <Table className="table-fixed w-full table-compact">
               <TableBody>
                 {paginatedCircuits.map((circuit) => (
                   <CircuitTableRow

@@ -104,8 +104,8 @@ export function SubLinesTableContent({
                 <div className="relative flex flex-col z-10">
                     {/* Fixed Table Header */}
                     <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
-                        <div className="min-w-[800px]">
-                            <Table className="table-fixed w-full">
+                        <div className="min-w-[1000px]">
+                            <Table className="table-fixed w-full table-compact">
                                 <SubLinesTableHeader
                                     selectedCount={selectedSubLines.length}
                                     totalCount={subLines.length}
@@ -119,10 +119,10 @@ export function SubLinesTableContent({
                     </div>
 
                     {/* Scrollable Table Body */}
-                    <div className="overflow-hidden" style={{ maxHeight: "calc(100vh - 400px)" }}>
+                    <div className="overflow-hidden" style={{ maxHeight: "calc(100vh - 260px)" }}>
                         <ScrollArea className="table-scroll-area h-full w-full">
-                            <div className="min-w-[800px] pb-4">
-                                <Table className="table-fixed w-full">
+                            <div className="min-w-[1000px] pb-4">
+                                <Table className="table-fixed w-full table-compact">
                                     <SubLinesTableBody
                                         subLines={subLines}
                                         selectedSubLines={selectedSubLines}

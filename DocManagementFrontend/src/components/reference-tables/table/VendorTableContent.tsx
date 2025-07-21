@@ -129,7 +129,7 @@ export function VendorTableContent({
             {/* Fixed Header - Never Scrolls */}
             <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
               <div className="min-w-[1026px]">
-                <Table className="table-fixed w-full">
+                <Table className="table-fixed w-full table-compact">
                   <VendorTableHeader
                     selectedCount={bulkSelection.currentPageSelectedCount}
                     totalCount={vendors?.length || 0}
@@ -145,11 +145,11 @@ export function VendorTableContent({
             {/* Scrollable Body - Only Content Scrolls - FILL REMAINING HEIGHT */}
             <div
               className="flex-1 overflow-hidden"
-              style={{ maxHeight: "calc(100vh - 300px)" }}
+              style={{ maxHeight: "calc(100vh - 260px)" }}
             >
               <ScrollArea className="table-scroll-area h-full w-full">
                 <div className="min-w-[1026px] pb-4">
-                  <Table className="table-fixed w-full">
+                  <Table className="table-fixed w-full table-compact">
                     <VendorTableBody
                       vendors={vendors || []}
                       selectedVendors={selectedVendors}

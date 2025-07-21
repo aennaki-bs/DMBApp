@@ -672,7 +672,7 @@ const UniteCodesManagement = ({
           <>
             {/* Fixed Header - Never Scrolls */}
             <div className="min-w-[800px] border-b border-blue-200 dark:border-blue-900/30">
-              <Table className="table-fixed w-full">
+              <Table className="table-fixed w-full table-compact">
                 <TableHeader className="bg-blue-50 dark:bg-gradient-to-r dark:from-[#1a2c6b] dark:to-[#0a1033]">
                   <TableRow className="border-blue-200 dark:border-blue-900/30 hover:bg-transparent">
                     <TableHead className="w-[50px]">
@@ -717,7 +717,7 @@ const UniteCodesManagement = ({
             {/* Scrollable Body - Only Content Scrolls */}
             <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
               <div className="min-w-[800px]">
-                <Table className="table-fixed w-full">
+                <Table className="table-fixed w-full table-compact">
                   <TableBody>
                     {paginatedUniteCodes.map((uniteCode, rowIndex) => (
                       <TableRow

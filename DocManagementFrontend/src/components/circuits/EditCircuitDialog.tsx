@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import circuitService from "@/services/circuitService";
 import documentService from "@/services/documentService";
 import {
@@ -54,6 +54,7 @@ export default function EditCircuitDialog({
   onOpenChange,
   onSuccess,
 }: EditCircuitDialogProps) {
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch document types
@@ -81,12 +82,30 @@ export default function EditCircuitDialog({
         documentTypeId: values.documentTypeId || undefined,
       });
 
-      toast.success("Circuit updated successfully");
+      // Invalidate and refetch circuit-related queries
+      await queryClient.invalidateQueries({
+        queryKey: ['circuits'],
+        exact: false
+      });
+
+      // Also refetch any circuit-related data immediately for better UX
+      await queryClient.refetchQueries({
+        queryKey: ['circuits'],
+        exact: false
+      });
+
+      toast.success("Circuit updated successfully", {
+        description: "The circuit list has been updated automatically.",
+        duration: 3000,
+      });
+
       onOpenChange(false);
       onSuccess();
     } catch (error) {
-      toast.error("Failed to update circuit");
-      console.error(error);
+      toast.error("Failed to update circuit", {
+        description: "Please try again or contact support if the problem persists.",
+      });
+      console.error("Circuit update error:", error);
     } finally {
       setIsSubmitting(false);
     }

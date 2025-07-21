@@ -100,7 +100,7 @@ export default function ArchivedDocumentsTable({
     <div className="rounded-xl border border-primary/10 overflow-hidden bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg">
       {/* Fixed Header - Never Scrolls */}
       <div className="min-w-[1200px] border-b border-primary/10">
-        <Table className="table-fixed w-full">
+        <Table className="table-fixed w-full table-compact">
           <TableHeader className="bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
             <TableRow className="border-primary/10 hover:bg-transparent">
               <TableHead className="w-[50px] text-foreground font-medium">
@@ -168,7 +168,7 @@ export default function ArchivedDocumentsTable({
 
       {/* Table Body - Shows all items on current page */}
       <div className="min-w-[1200px]">
-        <Table className="table-fixed w-full">
+        <Table className="table-fixed w-full table-compact">
           <TableBody>
             {documents.map((document, index) => (
               <TableRow
