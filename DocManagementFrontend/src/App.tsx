@@ -28,6 +28,7 @@ import CreateDocument from "./pages/documents/CreateDocument";
 import ViewDocument from "./pages/documents/ViewDocument";
 import EditDocument from "./pages/documents/EditDocument";
 import DocumentLignesPage from "./pages/documents/DocumentLignesPage";
+import SubLinesPage from "./pages/documents/SubLinesPage";
 import CircuitsPage from "./pages/workflows/Circuits";
 import CircuitStepsPage from "./pages/workflows/CircuitStepsPage";
 import CircuitStatusesPage from "./pages/workflows/CircuitStatusesPage";
@@ -35,7 +36,7 @@ import CircuitStatusStepsPage from "./pages/workflows/CircuitTransitionsPage";
 // import StepStatusesPage from "./pages/workflows/StepStatusesPage";
 import PendingApprovalsPage from "./pages/workflows/PendingApprovalsPage";
 import UserManagement from "./pages/admin/UserManagement";
-import DocumentFlowPage from "./pages/documents/DocumentFlowPage";
+
 import { Layout } from "./components/layout/Layout";
 import Settings from "./pages/user/Settings";
 import { SettingsProvider } from "./context/SettingsContext";
@@ -286,10 +287,6 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="/documents/:id/flow"
-                    element={<DocumentFlowPage />}
-                  />
 
                   {/* Document Lignes routes */}
                   <Route
@@ -307,16 +304,12 @@ const App = () => (
 
                   {/* Document SousLignes routes */}
                   <Route
-                    path="/documents/:id/lignes/:ligneId/souslignes"
+                    path="/documents/:documentId/lines/:ligneId/sublines"
                     element={
                       <ProtectedRoute requiresManagement>
-                        <ViewDocument />
+                        <SubLinesPage />
                       </ProtectedRoute>
                     }
-                  />
-                  <Route
-                    path="/documents/:id/lignes/:ligneId/souslignes/:sousLigneId"
-                    element={<ViewDocument />}
                   />
 
                   {/* Circuit Management routes */}

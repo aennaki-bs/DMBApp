@@ -38,32 +38,26 @@ const DocumentTabsView = ({
 }: DocumentTabsViewProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="bg-white/5 backdrop-blur-md border border-white/10 w-full grid grid-cols-2 p-1 h-auto">
+      <TabsList className="bg-gradient-to-r from-background/50 via-background/30 to-background/50 backdrop-blur-xl border border-border/50 w-full grid grid-cols-2 p-1 h-auto shadow-lg">
         <TabsTrigger
           value="details"
-          className="py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600/80 data-[state=active]:to-indigo-600/80 data-[state=active]:text-white"
+          className="py-3 px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/80 data-[state=active]:to-primary/60 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-primary/30 text-muted-foreground hover:text-foreground transition-all duration-300 rounded-lg"
         >
           <FileText className="h-4 w-4 mr-2" />
           Document Details
         </TabsTrigger>
         <TabsTrigger
           value="lignes"
-          className="py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600/80 data-[state=active]:to-indigo-600/80 data-[state=active]:text-white"
+          className="py-3 px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/80 data-[state=active]:to-primary/60 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-primary/30 text-muted-foreground hover:text-foreground transition-all duration-300 rounded-lg"
         >
           <Layers className="h-4 w-4 mr-2" />
           Lines
-          <Badge
-            variant="secondary"
-            className="ml-2 bg-blue-900/50 text-blue-200"
-          >
-            {document.lignesCount || lignes.length}
-          </Badge>
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="details" className="mt-0">
-        <DocumentDetailsTab 
-          document={document} 
+      <TabsContent value="details" className="mt-6">
+        <DocumentDetailsTab
+          document={document}
           workflowStatus={workflowStatus}
           isLoadingWorkflow={isLoadingWorkflow}
           pendingApproval={pendingApproval}
@@ -72,7 +66,7 @@ const DocumentTabsView = ({
         />
       </TabsContent>
 
-      <TabsContent value="lignes" className="mt-0">
+      <TabsContent value="lignes" className="mt-6">
         <DocumentLinesTab
           document={document}
           lignes={lignes}
