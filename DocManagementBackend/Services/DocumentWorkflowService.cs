@@ -555,6 +555,17 @@ namespace DocManagementBackend.Services
                             else
                                 approvalWriting.Status = ApprovalStatus.InProgress;
                             break;
+                            
+                        case RuleType.MinimumWithRequired:
+                            // Use the helper method to evaluate the rule
+                            if (EvaluateMinimumWithRequiredRule(rule, responses))
+                            {
+                                approvalWriting.Status = ApprovalStatus.Accepted;
+                                approvalCompleted = true;
+                            }
+                            else
+                                approvalWriting.Status = ApprovalStatus.InProgress;
+                            break;
                     }
                 }
             }
@@ -1683,6 +1694,86 @@ namespace DocManagementBackend.Services
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Evaluates if a MinimumWithRequired approval rule is satisfied
+        /// </summary>
+        private bool EvaluateMinimumWithRequiredRule(ApprovatorsGroupRule rule, List<ApprovalResponse> responses)
+        {
+            if (rule.RuleType != RuleType.MinimumWithRequired)
+                return false;
+
+            var minimumRequired = rule.MinimumApprovals ?? 1;
+            var requiredMemberIds = rule.RequiredMemberIds;
+            
+            var approvedUserIds = responses
+                .Where(r => r.IsApproved)
+                .Select(r => r.UserId)
+                .ToList();
+            
+            // Check if minimum number of approvals is met
+            bool minimumMet = approvedUserIds.Count >= minimumRequired;
+            
+            // Check if all required members have approved
+            bool allRequiredApproved = requiredMemberIds.All(reqId => 
+                approvedUserIds.Contains(reqId));
+            
+            return minimumMet && allRequiredApproved;
+        }
+
+        /// <summary>
+        /// Gets approval status summary for MinimumWithRequired rule
+        /// </summary>
+        public async Task<ApprovalStatusSummary> GetMinimumWithRequiredApprovalStatusAsync(int approvalWritingId)
+        {
+            var approvalWriting = await _context.ApprovalWritings
+                .Include(aw => aw.ApprovatorsGroup)
+                    .ThenInclude(g => g.ApprovatorsGroupUsers)
+                        .ThenInclude(gu => gu.User)
+                .FirstOrDefaultAsync(aw => aw.Id == approvalWritingId);
+
+            if (approvalWriting?.ApprovatorsGroupId == null)
+                throw new ArgumentException("Invalid approval writing or not a group approval");
+
+            var rule = await _context.ApprovatorsGroupRules
+                .FirstOrDefaultAsync(r => r.GroupId == approvalWriting.ApprovatorsGroupId);
+
+            if (rule?.RuleType != RuleType.MinimumWithRequired)
+                throw new ArgumentException("This approval is not using MinimumWithRequired rule");
+
+            var responses = await _context.ApprovalResponses
+                .Include(r => r.User)
+                .Where(r => r.ApprovalWritingId == approvalWritingId)
+                .ToListAsync();
+
+            var minimumRequired = rule.MinimumApprovals ?? 1;
+            var requiredMemberIds = rule.RequiredMemberIds;
+            
+            var approvedResponses = responses.Where(r => r.IsApproved).ToList();
+            var approvedUserIds = approvedResponses.Select(r => r.UserId).ToList();
+            
+            // Get required members who have approved
+            var requiredMembersApproved = requiredMemberIds
+                .Where(reqId => approvedUserIds.Contains(reqId))
+                .ToList();
+                
+            // Get required members who haven't approved yet
+            var requiredMembersPending = requiredMemberIds
+                .Where(reqId => !approvedUserIds.Contains(reqId))
+                .ToList();
+
+            return new ApprovalStatusSummary
+            {
+                MinimumRequired = minimumRequired,
+                CurrentApprovals = approvedResponses.Count,
+                RequiredMembersTotal = requiredMemberIds.Count,
+                RequiredMembersApproved = requiredMembersApproved.Count,
+                RequiredMembersPending = requiredMembersPending,
+                IsMinimumMet = approvedResponses.Count >= minimumRequired,
+                AreAllRequiredApproved = requiredMemberIds.All(reqId => approvedUserIds.Contains(reqId)),
+                IsComplete = EvaluateMinimumWithRequiredRule(rule, responses)
+            };
         }
     }
 

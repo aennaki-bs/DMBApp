@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace DocManagementBackend.Models
 {
@@ -100,13 +101,44 @@ namespace DocManagementBackend.Models
         
         [Required]
         public RuleType RuleType { get; set; } = RuleType.All;
+        
+        // For MinimumWithRequired rule type
+        public int? MinimumApprovals { get; set; }
+        
+        // JSON field to store required member IDs for MinimumWithRequired rule type
+        public string? RequiredMemberIdsJson { get; set; }
+        
+        // Helper property to work with RequiredMemberIds as a List<int>
+        [NotMapped]
+        public List<int> RequiredMemberIds
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(RequiredMemberIdsJson))
+                    return new List<int>();
+                
+                try
+                {
+                    return JsonSerializer.Deserialize<List<int>>(RequiredMemberIdsJson) ?? new List<int>();
+                }
+                catch
+                {
+                    return new List<int>();
+                }
+            }
+            set
+            {
+                RequiredMemberIdsJson = value.Any() ? JsonSerializer.Serialize(value) : null;
+            }
+        }
     }
 
     public enum RuleType
     {
-        Any = 0,     // Any user in the group can approve
-        All = 1,     // All users must approve
-        Sequential = 2  // Users must approve in specified order
+        Any = 0,                    // Any user in the group can approve
+        All = 1,                    // All users must approve
+        Sequential = 2,             // Users must approve in specified order
+        MinimumWithRequired = 3     // Minimum number of approvals + required members must approve
     }
 
     public class ApprovalWriting
@@ -184,5 +216,18 @@ namespace DocManagementBackend.Models
         public DateTime ResponseDate { get; set; } = DateTime.UtcNow;
         
         public string Comments { get; set; } = string.Empty;
+    }
+
+    // Summary class for MinimumWithRequired approval rule status
+    public class ApprovalStatusSummary
+    {
+        public int MinimumRequired { get; set; }
+        public int CurrentApprovals { get; set; }
+        public int RequiredMembersTotal { get; set; }
+        public int RequiredMembersApproved { get; set; }
+        public List<int> RequiredMembersPending { get; set; } = new List<int>();
+        public bool IsMinimumMet { get; set; }
+        public bool AreAllRequiredApproved { get; set; }
+        public bool IsComplete { get; set; }
     }
 }

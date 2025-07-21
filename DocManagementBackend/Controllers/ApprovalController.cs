@@ -135,6 +135,8 @@ namespace DocManagementBackend.Controllers
                             continue;
                     }
                 }
+                
+                // For MinimumWithRequired, Any, and All rules, any user in the group can approve
 
                 pendingApprovals.Add(new PendingApprovalDto
                 {
@@ -146,8 +148,14 @@ namespace DocManagementBackend.Controllers
                     RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
                     RequestDate = approval.CreatedAt,
                     Comments = approval.Comments,
-                    ApprovalType = rule?.RuleType == RuleType.Sequential ? "Sequential" :
-                                 rule?.RuleType == RuleType.All ? "All" : "Any"
+                    ApprovalType = rule?.RuleType switch
+                    {
+                        RuleType.Sequential => "Sequential",
+                        RuleType.All => "All",
+                        RuleType.Any => "Any",
+                        RuleType.MinimumWithRequired => "MinimumWithRequired",
+                        _ => "Any"
+                    }
                 });
             }
 
@@ -262,6 +270,8 @@ namespace DocManagementBackend.Controllers
                             continue;
                     }
                 }
+                
+                // For MinimumWithRequired, Any, and All rules, any user in the group can approve
 
                 pendingApprovals.Add(new PendingApprovalDto
                 {
@@ -297,6 +307,10 @@ namespace DocManagementBackend.Controllers
 
                 return Ok(new { IsApproved = response.IsApproved, Result = result });
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
@@ -305,13 +319,35 @@ namespace DocManagementBackend.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return Unauthorized(ex.Message);
+                return StatusCode(500, $"An error occurred while processing the approval: {ex.Message}");
+            }
+        }
+
+        [HttpGet("{approvalId}/status-summary")]
+        public async Task<ActionResult<ApprovalStatusSummary>> GetApprovalStatusSummary(int approvalId)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User);
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            try
+            {
+                var summary = await _workflowService.GetMinimumWithRequiredApprovalStatusAsync(approvalId);
+                return Ok(summary);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                return StatusCode(500, $"An error occurred while getting approval status: {ex.Message}");
             }
         }
 
@@ -988,6 +1024,8 @@ namespace DocManagementBackend.Controllers
                             continue;
                     }
                 }
+                
+                // For MinimumWithRequired, Any, and All rules, any user in the group can approve
 
                 if (approval.Document != null)
                 {
@@ -1002,8 +1040,14 @@ namespace DocManagementBackend.Controllers
                         CreatedBy = approval.Document.CreatedBy?.Username ?? "",
                         CreatedAt = approval.Document.CreatedAt,
                         CurrentStep = approval.Step?.Title ?? "",
-                        ApprovalType = rule?.RuleType == RuleType.Sequential ? "Sequential" :
-                                    rule?.RuleType == RuleType.All ? "All" : "Any",
+                        ApprovalType = rule?.RuleType switch
+                        {
+                            RuleType.Sequential => "Sequential",
+                            RuleType.All => "All",
+                            RuleType.Any => "Any",
+                            RuleType.MinimumWithRequired => "MinimumWithRequired",
+                            _ => "Any"
+                        },
                         Status = "Pending",
                         RequestedBy = approval.ProcessedBy?.Username ?? "",
                         RequestDate = approval.CreatedAt
