@@ -11,8 +11,6 @@ import {
   Check,
   Loader2,
   Edit2,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -53,14 +51,11 @@ interface ReviewSectionProps {
   }[];
   stepIndex: number;
   onEdit: (stepIndex: number) => void;
-  expanded?: boolean;
-  toggleExpand?: () => void;
 }
 
 const ReviewStep: React.FC = () => {
   const { formData, submitForm, goToStep, stepValidation } = useMultiStepForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<number | null>(0);
 
   // Typed formData for better TypeScript support
   const typedFormData = formData as FormData;
@@ -90,11 +85,6 @@ const ReviewStep: React.FC = () => {
     if (goToStep) {
       goToStep(stepIndex);
     }
-  };
-
-  // Toggle section expansion
-  const toggleSection = (sectionIndex: number) => {
-    setExpandedSection(expandedSection === sectionIndex ? null : sectionIndex);
   };
 
   // Format personal name
@@ -242,23 +232,19 @@ const ReviewStep: React.FC = () => {
 
         {/* Review sections */}
         <div className="space-y-4">
-          <AnimatePresence>
-            {reviewSections.map((section, index) => (
-              <motion.div
-                key={section.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <ReviewSection
-                  {...section}
-                  onEdit={handleEdit}
-                  expanded={expandedSection === index}
-                  toggleExpand={() => toggleSection(index)}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {reviewSections.map((section, index) => (
+            <motion.div
+              key={section.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <ReviewSection
+                {...section}
+                onEdit={handleEdit}
+              />
+            </motion.div>
+          ))}
         </div>
 
         {/* Confirmation message */}
@@ -450,16 +436,11 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
   items,
   stepIndex,
   onEdit,
-  expanded = false,
-  toggleExpand,
 }) => {
   return (
     <div className="border border-blue-900/30 rounded-lg overflow-hidden">
       {/* Section header */}
-      <div
-        className="bg-blue-900/30 p-4 flex items-center justify-between cursor-pointer"
-        onClick={toggleExpand}
-      >
+      <div className="bg-blue-900/30 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-full bg-blue-900/40 text-blue-400">
             {icon}
@@ -481,40 +462,22 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
             <Edit2 className="h-3.5 w-3.5 mr-1" />
             Edit
           </Button>
-
-          {expanded ? (
-            <ChevronUp className="h-4 w-4 text-blue-400" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-blue-400" />
-          )}
         </div>
       </div>
 
-      {/* Section content */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="p-4 border-t border-blue-900/30 bg-blue-950/30">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                {items.map((item, index) => (
-                  <div key={index} className="space-y-1">
-                    <div className="text-xs text-blue-400">{item.label}</div>
-                    <div className={item.valueClass || "text-blue-100"}>
-                      {item.value || "-"}
-                    </div>
-                  </div>
-                ))}
+      {/* Section content - Always visible */}
+      <div className="p-4 border-t border-blue-900/30 bg-blue-950/30">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+          {items.map((item, index) => (
+            <div key={index} className="space-y-1">
+              <div className="text-xs text-blue-400">{item.label}</div>
+              <div className={item.valueClass || "text-blue-100"}>
+                {item.value || "-"}
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

@@ -11,9 +11,10 @@ export interface ApproverInfo {
  * Enum for approval rule types
  */
 export enum ApprovalRuleType {
-  Any = 'Any',        // Any one approver can approve
-  All = 'All',        // All approvers must approve
-  Sequential = 'Sequential' // Approvers must approve in sequence
+  Any = 'Any',                          // Any one approver can approve
+  All = 'All',                          // All approvers must approve
+  Sequential = 'Sequential',            // Approvers must approve in sequence
+  MinimumWithRequired = 'MinimumWithRequired'  // Minimum number + required members must approve
 }
 
 /**
@@ -88,6 +89,7 @@ export interface ApprovalHistory {
   requestDate: string;
   status: string;
   comments?: string;
+  writingComments?: string;
   responses: ApprovalResponseHistory[];
   // Legacy fields for backward compatibility
   id?: number;
@@ -135,6 +137,21 @@ export interface ApprovalGroupFormData {
   comment?: string;
   selectedUsers: ApproverInfo[];
   ruleType: ApprovalRuleType;
+  // For MinimumWithRequired rule type
+  minimumApprovals?: number;
+  requiredMemberIds?: number[];
+}
+
+// Extended interface for MinimumWithRequired approval status
+export interface ApprovalStatusSummary {
+  minimumRequired: number;
+  currentApprovals: number;
+  requiredMembersTotal: number;
+  requiredMembersApproved: number;
+  requiredMembersPending: number[];
+  isMinimumMet: boolean;
+  areAllRequiredApproved: boolean;
+  isComplete: boolean;
 }
 
 // Approval response history interface

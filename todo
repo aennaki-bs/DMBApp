@@ -165,31 +165,35 @@ basic objects -> basic data
 generalise auto refrech
 change name DocumentManagementVerse
 
-auto refresh - circuit
-
-add search in create lines
 
 np 
 
-* option thol bach tchof kamlin fi sign up to see all data
-* add info for the id/user name in edit action --usermanagment
-* show pagination (all) option .
-* the ui fixing table lines be smaller.
-* propose the type tier in creation document type () .
-* add role in any control count of user that nesseserly approve (count )
-*  	- add role that nesseserly approve by specefic approbatur(s) ()
-* assign circuit in creation
-* controle for lines befor go to the next status and in approvment also need to check the doc berof approve
+
+
+
+<!-- * option thol bach tchof kamlin fi sign up to see all data -->
+<!-- * propose the type tier in creation document type (None). -->
+<!-- * add rule in any control count of user that nesseserly approve (count)
+*  	- add rule that nesseserly approve by specefic approbatur(s) () -->
+<!-- * add in approval requested / pinding approvales -->
+<!-- * controle for lines befor go to the next status and in approvment also need to check the doc berof approve -->
 * the document will be untouchable when i wait for the improvment
-* VAT -> auto by item () and the auther data (prix ...)
+* add info for the id/user name in edit action --usermanagment
+
+* assign circuit in creation to be required
 * choisire the element and fill data pricing in same form without split it
-* add in approval requested / pinding approvales
-* show the curent step in header
-* add bulk to lines ==> add option that make it list
-* make the ui better to view all easy
-* make the colors auminimum
+
+* VAT -> auto by item () and the auther data (prix ...)
 * approvation par wcenter de gestion
 
+add search in create lines
+* add bulk to lines ==> add option that make it list
+* show the curent step in header 
+* the ui fixing table lines be smaller.
+* make the ui better to view all easy
+auto refresh - circuit
+* make the colors auminimum
+* show pagination (all) option .
 
 
 

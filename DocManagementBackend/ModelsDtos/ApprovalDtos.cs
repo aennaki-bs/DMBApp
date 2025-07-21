@@ -22,6 +22,10 @@ namespace DocManagementBackend.Models
         public string Status { get; set; } = string.Empty;
         public string? AssignedTo { get; set; }
         public string? AssignedToGroup { get; set; }
+        
+        // Status flow information
+        public string CurrentStatusTitle { get; set; } = string.Empty;
+        public string NextStatusTitle { get; set; } = string.Empty;
     }
 
     public class ApprovalHistoryDto
@@ -51,6 +55,7 @@ namespace DocManagementBackend.Models
         public string DocumentTitle { get; set; } = string.Empty;
         public string StepTitle { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public string WritingComments { get; set; } = string.Empty;
         public bool? Approved { get; set; } // null if no response yet
         public DateTime? RespondedAt { get; set; }
         public string? ProcessedBy { get; set; }
@@ -101,7 +106,7 @@ namespace DocManagementBackend.Models
         public int? ApprovatorsGroupId { get; set; }
         public List<ApproverInfoDto>? GroupApprovers { get; set; }
         public string? GroupName { get; set; }
-        public string? RuleType { get; set; } = "All"; // "Any", "All", "Sequential"
+        public string? RuleType { get; set; } = "All"; // "Any", "All", "Sequential", "MinimumWithRequired"
         public string Comment { get; set; } = string.Empty;
     }
 
@@ -119,7 +124,11 @@ namespace DocManagementBackend.Models
         public string Name { get; set; } = string.Empty;
         public string? Comment { get; set; }
         public List<int> UserIds { get; set; } = new List<int>();
-        public string RuleType { get; set; } = "All"; // "Any", "All", "Sequential"
+        public string RuleType { get; set; } = "All"; // "Any", "All", "Sequential", "MinimumWithRequired"
+        
+        // Properties for MinimumWithRequired rule type
+        public int? MinimumApprovals { get; set; }
+        public List<int>? RequiredMemberIds { get; set; }
     }
 
     public class ApprovatorsGroupDetailDto

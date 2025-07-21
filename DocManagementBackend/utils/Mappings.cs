@@ -363,6 +363,23 @@ namespace DocManagementBackend.Mappings
             LignesCount = d.Lignes.Count,
             SousLignesCount = d.Lignes.Sum(l => l.SousLignes.Count),
             CircuitId = d.CircuitId,
+            Circuit = d.Circuit == null ? null : new CircuitDto
+            {
+                Id = d.Circuit.Id,
+                CircuitKey = d.Circuit.CircuitKey,
+                Title = d.Circuit.Title,
+                Descriptif = d.Circuit.Descriptif,
+                IsActive = d.Circuit.IsActive,
+                DocumentTypeId = d.Circuit.DocumentTypeId ?? 0,
+                DocumentType = d.Circuit.DocumentType != null ? new DocumentTypeDto
+                {
+                    TypeNumber = d.Circuit.DocumentType.TypeNumber,
+                    TypeKey = d.Circuit.DocumentType.TypeKey,
+                    TypeName = d.Circuit.DocumentType.TypeName,
+                    TypeAttr = d.Circuit.DocumentType.TypeAttr,
+                    TierType = d.Circuit.DocumentType.TierType
+                } : null
+            },
             CurrentStepId = d.CurrentStepId,
             ResponsibilityCentreId = d.ResponsibilityCentreId,
             ResponsibilityCentre = d.ResponsibilityCentre == null ? null : new ResponsibilityCentreSimpleDto

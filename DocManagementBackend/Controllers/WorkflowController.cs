@@ -264,7 +264,7 @@ namespace DocManagementBackend.Controllers
                                         isAutoApproved = true;
                                         Console.WriteLine($"Created auto-approved record with ID {approvalWriting.Id}");
                                     }
-                                    else if (rule != null && (rule.RuleType == RuleType.All || rule.RuleType == RuleType.Sequential))
+                                    else if (rule != null && (rule.RuleType == RuleType.All || rule.RuleType == RuleType.Sequential || rule.RuleType == RuleType.MinimumWithRequired))
                                     {
                                         Console.WriteLine($"Group has '{rule.RuleType}' rule - creating approval request");
                                         

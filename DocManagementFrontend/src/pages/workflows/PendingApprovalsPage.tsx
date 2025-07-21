@@ -8,6 +8,7 @@ import {
   FileWarning,
   ArrowUpDown,
   Search,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -98,7 +99,86 @@ export default function PendingApprovalsPage() {
     enabled: !!userIdNum,
   });
 
-  // Filter user approval history by status and search query (only those waiting for this user's response)
+  // Fetch approvals requested by this user
+  const {
+    data: requestedApprovalsData = [],
+    isLoading: isRequestedLoading,
+    isError: isRequestedError,
+    refetch: refetchRequested,
+  } = useQuery({
+    queryKey: ["requestedApprovals", userIdNum],
+    queryFn: () => {
+      if (!userIdNum) return [];
+      return approvalService.getRequestedApprovalsByUser(userIdNum);
+    },
+    enabled: !!userIdNum,
+  });
+
+  // Fetch accepted approval responses by this user
+  const {
+    data: acceptedApprovalsData = [],
+    isLoading: isAcceptedLoading,
+    isError: isAcceptedError,
+    refetch: refetchAccepted,
+  } = useQuery({
+    queryKey: ["acceptedApprovalResponses", userIdNum],
+    queryFn: () => {
+      if (!userIdNum) return [];
+      return approvalService.getAcceptedApprovalResponses(userIdNum);
+    },
+    enabled: !!userIdNum,
+  });
+
+  // Fetch rejected approval responses by this user
+  const {
+    data: rejectedApprovalsData = [],
+    isLoading: isRejectedLoading,
+    isError: isRejectedError,
+    refetch: refetchRejected,
+  } = useQuery({
+    queryKey: ["rejectedApprovalResponses", userIdNum],
+    queryFn: () => {
+      if (!userIdNum) return [];
+      return approvalService.getRejectedApprovalResponses(userIdNum);
+    },
+    enabled: !!userIdNum,
+  });
+
+  // Filter pending approvals (keep existing logic for pending tab)
+  const filteredPendingApprovals = pendingApprovals.filter(
+    (approval: any) =>
+      approval.documentTitle
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Filter accepted approvals from the new data source
+  const acceptedApprovals = acceptedApprovalsData.filter(
+    (approval: any) =>
+      approval.documentTitle
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.writingComments?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Filter rejected approvals from the new data source
+  const rejectedApprovals = rejectedApprovalsData.filter(
+    (approval: any) =>
+      approval.documentTitle
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.writingComments?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Filter waiting approvals from user history (only those waiting for this user's response)
   const waitingApprovals = userApprovalHistoryData.filter(
     (approval: any) =>
       (approval.status === "Open" || approval.status === "InProgress") &&
@@ -112,42 +192,27 @@ export default function PendingApprovalsPage() {
       approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Filter pending approvals (keep existing logic for pending tab)
-  const filteredPendingApprovals = pendingApprovals.filter(
+  // Filter requested approvals by search query and categorize by status
+  const filteredRequestedApprovals = requestedApprovalsData.filter(
     (approval: any) =>
       approval.documentTitle
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase())
+      approval.processedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter accepted approvals from user history (only those approved by this specific user)
-  const acceptedApprovals = userApprovalHistoryData.filter(
-    (approval: any) =>
-      approval.status === "Accepted" &&
-      approval.approved === true &&
-      approval.processedBy !== null && // Ensure this user actually responded
-      (approval.documentTitle
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const requestedPendingApprovals = filteredRequestedApprovals.filter(
+    (approval: any) => approval.status === "Open" || approval.status === "InProgress"
   );
 
-  // Filter rejected approvals from user history (only those rejected by this specific user)
-  const rejectedApprovals = userApprovalHistoryData.filter(
-    (approval: any) =>
-      approval.status === "Rejected" &&
-      approval.approved === false &&
-      approval.processedBy !== null && // Ensure this user actually responded
-      (approval.documentTitle
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      approval.stepTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.requestedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      approval.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const requestedCompletedApprovals = filteredRequestedApprovals.filter(
+    (approval: any) => approval.status === "Accepted"
+  );
+
+  const requestedRejectedApprovals = filteredRequestedApprovals.filter(
+    (approval: any) => approval.status === "Rejected"
   );
 
   const [historySubTab, setHistorySubTab] = useState("waiting");
@@ -206,7 +271,8 @@ export default function PendingApprovalsPage() {
 
     // Refetch data
     refetchPending();
-    refetchWaiting();
+    refetchUserHistory();
+    refetchRequested();
     refetchAccepted();
     refetchRejected();
   };
@@ -250,6 +316,18 @@ export default function PendingApprovalsPage() {
             {pendingApprovals.length > 0 && (
               <Badge variant="destructive" className="ml-2 bg-red-600">
                 {pendingApprovals.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger
+            value="requested"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-800/50"
+          >
+            <Send className="h-4 w-4 mr-1" />
+            Requested Approvals
+            {filteredRequestedApprovals.length > 0 && (
+              <Badge variant="secondary" className="ml-2 bg-blue-500/20 text-blue-400">
+                {filteredRequestedApprovals.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -328,6 +406,12 @@ export default function PendingApprovalsPage() {
                         Step
                       </TableHead>
                       <TableHead className="text-blue-900 dark:text-blue-300">
+                        Current Status
+                      </TableHead>
+                      <TableHead className="text-blue-900 dark:text-blue-300">
+                        Next Status
+                      </TableHead>
+                      <TableHead className="text-blue-900 dark:text-blue-300">
                         Requested By
                       </TableHead>
                       <TableHead className="text-blue-900 dark:text-blue-300">
@@ -374,6 +458,22 @@ export default function PendingApprovalsPage() {
                             {approval.stepTitle || "Unknown Step"}
                           </TableCell>
                           <TableCell className="text-blue-800 dark:text-blue-200">
+                            <Badge 
+                              variant="outline" 
+                              className="bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300"
+                            >
+                              {approval.currentStatusTitle || "Unknown"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-blue-800 dark:text-blue-200">
+                            <Badge 
+                              variant="outline" 
+                              className="bg-green-100 border-green-300 text-green-800 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300"
+                            >
+                              {approval.nextStatusTitle || "Unknown"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-blue-800 dark:text-blue-200">
                             {approval.requestedBy || "Unknown User"}
                           </TableCell>
                           <TableCell className="text-blue-800 dark:text-blue-200">
@@ -415,10 +515,10 @@ export default function PendingApprovalsPage() {
           </div>
         </TabsContent>
 
-        {/* Approval History Tab */}
-        <TabsContent value="history" className="mt-4">
+        {/* Requested Approvals Tab */}
+        <TabsContent value="requested" className="mt-4">
           <div className="rounded-xl border border-blue-200 overflow-hidden dark:border-blue-900/30 dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
-            {isUserHistoryLoading ? (
+            {isRequestedLoading ? (
               <div className="p-6 space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center space-x-4">
@@ -430,7 +530,285 @@ export default function PendingApprovalsPage() {
                   </div>
                 ))}
               </div>
-            ) : isUserHistoryError ? (
+            ) : isRequestedError ? (
+              <div className="p-6 text-center">
+                <FileWarning className="h-16 w-16 mx-auto text-red-500 mb-2" />
+                <h3 className="text-xl font-medium text-red-600 dark:text-red-400">
+                  Failed to load requested approvals
+                </h3>
+                <p className="text-blue-600 dark:text-gray-400">
+                  There was an error retrieving approvals you have requested.
+                </p>
+                <Button
+                  variant="destructive"
+                  className="mt-4"
+                  onClick={() => refetchRequested()}
+                >
+                  Try Again
+                </Button>
+              </div>
+            ) : (
+              <Tabs defaultValue="pending" className="w-full">
+                <TabsList className="bg-blue-100 border-b border-blue-200 dark:bg-blue-950/40 dark:border-blue-900/30 rounded-none h-auto w-full justify-start p-0">
+                  <TabsTrigger
+                    value="pending"
+                    className="px-4 py-3 text-sm font-medium transition-all border-b-2 data-[state=active]:border-amber-500 data-[state=active]:text-amber-600 data-[state=active]:bg-amber-100 dark:data-[state=active]:text-amber-400 dark:data-[state=active]:bg-amber-500/10"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Pending
+                      {requestedPendingApprovals.length > 0 && (
+                        <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 text-xs">
+                          {requestedPendingApprovals.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="completed"
+                    className="px-4 py-3 text-sm font-medium transition-all border-b-2 data-[state=active]:border-green-500 data-[state=active]:text-green-600 data-[state=active]:bg-green-100 dark:data-[state=active]:text-green-400 dark:data-[state=active]:bg-green-500/10"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CircleCheck className="h-4 w-4" />
+                      Completed
+                      {requestedCompletedApprovals.length > 0 && (
+                        <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
+                          {requestedCompletedApprovals.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="rejected"
+                    className="px-4 py-3 text-sm font-medium transition-all border-b-2 data-[state=active]:border-red-500 data-[state=active]:text-red-600 data-[state=active]:bg-red-100 dark:data-[state=active]:text-red-400 dark:data-[state=active]:bg-red-500/10"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CircleX className="h-4 w-4" />
+                      Rejected
+                      {requestedRejectedApprovals.length > 0 && (
+                        <Badge variant="secondary" className="bg-red-500/20 text-red-400 text-xs">
+                          {requestedRejectedApprovals.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="pending" className="p-4">
+                  {requestedPendingApprovals.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Send className="h-12 w-12 mx-auto text-amber-500 dark:text-amber-400/50 mb-3" />
+                      <h3 className="text-lg font-medium text-amber-700 dark:text-amber-300">
+                        No pending requests
+                      </h3>
+                      <p className="text-blue-600 dark:text-gray-400 text-sm">
+                        You haven't requested any approvals that are currently pending.
+                      </p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[calc(100vh-400px)]">
+                      <div className="space-y-3">
+                        {requestedPendingApprovals.map((approval: any, index: number) => (
+                          <div
+                            key={`requested-pending-${approval.approvalId || approval.documentId}-${index}`}
+                            className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg hover:bg-amber-500/10 transition-colors"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <button
+                                  onClick={() => navigate(`/documents/${approval.documentId}`)}
+                                  className="flex items-center gap-2 text-left hover:text-amber-600 dark:hover:text-amber-300 transition-colors group mb-2"
+                                >
+                                  <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                  <div>
+                                    <span className="font-mono text-amber-700 dark:text-amber-300 text-sm">
+                                      {approval.documentKey || "No Key"}
+                                    </span>
+                                    <span className="text-amber-800 dark:text-amber-100 ml-2">
+                                      {approval.documentTitle || "Untitled Document"}
+                                    </span>
+                                  </div>
+                                </button>
+                                <div className="text-sm text-amber-700 dark:text-amber-200/80">
+                                  Step: {approval.stepTitle || "Unknown Step"}
+                                </div>
+                                <div className="text-sm text-amber-600 dark:text-amber-200/60">
+                                  Assigned to: {approval.processedBy || "Unknown"}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                                  {approval.status === "InProgress" ? "In Progress" : "Pending"}
+                                </Badge>
+                                <div className="text-xs text-amber-600 dark:text-amber-200/60 mt-1">
+                                  {formatDate(approval.requestDate || "")}
+                                </div>
+                              </div>
+                            </div>
+                            {approval.comments && (
+                              <div className="mt-3 pt-2 border-t border-amber-500/20">
+                                <p className="text-sm text-amber-700 dark:text-amber-200/80">
+                                  {approval.comments}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="completed" className="p-4">
+                  {requestedCompletedApprovals.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CircleCheck className="h-12 w-12 mx-auto text-green-500 dark:text-green-400/50 mb-3" />
+                      <h3 className="text-lg font-medium text-green-700 dark:text-green-300">
+                        No completed requests
+                      </h3>
+                      <p className="text-blue-600 dark:text-gray-400 text-sm">
+                        None of your approval requests have been completed yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[calc(100vh-400px)]">
+                      <div className="space-y-3">
+                        {requestedCompletedApprovals.map((approval: any, index: number) => (
+                          <div
+                            key={`requested-completed-${approval.approvalId || approval.documentId}-${index}`}
+                            className="p-4 bg-green-500/5 border border-green-500/20 rounded-lg hover:bg-green-500/10 transition-colors"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <button
+                                  onClick={() => navigate(`/documents/${approval.documentId}`)}
+                                  className="flex items-center gap-2 text-left hover:text-green-600 dark:hover:text-green-300 transition-colors group mb-2"
+                                >
+                                  <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                  <div>
+                                    <span className="font-mono text-green-700 dark:text-green-300 text-sm">
+                                      {approval.documentKey || "No Key"}
+                                    </span>
+                                    <span className="text-green-800 dark:text-green-100 ml-2">
+                                      {approval.documentTitle || "Untitled Document"}
+                                    </span>
+                                  </div>
+                                </button>
+                                <div className="text-sm text-green-700 dark:text-green-200/80">
+                                  Step: {approval.stepTitle || "Unknown Step"}
+                                </div>
+                                <div className="text-sm text-green-600 dark:text-green-200/60">
+                                  Approved by: {approval.processedBy || "Unknown"}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                                  Completed
+                                </Badge>
+                                <div className="text-xs text-green-600 dark:text-green-200/60 mt-1">
+                                  {formatDate(approval.requestDate || "")}
+                                </div>
+                              </div>
+                            </div>
+                            {approval.comments && (
+                              <div className="mt-3 pt-2 border-t border-green-500/20">
+                                <p className="text-sm text-green-700 dark:text-green-200/80">
+                                  {approval.comments}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="rejected" className="p-4">
+                  {requestedRejectedApprovals.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CircleX className="h-12 w-12 mx-auto text-red-500 dark:text-red-400/50 mb-3" />
+                      <h3 className="text-lg font-medium text-red-700 dark:text-red-300">
+                        No rejected requests
+                      </h3>
+                      <p className="text-blue-600 dark:text-gray-400 text-sm">
+                        None of your approval requests have been rejected.
+                      </p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[calc(100vh-400px)]">
+                      <div className="space-y-3">
+                        {requestedRejectedApprovals.map((approval: any, index: number) => (
+                          <div
+                            key={`requested-rejected-${approval.approvalId || approval.documentId}-${index}`}
+                            className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg hover:bg-red-500/10 transition-colors"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <button
+                                  onClick={() => navigate(`/documents/${approval.documentId}`)}
+                                  className="flex items-center gap-2 text-left hover:text-red-600 dark:hover:text-red-300 transition-colors group mb-2"
+                                >
+                                  <FileText className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                  <div>
+                                    <span className="font-mono text-red-700 dark:text-red-300 text-sm">
+                                      {approval.documentKey || "No Key"}
+                                    </span>
+                                    <span className="text-red-800 dark:text-red-100 ml-2">
+                                      {approval.documentTitle || "Untitled Document"}
+                                    </span>
+                                  </div>
+                                </button>
+                                <div className="text-sm text-red-700 dark:text-red-200/80">
+                                  Step: {approval.stepTitle || "Unknown Step"}
+                                </div>
+                                <div className="text-sm text-red-600 dark:text-red-200/60">
+                                  Rejected by: {approval.processedBy || "Unknown"}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                                  Rejected
+                                </Badge>
+                                <div className="text-xs text-red-600 dark:text-red-200/60 mt-1">
+                                  {formatDate(approval.requestDate || "")}
+                                </div>
+                              </div>
+                            </div>
+                            {approval.comments && (
+                              <div className="mt-3 pt-2 border-t border-red-500/20">
+                                <p className="text-sm text-red-700 dark:text-red-200/80">
+                                  {approval.comments}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Approval History Tab */}
+        <TabsContent value="history" className="mt-4">
+          <div className="rounded-xl border border-blue-200 overflow-hidden dark:border-blue-900/30 dark:bg-gradient-to-b dark:from-[#1a2c6b]/50 dark:to-[#0a1033]/50 shadow-lg">
+            {(isUserHistoryLoading || isAcceptedLoading || isRejectedLoading) ? (
+              <div className="p-6 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-12 rounded-md" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[250px]" />
+                      <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (isUserHistoryError || isAcceptedError || isRejectedError) ? (
               <div className="p-6 text-center">
                 <FileWarning className="h-16 w-16 mx-auto text-red-500 mb-2" />
                 <h3 className="text-xl font-medium text-red-600 dark:text-red-400">
@@ -444,6 +822,8 @@ export default function PendingApprovalsPage() {
                   className="mt-4"
                   onClick={() => {
                     refetchUserHistory();
+                    refetchAccepted();
+                    refetchRejected();
                   }}
                 >
                   Try Again
@@ -675,13 +1055,18 @@ export default function PendingApprovalsPage() {
                                         </span>
                                       </div>
                                     </button>
+                                    {/* {approval.processedBy && (
+                                      <div className="text-sm text-green-600 dark:text-green-200/60">
+                                        Approved by: {approval.processedBy}
+                                      </div>
+                                    )} */}
                                     <div className="text-sm text-green-700 dark:text-green-200/80">
                                       Step:{" "}
                                       {approval.stepTitle || "Unknown Step"}
                                     </div>
-                                    {approval.processedBy && (
-                                      <div className="text-sm text-green-600 dark:text-green-200/60">
-                                        Approved by: {approval.processedBy}
+                                    {approval.writingComments && (
+                                      <div className="text-sm text-green-700 dark:text-green-200/80">
+                                        {approval.writingComments}
                                       </div>
                                     )}
                                   </div>
@@ -800,11 +1185,16 @@ export default function PendingApprovalsPage() {
                                       Step:{" "}
                                       {approval.stepTitle || "Unknown Step"}
                                     </div>
-                                    {approval.processedBy && (
+                                    {approval.writingComments && (
+                                      <div className="text-sm text-red-700 dark:text-red-200/80">
+                                        {approval.writingComments}
+                                      </div>
+                                    )}
+                                    {/* {approval.processedBy && (
                                       <div className="text-sm text-red-600 dark:text-red-200/60">
                                         Rejected by: {approval.processedBy}
                                       </div>
-                                    )}
+                                    )} */}
                                   </div>
                                   <div className="text-right">
                                     <Badge className="bg-red-500/20 text-red-400 border-red-500/30">

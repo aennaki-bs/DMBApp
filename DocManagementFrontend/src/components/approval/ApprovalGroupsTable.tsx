@@ -48,6 +48,7 @@ const RULE_TYPE_OPTIONS = [
   { id: "All", label: "All Must Approve", value: "All" },
   { id: "Any", label: "Any Can Approve", value: "Any" },
   { id: "Sequential", label: "Sequential", value: "Sequential" },
+  { id: "MinimumWithRequired", label: "Minimum + Required", value: "MinimumWithRequired" },
 ];
 
 const STATUS_OPTIONS = [

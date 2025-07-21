@@ -10,7 +10,8 @@ import {
   DocumentToApprove,
   ApprovalRuleType,
   GroupAssociationDto,
-  StepApprovalConfigDetailDto
+  StepApprovalConfigDetailDto,
+  ApprovalStatusSummary
 } from '@/models/approval';
 
 // Approvator (individual approver) interface
@@ -122,7 +123,9 @@ const approvalService = {
     name: string, 
     comment?: string, 
     userIds: number[], 
-    ruleType: string 
+    ruleType: string,
+    minimumApprovals?: number,
+    requiredMemberIds?: number[]
   }): Promise<void> => {
     try {
       // Check if userIds array exists and has entries
@@ -137,6 +140,8 @@ const approvalService = {
         userIds: number[];
         ruleType: string;
         users?: { userId: number; orderIndex: number }[];
+        minimumApprovals?: number;
+        requiredMemberIds?: number[];
       };
       
       // For sequential approval type, we include orderIndex information
@@ -153,6 +158,12 @@ const approvalService = {
         }));
       }
       
+      // Add MinimumWithRequired specific fields if present
+      if (group.ruleType === 'MinimumWithRequired') {
+        payload.minimumApprovals = group.minimumApprovals;
+        payload.requiredMemberIds = group.requiredMemberIds;
+      }
+      
       await api.post('/Approval/groups', payload);
     } catch (error) {
       console.error('Error creating approval group:', error);
@@ -165,7 +176,9 @@ const approvalService = {
     name: string, 
     comment?: string, 
     userIds: number[], 
-    ruleType: string 
+    ruleType: string,
+    minimumApprovals?: number,
+    requiredMemberIds?: number[]
   }): Promise<void> => {
     try {
       // Since there's no specific update endpoint, we need to:
@@ -185,6 +198,8 @@ const approvalService = {
         userIds: number[];
         ruleType: string;
         users?: { userId: number; orderIndex: number }[];
+        minimumApprovals?: number;
+        requiredMemberIds?: number[];
       };
       
       // For sequential approval type, we include orderIndex information
@@ -199,6 +214,12 @@ const approvalService = {
           userId,
           orderIndex: index
         }));
+      }
+      
+      // Add MinimumWithRequired specific fields if present
+      if (group.ruleType === 'MinimumWithRequired') {
+        payload.minimumApprovals = group.minimumApprovals;
+        payload.requiredMemberIds = group.requiredMemberIds;
       }
       
       await api.post('/Approval/groups', payload);
@@ -377,6 +398,45 @@ const approvalService = {
   },
 
   /**
+   * Get approvals requested by a specific user
+   */
+  getRequestedApprovalsByUser: async (userId: number): Promise<any[]> => {
+    try {
+      const response = await api.get(`/Approval/requested/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching requested approvals for user ${userId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get accepted approval responses by a specific user
+   */
+  getAcceptedApprovalResponses: async (userId: number): Promise<any[]> => {
+    try {
+      const response = await api.get(`/Approval/responses/accepted/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching accepted approval responses for user ${userId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get rejected approval responses by a specific user
+   */
+  getRejectedApprovalResponses: async (userId: number): Promise<any[]> => {
+    try {
+      const response = await api.get(`/Approval/responses/rejected/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching rejected approval responses for user ${userId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
    * Get documents waiting for the current user's approval
    */
   getDocumentsToApprove: async (): Promise<ApprovalInfo[]> => {
@@ -538,6 +598,17 @@ const approvalService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching rejected approvals:', error);
+      throw error;
+    }
+  },
+
+  // Get approval status summary for MinimumWithRequired rules
+  getApprovalStatusSummary: async (approvalId: number): Promise<ApprovalStatusSummary> => {
+    try {
+      const response = await api.get(`/Approval/${approvalId}/status-summary`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching approval status summary for ID ${approvalId}:`, error);
       throw error;
     }
   },

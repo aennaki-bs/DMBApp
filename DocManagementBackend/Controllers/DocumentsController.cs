@@ -50,6 +50,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Circuit)
                 .Include(d => d.Lignes)
                 .Where(d => !d.IsCircuitCompleted); // Only active documents (not completed circuits)
 
@@ -86,6 +87,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Circuit)
                 .Include(d => d.Lignes)
                 .Where(d => !d.IsCircuitCompleted); // Only active documents (not completed circuits)
 
@@ -120,6 +122,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Circuit)
                 .Include(d => d.Lignes)
                 .Where(d => d.Id == id)
                 .Select(DocumentMappings.ToDocumentDto)
@@ -153,6 +156,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Circuit)
                 .Include(d => d.Lignes);
 
             // Filter based on user's responsibility center
@@ -190,6 +194,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.SubType)
                 .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Circuit)
                 .Include(d => d.Lignes)
                 .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode)); // Only archived documents
 
@@ -228,6 +233,7 @@ namespace DocManagementBackend.Controllers
                 .Include(d => d.CurrentStep)
                 .Include(d => d.CurrentStatus)
                 .Include(d => d.ResponsibilityCentre)
+                .Include(d => d.Circuit)
                 .Include(d => d.Lignes)
                 .Where(d => d.IsCircuitCompleted && string.IsNullOrEmpty(d.ERPDocumentCode)); // Completed circuit but not archived
 

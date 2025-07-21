@@ -306,6 +306,9 @@ export function AssignApprovalDialog({
                         <SelectItem value={ApprovalRuleType.Sequential}>
                           Sequential - Approvers must approve in sequence
                         </SelectItem>
+                        <SelectItem value={ApprovalRuleType.MinimumWithRequired}>
+                          Minimum + Required - Minimum approvals plus required members
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

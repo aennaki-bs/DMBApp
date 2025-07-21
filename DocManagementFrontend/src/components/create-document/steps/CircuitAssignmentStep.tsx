@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
+  ArrowLeft,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,8 @@ interface CircuitAssignmentStepProps {
   circuitError: string | null;
   onCircuitChange: (value: string) => void;
   isLoading: boolean;
+  onGoToCircuitManagement?: () => void;
+  onGoBackToType?: () => void;
 }
 
 export const CircuitAssignmentStep = ({
@@ -52,6 +55,8 @@ export const CircuitAssignmentStep = ({
   circuitError,
   onCircuitChange,
   isLoading,
+  onGoToCircuitManagement,
+  onGoBackToType,
 }: CircuitAssignmentStepProps) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,7 +112,7 @@ export const CircuitAssignmentStep = ({
           <Share2 className="h-4 w-4 text-blue-400" />
           <Label className="text-sm font-medium text-gray-200">
             {t("circuits.selectCircuit")}{" "}
-            <span className="ml-1 text-blue-400">({t("common.optional")})</span>
+            <span className="ml-1 text-red-400">*</span>
           </Label>
         </div>
 
@@ -117,17 +122,41 @@ export const CircuitAssignmentStep = ({
             <span>{t("circuits.loadingCircuits")}</span>
           </div>
         ) : noCircuitsAvailable ? (
-          <Card className="bg-blue-900/20 border-blue-900/40">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3 text-blue-400">
-                <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">
-                    {t("circuits.noActiveCircuitsAvailable")}
+          <Card className="bg-red-900/20 border-red-900/40">
+            <CardContent className="p-6">
+              <div className="flex items-start space-x-3 text-red-400">
+                <AlertCircle className="h-6 w-6 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium mb-2">
+                    No Active Circuits Available
                   </p>
-                  <p className="text-xs mt-1 text-blue-300/80">
-                    {t("circuits.noActiveCircuitsDescription")}
+                  <p className="text-xs text-red-300/80 mb-4">
+                    There are no active circuits available for the selected document type. 
+                    You need to either create an active circuit or change the document type.
                   </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {onGoToCircuitManagement && (
+                      <Button
+                        onClick={onGoToCircuitManagement}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                        size="sm"
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Go to Circuit Management
+                      </Button>
+                    )}
+                    {onGoBackToType && (
+                      <Button
+                        onClick={onGoBackToType}
+                        variant="outline"
+                        className="border-red-600 text-red-400 hover:bg-red-900/20 text-sm"
+                        size="sm"
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Change Document Type
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -169,7 +198,7 @@ export const CircuitAssignmentStep = ({
                 <Info className="h-3.5 w-3.5 text-blue-400" />
                 <span>
                   Only <span className="font-bold">active circuits</span> compatible with the selected document type are
-                  displayed and available for selection
+                  displayed. Circuit selection is <span className="font-bold text-red-400">required</span>.
                 </span>
               </div>
             </div>
@@ -185,55 +214,6 @@ export const CircuitAssignmentStep = ({
             </div> */}
 
             <ScrollArea className="h-[360px] pr-4">
-              {/* Add a "No circuit" option */}
-              <div
-                key="no-circuit"
-                className="mb-8 bg-gray-900 border border-gray-800 rounded-md overflow-hidden"
-              >
-                <div
-                  className={cn(
-                    "cursor-pointer transition-all p-5",
-                    selectedCircuitId === null &&
-                      "bg-blue-900/30 border-blue-500"
-                  )}
-                  onClick={() => onCircuitChange("")}
-                >
-                  <div className="flex items-center">
-                    <RadioGroupItem
-                      value=""
-                      id="circuit-none"
-                      className={cn(
-                        "mr-4",
-                        selectedCircuitId === null && "text-blue-500"
-                      )}
-                    />
-
-                    <div className="flex items-center gap-2 w-20">
-                      <FileText className="h-5 w-5 text-gray-400" />
-                      <span className="font-mono text-sm">--</span>
-                    </div>
-
-                    <div className="flex-grow mr-4">
-                      <div className="text-blue-400 font-medium">
-                        No Circuit
-                      </div>
-                    </div>
-
-                    <div className="mr-4 text-sm text-gray-400">
-                      Document will be static (no workflow)
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {selectedCircuitId === null && (
-                        <Badge className="bg-blue-600 ml-2 px-3 py-1">
-                          Selected
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {filteredCircuits.map((circuit) => (
                 <div
                   key={circuit.id}

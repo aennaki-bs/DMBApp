@@ -19,6 +19,7 @@ import {
   FileText,
   UserRound,
   Pencil,
+  CheckCircle,
 } from "lucide-react";
 import {
   ApprovalGroup,
@@ -34,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { GroupDetailsStep } from "./steps/GroupDetailsStep";
 import { SelectUsersStep } from "./steps/SelectUsersStep";
 import { RuleSelectionStep } from "./steps/RuleSelectionStep";
+import { MinimumWithRequiredConfigStep } from "./steps/MinimumWithRequiredConfigStep";
 import { ReviewStep } from "./steps/ReviewStep";
 
 interface ApprovalGroupEditDialogProps {
@@ -57,6 +59,8 @@ export default function ApprovalGroupEditDialog({
     comment: "",
     selectedUsers: [],
     ruleType: "Any",
+    minimumApprovals: 1,
+    requiredMemberIds: [],
   });
 
   // Step management
@@ -81,6 +85,8 @@ export default function ApprovalGroupEditDialog({
             username: a.username,
           })) || [],
         ruleType: (group.ruleType as ApprovalRuleType) || "Any",
+        minimumApprovals: 1, // Default, TODO: load from group if available
+        requiredMemberIds: [], // Default, TODO: load from group if available
       });
 
       // Fetch available users
@@ -88,38 +94,57 @@ export default function ApprovalGroupEditDialog({
     }
   }, [open, group]);
 
-  // Step definitions
-  const steps = [
-    {
-      id: 1,
-      title: "Group Details",
-      description: "Name and basic information",
-      icon: <FileText className="h-4 w-4" />,
-      completed: currentStep > 1,
-    },
-    {
-      id: 2,
-      title: "Approval Rules",
-      description: "Set approval requirements",
-      icon: <Settings className="h-4 w-4" />,
-      completed: currentStep > 2,
-    },
-    {
-      id: 3,
-      title: "Select Users",
-      description: "Add users to the group",
-      icon: <UserRound className="h-4 w-4" />,
-      completed: currentStep > 3,
-    },
-    {
-      id: 4,
+  // Dynamically determine steps based on rule type
+  const getSteps = () => {
+    const baseSteps = [
+      {
+        id: 1,
+        title: "Group Details",
+        description: "Name and basic information",
+        icon: <FileText className="h-4 w-4" />,
+        completed: currentStep > 1,
+      },
+      {
+        id: 2,
+        title: "Approval Rules",
+        description: "Set approval requirements",
+        icon: <Settings className="h-4 w-4" />,
+        completed: currentStep > 2,
+      },
+      {
+        id: 3,
+        title: "Select Users",
+        description: "Add users to the group",
+        icon: <UserRound className="h-4 w-4" />,
+        completed: currentStep > 3,
+      },
+    ];
+
+    // Add MinimumWithRequired config step if that rule is selected
+    if (formData.ruleType === ApprovalRuleType.MinimumWithRequired) {
+      baseSteps.push({
+        id: 4,
+        title: "Configure Rule",
+        description: "Set minimum and required members",
+        icon: <Settings className="h-4 w-4" />,
+        completed: currentStep > 4,
+      });
+    }
+
+    // Add review step
+    const reviewStepId = formData.ruleType === ApprovalRuleType.MinimumWithRequired ? 5 : 4;
+    baseSteps.push({
+      id: reviewStepId,
       title: "Review",
       description: "Confirm group details",
-      icon: <Check className="h-4 w-4" />,
+      icon: <CheckCircle className="h-4 w-4" />,
       completed: false,
-    },
-  ];
+    });
 
+    return baseSteps;
+  };
+
+  const steps = getSteps();
   const TOTAL_STEPS = steps.length;
 
   const fetchAvailableUsers = async () => {
@@ -175,7 +200,35 @@ export default function ApprovalGroupEditDialog({
           return false;
         }
         return true;
-      case 4: // Review
+      case 4: // Configure Rule (for MinimumWithRequired) or Review (for others)
+        if (formData.ruleType === ApprovalRuleType.MinimumWithRequired) {
+          // Validate MinimumWithRequired configuration
+          if (!formData.minimumApprovals || formData.minimumApprovals < 1) {
+            toast.error("Minimum approvals must be at least 1");
+            return false;
+          }
+          if (formData.minimumApprovals > formData.selectedUsers.length) {
+            toast.error("Minimum approvals cannot exceed the number of selected users");
+            return false;
+          }
+          if (!formData.requiredMemberIds || formData.requiredMemberIds.length === 0) {
+            toast.error("Please select at least one required member");
+            return false;
+          }
+          return true;
+        } else {
+          // This is the review step for other rule types
+          if (formData.selectedUsers.length === 0) {
+            toast.error("Please select at least 2 users for the approval group");
+            return false;
+          }
+          if (formData.selectedUsers.length < 2) {
+            toast.error("Cannot update approval group with less than 2 users");
+            return false;
+          }
+          return true;
+        }
+      case 5: // Review (for MinimumWithRequired)
         // Final validation before submission
         if (formData.selectedUsers.length === 0) {
           toast.error("Please select at least 2 users for the approval group");
@@ -184,6 +237,16 @@ export default function ApprovalGroupEditDialog({
         if (formData.selectedUsers.length < 2) {
           toast.error("Cannot update approval group with less than 2 users");
           return false;
+        }
+        if (formData.ruleType === ApprovalRuleType.MinimumWithRequired) {
+          if (!formData.minimumApprovals || formData.minimumApprovals < 1) {
+            toast.error("Minimum approvals must be at least 1");
+            return false;
+          }
+          if (!formData.requiredMemberIds || formData.requiredMemberIds.length === 0) {
+            toast.error("Please select at least one required member");
+            return false;
+          }
         }
         return true;
       default:
@@ -218,12 +281,26 @@ export default function ApprovalGroupEditDialog({
       setIsSubmitting(true);
 
       // Prepare the request data
-      const requestData = {
+      const requestData: any = {
         name: formData.name,
         comment: formData.comment,
         userIds: formData.selectedUsers.map((user) => user.userId),
         ruleType: formData.ruleType,
       };
+
+      // Add MinimumWithRequired specific fields if that rule type is selected
+      if (formData.ruleType === ApprovalRuleType.MinimumWithRequired) {
+        requestData.minimumApprovals = formData.minimumApprovals;
+        requestData.requiredMemberIds = formData.requiredMemberIds;
+      }
+
+      // For sequential approval type, we include orderIndex information
+      if (formData.ruleType === ApprovalRuleType.Sequential && formData.selectedUsers.length > 0) {
+        requestData.users = formData.selectedUsers.map((user, index) => ({
+          userId: user.userId,
+          orderIndex: index
+        }));
+      }
 
       // Log the request payload
       console.log("Updating approval group with payload:", requestData);
@@ -300,18 +377,57 @@ export default function ApprovalGroupEditDialog({
             <SelectUsersStep
               availableUsers={availableUsers}
               selectedUsers={formData.selectedUsers}
-              isLoading={isLoadingUsers}
-              isSequential={formData.ruleType === "Sequential"}
-              onSelectedUsersChange={(users) =>
+              onSelectionChange={(users) =>
                 handleUpdateFormData("selectedUsers", users)
               }
+              isLoading={isLoadingUsers}
             />
           </MotionDiv>
         );
       case 4:
+        // For MinimumWithRequired, show config step; for others, show review
+        if (formData.ruleType === ApprovalRuleType.MinimumWithRequired) {
+          return (
+            <MotionDiv
+              key="step4-config"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={variants}
+              transition={{ duration: 0.2 }}
+            >
+              <MinimumWithRequiredConfigStep
+                minimumApprovals={formData.minimumApprovals || 1}
+                onMinimumApprovalsChange={(value) =>
+                  handleUpdateFormData("minimumApprovals", value)
+                }
+                requiredMemberIds={formData.requiredMemberIds || []}
+                onRequiredMemberIdsChange={(ids) =>
+                  handleUpdateFormData("requiredMemberIds", ids)
+                }
+                selectedUsers={formData.selectedUsers}
+              />
+            </MotionDiv>
+          );
+        } else {
+          return (
+            <MotionDiv
+              key="step4-review"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={variants}
+              transition={{ duration: 0.2 }}
+            >
+              <ReviewStep formData={formData} />
+            </MotionDiv>
+          );
+        }
+      case 5:
+        // This is the review step for MinimumWithRequired
         return (
           <MotionDiv
-            key="step4"
+            key="step5"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -328,112 +444,116 @@ export default function ApprovalGroupEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Edit Approval Group</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.3)] max-w-3xl mx-auto rounded-xl h-[90vh] max-h-[700px] flex flex-col p-5">
+        <DialogHeader className="mb-2 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Pencil className="h-5 w-5 text-blue-400" />
+            <DialogTitle className="text-lg text-blue-100">Edit Approval Group</DialogTitle>
+          </div>
+          <DialogDescription className="text-blue-300 text-xs">
             Modify the details of the "{group?.name}" approval group
           </DialogDescription>
         </DialogHeader>
 
-        {/* Progress Steps */}
-        <div className="mb-4 mt-2">
-          <div className="flex justify-between">
-            {steps.map((step) => (
+        {/* Progress indicator */}
+        <div className={`grid gap-2 mb-2 flex-shrink-0 ${
+          steps.length === 4 ? 'grid-cols-4' : 
+          steps.length === 5 ? 'grid-cols-5' : 
+          'grid-cols-4'
+        }`}>
+          {steps.map((step) => (
+            <div
+              key={step.id}
+              className="relative"
+            >
               <div
-                key={step.id}
-                className="flex flex-col items-center text-center"
+                className={cn(
+                  "flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-1 transition-all duration-200",
+                  currentStep === step.id
+                    ? "bg-blue-600 text-white"
+                    : step.completed
+                    ? "bg-green-600/70 text-white"
+                    : "bg-blue-900/50 text-blue-300"
+                )}
               >
-                <div
+                {step.completed ? <Check className="h-4 w-4" /> : step.icon}
+              </div>
+              <div className="text-center">
+                <p
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full border-2",
-                    step.id === currentStep
-                      ? "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500"
+                    "text-xs font-medium",
+                    currentStep === step.id
+                      ? "text-blue-200"
                       : step.completed
-                      ? "border-green-600 bg-green-600 text-white dark:border-green-500 dark:bg-green-500"
-                      : "border-gray-300 text-gray-500 dark:border-gray-700"
-                  )}
-                >
-                  {step.completed ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    step.icon || step.id
-                  )}
-                </div>
-                <span
-                  className={cn(
-                    "mt-2 text-sm font-medium",
-                    step.id === currentStep
-                      ? "text-blue-600 dark:text-blue-500"
-                      : step.completed
-                      ? "text-green-600 dark:text-green-500"
-                      : "text-gray-500 dark:text-gray-400"
+                      ? "text-green-400"
+                      : "text-blue-400/70"
                   )}
                 >
                   {step.title}
-                </span>
-                <span
+                </p>
+                <p
                   className={cn(
-                    "text-xs text-gray-500 dark:text-gray-400 hidden sm:block",
-                    step.id === currentStep &&
-                      "text-blue-600 dark:text-blue-500"
+                    "text-[10px] hidden sm:block",
+                    currentStep === step.id
+                      ? "text-blue-300/90"
+                      : step.completed
+                      ? "text-green-400/70"
+                      : "text-blue-400/50"
                   )}
                 >
                   {step.description}
-                </span>
+                </p>
               </div>
-            ))}
-          </div>
+              {step.id < steps.length && (
+                <div
+                  className={cn(
+                    "absolute top-4 left-[calc(50%+4px)] w-[calc(100%-8px)] h-0.5",
+                    step.completed ? "bg-green-500/50" : "bg-blue-900/50"
+                  )}
+                />
+              )}
+            </div>
+          ))}
+        </div>
 
-          {/* Progress line */}
-          <div className="relative mt-4 mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full h-1 bg-gray-200 dark:bg-gray-800 rounded"></div>
-            </div>
-            <div className="absolute inset-0 flex items-center">
-              <div
-                className="h-1 bg-blue-600 dark:bg-blue-500 rounded transition-all duration-300"
-                style={{
-                  width: `${((currentStep - 1) / (TOTAL_STEPS - 1)) * 100}%`,
-                }}
-              ></div>
-            </div>
+        {/* Step content - The flex-grow allows this to take remaining space */}
+        <div className="flex-grow overflow-auto px-1 py-2 min-h-0">
+          <div className="h-full">
+            {renderStepContent()}
           </div>
         </div>
 
-        {/* Step Content */}
-        <div className="py-2 min-h-[300px]">{renderStepContent()}</div>
+        {/* Footer - Fixed at bottom */}
+        <DialogFooter className="flex justify-between items-center mt-4 pt-4 border-t border-blue-900/40 shrink-0">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={prevStep}
+            disabled={currentStep === 1 || isSubmitting}
+            className="text-blue-300 hover:text-blue-100 hover:bg-blue-900/20"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
 
-        {/* Navigation Buttons */}
-        <DialogFooter className="flex justify-between">
-          <div>
-            {currentStep > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={prevStep}
-                disabled={isSubmitting}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Button>
-            )}
-          </div>
           <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="border-gray-600 text-gray-300 hover:text-white hover:bg-gray-800"
             >
-              <X className="mr-2 h-4 w-4" />
+              <X className="h-4 w-4 mr-1" />
               Cancel
             </Button>
+
             {currentStep < TOTAL_STEPS ? (
-              <Button 
-                type="button" 
-                onClick={nextStep} 
+              <Button
+                type="button"
+                onClick={nextStep}
                 disabled={isSubmitting || (currentStep === 3 && formData.selectedUsers.length < 2)}
+                className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70"
                 title={
                   currentStep === 3 && formData.selectedUsers.length < 2
                     ? "Select at least 2 users to continue"
@@ -441,22 +561,24 @@ export default function ApprovalGroupEditDialog({
                 }
               >
                 Next
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
               <Button
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-green-600/80 hover:bg-green-600 text-white border border-green-500/50 hover:border-green-400/70"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="spinner mr-2" /> Updating...
+                    <div className="spinner mr-2" />
+                    Updating...
                   </>
                 ) : (
                   <>
-                    <Pencil className="mr-2 h-4 w-4" /> Update Group
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Update Group
                   </>
                 )}
               </Button>

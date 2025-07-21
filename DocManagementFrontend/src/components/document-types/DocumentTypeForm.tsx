@@ -456,7 +456,10 @@ export const DocumentTypeForm = ({
 
       case 3: // ERP Type
         const selectedTierType = form.getValues("tierType") || TierType.None;
-        const availableErpTypes = erpTypes[selectedTierType] || [];
+        // When tier type is None, show all available ERP types from Customer and Vendor
+        const availableErpTypes = selectedTierType === TierType.None 
+          ? [...erpTypes[TierType.Customer], ...erpTypes[TierType.Vendor]]
+          : erpTypes[selectedTierType] || [];
 
         return (
           <MotionDiv
@@ -472,95 +475,90 @@ export const DocumentTypeForm = ({
                 <FileType className="mx-auto h-12 w-12 text-blue-500 mb-3 p-2 bg-blue-500/10 rounded-full" />
                 <h3 className="text-lg font-medium text-blue-100">ERP Type</h3>
                 <p className="text-sm text-blue-300/70">
-                  Select the ERP document type based on your tier selection
+                  Select an ERP document type (optional)
                 </p>
               </div>
 
-              {selectedTierType === TierType.None ? (
-                <div className="text-center py-8">
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-6">
-                    <Users className="mx-auto h-8 w-8 text-amber-500 mb-3" />
-                    <h4 className="text-lg font-medium text-amber-100 mb-2">
-                      Not Required
+              {/* <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <FileType className="h-5 w-5 text-blue-400 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-100 mb-1">
+                      Optional ERP Type Selection
                     </h4>
-                    <p className="text-sm text-amber-300/70">
-                      Please just continue to the next step. In case of None tier type there is no ERP type required.
+                    <p className="text-xs text-blue-300/70">
+                      {selectedTierType === TierType.None 
+                        ? "You can optionally select an ERP type from all available options if needed."
+                        : `You can optionally select an ERP type from ${selectedTierType === TierType.Customer ? 'customer' : 'vendor'} options, or choose none.`
+                      }
                     </p>
                   </div>
                 </div>
-              ) : (
-                <Form {...form}>
-                  <form className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="erpType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium text-blue-100">
-                            ERP Type*
-                          </FormLabel>
-                          <FormControl>
-                            <Select
-                              value={field.value}
-                              onValueChange={(value) => {
-                                field.onChange(value);
-                                // Set the corresponding type number
-                                const selectedErpType = availableErpTypes.find(
-                                  (type) => type.typeName === value
-                                );
-                                if (selectedErpType) {
-                                  console.log(`Selected ERP Type: ${value}, typeNumber: ${selectedErpType.typeNumber}`);
-                                  form.setValue("typeNumber", selectedErpType.typeNumber);
-                                }
-                              }}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="bg-[#111633] border-blue-900/40 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white">
-                                  <SelectValue placeholder="Select ERP type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-[#111633] border-blue-900/40 text-white max-h-60">
-                                {availableErpTypes.map((erpType) => (
-                                  <SelectItem 
-                                    key={erpType.typeNumber} 
-                                    value={erpType.typeName}
-                                  >
-                                    <div className="flex items-center justify-between w-full">
-                                      <span>{erpType.typeName}</span>
-                                      <span className="text-xs text-blue-300 ml-2">
-                                        ({erpType.typeKey})
-                                      </span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormDescription className="text-sm text-blue-300/70 mt-2">
-                            The type number will be automatically assigned based on your selection
-                          </FormDescription>
-                          <FormMessage className="text-sm mt-1 text-red-400" />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Display selected type number */}
-                    {/* {form.getValues("typeNumber") !== undefined && (
-                      <div className="bg-blue-900/20 p-3 rounded-md">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-blue-400" />
-                          <span className="text-sm text-blue-300">
-                            Assigned Type Number:
-                          </span>
-                          <span className="text-sm font-medium text-white">
-                            {form.getValues("typeNumber")}
-                          </span>
-                        </div>
-                      </div>
-                    )} */}
-                  </form>
-                </Form>
-              )}
+              </div> */}
+
+              <Form {...form}>
+                <form className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="erpType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-blue-100">
+                          ERP Type
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value || ""}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              // Set the corresponding type number
+                              const selectedErpType = availableErpTypes.find(
+                                (type) => type.typeName === value
+                              );
+                              if (selectedErpType) {
+                                console.log(`Selected ERP Type: ${value}, typeNumber: ${selectedErpType.typeNumber}`);
+                                form.setValue("typeNumber", selectedErpType.typeNumber);
+                              } else if (value === "") {
+                                // Set type number to -1 when no ERP type is selected (0 is used for Sales Quote)
+                                console.log("No ERP Type selected, setting typeNumber to -1");
+                                form.setValue("typeNumber", -1);
+                              }
+                            }}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="bg-[#111633] border-blue-900/40 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white">
+                                <SelectValue placeholder="Select ERP type (optional)" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-[#111633] border-blue-900/40 text-white max-h-60">
+                              <SelectItem value="">
+                                <span className="text-gray-400">No ERP type</span>
+                              </SelectItem>
+                              {availableErpTypes.map((erpType) => (
+                                <SelectItem 
+                                  key={erpType.typeNumber} 
+                                  value={erpType.typeName}
+                                >
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>{erpType.typeName}</span>
+                                    <span className="text-xs text-blue-300 ml-2">
+                                      ({erpType.typeKey})
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        {/* <FormDescription className="text-sm text-blue-300/70 mt-2">
+                          You can optionally select an ERP type. The type number will be automatically assigned based on your selection.
+                        </FormDescription> */}
+                        <FormMessage className="text-sm mt-1 text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                </form>
+              </Form>
             </div>
           </MotionDiv>
         );

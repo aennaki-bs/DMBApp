@@ -46,11 +46,11 @@ export function PageLayout({
       {/* Clean Header Bar */}
       <div className="flex items-center justify-between p-6 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-background/30 backdrop-blur-xl border border-primary/20 shadow-lg">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary/15 backdrop-blur-sm border border-primary/30">
+          {/* <div className="p-3 rounded-xl bg-primary/15 backdrop-blur-sm border border-primary/30">
             <Icon className="h-6 w-6 text-primary" />
-          </div>
+          </div> */}
           <div>
-            <h1 className="text-3xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="text-2xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               {title}
             </h1>
             <p className="text-muted-foreground mt-1">{subtitle}</p>

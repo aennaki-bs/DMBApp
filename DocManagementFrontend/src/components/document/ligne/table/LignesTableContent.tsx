@@ -82,7 +82,7 @@ export function LignesTableContent({
                     <p className="text-muted-foreground mb-6 max-w-md">
                         This document doesn't have any lines yet. Create your first line to get started.
                     </p>
-                    {canManageDocuments && (
+                    {/* {canManageDocuments && (
                         <Button
                             onClick={onCreateNew}
                             className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -90,7 +90,7 @@ export function LignesTableContent({
                             <Plus className="h-4 w-4 mr-2" />
                             Add First Line
                         </Button>
-                    )}
+                    )} */}
                 </div>
             </motion.div>
         );
