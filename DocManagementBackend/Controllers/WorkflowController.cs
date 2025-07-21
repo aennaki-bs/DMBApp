@@ -1007,7 +1007,7 @@ namespace DocManagementBackend.Controllers
                     .Where(log => (log.ActionType == 4 || log.ActionType == 5 || log.ActionType == 6 || 
                                    log.ActionType == 10 || log.ActionType == 11 || log.ActionType == 12 ||
                                    log.ActionType == 13 || log.ActionType == 14 || log.ActionType == 15) && 
-                                  log.Description.Contains(document.DocumentKey))
+                                  log.Description.Contains(document.Id.ToString()))
                     .Include(log => log.User)
                     .OrderBy(log => log.Timestamp)
                     .ToListAsync();

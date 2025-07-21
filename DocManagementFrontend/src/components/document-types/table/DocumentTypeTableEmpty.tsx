@@ -43,7 +43,7 @@ export function DocumentTypeTableEmpty({
                         Clear Filters
                     </Button>
 
-                    {onCreateType && (
+                    {/* {onCreateType && (
                         <Button
                             onClick={onCreateType}
                             className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all duration-200"
@@ -51,7 +51,7 @@ export function DocumentTypeTableEmpty({
                             <Plus className="h-4 w-4" />
                             Create Document Type
                         </Button>
-                    )}
+                    )} */}
                 </div>
             </CardContent>
         </Card>

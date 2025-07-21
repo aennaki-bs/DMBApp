@@ -8,6 +8,8 @@ import documentService from "@/services/documentService";
 import workflowService from "@/services/workflowService";
 import approvalService from "@/services/approvalService";
 import { navigateToDocumentList } from "@/utils/navigationUtils";
+import api from "@/services/api";
+import { DocumentHistoryEvent } from "@/models/document";
 
 // Component imports
 import DocumentTitle from "@/components/document/DocumentTitle";
@@ -16,6 +18,15 @@ import DocumentTabsView from "@/components/document/DocumentTabsView";
 import DocumentLoadingState from "@/components/document/DocumentLoadingState";
 import DocumentNotFoundCard from "@/components/document/DocumentNotFoundCard";
 import DeleteDocumentDialog from "@/components/document/DeleteDocumentDialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { History, Loader2 } from "lucide-react";
 
 const ViewDocument = () => {
   const { id } = useParams();
@@ -25,6 +36,8 @@ const ViewDocument = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [documentHistory, setDocumentHistory] = useState<DocumentHistoryEvent[]>([]);
 
   // Check if user has permissions to edit/delete documents
   const canManageDocuments =
@@ -142,6 +155,29 @@ const ViewDocument = () => {
     };
   }, []);
 
+  // Fetch document circuit history
+  useEffect(() => {
+    const fetchDocumentHistory = async () => {
+      if (!document?.id) return;
+
+      try {
+        const response = await api.get(
+          `/Workflow/document/${document.id}/history`
+        );
+        setDocumentHistory(response.data || []);
+      } catch (error) {
+        console.error("Error fetching document history:", error);
+        setDocumentHistory([]);
+      }
+    };
+
+    fetchDocumentHistory();
+  }, [document?.id]);
+
+  const handleShowHistory = () => {
+    setHistoryDialogOpen(true);
+  };
+
   const handleDelete = async () => {
     if (!canManageDocuments) {
       toast.error("You do not have permission to delete documents");
@@ -245,6 +281,8 @@ const ViewDocument = () => {
               onDelete={() => setDeleteDialogOpen(true)}
               onDocumentFlow={handleDocumentFlow}
               onWorkflowUpdate={handleWorkflowUpdate}
+              onShowHistory={handleShowHistory}
+              historyCount={documentHistory.length}
             />
           )}
         </motion.div>
@@ -283,6 +321,191 @@ const ViewDocument = () => {
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDelete}
       />
+
+      {/* Document History Dialog */}
+      <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] backdrop-blur-md bg-gradient-to-b from-[#0a1033]/95 to-[#131f4f]/95 border-blue-500/30">
+          <DialogHeader className="border-b border-blue-500/20 pb-4">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-600/20 border border-blue-400/30">
+                <History className="h-6 w-6 text-blue-400" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-white">Document History</span>
+                <span className="text-sm font-normal text-blue-300/80">
+                  View workflow history and activity
+                </span>
+              </div>
+              {documentHistory.length > 0 && (
+                <Badge
+                  variant="outline"
+                  className="ml-auto bg-blue-800/30 text-blue-300 border-blue-500/30 px-3 py-1"
+                >
+                  {documentHistory.length} entries
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            {documentHistory.length > 0 ? (
+              <div className="space-y-4">
+                {documentHistory.map((entry, index) => {
+                  // Function to get event styling based on event type
+                  const getEventStyling = (eventType: string) => {
+                    switch (eventType) {
+                      case "Creation":
+                        return {
+                          badge: "bg-gradient-to-r from-blue-600 to-cyan-600",
+                          icon: "🎉",
+                          background: "bg-blue-900/30",
+                          border: "border-blue-800/50",
+                          hoverBg: "hover:bg-blue-800/30",
+                          hoverBorder: "hover:border-blue-700/50"
+                        };
+                      case "Update":
+                        return {
+                          badge: "bg-gradient-to-r from-amber-600 to-orange-600",
+                          icon: "✏️",
+                          background: "bg-amber-900/20",
+                          border: "border-amber-800/40",
+                          hoverBg: "hover:bg-amber-800/20",
+                          hoverBorder: "hover:border-amber-700/40"
+                        };
+                      case "Workflow":
+                      default:
+                        return {
+                          badge: entry.isApproved 
+                            ? "bg-gradient-to-r from-green-600 to-emerald-600"
+                            : "bg-gradient-to-r from-red-600 to-rose-600",
+                          icon: entry.isApproved ? "✅" : "❌",
+                          background: "bg-blue-900/30",
+                          border: "border-blue-800/50",
+                          hoverBg: "hover:bg-blue-800/30",
+                          hoverBorder: "hover:border-blue-700/50"
+                        };
+                    }
+                  };
+
+                  const styling = getEventStyling(entry.eventType);
+
+                  return (
+                    <div
+                      key={entry.id || index}
+                      className={`p-4 ${styling.background} rounded-lg border ${styling.border} transition-all ${styling.hoverBg} ${styling.hoverBorder}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">{styling.icon}</span>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              className={`px-3 py-1.5 ${styling.badge}`}
+                            >
+                              {entry.eventType === "Creation" ? "Created" :
+                               entry.eventType === "Update" ? "Updated" :
+                               entry.isApproved ? "Approved" : "Rejected"}
+                            </Badge>
+                            <span className="text-sm font-medium text-blue-200 ml-1">
+                              {entry.stepTitle || "Unknown Step"}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded-md border border-blue-800/50">
+                          {new Date(entry.processedAt).toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="text-sm text-blue-300 mb-2 flex items-center gap-2">
+                        <div className="bg-blue-800/40 p-1 rounded-md">
+                          <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1"></span>
+                          <span className="font-medium">Status:</span>
+                        </div>
+                        <span className="text-white">
+                          {entry.statusTitle || "N/A"}
+                        </span>
+                      </div>
+
+                      <div className="text-sm text-blue-300 mb-3 flex items-center gap-2">
+                        <div className="bg-blue-800/40 p-1 rounded-md">
+                          <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1"></span>
+                          <span className="font-medium">Processed by:</span>
+                        </div>
+                        <span className="text-white">
+                          {entry.processedBy || "Unknown"}
+                        </span>
+                      </div>
+
+                      {entry.comments && (
+                        <div className="text-sm text-blue-200 bg-blue-800/30 p-3 rounded-lg border-l-2 border-blue-500/50 mt-3">
+                          <div className="flex items-center text-blue-300 mb-2">
+                            <span className="font-medium">Comments:</span>
+                          </div>
+                          <p className="mt-1 text-blue-100">{entry.comments}</p>
+                        </div>
+                      )}
+
+                      {entry.updateDetails && (
+                        <div className="text-sm text-amber-200 bg-amber-800/20 p-3 rounded-lg border-l-2 border-amber-500/50 mt-3">
+                          <div className="flex items-center text-amber-300 mb-2">
+                            <span className="font-medium">Update Details:</span>
+                          </div>
+                          <p className="mt-1 text-amber-100">{entry.updateDetails}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-16 px-6">
+                <div className="bg-blue-900/20 p-6 rounded-lg border border-blue-800/30 inline-flex flex-col items-center">
+                  <div className="p-4 rounded-full bg-blue-900/30 border border-blue-700/30 mb-4">
+                    <History className="h-10 w-10 text-blue-400/50" />
+                  </div>
+                  <p className="text-lg text-blue-300 mb-2">
+                    No History Available
+                  </p>
+                  <p className="text-sm text-blue-400/70 max-w-md">
+                    This document doesn't have any circuit history entries
+                    yet. History will appear here when workflow actions are
+                    taken.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="mt-6 flex justify-end border-t border-blue-500/20 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setHistoryDialogOpen(false)}
+              className="bg-gradient-to-r from-blue-600/10 to-indigo-600/10 border-blue-500/30 text-blue-300 hover:bg-blue-700/20 transition-all px-6 py-2 rounded-full flex items-center gap-2"
+            >
+              Close Dialog
+            </Button>
+          </div>
+
+          <style>
+            {`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 8px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: rgba(30, 41, 59, 0.2);
+                border-radius: 4px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: rgba(59, 130, 246, 0.3);
+                border-radius: 4px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: rgba(59, 130, 246, 0.5);
+              }
+            `}
+          </style>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

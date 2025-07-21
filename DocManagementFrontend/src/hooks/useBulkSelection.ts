@@ -139,14 +139,19 @@ export function useBulkSelection<T>({
         });
     }, [currentPageKeys, onSelectionChange]);
 
-    // Smart select all toggle (current page only)
+    // Smart select all toggle (current page only) - clear other page selections
     const toggleSelectCurrentPage = useCallback(() => {
         if (selectionState.isCurrentPageFullySelected) {
             deselectCurrentPage();
         } else {
-            selectCurrentPage();
+            // Clear all selections and select only current page
+            setSelectedItems(() => {
+                const newSelection = [...currentPageKeys];
+                onSelectionChange?.(newSelection);
+                return newSelection;
+            });
         }
-    }, [selectionState.isCurrentPageFullySelected, selectCurrentPage, deselectCurrentPage]);
+    }, [selectionState.isCurrentPageFullySelected, deselectCurrentPage, currentPageKeys, onSelectionChange]);
 
     // Clear all selections
     const clearSelection = useCallback(() => {

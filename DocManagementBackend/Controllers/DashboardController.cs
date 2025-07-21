@@ -41,10 +41,25 @@ namespace DocManagementBackend.Controllers
                     .Where(c => c.IsActive)
                     .CountAsync();
 
-                // Get pending approvals count (documents with status = pending)
-                var pendingApprovals = await _context.Documents
-                    .Where(d => d.Status == 2) // Assuming 2 is pending status
+                // Get pending approvals count (approvals waiting for current user to respond)
+                var userId = authResult.UserId;
+                
+                // Count individual approvals directly assigned to this user
+                var individualApprovals = await _context.ApprovalWritings
+                    .Where(a => a.Status == ApprovalStatus.Open && a.ApprovatorId != null)
+                    .Include(a => a.Approvator)
+                    .Where(a => a.Approvator!.UserId == userId)
                     .CountAsync();
+
+                // Count group approvals where this user is a member of the assigned group
+                var groupApprovals = await _context.ApprovalWritings
+                    .Where(a => a.Status == ApprovalStatus.Open && a.ApprovatorsGroupId != null)
+                    .Include(a => a.ApprovatorsGroup)
+                    .ThenInclude(g => g!.ApprovatorsGroupUsers)
+                    .Where(a => a.ApprovatorsGroup!.ApprovatorsGroupUsers.Any(gu => gu.UserId == userId))
+                    .CountAsync();
+
+                var pendingApprovals = individualApprovals + groupApprovals;
 
                 // Get team members count (active users)
                 var teamMembers = await _context.Users

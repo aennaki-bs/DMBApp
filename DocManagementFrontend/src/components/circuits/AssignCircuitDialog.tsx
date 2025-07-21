@@ -314,7 +314,7 @@ export default function AssignCircuitDialog({
               <p>
                 <span className="text-blue-400">Circuit:</span>{" "}
                 <span className="text-white">
-                  {selectedCircuit?.title} ({selectedCircuit?.circuitKey})
+                  {selectedCircuit?.title}
                 </span>
               </p>
               {circuitValidation && (
@@ -461,11 +461,6 @@ export default function AssignCircuitDialog({
                                 activeCircuits.find(
                                   (c) =>
                                     c.circuitId === parseInt(selectedCircuitId)
-                                )?.circuitKey
-                              } - ${
-                                activeCircuits.find(
-                                  (c) =>
-                                    c.circuitId === parseInt(selectedCircuitId)
                                 )?.circuitTitle
                               }`
                             : "Select a circuit"
@@ -488,7 +483,7 @@ export default function AssignCircuitDialog({
                                 )
                               }
                             >
-                              {circuit.circuitKey} - {circuit.circuitTitle}
+                              {circuit.circuitTitle}
                             </div>
                           ))}
                         </div>

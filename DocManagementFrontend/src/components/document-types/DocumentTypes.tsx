@@ -332,14 +332,14 @@ const DocumentTypes = () => {
               <p className="text-blue-400 mb-4">
                 Create document types to better organize your documents
               </p>
-              {!isSimpleUser && (
+              {/* {!isSimpleUser && (
                 <Button
                   onClick={() => navigate("/document-types-management")}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   Create Document Type
                 </Button>
-              )}
+              )} */}
             </div>
           )}
         </div>

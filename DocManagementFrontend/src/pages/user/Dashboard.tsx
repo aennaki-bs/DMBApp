@@ -82,10 +82,18 @@ export default function Dashboard() {
       <DashboardStats stats={dashboardStats} />
 
       {/* Main content grid with enhanced styling */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         <WelcomeCard user={user} />
-        <CompletionRateCard completionRate={dashboardStats?.completionRate} />
-        <ActivityScoreCard user={user} />
+        {recentDocuments && recentDocuments.length > 0 && (
+        <DashboardCard
+          title={t("dashboard.recentDocuments")}
+          className="transition-all duration-300 hover:shadow-lg"
+        >
+          <RecentDocumentsCard documents={recentDocuments} />
+        </DashboardCard>
+      )}
+        {/* <CompletionRateCard completionRate={dashboardStats?.completionRate} /> */}
+        {/* <ActivityScoreCard user={user} /> */}
       </div>
 
       {/* Professional charts section */}
@@ -156,14 +164,14 @@ export default function Dashboard() {
       </DashboardCard> */}
 
       {/* Professional recent documents section */}
-      {recentDocuments && recentDocuments.length > 0 && (
+      {/* {recentDocuments && recentDocuments.length > 0 && (
         <DashboardCard
           title={t("dashboard.recentDocuments")}
           className="transition-all duration-300 hover:shadow-lg"
         >
           <RecentDocumentsCard documents={recentDocuments} />
         </DashboardCard>
-      )}
+      )} */}
 
       {/* Optional UI Showcase section (professionally hidden for now) */}
       {/* 

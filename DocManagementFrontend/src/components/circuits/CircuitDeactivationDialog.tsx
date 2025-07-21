@@ -276,7 +276,7 @@ const CircuitDeactivationDialog = ({
               </h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-yellow-200">
                 <li>Circuit will not appear in document assignment options</li>
-                <li>Existing documents using this circuit will continue to work</li>
+                {/* <li>Existing documents using this circuit will continue to work</li> */}
                 <li>Circuit configuration (steps, statuses) will be preserved</li>
                 <li>Circuit can be reactivated later if needed</li>
               </ul>

@@ -19,7 +19,7 @@ const DocumentTitle = ({ document, isLoading }: DocumentTitleProps) => {
         ) : (
           <div className="flex items-center gap-3">
             <h1 className="text-xl sm:text-2xl font-bold text-white font-mono">
-              Document Code: {document?.documentKey}
+              Code: {document?.documentKey}
             </h1>
             {/* {document && <DocumentStatusBadge status={document.status} erpDocumentCode={document.erpDocumentCode} />} */}
             {/* {document?.erpDocumentCode && (

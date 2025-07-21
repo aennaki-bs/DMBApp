@@ -84,6 +84,19 @@ export interface DocumentType {
   updatedAt?: string;
 }
 
+// Interface for tracking document type associations
+export interface DocumentTypeAssociations {
+  circuitCount: number;
+  documentCount: number;
+  hasAssociations: boolean;
+}
+
+// Extended document type with association info for UI logic
+export interface DocumentTypeWithAssociations extends DocumentType {
+  associations?: DocumentTypeAssociations;
+  canPerformActions?: boolean;
+}
+
 export interface DocumentUser {
   id: number;
   username: string;

@@ -283,7 +283,7 @@ const DocumentDetailsTab = ({
                   {document.subType.name || document.subType.subTypeKey}
                 </p>
                 <p className="text-xs text-blue-300/70 mt-1">
-                  Key: {document.subType.subTypeKey}
+                  Code: {document.subType.subTypeKey}
                 </p>
                 <p className="text-xs text-blue-300/70">
                   Valid:{" "}
@@ -316,7 +316,7 @@ const DocumentDetailsTab = ({
                       {workflowStatus.circuitTitle}
                     </span>
                   </p>
-                  <p className="font-bold text-blue-300 ">Current Status:{"  "}
+                  <p className="font-bold text-green-300 ">Current Status:{"  "}
                   <span className="font-bold text-white text-sm">
                    {workflowStatus.currentStatusTitle}
                   </span>
@@ -434,60 +434,7 @@ const DocumentDetailsTab = ({
           </div>
         </div>
 
-        {/* Floating History Button */}
-        <div className="fixed bottom-6 right-6 z-50">
-          <Button
-            onClick={() => setHistoryDialogOpen(true)}
-            className="h-16 w-16 rounded-full shadow-xl bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 border-2 border-blue-400/30 flex items-center justify-center relative group history-button"
-            style={{
-              boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)",
-            }}
-          >
-            <div className="absolute inset-0 rounded-full bg-blue-500 opacity-20 blur-md group-hover:opacity-30 transition-opacity"></div>
-            <History className="h-8 w-8 text-white transform group-hover:scale-110 transition-transform duration-300" />
-            {documentHistory.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg border-2 border-white count-badge">
-                {documentHistory.length}
-              </span>
-            )}
-            <div className="absolute -bottom-12 right-0 transform translate-y-0 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-              <div className="bg-[#0a1033] text-white text-sm py-2 px-4 rounded-lg shadow-xl border border-blue-500/30 flex items-center gap-2 whitespace-nowrap">
-                <History className="h-4 w-4 text-blue-400" />
-                <span>View History</span>
-                <div className="absolute -top-2 right-6 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-[#0a1033]"></div>
-              </div>
-            </div>
-          </Button>
-        </div>
 
-        <style>
-          {`
-            @keyframes pulse-slow {
-              0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-              }
-              50% {
-                transform: scale(1.05);
-                box-shadow: 0 0 30px rgba(59, 130, 246, 0.7);
-              }
-            }
-            @keyframes bounce-gentle {
-              0%, 100% {
-                transform: translateY(0);
-              }
-              50% {
-                transform: translateY(-3px);
-              }
-            }
-            .history-button {
-              animation: pulse-slow 3s infinite;
-            }
-            .count-badge {
-              animation: bounce-gentle 2s infinite;
-            }
-          `}
-        </style>
 
         {/* Document History Dialog */}
         <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>

@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
 import { Loader2, Edit, Trash2 } from "lucide-react";
 import { BulkSelectionState } from "@/hooks/useBulkSelection";
+import { useDocumentTypeSelection } from "@/hooks/document-types/useDocumentTypeSelection";
 
 interface DocumentTypeTableContentProps {
     types: DocumentType[] | undefined;
@@ -52,47 +53,45 @@ export function DocumentTypeTableContent({
     isLoading = false,
     isError = false,
 }: DocumentTypeTableContentProps) {
-    // Use pagination from props
+    // Use enhanced selection hook with association checking
     const {
-        currentPage,
-        pageSize,
-        totalPages,
-        totalItems,
-        handlePageChange,
-        handlePageSizeChange,
-    } = pagination;
+        canSelectType,
+        getDisabledReason,
+        isLoadingAssociations,
+        selectableTypesCount,
+        totalTypesCount
+    } = useDocumentTypeSelection(types || []);
 
     // Check if we have types to display
     const hasTypes = types && types.length > 0;
 
-    // Define bulk actions - only for types without documents
+    // Define bulk actions - only allow actions on selectable types
     const bulkActions: BulkAction[] = [
-        {
-            id: 'edit',
-            label: 'Edit Types',
+        ...(onBulkEdit ? [{
+            id: "edit",
+            label: "Edit Selected",
             icon: <Edit className="h-4 w-4" />,
-            variant: 'outline',
-            onClick: () => onBulkEdit?.(),
-            shortcut: 'E',
-        },
-        {
-            id: 'delete',
-            label: 'Delete Types',
+            variant: "outline" as const,
+            onClick: onBulkEdit,
+        }] : []),
+        ...(onBulkDelete ? [{
+            id: "delete",
+            label: "Delete Selected",
             icon: <Trash2 className="h-4 w-4" />,
-            variant: 'destructive',
-            onClick: () => onBulkDelete?.(),
+            variant: "destructive" as const,
+            onClick: onBulkDelete,
             requiresConfirmation: true,
-            shortcut: 'Del',
-        },
+        }] : []),
     ];
 
     // Loading state
     if (isLoading) {
         return (
-            <div className="space-y-4">
-                <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
-                    <div className="flex items-center justify-center py-20">
-                        <div className="flex flex-col items-center gap-4">
+            <div className="h-full flex flex-col gap-4" style={{ minHeight: "100%" }}>
+                <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg min-h-0">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/2 via-transparent to-primary/2 animate-pulse"></div>
+                    <div className="relative h-full flex items-center justify-center z-10">
+                        <div className="flex flex-col items-center gap-3">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
                             <p className="text-muted-foreground">Loading document types...</p>
                         </div>
@@ -105,14 +104,12 @@ export function DocumentTypeTableContent({
     // Error state
     if (isError) {
         return (
-            <div className="space-y-4">
-                <div className="relative overflow-hidden rounded-2xl border border-destructive/10 bg-gradient-to-br from-destructive/5 via-background/60 to-background/80 backdrop-blur-xl shadow-2xl">
-                    <div className="flex items-center justify-center py-20">
-                        <div className="flex flex-col items-center gap-4">
-                            <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
-                                <Loader2 className="h-6 w-6 text-destructive" />
-                            </div>
-                            <p className="text-destructive">Failed to load document types</p>
+            <div className="h-full flex flex-col gap-4" style={{ minHeight: "100%" }}>
+                <div className="flex-1 relative overflow-hidden rounded-xl border border-destructive/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg min-h-0">
+                    <div className="relative h-full flex items-center justify-center z-10">
+                        <div className="text-center">
+                            <p className="text-destructive mb-2">Error loading document types</p>
+                            <p className="text-muted-foreground text-sm">Please try again or contact support</p>
                         </div>
                     </div>
                 </div>
@@ -161,6 +158,8 @@ export function DocumentTypeTableContent({
                                             }}
                                             onEditType={onEditType}
                                             onDeleteType={onDeleteType}
+                                            canSelectType={canSelectType}
+                                            getDisabledReason={getDisabledReason}
                                         />
                                     </Table>
                                 </div>
@@ -180,14 +179,16 @@ export function DocumentTypeTableContent({
             {/* Smart Pagination with Bulk Actions */}
             {hasTypes && (
                 <PaginationWithBulkActions
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    pageSize={pageSize}
-                    totalItems={totalItems}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    onPageChange={pagination.handlePageChange}
+                    pageSize={pagination.pageSize}
+                    onPageSizeChange={pagination.handlePageSizeChange}
+                    totalItems={pagination.totalItems}
                     bulkSelection={bulkSelection}
                     bulkActions={bulkActions}
+
+
                 />
             )}
         </div>

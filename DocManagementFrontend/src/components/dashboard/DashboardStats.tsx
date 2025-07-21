@@ -71,12 +71,8 @@ function StatCard({ title, value, change, icon }: StatCardProps) {
                 isPositive ? "text-green-400" : "text-yellow-400"
               }`}
             >
-              {isPositive ? (
-                <ArrowUp className="h-3 w-3 mr-0.5" />
-              ) : (
-                <ArrowDown className="h-3 w-3 mr-0.5" />
-              )}
-              <span>{Math.abs(change)}%</span>
+       
+              {/* <span>{Math.abs(change)}%</span> */}
             </div>
           </div>
         </div>

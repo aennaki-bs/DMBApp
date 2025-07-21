@@ -8,6 +8,8 @@ interface DocumentTypeTableBodyProps {
     onSelectType: (typeId: number) => void;
     onEditType: (type: DocumentType) => void;
     onDeleteType: (typeId: number) => void;
+    canSelectType?: (type: DocumentType) => boolean;
+    getDisabledReason?: (type: DocumentType) => string | null;
 }
 
 export function DocumentTypeTableBody({
@@ -16,6 +18,8 @@ export function DocumentTypeTableBody({
     onSelectType,
     onEditType,
     onDeleteType,
+    canSelectType,
+    getDisabledReason,
 }: DocumentTypeTableBodyProps) {
     return (
         <TableBody>
@@ -27,6 +31,8 @@ export function DocumentTypeTableBody({
                     onSelect={onSelectType}
                     onEditType={onEditType}
                     onDeleteType={onDeleteType}
+                    canSelectType={canSelectType}
+                    getDisabledReason={getDisabledReason}
                 />
             ))}
         </TableBody>

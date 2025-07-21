@@ -115,7 +115,7 @@ export function MainNavbar() {
             D
           </div>
           <span className="text-responsive-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 hidden sm:block">
-            D.M.V
+            DM<span className="text-docuBlue">V</span>
           </span>
         </Link>
       </div>

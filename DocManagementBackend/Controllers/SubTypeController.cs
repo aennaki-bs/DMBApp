@@ -458,7 +458,7 @@ namespace DocManagementBackend.Controllers
                 // Check if any SubType with this document type has a name (prefix) that matches
                 // We'll check both exact match and as part of the generated SubTypeKey
                 var query = _context.SubTypes
-                    .Where(st => st.DocumentTypeId == documentTypeId && 
+                    .Where(st =>  
                                 (st.Name.ToLower() == prefix.ToLower() || 
                                  st.SubTypeKey.ToLower().StartsWith(prefix.ToLower())));
 

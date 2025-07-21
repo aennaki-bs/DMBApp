@@ -22,11 +22,64 @@ export function useDocumentTypeManagement() {
     const [sortBy, setSortBy] = useState<DocumentTypeSortField>('typeName');
     const [sortDirection, setSortDirection] = useState<DocumentTypeSortDirection>('asc');
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    
+    // Auto-refresh state
+    const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(false);
+    const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds default
+    const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-    const { data: types, isLoading, isError, refetch } = useQuery({
+    const { data: types, isLoading, isError, refetch, isFetching } = useQuery({
         queryKey: ['document-types'],
-        queryFn: documentService.getAllDocumentTypes,
+        queryFn: async () => {
+            const data = await documentService.getAllDocumentTypes();
+            setLastRefresh(new Date());
+            return data;
+        },
+        refetchInterval: autoRefreshEnabled ? refreshInterval : false,
+        refetchIntervalInBackground: false, // Only refresh when tab is active
+        staleTime: 5000, // Consider data stale after 5 seconds
+        refetchOnWindowFocus: true, // Refresh when window gains focus
+        onSuccess: () => {
+            if (autoRefreshEnabled) {
+                console.log('Document types auto-refreshed at:', new Date().toLocaleTimeString());
+            }
+        },
+        onError: (error) => {
+            console.error('Failed to fetch document types:', error);
+            toast.error('Failed to refresh document types');
+        }
     });
+
+    // Manual refresh function
+    const handleManualRefresh = async () => {
+        try {
+            await refetch();
+            toast.success('Document types refreshed');
+        } catch (error) {
+            toast.error('Failed to refresh document types');
+        }
+    };
+
+    // Toggle auto-refresh
+    const toggleAutoRefresh = () => {
+        setAutoRefreshEnabled(prev => {
+            const newValue = !prev;
+            if (newValue) {
+                toast.success(`Auto-refresh enabled (${refreshInterval / 1000}s interval)`);
+            } else {
+                toast.info('Auto-refresh disabled');
+            }
+            return newValue;
+        });
+    };
+
+    // Change refresh interval
+    const updateRefreshInterval = (newInterval: number) => {
+        setRefreshInterval(newInterval);
+        if (autoRefreshEnabled) {
+            toast.success(`Refresh interval updated to ${newInterval / 1000} seconds`);
+        }
+    };
 
     const handleTypeEdited = () => {
         refetch();
@@ -107,7 +160,7 @@ export function useDocumentTypeManagement() {
         initialPageSize: 15,
     });
 
-    // Use enhanced bulk selection hook
+    // Use enhanced bulk selection hook with ALL items (no filtering)
     const bulkSelection = useBulkSelection({
         data: sortedTypes,
         paginatedData: pagination.paginatedData,
@@ -151,6 +204,7 @@ export function useDocumentTypeManagement() {
         isLoading,
         isError,
         refetch,
+        isFetching,
 
         // Setters
         setEditingType,
@@ -170,5 +224,13 @@ export function useDocumentTypeManagement() {
         handleTypeEdited,
         handleTypeDeleted,
         handleMultipleDeleted,
+
+        // Auto-refresh
+        autoRefreshEnabled,
+        refreshInterval,
+        lastRefresh,
+        handleManualRefresh,
+        toggleAutoRefresh,
+        updateRefreshInterval,
     };
 } 

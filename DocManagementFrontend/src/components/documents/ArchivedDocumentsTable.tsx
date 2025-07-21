@@ -115,9 +115,9 @@ export default function ArchivedDocumentsTable({
               <TableHead className="w-[140px] text-blue-300 font-medium">
                 ERP Code
               </TableHead>
-              <TableHead className="w-[100px] text-right text-blue-300 font-medium">
+              {/* <TableHead className="w-[100px] text-right text-blue-300 font-medium">
                 Actions
-              </TableHead>
+              </TableHead> */}
             </TableRow>
           </TableHeader>
         </Table>
@@ -187,7 +187,7 @@ export default function ArchivedDocumentsTable({
                     )}
                   </TableCell>
                   
-                  <TableCell className="w-[100px] text-right py-3">
+                  {/* <TableCell className="w-[100px] text-right py-3">
                     <div className="flex items-center justify-end gap-1">
                       <Badge 
                         variant="outline" 
@@ -222,7 +222,7 @@ export default function ArchivedDocumentsTable({
                         </Link>
                       </Button>
                     </div>
-                  </TableCell>
+                  </TableCell> */}
                 </motion.tr>
               ))}
             </TableBody>

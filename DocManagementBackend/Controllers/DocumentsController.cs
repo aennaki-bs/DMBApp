@@ -794,6 +794,12 @@ namespace DocManagementBackend.Controllers
             var ThisType = await _context.DocumentTypes.FindAsync(id);
             if (ThisType == null)
                 return NotFound("No type with this id!");
+            var typeAssociated = await _context.Documents.AnyAsync(d => d.TypeId == id);
+            if (typeAssociated)
+                return BadRequest("This type is associated with documents and cannot be edited!");
+            var typeAssociatedWithCircuits = await _context.Circuits.AnyAsync(c => c.DocumentTypeId == id);
+            if (typeAssociatedWithCircuits)
+                return BadRequest("This type is associated with circuits and cannot be edited!");
             if (!string.IsNullOrEmpty(request.TypeName))
             {
                 var typeName = request.TypeName.ToLower();

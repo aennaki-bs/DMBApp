@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Edit, Trash, GitBranch, Activity } from "lucide-react";
+import { Edit, Trash, GitBranch, Activity, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Document } from "@/models/document";
 import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
@@ -18,6 +18,8 @@ interface DocumentActionsProps {
   onDelete: () => void;
   onDocumentFlow: () => void;
   onWorkflowUpdate?: () => void;
+  onShowHistory?: () => void;
+  historyCount?: number;
 }
 
 const DocumentActions = ({
@@ -26,6 +28,8 @@ const DocumentActions = ({
   onDelete,
   onDocumentFlow,
   onWorkflowUpdate,
+  onShowHistory,
+  historyCount = 0,
 }: DocumentActionsProps) => {
   const [isAssignCircuitOpen, setIsAssignCircuitOpen] = useState(false);
 
@@ -48,6 +52,23 @@ const DocumentActions = ({
             title="Execute Step"
             onWorkflowUpdate={onWorkflowUpdate}
           />
+        )}
+
+        {/* Show History Button */}
+        {onShowHistory && (
+          <Button
+            variant="outline"
+            className="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50 flex items-center gap-2"
+            onClick={onShowHistory}
+          >
+            <History className="h-4 w-4" />
+            Show History
+            {historyCount > 0 && (
+              <span className="bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {historyCount}
+              </span>
+            )}
+          </Button>
         )}
 
         {/* Show Assign to Circuit button when document has no circuit and user can manage documents */}

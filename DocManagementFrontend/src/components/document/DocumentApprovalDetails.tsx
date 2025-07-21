@@ -353,7 +353,7 @@ const DocumentApprovalDetails = ({
       </div>
       
       {/* If there's approval history, show recent actions */}
-      {approvalHistory && approvalHistory.length > 1 && (
+      {/* {approvalHistory && approvalHistory.length > 1 && (
         <div className="mt-4 pt-3 border-t border-amber-500/20">
           <p className="text-amber-300 font-medium mb-2 flex items-center gap-1">
             <Calendar className="h-4 w-4" />
@@ -384,7 +384,7 @@ const DocumentApprovalDetails = ({
               ))}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

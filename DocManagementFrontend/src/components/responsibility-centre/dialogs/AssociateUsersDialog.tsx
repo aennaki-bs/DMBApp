@@ -273,7 +273,7 @@ export function AssociateUsersDialog({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                                {user.firstName || user.username} {user.lastName}
+                                { user.username}
                               </p>
                               {user.role && (
                                 <Badge variant="outline" className="text-xs">

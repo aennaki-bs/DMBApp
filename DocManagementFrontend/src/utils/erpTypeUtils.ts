@@ -3,12 +3,13 @@ import { TierType } from "@/models/document";
 // ERP Type mappings based on type numbers from DataSeeder
 export const ERP_TYPE_MAPPINGS = {
   // Customer types (0-5)
-  0: "sales Quote",
-  1: "sales Order",
-  2: "sales Invoice",
-  3: "sales Credit Memo",
-  4: "sales Blanket Order",
-  5: "sales Return Order",
+  0: "Sales Quote",
+  1: "Sales Order",
+  2: "Sales Invoice",
+  3: "Sales Credit Memo",
+  4: "Sales Blanket Order",
+  5: "Sales Return Order",
+  
 
   // Vendor types (10-15)
   10: "Purchase Quote",
@@ -20,24 +21,30 @@ export const ERP_TYPE_MAPPINGS = {
 } as const;
 
 export const getErpTypeFromNumber = (typeNumber?: number): string => {
+  // Handle undefined/null cases
   if (typeNumber === undefined || typeNumber === null) {
     return "None";
   }
 
-  const erpType = ERP_TYPE_MAPPINGS[typeNumber as keyof typeof ERP_TYPE_MAPPINGS];
-  return erpType || "None";
+  // Check if the typeNumber exists in our mappings (including 0)
+  if (typeNumber in ERP_TYPE_MAPPINGS) {
+    return ERP_TYPE_MAPPINGS[typeNumber as keyof typeof ERP_TYPE_MAPPINGS];
+  }
+
+  // If not found in mappings, return "None"
+  return "None";
 };
 
 export const getErpTypesByTierType = (tierType: TierType) => {
   switch (tierType) {
     case TierType.Customer:
       return [
-        { typeNumber: 0, typeName: "sales Quote", typeKey: "SQ", typeAttr: "Quote" },
-        { typeNumber: 1, typeName: "sales Order", typeKey: "SO", typeAttr: "Order" },
-        { typeNumber: 2, typeName: "sales Invoice", typeKey: "SI", typeAttr: "Invoice" },
-        { typeNumber: 3, typeName: "sales Credit Memo", typeKey: "SCM", typeAttr: "Credit Memo" },
-        { typeNumber: 4, typeName: "sales Blanket Order", typeKey: "CBO", typeAttr: "Blanket Order" },
-        { typeNumber: 5, typeName: "sales Return Order", typeKey: "CRO", typeAttr: "Return Order" },
+        { typeNumber: 0, typeName: "Sales Quote", typeKey: "SQ", typeAttr: "Quote" },
+        { typeNumber: 1, typeName: "Sales Order", typeKey: "SO", typeAttr: "Order" },
+        { typeNumber: 2, typeName: "Sales Invoice", typeKey: "SI", typeAttr: "Invoice" },
+        { typeNumber: 3, typeName: "Sales Credit Memo", typeKey: "SCM", typeAttr: "Credit Memo" },
+        { typeNumber: 4, typeName: "Sales Blanket Order", typeKey: "CBO", typeAttr: "Blanket Order" },
+        { typeNumber: 5, typeName: "Sales Return Order", typeKey: "CRO", typeAttr: "Return Order" },
       ];
     case TierType.Vendor:
       return [

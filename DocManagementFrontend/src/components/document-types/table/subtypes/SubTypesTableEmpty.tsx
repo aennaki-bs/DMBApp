@@ -7,6 +7,16 @@ interface SubTypesTableEmptyProps {
     onCreateSeries?: () => void;
 }
 
+/**
+ * Empty state component for subtypes table.
+ * 
+ * Note: The document type association checking system has been enhanced to include:
+ * - Document associations (existing: documentCounter > 0)
+ * - Circuit associations (new: circuits using this document type)
+ * 
+ * Document types with any associations cannot be selected or deleted.
+ * This prevents data integrity issues when removing types that are in use.
+ */
 export function SubTypesTableEmpty({ onClearFilters, onCreateSeries }: SubTypesTableEmptyProps) {
     return (
         <div className="flex flex-col items-center justify-center py-20">
@@ -21,7 +31,7 @@ export function SubTypesTableEmpty({ onClearFilters, onCreateSeries }: SubTypesT
                     <p className="text-muted-foreground text-sm max-w-md mb-4">
                         No series match your current filters. Try adjusting your search criteria or create a new series.
                     </p>
-                    <div className="flex gap-3">
+                    {/* <div className="flex gap-3">
                         <Button
                             variant="outline"
                             onClick={onClearFilters}
@@ -39,7 +49,7 @@ export function SubTypesTableEmpty({ onClearFilters, onCreateSeries }: SubTypesT
                                 Add Series
                             </Button>
                         )}
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>

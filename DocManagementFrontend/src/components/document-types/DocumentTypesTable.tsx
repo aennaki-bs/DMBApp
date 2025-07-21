@@ -31,6 +31,7 @@ import { ERP_TYPE_MAPPINGS } from "@/utils/erpTypeUtils";
 import documentService from "@/services/documentService";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { DocumentType } from "@/models/document";
+import { Badge } from "@/components/ui/badge";
 
 const SEARCH_FIELDS = [
     { id: "all", label: "All fields" },
@@ -59,6 +60,8 @@ const ERP_TYPE_OPTIONS = [
         value: typeName,
     })),
 ];
+
+
 
 interface DocumentTypesTableProps {
     onCreateType?: () => void;
@@ -90,6 +93,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
         isLoading,
         isError,
         refetch,
+        isFetching,
         setEditingType,
         setDeletingType,
         setDeleteMultipleOpen,
@@ -193,18 +197,8 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
             return;
         }
 
-        // Check if any selected type has documents
-        const typesWithDocuments = filteredTypes
-            .filter((type) => selectedTypes.includes(type.id!))
-            .filter((type) => type.documentCounter && type.documentCounter > 0);
-
-        console.log("typesWithDocuments:", typesWithDocuments);
-
-        if (typesWithDocuments.length > 0) {
-            toast.error(`Cannot delete ${typesWithDocuments.length} document type(s) with associated documents. Only types without documents can be deleted.`);
-            return;
-        }
-
+        // Note: Association checking has been disabled - allow all bulk deletions
+        console.log("Association checking disabled - allowing all bulk deletions");
         setDeleteMultipleOpen(true);
     };
 
@@ -270,6 +264,8 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-lg"
                     />
+
+
 
                     {/* Advanced Filters Popover */}
                     <Popover open={filterOpen} onOpenChange={setFilterOpen}>

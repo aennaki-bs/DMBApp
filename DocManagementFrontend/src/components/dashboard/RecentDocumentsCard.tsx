@@ -66,13 +66,13 @@ export function RecentDocumentsCard({ documents }: RecentDocumentsCardProps) {
                   </div>
                 </div>
               </div>
-              <div className={`px-2 py-1 rounded text-xs ${
+              {/* <div className={`px-2 py-1 rounded text-xs ${
                 doc.status === 1 ? 'bg-green-900/30 text-green-400' : 
                 doc.status === 2 ? 'bg-amber-900/30 text-amber-400' : 
                 'bg-blue-900/30 text-blue-400'
               }`}>
                 {getStatusText(doc.status)}
-              </div>
+              </div> */}
             </div>
           ))}
         </div>

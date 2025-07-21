@@ -37,6 +37,8 @@ interface DocumentTypeTableRowProps {
   onSelect: (typeId: number) => void;
   onEditType: (type: DocumentType) => void;
   onDeleteType: (typeId: number) => void;
+  canSelectType?: (type: DocumentType) => boolean;
+  getDisabledReason?: (type: DocumentType) => string | null;
 }
 
 export const DocumentTypeTableRow = ({
@@ -45,12 +47,17 @@ export const DocumentTypeTableRow = ({
   onSelect,
   onEditType,
   onDeleteType,
+  canSelectType,
+  getDisabledReason,
 }: DocumentTypeTableRowProps) => {
   const navigate = useNavigate();
 
-  // Disable document types that have documents
+  // Use enhanced association checks if available, fallback to simple document counter check
   const hasDocuments = type.documentCounter && type.documentCounter > 0;
-  const isDisabled = hasDocuments;
+  const canSelect = canSelectType ? canSelectType(type) : !hasDocuments;
+  const isDisabled = !canSelect;
+  const disabledReason = getDisabledReason ? getDisabledReason(type) : 
+    (hasDocuments ? `Cannot select: has ${type.documentCounter} document(s)` : null);
 
   const renderTierType = (tierType?: TierType | number) => {
     if (!tierType || tierType === TierType.None || tierType === 0) {
@@ -103,7 +110,7 @@ export const DocumentTypeTableRow = ({
   };
 
   const renderErpType = (erpTypeNumber?: number) => {
-    if (!erpTypeNumber) {
+    if (erpTypeNumber === undefined || erpTypeNumber === null) {
       return (
         <span className="text-slate-500 dark:text-slate-400 text-sm">None</span>
       );
@@ -201,13 +208,34 @@ export const DocumentTypeTableRow = ({
       {/* Selection Checkbox - exactly like UserTable */}
       <TableCell className="w-[48px] text-center">
         <div className="flex items-center justify-center">
-          <ProfessionalCheckbox
-            checked={isSelected && !isDisabled}
-            onCheckedChange={() => !isDisabled && onSelect(type.id!)}
-            size="md"
-            variant="row"
-            disabled={isDisabled}
-          />
+          {isDisabled && disabledReason ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <ProfessionalCheckbox
+                      checked={false}
+                      onCheckedChange={() => {}}
+                      size="md"
+                      variant="row"
+                      disabled={true}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="bg-slate-900 border-slate-600 text-slate-200 max-w-xs">
+                  <p>{disabledReason}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <ProfessionalCheckbox
+              checked={isSelected && !isDisabled}
+              onCheckedChange={() => !isDisabled && onSelect(type.id!)}
+              size="md"
+              variant="row"
+              disabled={isDisabled}
+            />
+          )}
         </div>
       </TableCell>
 
@@ -234,9 +262,8 @@ export const DocumentTypeTableRow = ({
                   <span className="flex items-center gap-2 group">
                     <Eye className="h-4 w-4 opacity-60 group-hover:opacity-100 transition-opacity" />
                     <span className="underline-offset-4 group-hover:underline">
-                      {getDisplayTypeName(type.typeName)}
+                      {type.typeName}
                     </span>
-
                   </span>
                 </Button>
               </TooltipTrigger>
@@ -323,6 +350,18 @@ export const DocumentTypeTableRow = ({
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 <span>Delete{isDisabled ? ' (Protected)' : ''}</span>
+                {isDisabled && disabledReason && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <AlertCircle className="ml-2 h-3 w-3 text-amber-500" />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-900 border-slate-600 text-slate-200 max-w-xs">
+                        <p>{disabledReason}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

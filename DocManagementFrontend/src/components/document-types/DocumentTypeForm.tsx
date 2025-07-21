@@ -96,7 +96,7 @@ export const DocumentTypeForm = ({
         typeAttr: documentType.typeAttr || "",
         tierType: documentType.tierType || TierType.None,
         erpType: "",
-        typeNumber: documentType.typeNumber || undefined,
+        typeNumber: documentType.typeNumber !== undefined && documentType.typeNumber !== null ? documentType.typeNumber : undefined,
       });
 
       // In edit mode, start from step 1 to allow users to review and edit all fields
@@ -234,6 +234,7 @@ export const DocumentTypeForm = ({
   const onSubmit = async (data: z.infer<typeof typeSchema>) => {
     if (isSubmitting) return; // Prevent double submission
 
+    console.log("Form submission data:", data);
     setIsSubmitting(true);
     try {
       if (isEditMode && documentType?.id) {
@@ -242,7 +243,7 @@ export const DocumentTypeForm = ({
           typeAttr: data.typeAttr || undefined,
           documentCounter: documentType.documentCounter,
           tierType: data.tierType || undefined,
-          typeNumber: data.typeNumber || undefined,
+          typeNumber: data.typeNumber !== undefined && data.typeNumber !== null ? data.typeNumber : undefined,
         };
         await documentService.updateDocumentType(documentType.id, updateRequest);
         toast.success("Document type updated successfully");
@@ -251,7 +252,7 @@ export const DocumentTypeForm = ({
           typeName: data.typeName,
           typeAttr: data.typeAttr || undefined,
           tierType: data.tierType || undefined,
-          typeNumber: data.typeNumber || undefined,
+          typeNumber: data.typeNumber !== undefined && data.typeNumber !== null ? data.typeNumber : undefined,
         };
         await documentService.createDocumentType(createRequest);
         toast.success("Document type created successfully");
@@ -508,6 +509,7 @@ export const DocumentTypeForm = ({
                                   (type) => type.typeName === value
                                 );
                                 if (selectedErpType) {
+                                  console.log(`Selected ERP Type: ${value}, typeNumber: ${selectedErpType.typeNumber}`);
                                   form.setValue("typeNumber", selectedErpType.typeNumber);
                                 }
                               }}

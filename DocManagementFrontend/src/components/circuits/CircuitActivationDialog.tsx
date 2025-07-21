@@ -116,10 +116,10 @@ const CircuitActivationDialog = ({
                 Circuit Information
               </h3>
               <div className="grid grid-cols-2 gap-2">
-                <div>
+                {/* <div>
                   <p className="text-sm text-blue-400">Code:</p>
                   <p className="font-medium">{circuit?.circuitKey}</p>
-                </div>
+                </div> */}
                 <div>
                   <p className="text-sm text-blue-400">Title:</p>
                   <p className="font-medium">{circuit?.title}</p>

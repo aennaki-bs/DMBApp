@@ -47,8 +47,7 @@ export function StatusTableEmpty({ onClearFilters }: StatusTableEmptyProps) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
             >
-                Try adjusting your search criteria or filters to find what you're
-                looking for. You can also add new statuses to the circuit.
+                You can add new statuses to the circuit.
             </motion.p>
 
             <motion.div
@@ -57,7 +56,7 @@ export function StatusTableEmpty({ onClearFilters }: StatusTableEmptyProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
             >
-                <Button
+                {/* <Button
                     variant="outline"
                     size="sm"
                     className="min-w-[130px] bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30 hover:text-blue-900 dark:hover:text-blue-200 transition-all duration-300 backdrop-blur-sm"
@@ -73,7 +72,7 @@ export function StatusTableEmpty({ onClearFilters }: StatusTableEmptyProps) {
                 >
                     <Plus className="h-4 w-4 mr-2" />
                     Add New Status
-                </Button>
+                </Button> */}
             </motion.div>
 
             {/* Decorative elements */}
