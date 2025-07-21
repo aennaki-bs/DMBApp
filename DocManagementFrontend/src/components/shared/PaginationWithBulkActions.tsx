@@ -298,7 +298,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                                 size="sm"
                                 onClick={() => onPageChange(1)}
                                 disabled={currentPage === 1}
-                                className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                                className="h-8 w-8 p-0 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
                                 title="First page"
                             >
                                 <ChevronsLeft className="h-4 w-4" />
@@ -310,7 +310,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                             size="sm"
                             onClick={() => onPageChange(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                            className="h-8 w-8 p-0 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
                             title="Previous page"
                         >
                             <ChevronLeft className="h-4 w-4" />
@@ -321,7 +321,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                                 return (
                                     <div
                                         key={`ellipsis-${index}`}
-                                        className="h-8 w-8 flex items-center justify-center text-blue-600 dark:text-blue-400"
+                                        className="h-8 w-8 flex items-center justify-center text-primary"
                                     >
                                         <MoreHorizontal className="h-4 w-4" />
                                     </div>
@@ -336,8 +336,8 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                                     onClick={() => onPageChange(page)}
                                     className={
                                         page === currentPage
-                                            ? "h-8 min-w-[32px] px-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 border-blue-500 shadow-md font-semibold"
-                                            : "h-8 min-w-[32px] px-2 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 transition-all duration-200 shadow-sm"
+                                            ? "h-8 min-w-[32px] px-2 bg-primary text-primary-foreground hover:bg-primary/90 border border-primary shadow-md font-semibold"
+                                            : "h-8 min-w-[32px] px-2 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary transition-all duration-200 shadow-sm"
                                     }
                                     title={`Page ${page}`}
                                 >
@@ -351,7 +351,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                             size="sm"
                             onClick={() => onPageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
-                            className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                            className="h-8 w-8 p-0 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
                             title="Next page"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -363,7 +363,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                                 size="sm"
                                 onClick={() => onPageChange(totalPages)}
                                 disabled={currentPage === totalPages}
-                                className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                                className="h-8 w-8 p-0 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
                                 title="Last page"
                             >
                                 <ChevronsRight className="h-4 w-4" />

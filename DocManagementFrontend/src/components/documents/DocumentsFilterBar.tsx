@@ -148,9 +148,9 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
       documentTypes.forEach((type) => {
         // Add options based on the selected filter field
         if (typeFilterField === "typeName") {
-        baseOptions.push({
-          id: type.id || 0,
-          label: type.typeName,
+          baseOptions.push({
+            id: type.id || 0,
+            label: type.typeName,
             value: type.typeName, // Use typeName as the filter value
           });
         } else if (typeFilterField === "id") {
@@ -158,7 +158,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
             id: type.id || 0,
             label: `${type.typeName} (ID: ${type.id})`,
             value: String(type.id), // Use ID as the filter value
-        });
+          });
         }
       });
     }
@@ -391,19 +391,19 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
 
   // Return just the filter content
   return (
-    <div className="w-full sm:w-full bg-[#1e2a4a] border border-blue-900/40 rounded-xl shadow-xl">
+    <div className="w-full sm:w-full bg-background/95 backdrop-blur-xl border border-primary/20 rounded-xl shadow-2xl">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
-        className="p-4 border-b border-blue-900/30 bg-gradient-to-r from-[#1a2c6b]/50 to-[#0a1033]/50 rounded-t-xl"
+        className="p-4 border-b border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-xl"
       >
-        <h3 className="text-lg font-medium text-blue-100 flex items-center">
-          <Filter className="h-5 w-5 mr-2 text-blue-400" />
+        <h3 className="text-lg font-medium text-foreground flex items-center">
+          <Filter className="h-5 w-5 mr-2 text-primary" />
           Filter Documents
         </h3>
-        <p className="text-sm text-blue-300/80 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Refine your document list using the filters below
         </p>
       </motion.div>
@@ -414,16 +414,16 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className="w-full bg-blue-900/20 border-b border-blue-900/30 rounded-none">
+        <TabsList className="w-full bg-primary/5 backdrop-blur-sm border-b border-primary/20 rounded-none">
           <TabsTrigger
             value="filters"
-            className="flex-1 data-[state=active]:bg-blue-800/30"
+            className="flex-1 data-[state=active]:bg-primary/15 data-[state=active]:text-primary text-muted-foreground hover:text-foreground transition-colors"
           >
             <Tag className="h-4 w-4 mr-2" /> Filters
           </TabsTrigger>
           <TabsTrigger
             value="date"
-            className="flex-1 data-[state=active]:bg-blue-800/30"
+            className="flex-1 data-[state=active]:bg-primary/15 data-[state=active]:text-primary text-muted-foreground hover:text-foreground transition-colors"
           >
             <CalendarRange className="h-4 w-4 mr-2" /> Date Range
           </TabsTrigger>
@@ -434,21 +434,21 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
 
             {/* Document Type filter */}
             <div>
-              <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                <Tag className="h-4 w-4 mr-2 text-blue-400" />
+              <label className="text-sm font-medium text-foreground block mb-2 flex items-center">
+                <Tag className="h-4 w-4 mr-2 text-primary" />
                 Document Type
               </label>
-              
+
               <Select value={typeFilter} onValueChange={handleTypeChange}>
-                <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                <SelectTrigger className="w-full bg-background/60 backdrop-blur-sm text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 hover:bg-background/80 shadow-sm">
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20">
                   {typeFilterOptions.map((option) => (
                     <SelectItem
                       key={option.id}
                       value={option.value}
-                      className="hover:bg-blue-800/40"
+                      className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                     >
                       {option.label}
                     </SelectItem>
@@ -461,8 +461,8 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
           <TabsContent value="date" className="p-4 space-y-4 mt-0">
             {/* Date range presets */}
             <div>
-              <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-blue-400" />
+              <label className="text-sm font-medium text-foreground block mb-2 flex items-center">
+                <Clock className="h-4 w-4 mr-2 text-primary" />
                 Quick Date Ranges
               </label>
               <div className="grid grid-cols-2 gap-2 mb-4">
@@ -473,9 +473,9 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
                     variant="outline"
                     size="sm"
                     className={cn(
-                      "bg-[#22306e] text-blue-100 border border-blue-900/40 hover:bg-blue-800/40 h-9 justify-start",
+                      "bg-background/60 backdrop-blur-sm text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 h-9 justify-start transition-all duration-200",
                       selectedDatePreset === preset.value &&
-                        "bg-blue-800 border-blue-500"
+                      "bg-primary/15 border-primary/40 text-primary"
                     )}
                     onClick={() => applyDatePreset(preset.value)}
                   >
@@ -488,28 +488,28 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
 
             {/* Date Range */}
             <div>
-              <label className="text-sm font-medium text-blue-200 block mb-2 flex items-center">
-                <CalendarRange className="h-4 w-4 mr-2 text-blue-400" />
+              <label className="text-sm font-medium text-foreground block mb-2 flex items-center">
+                <CalendarRange className="h-4 w-4 mr-2 text-primary" />
                 Date Filter
-                </label>
-              
+              </label>
+
               {/* Date field selector */}
               <div className="mb-2">
                 <Select
                   value={dateFilterField}
                   onValueChange={handleDateFieldChange}
                 >
-                  <SelectTrigger className="w-full bg-[#22306e] text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                  <SelectTrigger className="w-full bg-background/60 backdrop-blur-sm text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 hover:bg-background/80 shadow-sm">
                     <SelectValue>
                       {dateFieldOptions.find(opt => opt.id === dateFilterField)?.label || "Document Date"}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40">
+                  <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20">
                     {dateFieldOptions.map((option) => (
                       <SelectItem
                         key={option.id}
                         value={option.id}
-                        className="hover:bg-blue-800/40"
+                        className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                       >
                         {option.label}
                       </SelectItem>
@@ -517,13 +517,13 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <DateRangePicker
                 date={advancedDateRange}
                 onDateChange={handleDateRangeChange}
                 className="w-full"
-                  />
-                </div>
+              />
+            </div>
 
             {/* <div className="mt-2">
               <div className="bg-blue-900/20 p-2 rounded-md border border-blue-900/40">
@@ -543,24 +543,24 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
         </ScrollArea>
       </Tabs>
 
-      <div className="p-3 border-t border-blue-900/30 bg-blue-900/20 flex justify-between items-center rounded-b-xl">
+      <div className="p-3 border-t border-primary/20 bg-primary/5 backdrop-blur-sm flex justify-between items-center rounded-b-xl">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={clearAllFilters}
-          className="text-blue-300 hover:text-blue-200 hover:bg-blue-800/40"
+          className="text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
         >
           <RefreshCw className="h-4 w-4 mr-1.5" />
           Reset All
-          <kbd className="sr-only md:not-sr-only text-[10px] text-blue-400/70 bg-blue-900/40 px-1.5 py-0.5 rounded border border-blue-800/30 ml-1.5 hidden md:inline-block">
+          <kbd className="sr-only md:not-sr-only text-[10px] text-muted-foreground/70 bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 ml-1.5 hidden md:inline-block">
             Alt+C
           </kbd>
         </Button>
         <Button
           type="button"
           onClick={onClose}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
           size="sm"
         >
           Apply Filters

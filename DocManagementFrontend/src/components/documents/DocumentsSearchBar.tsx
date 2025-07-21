@@ -31,7 +31,7 @@ export const DocumentsSearchBar = ({
 }: DocumentsSearchBarProps) => {
   const { t } = useTranslation();
   const { searchQuery, setSearchQuery, activeFilters, applyFilters, resetFilters } = useDocumentsFilter();
-  
+
   const [searchField, setSearchField] = useState(activeFilters.searchField || "all");
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -58,7 +58,7 @@ export const DocumentsSearchBar = ({
     const newValue = e.target.value;
     setLocalSearchQuery(newValue);
     setSearchQuery(newValue);
-    
+
     // Apply filters with the new search query
     applyFilters({
       ...activeFilters,
@@ -69,7 +69,7 @@ export const DocumentsSearchBar = ({
 
   const handleSearchFieldChange = (field: string) => {
     setSearchField(field);
-    
+
     // Apply filters with the new search field
     applyFilters({
       ...activeFilters,
@@ -81,7 +81,7 @@ export const DocumentsSearchBar = ({
   const clearSearch = () => {
     setLocalSearchQuery("");
     setSearchQuery("");
-    
+
     // Apply filters with cleared search
     applyFilters({
       ...activeFilters,
@@ -100,93 +100,113 @@ export const DocumentsSearchBar = ({
     return value !== 'any' && value !== '' && value !== undefined;
   }).length;
 
+  // Professional filter/search bar styling matching User Management
+  const filterCardClass =
+    "w-full flex flex-col md:flex-row items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl shadow-lg border border-primary/10";
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === "f") {
+        e.preventDefault();
+        setFilterOpen(true);
+      }
+      if (e.key === "Escape" && filterOpen) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [filterOpen]);
+
   return (
     <div className={cn("w-full", className)}>
       {/* Search and filter toolbar - matches user management style */}
-      <div className="p-5 border-b border-blue-900/30 bg-blue-900/20 backdrop-blur-sm rounded-lg border border-blue-900/30">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex-1 flex items-center gap-3 min-w-0">
-            {/* Field Selector */}
+      <div className={filterCardClass}>
+        {/* Search and field select */}
+        <div className="flex-1 flex items-center gap-4 min-w-0">
+          <div className="relative">
             <Select value={searchField} onValueChange={handleSearchFieldChange}>
-              <SelectTrigger className="w-[140px] bg-[#22306e]/80 text-blue-100 border border-blue-900/40 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-800/50 shadow-sm rounded-lg backdrop-blur-sm">
+              <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
                 <SelectValue>
                   {selectedField?.label || t("documents.allFields")}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-[#22306e] text-blue-100 border border-blue-900/40 backdrop-blur-md">
+              <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
                 {fieldOptions.map((option) => (
                   <SelectItem
                     key={option.id}
                     value={option.id}
-                    className="hover:bg-blue-800/40 focus:bg-blue-800/40"
+                    className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
                   >
                     {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Input
-                placeholder={`${t("documents.searchDocuments")} ${fieldLabel}...`}
-                value={localSearchQuery}
-                onChange={handleSearchChange}
-                className="bg-[#22306e]/80 text-blue-100 border border-blue-900/40 pl-11 pr-10 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-blue-800/50 shadow-sm backdrop-blur-sm h-11"
-              />
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
-              {localSearchQuery && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors duration-150"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Filter Toggle Button with Popover */}
-            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="bg-[#22306e]/80 text-blue-100 border border-blue-900/40 hover:bg-blue-800/50 shadow-sm rounded-lg flex items-center gap-2 h-11 px-4 backdrop-blur-sm transition-all duration-200"
-                >
-                  <SlidersHorizontal className="h-4 w-4 text-blue-400" />
-                  {t("documents.filterDocuments")}
-                  {hasActiveFilters && activeFilterCount > 0 && (
-                    <Badge className="ml-1 bg-blue-600 text-white shadow-sm">
-                      {activeFilterCount}
-                    </Badge>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-auto p-0"
-                align="end"
-                sideOffset={5}
+          <div className="relative flex-1 group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+            <Input
+              placeholder={`${t("documents.searchDocuments")} ${fieldLabel}...`}
+              value={localSearchQuery}
+              onChange={handleSearchChange}
+              className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-10 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
+            />
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary/60 group-hover:text-primary transition-colors duration-300">
+              <Search className="h-5 w-5" />
+            </div>
+            {localSearchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary/60 hover:text-primary transition-colors duration-150"
               >
-                <DocumentsFilterBar onClose={() => setFilterOpen(false)} />
-              </PopoverContent>
-            </Popover>
-
-            {/* Reset Filters Button */}
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  resetFilters();
-                  setFilterOpen(false);
-                }}
-                className="h-11 px-4 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40 transition-all duration-150 rounded-lg"
-                title="Reset all filters"
-              >
-                <FilterX className="h-4 w-4" />
-              </Button>
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Filter Toggle Button with Popover */}
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
+              >
+                <SlidersHorizontal className="h-5 w-5" />
+                {t("documents.filterDocuments")}
+                <span className="ml-2 px-2 py-0.5 rounded border border-primary/30 text-xs text-primary/70 bg-primary/10 font-mono">Alt+F</span>
+                {hasActiveFilters && activeFilterCount > 0 && (
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0"
+              align="end"
+              sideOffset={5}
+            >
+              <DocumentsFilterBar onClose={() => setFilterOpen(false)} />
+            </PopoverContent>
+          </Popover>
+
+          {/* Reset Filters Button */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                resetFilters();
+                setFilterOpen(false);
+              }}
+              className="h-12 px-4 text-primary/60 hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl"
+              title="Reset all filters"
+            >
+              <FilterX className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

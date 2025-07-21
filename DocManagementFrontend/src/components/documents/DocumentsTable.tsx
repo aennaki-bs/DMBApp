@@ -17,8 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -60,7 +60,7 @@ export default function DocumentsTable({
     icon: React.ReactNode
   ) => (
     <div
-      className="flex items-center gap-1 cursor-pointer select-none"
+      className="flex items-center gap-1 cursor-pointer select-none hover:text-primary transition-colors duration-200"
       onClick={() => requestSort(key)}
     >
       {icon}
@@ -74,62 +74,68 @@ export default function DocumentsTable({
   );
 
   return (
-    <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
+    <div className="rounded-xl border border-primary/10 overflow-hidden bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg">
       {/* Fixed Header - Never Scrolls */}
-      <div className="min-w-[1100px] border-b border-blue-900/30">
+      <div className="min-w-[1100px] border-b border-primary/10">
         <Table className="table-fixed w-full">
-          <TableHeader className="bg-gradient-to-r from-[#1a2c6b] to-[#0a1033]">
-            <TableRow className="border-blue-900/50 hover:bg-transparent">
-              <TableHead className="w-[50px] text-blue-300 font-medium">
+          <TableHeader className="bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
+            <TableRow className="border-primary/10 hover:bg-transparent">
+              <TableHead className="w-[50px] text-foreground font-medium">
                 {canManageDocuments ? (
-                  <Checkbox
+                  <ProfessionalCheckbox
                     checked={
                       selectedDocuments.length === documents.length &&
                       documents.length > 0
                     }
+                    indeterminate={
+                      selectedDocuments.length > 0 &&
+                      selectedDocuments.length < documents.length
+                    }
                     onCheckedChange={handleSelectAll}
-                    className="border-blue-500/50 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
+                    size="md"
+                    variant="header"
+                    className="shadow-lg"
                   />
                 ) : (
                   <span>#</span>
                 )}
               </TableHead>
-              <TableHead className="w-[160px] text-blue-300 font-medium">
+              <TableHead className="w-[160px] text-foreground font-medium">
                 {renderSortableHeader(
                   "Document Code",
                   "documentKey",
-                  <Tag className="h-4 w-4 text-blue-400" />
+                  <Tag className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
-              <TableHead className="w-[250px] text-blue-300 font-medium">
+              <TableHead className="w-[250px] text-foreground font-medium">
                 {renderSortableHeader(
                   "Title",
                   "title",
-                  <FileText className="h-4 w-4 text-blue-400" />
+                  <FileText className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
-              <TableHead className="w-[150px] text-blue-300 font-medium">
+              <TableHead className="w-[150px] text-foreground font-medium">
                 {renderSortableHeader(
                   "Type",
                   "documentType",
-                  <Filter className="h-4 w-4 text-blue-400" />
+                  <Filter className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
-              <TableHead className="w-[140px] text-blue-300 font-medium">
+              <TableHead className="w-[140px] text-foreground font-medium">
                 {renderSortableHeader(
                   "Document Date",
                   "docDate",
-                  <CalendarDays className="h-4 w-4 text-blue-400" />
+                  <CalendarDays className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
-              <TableHead className="w-[150px] text-blue-300 font-medium">
+              <TableHead className="w-[150px] text-foreground font-medium">
                 {renderSortableHeader(
                   "Responsibility Center",
                   "responsibilityCentre.code",
-                  <Building2 className="h-4 w-4 text-blue-400" />
+                  <Building2 className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
-              <TableHead className="w-[100px] text-right text-blue-300 font-medium">
+              <TableHead className="w-[100px] text-right text-foreground font-medium">
                 Actions
               </TableHead>
             </TableRow>
@@ -137,27 +143,25 @@ export default function DocumentsTable({
         </Table>
       </div>
 
-      {/* Scrollable Body - Only Content Scrolls */}
-      <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
-        <div className="min-w-[1100px]">
-          <Table className="table-fixed w-full">
-            <TableBody>
-              {documents.map((document, index) => (
-                <DocumentsTableRow
-                  key={document.id}
-                  document={document}
-                  index={index + (page - 1) * pageSize}
-                  isSelected={selectedDocuments.includes(document.id)}
-                  canManageDocuments={canManageDocuments}
-                  onSelect={() => handleSelectDocument(document.id)}
-                  onDelete={() => openDeleteDialog(document.id)}
-                  onAssignCircuit={() => openAssignCircuitDialog(document)}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </ScrollArea>
+      {/* Table Body - Shows all items on current page */}
+      <div className="min-w-[1100px]">
+        <Table className="table-fixed w-full">
+          <TableBody>
+            {documents.map((document, index) => (
+              <DocumentsTableRow
+                key={document.id}
+                document={document}
+                index={index + (page - 1) * pageSize}
+                isSelected={selectedDocuments.includes(document.id)}
+                canManageDocuments={canManageDocuments}
+                onSelect={() => handleSelectDocument(document.id)}
+                onDelete={() => openDeleteDialog(document.id)}
+                onAssignCircuit={() => openAssignCircuitDialog(document)}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

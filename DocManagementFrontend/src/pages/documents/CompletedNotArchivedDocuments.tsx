@@ -2,26 +2,21 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import documentService from "@/services/documentService";
 import { AlertTriangle, FileCheck } from "lucide-react";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 import ArchivedDocumentsTable from "@/components/documents/ArchivedDocumentsTable";
 import CompletedDocumentsEmptyState from "@/components/documents/CompletedDocumentsEmptyState";
 import { ArchivedDocumentsSearchBar } from "@/components/documents/ArchivedDocumentsSearchBar";
 import { useArchivedDocumentsData } from "@/hooks/documents/useArchivedDocumentsData";
 import { ArchivedDocumentsFilterProvider, useArchivedDocumentsFilter } from "@/hooks/documents/useArchivedDocumentsFilter";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
+import { PageLayout } from "@/components/layout/PageLayout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-const ITEMS_PER_PAGE = 10;
+import { useTranslation } from "@/hooks/useTranslation";
 
 function CompletedNotArchivedDocumentsContent() {
+  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const { data: documents = [], isLoading, error } = useQuery({
     queryKey: ["completedNotArchivedDocuments"],
@@ -31,22 +26,53 @@ function CompletedNotArchivedDocumentsContent() {
   const { filteredItems, requestSort, sortConfig, filteredCount, totalCount } = useArchivedDocumentsData(documents);
   const { isFilterActive, resetFilters } = useArchivedDocumentsFilter();
 
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentPageDocuments = filteredItems.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredItems.length / pageSize);
+  const totalItems = filteredItems.length;
+
+  const getPageDocuments = () => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredItems.slice(start, end);
+  };
+
+  const paginatedDocuments = getPageDocuments();
+
+  // Bulk selection
+  const bulkSelection = useBulkSelection({
+    data: filteredItems,
+    paginatedData: paginatedDocuments,
+    keyField: 'id',
+    currentPage,
+    pageSize,
+  });
 
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
   }, [filteredCount]);
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+  };
+
+  // Bulk actions (empty for completed documents as they're read-only)
+  const bulkActions: BulkAction[] = [];
+
+  const pageActions = [
+    // No actions for completed documents as they're read-only
+  ];
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] bg-background/50 backdrop-blur-sm shadow-lg rounded-xl border border-border/50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading completed documents...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+          <p className="text-muted-foreground">Loading completed documents...</p>
         </div>
       </div>
     );
@@ -54,36 +80,21 @@ function CompletedNotArchivedDocumentsContent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] bg-background/50 backdrop-blur-sm shadow-lg rounded-xl border border-border/50">
         <div className="text-center">
-          <p className="text-red-600">Error loading completed documents</p>
+          <p className="text-destructive">Error loading completed documents</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <FileCheck className="h-6 w-6 text-amber-600" />
-          <h1 className="text-2xl font-bold">Completed Documents</h1>
-          <span className="text-sm text-gray-900">(Pending ERP Archive)</span>
-        </div>
-        <div className="text-sm text-gray-500">
-          {filteredCount} of {totalCount} documents
-          {isFilterActive && (
-            <span className="ml-2 text-amber-600 font-medium">(filtered)</span>
-          )}
-        </div>
-      </div>
-
+  const mainContent = (
+    <div className="h-full flex flex-col gap-6 w-full" style={{ minHeight: "100%" }}>
       {/* Info Alert */}
-      <Alert className="border-blue-900/30 bg-blue-900/20">
-        {/* <AlertTriangle className="h-4 w-4 text-amber-600" /> */}
-        <AlertDescription className="text-sm font-medium">
-          These documents have completed their workflow circuit but are not yet archived to the ERP system. 
+      <Alert className="border-primary/20 bg-primary/5 backdrop-blur-sm">
+        <AlertTriangle className="h-4 w-4 text-amber-600" />
+        <AlertDescription className="text-sm font-medium text-foreground">
+          These documents have completed their workflow circuit but are not yet archived to the ERP system.
           ERP archival may be in progress or may have failed and requires manual intervention.
         </AlertDescription>
       </Alert>
@@ -91,75 +102,54 @@ function CompletedNotArchivedDocumentsContent() {
       {/* Search and Filter Bar */}
       <ArchivedDocumentsSearchBar hasActiveFilters={isFilterActive} />
 
-      {/* Table or Empty State */}
-      {filteredItems.length === 0 ? (
-        <div className="rounded-xl border border-blue-900/30 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/80 to-[#0a1033]/80">
-          <CompletedDocumentsEmptyState
-            hasFilters={isFilterActive}
-            onClearFilters={resetFilters}
-          />
-        </div>
-      ) : (
-        <div className="rounded-xl border border-blue-900/100 overflow-hidden bg-gradient-to-b from-[#1a2c6b]/80 to-[#0a1033]/80">
+      {/* Main Table Content */}
+      <div className="flex-1 min-h-0">
+        {filteredItems.length === 0 ? (
+          <div className="bg-background/50 backdrop-blur-sm shadow-lg rounded-xl border border-border/50">
+            <CompletedDocumentsEmptyState
+              hasFilters={isFilterActive}
+              onClearFilters={resetFilters}
+            />
+          </div>
+        ) : (
           <ArchivedDocumentsTable
-            documents={currentPageDocuments}
+            documents={paginatedDocuments}
             onSort={requestSort}
             sortConfig={sortConfig}
             showErpStatus={true}
+            selectedDocuments={bulkSelection.selectedItems}
+            bulkSelection={bulkSelection}
+            page={currentPage}
+            pageSize={pageSize}
           />
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Pagination */}
-      {filteredItems.length > 0 && totalPages > 1 && (
-        <div className="flex justify-center">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                if (
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= currentPage - 1 && page <= currentPage + 1)
-                ) {
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                } else if (page === currentPage - 2 || page === currentPage + 2) {
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  );
-                }
-                return null;
-              })}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+      {/* Professional Pagination with Bulk Actions */}
+      {filteredItems.length > 0 && (
+        <PaginationWithBulkActions
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          bulkSelection={bulkSelection}
+          bulkActions={bulkActions}
+        />
       )}
     </div>
+  );
+
+  return (
+    <PageLayout
+      title="Completed Documents"
+      subtitle={`${filteredCount} of ${totalCount} documents (Pending ERP Archive)${isFilterActive ? ' (filtered)' : ''}`}
+      icon={FileCheck}
+      actions={pageActions}
+    >
+      {mainContent}
+    </PageLayout>
   );
 }
 
