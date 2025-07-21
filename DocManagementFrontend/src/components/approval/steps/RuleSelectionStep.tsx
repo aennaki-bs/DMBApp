@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Settings, UsersRound, UserCheck, ListOrdered } from "lucide-react";
+import { Settings, UsersRound, UserCheck, ListOrdered, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ApprovalRuleType } from "@/models/approval";
 
@@ -28,6 +28,12 @@ const ruleDefinitions = [
     title: "Sequential Approval",
     description: "Users must approve in a specific order",
     icon: <ListOrdered className="h-4 w-4 text-purple-500" />,
+  },
+  {
+    id: "MinimumWithRequired",
+    title: "Minimum + Required",
+    description: "Minimum number of approvals plus specific required members",
+    icon: <Target className="h-4 w-4 text-orange-500" />,
   },
 ];
 

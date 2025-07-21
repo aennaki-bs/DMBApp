@@ -66,6 +66,7 @@ namespace DocManagementBackend.Models
         public int LignesCount { get; set; }
         public int SousLignesCount { get; set; }
         public int? CircuitId { get; set; }
+        public CircuitDto? Circuit { get; set; }
         public int? CurrentStepId { get; set; }
         public string CurrentStepTitle { get; set; } = string.Empty;
         public int? CurrentStatusId { get; set; }

@@ -260,7 +260,7 @@ const ViewDocument = () => {
         onClick: () => navigate(`/documents/${document.id}/edit`),
       },
       {
-        label: "Document Flow",
+        label: "Execute Steps",
         variant: "outline" as const,
         icon: GitBranch,
         onClick: handleDocumentFlow,
@@ -294,9 +294,39 @@ const ViewDocument = () => {
   ];
 
   // Get document title and subtitle
-  const documentTitle = document ? `${document.documentKey} - ${document.title}` : "Loading Document...";
+  
+  // Get current status information
+  const getCurrentStatus = () => {
+    if (!document) return "Unknown Status";
+    
+    // Priority 1: Check workflow status for more detailed info
+    if (workflowStatus?.currentStatusTitle) {
+      return workflowStatus.currentStatusTitle;
+    }
+    
+    // Priority 2: Check if there's an effective approval with status
+    if (effectiveApproval?.status) {
+      return effectiveApproval.status;
+    }
+    
+    // Priority 3: Map document status number to text
+    // switch (document.status) {
+      //   case 0:
+      //     return "Draft";
+      //   case 1:
+      //     return "In Progress";
+      //   case 2:
+      //     return "Completed";
+      //   case 3:
+      //     return "Cancelled";
+      //   default:
+      //     return "Unknown";
+      // }
+    };
+    
+  const documentTitle = document ? `${document.documentKey} • ${getCurrentStatus()}` : "Loading Document...";
   const documentSubtitle = document
-    ? `${document.documentType.typeName} • Created ${new Date(document.createdAt).toLocaleDateString()}`
+    ? `Created At ${new Date(document.createdAt).toLocaleDateString()}`
     : "Document details and information";
 
   return (

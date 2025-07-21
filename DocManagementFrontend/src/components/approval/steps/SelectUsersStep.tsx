@@ -28,7 +28,7 @@ interface SelectUsersStepProps {
   selectedUsers: ApproverInfo[];
   isLoading: boolean;
   isSequential?: boolean;
-  onSelectedUsersChange: (users: ApproverInfo[]) => void;
+  onSelectionChange: (users: ApproverInfo[]) => void;
 }
 
 export function SelectUsersStep({
@@ -36,7 +36,7 @@ export function SelectUsersStep({
   selectedUsers,
   isLoading,
   isSequential = false,
-  onSelectedUsersChange,
+  onSelectionChange,
 }: SelectUsersStepProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<ApproverInfo[]>([]);
@@ -61,12 +61,12 @@ export function SelectUsersStep({
 
     if (isSelected) {
       // Remove user
-      onSelectedUsersChange(
+      onSelectionChange(
         selectedUsers.filter((u) => u.userId !== user.userId)
       );
     } else {
       // Add user
-      onSelectedUsersChange([...selectedUsers, user]);
+      onSelectionChange([...selectedUsers, user]);
     }
   };
 
@@ -75,7 +75,7 @@ export function SelectUsersStep({
   };
 
   const handleRemoveSelectedUser = (userId: number) => {
-    onSelectedUsersChange(
+    onSelectionChange(
       selectedUsers.filter((user) => user.userId !== userId)
     );
   };
@@ -91,14 +91,14 @@ export function SelectUsersStep({
         newUsers[index - 1],
         newUsers[index],
       ];
-      onSelectedUsersChange(newUsers);
+      onSelectionChange(newUsers);
     } else if (direction === "down" && index < selectedUsers.length - 1) {
       // Swap with the user below
       [newUsers[index], newUsers[index + 1]] = [
         newUsers[index + 1],
         newUsers[index],
       ];
-      onSelectedUsersChange(newUsers);
+      onSelectionChange(newUsers);
     }
   };
 
@@ -117,53 +117,56 @@ export function SelectUsersStep({
     const newUsers = [...selectedUsers];
     const [movedUser] = newUsers.splice(fromIndex, 1);
     newUsers.splice(toIndex, 0, movedUser);
-    onSelectedUsersChange(newUsers);
+    onSelectionChange(newUsers);
   };
 
   return (
-    <div className="space-y-3">
-      <div className="space-y-1">
+    <div className="space-y-4 h-full flex flex-col">
+      <div className="space-y-1 flex-shrink-0">
         <h3 className="text-sm font-medium">Select Users</h3>
         <p className="text-xs text-muted-foreground">
           Choose users who will be part of this approval group (minimum 2 users required)
         </p>
       </div>
 
-      {/* Minimum users requirement alert */}
-      {selectedUsers.length < 2 && (
-        <Alert
-          variant="default"
-          className="bg-blue-500/10 border-blue-500/30 py-1.5 px-3 text-xs"
-        >
-          <UserPlus className="h-3 w-3 text-blue-600" />
-          <AlertDescription className="text-blue-900 dark:text-blue-300 text-xs">
-            <span className="font-semibold">
-              {selectedUsers.length === 0 
-                ? "Select at least 2 users to create an effective approval group"
-                : `Select ${2 - selectedUsers.length} more user${2 - selectedUsers.length > 1 ? 's' : ''} to meet the minimum requirement`
-              }
-            </span>
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Alerts section - flex-shrink-0 to prevent compression */}
+      <div className="flex-shrink-0 space-y-2">
+        {/* Minimum users requirement alert */}
+        {selectedUsers.length < 2 && (
+          <Alert
+            variant="default"
+            className="bg-blue-500/10 border-blue-500/30 py-1.5 px-3 text-xs"
+          >
+            <UserPlus className="h-3 w-3 text-blue-600" />
+            <AlertDescription className="text-blue-900 dark:text-blue-300 text-xs">
+              <span className="font-semibold">
+                {selectedUsers.length === 0 
+                  ? "Select at least 2 users to create an effective approval group"
+                  : `Select ${2 - selectedUsers.length} more user${2 - selectedUsers.length > 1 ? 's' : ''} to meet the minimum requirement`
+                }
+              </span>
+            </AlertDescription>
+          </Alert>
+        )}
 
-      {isSequential && (
-        <Alert
-          variant="warning"
-          className="bg-purple-500/10 border-purple-500/30 py-1.5 px-3 text-xs"
-        >
-          <MoveVertical className="h-3 w-3 text-purple-600" />
-          <AlertDescription className="text-purple-900 dark:text-purple-300 text-xs">
-            <span className="font-semibold">
-              Sequential approval order is important.
-            </span>{" "}
-            Use arrows to change the order.
-          </AlertDescription>
-        </Alert>
-      )}
+        {isSequential && (
+          <Alert
+            variant="warning"
+            className="bg-purple-500/10 border-purple-500/30 py-1.5 px-3 text-xs"
+          >
+            <MoveVertical className="h-3 w-3 text-purple-600" />
+            <AlertDescription className="text-purple-900 dark:text-purple-300 text-xs">
+              <span className="font-semibold">
+                Sequential approval order is important.
+              </span>{" "}
+              Use arrows to change the order.
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
 
-      {/* Selected Users */}
-      <div className="space-y-1">
+      {/* Selected Users - flex-shrink-0 with max height */}
+      <div className="space-y-1 flex-shrink-0">
         <Label className="text-xs font-medium flex items-center gap-1">
           {isSequential ? (
             <ListOrdered className="h-3 w-3 text-purple-500" />
@@ -174,7 +177,7 @@ export function SelectUsersStep({
           {selectedUsers.length})
         </Label>
         <div
-          className={`border rounded-md p-1.5 min-h-[40px] ${
+          className={`border rounded-md p-1.5 min-h-[40px] max-h-[120px] overflow-y-auto ${
             isSequential
               ? "bg-purple-500/5 border-purple-500/20"
               : "bg-muted/30"
@@ -274,9 +277,9 @@ export function SelectUsersStep({
         </div>
       </div>
 
-      {/* User Selection */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
+      {/* User Selection - flex-grow to take remaining space */}
+      <div className="space-y-1.5 flex-grow flex flex-col min-h-0">
+        <div className="flex items-center justify-between flex-shrink-0">
           <Label className="text-xs font-medium flex items-center gap-1">
             <Users className="h-3 w-3 text-blue-500" />
             Available Users
@@ -292,8 +295,8 @@ export function SelectUsersStep({
           </div>
         </div>
 
-        <div className="border rounded-md">
-          <ScrollArea className="h-[170px] rounded-md">
+        <div className="border rounded-md flex-grow min-h-0">
+          <ScrollArea className="h-full rounded-md">
             {isLoading ? (
               <div className="p-2 space-y-2">
                 {Array.from({ length: 3 }).map((_, index) => (

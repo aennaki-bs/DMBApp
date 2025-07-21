@@ -269,29 +269,28 @@ export default function CreateDocumentWizard({
     },
     {
       id: 4,
-      title: t("documents.customerVendor"),
+      title: "Circuit",
       description: "",
-      icon: <Building2 className="h-4 w-4" />,
+      icon: <Share2 className="h-4 w-4" />,
       completed: currentStep > 4,
     },
     {
       id: 5,
+      title: t("documents.customerVendor"),
+      description: "",
+      icon: <Building2 className="h-4 w-4" />,
+      completed: currentStep > 5,
+    },
+    {
+      id: 6,
       title: t("documents.content"),
       description: "",
       icon: <FileText className="h-4 w-4" />,
-      completed: currentStep > 5,
+      completed: currentStep > 6,
     },
   ];
 
-  // Circuit step and review step
-  const circuitStep: Step = {
-    id: 6,
-    title: t("documents.circuitOptional"),
-    description: "",
-    icon: <Share2 className="h-4 w-4" />,
-    completed: currentStep > 6,
-  };
-
+  // Review step
   const reviewStep: Step = {
     id: 7,
     title: t("documents.review"),
@@ -301,7 +300,7 @@ export default function CreateDocumentWizard({
   };
 
   // Create final steps array
-  const steps: Step[] = [...baseSteps, circuitStep, reviewStep];
+  const steps: Step[] = [...baseSteps, reviewStep];
 
   const TOTAL_STEPS = steps.length;
 
@@ -635,9 +634,9 @@ export default function CreateDocumentWizard({
     }
 
     if (!formData.selectedSubTypeId) {
-      setSubTypeError("Subtype is required");
-      toast.error("Subtype is required", {
-        description: "Please select a subtype to continue.",
+      setSubTypeError("Serie is required");
+      toast.error("Serie is required", {
+        description: "Please select a serie to continue.",
         duration: 3000,
       });
       return false;
@@ -711,19 +710,37 @@ export default function CreateDocumentWizard({
   };
 
   const validateCircuitStep = () => {
-    // Circuit selection is optional
-    // Just check if there are active circuits available to show, but don't require selection
+    // Check if there are active circuits available
     const activeCircuits = circuits.filter((c) => c.isActive);
-    if (activeCircuits.length === 0) {
-      setCircuitError("No active circuits available for assignment");
-      toast.error("No active circuits available", {
-        description:
-          "There are no active circuits available. You can continue without assigning a circuit or create active circuits first.",
+    
+    // Filter circuits by document type if one is selected
+    const compatibleCircuits = activeCircuits.filter((circuit) => {
+      if (formData.selectedTypeId && circuit.documentTypeId) {
+        return circuit.documentTypeId === formData.selectedTypeId;
+      }
+      // If circuit has no specific document type, allow it for any document type
+      return !circuit.documentTypeId;
+    });
+
+    if (compatibleCircuits.length === 0) {
+      setCircuitError("No active circuits available for the selected document type");
+      toast.error("No circuits available", {
+        description: "There are no active circuits available for the selected document type. Please create an active circuit or change the document type.",
         duration: 5000,
       });
-      // Still return true since circuit assignment is optional
-      return true;
+      return false;
     }
+
+    // Circuit selection is now required
+    if (!formData.circuitId) {
+      setCircuitError("Circuit selection is required");
+      toast.error("Circuit selection is required", {
+        description: "Please select a circuit to define the document workflow.",
+        duration: 3000,
+      });
+      return false;
+    }
+
     return true;
   };
 
@@ -772,12 +789,12 @@ export default function CreateDocumentWizard({
         return validateDateStep();
       case 3: // Document Type
         return validateTypeStep();
-      case 4: // Customer/Vendor
-        return validateCustomerVendorStep();
-      case 5: // Content
-        return validateContentStep();
-      case 6: // Circuit
+      case 4: // Circuit
         return validateCircuitStep();
+      case 5: // Customer/Vendor
+        return validateCustomerVendorStep();
+      case 6: // Content
+        return validateContentStep();
       case 7: // Review
         return true;
       default:
@@ -972,6 +989,26 @@ export default function CreateDocumentWizard({
     setCurrentStep(step);
   };
 
+  // Navigation handlers for circuit step
+  const handleGoToCircuitManagement = () => {
+    // Close the wizard dialog and navigate to circuit management
+    onOpenChange(false);
+    navigate('/circuits');
+    toast.info("Redirecting to Circuit Management", {
+      description: "Create or activate circuits for your document type, then return to create the document.",
+      duration: 4000,
+    });
+  };
+
+  const handleGoBackToType = () => {
+    // Go back to the document type step
+    setCurrentStep(3);
+    toast.info("Select a different document type", {
+      description: "Choose a document type that has active circuits available.",
+      duration: 3000,
+    });
+  };
+
   // Fetch responsibility centers with better error handling
   const fetchResponsibilityCentres = async () => {
     try {
@@ -1159,63 +1196,10 @@ export default function CreateDocumentWizard({
           </MotionDiv>
         );
 
-      case 4: // Customer/Vendor
+      case 4: // Circuit
         return (
           <MotionDiv
-            key="step4-customer-vendor"
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            variants={variants}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="space-y-4 py-4">
-              <CustomerVendorSelectionStep
-                selectedTypeId={formData.selectedTypeId}
-                documentTypes={documentTypes}
-                selectedCustomerVendor={formData.selectedCustomerVendor}
-                customerVendorName={formData.customerVendorName}
-                customerVendorAddress={formData.customerVendorAddress}
-                customerVendorCity={formData.customerVendorCity}
-                customerVendorCountry={formData.customerVendorCountry}
-                onCustomerVendorSelect={handleCustomerVendorSelect}
-                onNameChange={handleCustomerVendorNameChange}
-                onAddressChange={handleCustomerVendorAddressChange}
-                onCityChange={handleCustomerVendorCityChange}
-                onCountryChange={handleCustomerVendorCountryChange}
-              />
-            </div>
-          </MotionDiv>
-        );
-
-      case 5: // Content
-        return (
-          <MotionDiv
-            key="step5-content"
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            variants={variants}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="space-y-4 py-4">
-              <ContentStep
-                content={formData.content}
-                onContentChange={handleContentChange}
-                contentError={contentError}
-                isExternal={formData.isExternal}
-                onExternalChange={handleExternalChange}
-                externalReference={formData.externalReference}
-                onExternalReferenceChange={handleExternalReferenceChange}
-              />
-            </div>
-          </MotionDiv>
-        );
-
-      case 6: // Circuit
-        return (
-          <MotionDiv
-            key="step6-circuit"
+            key="step4-circuit"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -1246,6 +1230,61 @@ export default function CreateDocumentWizard({
                 circuitError={circuitError}
                 onCircuitChange={handleCircuitChange}
                 isLoading={isLoading}
+                onGoToCircuitManagement={handleGoToCircuitManagement}
+                onGoBackToType={handleGoBackToType}
+              />
+            </div>
+          </MotionDiv>
+        );
+
+      case 5: // Customer/Vendor
+        return (
+          <MotionDiv
+            key="step5-customer-vendor"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-4 py-4">
+              <CustomerVendorSelectionStep
+                selectedTypeId={formData.selectedTypeId}
+                documentTypes={documentTypes}
+                selectedCustomerVendor={formData.selectedCustomerVendor}
+                customerVendorName={formData.customerVendorName}
+                customerVendorAddress={formData.customerVendorAddress}
+                customerVendorCity={formData.customerVendorCity}
+                customerVendorCountry={formData.customerVendorCountry}
+                onCustomerVendorSelect={handleCustomerVendorSelect}
+                onNameChange={handleCustomerVendorNameChange}
+                onAddressChange={handleCustomerVendorAddressChange}
+                onCityChange={handleCustomerVendorCityChange}
+                onCountryChange={handleCustomerVendorCountryChange}
+              />
+            </div>
+          </MotionDiv>
+        );
+
+      case 6: // Content
+        return (
+          <MotionDiv
+            key="step6-content"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-4 py-4">
+              <ContentStep
+                content={formData.content}
+                onContentChange={handleContentChange}
+                contentError={contentError}
+                isExternal={formData.isExternal}
+                onExternalChange={handleExternalChange}
+                externalReference={formData.externalReference}
+                onExternalReferenceChange={handleExternalReferenceChange}
               />
             </div>
           </MotionDiv>
@@ -1285,11 +1324,11 @@ export default function CreateDocumentWizard({
                 customerVendorCity={formData.customerVendorCity}
                 customerVendorCountry={formData.customerVendorCountry}
                 onEditTypeClick={() => jumpToStep(3)}
-                onEditDetailsClick={() => jumpToStep(5)} // Updated to point to Content step
+                onEditDetailsClick={() => jumpToStep(6)} // Updated to point to Content step
                 onEditDateClick={() => jumpToStep(2)}
-                onEditContentClick={() => jumpToStep(5)} // Updated to point to Content step
-                onEditCircuitClick={() => jumpToStep(6)} // Updated to point to Circuit step
-                onEditCustomerVendorClick={() => jumpToStep(4)} // Point to Customer/Vendor step
+                onEditContentClick={() => jumpToStep(6)} // Updated to point to Content step
+                onEditCircuitClick={() => jumpToStep(4)} // Updated to point to Circuit step
+                onEditCustomerVendorClick={() => jumpToStep(5)} // Point to Customer/Vendor step
                 onEditResponsibilityCentreClick={
                   userHasResponsibilityCentre ? undefined : () => jumpToStep(1)
                 }
@@ -1315,11 +1354,11 @@ export default function CreateDocumentWizard({
               : currentStep === 3
               ? t("common.type")
               : currentStep === 4
-              ? t("documents.documentCustomerVendor")
+              ? "Circuit"
               : currentStep === 5
-              ? t("documents.documentContent")
+              ? t("documents.documentCustomerVendor")
               : currentStep === 6
-              ? t("documents.circuitAssignmentOptional")
+              ? t("documents.documentContent")
               : t("documents.reviewDocument")}
           </DialogTitle>
           <DialogDescription className="text-blue-300">
@@ -1332,11 +1371,11 @@ export default function CreateDocumentWizard({
               : currentStep === 3
               ? t("documents.selectDocumentTypeAndSubtype")
               : currentStep === 4
-              ? t("documents.addDocumentCustomerVendor")
-              : currentStep === 5
-              ? t("documents.addContentForDocument")
-              : currentStep === 6
               ? t("documents.assignCircuitOrSkipToCreateStatic")
+              : currentStep === 5
+              ? t("documents.addDocumentCustomerVendor")
+              : currentStep === 6
+              ? t("documents.addContentForDocument")
               : t("documents.confirmDocumentDetailsBeforeCreation")}
           </DialogDescription>
         </DialogHeader>

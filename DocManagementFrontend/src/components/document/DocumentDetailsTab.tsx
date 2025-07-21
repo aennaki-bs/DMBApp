@@ -145,7 +145,7 @@ const DocumentDetailsTab = ({
             <div>
               <h2 className="text-lg font-bold text-foreground">Document Information</h2>
               <p className="text-sm text-muted-foreground">
-                Updated {new Date(document.updatedAt).toLocaleDateString()} • {document.updatedBy?.username || 'Unknown'}
+                Last Updated At {new Date(document.updatedAt).toLocaleDateString()} • By {document.updatedBy?.username || 'Unknown'}
               </p>
             </div>
           </div>

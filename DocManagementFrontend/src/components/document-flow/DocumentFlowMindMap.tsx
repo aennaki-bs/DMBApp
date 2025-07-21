@@ -27,6 +27,7 @@ interface DocumentFlowMindMapProps {
   wasRejected?: boolean;
   refreshTrigger?: number;
   onCloseWorkflow?: () => void;
+  hasNoLines?: boolean;
 }
 
 interface NextStep {
@@ -54,6 +55,7 @@ export function DocumentFlowMindMap({
   wasRejected = false,
   refreshTrigger = 0,
   onCloseWorkflow,
+  hasNoLines = false,
 }: DocumentFlowMindMapProps) {
   const { user } = useAuth();
   const { completeStatus } = useWorkflowStepStatuses(documentId);
@@ -355,10 +357,10 @@ export function DocumentFlowMindMap({
                   className={cn(
                     "border border-blue-500/30 bg-gradient-to-r from-blue-900/20 to-indigo-900/10 overflow-hidden",
                     "transform hover:-translate-y-1 hover:border-blue-400/50 transition-all duration-200",
-                    hasPendingApprovals || isSimpleUser ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                    hasPendingApprovals || isSimpleUser || hasNoLines ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                   )}
                   onClick={() => {
-                    if (!hasPendingApprovals && !isSimpleUser) {
+                    if (!hasPendingApprovals && !isSimpleUser && !hasNoLines) {
                       handleNextStepClick(step);
                     }
                   }}
@@ -373,15 +375,15 @@ export function DocumentFlowMindMap({
                       </div>
                       <Button
                         size="sm"
-                        disabled={hasPendingApprovals || isSimpleUser}
+                        disabled={hasPendingApprovals || isSimpleUser || hasNoLines}
                         className={cn(
                           "bg-blue-600 hover:bg-blue-700",
                           step.requiresApproval && "bg-amber-600 hover:bg-amber-700",
-                          (hasPendingApprovals || isSimpleUser) && "opacity-50 cursor-not-allowed"
+                          (hasPendingApprovals || isSimpleUser || hasNoLines) && "opacity-50 cursor-not-allowed"
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!hasPendingApprovals && !isSimpleUser) {
+                          if (!hasPendingApprovals && !isSimpleUser && !hasNoLines) {
                             handleNextStepClick(step);
                           }
                         }}
@@ -389,7 +391,9 @@ export function DocumentFlowMindMap({
                           isSimpleUser 
                             ? "Read-only access: You can view but cannot move documents" 
                             : hasPendingApprovals 
-                            ? "Document cannot be moved while approval is pending" 
+                            ? "Document cannot be moved while approval is pending"
+                            : hasNoLines
+                            ? "Document must have at least one line before moving to next step"
                             : undefined
                         }
                       >

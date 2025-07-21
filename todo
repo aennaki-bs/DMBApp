@@ -173,15 +173,15 @@ change name DocumentManagementVerse
 
 <!-- * option thol bach tchof kamlin fi sign up to see all data -->
 <!-- * propose the type tier in creation document type (None). -->
+<!-- * add rule in any control count of user that nesseserly approve (count)
+*  	- add rule that nesseserly approve by specefic approbatur(s) () -->
+<!-- * add in approval requested / pinding approvales -->
+<!-- * controle for lines befor go to the next status and in approvment also need to check the doc berof approve -->
+* the document will be untouchable when i wait for the improvment
 * add info for the id/user name in edit action --usermanagment
-* add rule in any control count of user that nesseserly approve (count)
-*  	- add rule that nesseserly approve by specefic approbatur(s) ()
-* add in approval requested / pinding approvales
 
 * assign circuit in creation to be required
 * choisire the element and fill data pricing in same form without split it
-* controle for lines befor go to the next status and in approvment also need to check the doc berof approve
-* the document will be untouchable when i wait for the improvment
 
 * VAT -> auto by item () and the auther data (prix ...)
 * approvation par wcenter de gestion

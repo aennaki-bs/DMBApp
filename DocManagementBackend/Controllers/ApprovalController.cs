@@ -47,6 +47,9 @@ namespace DocManagementBackend.Controllers
             var singleApprovals = await _context.ApprovalWritings
                 .Include(aw => aw.Document)
                 .Include(aw => aw.Step)
+                    .ThenInclude(s => s.CurrentStatus)
+                .Include(aw => aw.Step)
+                    .ThenInclude(s => s.NextStatus)
                 .Include(aw => aw.ProcessedBy)
                 .Where(aw => 
                     aw.ApprovatorId.HasValue && 
@@ -67,7 +70,9 @@ namespace DocManagementBackend.Controllers
                     RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
                     RequestDate = approval.CreatedAt,
                     Comments = approval.Comments,
-                    ApprovalType = "Single"
+                    ApprovalType = "Single",
+                    CurrentStatusTitle = approval.Step?.CurrentStatus?.Title ?? string.Empty,
+                    NextStatusTitle = approval.Step?.NextStatus?.Title ?? string.Empty
                 });
             }
 
@@ -75,6 +80,9 @@ namespace DocManagementBackend.Controllers
             var groupApprovals = await _context.ApprovalWritings
                 .Include(aw => aw.Document)
                 .Include(aw => aw.Step)
+                    .ThenInclude(s => s.CurrentStatus)
+                .Include(aw => aw.Step)
+                    .ThenInclude(s => s.NextStatus)
                 .Include(aw => aw.ProcessedBy)
                 .Where(aw => 
                     aw.ApprovatorsGroupId.HasValue && 
@@ -155,7 +163,9 @@ namespace DocManagementBackend.Controllers
                         RuleType.Any => "Any",
                         RuleType.MinimumWithRequired => "MinimumWithRequired",
                         _ => "Any"
-                    }
+                    },
+                    CurrentStatusTitle = approval.Step?.CurrentStatus?.Title ?? string.Empty,
+                    NextStatusTitle = approval.Step?.NextStatus?.Title ?? string.Empty
                 });
             }
 
@@ -182,6 +192,9 @@ namespace DocManagementBackend.Controllers
             var singleApprovals = await _context.ApprovalWritings
                 .Include(aw => aw.Document)
                 .Include(aw => aw.Step)
+                    .ThenInclude(s => s.CurrentStatus)
+                .Include(aw => aw.Step)
+                    .ThenInclude(s => s.NextStatus)
                 .Include(aw => aw.ProcessedBy)
                 .Where(aw => 
                     aw.ApprovatorId.HasValue && 
@@ -202,7 +215,9 @@ namespace DocManagementBackend.Controllers
                     RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
                     RequestDate = approval.CreatedAt,
                     Comments = approval.Comments,
-                    ApprovalType = "Single"
+                    ApprovalType = "Single",
+                    CurrentStatusTitle = approval.Step?.CurrentStatus?.Title ?? string.Empty,
+                    NextStatusTitle = approval.Step?.NextStatus?.Title ?? string.Empty
                 });
             }
 
@@ -210,6 +225,9 @@ namespace DocManagementBackend.Controllers
             var groupApprovals = await _context.ApprovalWritings
                 .Include(aw => aw.Document)
                 .Include(aw => aw.Step)
+                    .ThenInclude(s => s.CurrentStatus)
+                .Include(aw => aw.Step)
+                    .ThenInclude(s => s.NextStatus)
                 .Include(aw => aw.ProcessedBy)
                 .Where(aw => 
                     aw.ApprovatorsGroupId.HasValue && 
@@ -283,8 +301,16 @@ namespace DocManagementBackend.Controllers
                     RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
                     RequestDate = approval.CreatedAt,
                     Comments = approval.Comments,
-                    ApprovalType = rule?.RuleType == RuleType.Sequential ? "Sequential" :
-                                 rule?.RuleType == RuleType.All ? "All" : "Any"
+                    ApprovalType = rule?.RuleType switch
+                    {
+                        RuleType.Sequential => "Sequential",
+                        RuleType.All => "All",
+                        RuleType.Any => "Any",
+                        RuleType.MinimumWithRequired => "MinimumWithRequired",
+                        _ => "Any"
+                    },
+                    CurrentStatusTitle = approval.Step?.CurrentStatus?.Title ?? string.Empty,
+                    NextStatusTitle = approval.Step?.NextStatus?.Title ?? string.Empty
                 });
             }
 
@@ -1081,6 +1107,9 @@ namespace DocManagementBackend.Controllers
             // 1. Get individual approvals for this document
             var individualApprovals = await _context.ApprovalWritings
                 .Include(aw => aw.Step)
+                    .ThenInclude(s => s.CurrentStatus)
+                .Include(aw => aw.Step)
+                    .ThenInclude(s => s.NextStatus)
                 .Include(aw => aw.ProcessedBy)
                 .Include(aw => aw.Approvator)
                     .ThenInclude(a => a.User)
@@ -1104,13 +1133,18 @@ namespace DocManagementBackend.Controllers
                     Comments = approval.Comments,
                     ApprovalType = "Individual",
                     Status = approval.Status.ToString(),
-                    AssignedTo = approval.Approvator?.User?.Username ?? "Unknown Approver"
+                    AssignedTo = approval.Approvator?.User?.Username ?? "Unknown Approver",
+                    CurrentStatusTitle = approval.Step?.CurrentStatus?.Title ?? string.Empty,
+                    NextStatusTitle = approval.Step?.NextStatus?.Title ?? string.Empty
                 });
             }
 
             // 2. Get group approvals for this document
             var groupApprovals = await _context.ApprovalWritings
                 .Include(aw => aw.Step)
+                    .ThenInclude(s => s.CurrentStatus)
+                .Include(aw => aw.Step)
+                    .ThenInclude(s => s.NextStatus)
                 .Include(aw => aw.ProcessedBy)
                 .Include(aw => aw.ApprovatorsGroup)
                 .Where(aw => 
@@ -1125,17 +1159,14 @@ namespace DocManagementBackend.Controllers
                 var rule = await _context.ApprovatorsGroupRules
                     .FirstOrDefaultAsync(r => r.GroupId == approval.ApprovatorsGroupId);
                 
-                string approvalType = "Group";
-                if (rule != null)
+                string approvalType = rule?.RuleType switch
                 {
-                    approvalType = rule.RuleType switch
-                    {
-                        RuleType.Sequential => "Sequential",
-                        RuleType.All => "All",
-                        RuleType.Any => "Any",
-                        _ => "Group"
-                    };
-                }
+                    RuleType.Sequential => "Sequential",
+                    RuleType.All => "All",
+                    RuleType.Any => "Any",
+                    RuleType.MinimumWithRequired => "MinimumWithRequired",
+                    _ => "Group"
+                };
 
                 pendingApprovals.Add(new PendingApprovalDto
                 {
@@ -1152,7 +1183,9 @@ namespace DocManagementBackend.Controllers
                     Status = approval.Status.ToString(),
                     AssignedToGroup = approval.ApprovatorsGroup?.Name != null ? 
                         $"{approval.ApprovatorsGroup.Name} (ID: {approval.ApprovatorsGroupId})" : 
-                        $"Group ID: {approval.ApprovatorsGroupId}"
+                        $"Group ID: {approval.ApprovatorsGroupId}",
+                    CurrentStatusTitle = approval.Step?.CurrentStatus?.Title ?? string.Empty,
+                    NextStatusTitle = approval.Step?.NextStatus?.Title ?? string.Empty
                 });
             }
 
@@ -1438,6 +1471,9 @@ namespace DocManagementBackend.Controllers
                     case "Sequential":
                         ruleType = RuleType.Sequential;
                         break;
+                    case "MinimumWithRequired":
+                        ruleType = RuleType.MinimumWithRequired;
+                        break;
                     default:
                         ruleType = RuleType.Any;
                         break;
@@ -1448,20 +1484,58 @@ namespace DocManagementBackend.Controllers
                     GroupId = group.Id,
                     RuleType = ruleType
                 };
+
+                // Set MinimumWithRequired specific properties
+                if (ruleType == RuleType.MinimumWithRequired)
+                {
+                    if (!request.MinimumApprovals.HasValue || request.MinimumApprovals.Value < 1)
+                        return BadRequest("MinimumApprovals is required and must be at least 1 for MinimumWithRequired rule type.");
+                    
+                    if (request.MinimumApprovals.Value > request.UserIds.Count)
+                        return BadRequest("MinimumApprovals cannot be greater than the total number of users in the group.");
+                    
+                    if (request.RequiredMemberIds == null || !request.RequiredMemberIds.Any())
+                        return BadRequest("RequiredMemberIds is required for MinimumWithRequired rule type.");
+                    
+                    // Validate that all required member IDs are in the user list
+                    var invalidRequiredMembers = request.RequiredMemberIds.Except(request.UserIds).ToList();
+                    if (invalidRequiredMembers.Any())
+                        return BadRequest($"Required member IDs {string.Join(", ", invalidRequiredMembers)} are not in the group's user list.");
+                    
+                    rule.MinimumApprovals = request.MinimumApprovals.Value;
+                    rule.RequiredMemberIds = request.RequiredMemberIds.ToList();
+                }
                 
                 _context.ApprovatorsGroupRules.Add(rule);
                 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
                 
-                return CreatedAtAction(nameof(GetApprovatorsGroup), new { id = group.Id }, new
+                var response = new
                 {
                     group.Id,
                     group.Name,
                     group.Comment,
                     RuleType = rule.RuleType.ToString(),
                     UserIds = request.UserIds
-                });
+                };
+
+                // Add MinimumWithRequired specific properties to response
+                if (rule.RuleType == RuleType.MinimumWithRequired)
+                {
+                    return CreatedAtAction(nameof(GetApprovatorsGroup), new { id = group.Id }, new
+                    {
+                        response.Id,
+                        response.Name,
+                        response.Comment,
+                        response.RuleType,
+                        response.UserIds,
+                        MinimumApprovals = rule.MinimumApprovals,
+                        RequiredMemberIds = rule.RequiredMemberIds
+                    });
+                }
+
+                return CreatedAtAction(nameof(GetApprovatorsGroup), new { id = group.Id }, response);
             }
             catch (Exception ex)
             {
@@ -1506,6 +1580,22 @@ namespace DocManagementBackend.Controllers
                 }).ToList(),
                 IsAssociated = _context.Steps.Any(s => s.ApprovatorsGroupId == group.Id)
             };
+
+            // Add MinimumWithRequired specific properties if applicable
+            if (rule?.RuleType == RuleType.MinimumWithRequired)
+            {
+                return Ok(new
+                {
+                    result.Id,
+                    result.Name,
+                    result.Comment,
+                    result.RuleType,
+                    result.Approvers,
+                    result.IsAssociated,
+                    MinimumApprovals = rule.MinimumApprovals,
+                    RequiredMemberIds = rule.RequiredMemberIds
+                });
+            }
             
             return Ok(result);
         }
@@ -1518,7 +1608,7 @@ namespace DocManagementBackend.Controllers
                 return authResult.ErrorResponse!;
 
             var groups = await _context.ApprovatorsGroups.ToListAsync();
-            var result = new List<ApprovatorsGroupDetailDto>();
+            var result = new List<object>();
 
             foreach (var group in groups)
             {
@@ -1531,7 +1621,7 @@ namespace DocManagementBackend.Controllers
                     .OrderBy(gu => gu.OrderIndex)
                     .ToListAsync();
 
-                result.Add(new ApprovatorsGroupDetailDto
+                var baseGroup = new ApprovatorsGroupDetailDto
                 {
                     Id = group.Id,
                     Name = group.Name,
@@ -1544,7 +1634,27 @@ namespace DocManagementBackend.Controllers
                         OrderIndex = u.OrderIndex
                     }).ToList(),
                     IsAssociated = _context.Steps.Any(s => s.ApprovatorsGroupId == group.Id)
-                });
+                };
+
+                // Add MinimumWithRequired specific properties if applicable
+                if (rule?.RuleType == RuleType.MinimumWithRequired)
+                {
+                    result.Add(new
+                    {
+                        baseGroup.Id,
+                        baseGroup.Name,
+                        baseGroup.Comment,
+                        baseGroup.RuleType,
+                        baseGroup.Approvers,
+                        baseGroup.IsAssociated,
+                        MinimumApprovals = rule.MinimumApprovals,
+                        RequiredMemberIds = rule.RequiredMemberIds
+                    });
+                }
+                else
+                {
+                    result.Add(baseGroup);
+                }
             }
 
             return Ok(result);
@@ -2057,6 +2167,317 @@ namespace DocManagementBackend.Controllers
                 AssociatedSteps = associatedSteps
             };
             
+            return Ok(result);
+        }
+
+        [HttpPut("groups/{id}")]
+        public async Task<IActionResult> UpdateApprovatorsGroup(int id, [FromBody] CreateApprovatorsGroupDto request)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            var group = await _context.ApprovatorsGroups.FindAsync(id);
+            if (group == null)
+                return NotFound("Approvers group not found.");
+
+            // Check if group is being used in active approvals
+            var groupInUse = await _context.ApprovalWritings
+                .AnyAsync(aw => aw.ApprovatorsGroupId == id && 
+                              (aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress));
+                       
+            if (groupInUse)
+                return BadRequest("Cannot update approvers group that is being used in active approvals.");
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Update group details
+                group.Name = request.Name;
+                group.Comment = request.Comment ?? string.Empty;
+                
+                // Remove existing group users
+                var existingUsers = await _context.ApprovatorsGroupUsers
+                    .Where(gu => gu.GroupId == id)
+                    .ToListAsync();
+                _context.ApprovatorsGroupUsers.RemoveRange(existingUsers);
+                
+                // Add new users to group
+                for (int i = 0; i < request.UserIds.Count; i++)
+                {
+                    var groupUser = new ApprovatorsGroupUser
+                    {
+                        GroupId = group.Id,
+                        UserId = request.UserIds[i],
+                        OrderIndex = request.RuleType == "Sequential" ? i : null
+                    };
+                    
+                    _context.ApprovatorsGroupUsers.Add(groupUser);
+                }
+                
+                // Update rule
+                var existingRule = await _context.ApprovatorsGroupRules
+                    .FirstOrDefaultAsync(r => r.GroupId == id);
+                
+                RuleType ruleType;
+                switch (request.RuleType)
+                {
+                    case "All":
+                        ruleType = RuleType.All;
+                        break;
+                    case "Sequential":
+                        ruleType = RuleType.Sequential;
+                        break;
+                    case "MinimumWithRequired":
+                        ruleType = RuleType.MinimumWithRequired;
+                        break;
+                    default:
+                        ruleType = RuleType.Any;
+                        break;
+                }
+                
+                if (existingRule != null)
+                {
+                    // Update existing rule
+                    existingRule.RuleType = ruleType;
+                    
+                    // Reset MinimumWithRequired properties
+                    existingRule.MinimumApprovals = null;
+                    existingRule.RequiredMemberIds = new List<int>();
+                    
+                    // Set MinimumWithRequired specific properties if applicable
+                    if (ruleType == RuleType.MinimumWithRequired)
+                    {
+                        if (!request.MinimumApprovals.HasValue || request.MinimumApprovals.Value < 1)
+                            return BadRequest("MinimumApprovals is required and must be at least 1 for MinimumWithRequired rule type.");
+                        
+                        if (request.MinimumApprovals.Value > request.UserIds.Count)
+                            return BadRequest("MinimumApprovals cannot be greater than the total number of users in the group.");
+                        
+                        if (request.RequiredMemberIds == null || !request.RequiredMemberIds.Any())
+                            return BadRequest("RequiredMemberIds is required for MinimumWithRequired rule type.");
+                        
+                        // Validate that all required member IDs are in the user list
+                        var invalidRequiredMembers = request.RequiredMemberIds.Except(request.UserIds).ToList();
+                        if (invalidRequiredMembers.Any())
+                            return BadRequest($"Required member IDs {string.Join(", ", invalidRequiredMembers)} are not in the group's user list.");
+                        
+                        existingRule.MinimumApprovals = request.MinimumApprovals.Value;
+                        existingRule.RequiredMemberIds = request.RequiredMemberIds.ToList();
+                    }
+                }
+                else
+                {
+                    // Create new rule if none exists
+                    var rule = new ApprovatorsGroupRule
+                    {
+                        GroupId = group.Id,
+                        RuleType = ruleType
+                    };
+
+                    // Set MinimumWithRequired specific properties
+                    if (ruleType == RuleType.MinimumWithRequired)
+                    {
+                        if (!request.MinimumApprovals.HasValue || request.MinimumApprovals.Value < 1)
+                            return BadRequest("MinimumApprovals is required and must be at least 1 for MinimumWithRequired rule type.");
+                        
+                        if (request.MinimumApprovals.Value > request.UserIds.Count)
+                            return BadRequest("MinimumApprovals cannot be greater than the total number of users in the group.");
+                        
+                        if (request.RequiredMemberIds == null || !request.RequiredMemberIds.Any())
+                            return BadRequest("RequiredMemberIds is required for MinimumWithRequired rule type.");
+                        
+                        // Validate that all required member IDs are in the user list
+                        var invalidRequiredMembers = request.RequiredMemberIds.Except(request.UserIds).ToList();
+                        if (invalidRequiredMembers.Any())
+                            return BadRequest($"Required member IDs {string.Join(", ", invalidRequiredMembers)} are not in the group's user list.");
+                        
+                        rule.MinimumApprovals = request.MinimumApprovals.Value;
+                        rule.RequiredMemberIds = request.RequiredMemberIds.ToList();
+                    }
+                    
+                    _context.ApprovatorsGroupRules.Add(rule);
+                }
+                
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                
+                return Ok("Approvers group updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("requested/user/{userId}")]
+        public async Task<ActionResult<IEnumerable<UserApprovalHistoryDto>>> GetRequestedApprovalsByUser(int userId)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Verify the specified user exists
+            var targetUser = await _context.Users.FindAsync(userId);
+            if (targetUser == null)
+                return NotFound($"User with ID {userId} not found.");
+
+            // Get all approvals requested by this user (where ProcessedByUserId = userId)
+            var requestedApprovals = new List<UserApprovalHistoryDto>();
+
+            var approvalWritings = await _context.ApprovalWritings
+                .Include(aw => aw.Document)
+                .Include(aw => aw.Step)
+                .Include(aw => aw.ProcessedBy)
+                .Include(aw => aw.Approvator)
+                    .ThenInclude(a => a.User)
+                .Include(aw => aw.ApprovatorsGroup)
+                .Where(aw => aw.ProcessedByUserId == userId)
+                .OrderByDescending(aw => aw.CreatedAt)
+                .ToListAsync();
+
+            foreach (var approval in approvalWritings)
+            {
+                if (approval.Document != null)
+                {
+                    // For individual approvals
+                    if (approval.ApprovatorId.HasValue)
+                    {
+                        requestedApprovals.Add(new UserApprovalHistoryDto
+                        {
+                            ApprovalId = approval.Id,
+                            DocumentId = approval.DocumentId,
+                            DocumentKey = approval.Document.DocumentKey,
+                            DocumentTitle = approval.Document.Title,
+                            StepTitle = approval.Step?.Title ?? string.Empty,
+                            Status = approval.Status.ToString(),
+                            Approved = null, // This is from the requester's perspective
+                            RespondedAt = null,
+                            ProcessedBy = approval.Approvator?.User?.Username ?? "Unknown",
+                            Comments = approval.Comments,
+                            RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                            RequestDate = approval.CreatedAt
+                        });
+                    }
+                    // For group approvals
+                    else if (approval.ApprovatorsGroupId.HasValue)
+                    {
+                        requestedApprovals.Add(new UserApprovalHistoryDto
+                        {
+                            ApprovalId = approval.Id,
+                            DocumentId = approval.DocumentId,
+                            DocumentKey = approval.Document.DocumentKey,
+                            DocumentTitle = approval.Document.Title,
+                            StepTitle = approval.Step?.Title ?? string.Empty,
+                            Status = approval.Status.ToString(),
+                            Approved = null, // This is from the requester's perspective
+                            RespondedAt = null,
+                            ProcessedBy = approval.ApprovatorsGroup?.Name ?? "Unknown Group",
+                            Comments = approval.Comments,
+                            RequestedBy = approval.ProcessedBy?.Username ?? string.Empty,
+                            RequestDate = approval.CreatedAt
+                        });
+                    }
+                }
+            }
+
+            return Ok(requestedApprovals);
+        }
+
+        [HttpGet("responses/accepted/user/{userId}")]
+        public async Task<ActionResult<IEnumerable<UserApprovalHistoryDto>>> GetAcceptedApprovalResponses(int userId)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Verify the specified user exists
+            var targetUser = await _context.Users.FindAsync(userId);
+            if (targetUser == null)
+                return NotFound($"User with ID {userId} not found.");
+
+            // Get all accepted approval responses by this user
+            var acceptedResponses = await _context.ApprovalResponses
+                .Include(r => r.ApprovalWriting)
+                    .ThenInclude(aw => aw.Document)
+                .Include(r => r.ApprovalWriting)
+                    .ThenInclude(aw => aw.Step)
+                .Include(r => r.ApprovalWriting)
+                    .ThenInclude(aw => aw.ProcessedBy)
+                .Include(r => r.User)
+                .Where(r => r.UserId == userId && r.IsApproved == true)
+                .OrderByDescending(r => r.ResponseDate)
+                .ToListAsync();
+
+            var result = acceptedResponses
+                .Where(r => r.ApprovalWriting?.Document != null)
+                .Select(response => new UserApprovalHistoryDto
+                {
+                    ApprovalId = response.ApprovalWritingId,
+                    DocumentId = response.ApprovalWriting.DocumentId,
+                    DocumentKey = response.ApprovalWriting.Document.DocumentKey,
+                    DocumentTitle = response.ApprovalWriting.Document.Title,
+                    StepTitle = response.ApprovalWriting.Step?.Title ?? string.Empty,
+                    Status = response.ApprovalWriting.Status.ToString(),
+                    WritingComments = response.ApprovalWriting.Comments,
+                    Approved = response.IsApproved,
+                    RespondedAt = response.ResponseDate,
+                    ProcessedBy = response.User?.Username ?? string.Empty,
+                    Comments = response.Comments,
+                    RequestedBy = response.ApprovalWriting.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = response.ApprovalWriting.CreatedAt
+                })
+                .ToList();
+
+            return Ok(result);
+        }
+
+        [HttpGet("responses/rejected/user/{userId}")]
+        public async Task<ActionResult<IEnumerable<UserApprovalHistoryDto>>> GetRejectedApprovalResponses(int userId)
+        {
+            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
+            if (!authResult.IsAuthorized)
+                return authResult.ErrorResponse!;
+
+            // Verify the specified user exists
+            var targetUser = await _context.Users.FindAsync(userId);
+            if (targetUser == null)
+                return NotFound($"User with ID {userId} not found.");
+
+            // Get all rejected approval responses by this user
+            var rejectedResponses = await _context.ApprovalResponses
+                .Include(r => r.ApprovalWriting)
+                    .ThenInclude(aw => aw.Document)
+                .Include(r => r.ApprovalWriting)
+                    .ThenInclude(aw => aw.Step)
+                .Include(r => r.ApprovalWriting)
+                    .ThenInclude(aw => aw.ProcessedBy)
+                .Include(r => r.User)
+                .Where(r => r.UserId == userId && r.IsApproved == false)
+                .OrderByDescending(r => r.ResponseDate)
+                .ToListAsync();
+
+            var result = rejectedResponses
+                .Where(r => r.ApprovalWriting?.Document != null)
+                .Select(response => new UserApprovalHistoryDto
+                {
+                    ApprovalId = response.ApprovalWritingId,
+                    DocumentId = response.ApprovalWriting.DocumentId,
+                    DocumentKey = response.ApprovalWriting.Document.DocumentKey,
+                    DocumentTitle = response.ApprovalWriting.Document.Title,
+                    StepTitle = response.ApprovalWriting.Step?.Title ?? string.Empty,
+                    Status = response.ApprovalWriting.Status.ToString(),
+                    WritingComments = response.ApprovalWriting.Comments,
+                    Approved = response.IsApproved,
+                    RespondedAt = response.ResponseDate,
+                    ProcessedBy = response.User?.Username ?? string.Empty,
+                    Comments = response.Comments,
+                    RequestedBy = response.ApprovalWriting.ProcessedBy?.Username ?? string.Empty,
+                    RequestDate = response.ApprovalWriting.CreatedAt
+                })
+                .ToList();
+
             return Ok(result);
         }
     }

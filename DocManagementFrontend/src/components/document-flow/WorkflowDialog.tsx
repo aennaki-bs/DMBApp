@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CircuitBoard, ArrowLeft } from "lucide-react";
+import { CircuitBoard, ArrowLeft, AlertCircle } from "lucide-react";
 import { LoadingState } from "@/components/circuits/document-flow/LoadingState";
 import { NoCircuitAssignedCard } from "@/components/circuits/document-flow/NoCircuitAssignedCard";
 import { ErrorMessage } from "./ErrorMessage";
@@ -79,6 +79,9 @@ export function WorkflowDialog({
     queryFn: () => documentService.getDocumentById(documentId),
     enabled: open && !!documentId, // Only fetch when dialog is open
   });
+
+  // Check if document has lines
+  const hasNoLines = !document?.lignesCount || document.lignesCount === 0;
 
   // Handle move to status
   const handleMoveToStatus = async (statusId: number) => {
@@ -375,6 +378,33 @@ export function WorkflowDialog({
                 />
               </motion.div>
 
+              {/* No Lines Warning */}
+              {hasNoLines && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <Card className="border border-amber-500/50 bg-gradient-to-r from-amber-900/20 to-orange-900/10">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-900/30 border border-amber-500/30 flex items-center justify-center">
+                          <AlertCircle className="h-5 w-5 text-amber-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-medium text-amber-200">
+                            Document Lines Required
+                          </h3>
+                          <p className="text-sm text-amber-300/80">
+                            Add at least one line to the document before moving to the next step in the workflow.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
               {/* Approval History - Conditionally shown */}
               {showApprovalHistory && (
                 <motion.div
@@ -399,6 +429,7 @@ export function WorkflowDialog({
                   wasRejected={wasRejected}
                   refreshTrigger={mindMapRefreshTrigger}
                   onCloseWorkflow={() => onOpenChange(false)}
+                  hasNoLines={hasNoLines}
                 />
               </div>
             </div>
