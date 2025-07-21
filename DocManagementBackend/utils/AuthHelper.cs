@@ -61,7 +61,7 @@ namespace DocManagementBackend.Utils
                 new Claim("IsActive", user.IsActive.ToString()),
                 new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "SimpleUser")};
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expMinutes = 180;
+            var expMinutes = 480; // Extended to 8 hours (was 180 = 3 hours)
             // if (string.IsNullOrEmpty(expMinutes))
             //     throw new InvalidOperationException("ExpiryMinutes is missing.");
             var token = new JwtSecurityToken(issuer: Environment.GetEnvironmentVariable("ISSUER"),
