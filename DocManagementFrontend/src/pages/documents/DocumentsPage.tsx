@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useDocumentsData } from "@/hooks/documents/useDocumentsData";
-import DocumentsHeader from "@/components/documents/DocumentsHeader";
+import { useDocumentsFilter } from "@/hooks/documents/useDocumentsFilter";
 import DocumentsTable from "@/components/documents/DocumentsTable";
 import DocumentsEmptyState from "@/components/documents/DocumentsEmptyState";
-import DocumentsFilterBar from "@/components/documents/DocumentsFilterBar";
-import SelectedDocumentsBar from "@/components/documents/SelectedDocumentsBar";
 import DeleteConfirmDialog from "@/components/documents/DeleteConfirmDialog";
-import { Document } from "@/models/document";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { toast } from "sonner";
 import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
+import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
+import { FileText, Plus, GitBranch, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { Document } from "@/models/document";
+import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
+import { DocumentsSearchBar } from "@/components/documents/DocumentsSearchBar";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -20,28 +24,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { PageHeader } from "@/components/shared/PageHeader";
-import {
-  FileText,
-  Plus,
-  GitBranch,
-  Trash2,
-  AlertCircle,
-  FilterX,
-  SlidersHorizontal,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
-import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
-import { useDocumentsFilter } from "@/hooks/documents/useDocumentsFilter";
-import { DocumentsSearchBar } from "@/components/documents/DocumentsSearchBar";
 
 const DocumentsPage = () => {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [isCreateDocumentOpen, setIsCreateDocumentOpen] = useState(false);
   const { t, tWithParams } = useTranslation();
-  const { user } = useAuth();
-  const canManageDocuments =
-    user?.role === "Admin" || user?.role === "FullUser";
+
+  const canManageDocuments = user?.role === "Admin" || user?.role === "FullUser";
 
   const {
     documents,
@@ -50,30 +41,35 @@ const DocumentsPage = () => {
     fetchDocuments,
     deleteDocument,
     deleteMultipleDocuments,
-    useFakeData,
     sortConfig,
     setSortConfig,
     requestSort,
   } = useDocumentsData();
 
-  // Get filter state to check if filters are applied
   const { activeFilters, resetFilters } = useDocumentsFilter();
 
+  // State management
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
+  const [assignCircuitDialogOpen, setAssignCircuitDialogOpen] = useState(false);
+  const [documentToAssign, setDocumentToAssign] = useState<Document | null>(null);
+
+  // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize] = useState(10);
-  const [assignCircuitDialogOpen, setAssignCircuitDialogOpen] = useState(false);
-  const [documentToAssign, setDocumentToAssign] = useState<Document | null>(
-    null
-  );
-  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     setTotalPages(Math.ceil(filteredItems.length / pageSize));
-    setPage(1); // Reset to first page when filters change
+    setPage(1);
   }, [filteredItems, pageSize]);
 
   // Check if any filters are applied
@@ -123,40 +119,32 @@ const DocumentsPage = () => {
   const handleDeleteConfirm = async () => {
     try {
       if (documentToDelete !== null) {
-        // Single document delete
         await deleteDocument(documentToDelete);
         toast.success(t("documents.documentDeleted"));
       } else if (selectedDocuments.length > 0) {
-        // Multiple documents delete with improved error handling
         try {
           const results = await deleteMultipleDocuments(selectedDocuments);
-
-          // All deletions were successful
           if (results.successful.length === selectedDocuments.length) {
             toast.success(
               tWithParams("documents.documentsDeleted", { count: results.successful.length })
             );
           }
         } catch (error: any) {
-          // Handle partial success/failure with enhanced ERP archival information
           if (error.results) {
-            const { successful, failed, erpArchivedCount = 0, erpArchivedDocuments = [] } = error.results;
+            const { successful, failed, erpArchivedCount = 0 } = error.results;
 
             if (successful.length > 0 && failed.length > 0) {
-              // Partial success
               toast.success(
                 tWithParams("documents.documentsDeleted", { count: successful.length })
               );
-              
-              // Show specific error for ERP-archived documents
+
               if (erpArchivedCount > 0) {
                 toast.error(
                   `${erpArchivedCount} document${erpArchivedCount !== 1 ? 's' : ''} could not be deleted because they are archived to ERP`,
                   { duration: 6000 }
                 );
               }
-              
-              // Show generic error for other failures
+
               const otherFailures = failed.length - erpArchivedCount;
               if (otherFailures > 0) {
                 toast.error(
@@ -165,28 +153,23 @@ const DocumentsPage = () => {
                 );
               }
             } else if (successful.length === 0) {
-              // Complete failure - categorize the failures
               if (erpArchivedCount === failed.length) {
-                // All failures were due to ERP archival
                 toast.error(
                   `Cannot delete ${erpArchivedCount} document${erpArchivedCount !== 1 ? 's' : ''} - they are archived to ERP`,
                   { duration: 6000 }
                 );
               } else if (erpArchivedCount > 0) {
-                // Mixed failure reasons
                 toast.error(
                   `${erpArchivedCount} document${erpArchivedCount !== 1 ? 's' : ''} are archived to ERP, ${failed.length - erpArchivedCount} failed for other reasons`,
                   { duration: 6000 }
                 );
               } else {
-                // No ERP archival issues, generic failure
                 toast.error(
                   tWithParams("documents.failedToDelete", { count: failed.length })
                 );
               }
             }
           } else {
-            // Generic error - check if it mentions ERP archival
             const errorMessage = error.message || t("documents.failedToDelete");
             if (errorMessage.includes('archived to ERP')) {
               toast.error(errorMessage, { duration: 6000 });
@@ -194,23 +177,16 @@ const DocumentsPage = () => {
               toast.error(errorMessage);
             }
           }
-
-          // Don't return early - we still want to clean up the UI state
         }
+        setSelectedDocuments([]);
       }
 
-      // Clean up UI state regardless of success/failure
-      setSelectedDocuments([]);
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
-
-      // Fetch documents to refresh the list (this will show what was actually deleted)
       fetchDocuments();
     } catch (error) {
       console.error("Error deleting document(s):", error);
       toast.error(t("documents.failedToDelete"));
-
-      // Still clean up UI state on error
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
     }
@@ -228,50 +204,29 @@ const DocumentsPage = () => {
     toast.success(t("documents.circuitAssignedSuccess"));
   };
 
-  return (
-    <div className="container mx-auto p-2">
-      <PageHeader
-        title={t("documents.title")}
-        description={t("documents.subtitle")}
-        icon={<FileText className="h-6 w-6 text-blue-500" />}
-        actions={
-          <>
-            {canManageDocuments ? (
-              <>
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-                  onClick={() => setCreateModalOpen(true)}
-                >
-                  <Plus className="h-4 w-4" /> {t("documents.newDocument")}
-                </Button>
+  const handleDocumentCreated = () => {
+    setIsCreateDocumentOpen(false);
+    toast.success("Document created successfully");
+    fetchDocuments();
+  };
 
-                {selectedDocuments.length === 1 && (
-                  <Button
-                    variant="outline"
-                    className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20"
-                    onClick={() =>
-                      openAssignCircuitDialog(
-                        documents.find((d) => d.id === selectedDocuments[0])!
-                      )
-                    }
-                  >
-                    <GitBranch className="mr-2 h-4 w-4" /> {t("documents.assignCircuit")}
-                  </Button>
-                )}
-              </>
-            ) : (
-              <Button className="bg-blue-600 hover:bg-blue-700" disabled>
-                <Plus className="mr-2 h-4 w-4" /> {t("documents.newDocument")}
-              </Button>
-            )}
-          </>
-        }
-      />
+  const pageActions = [
+    {
+      label: t("documents.newDocument"),
+      variant: "default" as const,
+      icon: Plus,
+      onClick: () => setIsCreateDocumentOpen(true),
+      disabled: !canManageDocuments,
+      tooltip: !canManageDocuments ? "You don't have permission to create documents" : undefined,
+    },
+  ];
 
+  const mainContent = (
+    <div className="flex flex-col h-full">
       {/* Search Bar with Integrated Filters */}
-      <DocumentsSearchBar 
+      <DocumentsSearchBar
         hasActiveFilters={hasActiveFilters}
-        className="mb-4"
+        className="mb-6"
       />
 
       {/* Selected Documents Bar */}
@@ -282,11 +237,12 @@ const DocumentsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
+            className="mb-6"
           >
             <BulkActionsBar
               selectedCount={selectedDocuments.length}
               entityName="document"
-              icon={<FileText className="h-4 w-4 text-blue-400" />}
+              icon={<FileText className="h-4 w-4 text-primary" />}
               actions={[
                 {
                   id: "delete",
@@ -295,6 +251,16 @@ const DocumentsPage = () => {
                   onClick: openDeleteDialog,
                   variant: "destructive",
                 },
+                ...(selectedDocuments.length === 1 ? [{
+                  id: "assign-circuit",
+                  label: t("documents.assignCircuit"),
+                  icon: <GitBranch className="h-4 w-4" />,
+                  onClick: () => {
+                    const doc = documents.find(d => d.id === selectedDocuments[0]);
+                    if (doc) openAssignCircuitDialog(doc);
+                  },
+                  variant: "outline" as const,
+                }] : [])
               ]}
             />
           </motion.div>
@@ -302,12 +268,12 @@ const DocumentsPage = () => {
       </AnimatePresence>
 
       {/* Main Content */}
-      <Card className="mt-6 border-gray-800 bg-[#0d1117]/60 backdrop-blur-sm shadow-md">
+      <Card className="flex-1 border-border/50 bg-background/50 backdrop-blur-sm shadow-lg">
         {isLoading ? (
           <CardContent className="p-8">
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-              <p className="text-gray-400">{t("common.loading")}</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+              <p className="text-muted-foreground">{t("common.loading")}</p>
             </div>
           </CardContent>
         ) : filteredItems.length === 0 ? (
@@ -337,7 +303,7 @@ const DocumentsPage = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center py-4 border-t border-gray-800">
+              <div className="flex justify-center py-4 border-t border-border/50">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
@@ -355,6 +321,7 @@ const DocumentsPage = () => {
                         <PaginationLink
                           onClick={() => handlePageChange(i + 1)}
                           isActive={page === i + 1}
+                          className="cursor-pointer"
                         >
                           {i + 1}
                         </PaginationLink>
@@ -379,6 +346,17 @@ const DocumentsPage = () => {
           </>
         )}
       </Card>
+    </div>
+  );
+
+  return (
+    <PageLayout
+      title={t("documents.title")}
+      subtitle={t("documents.subtitle")}
+      icon={FileText}
+      actions={pageActions}
+    >
+      {mainContent}
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
@@ -402,11 +380,11 @@ const DocumentsPage = () => {
 
       {/* Create Document Wizard */}
       <CreateDocumentWizard
-        open={createModalOpen}
-        onOpenChange={setCreateModalOpen}
-        onSuccess={fetchDocuments}
+        open={isCreateDocumentOpen}
+        onOpenChange={setIsCreateDocumentOpen}
+        onSuccess={handleDocumentCreated}
       />
-    </div>
+    </PageLayout>
   );
 };
 
