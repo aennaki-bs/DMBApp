@@ -88,7 +88,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               console.log("Token refreshed successfully, using stored user data");
               
               // Optionally verify user info in background (don't block initialization)
-              // Only make this call if we have a valid token
               authService.getUserInfo()
                 .then(userInfo => {
                   console.log("User info verified in background:", userInfo);
@@ -100,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                   // Keep using stored user data
                 });
             } else {
-              // Token refresh failed - this is expected on landing page when no tokens exist
+              // Token refresh failed
               console.log("Token refresh failed, clearing auth state");
               authService.clearTokens();
               setUser(null);
