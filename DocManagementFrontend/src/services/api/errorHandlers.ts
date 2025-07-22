@@ -91,8 +91,12 @@ export const handleErrorResponse = (error: any, skipToast: boolean = false): Pro
     error.config?.params?.search ||
     error.config?.params?.q;
 
+  // Skip showing error for "No refresh token provided" as it's expected on landing page
+  const isRefreshTokenError = errorMessage?.includes('No refresh token provided') || 
+                             errorMessage?.includes('No refresh token available');
+
   // Only show notification for endpoints that don't handle their own errors
-  if (!skipToast && errorMessage) {
+  if (!skipToast && errorMessage && !isRefreshTokenError) {
     if (isNotFoundError && isSearchOperation) {
       // Use info notification for search with no results
       notifications.info('Search Results', {
@@ -119,7 +123,9 @@ export const shouldSkipAuthRedirect = (url: string): boolean => {
     '/Account/resend-code',
     '/Auth/verify-email',
     '/Auth/valide-email',
-    '/Auth/valide-username'
+    '/Auth/valide-username',
+    '/Auth/refresh-token',
+    '/' // Root path for connection check
   ];
 
   return noRedirectEndpoints.some(endpoint => url.includes(endpoint));
@@ -132,7 +138,9 @@ export const shouldSkipErrorToast = (url: string): boolean => {
     url.includes('/Auth/valide-email') ||
     url.includes('/Auth/valide-username') ||
     url.includes('/Auth/verify-email') ||
-    url.includes('/Account/resend-code');
+    url.includes('/Account/resend-code') ||
+    url.includes('/Auth/refresh-token') ||
+    url.includes('/'); // Root path for connection check
 };
 
 // Helper function to get specific error message for Admin/user operations

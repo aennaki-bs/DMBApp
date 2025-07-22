@@ -10,10 +10,16 @@ let hasRedirectedToLogin = false;
 const setupRequestInterceptor = () => {
   api.interceptors.request.use(
     async (config) => {
-      // Ensure we have a valid token before making the request
-      const token = await tokenManager.ensureValidToken();
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
+      // Only add authentication headers for endpoints that require it
+      // Skip auth for public endpoints
+      const isPublicEndpoint = shouldSkipAuthRedirect(config.url || '');
+      
+      if (!isPublicEndpoint) {
+        // Ensure we have a valid token before making the request
+        const token = await tokenManager.ensureValidToken();
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
       }
 
       console.log('API Request:', {
