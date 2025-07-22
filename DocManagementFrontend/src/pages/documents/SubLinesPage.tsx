@@ -289,7 +289,7 @@ const SubLinesPage = () => {
         : "Sub-Lines";
 
     const pageSubtitle = document && ligne
-        ? `${document.documentKey} • Line: ${ligne.title || "Untitled Line"}`
+        ? `Document: ${document.documentKey} • Line: ${ligne.title || "Untitled Line"}`
         : "Manage sub-lines for this document line";
 
     return (

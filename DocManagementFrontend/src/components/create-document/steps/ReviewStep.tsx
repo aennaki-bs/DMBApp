@@ -296,6 +296,35 @@ export const ReviewStep = ({
         </CardContent>
       </Card>
 
+      {/* Circuit Information */}
+      <Card className="bg-[#0a1033]/80 border-gray-800">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-md text-white flex items-center gap-2">
+              <Share2 className="h-4 w-4 text-blue-400" />
+              Circuit Assignment
+            </CardTitle>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-400 hover:bg-blue-900/20"
+            onClick={onEditCircuitClick}
+          >
+            <Edit className="h-4 w-4 mr-1" /> Edit
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-white">
+            {circuitName || "No circuit assigned"}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            This document will be processed according to the {circuitName}{" "}
+            workflow
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Customer/Vendor Information */}
       {shouldShowCustomerVendor() && (
         <Card className="bg-[#0a1033]/80 border-gray-800">
@@ -427,37 +456,6 @@ export const ReviewStep = ({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      
-
-      {/* Circuit Information */}
-      <Card className="bg-[#0a1033]/80 border-gray-800">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-md text-white flex items-center gap-2">
-              <Share2 className="h-4 w-4 text-blue-400" />
-              Circuit Assignment
-            </CardTitle>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-blue-400 hover:bg-blue-900/20"
-            onClick={onEditCircuitClick}
-          >
-            <Edit className="h-4 w-4 mr-1" /> Edit
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-white">
-            {circuitName || "No circuit assigned"}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            This document will be processed according to the {circuitName}{" "}
-            workflow
-          </p>
         </CardContent>
       </Card>
 

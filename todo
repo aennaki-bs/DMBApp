@@ -177,16 +177,16 @@ np
 *  	- add rule that nesseserly approve by specefic approbatur(s) () -->
 <!-- * add in approval requested / pinding approvales -->
 <!-- * controle for lines befor go to the next status and in approvment also need to check the doc berof approve -->
-* the document will be untouchable when i wait for the improvment
+<!-- * assign circuit in creation to be required -->
+<!-- * the document will be untouchable when i wait for the improvment -->
+<!-- * choisire the element and fill data pricing in same form without split it -->
+<!-- add search in create lines -->
 * add info for the id/user name in edit action --usermanagment
 
-* assign circuit in creation to be required
-* choisire the element and fill data pricing in same form without split it
 
 * VAT -> auto by item () and the auther data (prix ...)
 * approvation par wcenter de gestion
 
-add search in create lines
 * add bulk to lines ==> add option that make it list
 * show the curent step in header 
 * the ui fixing table lines be smaller.

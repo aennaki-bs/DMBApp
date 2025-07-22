@@ -10,6 +10,7 @@ import approvalService, { ApprovalHistoryItem } from "@/services/approvalService
 import { navigateToDocumentList } from "@/utils/navigationUtils";
 import api from "@/services/api";
 import { DocumentHistoryEvent } from "@/models/document";
+import { useDocumentEditingStatus } from "@/hooks/useDocumentEditingStatus";
 
 // Component imports
 import DocumentTitle from "@/components/document/DocumentTitle";
@@ -54,6 +55,9 @@ const ViewDocument = () => {
   // Check if user has permissions to edit/delete documents
   const canManageDocuments =
     user?.role === "Admin" || user?.role === "FullUser";
+
+  // Check if document editing should be disabled due to pending approval
+  const { isEditingDisabled, disabledReason } = useDocumentEditingStatus(Number(id) || 0);
 
   // Animation variants
   const containerVariants = {
@@ -258,6 +262,8 @@ const ViewDocument = () => {
         variant: "outline" as const,
         icon: Edit,
         onClick: () => navigate(`/documents/${document.id}/edit`),
+        disabled: isEditingDisabled,
+        tooltip: isEditingDisabled ? disabledReason : undefined,
       },
       {
         label: "Execute Steps",
@@ -276,6 +282,8 @@ const ViewDocument = () => {
         variant: "destructive" as const,
         icon: Trash2,
         onClick: () => setDeleteDialogOpen(true),
+        disabled: isEditingDisabled,
+        tooltip: isEditingDisabled ? disabledReason : undefined,
       },
     ] : document ? [
       {
@@ -324,7 +332,8 @@ const ViewDocument = () => {
       // }
     };
     
-  const documentTitle = document ? `${document.documentKey} • ${getCurrentStatus()}` : "Loading Document...";
+  const documentTitle = document ? document.documentKey : "Loading Document...";
+  const documentStatus = document ? getCurrentStatus() : undefined;
   const documentSubtitle = document
     ? `Created At ${new Date(document.createdAt).toLocaleDateString()}`
     : "Document details and information";
@@ -335,6 +344,8 @@ const ViewDocument = () => {
       subtitle={documentSubtitle}
       icon={FileText}
       actions={pageActions}
+      status={documentStatus}
+      statusColor="text-green-500"
     >
       {/* Main Content */}
       <motion.div

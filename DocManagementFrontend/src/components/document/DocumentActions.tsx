@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { WorkflowDialogButton } from "@/components/document-flow/WorkflowDialogButton";
+import { useDocumentEditingStatus } from "@/hooks/useDocumentEditingStatus";
 
 interface DocumentActionsProps {
   document: Document;
@@ -32,6 +33,9 @@ const DocumentActions = ({
   historyCount = 0,
 }: DocumentActionsProps) => {
   const [isAssignCircuitOpen, setIsAssignCircuitOpen] = useState(false);
+
+  // Check if document editing should be disabled due to pending approval
+  const { isEditingDisabled, disabledReason } = useDocumentEditingStatus(document.id);
 
   // Check if document is fully archived (read-only)
   const isFullyArchived = document.erpDocumentCode;
@@ -84,22 +88,61 @@ const DocumentActions = ({
 
         {canManageDocuments && !isFullyArchived && (
           <>
-            <Button
-              variant="outline"
-              className="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50 flex items-center gap-2"
-              asChild
-            >
-              <Link to={`/documents/${document.id}/edit`}>
-                <Edit className="h-4 w-4 mr-2" /> Edit
-              </Link>
-            </Button>
-            <Button
-              variant="destructive"
-              className="bg-red-600/80 hover:bg-red-700/80 flex items-center gap-2"
-              onClick={onDelete}
-            >
-              <Trash className="h-4 w-4 mr-2" /> Delete
-            </Button>
+            {isEditingDisabled ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="border-blue-400/30 text-blue-300 opacity-60 cursor-not-allowed flex items-center gap-2"
+                      disabled
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> Edit
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-900 border-blue-500/30 text-blue-300">
+                    <p>{disabledReason}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button
+                variant="outline"
+                className="border-blue-400/30 text-blue-300 hover:text-white hover:bg-blue-700/50 flex items-center gap-2"
+                asChild
+              >
+                <Link to={`/documents/${document.id}/edit`}>
+                  <Edit className="h-4 w-4 mr-2" /> Edit
+                </Link>
+              </Button>
+            )}
+
+            {isEditingDisabled ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      className="bg-red-600/40 opacity-60 cursor-not-allowed flex items-center gap-2"
+                      disabled
+                    >
+                      <Trash className="h-4 w-4 mr-2" /> Delete
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-900 border-red-500/30 text-red-300">
+                    <p>{disabledReason}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button
+                variant="destructive"
+                className="bg-red-600/80 hover:bg-red-700/80 flex items-center gap-2"
+                onClick={onDelete}
+              >
+                <Trash className="h-4 w-4 mr-2" /> Delete
+              </Button>
+            )}
           </>
         )}
 

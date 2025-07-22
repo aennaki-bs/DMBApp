@@ -29,6 +29,8 @@ interface PageLayoutProps {
   icon: LucideIcon;
   actions?: PageAction[];
   children: React.ReactNode;
+  status?: string;
+  statusColor?: string;
 }
 
 export function PageLayout({
@@ -37,6 +39,8 @@ export function PageLayout({
   icon: Icon,
   actions = [],
   children,
+  status,
+  statusColor = "text-green-500",
 }: PageLayoutProps) {
   return (
     <div
@@ -50,8 +54,14 @@ export function PageLayout({
             <Icon className="h-6 w-6 text-primary" />
           </div> */}
           <div>
-            <h1 className="text-2xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              {title}
+            <h1 className="text-2xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-3">
+              <span>{title}</span>
+              {status && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <span className={`${statusColor} font-semibold`}>{status}</span>
+                </>
+              )}
             </h1>
             <p className="text-muted-foreground mt-1">{subtitle}</p>
           </div>
