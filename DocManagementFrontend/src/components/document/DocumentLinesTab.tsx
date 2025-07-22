@@ -18,6 +18,13 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useDocumentEditingStatus } from "@/hooks/useDocumentEditingStatus";
 
 interface DocumentLinesTabProps {
   document: Document;
@@ -38,6 +45,9 @@ const DocumentLinesTab = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchField, setSearchField] = useState("all");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // Check if line editing should be disabled due to pending approval
+  const { isLineEditingDisabled, disabledReason } = useDocumentEditingStatus(document.id);
 
   // Check if document is archived to ERP (read-only)
   const isArchivedToERP = !!(document.erpDocumentCode && document.erpDocumentCode.length > 0);
@@ -97,12 +107,32 @@ const DocumentLinesTab = ({
           </div>
           <div className="flex items-center gap-2">
             {canManageDocuments && !isArchivedToERP && (
-              <Button
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg border border-primary/30"
-              >
-                <Plus className="h-4 w-4 mr-2" /> Add New Line
-              </Button>
+              <>
+                {isLineEditingDisabled ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className="bg-primary/40 opacity-60 cursor-not-allowed text-primary-foreground shadow-lg border border-primary/30"
+                          disabled
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Add New Line
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-gray-900 border-primary/30 text-primary">
+                        <p>{disabledReason}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg border border-primary/30"
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Add New Line
+                  </Button>
+                )}
+              </>
             )}
             {isArchivedToERP && (
               <div className="flex items-center gap-2 text-orange-300 bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-2">
@@ -221,7 +251,7 @@ const DocumentLinesTab = ({
         <LignesList
           document={document}
           lignes={filteredLignes}
-          canManageDocuments={canManageDocuments && !isArchivedToERP}
+          canManageDocuments={canManageDocuments && !isArchivedToERP && !isLineEditingDisabled}
           isCreateDialogOpen={isCreateDialogOpen}
           setIsCreateDialogOpen={setIsCreateDialogOpen}
         />

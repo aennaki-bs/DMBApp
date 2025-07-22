@@ -193,17 +193,6 @@ const DocumentDetailsTab = ({
       {/* Enhanced Grid Layout with Better Visibility */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
 
-        {/* Document Type */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors border border-purple-500/30 group-hover:border-purple-500/50">
-              <Tag className="h-5 w-5 text-purple-400 group-hover:text-purple-300" />
-            </div>
-            <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">Document Type</h3>
-          </div>
-          <p className="font-bold text-white text-lg group-hover:text-purple-100">{document.documentType.typeName}</p>
-        </div>
-
         {/* Document Date */}
         <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
           <div className="flex items-center gap-3 mb-3">
@@ -216,34 +205,32 @@ const DocumentDetailsTab = ({
         </div>
 
         {/* Posting Date */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-green-500/50 hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
+        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-green-500/20 group-hover:bg-green-500/30 transition-colors border border-green-500/30 group-hover:border-green-500/50">
-              <Calendar className="h-5 w-5 text-green-400 group-hover:text-green-300" />
+            <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors border border-blue-500/30 group-hover:border-blue-500/50">
+              <Calendar className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
             </div>
             <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">Posting Date</h3>
           </div>
           <p className="font-bold text-white text-lg group-hover:text-green-100">{new Date(document.comptableDate).toLocaleDateString()}</p>
         </div>
 
-        {/* External Document - Only show if exists */}
-        {document.documentExterne && (
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-orange-500/50 hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-orange-500/20 group-hover:bg-orange-500/30 transition-colors border border-orange-500/30 group-hover:border-orange-500/50">
-                <ExternalLink className="h-5 w-5 text-orange-400 group-hover:text-orange-300" />
-              </div>
-              <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">External Document</h3>
+        {/* Document Type */}
+        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors border border-blue-500/30 group-hover:border-blue-500/50">
+              <Tag className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
             </div>
-            <p className="font-bold text-white text-lg break-all group-hover:text-orange-100">{document.documentExterne}</p>
+            <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">Document Type</h3>
           </div>
-        )}
+          <p className="font-bold text-white text-lg group-hover:text-purple-100">{document.documentType.typeName}</p>
+        </div>
 
         {/* Series */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
+        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors border border-cyan-500/30 group-hover:border-cyan-500/50">
-              <Hash className="h-5 w-5 text-cyan-400 group-hover:text-cyan-300" />
+            <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors border border-blue-500/30 group-hover:border-blue-500/50">
+              <Hash className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
             </div>
             <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">Series</h3>
           </div>
@@ -256,51 +243,30 @@ const DocumentDetailsTab = ({
         </div>
 
         {/* Circuit */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
+        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-indigo-500/20 group-hover:bg-indigo-500/30 transition-colors border border-indigo-500/30 group-hover:border-indigo-500/50">
-              <GitBranch className="h-5 w-5 text-indigo-400 group-hover:text-indigo-300" />
+            <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors border border-blue-500/30 group-hover:border-blue-500/50">
+              <GitBranch className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
             </div>
             <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">Circuit</h3>
           </div>
           <div>
-            <p className="font-bold text-white text-lg group-hover:text-indigo-100">{document.circuit?.title || 'No Circuit'}</p>
-            {document.circuit && (
-              <div className="flex items-center gap-2 mt-2">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  document.circuit.isActive 
-                    ? "bg-green-500/20 text-green-300 border-green-500/30 group-hover:bg-green-500/30 group-hover:border-green-500/50"
-                    : "bg-red-500/20 text-red-300 border-red-500/30 group-hover:bg-red-500/30 group-hover:border-red-500/50"
-                }`}>
-                  {document.circuit.isActive ? "Active" : "Inactive"}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Created By */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-amber-500/20 group-hover:bg-amber-500/30 transition-colors border border-amber-500/30 group-hover:border-amber-500/50">
-              <User className="h-5 w-5 text-amber-400 group-hover:text-amber-300" />
+            <p className="text-xs  text-slate-100 text-center group-hover:text-slate-200 mb-2">{document.circuit?.title || 'No Circuit'}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-slate-200 group-hover:text-slate-200">Status:</p>
+              <p className=" text-sm font-medium text-green-300">
+                {workflowStatus?.currentStatusTitle || 'Unknown Status'}
+              </p>
             </div>
-            <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">Created By</h3>
-          </div>
-          <div>
-            <p className="font-bold text-white text-lg group-hover:text-amber-100">{document.createdBy.username}</p>
-            <p className="text-xs text-slate-400 group-hover:text-slate-300 mt-1 font-medium">
-              {new Date(document.createdAt).toLocaleDateString()} at {new Date(document.createdAt).toLocaleTimeString()}
-            </p>
           </div>
         </div>
-
+        
         {/* Customer/Vendor (if exists) */}
         {(document.customerVendorName || document.customerVendorCode) && (
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-pink-500/50 hover:shadow-xl hover:shadow-pink-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
+          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-pink-500/20 group-hover:bg-pink-500/30 transition-colors border border-pink-500/30 group-hover:border-pink-500/50">
-                <Users className="h-5 w-5 text-pink-400 group-hover:text-pink-300" />
+              <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors border border-blue-500/30 group-hover:border-blue-500/50">
+                <Users className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
               </div>
               <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">
                 {document.documentType?.tierType === 1 ? 'Customer' : 'Vendor'}
@@ -322,7 +288,36 @@ const DocumentDetailsTab = ({
             </div>
           </div>
         )}
-      </div>
+      
+          {/* External Document - Only show if exists */}
+          {document.documentExterne && (
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors border border-blue-500/30 group-hover:border-blue-500/50">
+                  <ExternalLink className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
+                </div>
+                <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">External Document</h3>
+              </div>
+              <p className="font-bold text-white text-lg break-all group-hover:text-orange-100">{document.documentExterne}</p>
+            </div>
+          )}
+
+        {/* Created By */}
+        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group cursor-pointer">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors border border-blue-500/30 group-hover:border-blue-500/50">
+              <User className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-300 group-hover:text-slate-200">Created By</h3>
+          </div>
+          <div>
+            <p className="font-bold text-white text-lg group-hover:text-blu-100">{document.createdBy.username}</p>
+            <p className="text-xs text-slate-400 group-hover:text-slate-300 mt-1 font-medium">
+              {new Date(document.createdAt).toLocaleDateString()} at {new Date(document.createdAt).toLocaleTimeString()}
+            </p>
+          </div>
+        </div>
+        </div>
 
       {/* Enhanced Content Section */}
       <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-700/70 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl p-6 group">

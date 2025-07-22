@@ -15,6 +15,9 @@ import {
   CheckCircle,
   XCircle,
   Layers,
+  Edit,
+  Search,
+  ChevronDown,
 } from "lucide-react";
 import { Document, CreateLigneRequest, Ligne } from "@/models/document";
 import { toast } from "sonner";
@@ -309,11 +312,45 @@ const CreateLigneDialog = ({
         }
         
         // Auto-fill code and description from selected element
+        console.log("Auto-generating code:", suggestedCode);
         handleFieldChange("code", suggestedCode);
         handleFieldChange("article", selectedElement.description);
       }
     }
   }, [formValues.selectedElementCode, availableElements, elementTypes, formValues.lignesElementTypeId, existingLignes]);
+
+  // Ensure code is generated when reaching step 3 (Code & Description)
+  useEffect(() => {
+    if (step === 3 && formValues.selectedElementCode && availableElements.length > 0 && !formValues.code.trim()) {
+      const selectedElement = availableElements.find(el => el.code === formValues.selectedElementCode);
+      const selectedType = elementTypes.find(t => t.id === formValues.lignesElementTypeId);
+      
+      if (selectedElement && selectedType) {
+        // Generate suggested code based on element type and selected element
+        const typePrefix = selectedType.typeElement === 'Item' ? 'ITM' : 'ACC';
+        let baseSuggestedCode = `${typePrefix}_${selectedElement.code}`;
+        
+        // Ensure uniqueness by checking against existing lignes
+        let suggestedCode = baseSuggestedCode;
+        let suffix = 1;
+        
+        // Get all existing codes in the document
+        const existingCodes = new Set(existingLignes.map(ligne => 
+          ligne.ligneKey?.toLowerCase() || ligne.title?.toLowerCase() || ''
+        ).filter(code => code.length > 0));
+        
+        // If the base code is already used, add a suffix
+        while (existingCodes.has(suggestedCode.toLowerCase())) {
+          suggestedCode = `${baseSuggestedCode}_${suffix}`;
+          suffix++;
+        }
+        
+        // Auto-fill code when reaching step 3
+        console.log("Re-generating code on step 3:", suggestedCode);
+        handleFieldChange("code", suggestedCode);
+      }
+    }
+  }, [step, formValues.selectedElementCode, availableElements, elementTypes, formValues.lignesElementTypeId, existingLignes, formValues.code]);
 
   // Validate code with debouncing (client-side validation)
   useEffect(() => {
@@ -422,6 +459,36 @@ const CreateLigneDialog = ({
     onOpenChange(false);
   };
 
+  // Searchable select state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const [locationSearchQuery, setLocationSearchQuery] = useState("");
+  const [isLocationSelectOpen, setIsLocationSelectOpen] = useState(false);
+
+  // Filter available elements based on search query
+  const filteredElements = availableElements.filter((element) => 
+    element.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    element.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Filter locations based on search query
+  const filteredLocations = locations.filter((location) => 
+    location.locationCode.toLowerCase().includes(locationSearchQuery.toLowerCase()) ||
+    location.description.toLowerCase().includes(locationSearchQuery.toLowerCase())
+  );
+
+  // Reset search and dropdown state when elements change
+  useEffect(() => {
+    setSearchQuery("");
+    setIsSelectOpen(false);
+  }, [availableElements]);
+
+  // Reset location search when locations change
+  useEffect(() => {
+    setLocationSearchQuery("");
+    setIsLocationSelectOpen(false);
+  }, [locations]);
+
   // Helper function to validate numeric input
   const isValidNumber = (value: string): boolean => {
     // Allow empty string, numbers, and decimal point
@@ -517,6 +584,9 @@ const CreateLigneDialog = ({
   };
 
   const handleFieldChange = (key: keyof FormValues, value: any) => {
+    if (key === 'code') {
+      console.log("Code field changing from:", formValues.code, "to:", value);
+    }
     setFormValues(prev => ({ ...prev, [key]: value }));
     // Clear error when user starts typing
     if (errors[key]) {
@@ -546,17 +616,6 @@ const CreateLigneDialog = ({
         }
         break;
       case 2:
-        if (!formValues.code.trim()) {
-          newErrors.code = "Code is required";
-        }
-        if (!formValues.article.trim()) {
-          newErrors.article = "Article description is required";
-        }
-        if (codeValidation.isValid !== true) {
-          newErrors.code = "Code validation failed";
-        }
-        break;
-      case 3:
         // Validate quantity
         if (isNaN(formValues.quantity) || formValues.quantity <= 0) {
           newErrors.quantity = "Quantity must be a valid number greater than 0";
@@ -603,6 +662,17 @@ const CreateLigneDialog = ({
           }
         }
         break;
+      case 3:
+        if (!formValues.code.trim()) {
+          newErrors.code = "Code is required";
+        }
+        if (!formValues.article.trim()) {
+          newErrors.article = "Article description is required";
+        }
+        if (codeValidation.isValid !== true) {
+          newErrors.code = "Code validation failed";
+        }
+        break;
     }
 
     setErrors(newErrors);
@@ -617,6 +687,10 @@ const CreateLigneDialog = ({
 
   const handleBack = () => {
     setStep(prev => Math.max(prev - 1, 1) as Step);
+  };
+
+  const handleEditStep = (targetStep: Step) => {
+    setStep(targetStep);
   };
 
   const handleSubmit = async () => {
@@ -637,7 +711,7 @@ const CreateLigneDialog = ({
         locationCode: formValues.locationCode,
         unitCode: formValues.unitCode,
         quantity: formValues.quantity,
-        priceHT: calculatedAmounts.adjustedPriceHT, // Send adjusted price (unit price * ratio)
+        priceHT: formValues.priceHT, // Send original price (quantity is now adjusted instead)
         discountPercentage: formValues.discountPercentage,
         discountAmount: calculatedAmounts.discountAmount, // Send calculated discount amount
         vatPercentage: formValues.vatPercentage,
@@ -661,7 +735,7 @@ const CreateLigneDialog = ({
   const formatPrice = formatPriceUtil;
   const formatPercentage = formatPercentageUtil;
 
-  const { amountHT, amountVAT, amountTTC, unitConversionFactor, adjustedPriceHT } = calculateAmounts();
+  const { amountHT, amountVAT, amountTTC, unitConversionFactor, adjustedQuantity } = calculateAmounts();
 
   const getSelectedElementType = () => {
     if (!formValues.lignesElementTypeId || !elementTypes.length) return null;
@@ -691,7 +765,7 @@ const CreateLigneDialog = ({
             </DialogTitle>
           </div>
           <DialogDescription className="text-blue-200 m-0 pl-10">
-            Create a new line item for document: {document.title}
+            Create a new line item for document: {document.documentKey}
           </DialogDescription>
         </div>
 
@@ -700,8 +774,8 @@ const CreateLigneDialog = ({
           <div className="flex items-center justify-between overflow-x-auto">
             {[
               { number: 1, title: "Element Type", icon: Layers },
-              { number: 2, title: "Code & Description", icon: Hash },
-              { number: 3, title: "Pricing", icon: Calculator },
+              { number: 2, title: "Pricing", icon: Calculator },
+              { number: 3, title: "Code & Description", icon: Hash },
               { number: 4, title: "Review", icon: Check },
             ].map((stepData, index) => (
               <div key={stepData.number} className="flex items-center flex-shrink-0">
@@ -761,6 +835,12 @@ const CreateLigneDialog = ({
                         // Reset element selection and location when type changes
                         handleFieldChange("selectedElementCode", undefined);
                         handleFieldChange("locationCode", undefined);
+                        // Reset search query
+                        setSearchQuery("");
+                        setIsSelectOpen(false);
+                        // Reset location search query
+                        setLocationSearchQuery("");
+                        setIsLocationSelectOpen(false);
                       }}
                     >
                       <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
@@ -772,8 +852,8 @@ const CreateLigneDialog = ({
                             <div className="flex items-center gap-3">
                               <div className={`w-3 h-3 rounded-full ${
                                 type.typeElement === 'Item' ? 'bg-green-400' :
-                                type.typeElement === 'GeneralAccounts' ? 'bg-purple-400' :
-                                'bg-purple-400'
+                                type.typeElement === 'GeneralAccounts' ? 'bg-blue-400' :
+                                'bg-blue-400'
                               }`}></div>
                               <div>
                                 <div className="font-medium">{type.code} - {type.typeElement}</div>
@@ -802,24 +882,88 @@ const CreateLigneDialog = ({
                           <span className="text-blue-300">Loading available elements...</span>
                         </div>
                       ) : (
-                        <Select
-                          value={formValues.selectedElementCode || ""}
-                          onValueChange={(value) => handleFieldChange("selectedElementCode", value || undefined)}
-                        >
-                          <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
-                            <SelectValue placeholder={`Select ${getSelectedElementType()?.typeElement === 'Item' ? 'an item' : 'a general account'}`} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-blue-950 border-blue-400/20 max-h-60">
-                            {availableElements.map((element) => (
-                              <SelectItem key={element.code} value={element.code} className="text-white hover:bg-blue-800">
-                                <div className="flex flex-col">
-                                  <div className="font-medium">{element.code}</div>
-                                  <div className="text-sm text-gray-400">{element.description}</div>
+                        <div className="relative">
+                          {/* Trigger Button */}
+                          <button
+                            type="button"
+                            onClick={() => setIsSelectOpen(!isSelectOpen)}
+                            className="w-full bg-blue-950/40 border border-blue-400/20 text-white h-12 px-3 text-base rounded-md flex items-center justify-between hover:bg-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <span className={formValues.selectedElementCode ? "text-white" : "text-blue-300/70"}>
+                              {formValues.selectedElementCode ? (
+                                availableElements.find(el => el.code === formValues.selectedElementCode)?.code || formValues.selectedElementCode
+                              ) : (
+                                `Select ${getSelectedElementType()?.typeElement === 'Item' ? 'an item' : 'a general account'}`
+                              )}
+                            </span>
+                            <ChevronDown className={`h-4 w-4 text-blue-400 transition-transform ${isSelectOpen ? 'rotate-180' : ''}`} />
+                          </button>
+
+                          {/* Dropdown */}
+                          {isSelectOpen && (
+                            <div className="absolute z-50 w-full mt-1 bg-blue-950 border border-blue-400/20 rounded-md shadow-lg max-h-60 overflow-hidden">
+                              {/* Search Input */}
+                              <div className="p-2 border-b border-blue-400/20">
+                                <div className="relative">
+                                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+                                  <Input
+                                    placeholder={`Search ${getSelectedElementType()?.typeElement === 'Item' ? 'items' : 'general accounts'}...`}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="bg-blue-900/40 border-blue-400/20 text-white pl-10 h-9 focus:border-blue-400"
+                                    autoFocus
+                                  />
                                 </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                              </div>
+
+                              {/* Options List */}
+                              <div className="max-h-48 overflow-y-auto">
+                                {filteredElements.length > 0 ? (
+                                  filteredElements.map((element) => (
+                                    <button
+                                      key={element.code}
+                                      type="button"
+                                      onClick={() => {
+                                        handleFieldChange("selectedElementCode", element.code);
+                                        setIsSelectOpen(false);
+                                        setSearchQuery("");
+                                      }}
+                                      className={`w-full text-left px-3 py-2 text-white hover:bg-blue-800/50 focus:bg-blue-800/50 focus:outline-none ${
+                                        formValues.selectedElementCode === element.code ? 'bg-blue-800/50' : ''
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-3 h-3 rounded-full bg-blue-400 flex-shrink-0"></div>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="font-medium text-sm">{element.code}</div>
+                                          <div className="text-xs text-gray-400 truncate">{element.description}</div>
+                                        </div>
+                                        {formValues.selectedElementCode === element.code && (
+                                          <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                                        )}
+                                      </div>
+                                    </button>
+                                  ))
+                                ) : (
+                                  <div className="px-3 py-6 text-center text-sm text-blue-300/70">
+                                    No {getSelectedElementType()?.typeElement === 'Item' ? 'items' : 'general accounts'} found
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Click outside to close */}
+                      {isSelectOpen && (
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => {
+                            setIsSelectOpen(false);
+                            setSearchQuery("");
+                          }}
+                        />
                       )}
                       
                       {errors.selectedElementCode && (
@@ -911,24 +1055,88 @@ const CreateLigneDialog = ({
                       <Label htmlFor="locationCode" className="text-blue-200 text-base font-medium">
                         Location<span className="text-red-400">*</span>
                       </Label>
-                      <Select
-                        value={formValues.locationCode || ""}
-                        onValueChange={(value) => handleFieldChange("locationCode", value || undefined)}
-                      >
-                        <SelectTrigger className="bg-blue-950/40 border-blue-400/20 text-white h-12 text-base">
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-blue-950 border-blue-400/20 max-h-60">
-                          {locations.map((location) => (
-                            <SelectItem key={location.locationCode} value={location.locationCode} className="text-white hover:bg-blue-800">
-                              <div className="flex flex-col">
-                                <div className="font-medium">{location.locationCode}</div>
-                                <div className="text-sm text-gray-400">{location.description}</div>
+                      <div className="relative">
+                        {/* Trigger Button */}
+                        <button
+                          type="button"
+                          onClick={() => setIsLocationSelectOpen(!isLocationSelectOpen)}
+                          className="w-full bg-blue-950/40 border border-blue-400/20 text-white h-12 px-3 text-base rounded-md flex items-center justify-between hover:bg-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <span className={formValues.locationCode ? "text-white" : "text-blue-300/70"}>
+                            {formValues.locationCode ? (
+                              locations.find(loc => loc.locationCode === formValues.locationCode)?.locationCode || formValues.locationCode
+                            ) : (
+                              "Select location"
+                            )}
+                          </span>
+                          <ChevronDown className={`h-4 w-4 text-blue-400 transition-transform ${isLocationSelectOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {/* Dropdown */}
+                        {isLocationSelectOpen && (
+                          <div className="absolute z-50 w-full mt-1 bg-blue-950 border border-blue-400/20 rounded-md shadow-lg max-h-60 overflow-hidden">
+                            {/* Search Input */}
+                            <div className="p-2 border-b border-blue-400/20">
+                              <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
+                                <Input
+                                  placeholder="Search locations..."
+                                  value={locationSearchQuery}
+                                  onChange={(e) => setLocationSearchQuery(e.target.value)}
+                                  className="bg-blue-900/40 border-blue-400/20 text-white pl-10 h-9 focus:border-blue-400"
+                                  autoFocus
+                                />
                               </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </div>
+
+                            {/* Options List */}
+                            <div className="max-h-48 overflow-y-auto">
+                              {filteredLocations.length > 0 ? (
+                                filteredLocations.map((location) => (
+                                  <button
+                                    key={location.locationCode}
+                                    type="button"
+                                    onClick={() => {
+                                      handleFieldChange("locationCode", location.locationCode);
+                                      setIsLocationSelectOpen(false);
+                                      setLocationSearchQuery("");
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-white hover:bg-blue-800/50 focus:bg-blue-800/50 focus:outline-none ${
+                                      formValues.locationCode === location.locationCode ? 'bg-blue-800/50' : ''
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-3 h-3 rounded-full bg-blue-400 flex-shrink-0"></div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="font-medium text-sm">{location.locationCode}</div>
+                                        <div className="text-xs text-gray-400 truncate">{location.description}</div>
+                                      </div>
+                                      {formValues.locationCode === location.locationCode && (
+                                        <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                                      )}
+                                    </div>
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-3 py-6 text-center text-sm text-blue-300/70">
+                                  No locations found
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Click outside to close */}
+                      {isLocationSelectOpen && (
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => {
+                            setIsLocationSelectOpen(false);
+                            setLocationSearchQuery("");
+                          }}
+                        />
+                      )}
                       {errors.locationCode && (
                         <p className="text-red-400 text-sm mt-1">{errors.locationCode}</p>
                       )}
@@ -950,7 +1158,7 @@ const CreateLigneDialog = ({
                             {getSelectedElement()?.description}
                           </p>
                           <p className="text-blue-400/60 text-xs mt-2">
-                            This will be used as the reference for your line item. Code and description will be auto-suggested in the next step.
+                            This will be used as the reference for your line item. Code and description will be auto-suggested in the last step.
                           </p>
                         </div>
                       </div>
@@ -984,8 +1192,205 @@ const CreateLigneDialog = ({
                 </div>
               )}
 
-              {/* Step 2: Code & Description */}
+              {/* Step 2: Pricing */}
               {step === 2 && (
+                <div className="space-y-6">
+                  {/* Quantity and Unit Price */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3 p-4 bg-blue-950/20 rounded-lg border border-blue-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                        <Label htmlFor="quantity" className="text-blue-200 text-base font-medium">
+                          Quantity
+                        </Label>
+                      </div>
+                      <Input
+                        id="quantity"
+                        type="text"
+                        value={formValues.quantity === 0 ? "" : formValues.quantity.toString()}
+                        onChange={(e) => handleNumericInput("quantity", e.target.value, true)}
+                        className={`bg-blue-950/40 border-blue-400/20 text-white h-12 text-base ${errors.quantity ? 'border-red-500' : ''}`}
+                        placeholder="Enter quantity"
+                      />
+                      {errors.quantity && (
+                        <p className="text-red-400 text-sm mt-1">{errors.quantity}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 p-4 bg-blue-950/20 rounded-lg border border-blue-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                        <Label htmlFor="priceHT" className="text-blue-200 text-base font-medium">
+                          Unit Price (HT)
+                        </Label>
+                      </div>
+                      <Input
+                        id="priceHT"
+                        type="text"
+                        value={formValues.priceHT === 0 ? "" : formValues.priceHT.toString()}
+                        onChange={(e) => handleNumericInput("priceHT", e.target.value, false)}
+                        className={`bg-blue-950/40 border-blue-400/20 text-white h-12 text-base ${errors.priceHT ? 'border-red-500' : ''}`}
+                        placeholder="Enter price"
+                      />
+                      {errors.priceHT && (
+                        <p className="text-red-400 text-sm mt-1">{errors.priceHT}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Unit Conversion Info - Only show for Item types with non-default units */}
+                  {formValues.unitCode && selectedItemDetails && unitConversionFactor !== 1 && (
+                    <div className="p-4 bg-blue-950/20 rounded-lg border border-yellow-500/20">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <Label className="text-yellow-200 text-base font-medium">Unit Conversion Applied</Label>
+                      </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="text-yellow-400">Base Quantity:</span>
+                          <div className="text-white font-medium">{formValues.quantity}</div>
+                        </div>
+                        <div>
+                          <span className="text-yellow-400">Conversion Factor:</span>
+                          <div className="text-white font-medium">× {unitConversionFactor}</div>
+                        </div>
+                        <div>
+                          <span className="text-yellow-400">Adjusted Quantity:</span>
+                          <div className="text-white font-medium">{adjustedQuantity}</div>
+                        </div>
+                      </div>
+                      <div className="mt-3 p-3 bg-yellow-950/30 rounded border border-yellow-500/30">
+                        <p className="text-yellow-100 text-xs">
+                          <strong>Note:</strong> Since you're using unit "{formValues.unitCode}" instead of the default unit "{selectedItemDetails.unite}", 
+                          the quantity has been automatically adjusted by the conversion factor ({unitConversionFactor}).
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Discount Section */}
+                  <div className="space-y-4 p-4 bg-blue-950/20 rounded-lg border border-blue-500/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                      <Label className="text-blue-200 text-base font-medium">Discount Options</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 mb-4">
+                      <Switch
+                        id="useFixedDiscount"
+                        checked={formValues.useFixedDiscount}
+                        onCheckedChange={(checked) => {
+                          handleFieldChange("useFixedDiscount", checked);
+                          if (checked) {
+                            handleFieldChange("discountPercentage", 0);
+                          } else {
+                            handleFieldChange("discountAmount", 0);
+                          }
+                        }}
+                      />
+                      <Label htmlFor="useFixedDiscount" className="text-blue-200">
+                        Use fixed amount instead of percentage
+                      </Label>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {!formValues.useFixedDiscount ? (
+                        <div className="space-y-2">
+                          <Label htmlFor="discountPercentage" className="text-blue-200">
+                            Discount Percentage
+                          </Label>
+                          <Input
+                            id="discountPercentage"
+                            type="text"
+                            value={formValues.discountPercentage === 0 ? "" : (formValues.discountPercentage * 100).toString()}
+                            onChange={(e) => handlePercentageInput("discountPercentage", e.target.value)}
+                            className={`bg-blue-950/40 border-blue-400/20 text-white ${errors.discountPercentage ? 'border-red-500' : ''}`}
+                            placeholder="0"
+                          />
+                          {errors.discountPercentage && (
+                            <p className="text-red-400 text-sm mt-1">{errors.discountPercentage}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label htmlFor="discountAmount" className="text-blue-200">
+                            Discount Amount
+                          </Label>
+                          <Input
+                            id="discountAmount"
+                            type="text"
+                            value={formValues.discountAmount === 0 || !formValues.discountAmount ? "" : formValues.discountAmount.toString()}
+                            onChange={(e) => handleNumericInput("discountAmount", e.target.value, false)}
+                            className={`bg-blue-950/40 border-blue-400/20 text-white ${errors.discountAmount ? 'border-red-500' : ''}`}
+                            placeholder="0.00"
+                          />
+                          {errors.discountAmount && (
+                            <p className="text-red-400 text-sm mt-1">{errors.discountAmount}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* VAT Section */}
+                  <div className="space-y-3 p-4 bg-blue-950/20 rounded-lg border border-blue-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                      <Label htmlFor="vatPercentage" className="text-blue-200 text-base font-medium">
+                        VAT Percentage
+                      </Label>
+                    </div>
+                    <Input
+                      id="vatPercentage"
+                      type="text"
+                      value={formValues.vatPercentage === 0 ? "" : (formValues.vatPercentage * 100).toString()}
+                      onChange={(e) => handlePercentageInput("vatPercentage", e.target.value)}
+                      className={`bg-blue-950/40 border-blue-400/20 text-white h-12 text-base ${errors.vatPercentage ? 'border-red-500' : ''}`}
+                      placeholder="20"
+                    />
+                    {errors.vatPercentage && (
+                      <p className="text-red-400 text-sm mt-1">{errors.vatPercentage}</p>
+                    )}
+                  </div>
+
+                  {/* Live Calculation Preview */}
+                  <div className="p-6 bg-gray-950/40 rounded-lg border border-gray-500/20">
+                    <h4 className="text-gray-200 font-medium mb-4 flex items-center gap-2">
+                      <Calculator className="h-5 w-5 text-gray-400" />
+                      Calculation Preview
+                    </h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-blue-950/30 rounded-lg border border-blue-500/20">
+                        <div className="text-blue-300 text-sm font-medium">Amount Discount</div>
+                        <div className="text-blue-100 text-xl font-bold">
+                          {formatPrice(calculateAmounts().discountAmount)}
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-950/30 rounded-lg border border-blue-500/20">
+                        <div className="text-blue-300 text-sm font-medium">Amount HT</div>
+                        <div className="text-blue-100 text-xl font-bold">
+                          {formatPrice(calculateAmounts().amountHT)}
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-950/30 rounded-lg border border-blue-500/20">
+                        <div className="text-blue-300 text-sm font-medium">VAT</div>
+                        <div className="text-blue-100 text-xl font-bold">
+                          {formatPrice(calculateAmounts().amountVAT)}
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-950/30 rounded-lg border border-blue-500/20">
+                        <div className="text-blue-300 text-sm font-medium">Amount TTC</div>
+                        <div className="text-blue-100 text-xl font-bold">
+                          {formatPrice(calculateAmounts().amountTTC)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Code & Description */}
+              {step === 3 && (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="code" className="text-blue-200">
@@ -1065,346 +1470,213 @@ const CreateLigneDialog = ({
                 </div>
               )}
 
-              {/* Step 3: Pricing */}
-              {step === 3 && (
-                <div className="space-y-6">
-                  {/* Quantity and Unit Price */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-3 p-4 bg-blue-950/20 rounded-lg border border-blue-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-blue-400"></div>
-                        <Label htmlFor="quantity" className="text-blue-200 text-base font-medium">
-                          Quantity
-                        </Label>
-                      </div>
-                      <Input
-                        id="quantity"
-                        type="text"
-                        value={formValues.quantity === 0 ? "" : formValues.quantity.toString()}
-                        onChange={(e) => handleNumericInput("quantity", e.target.value, true)}
-                        className={`bg-blue-950/40 border-blue-400/20 text-white h-12 text-base ${errors.quantity ? 'border-red-500' : ''}`}
-                        placeholder="Enter quantity"
-                      />
-                      {errors.quantity && (
-                        <p className="text-red-400 text-sm mt-1">{errors.quantity}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-3 p-4 bg-green-950/20 rounded-lg border border-green-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                        <Label htmlFor="priceHT" className="text-green-200 text-base font-medium">
-                          Unit Price (HT)
-                        </Label>
-                      </div>
-                      <Input
-                        id="priceHT"
-                        type="text"
-                        value={formValues.priceHT === 0 ? "" : formValues.priceHT.toString()}
-                        onChange={(e) => handleNumericInput("priceHT", e.target.value, false)}
-                        className={`bg-blue-950/40 border-blue-400/20 text-white h-12 text-base ${errors.priceHT ? 'border-red-500' : ''}`}
-                        placeholder="Enter price"
-                      />
-                      {errors.priceHT && (
-                        <p className="text-red-400 text-sm mt-1">{errors.priceHT}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Unit Conversion Info - Only show for Item types with non-default units */}
-                  {formValues.unitCode && selectedItemDetails && unitConversionFactor !== 1 && (
-                    <div className="p-4 bg-yellow-950/20 rounded-lg border border-yellow-500/20">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                        <Label className="text-yellow-200 text-base font-medium">Unit Conversion Applied</Label>
-                      </div>
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-yellow-400">Base Price (HT):</span>
-                          <div className="text-white font-medium">{formatPrice(formValues.priceHT)}</div>
-                        </div>
-                        <div>
-                          <span className="text-yellow-400">Conversion Factor:</span>
-                          <div className="text-white font-medium">× {unitConversionFactor}</div>
-                        </div>
-                        <div>
-                          <span className="text-yellow-400">Adjusted Price (HT):</span>
-                          <div className="text-white font-medium">{formatPrice(adjustedPriceHT)}</div>
-                        </div>
-                      </div>
-                      <div className="mt-3 p-3 bg-yellow-950/30 rounded border border-yellow-500/30">
-                        <p className="text-yellow-100 text-xs">
-                          <strong>Note:</strong> Since you're using unit "{formValues.unitCode}" instead of the default unit "{selectedItemDetails.unite}", 
-                          the price has been automatically adjusted by the conversion factor ({unitConversionFactor}).
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Discount Section */}
-                  <div className="space-y-4 p-4 bg-orange-950/20 rounded-lg border border-orange-500/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-3 h-3 rounded-full bg-orange-400"></div>
-                      <Label className="text-orange-200 text-base font-medium">Discount Options</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3 mb-4">
-                      <Switch
-                        id="useFixedDiscount"
-                        checked={formValues.useFixedDiscount}
-                        onCheckedChange={(checked) => {
-                          handleFieldChange("useFixedDiscount", checked);
-                          if (checked) {
-                            handleFieldChange("discountPercentage", 0);
-                          } else {
-                            handleFieldChange("discountAmount", 0);
-                          }
-                        }}
-                      />
-                      <Label htmlFor="useFixedDiscount" className="text-orange-200">
-                        Use fixed amount instead of percentage
-                      </Label>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {!formValues.useFixedDiscount ? (
-                        <div className="space-y-2">
-                          <Label htmlFor="discountPercentage" className="text-orange-200">
-                            Discount Percentage
-                          </Label>
-                          <Input
-                            id="discountPercentage"
-                            type="text"
-                            value={formValues.discountPercentage === 0 ? "" : (formValues.discountPercentage * 100).toString()}
-                            onChange={(e) => handlePercentageInput("discountPercentage", e.target.value)}
-                            className={`bg-orange-950/40 border-orange-400/20 text-white ${errors.discountPercentage ? 'border-red-500' : ''}`}
-                            placeholder="0"
-                          />
-                          {errors.discountPercentage && (
-                            <p className="text-red-400 text-sm mt-1">{errors.discountPercentage}</p>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Label htmlFor="discountAmount" className="text-orange-200">
-                            Discount Amount
-                          </Label>
-                          <Input
-                            id="discountAmount"
-                            type="text"
-                            value={formValues.discountAmount === 0 || !formValues.discountAmount ? "" : formValues.discountAmount.toString()}
-                            onChange={(e) => handleNumericInput("discountAmount", e.target.value, false)}
-                            className={`bg-orange-950/40 border-orange-400/20 text-white ${errors.discountAmount ? 'border-red-500' : ''}`}
-                            placeholder="0.00"
-                          />
-                          {errors.discountAmount && (
-                            <p className="text-red-400 text-sm mt-1">{errors.discountAmount}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* VAT Section */}
-                  <div className="space-y-3 p-4 bg-purple-950/20 rounded-lg border border-purple-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 rounded-full bg-purple-400"></div>
-                      <Label htmlFor="vatPercentage" className="text-purple-200 text-base font-medium">
-                        VAT Percentage
-                      </Label>
-                    </div>
-                    <Input
-                      id="vatPercentage"
-                      type="text"
-                      value={formValues.vatPercentage === 0 ? "" : (formValues.vatPercentage * 100).toString()}
-                      onChange={(e) => handlePercentageInput("vatPercentage", e.target.value)}
-                      className={`bg-purple-950/40 border-purple-400/20 text-white h-12 text-base ${errors.vatPercentage ? 'border-red-500' : ''}`}
-                      placeholder="20"
-                    />
-                    {errors.vatPercentage && (
-                      <p className="text-red-400 text-sm mt-1">{errors.vatPercentage}</p>
-                    )}
-                  </div>
-
-                  {/* Live Calculation Preview */}
-                  <div className="p-6 bg-gray-950/40 rounded-lg border border-gray-500/20">
-                    <h4 className="text-gray-200 font-medium mb-4 flex items-center gap-2">
-                      <Calculator className="h-5 w-5 text-gray-400" />
-                      Calculation Preview
-                    </h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-                      <div className="text-center p-3 bg-orange-950/30 rounded-lg border border-orange-500/20">
-                        <div className="text-orange-300 text-sm font-medium">Amount Discount</div>
-                        <div className="text-orange-100 text-xl font-bold">
-                          {formatPrice(calculateAmounts().discountAmount)}
-                        </div>
-                      </div>
-                      <div className="text-center p-3 bg-blue-950/30 rounded-lg border border-blue-500/20">
-                        <div className="text-blue-300 text-sm font-medium">Amount HT</div>
-                        <div className="text-blue-100 text-xl font-bold">
-                          {formatPrice(calculateAmounts().amountHT)}
-                        </div>
-                      </div>
-                      <div className="text-center p-3 bg-purple-950/30 rounded-lg border border-purple-500/20">
-                        <div className="text-purple-300 text-sm font-medium">VAT</div>
-                        <div className="text-purple-100 text-xl font-bold">
-                          {formatPrice(calculateAmounts().amountVAT)}
-                        </div>
-                      </div>
-                      <div className="text-center p-3 bg-green-950/30 rounded-lg border border-green-500/20">
-                        <div className="text-green-300 text-sm font-medium">Amount TTC</div>
-                        <div className="text-green-100 text-xl font-bold">
-                          {formatPrice(calculateAmounts().amountTTC)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Step 4: Review */}
               {step === 4 && (
                 <div className="space-y-4">
-                  <h3 className="text-blue-200 font-medium mb-4">Review Line Details</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-blue-200 font-medium">Review Line Details</h3>
+                    <p className="text-blue-400/70 text-sm">Click edit buttons to modify any section</p>
+                  </div>
                   
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-blue-400">Code:</span>
-                        <div className="text-white">{formValues.code}</div>
-                      </div>
-                      <div>
-                        <span className="text-blue-400">Description:</span>
-                        <div className="text-white">
-                          {formValues.article.length > 100
-                            ? `${formValues.article.substring(0, 100)}...`
-                            : formValues.article}
+                    <div className="space-y-4">
+                      {/* Code & Description Section */}
+                      <div className="p-4 bg-blue-950/20 rounded-lg border border-blue-500/30 relative">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-blue-200 font-medium flex items-center gap-2">
+                            <Hash className="h-4 w-4" />
+                            Code & Description
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditStep(3)}
+                            className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/40 h-8 w-8 p-0"
+                            title="Edit Code & Description"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </div>
-                      <div>
-                        <span className="text-blue-400">Element Type:</span>
-                        <div className="text-white">
-                          {selectedElementType ? (
-                            <div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <div className={`w-2 h-2 rounded-full ${
-                                  selectedElementType?.typeElement === 'Item' ? 'bg-green-400' :
-                                  selectedElementType?.typeElement === 'GeneralAccounts' ? 'bg-purple-400' :
-                                  'bg-purple-400'
-                                }`}></div>
-                                <span>{selectedElementType?.code} - {selectedElementType?.typeElement}</span>
-                              </div>
-                              <div className="text-gray-400 text-xs mt-1">
-                                {selectedElementType?.description}
-                              </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-blue-400">Code:</span>
+                            <div className="text-white font-medium">{formValues.code}</div>
+                          </div>
+                          <div>
+                            <span className="text-blue-400">Description:</span>
+                            <div className="text-white">
+                              {formValues.article.length > 100
+                                ? `${formValues.article.substring(0, 100)}...`
+                                : formValues.article}
                             </div>
-                          ) : (
-                            <span className="text-gray-400">Element type information not available</span>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-blue-400">Selected Element:</span>
-                        <div className="text-white">
-                          {selectedElement ? (
-                            <div>
-                              <div className="font-medium">{selectedElement?.code}</div>
-                              <div className="text-gray-400 text-xs">{selectedElement?.description}</div>
-                            </div>
-                          ) : formValues.selectedElementCode ? (
-                            <div>
-                              <div className="font-medium">{formValues.selectedElementCode}</div>
-                              <div className="text-gray-400 text-xs">Selected element details not available</div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">No element selected</span>
-                          )}
-                        </div>
-                      </div>
-                      {/* Location - Only for Item types */}
-                      {selectedElementType?.typeElement === 'Item' && (
-                        <div>
-                          <span className="text-blue-400">Location:</span>
-                          <div className="text-white">
-                            {formValues.locationCode ? (
-                              <div>
-                                <div className="font-medium">{formValues.locationCode}</div>
-                                <div className="text-gray-400 text-xs">
-                                  {locations.find(l => l.locationCode === formValues.locationCode)?.description || 'Location details not available'}
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">No location selected</span>
-                            )}
                           </div>
                         </div>
-                      )}
-                      {/* Unit of Measure - Only for Item types */}
-                      {selectedElementType?.typeElement === 'Item' && (
-                        <div>
-                          <span className="text-blue-400">Unit of Measure:</span>
-                          <div className="text-white">
-                            {formValues.unitCode ? (
-                              <div>
-                                <div className="font-medium">{formValues.unitCode}</div>
-                                <div className="text-gray-400 text-xs">
-                                  {(() => {
-                                    const selectedUnit = itemUnits.find(u => u.unitOfMeasureCode === formValues.unitCode);
-                                    if (selectedUnit) {
-                                      return `${selectedUnit.unitOfMeasureDescription} • Ratio: ${selectedUnit.qtyPerUnitOfMeasure}`;
+                      </div>
+
+                      {/* Element Type & Selection Section */}
+                      <div className="p-4 bg-blue-950/20 rounded-lg border border-blue-500/30 relative">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-blue-200 font-medium flex items-center gap-2">
+                            <Layers className="h-4 w-4" />
+                            Element Type & Selection
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditStep(1)}
+                            className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/40 h-8 w-8 p-0"
+                            title="Edit Element Type & Selection"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-blue-400">Element Type:</span>
+                            <div className="text-white">
+                              {selectedElementType ? (
+                                <div>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <div className={`w-2 h-2 rounded-full ${
+                                      selectedElementType?.typeElement === 'Item' ? 'bg-blue-400' :
+                                      selectedElementType?.typeElement === 'GeneralAccounts' ? 'bg-blue-400' :
+                                      'bg-blue-400'
+                                    }`}></div>
+                                    <span className="font-medium">{selectedElementType?.code} - {selectedElementType?.typeElement}</span>
+                                  </div>
+                                  <div className="text-gray-400 text-xs mt-1">
+                                    {selectedElementType?.description}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">Element type information not available</span>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-blue-400">Selected Element:</span>
+                            <div className="text-white">
+                              {selectedElement ? (
+                                <div>
+                                  <div className="font-medium">{selectedElement?.code}</div>
+                                  <div className="text-gray-400 text-xs">{selectedElement?.description}</div>
+                                </div>
+                              ) : formValues.selectedElementCode ? (
+                                <div>
+                                  <div className="font-medium">{formValues.selectedElementCode}</div>
+                                  <div className="text-gray-400 text-xs">Selected element details not available</div>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">No element selected</span>
+                              )}
+                            </div>
+                          </div>
+                          {/* Location - Only for Item types */}
+                          {selectedElementType?.typeElement === 'Item' && (
+                            <div>
+                              <span className="text-blue-400">Location:</span>
+                              <div className="text-white">
+                                {formValues.locationCode ? (
+                                  <div>
+                                    <div className="font-medium">{formValues.locationCode}</div>
+                                    <div className="text-gray-400 text-xs">
+                                      {locations.find(l => l.locationCode === formValues.locationCode)?.description || 'Location details not available'}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">No location selected</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {/* Unit of Measure - Only for Item types */}
+                          {selectedElementType?.typeElement === 'Item' && (
+                            <div>
+                              <span className="text-blue-400">Unit of Measure:</span>
+                              <div className="text-white">
+                                {formValues.unitCode ? (
+                                  <div>
+                                    <div className="font-medium">{formValues.unitCode}</div>
+                                    <div className="text-gray-400 text-xs">
+                                      {(() => {
+                                        const selectedUnit = itemUnits.find(u => u.unitOfMeasureCode === formValues.unitCode);
+                                        if (selectedUnit) {
+                                          return `${selectedUnit.unitOfMeasureDescription} • Ratio: ${selectedUnit.qtyPerUnitOfMeasure}`;
+                                        }
+                                        return 'Unit details not available';
+                                      })()}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">
+                                    {itemUnits.length === 1 && itemUnits[0] ? 
+                                      `${itemUnits[0].unitOfMeasureCode} (Auto-selected)` : 
+                                      'No unit selected'
                                     }
-                                    return 'Unit details not available';
-                                  })()}
-                                </div>
+                                  </span>
+                                )}
                               </div>
-                            ) : (
-                              <span className="text-gray-400">
-                                {itemUnits.length === 1 && itemUnits[0] ? 
-                                  `${itemUnits[0].unitOfMeasureCode} (Auto-selected)` : 
-                                  'No unit selected'
-                                }
-                              </span>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-blue-400">Quantity:</span>
-                        <div className="text-white">{formValues.quantity}</div>
-                      </div>
-                      <div>
-                        <span className="text-blue-400">Unit Price (HT):</span>
-                        <div className="text-white">
-                          {formatPrice(formValues.priceHT)}
-                          {unitConversionFactor !== 1 && (
-                            <div className="text-yellow-300 text-xs mt-1">
-                              Adjusted: {formatPrice(adjustedPriceHT)} (× {unitConversionFactor})
+                    {/* Pricing Section */}
+                    <div className="space-y-4">
+                      <div className="p-4 bg-blue-950/20 rounded-lg border border-blue-500/30 relative">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-blue-200 font-medium flex items-center gap-2">
+                            <Calculator className="h-4 w-4" />
+                            Pricing Details
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditStep(2)}
+                            className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/40 h-8 w-8 p-0"
+                            title="Edit Pricing Details"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-blue-400">Quantity:</span>
+                            <div className="text-white">
+                              <div className="font-medium">{formValues.quantity}</div>
+                              {unitConversionFactor !== 1 && (
+                                <div className="text-yellow-300 text-xs mt-1">
+                                  Adjusted: {adjustedQuantity} (× {unitConversionFactor})
+                                </div>
+                              )}
                             </div>
-                          )}
+                          </div>
+                          <div>
+                            <span className="text-blue-400">Unit Price (HT):</span>
+                            <div className="text-white font-medium">{formatPrice(formValues.priceHT)}</div>
+                          </div>
+                          <div>
+                            <span className="text-blue-400">Discount:</span>
+                            <div className="text-white font-medium">
+                              {formValues.useFixedDiscount 
+                                ? formatPrice(formValues.discountAmount || 0)
+                                : formatPercentage(formValues.discountPercentage)
+                              }
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-blue-400">VAT:</span>
+                            <div className="text-white font-medium">{formatPercentage(formValues.vatPercentage)}</div>
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        <span className="text-blue-400">Discount:</span>
-                        <div className="text-white">
-                          {formValues.useFixedDiscount 
-                            ? formatPrice(formValues.discountAmount || 0)
-                            : formatPercentage(formValues.discountPercentage)
-                          }
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-blue-400">VAT:</span>
-                        <div className="text-white">{formatPercentage(formValues.vatPercentage)}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Unit Conversion Summary - Only show for Item types with non-default units */}
                   {formValues.unitCode && selectedItemDetails && unitConversionFactor !== 1 && (
-                    <div className="p-4 bg-yellow-950/20 rounded-lg border border-yellow-500/20">
+                    <div className="p-4 bg-blue-950/20 rounded-lg border border-yellow-500/20">
                       <h4 className="text-yellow-200 font-medium mb-2 flex items-center gap-2">
                         <Package className="h-4 w-4" />
                         Unit Conversion Applied
@@ -1425,7 +1697,7 @@ const CreateLigneDialog = ({
                       </div>
                       <div className="mt-3 p-3 bg-yellow-950/30 rounded border border-yellow-500/30">
                         <p className="text-yellow-100 text-xs">
-                          Price has been automatically adjusted from {formatPrice(formValues.priceHT)} to {formatPrice(adjustedPriceHT)} to account for the unit conversion.
+                          Quantity has been automatically adjusted from {formValues.quantity} to {adjustedQuantity} to account for the unit conversion.
                         </p>
                       </div>
                     </div>
@@ -1436,7 +1708,7 @@ const CreateLigneDialog = ({
                     <h4 className="text-green-200 font-medium mb-2">Final Calculation</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="text-center">
-                        <div className="text-orange-400 text-sm">Amount Discount</div>
+                        <div className="text-blue-400 text-sm">Amount Discount</div>
                         <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().discountAmount)}</div>
                       </div>
                       <div className="text-center">
@@ -1444,7 +1716,7 @@ const CreateLigneDialog = ({
                         <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().amountHT)}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-purple-400 text-sm">VAT</div>
+                        <div className="text-blue-400 text-sm">VAT</div>
                         <div className="text-white font-bold text-lg">{formatPrice(calculateAmounts().amountVAT)}</div>
                       </div>
                       <div className="text-center">
@@ -1487,8 +1759,8 @@ const CreateLigneDialog = ({
                     (step === 1 && (!formValues.lignesElementTypeId || !formValues.selectedElementCode || 
                       (getSelectedElementType()?.typeElement === 'Item' && !formValues.locationCode) ||
                       (getSelectedElementType()?.typeElement === 'Item' && itemUnits.length > 0 && !formValues.unitCode))) ||
-                    (step === 2 && (codeValidation.isValidating || codeValidation.isValid !== true)) ||
-                    (step === 3 && (formValues.quantity <= 0 || formValues.priceHT <= 0))
+                    (step === 2 && (formValues.quantity <= 0 || formValues.priceHT <= 0)) ||
+                    (step === 3 && (codeValidation.isValidating || codeValidation.isValid !== true))
                   }
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

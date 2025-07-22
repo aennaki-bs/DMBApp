@@ -4,7 +4,7 @@ import { Item, ItemUnitOfMeasure } from '@/models/lineElements';
  * Result of ligne calculation operations
  */
 export interface LigneCalculationResult {
-  adjustedPriceHT: number;
+  adjustedQuantity: number;
   subtotal: number;
   discountAmount: number;
   amountHT: number;
@@ -27,17 +27,17 @@ export function calculateLigneAmounts(
   selectedItemDetails?: Item,
   itemUnits?: ItemUnitOfMeasure[]
 ): LigneCalculationResult {
-  // Step 1: Apply unit conversion to get the adjusted price
+  // Step 1: Apply unit conversion to get the adjusted quantity
   const unitConversionFactor = getUnitConversionFactor(
     unitCode,
     selectedItemDetails,
     itemUnits
   );
   
-  const adjustedPriceHT = priceHT * unitConversionFactor;
+  const adjustedQuantity = quantity * unitConversionFactor;
   
-  // Step 2: Calculate subtotal with adjusted price
-  const subtotal = quantity * adjustedPriceHT;
+  // Step 2: Calculate subtotal with adjusted quantity
+  const subtotal = adjustedQuantity * priceHT;
   
   // Step 3: Calculate discount amount
   let calculatedDiscountAmount: number;
@@ -53,7 +53,7 @@ export function calculateLigneAmounts(
   const amountTTC = amountHT + amountVAT;
   
   return {
-    adjustedPriceHT,
+    adjustedQuantity,
     subtotal,
     discountAmount: calculatedDiscountAmount,
     amountHT,
