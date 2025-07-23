@@ -5,11 +5,14 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 export function UserProfileSection() {
   const { user, refreshUserInfo } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   if (!user) return null;
 
@@ -32,7 +35,10 @@ export function UserProfileSection() {
 
   return (
     <motion.div
-      className="mx-3 my-4"
+      className={cn(
+        "mx-3 my-4",
+        isMobile ? "mx-2 my-3" : "mx-3 my-4"
+      )}
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
@@ -40,14 +46,20 @@ export function UserProfileSection() {
       {/* Professional profile card with glass morphism effects */}
       <div className="bg-background/10 backdrop-blur-xl rounded-xl border border-border/30 shadow-lg overflow-hidden supports-[backdrop-filter]:bg-background/5">
         {/* User avatar and basic info */}
-        <div className="p-4 pb-3">
+        <div className={cn(
+          "p-4 pb-3",
+          isMobile ? "p-3 pb-2" : "p-4 pb-3"
+        )}>
           <div className="flex items-center space-x-3">
             <motion.div
               className="relative flex-shrink-0"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="h-12 w-12 rounded-xl overflow-hidden bg-primary ring-2 ring-primary/40 shadow-md">
+              <div className={cn(
+                "rounded-xl overflow-hidden bg-primary ring-2 ring-primary/40 shadow-md",
+                isMobile ? "h-10 w-10" : "h-12 w-12"
+              )}>
                 {user.profilePicture ? (
                   <img
                     src={user.profilePicture}
@@ -55,13 +67,19 @@ export function UserProfileSection() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center text-primary-foreground text-lg font-bold">
+                  <div className={cn(
+                    "h-full w-full flex items-center justify-center text-primary-foreground font-bold",
+                    isMobile ? "text-base" : "text-lg"
+                  )}>
                     {user.username?.[0]?.toUpperCase() || "U"}
                   </div>
                 )}
               </div>
               <motion.div
-                className="absolute -bottom-0.5 -right-0.5 bg-green-500 h-3 w-3 rounded-full border-2 border-background/50 shadow-sm"
+                className={cn(
+                  "absolute -bottom-0.5 -right-0.5 bg-green-500 rounded-full border-2 border-background/50 shadow-sm",
+                  isMobile ? "h-2.5 w-2.5" : "h-3 w-3"
+                )}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.2, type: "spring" }}
@@ -69,11 +87,17 @@ export function UserProfileSection() {
             </motion.div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="text-foreground font-semibold text-sm truncate">
+              <h3 className={cn(
+                "text-foreground font-semibold truncate",
+                isMobile ? "text-sm" : "text-sm"
+              )}>
                 {user.username || "User"}
               </h3>
               <div className="mt-1">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary/80 text-primary-foreground border border-primary/50 shadow-sm backdrop-blur-sm">
+                <span className={cn(
+                  "inline-flex items-center px-2 py-0.5 rounded-md font-medium bg-primary/80 text-primary-foreground border border-primary/50 shadow-sm backdrop-blur-sm",
+                  isMobile ? "text-xs" : "text-xs"
+                )}>
                   {user.role || "User"}
                 </span>
               </div>
@@ -82,32 +106,52 @@ export function UserProfileSection() {
         </div>
 
         {/* Professional responsibility centre section */}
-        <div className="px-4 py-3 bg-background/5 backdrop-blur-sm border-t border-border/30">
+        <div className={cn(
+          "px-4 py-3 bg-background/5 backdrop-blur-sm border-t border-border/30",
+          isMobile ? "px-3 py-2" : "px-4 py-3"
+        )}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <div className="flex-shrink-0">
-                <div className="p-1.5 rounded-lg bg-primary/20 border border-primary/40 backdrop-blur-sm">
-                  <Building2 className="h-3.5 w-3.5 text-primary" />
+                <div className={cn(
+                  "p-1.5 rounded-lg bg-primary/20 border border-primary/40 backdrop-blur-sm",
+                  isMobile ? "p-1" : "p-1.5"
+                )}>
+                  <Building2 className={cn(
+                    "text-primary",
+                    isMobile ? "h-3 w-3" : "h-3.5 w-3.5"
+                  )} />
                 </div>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-muted-foreground/80 mb-0.5">
+                  <p className={cn(
+                    "font-medium text-muted-foreground/80 mb-0.5",
+                    isMobile ? "text-xs" : "text-xs"
+                  )}>
                     {t("navigation.responsibilityCenter")}
                   </p>
                   <button
                     onClick={handleRefreshUserInfo}
                     disabled={isRefreshing}
-                    className="text-muted-foreground/80 hover:text-foreground transition-colors p-1 rounded-md hover:bg-accent/50"
+                    className={cn(
+                      "text-muted-foreground/80 hover:text-foreground transition-colors rounded-md hover:bg-accent/50",
+                      isMobile ? "p-0.5" : "p-1"
+                    )}
                     title="Refresh user information"
                   >
                     <RefreshCw
-                      className={`h-3 w-3 ${isRefreshing ? "animate-spin" : ""
-                        }`}
+                      className={cn(
+                        isRefreshing ? "animate-spin" : "",
+                        isMobile ? "h-2.5 w-2.5" : "h-3 w-3"
+                      )}
                     />
                   </button>
                 </div>
-                <p className="text-sm text-foreground font-medium truncate">
+                <p className={cn(
+                  "text-foreground font-medium truncate",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>
                   {responsibilityCenter ? (
                     responsibilityCenter.descr || responsibilityCenter.code
                   ) : (
@@ -120,7 +164,10 @@ export function UserProfileSection() {
             </div>
             {responsibilityCenter && (
               <div className="flex-shrink-0 ml-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div>
+                <div className={cn(
+                  "rounded-full bg-green-500 shadow-sm",
+                  isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                )}></div>
               </div>
             )}
           </div>

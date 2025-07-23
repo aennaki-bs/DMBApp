@@ -44,17 +44,14 @@ export function PageLayout({
 }: PageLayoutProps) {
   return (
     <div
-      className="h-full flex flex-col gap-6 max-w-full"
+      className="h-full flex flex-col gap-2 max-w-full"
       style={{ minHeight: "100%" }}
     >
       {/* Clean Header Bar */}
-      <div className="flex items-center justify-between p-6 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-background/30 backdrop-blur-xl border border-primary/20 shadow-lg">
+      <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-background/30 backdrop-blur-xl border border-primary/20 shadow-lg">
         <div className="flex items-center gap-4">
-          {/* <div className="p-3 rounded-xl bg-primary/15 backdrop-blur-sm border border-primary/30">
-            <Icon className="h-6 w-6 text-primary" />
-          </div> */}
           <div>
-            <h1 className="text-2xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
               <span>{title}</span>
               {status && (
                 <>

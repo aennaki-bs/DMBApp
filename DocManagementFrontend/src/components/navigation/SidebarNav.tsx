@@ -27,6 +27,8 @@ import {
   Archive,
   FileCheck,
   Info,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -34,12 +36,15 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import approvalService from "@/services/approvalService";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 // Navigation item descriptions for tooltips
 const navDescriptions = {
@@ -61,10 +66,16 @@ const navDescriptions = {
   "/vendor-management": "Manage vendor relationships",
 };
 
-export function SidebarNav() {
+interface SidebarNavProps {
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export function SidebarNav({ collapsed = false, onToggleCollapse }: SidebarNavProps) {
   const { user } = useAuth();
   const { t } = useTranslation();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const isAdmin = user?.role === "Admin";
   const isSimpleUser = user?.role === "SimpleUser";
 
@@ -99,160 +110,113 @@ export function SidebarNav() {
     return false;
   };
 
-  // Check if any line elements-related route is active
   const isLineElementsActive = () => {
     return (
-      isActive("/line-elements-management") ||
+      isActive("/element-types") ||
       isActive("/items-management") ||
       isActive("/unit-codes-management") ||
       isActive("/general-accounts-management") ||
-      isActive("/customer-management") ||
-      isActive("/vendor-management") ||
-      isActive("/locations-management") ||
-      isActive("/element-types")
+      isActive("/locations-management")
     );
   };
 
-  // Check if any approval-related route is active (but NOT for My Approvals)
   const isApprovalActive = () => {
     return (
-      (isActive("/approval-groups") || isActive("/approvers-management"))
+      isActive("/approval-groups") ||
+      isActive("/approvers-management")
     );
   };
 
-  // Check if any documents-related route is active
   const isDocumentsActive = () => {
     return (
-      isActive("/documents") || isActive("/documents/archived") || isActive("/documents/completed-not-archived")
+      isActive("/documents") ||
+      isActive("/documents/archived") ||
+      isActive("/documents/completed-not-archived") ||
+      isArchivedDocumentContext() ||
+      isCompletedDocumentContext()
     );
   };
 
-  // Enhanced submenu state management - allows manual control
-  const [approvalMenuOpen, setApprovalMenuOpen] = useState(isApprovalActive());
-  const [lineElementsMenuOpen, setLineElementsMenuOpen] = useState(isLineElementsActive());
-  const [documentsMenuOpen, setDocumentsMenuOpen] = useState(isDocumentsActive());
-
-  // Track which submenus have been manually controlled to prevent auto-closing
-  const [manuallyControlled, setManuallyControlled] = useState({
-    approval: false,
-    lineElements: false,
-    documents: false,
+  // Fetch pending approvals for badge
+  const { data: pendingApprovals = [] } = useQuery({
+    queryKey: ["pendingApprovals"],
+    queryFn: approvalService.getPendingApprovals,
+    enabled: !isSimpleUser,
   });
 
-  // Smart submenu management based on current route
+  // State for submenu toggles
+  const [documentsMenuOpen, setDocumentsMenuOpen] = useState(false);
+  const [lineElementsMenuOpen, setLineElementsMenuOpen] = useState(false);
+  const [approvalMenuOpen, setApprovalMenuOpen] = useState(false);
+
+  // Auto-expand submenus based on current route
   useEffect(() => {
-    const currentPath = location.pathname;
-
-    // Determine which section is currently active
-    const activeSection = {
-      documents: isDocumentsActive(),
-      lineElements: isLineElementsActive(),
-      approval: isApprovalActive(),
-    };
-
-    // Auto-open the submenu for the current active section
-    if (activeSection.documents && !documentsMenuOpen) {
+    if (isDocumentsActive()) {
       setDocumentsMenuOpen(true);
     }
-    if (activeSection.lineElements && !lineElementsMenuOpen) {
+    if (isLineElementsActive()) {
       setLineElementsMenuOpen(true);
     }
-    if (activeSection.approval && !approvalMenuOpen) {
+    if (isApprovalActive()) {
       setApprovalMenuOpen(true);
-    }
-
-    // Close other submenus when navigating to a different section (unless manually controlled)
-    // Only close if we're on a main navigation item that's not part of a submenu section
-    const isOnMainNavItem =
-      isActive("/dashboard") ||
-      isActive("/pending-approvals") ||
-      isActive("/user-management") ||
-      isActive("/document-types-management") ||
-      isActive("/circuits") ||
-      isActive("/responsibility-centres");
-
-    if (isOnMainNavItem) {
-      // Close all submenus when navigating to main nav items
-      if (!activeSection.documents && !manuallyControlled.documents) {
-        setDocumentsMenuOpen(false);
-      }
-      if (!activeSection.lineElements && !manuallyControlled.lineElements) {
-        setLineElementsMenuOpen(false);
-      }
-      if (!activeSection.approval && !manuallyControlled.approval) {
-        setApprovalMenuOpen(false);
-      }
     }
   }, [location.pathname]);
 
-  // Handle manual submenu toggles - gives user full control
   const handleSubmenuToggle = (menu: 'approval' | 'lineElements' | 'documents') => {
-    // Mark this submenu as manually controlled
-    setManuallyControlled(prev => ({ ...prev, [menu]: true }));
-
     switch (menu) {
-      case 'approval':
-        setApprovalMenuOpen(prev => !prev);
+      case 'documents':
+        setDocumentsMenuOpen(!documentsMenuOpen);
         break;
       case 'lineElements':
-        setLineElementsMenuOpen(prev => !prev);
+        setLineElementsMenuOpen(!lineElementsMenuOpen);
         break;
-      case 'documents':
-        setDocumentsMenuOpen(prev => !prev);
+      case 'approval':
+        setApprovalMenuOpen(!approvalMenuOpen);
         break;
     }
-
-    // Reset manual control flag after navigation to allow smart behavior again
-    setTimeout(() => {
-      setManuallyControlled(prev => ({ ...prev, [menu]: false }));
-    }, 100);
   };
 
-  // Fetch pending approvals count
-  const { data: pendingApprovals = [] } = useQuery({
-    queryKey: ["pendingApprovals"],
-    queryFn: () => approvalService.getPendingApprovals(),
-    enabled: !!user?.userId && !isSimpleUser,
-  });
-
-  // Enhanced navigation item classes with improved visual feedback
+  // Enhanced responsive classes
   const getNavItemClasses = (isActiveItem: boolean) => {
-    const baseClasses = "group relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ease-out overflow-hidden";
+    const baseClasses = cn(
+      "group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ease-out cursor-pointer overflow-hidden",
+      "hover:shadow-md hover:shadow-primary/5",
+      isMobile ? "py-3" : "py-2.5",
+      isActiveItem 
+        ? "bg-gradient-to-r from-primary/10 via-primary/8 to-primary/6 border border-primary/20 shadow-sm shadow-primary/10" 
+        : "hover:bg-gradient-to-r hover:from-accent/10 hover:via-accent/8 hover:to-accent/6 hover:border hover:border-accent/20"
+    );
 
-    if (isActiveItem) {
-      return `${baseClasses} bg-gradient-to-r from-primary/25 via-primary/20 to-primary/15 text-primary border border-primary/20 shadow-lg shadow-primary/10 backdrop-blur-sm before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300`;
-    }
-
-    return `${baseClasses} text-foreground/85 hover:text-foreground hover:bg-gradient-to-r hover:from-accent/20 hover:via-accent/15 hover:to-accent/10 hover:shadow-md hover:shadow-accent/5 hover:border hover:border-accent/20 border border-transparent hover:backdrop-blur-sm`;
+    return baseClasses;
   };
 
-  // Enhanced submenu item classes with better selection clarity
   const getSubmenuItemClasses = (isActiveItem: boolean) => {
-    const baseClasses = "group relative flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-300 ease-out overflow-hidden";
+    const baseClasses = cn(
+      "group flex items-center gap-2.5 px-3 py-2 rounded-md transition-all duration-300 ease-out cursor-pointer relative overflow-hidden",
+      "hover:shadow-sm hover:shadow-primary/5",
+      isMobile ? "py-2.5" : "py-2",
+      isActiveItem 
+        ? "bg-gradient-to-r from-primary/8 via-primary/6 to-primary/4 border border-primary/15 text-primary font-medium" 
+        : "hover:bg-gradient-to-r hover:from-accent/8 hover:via-accent/6 hover:to-accent/4 hover:text-foreground"
+    );
 
-    if (isActiveItem) {
-      return `${baseClasses} bg-gradient-to-r from-primary/20 to-primary/15 text-primary font-semibold border border-primary/25 shadow-md shadow-primary/5 backdrop-blur-sm before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary before:rounded-r-full`;
-    }
-
-    return `${baseClasses} text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-accent/15 hover:to-accent/10 hover:shadow-sm hover:border hover:border-accent/20 border border-transparent hover:font-medium`;
+    return baseClasses;
   };
 
-  // Enhanced submenu button classes with better visual hierarchy
   const getSubmenuButtonClasses = (isActiveSection: boolean, isOpen: boolean) => {
-    const baseClasses = "group w-full relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ease-out overflow-hidden";
+    const baseClasses = cn(
+      "group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ease-out cursor-pointer overflow-hidden w-full",
+      "hover:shadow-md hover:shadow-primary/5",
+      isMobile ? "py-3" : "py-2.5",
+      isActiveSection || isOpen
+        ? "bg-gradient-to-r from-primary/8 via-primary/6 to-primary/4 border border-primary/15" 
+        : "hover:bg-gradient-to-r hover:from-accent/10 hover:via-accent/8 hover:to-accent/6 hover:border hover:border-accent/20"
+    );
 
-    if (isActiveSection) {
-      return `${baseClasses} bg-gradient-to-r from-primary/25 via-primary/20 to-primary/15 text-primary border border-primary/20 shadow-lg shadow-primary/10 backdrop-blur-sm`;
-    }
-
-    if (isOpen) {
-      return `${baseClasses} text-foreground bg-gradient-to-r from-accent/15 to-accent/10 border border-accent/15 shadow-sm backdrop-blur-sm`;
-    }
-
-    return `${baseClasses} text-foreground/85 hover:text-foreground hover:bg-gradient-to-r hover:from-accent/20 hover:via-accent/15 hover:to-accent/10 hover:shadow-md hover:shadow-accent/5 hover:border hover:border-accent/20 border border-transparent`;
+    return baseClasses;
   };
 
-  // Navigation item component with enhanced tooltip and better interactions
+  // Enhanced navigation item component with better responsive design
   const NavItem = ({ to, icon: Icon, label, description, isActiveItem, badge, onClick }: any) => (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
@@ -260,129 +224,211 @@ export function SidebarNav() {
           <Link
             to={to}
             onClick={onClick}
-            className={getNavItemClasses(isActiveItem)}
+            className={cn(
+              getNavItemClasses(isActiveItem),
+              collapsed ? "justify-center px-3" : ""
+            )}
           >
             {/* Active state background glow */}
             {isActiveItem && (
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 animate-pulse" />
             )}
 
-            <Icon className={`h-5 w-5 flex-shrink-0 transition-all duration-300 relative z-10 ${isActiveItem
-              ? "text-primary drop-shadow-sm"
-              : "text-foreground/70 group-hover:text-foreground group-hover:scale-110"
-              }`} />
+            <Icon className={cn(
+              "flex-shrink-0 transition-all duration-300 relative z-10",
+              isMobile ? "h-5 w-5" : "h-4 w-4",
+              isActiveItem
+                ? "text-primary drop-shadow-sm"
+                : "text-foreground/70 group-hover:text-foreground group-hover:scale-110"
+            )} />
 
-            <span className={`flex-1 truncate relative z-10 transition-all duration-300 ${isActiveItem ? "text-primary font-semibold" : "group-hover:translate-x-0.5"
-              }`}>
-              {label}
-            </span>
+            {!collapsed && (
+              <span className={cn(
+                "flex-1 truncate relative z-10 transition-all duration-300",
+                isMobile ? "text-sm" : "text-xs",
+                isActiveItem ? "text-primary font-semibold" : "group-hover:translate-x-0.5"
+              )}>
+                {label}
+              </span>
+            )}
 
-            {badge && (
+            {!collapsed && badge && (
               <div className="flex items-center justify-center h-5 w-5 text-xs bg-destructive text-destructive-foreground rounded-full font-bold animate-pulse shadow-lg relative z-10">
                 {badge}
               </div>
             )}
 
             {/* Enhanced active indicator */}
-            {isActiveItem && (
+            {isActiveItem && !collapsed && (
               <div className="absolute right-3 w-2 h-2 bg-primary rounded-full shadow-lg shadow-primary/50 animate-pulse relative z-10" />
             )}
 
             {/* Hover effect line */}
-            <div className={`absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${isActiveItem ? "opacity-0" : ""
-              }`} />
+            <div className={cn(
+              "absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300",
+              isActiveItem ? "opacity-0" : ""
+            )} />
           </Link>
         </TooltipTrigger>
-        <TooltipContent
-          side="right"
-          className="bg-popover/95 backdrop-blur-md border border-primary/20 shadow-xl rounded-lg p-3 max-w-xs"
-          sideOffset={12}
-        >
-          <div>
-            <p className="font-semibold text-sm text-foreground">{label}</p>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
-          </div>
-        </TooltipContent>
+        {collapsed && (
+          <TooltipContent
+            side="right"
+            className="bg-popover/95 backdrop-blur-md border border-primary/20 shadow-xl rounded-lg p-3 max-w-xs"
+            sideOffset={12}
+          >
+            <div>
+              <p className="font-semibold text-sm text-foreground">{label}</p>
+              {description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>}
+            </div>
+          </TooltipContent>
+        )}
       </Tooltip>
     </TooltipProvider>
   );
 
-  // Enhanced submenu button component with better visual feedback
+  // Enhanced submenu button component with better responsive design
   const SubmenuButton = ({ icon: Icon, label, isOpen, isActiveSection, onClick, children }: any) => (
     <li>
       <button
-        onClick={onClick}
-        className={`${getSubmenuButtonClasses(isActiveSection, isOpen)} justify-between`}
+        onClick={collapsed ? undefined : onClick}
+        className={cn(
+          getSubmenuButtonClasses(isActiveSection, isOpen), 
+          collapsed ? "justify-center px-3" : "justify-between"
+        )}
       >
         {/* Background effect for active/open states */}
         {(isActiveSection || isOpen) && (
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 animate-pulse" />
         )}
 
-        <div className="flex items-center gap-3 flex-1 relative z-10">
-          <Icon className={`h-5 w-5 flex-shrink-0 transition-all duration-300 ${isActiveSection
-            ? "text-primary drop-shadow-sm"
-            : isOpen
-              ? "text-foreground scale-105"
-              : "text-foreground/70 group-hover:text-foreground group-hover:scale-110"
-            }`} />
-          <span className={`truncate transition-all duration-300 ${isActiveSection
-            ? "text-primary font-semibold"
-            : isOpen
-              ? "text-foreground font-medium"
-              : "group-hover:translate-x-0.5"
-            }`}>
-            {label}
-          </span>
+        <div className={cn(
+          "flex items-center flex-1 relative z-10",
+          collapsed ? "justify-center" : "gap-3"
+        )}>
+          <Icon className={cn(
+            "flex-shrink-0 transition-all duration-300",
+            isMobile ? "h-5 w-5" : "h-4 w-4",
+            isActiveSection
+              ? "text-primary drop-shadow-sm"
+              : isOpen
+                ? "text-foreground scale-105"
+                : "text-foreground/70 group-hover:text-foreground group-hover:scale-110"
+          )} />
+          {!collapsed && (
+            <span className={cn(
+              "truncate transition-all duration-300",
+              isMobile ? "text-sm" : "text-xs",
+              isActiveSection
+                ? "text-primary font-semibold"
+                : isOpen
+                  ? "text-foreground font-medium"
+                  : "group-hover:translate-x-0.5"
+            )}>
+              {label}
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 relative z-10">
-          {/* Enhanced active indicator */}
-          {isActiveSection && (
-            <div className="w-2 h-2 bg-primary rounded-full shadow-lg shadow-primary/50 animate-pulse" />
-          )}
-          <div className={`transition-all duration-300 ${isOpen ? 'rotate-90 scale-110' : 'group-hover:scale-110'
-            }`}>
-            <ChevronRight className={`h-4 w-4 ${isActiveSection
-              ? "text-primary"
-              : isOpen
-                ? "text-foreground"
-                : "text-foreground/70 group-hover:text-foreground"
-              }`} />
+        {!collapsed && (
+          <div className="flex items-center gap-2 relative z-10">
+            {/* Enhanced active indicator */}
+            {isActiveSection && (
+              <div className="w-2 h-2 bg-primary rounded-full shadow-lg shadow-primary/50 animate-pulse" />
+            )}
+            <div className={cn(
+              "transition-all duration-300",
+              isOpen ? 'rotate-90 scale-110' : 'group-hover:scale-110'
+            )}>
+              <ChevronRight className={cn(
+                isMobile ? "h-4 w-4" : "h-3 w-3",
+                isActiveSection
+                  ? "text-primary"
+                  : isOpen
+                    ? "text-foreground"
+                    : "text-foreground/70 group-hover:text-foreground"
+              )} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Hover effect line */}
-        <div className={`absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${isActiveSection || isOpen ? "opacity-0" : ""
-          }`} />
+        <div className={cn(
+          "absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300",
+          isActiveSection || isOpen ? "opacity-0" : ""
+        )} />
       </button>
 
-      {/* Enhanced submenu with improved animations */}
-      <div className={`overflow-hidden transition-all duration-500 ease-out ${isOpen ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
-        }`}>
-        <ul className="ml-6 space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-primary/10 pl-4 relative">
-          {/* Animated border effect with glow */}
-          <div className="absolute left-0 top-0 w-0.5 bg-gradient-to-b from-primary/60 via-primary/40 to-transparent h-full rounded-full shadow-sm shadow-primary/20" />
-          {children}
-        </ul>
-      </div>
+      {/* Enhanced submenu with improved animations - hidden when collapsed */}
+      {!collapsed && (
+        <div className={cn(
+          "overflow-hidden transition-all duration-500 ease-out",
+          isOpen ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
+        )}>
+          <ul className={cn(
+            "space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-primary/10 pl-4 relative",
+            isMobile ? "ml-4" : "ml-6"
+          )}>
+            {/* Animated border effect with glow */}
+            <div className="absolute left-0 top-0 w-0.5 bg-gradient-to-b from-primary/60 via-primary/40 to-transparent h-full rounded-full shadow-sm shadow-primary/20" />
+            {children}
+          </ul>
+        </div>
+      )}
     </li>
   );
 
   return (
-    <div className="h-full w-full bg-background/10 backdrop-blur-xl border-r border-border/30 overflow-y-auto supports-[backdrop-filter]:bg-background/5">
+    <div className={cn(
+      "h-full w-full bg-background/10 backdrop-blur-xl border-r border-border/30 overflow-y-auto supports-[backdrop-filter]:bg-background/5",
+      isMobile ? "px-3" : "px-4"
+    )}>
       {/* User Profile Section */}
       <UserProfileSection />
 
-      <div className="px-4 py-2">
-        <div className="flex items-center gap-2 px-2 py-3">
-          <p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wide flex-1">
-            Main Navigation
-          </p>
-          <div className="w-8 h-0.5 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent rounded-full" />
+      {/* Desktop Sidebar Toggle Button */}
+      {!isMobile && onToggleCollapse && (
+        <div className={cn(
+          "flex p-2 border-b border-border/30",
+          collapsed ? "justify-center" : "justify-end"
+        )}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-200 rounded-lg"
+            onClick={onToggleCollapse}
+          >
+            {collapsed ? (
+              <PanelLeft className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </Button>
         </div>
+      )}
 
-        <ul className="space-y-1.5">
+      <div className={cn(
+        "py-2",
+        isMobile ? "px-2" : "px-4"
+      )}>
+        {!collapsed && (
+          <div className={cn(
+            "flex items-center gap-2 px-2 py-3",
+            isMobile ? "py-2" : "py-3"
+          )}>
+            <p className={cn(
+              "font-semibold text-muted-foreground/80 uppercase tracking-wide flex-1",
+              isMobile ? "text-xs" : "text-xs"
+            )}>
+              Main Navigation
+            </p>
+            <div className="w-8 h-0.5 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent rounded-full" />
+          </div>
+        )}
+
+        <ul className={cn(
+          "space-y-1.5",
+          isMobile ? "space-y-2" : "space-y-1.5"
+        )}>
           {/* Dashboard */}
           <li>
             <NavItem
@@ -436,8 +482,11 @@ export function SidebarNav() {
                   (isActive("/documents") && !isActive("/documents/archived") && !isActive("/documents/completed-not-archived") && !isArchivedDocumentContext() && !isCompletedDocumentContext())
                 )}
               >
-                <FileText className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                <span>Activated</span>
+                <FileText className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Activated</span>
               </Link>
             </li>
             <li>
@@ -447,8 +496,11 @@ export function SidebarNav() {
                   isActive("/documents/archived") || isArchivedDocumentContext()
                 )}
               >
-                <Archive className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                <span>Archived</span>
+                <Archive className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Archived</span>
               </Link>
             </li>
             <li>
@@ -458,150 +510,182 @@ export function SidebarNav() {
                   isActive("/documents/completed-not-archived") || isCompletedDocumentContext()
                 )}
               >
-                <FileCheck className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                <span>Completed</span>
+                <FileCheck className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Completed</span>
               </Link>
             </li>
           </SubmenuButton>
 
-          {/* Document Types - Only for non-simple users */}
-          {!isSimpleUser && (
-            <>
-              <li>
-                <NavItem
-                  to="/document-types-management"
-                  icon={Layers}
-                  label={t("nav.documentTypes")}
-                  description={navDescriptions["/document-types-management"]}
-                  isActiveItem={isActive("/document-types-management")}
-                />
-              </li>
+          {/* Document Types Management - Only for Admin */}
+          {isAdmin && (
+            <li>
+              <NavItem
+                to="/document-types-management"
+                icon={Tag}
+                label={t("nav.documentTypes")}
+                description={navDescriptions["/document-types-management"]}
+                isActiveItem={isActive("/document-types-management")}
+              />
+            </li>
+          )}
 
-              {/* Line Elements Section with enhanced submenu */}
-              <SubmenuButton
-                icon={Box}
-                label={t("nav.lineElements")}
-                isOpen={lineElementsMenuOpen}
-                isActiveSection={isLineElementsActive()}
-                onClick={() => handleSubmenuToggle('lineElements')}
+          {/* Basic Data Section */}
+          <SubmenuButton
+            icon={Layers}
+            label={t("nav.lineElements")}
+            isOpen={lineElementsMenuOpen}
+            isActiveSection={isLineElementsActive()}
+            onClick={() => handleSubmenuToggle('lineElements')}
+          >
+            <li>
+              <Link
+                to="/element-types"
+                className={getSubmenuItemClasses(isActive("/element-types"))}
               >
-                <li>
-                  <Link
-                    to="/element-types"
-                    className={getSubmenuItemClasses(isActive("/element-types"))}
-                  >
-                    <Tag className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>Element Types</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/items-management"
-                    className={getSubmenuItemClasses(isActive("/items-management"))}
-                  >
-                    <Package className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>Items</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/unit-codes-management"
-                    className={getSubmenuItemClasses(isActive("/unit-codes-management"))}
-                  >
-                    <Hash className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>Unit Codes</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/general-accounts-management"
-                    className={getSubmenuItemClasses(isActive("/general-accounts-management"))}
-                  >
-                    <Calculator className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>General Accounts</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/locations-management"
-                    className={getSubmenuItemClasses(isActive("/locations-management"))}
-                  >
-                    <MapPin className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>Locations</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/customer-management"
-                    className={getSubmenuItemClasses(isActive("/customer-management"))}
-                  >
-                    <Users className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>Customers</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/vendor-management"
-                    className={getSubmenuItemClasses(isActive("/vendor-management"))}
-                  >
-                    <Truck className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>Vendors</span>
-                  </Link>
-                </li>
-              </SubmenuButton>
-
-              {/* Circuits */}
-              <li>
-                <NavItem
-                  to="/circuits"
-                  icon={GitBranch}
-                  label={t("nav.circuits")}
-                  description={navDescriptions["/circuits"]}
-                  isActiveItem={isActive("/circuits")}
-                />
-              </li>
-
-              {/* Approval Section with enhanced submenu */}
-              <SubmenuButton
-                icon={UserCheck}
-                label={t("nav.approval")}
-                isOpen={approvalMenuOpen}
-                isActiveSection={isApprovalActive()}
-                onClick={() => handleSubmenuToggle('approval')}
+                <Hash className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Element Types</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/items-management"
+                className={getSubmenuItemClasses(isActive("/items-management"))}
               >
-                <li>
-                  <Link
-                    to="/approval-groups"
-                    className={getSubmenuItemClasses(isActive("/approval-groups"))}
-                  >
-                    <UsersRound className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>Groups</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/approvers-management"
-                    className={getSubmenuItemClasses(isActive("/approvers-management"))}
-                  >
-                    <UserCog className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-                    <span>Approvers</span>
-                  </Link>
-                </li>
-              </SubmenuButton>
+                <Package className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Items</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/unit-codes-management"
+                className={getSubmenuItemClasses(isActive("/unit-codes-management"))}
+              >
+                <Calculator className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Unit Codes</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/general-accounts-management"
+                className={getSubmenuItemClasses(isActive("/general-accounts-management"))}
+              >
+                <Box className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>General Accounts</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/locations-management"
+                className={getSubmenuItemClasses(isActive("/locations-management"))}
+              >
+                <MapPin className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Locations</span>
+              </Link>
+            </li>
+          </SubmenuButton>
 
-              {/* Responsibility Centres */}
-              {isAdmin && (
-                <li>
-                  <NavItem
-                    to="/responsibility-centres"
-                    icon={Building2}
-                    label={t("nav.responsibilityCentres")}
-                    description={navDescriptions["/responsibility-centres"]}
-                    isActiveItem={isActive("/responsibility-centres")}
-                  />
-                </li>
-              )}
-            </>
+          {/* Circuits - Only for Admin */}
+          {isAdmin && (
+            <li>
+              <NavItem
+                to="/circuits"
+                icon={GitBranch}
+                label={t("nav.circuits")}
+                description={navDescriptions["/circuits"]}
+                isActiveItem={isActive("/circuits")}
+              />
+            </li>
+          )}
+
+          {/* Approval Section */}
+          <SubmenuButton
+            icon={UserCheck}
+            label={t("nav.approval")}
+            isOpen={approvalMenuOpen}
+            isActiveSection={isApprovalActive()}
+            onClick={() => handleSubmenuToggle('approval')}
+          >
+            <li>
+              <Link
+                to="/approval-groups"
+                className={getSubmenuItemClasses(isActive("/approval-groups"))}
+              >
+                <UsersRound className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Approval Groups</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/approvers-management"
+                className={getSubmenuItemClasses(isActive("/approvers-management"))}
+              >
+                <UserCog className={cn(
+                  "transition-all duration-300 group-hover:scale-110",
+                  isMobile ? "h-4 w-4" : "h-3 w-3"
+                )} />
+                <span className={cn(isMobile ? "text-sm" : "text-xs")}>Approvers</span>
+              </Link>
+            </li>
+          </SubmenuButton>
+
+          {/* Responsibility Centres - Only for Admin */}
+          {isAdmin && (
+            <li>
+              <NavItem
+                to="/responsibility-centres"
+                icon={Building2}
+                label={t("nav.responsibilityCentres")}
+                description={navDescriptions["/responsibility-centres"]}
+                isActiveItem={isActive("/responsibility-centres")}
+              />
+            </li>
+          )}
+
+          {/* Customer Management - Only for Admin */}
+          {isAdmin && (
+            <li>
+              <NavItem
+                to="/customer-management"
+                icon={Users}
+                label="Customer Management"
+                description={navDescriptions["/customer-management"]}
+                isActiveItem={isActive("/customer-management")}
+              />
+            </li>
+          )}
+
+          {/* Vendor Management - Only for Admin */}
+          {isAdmin && (
+            <li>
+              <NavItem
+                to="/vendor-management"
+                icon={Truck}
+                label="Vendor Management"
+                description={navDescriptions["/vendor-management"]}
+                isActiveItem={isActive("/vendor-management")}
+              />
+            </li>
           )}
         </ul>
       </div>
