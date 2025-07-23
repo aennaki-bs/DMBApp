@@ -99,27 +99,6 @@ function CompletedNotArchivedDocumentsContent() {
         <div className="absolute inset-0 rounded-lg border border-amber-500/30 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
         
         {/* Main content */}
-        <div className="relative bg-slate-800/80 backdrop-blur-md border border-amber-500/40 rounded-lg p-4 shadow-lg">
-          <div className="flex items-center gap-3">
-            {/* Icon container with glow effect */}
-            <div className="flex-shrink-0">
-              <div className="relative">
-                <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-sm animate-pulse"></div>
-                <div className="relative bg-gradient-to-br from-amber-500 to-orange-600 p-2 rounded-full shadow-md">
-                  <AlertTriangle className="h-4 w-4 text-white" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-200 leading-relaxed">
-                These documents have completed their workflow circuit but are not yet archived to the ERP system. 
-                ERP archival may be in progress or may have failed and requires manual intervention.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Search and Filter Bar */}
@@ -167,7 +146,7 @@ function CompletedNotArchivedDocumentsContent() {
   return (
     <PageLayout
       title="Completed Documents"
-      subtitle={`${filteredCount} of ${totalCount} documents (Pending ERP Archive)${isFilterActive ? ' (filtered)' : ''}`}
+      subtitle="These documents have completed their workflow circuit but are not yet archived to the ERP system. ERP archival may be in progress or may have failed and requires manual intervention."
       icon={FileCheck}
       actions={pageActions}
     >

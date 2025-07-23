@@ -114,7 +114,7 @@ export function MainNavbar() {
   }, []);
 
   return (
-    <div className="border-b border-border shadow-sm sticky top-0 z-40 bg-background/95 backdrop-blur-xl">
+    <div className="border-b border-border shadow-sm sticky top-0 z-40">
       <div className="flex items-center justify-between h-full px-3 sm:px-4 lg:px-6">
         {/* Left Section - Logo/Brand */}
         <Link

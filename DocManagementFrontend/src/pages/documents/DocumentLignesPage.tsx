@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { FileText, Layers } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import documentService from "@/services/documentService";
 import DocumentHeader from "@/components/document/DocumentHeader";
 import DocumentDetailsTab from "@/components/document/DocumentDetailsTab";
@@ -14,52 +15,43 @@ import DocumentNotFound from "@/components/document/DocumentNotFound";
 import { navigateToDocumentList } from "@/utils/navigationUtils";
 
 const DocumentLignesPage = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-
-  const canManageDocuments =
-    user?.role === "Admin" || user?.role === "FullUser";
   const [activeTab, setActiveTab] = useState<"details" | "lines">("lines");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
+  // Fetch document data
   const {
     data: document,
     isLoading: isLoadingDocument,
     error: documentError,
   } = useQuery({
-    queryKey: ["document", Number(id)],
-    queryFn: () => documentService.getDocumentById(Number(id)),
+    queryKey: ["document", id],
+    queryFn: () => documentService.getDocument(parseInt(id!)),
     enabled: !!id,
   });
 
+  // Fetch document lines
   const {
     data: lignes = [],
     isLoading: isLoadingLignes,
     error: lignesError,
   } = useQuery({
-    queryKey: ["documentLignes", Number(id)],
-    queryFn: () => documentService.getLignesByDocumentId(Number(id)),
+    queryKey: ["document-lignes", id],
+    queryFn: () => documentService.getDocumentLignes(parseInt(id!)),
     enabled: !!id,
   });
 
-  useEffect(() => {
-    if (documentError) {
-      toast.error("Failed to load document");
-      navigateToDocumentList(navigate);
-    }
+  // Check if user can manage documents
+  const canManageDocuments = user?.role === "Admin" || user?.role === "Manager";
 
-    if (lignesError) {
-      toast.error("Failed to load document lines");
-    }
-  }, [documentError, lignesError, navigate]);
-
-  if (isLoadingDocument) {
+  if (isLoadingDocument || isLoadingLignes) {
     return <DocumentLoading />;
   }
 
-  if (!document) {
-    return <DocumentNotFound onNavigateBack={() => navigateToDocumentList(navigate)} />;
+  if (documentError || lignesError || !document) {
+    return <DocumentNotFound />;
   }
 
   return (
@@ -85,6 +77,12 @@ const DocumentLignesPage = () => {
                 >
                   <Layers className="h-4 w-4 mr-2" />
                   Document Lines
+                  <Badge 
+                    variant="secondary" 
+                    className="ml-2 bg-blue-600/20 text-blue-200 border-blue-500/30 text-xs font-medium"
+                  >
+                    {lignes?.length || 0}
+                  </Badge>
                 </TabsTrigger>
                 <TabsTrigger
                   value="details"

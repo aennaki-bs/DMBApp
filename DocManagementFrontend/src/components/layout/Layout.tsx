@@ -38,6 +38,7 @@ export function Layout() {
   const { theme } = useSettings();
   const { theme: themeConfig } = useTheme();
   const [backgroundUrl, setBackgroundUrl] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
   // Get the selected background from localStorage
   useEffect(() => {
@@ -139,15 +140,18 @@ export function Layout() {
 
         {/* Main layout structure - elevated above overlay */}
         <div className="relative flex w-full min-h-full z-10">
-          {/* Sidebar - clean transparent styling with responsive width */}
+          {/* Sidebar - clean transparent styling with responsive width and collapse functionality */}
           <aside
-            className={`h-full ${isMobile ? "hidden" : "w-56 sm:w-60 lg:w-64 xl:w-64 flex-shrink-0"
-              } ${isStandardTheme
+            className={`h-full ${isMobile ? "hidden" : sidebarCollapsed ? "w-16" : "w-72 sm:w-80 lg:w-80 xl:w-80"
+              } flex-shrink-0 ${isStandardTheme
                 ? "glass-sidebar"
                 : "border-r border-border bg-card/95"
               } transition-all duration-300 ease-in-out shadow-lg z-20 overflow-hidden`}
           >
-            <SidebarNav />
+            <SidebarNav 
+              collapsed={sidebarCollapsed} 
+              onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} 
+            />
           </aside>
 
           {/* Main content area */}
@@ -195,7 +199,7 @@ export function Layout() {
                   } shadow-lg transition-all duration-300`}
                 style={{ minHeight: "100%" }}
               >
-                <div className="h-full overflow-auto p-4">
+                <div className="h-full overflow-auto p-3">
                   <Outlet />
                 </div>
               </div>

@@ -27,6 +27,8 @@ import {
   Archive,
   FileCheck,
   Info,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserProfileSection } from "./UserProfileSection";
@@ -42,6 +44,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 // Navigation item descriptions for tooltips
 const navDescriptions = {
@@ -63,7 +66,12 @@ const navDescriptions = {
   "/vendor-management": "Manage vendor relationships",
 };
 
-export function SidebarNav() {
+interface SidebarNavProps {
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export function SidebarNav({ collapsed = false, onToggleCollapse }: SidebarNavProps) {
   const { user } = useAuth();
   const { t } = useTranslation();
   const location = useLocation();
@@ -216,7 +224,10 @@ export function SidebarNav() {
           <Link
             to={to}
             onClick={onClick}
-            className={getNavItemClasses(isActiveItem)}
+            className={cn(
+              getNavItemClasses(isActiveItem),
+              collapsed ? "justify-center px-3" : ""
+            )}
           >
             {/* Active state background glow */}
             {isActiveItem && (
@@ -231,22 +242,24 @@ export function SidebarNav() {
                 : "text-foreground/70 group-hover:text-foreground group-hover:scale-110"
             )} />
 
-            <span className={cn(
-              "flex-1 truncate relative z-10 transition-all duration-300",
-              isMobile ? "text-sm" : "text-xs",
-              isActiveItem ? "text-primary font-semibold" : "group-hover:translate-x-0.5"
-            )}>
-              {label}
-            </span>
+            {!collapsed && (
+              <span className={cn(
+                "flex-1 truncate relative z-10 transition-all duration-300",
+                isMobile ? "text-sm" : "text-xs",
+                isActiveItem ? "text-primary font-semibold" : "group-hover:translate-x-0.5"
+              )}>
+                {label}
+              </span>
+            )}
 
-            {badge && (
+            {!collapsed && badge && (
               <div className="flex items-center justify-center h-5 w-5 text-xs bg-destructive text-destructive-foreground rounded-full font-bold animate-pulse shadow-lg relative z-10">
                 {badge}
               </div>
             )}
 
             {/* Enhanced active indicator */}
-            {isActiveItem && (
+            {isActiveItem && !collapsed && (
               <div className="absolute right-3 w-2 h-2 bg-primary rounded-full shadow-lg shadow-primary/50 animate-pulse relative z-10" />
             )}
 
@@ -257,16 +270,18 @@ export function SidebarNav() {
             )} />
           </Link>
         </TooltipTrigger>
-        <TooltipContent
-          side="right"
-          className="bg-popover/95 backdrop-blur-md border border-primary/20 shadow-xl rounded-lg p-3 max-w-xs"
-          sideOffset={12}
-        >
-          <div>
-            <p className="font-semibold text-sm text-foreground">{label}</p>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
-          </div>
-        </TooltipContent>
+        {collapsed && (
+          <TooltipContent
+            side="right"
+            className="bg-popover/95 backdrop-blur-md border border-primary/20 shadow-xl rounded-lg p-3 max-w-xs"
+            sideOffset={12}
+          >
+            <div>
+              <p className="font-semibold text-sm text-foreground">{label}</p>
+              {description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>}
+            </div>
+          </TooltipContent>
+        )}
       </Tooltip>
     </TooltipProvider>
   );
@@ -275,15 +290,21 @@ export function SidebarNav() {
   const SubmenuButton = ({ icon: Icon, label, isOpen, isActiveSection, onClick, children }: any) => (
     <li>
       <button
-        onClick={onClick}
-        className={cn(getSubmenuButtonClasses(isActiveSection, isOpen), "justify-between")}
+        onClick={collapsed ? undefined : onClick}
+        className={cn(
+          getSubmenuButtonClasses(isActiveSection, isOpen), 
+          collapsed ? "justify-center px-3" : "justify-between"
+        )}
       >
         {/* Background effect for active/open states */}
         {(isActiveSection || isOpen) && (
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 animate-pulse" />
         )}
 
-        <div className="flex items-center gap-3 flex-1 relative z-10">
+        <div className={cn(
+          "flex items-center flex-1 relative z-10",
+          collapsed ? "justify-center" : "gap-3"
+        )}>
           <Icon className={cn(
             "flex-shrink-0 transition-all duration-300",
             isMobile ? "h-5 w-5" : "h-4 w-4",
@@ -293,38 +314,42 @@ export function SidebarNav() {
                 ? "text-foreground scale-105"
                 : "text-foreground/70 group-hover:text-foreground group-hover:scale-110"
           )} />
-          <span className={cn(
-            "truncate transition-all duration-300",
-            isMobile ? "text-sm" : "text-xs",
-            isActiveSection
-              ? "text-primary font-semibold"
-              : isOpen
-                ? "text-foreground font-medium"
-                : "group-hover:translate-x-0.5"
-          )}>
-            {label}
-          </span>
+          {!collapsed && (
+            <span className={cn(
+              "truncate transition-all duration-300",
+              isMobile ? "text-sm" : "text-xs",
+              isActiveSection
+                ? "text-primary font-semibold"
+                : isOpen
+                  ? "text-foreground font-medium"
+                  : "group-hover:translate-x-0.5"
+            )}>
+              {label}
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 relative z-10">
-          {/* Enhanced active indicator */}
-          {isActiveSection && (
-            <div className="w-2 h-2 bg-primary rounded-full shadow-lg shadow-primary/50 animate-pulse" />
-          )}
-          <div className={cn(
-            "transition-all duration-300",
-            isOpen ? 'rotate-90 scale-110' : 'group-hover:scale-110'
-          )}>
-            <ChevronRight className={cn(
-              isMobile ? "h-4 w-4" : "h-3 w-3",
-              isActiveSection
-                ? "text-primary"
-                : isOpen
-                  ? "text-foreground"
-                  : "text-foreground/70 group-hover:text-foreground"
-            )} />
+        {!collapsed && (
+          <div className="flex items-center gap-2 relative z-10">
+            {/* Enhanced active indicator */}
+            {isActiveSection && (
+              <div className="w-2 h-2 bg-primary rounded-full shadow-lg shadow-primary/50 animate-pulse" />
+            )}
+            <div className={cn(
+              "transition-all duration-300",
+              isOpen ? 'rotate-90 scale-110' : 'group-hover:scale-110'
+            )}>
+              <ChevronRight className={cn(
+                isMobile ? "h-4 w-4" : "h-3 w-3",
+                isActiveSection
+                  ? "text-primary"
+                  : isOpen
+                    ? "text-foreground"
+                    : "text-foreground/70 group-hover:text-foreground"
+              )} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Hover effect line */}
         <div className={cn(
@@ -333,20 +358,22 @@ export function SidebarNav() {
         )} />
       </button>
 
-      {/* Enhanced submenu with improved animations */}
-      <div className={cn(
-        "overflow-hidden transition-all duration-500 ease-out",
-        isOpen ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
-      )}>
-        <ul className={cn(
-          "space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-primary/10 pl-4 relative",
-          isMobile ? "ml-4" : "ml-6"
+      {/* Enhanced submenu with improved animations - hidden when collapsed */}
+      {!collapsed && (
+        <div className={cn(
+          "overflow-hidden transition-all duration-500 ease-out",
+          isOpen ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
         )}>
-          {/* Animated border effect with glow */}
-          <div className="absolute left-0 top-0 w-0.5 bg-gradient-to-b from-primary/60 via-primary/40 to-transparent h-full rounded-full shadow-sm shadow-primary/20" />
-          {children}
-        </ul>
-      </div>
+          <ul className={cn(
+            "space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-primary/10 pl-4 relative",
+            isMobile ? "ml-4" : "ml-6"
+          )}>
+            {/* Animated border effect with glow */}
+            <div className="absolute left-0 top-0 w-0.5 bg-gradient-to-b from-primary/60 via-primary/40 to-transparent h-full rounded-full shadow-sm shadow-primary/20" />
+            {children}
+          </ul>
+        </div>
+      )}
     </li>
   );
 
@@ -358,22 +385,45 @@ export function SidebarNav() {
       {/* User Profile Section */}
       <UserProfileSection />
 
+      {/* Desktop Sidebar Toggle Button */}
+      {!isMobile && onToggleCollapse && (
+        <div className={cn(
+          "flex p-2 border-b border-border/30",
+          collapsed ? "justify-center" : "justify-end"
+        )}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-200 rounded-lg"
+            onClick={onToggleCollapse}
+          >
+            {collapsed ? (
+              <PanelLeft className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      )}
+
       <div className={cn(
         "py-2",
         isMobile ? "px-2" : "px-4"
       )}>
-        <div className={cn(
-          "flex items-center gap-2 px-2 py-3",
-          isMobile ? "py-2" : "py-3"
-        )}>
-          <p className={cn(
-            "font-semibold text-muted-foreground/80 uppercase tracking-wide flex-1",
-            isMobile ? "text-xs" : "text-xs"
+        {!collapsed && (
+          <div className={cn(
+            "flex items-center gap-2 px-2 py-3",
+            isMobile ? "py-2" : "py-3"
           )}>
-            Main Navigation
-          </p>
-          <div className="w-8 h-0.5 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent rounded-full" />
-        </div>
+            <p className={cn(
+              "font-semibold text-muted-foreground/80 uppercase tracking-wide flex-1",
+              isMobile ? "text-xs" : "text-xs"
+            )}>
+              Main Navigation
+            </p>
+            <div className="w-8 h-0.5 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent rounded-full" />
+          </div>
+        )}
 
         <ul className={cn(
           "space-y-1.5",
