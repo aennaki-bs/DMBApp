@@ -69,7 +69,6 @@ namespace DocManagementBackend.Models
         [JsonIgnore]
         public ApprovatorsGroup? ApprovatorsGroup { get; set; }
 
-        [JsonIgnore]
-        public ICollection<StepAction> StepActions { get; set; } = new List<StepAction>();
+        // StepActions removed - Actions functionality has been removed from the system
     }
 }

@@ -6,13 +6,7 @@ namespace DocManagementBackend.Models
         public int CircuitId { get; set; }
     }
 
-    public class PerformActionDto
-    {
-        public int DocumentId { get; set; }
-        public int ActionId { get; set; }
-        public string Comments { get; set; } = string.Empty;
-        public bool IsApproved { get; set; } = true;
-    }
+    // PerformActionDto removed - Actions functionality has been removed from the system
 
     public class ReturnToPreviousDto
     {
@@ -25,7 +19,7 @@ namespace DocManagementBackend.Models
         public int Id { get; set; }
         public string EventType { get; set; } = string.Empty; // "Creation", "Update", "Workflow"
         public string StepTitle { get; set; } = string.Empty;
-        public string ActionTitle { get; set; } = string.Empty;
+        // ActionTitle removed - Actions functionality has been removed from the system
         public string StatusTitle { get; set; } = string.Empty;
         public string ProcessedBy { get; set; } = string.Empty;
         public DateTime ProcessedAt { get; set; }
@@ -52,7 +46,7 @@ namespace DocManagementBackend.Models
         public List<DocumentStatusItemDto> Statuses { get; set; } = new();
         public List<DocumentStepHistoryItemDto> StepHistory { get; set; } = new();
         public List<StatusDto> AvailableStatusTransitions { get; set; } = new();
-        public List<ActionDto> AvailableActions { get; set; } = new();
+        // AvailableActions removed - Actions functionality has been removed from the system
         public bool CanAdvanceToNextStep { get; set; }
         public bool CanReturnToPreviousStep { get; set; }
     }

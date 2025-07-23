@@ -41,9 +41,6 @@ namespace DocManagementBackend.Data
         // Workflow entities
         public DbSet<Status> Status { get; set; }
         public DbSet<Step> Steps { get; set; }
-        public DbSet<Models.Action> Actions { get; set; }
-        public DbSet<StepAction> StepActions { get; set; }
-        public DbSet<ActionStatusEffect> ActionStatusEffects { get; set; }
         public DbSet<DocumentStatus> DocumentStatus { get; set; }
 
         // Approval entities
@@ -204,34 +201,7 @@ namespace DocManagementBackend.Data
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // StepAction relationships
-            modelBuilder.Entity<StepAction>()
-                .HasOne(sa => sa.Step)
-                .WithMany(s => s.StepActions)
-                .HasForeignKey(sa => sa.StepId);
-
-            modelBuilder.Entity<StepAction>()
-                .HasOne(sa => sa.Action)
-                .WithMany(a => a.StepActions)
-                .HasForeignKey(sa => sa.ActionId);
-
-            // ActionStatusEffect relationships
-            modelBuilder.Entity<ActionStatusEffect>()
-                .HasOne(ase => ase.Action)
-                .WithMany()
-                .HasForeignKey(ase => ase.ActionId);
-
-            modelBuilder.Entity<ActionStatusEffect>()
-                .HasOne(ase => ase.Status)
-                .WithMany()
-                .HasForeignKey(ase => ase.StatusId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<ActionStatusEffect>()
-                .HasOne(ase => ase.Step)
-                .WithMany()
-                .HasForeignKey(ase => ase.StepId)
-                .OnDelete(DeleteBehavior.NoAction);
+            // StepAction and ActionStatusEffect relationships removed - Actions functionality has been removed from the system
 
             // DocumentStatus relationships
             modelBuilder.Entity<DocumentStatus>()
