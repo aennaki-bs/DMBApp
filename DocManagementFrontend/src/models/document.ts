@@ -56,6 +56,9 @@ export interface Document {
   // ERP Archive status
   erpDocumentCode?: string;
   isArchived?: boolean;
+  
+  // Approval status
+  isWaitingForApproval?: boolean;
 }
 
 export interface DocumentHistoryEvent {

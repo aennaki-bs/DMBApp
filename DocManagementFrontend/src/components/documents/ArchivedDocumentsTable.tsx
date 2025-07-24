@@ -153,8 +153,8 @@ export default function ArchivedDocumentsTable({
               </TableHead>
               <TableHead className="w-[150px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Created By",
-                  "createdBy",
+                  "Responsibility Center",
+                  "responsibilityCentre.code",
                   <User className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
@@ -220,7 +220,7 @@ export default function ArchivedDocumentsTable({
                 </TableCell>
 
                 <TableCell className="w-[150px] text-muted-foreground text-sm py-3">
-                  {document.createdBy?.username || 'N/A'}
+                  {document.responsibilityCentre?.code  || 'N/A'}
                 </TableCell>
 
                 <TableCell className="w-[140px] py-3">
@@ -230,7 +230,7 @@ export default function ArchivedDocumentsTable({
                     </Badge>
                   ) : showErpStatus ? (
                     <Badge variant="destructive" className="text-xs">
-                      Pending
+                                              Waiting
                     </Badge>
                   ) : (
                     <span className="text-muted-foreground text-sm">N/A</span>

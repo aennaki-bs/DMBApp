@@ -312,7 +312,7 @@ export default function PendingApprovalsPage() {
             value="pending"
             className="data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-800/50"
           >
-            Pending Approvals
+            Waiting Approvals
             {pendingApprovals.length > 0 && (
               <Badge variant="destructive" className="ml-2 bg-red-600">
                 {pendingApprovals.length}
@@ -361,7 +361,7 @@ export default function PendingApprovalsPage() {
                   Failed to load approvals
                 </h3>
                 <p className="text-blue-600 dark:text-gray-400">
-                  There was an error retrieving your pending approvals.
+                  There was an error retrieving your waiting approvals.
                 </p>
                 <Button
                   variant="destructive"
@@ -386,7 +386,7 @@ export default function PendingApprovalsPage() {
                 ) : (
                   <>
                     <h3 className="text-xl font-medium text-blue-800 dark:text-blue-300">
-                      No pending approvals
+                      No waiting approvals
                     </h3>
                     <p className="text-blue-600 dark:text-gray-400">
                       You don't have any documents waiting for your approval.
@@ -556,7 +556,7 @@ export default function PendingApprovalsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Pending
+                      Waiting
                       {requestedPendingApprovals.length > 0 && (
                         <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 text-xs">
                           {requestedPendingApprovals.length}
@@ -570,7 +570,7 @@ export default function PendingApprovalsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <CircleCheck className="h-4 w-4" />
-                      Completed
+                      Accepted
                       {requestedCompletedApprovals.length > 0 && (
                         <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
                           {requestedCompletedApprovals.length}
@@ -599,10 +599,10 @@ export default function PendingApprovalsPage() {
                     <div className="text-center py-8">
                       <Send className="h-12 w-12 mx-auto text-amber-500 dark:text-amber-400/50 mb-3" />
                       <h3 className="text-lg font-medium text-amber-700 dark:text-amber-300">
-                        No pending requests
+                        No waiting requests
                       </h3>
                       <p className="text-blue-600 dark:text-gray-400 text-sm">
-                        You haven't requested any approvals that are currently pending.
+                        You haven't requested any approvals that are currently waiting.
                       </p>
                     </div>
                   ) : (
@@ -638,7 +638,7 @@ export default function PendingApprovalsPage() {
                               </div>
                               <div className="text-right">
                                 <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                                  {approval.status === "InProgress" ? "In Progress" : "Pending"}
+                                  {approval.status === "InProgress" ? "In Progress" : "Waiting"}
                                 </Badge>
                                 <div className="text-xs text-amber-600 dark:text-amber-200/60 mt-1">
                                   {formatDate(approval.requestDate || "")}
@@ -664,10 +664,10 @@ export default function PendingApprovalsPage() {
                     <div className="text-center py-8">
                       <CircleCheck className="h-12 w-12 mx-auto text-green-500 dark:text-green-400/50 mb-3" />
                       <h3 className="text-lg font-medium text-green-700 dark:text-green-300">
-                        No completed requests
+                        No accepted requests
                       </h3>
                       <p className="text-blue-600 dark:text-gray-400 text-sm">
-                        None of your approval requests have been completed yet.
+                        None of your approval requests have been accepted yet.
                       </p>
                     </div>
                   ) : (
@@ -703,7 +703,7 @@ export default function PendingApprovalsPage() {
                               </div>
                               <div className="text-right">
                                 <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                  Completed
+                                  Accepted
                                 </Badge>
                                 <div className="text-xs text-green-600 dark:text-green-200/60 mt-1">
                                   {formatDate(approval.requestDate || "")}
@@ -1072,7 +1072,7 @@ export default function PendingApprovalsPage() {
                                   </div>
                                   <div className="text-right">
                                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                      Approved
+                                      Accepted
                                     </Badge>
                                     <div className="text-xs text-green-600 dark:text-green-200/60 mt-1">
                                       {formatDate(

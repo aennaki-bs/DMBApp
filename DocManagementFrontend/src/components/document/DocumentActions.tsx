@@ -37,8 +37,17 @@ const DocumentActions = ({
   // Check if document editing should be disabled due to pending approval
   const { isEditingDisabled, disabledReason } = useDocumentEditingStatus(document.id);
 
+  // Check if document is waiting for approval (from the new isWaitingForApproval field)
+  const isWaitingForApproval = document.isWaitingForApproval || false;
+  
   // Check if document is fully archived (read-only)
   const isFullyArchived = document.erpDocumentCode;
+  
+  // Combine both conditions for disabling edit/delete actions
+  const shouldDisableActions = isEditingDisabled || isWaitingForApproval;
+  const actionDisabledReason = isWaitingForApproval 
+    ? "Document is waiting for approval and cannot be modified" 
+    : disabledReason;
 
   // Refresh the page after circuit assignment
   const handleCircuitAssigned = () => {
@@ -88,7 +97,7 @@ const DocumentActions = ({
 
         {canManageDocuments && !isFullyArchived && (
           <>
-            {isEditingDisabled ? (
+            {shouldDisableActions ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -101,7 +110,7 @@ const DocumentActions = ({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-gray-900 border-blue-500/30 text-blue-300">
-                    <p>{disabledReason}</p>
+                    <p>{actionDisabledReason}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -117,7 +126,7 @@ const DocumentActions = ({
               </Button>
             )}
 
-            {isEditingDisabled ? (
+            {shouldDisableActions ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -130,7 +139,7 @@ const DocumentActions = ({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-gray-900 border-red-500/30 text-red-300">
-                    <p>{disabledReason}</p>
+                    <p>{actionDisabledReason}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

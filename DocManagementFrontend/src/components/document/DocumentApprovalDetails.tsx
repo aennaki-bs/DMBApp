@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   AlertCircle, Clock8, User, UserCheck, Users, Loader2, 
   Clock, Shield, CheckCircle2, XCircle, Calendar, Check, X, ArrowRight,
@@ -36,6 +36,8 @@ const DocumentApprovalDetails = ({
     queryKey: ['stepConfig', pendingApproval?.stepId],
     queryFn: () => approvalService.getStepApprovalConfig(pendingApproval!.stepId),
     enabled: !!pendingApproval?.stepId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Get approval group details if this is a group approval
@@ -400,7 +402,7 @@ const DocumentApprovalDetails = ({
                                         "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/30"
                                     )}
                             >
-                              {hasApproved ? 'Approved' : hasRejected ? 'Rejected' : 'Pending'}
+                              {hasApproved ? 'Accepted' : hasRejected ? 'Rejected' : 'Waiting'}
                             </Badge>
                             {userStatus && (
                                     <span className="text-xs text-muted-foreground">

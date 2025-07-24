@@ -38,7 +38,6 @@ export function Layout() {
   const { theme } = useSettings();
   const { theme: themeConfig } = useTheme();
   const [backgroundUrl, setBackgroundUrl] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
   // Get the selected background from localStorage
   useEffect(() => {
@@ -140,18 +139,15 @@ export function Layout() {
 
         {/* Main layout structure - elevated above overlay */}
         <div className="relative flex w-full min-h-full z-10">
-          {/* Sidebar - clean transparent styling with responsive width and collapse functionality */}
+          {/* Sidebar - clean transparent styling with responsive width */}
           <aside
-            className={`h-full ${isMobile ? "hidden" : sidebarCollapsed ? "w-16" : "w-72 sm:w-80 lg:w-80 xl:w-80"
-              } flex-shrink-0 ${isStandardTheme
+            className={`h-full ${isMobile ? "hidden" : "w-56 sm:w-60 lg:w-64 xl:w-64 flex-shrink-0"
+              } ${isStandardTheme
                 ? "glass-sidebar"
                 : "border-r border-border bg-card/95"
               } transition-all duration-300 ease-in-out shadow-lg z-20 overflow-hidden`}
           >
-            <SidebarNav 
-              collapsed={sidebarCollapsed} 
-              onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} 
-            />
+            <SidebarNav />
           </aside>
 
           {/* Main content area */}
