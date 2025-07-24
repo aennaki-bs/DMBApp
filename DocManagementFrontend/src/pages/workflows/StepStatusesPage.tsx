@@ -8,7 +8,7 @@ import { useStepStatuses } from '@/hooks/useStepStatuses';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Plus, AlertCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 import { StepStatusesHeader } from './step-statuses/StepStatusesHeader';
 import { StepStatusesTableContent } from './step-statuses/StepStatusesTableContent';
@@ -154,21 +154,12 @@ export default function StepStatusesPage() {
           
           {!isSimpleUser && (
             circuit.isActive ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      className="bg-blue-500/50 text-blue-200 cursor-not-allowed"
-                      disabled>
-                      <Plus className="mr-2 h-4 w-4" /> Add Status
-                      <AlertCircle className="ml-2 h-3 w-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Cannot add statuses to active circuit</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Button 
+                className="bg-blue-500/50 text-blue-200 cursor-not-allowed"
+                disabled>
+                <Plus className="mr-2 h-4 w-4" /> Add Status
+                <AlertCircle className="ml-2 h-3 w-3" />
+              </Button>
             ) : (
               <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                       onClick={handleAddStatus}>

@@ -4,7 +4,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 interface Step {
   id: number;
@@ -68,18 +68,9 @@ export function StepsTable({
                   <div className="font-medium">{step.title}</div>
                 </TableCell>
                 <TableCell>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="max-w-[200px] truncate">
-                          {step.descriptif || 'No description'}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-sm">
-                        {step.descriptif || 'No description'}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <div className="max-w-[200px] truncate">
+                    {step.descriptif || 'No description'}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">{step.currentStatusTitle}</div>

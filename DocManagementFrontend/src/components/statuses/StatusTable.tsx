@@ -11,10 +11,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+
 } from "@/components/ui/tooltip";
 import { DocumentStatus } from "@/models/documentCircuit";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -201,23 +198,14 @@ export function StatusTable({
                   <TableCell className="w-[100px] text-right">
                     <div className="flex items-center justify-end gap-1">
                       {isCircuitActive ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 cursor-not-allowed opacity-50"
-                                disabled
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Cannot edit status in active circuit</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 cursor-not-allowed opacity-50"
+                          disabled
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                       ) : (
                         <Button
                           variant="ghost"
@@ -230,25 +218,14 @@ export function StatusTable({
                       )}
 
                       {isCircuitActive ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 cursor-not-allowed opacity-50"
-                                disabled
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                Cannot delete status in active circuit
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 cursor-not-allowed opacity-50"
+                          disabled
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       ) : (
                         <Button
                           variant="ghost"

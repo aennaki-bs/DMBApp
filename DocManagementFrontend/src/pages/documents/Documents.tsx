@@ -49,10 +49,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -787,19 +784,10 @@ const Documents = () => {
                 </Link>
               </Button>
             ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-700" disabled>
-                      <Plus className="mr-2 h-4 w-4" />{" "}
-                      {t("documents.newDocument")}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                    <p>{t("documents.onlyAdminCanCreate")}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Button className="bg-blue-600 hover:bg-blue-700" disabled>
+                <Plus className="mr-2 h-4 w-4" />{" "}
+                {t("documents.newDocument")}
+              </Button>
             )}
           </>
         }
@@ -1093,77 +1081,47 @@ const Documents = () => {
                         <div className="flex justify-end space-x-1">
                           {canManageDocuments ? (
                             <>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                                    onClick={() =>
-                                      openAssignCircuitDialog(document)
-                                    }
-                                  >
-                                    <GitBranch className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>{t("documents.assignCircuit")}</p>
-                                </TooltipContent>
-                              </Tooltip>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
+                                onClick={() =>
+                                  openAssignCircuitDialog(document)
+                                }
+                              >
+                                <GitBranch className="h-4 w-4" />
+                              </Button>
 
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                                    asChild
-                                  >
-                                    <Link to={`/documents/${document.id}/edit`}>
-                                      <Edit className="h-4 w-4" />
-                                    </Link>
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>{t("documents.editDocument")}</p>
-                                </TooltipContent>
-                              </Tooltip>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
+                                asChild
+                              >
+                                <Link to={`/documents/${document.id}/edit`}>
+                                  <Edit className="h-4 w-4" />
+                                </Link>
+                              </Button>
 
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                                    onClick={() =>
-                                      openDeleteDialog(document.id)
-                                    }
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>{t("documents.deleteDocument")}</p>
-                                </TooltipContent>
-                              </Tooltip>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                                onClick={() =>
+                                  openDeleteDialog(document.id)
+                                }
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
                             </>
                           ) : (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="cursor-not-allowed opacity-50"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-[#0a1033]/90 border-blue-900/50">
-                                  <p>{t("documents.onlyAdminCanEdit")}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="cursor-not-allowed opacity-50"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
                           )}
                         </div>
                       </TableCell>
