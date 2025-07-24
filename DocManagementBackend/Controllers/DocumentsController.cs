@@ -70,7 +70,7 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpGet("my-documents")]
-        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetMyDocuments()
+        public async Task<ActionResult<IEnumerable<MyDocumentDto>>> GetMyDocuments()
         {
             var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
             if (!authResult.IsAuthorized)
@@ -82,13 +82,8 @@ namespace DocManagementBackend.Controllers
             // Query builder for active documents (exclude completed circuits and archived documents)
             IQueryable<Document> documentsQuery = _context.Documents
                 .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
-                .Include(d => d.SubType)
-                .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
-                .Include(d => d.Circuit)
-                .Include(d => d.Lignes)
                 .Where(d => !d.IsCircuitCompleted); // Only active documents (not completed circuits)
 
             // Filter based on user's responsibility center
@@ -100,8 +95,25 @@ namespace DocManagementBackend.Controllers
             // If user doesn't have a responsibility center, show all documents (no filter applied)
 
             var documents = await documentsQuery
-                .Select(DocumentMappings.ToDocumentDto)
+                .Select(DocumentMappings.ToMyDocumentDto)
                 .ToListAsync();
+
+            // Get document IDs to check for pending approvals
+            var documentIds = documents.Select(d => d.Id).ToList();
+
+            // Get documents that have pending approvals (Open or InProgress)
+            var documentsWithPendingApprovals = await _context.ApprovalWritings
+                .Where(aw => documentIds.Contains(aw.DocumentId) && 
+                            (aw.Status == ApprovalStatus.Open || aw.Status == ApprovalStatus.InProgress))
+                .Select(aw => aw.DocumentId)
+                .Distinct()
+                .ToListAsync();
+
+            // Update IsWaitingForApproval for documents with pending approvals
+            foreach (var document in documents)
+            {
+                document.IsWaitingForApproval = documentsWithPendingApprovals.Contains(document.Id);
+            }
 
             return Ok(documents);
         }
@@ -177,7 +189,7 @@ namespace DocManagementBackend.Controllers
         }
 
         [HttpGet("archived")]
-        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetArchivedDocuments()
+        public async Task<ActionResult<IEnumerable<MyArchivedDocumentDto>>> GetArchivedDocuments()
         {
             var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
             if (!authResult.IsAuthorized)
@@ -188,14 +200,8 @@ namespace DocManagementBackend.Controllers
 
             // Query builder for archived documents (documents with ERPDocumentCode)
             IQueryable<Document> documentsQuery = _context.Documents
-                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
-                .Include(d => d.SubType)
-                .Include(d => d.CurrentStep)
                 .Include(d => d.ResponsibilityCentre)
-                .Include(d => d.Circuit)
-                .Include(d => d.Lignes)
                 .Where(d => !string.IsNullOrEmpty(d.ERPDocumentCode)); // Only archived documents
 
             // Filter based on user's responsibility center
@@ -208,14 +214,14 @@ namespace DocManagementBackend.Controllers
 
             var archivedDocuments = await documentsQuery
                 .OrderByDescending(d => d.UpdatedAt) // Sort by last update (when archived)
-                .Select(DocumentMappings.ToDocumentDto)
+                .Select(DocumentMappings.ToMyArchivedDocumentDto)
                 .ToListAsync();
 
             return Ok(archivedDocuments);
         }
 
         [HttpGet("completed-not-archived")]
-        public async Task<ActionResult<IEnumerable<DocumentDto>>> GetCompletedNotArchivedDocuments()
+        public async Task<ActionResult<IEnumerable<MyArchivedDocumentDto>>> GetCompletedNotArchivedDocuments()
         {
             var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser", "SimpleUser" });
             if (!authResult.IsAuthorized)
@@ -226,15 +232,8 @@ namespace DocManagementBackend.Controllers
 
             // Query builder for completed but not archived documents (IsCircuitCompleted = true but ERPDocumentCode is null/empty)
             IQueryable<Document> documentsQuery = _context.Documents
-                .Include(d => d.CreatedBy).ThenInclude(u => u.Role)
-                .Include(d => d.UpdatedBy).ThenInclude(u => u.Role)
                 .Include(d => d.DocumentType)
-                .Include(d => d.SubType)
-                .Include(d => d.CurrentStep)
-                .Include(d => d.CurrentStatus)
                 .Include(d => d.ResponsibilityCentre)
-                .Include(d => d.Circuit)
-                .Include(d => d.Lignes)
                 .Where(d => d.IsCircuitCompleted && string.IsNullOrEmpty(d.ERPDocumentCode)); // Completed circuit but not archived
 
             // Filter based on user's responsibility center
@@ -247,7 +246,7 @@ namespace DocManagementBackend.Controllers
 
             var completedNotArchivedDocuments = await documentsQuery
                 .OrderByDescending(d => d.UpdatedAt) // Sort by last update (when circuit was completed)
-                .Select(DocumentMappings.ToDocumentDto)
+                .Select(DocumentMappings.ToMyArchivedDocumentDto)
                 .ToListAsync();
 
             return Ok(completedNotArchivedDocuments);

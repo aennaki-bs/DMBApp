@@ -306,6 +306,53 @@ namespace DocManagementBackend.Mappings
 
     public static class DocumentMappings
     {
+        public static Expression<Func<Document, MyArchivedDocumentDto>> ToMyArchivedDocumentDto = d => new MyArchivedDocumentDto
+        {
+            Id = d.Id,
+            DocumentKey = d.DocumentKey,
+            Title = d.Title,
+            DocDate = d.DocDate,
+            DocumentType = new DocumentTypeDto
+            {
+                TypeNumber = d.DocumentType!.TypeNumber,
+                TypeKey = d.DocumentType!.TypeKey,
+                TypeName = d.DocumentType!.TypeName,
+                TypeAttr = d.DocumentType.TypeAttr,
+                TierType = d.DocumentType.TierType
+            },
+            ResponsibilityCentre = d.ResponsibilityCentre == null ? null : new ResponsibilityCentreSimpleDto
+            {
+                Id = d.ResponsibilityCentre.Id,
+                Code = d.ResponsibilityCentre.Code,
+                Descr = d.ResponsibilityCentre.Descr
+            },
+            IsWaitingForApproval = false, // Archived/completed documents don't need approval
+            ERPDocumentCode = d.ERPDocumentCode
+        };
+
+        public static Expression<Func<Document, MyDocumentDto>> ToMyDocumentDto = d => new MyDocumentDto
+        {
+            Id = d.Id,
+            DocumentKey = d.DocumentKey,
+            Title = d.Title,
+            DocDate = d.DocDate,
+            DocumentType = new DocumentTypeDto
+            {
+                TypeNumber = d.DocumentType!.TypeNumber,
+                TypeKey = d.DocumentType!.TypeKey,
+                TypeName = d.DocumentType!.TypeName,
+                TypeAttr = d.DocumentType.TypeAttr,
+                TierType = d.DocumentType.TierType
+            },
+            ResponsibilityCentre = d.ResponsibilityCentre == null ? null : new ResponsibilityCentreSimpleDto
+            {
+                Id = d.ResponsibilityCentre.Id,
+                Code = d.ResponsibilityCentre.Code,
+                Descr = d.ResponsibilityCentre.Descr
+            },
+            IsWaitingForApproval = false // Will be set in the controller
+        };
+
         public static Expression<Func<Document, DocumentDto>> ToDocumentDto = d => new DocumentDto
         {
             Id = d.Id,
@@ -395,6 +442,14 @@ namespace DocManagementBackend.Mappings
             CustomerVendorAddress = d.CustomerVendorAddress,
             CustomerVendorCity = d.CustomerVendorCity,
             CustomerVendorCountry = d.CustomerVendorCountry,
+            
+            // Workflow properties
+            IsCircuitCompleted = d.IsCircuitCompleted,
+            IsWaitingForApproval = d.CircuitId != null && 
+                                   !d.IsCircuitCompleted && 
+                                   d.CurrentStepId != null && 
+                                   d.CurrentStep != null && 
+                                   d.CurrentStep.RequiresApproval,
             
             // ERP Integration
             ERPDocumentCode = d.ERPDocumentCode
