@@ -163,10 +163,7 @@ namespace DocManagementBackend.Models
         [ForeignKey("StepId")]
         [JsonIgnore]
         public Step? Step { get; set; }
-        public int? ActionId { get; set; }
-        [ForeignKey("ActionId")]
-        [JsonIgnore]
-        public Action? Action { get; set; }
+        // ActionId removed - Actions functionality has been removed from the system
         public int? StatusId { get; set; }
         [ForeignKey("StatusId")]
         [JsonIgnore]

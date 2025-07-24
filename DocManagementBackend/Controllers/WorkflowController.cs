@@ -60,42 +60,7 @@ namespace DocManagementBackend.Controllers
             }
         }
 
-        [HttpPost("perform-action")]
-        public async Task<IActionResult> PerformAction([FromBody] PerformActionDto actionDto)
-        {
-            var authResult = await _authService.AuthorizeUserAsync(User, new[] { "Admin", "FullUser" });
-            if (!authResult.IsAuthorized)
-                return authResult.ErrorResponse!;
-
-            var userId = authResult.UserId;
-
-            try
-            {
-                var success = await _workflowService.ProcessActionAsync(
-                    actionDto.DocumentId, actionDto.ActionId, userId, actionDto.Comments, actionDto.IsApproved);
-
-                if (success)
-                    return Ok("Action performed successfully.");
-                else
-                    return BadRequest("Failed to perform action.");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
-            }
-        }
+        // PerformAction endpoint removed - Actions functionality has been removed from the system
 
         [HttpPost("move-to-status")]
         public async Task<IActionResult> MoveToStatus([FromBody] MoveToStatusDto moveToStatusDto)
@@ -1016,70 +981,71 @@ namespace DocManagementBackend.Controllers
                 int logEventId = -1000; // Start from a lower negative number to avoid conflicts
                 foreach (var log in documentLogs)
                 {
-                    string eventType, stepTitle, actionTitle, statusTitle, updateDetails;
+                    string eventType, stepTitle, statusTitle, updateDetails;
+                    // actionTitle variable removed - Actions functionality has been removed from the system
                     
                     switch (log.ActionType)
                     {
                         case 4: // Create document
                             eventType = "Creation";
                             stepTitle = "Document Created";
-                            actionTitle = "Create Document";
+                            // actionTitle = "Create Document"; - removed, Actions functionality removed
                             statusTitle = "Created";
                             updateDetails = null;
                             break;
                         case 5: // Update document
                             eventType = "Update";
                             stepTitle = "Document Updated";
-                            actionTitle = "Update Document";
+                            // actionTitle = "Update Document"; - removed, Actions functionality removed
                             statusTitle = "Updated";
                             updateDetails = "Document content, metadata, or lines were modified";
                             break;
                         case 6: // Delete document
                             eventType = "Deletion";
                             stepTitle = "Document Deleted";
-                            actionTitle = "Delete Document";
+                            // actionTitle = "Delete Document"; - removed, Actions functionality removed
                             statusTitle = "Deleted";
                             updateDetails = "Document was permanently removed";
                             break;
                         case 10: // Add line
                             eventType = "Update";
                             stepTitle = "Line Added";
-                            actionTitle = "Add Line";
+                            // actionTitle = "Add Line"; - removed, Actions functionality removed
                             statusTitle = "Line Added";
                             updateDetails = "A new line was added to the document";
                             break;
                         case 11: // Update line
                             eventType = "Update";
                             stepTitle = "Line Updated";
-                            actionTitle = "Update Line";
+                            // actionTitle = "Update Line"; - removed, Actions functionality removed
                             statusTitle = "Line Updated";
                             updateDetails = "An existing line was modified";
                             break;
                         case 12: // Delete line
                             eventType = "Update";
                             stepTitle = "Line Deleted";
-                            actionTitle = "Delete Line";
+                            // actionTitle = "Delete Line"; - removed, Actions functionality removed
                             statusTitle = "Line Deleted";
                             updateDetails = "A line was removed from the document";
                             break;
                         case 13: // Add sub-line
                             eventType = "Update";
                             stepTitle = "Sub-line Added";
-                            actionTitle = "Add Sub-line";
+                            // actionTitle = "Add Sub-line"; - removed, Actions functionality removed
                             statusTitle = "Sub-line Added";
                             updateDetails = "A new sub-line was added to the document";
                             break;
                         case 14: // Update sub-line
                             eventType = "Update";
                             stepTitle = "Sub-line Updated";
-                            actionTitle = "Update Sub-line";
+                            // actionTitle = "Update Sub-line"; - removed, Actions functionality removed
                             statusTitle = "Sub-line Updated";
                             updateDetails = "An existing sub-line was modified";
                             break;
                         case 15: // Delete sub-line
                             eventType = "Update";
                             stepTitle = "Sub-line Deleted";
-                            actionTitle = "Delete Sub-line";
+                            // actionTitle = "Delete Sub-line"; - removed, Actions functionality removed
                             statusTitle = "Sub-line Deleted";
                             updateDetails = "A sub-line was removed from the document";
                             break;
@@ -1092,7 +1058,7 @@ namespace DocManagementBackend.Controllers
                         Id = logEventId--,
                         EventType = eventType,
                         StepTitle = stepTitle,
-                        ActionTitle = actionTitle,
+                        // ActionTitle removed - Actions functionality has been removed from the system
                         StatusTitle = statusTitle,
                         ProcessedBy = log.User?.Username ?? "System",
                         ProcessedAt = log.Timestamp,
@@ -1111,7 +1077,7 @@ namespace DocManagementBackend.Controllers
                         Id = -1, // Fallback creation event
                         EventType = "Creation",
                         StepTitle = "Document Created",
-                        ActionTitle = "Create Document",
+                        // ActionTitle removed - Actions functionality has been removed from the system
                         StatusTitle = "Created",
                         ProcessedBy = document.CreatedBy?.Username ?? "System",
                         ProcessedAt = document.CreatedAt,
@@ -1126,7 +1092,7 @@ namespace DocManagementBackend.Controllers
                     .Where(h => h.DocumentId == documentId)
                     .Include(h => h.Step)
                     .Include(h => h.ProcessedBy)
-                    .Include(h => h.Action)
+                    // Include(h => h.Action) removed - Actions functionality has been removed from the system
                     .Include(h => h.Status)
                     .ToListAsync();
 
@@ -1136,7 +1102,7 @@ namespace DocManagementBackend.Controllers
                     Id = h.Id,
                     EventType = "Workflow",
                     StepTitle = h.Step?.Title ?? "N/A",
-                    ActionTitle = h.Action?.Title ?? "N/A",
+                    // ActionTitle removed - Actions functionality has been removed from the system
                     StatusTitle = h.Status?.Title ?? "N/A",
                     ProcessedBy = h.ProcessedBy?.Username ?? "System",
                     ProcessedAt = h.ProcessedAt,
