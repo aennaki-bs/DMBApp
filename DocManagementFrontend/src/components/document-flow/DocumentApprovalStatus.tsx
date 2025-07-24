@@ -115,9 +115,9 @@ export function DocumentApprovalStatus({
       return <Badge className="bg-red-600">Rejected</Badge>;
     }
 
-    if (hasPendingApprovals) {
-      return <Badge className="bg-amber-500">Pending Approval</Badge>;
-    }
+      if (hasPendingApprovals) {
+    return <Badge className="bg-amber-500">Waiting for Approval</Badge>;
+  }
 
     if (latestApprovalStatus?.toLowerCase().includes("approved")) {
       return <Badge className="bg-green-600">Approved</Badge>;
@@ -255,7 +255,7 @@ export function DocumentApprovalStatus({
                     ? "Approval Rejected"
                     : hasPendingApprovals
                     ? "Waiting for Approval"
-                    : "Approval Complete"}
+                    : "Approval Accepted"}
                 </span>
               </div>
               {getStatusBadge()}
@@ -269,7 +269,7 @@ export function DocumentApprovalStatus({
                     <Clock className="h-4 w-4 text-amber-400/70" />
                     <span className="text-amber-200/80">Status:</span> 
                     <span className="text-amber-100">
-                      {latestPendingAssignment.status || "Pending"}
+                      {latestPendingAssignment.status || "Waiting"}
                     </span>
                   </div>
                   
@@ -371,7 +371,7 @@ export function DocumentApprovalStatus({
                                       'border-amber-500/30 text-amber-200 bg-amber-500/10'
                                     }`}
                                   >
-                                    {hasApproved ? 'Approved' : hasRejected ? 'Rejected' : 'Pending'}
+                                    {hasApproved ? 'Accepted' : hasRejected ? 'Rejected' : 'Waiting'}
                                   </Badge>
                                   
                                   {/* Response date */}

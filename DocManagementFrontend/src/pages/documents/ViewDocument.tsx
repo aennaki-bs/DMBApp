@@ -73,7 +73,7 @@ const ViewDocument = () => {
     visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
   };
 
-  // Fetch document details
+  // Fetch document details with optimized caching
   const {
     data: document,
     isLoading: isLoadingDocument,
@@ -82,6 +82,8 @@ const ViewDocument = () => {
     queryKey: ["document", Number(id)],
     queryFn: () => documentService.getDocumentById(Number(id)),
     enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // Fetch workflow status for this document
@@ -94,6 +96,8 @@ const ViewDocument = () => {
     queryFn: () => workflowService.getDocumentWorkflowStatus(Number(id)),
     enabled: !!id && !!document?.circuitId,
     retry: false,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Fetch approval history for this document
@@ -106,6 +110,8 @@ const ViewDocument = () => {
     queryFn: () => approvalService.getApprovalHistory(Number(id)),
     enabled: !!id,
     retry: false,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Fetch pending approvals for this document
@@ -118,9 +124,11 @@ const ViewDocument = () => {
     queryFn: () => approvalService.getDocumentApprovals(Number(id)),
     enabled: !!id,
     retry: false,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  // Fetch lignes for this document
+  // Fetch lignes for this document with lazy loading
   const {
     data: lignes = [],
     isLoading: isLoadingLignes,
@@ -129,6 +137,8 @@ const ViewDocument = () => {
     queryKey: ["documentLignes", Number(id)],
     queryFn: () => documentService.getLignesByDocumentId(Number(id)),
     enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // Handle errors from queries using useEffect
@@ -248,6 +258,15 @@ const ViewDocument = () => {
 
   const effectiveApproval = directPendingApproval || historyPendingApproval;
 
+  // Check if document is waiting for approval (from the new isWaitingForApproval field)
+  const isWaitingForApproval = document?.isWaitingForApproval || false;
+  
+  // Combine both conditions for disabling edit/delete actions
+  const shouldDisableActions = isEditingDisabled || isWaitingForApproval;
+  const actionDisabledReason = isWaitingForApproval 
+    ? "Document is waiting for approval and cannot be modified" 
+    : disabledReason;
+
   // Page actions for the PageLayout
   const pageActions = [
     {
@@ -262,8 +281,8 @@ const ViewDocument = () => {
         variant: "outline" as const,
         icon: Edit,
         onClick: () => navigate(`/documents/${document.id}/edit`),
-        disabled: isEditingDisabled,
-        tooltip: isEditingDisabled ? disabledReason : undefined,
+        disabled: shouldDisableActions,
+        tooltip: shouldDisableActions ? actionDisabledReason : undefined,
       },
       {
         label: "Execute Steps",
@@ -282,8 +301,8 @@ const ViewDocument = () => {
         variant: "destructive" as const,
         icon: Trash2,
         onClick: () => setDeleteDialogOpen(true),
-        disabled: isEditingDisabled,
-        tooltip: isEditingDisabled ? disabledReason : undefined,
+        disabled: shouldDisableActions,
+        tooltip: shouldDisableActions ? actionDisabledReason : undefined,
       },
     ] : document ? [
       {

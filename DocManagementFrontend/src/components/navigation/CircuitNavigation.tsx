@@ -29,7 +29,7 @@ export function CircuitNavigation() {
       <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pending-approvals')}>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <CircleCheck className="mr-2 h-5 w-5" /> Pending Approvals
+            <CircleCheck className="mr-2 h-5 w-5" /> Waiting Approvals
           </CardTitle>
           <CardDescription>
             Documents waiting for your approval
@@ -39,7 +39,7 @@ export function CircuitNavigation() {
           <p className="text-sm text-muted-foreground">
             Review and approve documents assigned to you or your role
           </p>
-          <Button variant="ghost" className="mt-4 w-full">View Pending Approvals</Button>
+          <Button variant="ghost" className="mt-4 w-full">View Waiting Approvals</Button>
         </CardContent>
       </Card>
     </div>

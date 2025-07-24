@@ -1092,27 +1092,52 @@ const Documents = () => {
                                 <GitBranch className="h-4 w-4" />
                               </Button>
 
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
-                                asChild
-                              >
-                                <Link to={`/documents/${document.id}/edit`}>
-                                  <Edit className="h-4 w-4" />
-                                </Link>
-                              </Button>
+                              {document.isWaitingForApproval ? (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 p-0 text-blue-400 opacity-50 cursor-not-allowed"
+                                    disabled
+                                    title="Document is waiting for approval"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 p-0 text-red-400 opacity-50 cursor-not-allowed"
+                                    disabled
+                                    title="Document is waiting for approval"
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-900/40"
+                                    asChild
+                                  >
+                                    <Link to={`/documents/${document.id}/edit`}>
+                                      <Edit className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
 
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                                onClick={() =>
-                                  openDeleteDialog(document.id)
-                                }
-                              >
-                                <Trash className="h-4 w-4" />
-                              </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                                    onClick={() =>
+                                      openDeleteDialog(document.id)
+                                    }
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
                             </>
                           ) : (
                             <Button

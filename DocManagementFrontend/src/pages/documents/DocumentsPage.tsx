@@ -6,10 +6,10 @@ import { useBulkSelection } from "@/hooks/useBulkSelection";
 import DocumentsTable from "@/components/documents/DocumentsTable";
 import DocumentsEmptyState from "@/components/documents/DocumentsEmptyState";
 import DeleteConfirmDialog from "@/components/documents/DeleteConfirmDialog";
-import AssignCircuitDialog from "@/components/circuits/AssignCircuitDialog";
+
 import CreateDocumentWizard from "@/components/create-document/CreateDocumentWizard";
 import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
-import { FileText, Plus, GitBranch, Trash2 } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -69,8 +69,7 @@ const DocumentsPage = () => {
   // State management
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
-  const [assignCircuitDialogOpen, setAssignCircuitDialogOpen] = useState(false);
-  const [documentToAssign, setDocumentToAssign] = useState<Document | null>(null);
+
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -196,17 +195,9 @@ const DocumentsPage = () => {
     }
   };
 
-  const openAssignCircuitDialog = (document: Document) => {
-    setDocumentToAssign(document);
-    setAssignCircuitDialogOpen(true);
-  };
 
-  const handleAssignCircuitSuccess = () => {
-    setAssignCircuitDialogOpen(false);
-    setDocumentToAssign(null);
-    fetchDocuments();
-    toast.success(t("documents.circuitAssignedSuccess"));
-  };
+
+
 
   const handleDocumentCreated = () => {
     setIsCreateDocumentOpen(false);
@@ -223,18 +214,7 @@ const DocumentsPage = () => {
       onClick: openDeleteDialog,
       variant: "destructive",
     },
-    ...(bulkSelection.selectedCount === 1 ? [{
-      id: "assign-circuit",
-      label: "Assign Circuit",
-      icon: <GitBranch className="h-4 w-4" />,
-      onClick: () => {
-        const selectedObjects = bulkSelection.getSelectedObjects();
-        if (selectedObjects.length === 1) {
-          openAssignCircuitDialog(selectedObjects[0]);
-        }
-      },
-      variant: "outline" as const,
-    }] : [])
+
   ];
 
   const pageActions = [
@@ -279,7 +259,6 @@ const DocumentsPage = () => {
             handleSelectDocument={handleSelectDocument}
             handleSelectAll={handleSelectAll}
             openDeleteDialog={openDeleteSingleDialog}
-            openAssignCircuitDialog={openAssignCircuitDialog}
             sortConfig={sortConfig}
             requestSort={requestSort}
             page={currentPage}
@@ -321,17 +300,7 @@ const DocumentsPage = () => {
         count={documentToDelete ? 1 : bulkSelection.selectedCount}
       />
 
-      {/* Assign Circuit Dialog */}
-      {documentToAssign && (
-        <AssignCircuitDialog
-          open={assignCircuitDialogOpen}
-          onOpenChange={setAssignCircuitDialogOpen}
-          documentId={documentToAssign.id}
-          documentKey={documentToAssign.documentKey}
-          documentTypeId={documentToAssign.typeId}
-          onSuccess={handleAssignCircuitSuccess}
-        />
-      )}
+
 
       {/* Create Document Wizard */}
       <CreateDocumentWizard

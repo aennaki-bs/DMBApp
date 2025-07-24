@@ -27,7 +27,6 @@ interface DocumentsTableProps {
   handleSelectDocument: (id: number) => void;
   handleSelectAll: () => void;
   openDeleteDialog: (id: number) => void;
-  openAssignCircuitDialog: (document: Document) => void;
   page: number;
   pageSize: number;
   sortConfig: { key: string; direction: "ascending" | "descending" } | null;
@@ -41,7 +40,6 @@ export default function DocumentsTable({
   handleSelectDocument,
   handleSelectAll,
   openDeleteDialog,
-  openAssignCircuitDialog,
   page,
   pageSize,
   sortConfig,
@@ -156,7 +154,6 @@ export default function DocumentsTable({
                 canManageDocuments={canManageDocuments}
                 onSelect={() => handleSelectDocument(document.id)}
                 onDelete={() => openDeleteDialog(document.id)}
-                onAssignCircuit={() => openAssignCircuitDialog(document)}
               />
             ))}
           </TableBody>

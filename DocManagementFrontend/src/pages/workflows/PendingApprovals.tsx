@@ -184,7 +184,7 @@ export default function PendingApprovalsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold mb-1 md:mb-2 text-white flex items-center">
-              <Clock className="mr-2 h-6 w-6 text-amber-500" /> Pending
+              <Clock className="mr-2 h-6 w-6 text-amber-500" /> Waiting
               Approvals
             </h1>
             <p className="text-sm md:text-base text-gray-400">
@@ -208,7 +208,7 @@ export default function PendingApprovalsPage() {
       <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         <CardHeader className="pb-0">
           <CardTitle className="text-xl text-white">
-            Documents Pending Approval
+            Documents Waiting for Approval
           </CardTitle>
           <CardDescription>
             {filteredApprovals.length} document
@@ -228,7 +228,7 @@ export default function PendingApprovalsPage() {
                 Failed to load approvals
               </h3>
               <p className="text-gray-400 mt-2">
-                There was an error loading your pending approvals.
+                There was an error loading your waiting approvals.
               </p>
               <Button
                 onClick={() =>
@@ -245,7 +245,7 @@ export default function PendingApprovalsPage() {
             <div className="flex flex-col items-center justify-center p-8 text-center">
               <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
               <h3 className="text-xl font-semibold text-white">
-                No pending approvals
+                No waiting approvals
               </h3>
               <p className="text-gray-400 mt-2">
                 You don't have any documents waiting for your approval.

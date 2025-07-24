@@ -83,7 +83,7 @@ export function ApprovalHistoryComponent({
       return <Badge className="bg-red-600">Rejected</Badge>;
     }
             if (status.toLowerCase() === 'open' || status.toLowerCase() === 'inprogress' || status.toLowerCase().includes("pending")) {
-      return <Badge className="bg-amber-500">Pending</Badge>;
+  return <Badge className="bg-amber-500">Waiting</Badge>;
     }
 
     return <Badge>{status}</Badge>;

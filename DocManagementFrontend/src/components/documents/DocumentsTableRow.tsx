@@ -39,7 +39,6 @@ interface DocumentsTableRowProps {
   canManageDocuments: boolean;
   onSelect: () => void;
   onDelete: () => void;
-  onAssignCircuit: () => void;
 }
 
 // Document Actions Dropdown component
@@ -47,12 +46,10 @@ const DocumentActionsDropdown = ({
   document,
   canManageDocuments,
   onDelete,
-  onAssignCircuit,
 }: {
   document: Document;
   canManageDocuments: boolean;
   onDelete: () => void;
-  onAssignCircuit: () => void;
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -101,36 +98,41 @@ const DocumentActionsDropdown = ({
               </DropdownMenuItem>
             )}
 
-            {/* Show Assign to Circuit if not assigned */}
-            {!isAssignedToCircuit && (
-              <DropdownMenuItem
-                className="hover:bg-primary/10 focus:bg-primary/10 cursor-pointer"
-                onClick={onAssignCircuit}
-              >
-                <GitBranch className="mr-2 h-4 w-4 text-primary" />
-                Assign to Circuit
-              </DropdownMenuItem>
+            {document.isWaitingForApproval ? (
+              <>
+                <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
+                  <Edit className="mr-2 h-4 w-4" />
+                  {t("common.edit")} (Waiting for Approval)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-primary/20" />
+                <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed text-destructive">
+                  <Trash className="mr-2 h-4 w-4" />
+                  {t("common.delete")} (Waiting for Approval)
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem
+                  className="hover:bg-primary/10 focus:bg-primary/10 cursor-pointer"
+                  asChild
+                >
+                  <Link to={`/documents/${document.id}/edit`}>
+                    <Edit className="mr-2 h-4 w-4 text-primary" />
+                    {t("common.edit")}
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-primary/20" />
+
+                <DropdownMenuItem
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                  onClick={onDelete}
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  {t("common.delete")}
+                </DropdownMenuItem>
+              </>
             )}
-
-            <DropdownMenuItem
-              className="hover:bg-primary/10 focus:bg-primary/10 cursor-pointer"
-              asChild
-            >
-              <Link to={`/documents/${document.id}/edit`}>
-                <Edit className="mr-2 h-4 w-4 text-primary" />
-                {t("common.edit")}
-              </Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator className="bg-primary/20" />
-
-            <DropdownMenuItem
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
-              onClick={onDelete}
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              {t("common.delete")}
-            </DropdownMenuItem>
           </>
         )}
 
@@ -152,7 +154,6 @@ export default function DocumentsTableRow({
   canManageDocuments,
   onSelect,
   onDelete,
-  onAssignCircuit,
 }: DocumentsTableRowProps) {
   // Check if document is already assigned to a circuit
   const isAssignedToCircuit = !!document.circuitId;
@@ -218,7 +219,6 @@ export default function DocumentsTableRow({
                   document={document}
                   canManageDocuments={canManageDocuments}
                   onDelete={onDelete}
-                  onAssignCircuit={onAssignCircuit}
                 />
               </div>
             </TooltipTrigger>

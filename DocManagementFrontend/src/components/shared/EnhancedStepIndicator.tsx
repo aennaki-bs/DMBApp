@@ -68,7 +68,7 @@ export const EnhancedStepIndicator: React.FC<EnhancedStepIndicatorProps> = ({
         if (step.hasError) return 'error';
         if (step.completed || step.id < currentStep) return 'completed';
         if (step.id === currentStep) return 'current';
-        return 'pending';
+        return 'waiting';
     };
 
     const getStepColors = (status: string, isHovered: boolean = false) => {
@@ -91,7 +91,7 @@ export const EnhancedStepIndicator: React.FC<EnhancedStepIndicatorProps> = ({
                 text: 'text-blue-300',
                 pulse: 'animate-pulse'
             },
-            pending: {
+            waiting: {
                 circle: 'bg-slate-800/50 border-slate-600 text-slate-400',
                 line: 'bg-slate-600/20',
                 text: 'text-slate-400',
