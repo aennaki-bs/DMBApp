@@ -42,6 +42,29 @@ namespace DocManagementBackend.Models
         public string? CustomerVendorCountry { get; set; }
     }
     
+    public class MyArchivedDocumentDto
+    {
+        public int Id { get; set; }
+        public string DocumentKey { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public DateTime DocDate { get; set; }
+        public DocumentTypeDto? DocumentType { get; set; }
+        public ResponsibilityCentreSimpleDto? ResponsibilityCentre { get; set; }
+        public bool IsWaitingForApproval { get; set; } = false;
+        public string? ERPDocumentCode { get; set; }
+    }
+
+    public class MyDocumentDto
+    {
+        public int Id { get; set; }
+        public string DocumentKey { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public DateTime DocDate { get; set; }
+        public DocumentTypeDto? DocumentType { get; set; }
+        public ResponsibilityCentreSimpleDto? ResponsibilityCentre { get; set; }
+        public bool IsWaitingForApproval { get; set; } = false;
+    }
+
     public class DocumentDto
     {
         public int Id { get; set; }
@@ -72,6 +95,7 @@ namespace DocManagementBackend.Models
         public int? CurrentStatusId { get; set; }
         public string CurrentStatusTitle { get; set; } = string.Empty;
         public bool IsCircuitCompleted { get; set; }
+        public bool IsWaitingForApproval { get; set; } = false;
         public int? ResponsibilityCentreId { get; set; }
         public ResponsibilityCentreSimpleDto? ResponsibilityCentre { get; set; }
         
