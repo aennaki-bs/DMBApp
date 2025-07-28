@@ -60,7 +60,7 @@ export function PageLayout({
                 </>
               )}
             </h1>
-            <p className="text-muted-foreground mt-1">{subtitle}</p>
+            {/* <p className="text-muted-foreground mt-1">{subtitle}</p> */}
           </div>
         </div>
 
@@ -110,7 +110,7 @@ export function PageLayout({
       </div>
 
       {/* Main Content Section */}
-      <div className="flex-1 overflow-auto">{children}</div>
+      <div className="flex-1 overflow-hidden min-h-0">{children}</div>
     </div>
   );
 }

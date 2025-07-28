@@ -9,11 +9,12 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import { cn } from "@/lib/utils";
 
 interface SubLinesTableBodyProps {
     subLines: SousLigne[];
-    selectedSubLines: number[];
-    onSelectSubLine: (subLineId: number) => void;
+    bulkSelection: ReturnType<typeof useBulkSelection<SousLigne>>;
     onEdit: (subLine: SousLigne) => void;
     onDelete: (subLine: SousLigne) => void;
     canManageDocuments: boolean;
@@ -21,8 +22,7 @@ interface SubLinesTableBodyProps {
 
 export function SubLinesTableBody({
     subLines,
-    selectedSubLines,
-    onSelectSubLine,
+    bulkSelection,
     onEdit,
     onDelete,
     canManageDocuments,
@@ -35,53 +35,76 @@ export function SubLinesTableBody({
         });
     };
 
+    const handleRowClick = (subLine: SousLigne, event: React.MouseEvent) => {
+        // Don't trigger row selection if clicking on interactive elements
+        const target = event.target as HTMLElement;
+        if (
+            target.closest('button') ||
+            target.closest('input') ||
+            target.closest('select') ||
+            target.closest('[role="button"]') ||
+            target.closest('[data-no-row-select]') ||
+            target.classList.contains('no-row-select')
+        ) {
+            return;
+        }
+        
+        // Toggle selection on row click
+        bulkSelection.toggleItem(subLine);
+    };
+
     return (
         <TableBody>
             {subLines.map((subLine) => (
                 <TableRow
                     key={subLine.id}
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border-b border-slate-200/50 dark:border-slate-700/50"
+                    className={cn(
+                        "border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer group",
+                        bulkSelection.isSelected(subLine)
+                            ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-2 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
+                            : "hover:shadow-sm"
+                    )}
+                    onClick={(e) => handleRowClick(subLine, e)}
                 >
-                    {/* Checkbox */}
+                    {/* Selection Column */}
                     <TableCell className="w-[48px]">
                         <div className="flex items-center justify-center">
                             <ProfessionalCheckbox
-                                checked={selectedSubLines.includes(subLine.id)}
-                                onCheckedChange={() => onSelectSubLine(subLine.id)}
+                                checked={bulkSelection.isSelected(subLine)}
+                                onCheckedChange={() => bulkSelection.toggleItem(subLine)}
                                 size="md"
-                                variant="table"
-                                className="shadow-lg"
+                                variant="row"
                             />
                         </div>
                     </TableCell>
 
-                    {/* Title */}
+                    {/* Title Column */}
                     <TableCell className="w-[200px]">
-                        <div className="max-w-[180px] truncate">
-                            <span className="font-medium text-foreground">
+                        <div className="max-w-[180px]">
+                            <div className="font-medium text-blue-900 dark:text-blue-100 truncate">
                                 {subLine.title || "Untitled Sub-Line"}
-                            </span>
+                            </div>
                         </div>
                     </TableCell>
 
-                    {/* Attribute */}
+                    {/* Attribute Column */}
                     <TableCell className="flex-1">
                         <div className="max-w-full">
-                            <span className="text-foreground">
+                            <div className="font-medium text-blue-900 dark:text-blue-100">
                                 {subLine.attribute || "No attribute"}
-                            </span>
+                            </div>
                         </div>
                     </TableCell>
 
-                    {/* Created Date */}
+                    {/* Created Date Column */}
                     <TableCell className="w-[150px]">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-blue-600 dark:text-blue-400">
                             {subLine.createdAt ? formatDate(subLine.createdAt) : "N/A"}
                         </span>
                     </TableCell>
 
-                    {/* Actions */}
-                    <TableCell className="w-[100px]">
+                    {/* Actions Column */}
+                    <TableCell className="w-[100px] text-center" data-no-row-select>
                         <div className="flex items-center justify-center">
                             {canManageDocuments ? (
                                 <DropdownMenu>
@@ -101,14 +124,20 @@ export function SubLinesTableBody({
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-[160px]">
                                         <DropdownMenuItem
-                                            onClick={() => onEdit(subLine)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onEdit(subLine);
+                                            }}
                                             className="cursor-pointer"
                                         >
                                             <Edit className="h-4 w-4 mr-2 text-blue-500" />
                                             Edit Sub-Line
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                            onClick={() => onDelete(subLine)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDelete(subLine);
+                                            }}
                                             className="cursor-pointer text-destructive focus:text-destructive"
                                         >
                                             <Trash2 className="h-4 w-4 mr-2" />

@@ -8,6 +8,8 @@ import DeleteLigneDialog from './ligne/dialogs/DeleteLigneDialog';
 import { toast } from 'sonner';
 import documentService from '@/services/documentService';
 import { useQueryClient } from '@tanstack/react-query';
+import { usePagination } from '@/hooks/usePagination';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
 
 interface LignesListProps {
   document: Document;
@@ -26,9 +28,6 @@ const LignesList = ({
 }: LignesListProps) => {
   const queryClient = useQueryClient();
 
-  // Selection state
-  const [selectedLignes, setSelectedLignes] = useState<number[]>([]);
-
   // Sorting state
   const [sortBy, setSortBy] = useState<keyof Ligne | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
@@ -41,20 +40,32 @@ const LignesList = ({
   // Form states
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handlers for ligne selection
-  const handleSelectLigne = (ligneId: number) => {
-    setSelectedLignes(prev =>
-      prev.includes(ligneId)
-        ? prev.filter(id => id !== ligneId)
-        : [...prev, ligneId]
-    );
-  };
+  // Sort lignes
+  const sortedLignes = [...lignes].sort((a, b) => {
+    if (!sortBy || !sortDirection) return 0;
 
-  const handleSelectAll = () => {
-    setSelectedLignes(
-      selectedLignes.length === lignes.length ? [] : lignes.map(ligne => ligne.id)
-    );
-  };
+    const aValue = a[sortBy];
+    const bValue = b[sortBy];
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  // Pagination hook
+  const pagination = usePagination({
+    data: sortedLignes,
+    initialPageSize: 15,
+  });
+
+  // Bulk selection hook
+  const bulkSelection = useBulkSelection<Ligne>({
+    data: sortedLignes,
+    paginatedData: pagination.paginatedData,
+    keyField: 'id',
+    currentPage: pagination.currentPage,
+    pageSize: pagination.pageSize,
+  });
 
   // Sorting handlers
   const handleSort = (column: keyof Ligne) => {
@@ -95,41 +106,55 @@ const LignesList = ({
     }
   };
 
+  // Bulk actions handlers
+  const handleBulkDelete = async () => {
+    const selectedLignes = bulkSelection.getSelectedObjects();
+    if (selectedLignes.length === 0) {
+      toast.error('No lines selected');
+      return;
+    }
+
+    try {
+      // Delete all selected lines
+      await Promise.all(
+        selectedLignes.map(ligne => documentService.deleteLigne(ligne.id))
+      );
+      
+      toast.success(`${selectedLignes.length} lines deleted successfully`);
+      bulkSelection.deselectAll();
+      queryClient.invalidateQueries({ queryKey: ['documentLignes', document.id] });
+    } catch (error) {
+      console.error('Failed to delete lines:', error);
+      toast.error('Failed to delete selected lines');
+    }
+  };
+
   // Clear selection when lignes change
   useEffect(() => {
-    setSelectedLignes([]);
+    bulkSelection.deselectAll();
   }, [lignes]);
-
-  // Sort lignes
-  const sortedLignes = [...lignes].sort((a, b) => {
-    if (!sortBy || !sortDirection) return 0;
-
-    const aValue = a[sortBy];
-    const bValue = b[sortBy];
-
-    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
 
   return (
     <>
-      <LignesTableContent
-        lignes={sortedLignes}
-        isLoading={false}
-        error={null}
-        selectedLignes={selectedLignes}
-        onSelectLigne={handleSelectLigne}
-        onSelectAll={handleSelectAll}
-        sortBy={sortBy}
-        sortDirection={sortDirection}
-        onSort={handleSort}
-        onEdit={handleEditLigne}
-        onDelete={handleDeleteLigne}
-        canManageDocuments={canManageDocuments}
-        onCreateNew={() => setIsCreateDialogOpen(true)}
-        documentId={document.id}
-      />
+      <div className="h-full">
+        <LignesTableContent
+          lignes={pagination.paginatedData}
+          allLignes={sortedLignes}
+          isLoading={false}
+          error={null}
+          bulkSelection={bulkSelection}
+          pagination={pagination}
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+          onEdit={handleEditLigne}
+          onDelete={handleDeleteLigne}
+          onBulkDelete={handleBulkDelete}
+          canManageDocuments={canManageDocuments}
+          onCreateNew={() => setIsCreateDialogOpen(true)}
+          documentId={document.id}
+        />
+      </div>
 
       {/* Create Ligne Dialog */}
       <CreateLigneDialog

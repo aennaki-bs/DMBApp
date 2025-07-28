@@ -11,11 +11,12 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import { cn } from "@/lib/utils";
 
 interface LignesTableBodyProps {
     lignes: Ligne[];
-    selectedLignes: number[];
-    onSelectLigne: (ligneId: number) => void;
+    bulkSelection: ReturnType<typeof useBulkSelection<Ligne>>;
     onEdit: (ligne: Ligne) => void;
     onDelete: (ligne: Ligne) => void;
     canManageDocuments: boolean;
@@ -24,8 +25,7 @@ interface LignesTableBodyProps {
 
 export function LignesTableBody({
     lignes,
-    selectedLignes,
-    onSelectLigne,
+    bulkSelection,
     onEdit,
     onDelete,
     canManageDocuments,
@@ -33,11 +33,28 @@ export function LignesTableBody({
 }: LignesTableBodyProps) {
     const navigate = useNavigate();
 
+    const handleRowClick = (ligne: Ligne, event: React.MouseEvent) => {
+        // Don't trigger row selection if clicking on interactive elements
+        const target = event.target as HTMLElement;
+        if (
+            target.closest('button') ||
+            target.closest('input') ||
+            target.closest('select') ||
+            target.closest('[role="button"]') ||
+            target.closest('[data-no-row-select]') ||
+            target.classList.contains('no-row-select')
+        ) {
+            return;
+        }
+        
+        // Toggle selection on row click
+        bulkSelection.toggleItem(ligne);
+    };
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('fr-FR', {
             style: 'currency',
-            currency: 'MAD',
-            minimumFractionDigits: 2,
+            currency: 'MAD'
         }).format(amount);
     };
 
@@ -45,7 +62,8 @@ export function LignesTableBody({
         return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(num);
     };
 
-    const handleViewSublines = (ligneId: number) => {
+    const handleViewSublines = (ligneId: number, event: React.MouseEvent) => {
+        event.stopPropagation();
         navigate(`/documents/${documentId}/lines/${ligneId}/sublines`);
     };
 
@@ -54,92 +72,98 @@ export function LignesTableBody({
             {lignes.map((ligne) => (
                 <TableRow
                     key={ligne.id}
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border-b border-slate-200/50 dark:border-slate-700/50"
+                    className={cn(
+                        "border-slate-200/50 dark:border-slate-700/50 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer group",
+                        bulkSelection.isSelected(ligne)
+                            ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-2 border-l-blue-500 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
+                            : "hover:shadow-sm"
+                    )}
+                    onClick={(e) => handleRowClick(ligne, e)}
                 >
-                    {/* Checkbox */}
+                    {/* Selection Column */}
                     <TableCell className="w-[48px]">
                         <div className="flex items-center justify-center">
                             <ProfessionalCheckbox
-                                checked={selectedLignes.includes(ligne.id)}
-                                onCheckedChange={() => onSelectLigne(ligne.id)}
+                                checked={bulkSelection.isSelected(ligne)}
+                                onCheckedChange={() => bulkSelection.toggleItem(ligne)}
                                 size="md"
                                 variant="row"
-                                className="shadow-lg"
                             />
                         </div>
                     </TableCell>
 
-                    {/* Line Key */}
+                    {/* Line Key Column */}
                     <TableCell className="w-[120px]">
-                        <span className="font-mono text-sm text-foreground font-medium">
+                        <div className="font-medium text-blue-900 dark:text-blue-100">
                             {ligne.ligneKey || `L${ligne.id}`}
-                        </span>
+                        </div>
                     </TableCell>
 
-                    {/* Title */}
+                    {/* Title Column */}
                     <TableCell className="w-[200px]">
-                        <div className="max-w-[180px] truncate">
-                            <span className="font-medium text-foreground">
+                        <div className="max-w-[180px]">
+                            <div className="font-medium text-blue-900 dark:text-blue-100 truncate">
                                 {ligne.title || "Untitled Line"}
-                            </span>
-                        </div>
-                    </TableCell>
-
-                    {/* Article */}
-                    <TableCell className="w-[200px]">
-                        <div className="max-w-[180px] truncate">
-                            <div className="flex items-center gap-2">
-                                <div className="flex-1">
-                                    <div className="font-medium text-foreground">
-                                        {ligne.item?.description || ligne.lignesElementType?.typeElement || "N/A"}
-                                    </div>
-                                    {ligne.item?.code && (
-                                        <div className="text-xs text-muted-foreground">
-                                            Code: {ligne.item.code}
-                                        </div>
-                                    )}
-                                </div>
                             </div>
+                            {ligne.description && (
+                                <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
+                                    {ligne.description}
+                                </div>
+                            )}
                         </div>
                     </TableCell>
 
-                    {/* Quantity */}
+                    {/* Article Column */}
+                    <TableCell className="w-[200px]">
+                        <div className="max-w-[180px]">
+                            <div className="font-medium text-blue-900 dark:text-blue-100 truncate">
+                                {ligne.article || "N/A"}
+                            </div>
+                            {ligne.code && (
+                                <div className="text-xs text-blue-600 dark:text-blue-400">
+                                    Code: {ligne.code}
+                                </div>
+                            )}
+                        </div>
+                    </TableCell>
+
+                    {/* Quantity Column */}
                     <TableCell className="w-[100px] text-right">
                         <div className="flex flex-col items-end">
-                            <span className="font-medium text-foreground">
+                            <span className="font-medium text-blue-900 dark:text-blue-100">
                                 {formatNumber(ligne.quantity || 0)}
                             </span>
-                            {ligne.unit?.code && (
-                                <span className="text-xs text-muted-foreground">
-                                    {ligne.unit.code}
+                            {ligne.unite && (
+                                <span className="text-xs text-blue-600 dark:text-blue-400">
+                                    {ligne.unite}
                                 </span>
                             )}
                         </div>
                     </TableCell>
 
-                    {/* Price HT */}
+                    {/* Price HT Column */}
                     <TableCell className="w-[120px] text-right">
-                        <span className="font-medium text-foreground">
+                        <span className="font-medium text-blue-900 dark:text-blue-100">
                             {formatCurrency(ligne.priceHT || 0)}
                         </span>
                     </TableCell>
 
-                    {/* Amount HT */}
+                    {/* Amount HT Column */}
                     <TableCell className="w-[120px] text-right">
-                        <span className="font-medium text-foreground">
+                        <span className="font-medium text-blue-900 dark:text-blue-100">
                             {formatCurrency(ligne.amountHT || 0)}
                         </span>
                     </TableCell>
 
-                    {/* Amount TTC */}
+                    {/* Amount TTC Column */}
                     <TableCell className="w-[120px] text-right">
-                        <span className="font-bold text-foreground">
+                        <span className="font-bold text-blue-900 dark:text-blue-100">
                             {formatCurrency(ligne.amountTTC || 0)}
                         </span>
                     </TableCell>
 
-                    {/* Actions */}
-                    <TableCell className="w-[120px] text-center">
+                    {/* Actions Column */}
+                    <TableCell className="w-[120px] text-center" data-no-row-select>
                         <div className="flex items-center justify-center">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -158,23 +182,29 @@ export function LignesTableBody({
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-[160px]">
                                     <DropdownMenuItem
-                                        onClick={() => handleViewSublines(ligne.id)}
+                                        onClick={(e) => handleViewSublines(ligne.id, e)}
                                         className="cursor-pointer"
                                     >
-                                        <Eye className="h-4 w-4 mr-2 text-blue-500" />
-                                        View Sublines
+                                        <FileStack className="h-4 w-4 mr-2 text-blue-500" />
+                                        View Sub-lines
                                     </DropdownMenuItem>
                                     {canManageDocuments && (
                                         <>
                                             <DropdownMenuItem
-                                                onClick={() => onEdit(ligne)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onEdit(ligne);
+                                                }}
                                                 className="cursor-pointer"
                                             >
                                                 <Edit className="h-4 w-4 mr-2 text-blue-500" />
                                                 Edit Line
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
-                                                onClick={() => onDelete(ligne)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onDelete(ligne);
+                                                }}
                                                 className="cursor-pointer text-destructive focus:text-destructive"
                                             >
                                                 <Trash2 className="h-4 w-4 mr-2" />

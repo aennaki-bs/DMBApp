@@ -1,43 +1,61 @@
 import { Table } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { SousLigne } from "@/models/document";
 import { SubLinesTableHeader } from "./SubLinesTableHeader";
 import { SubLinesTableBody } from "./SubLinesTableBody";
+import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
+import { usePagination } from "@/hooks/usePagination";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 
 interface SubLinesTableContentProps {
     subLines: SousLigne[];
+    allSubLines: SousLigne[];
     isLoading: boolean;
     error: string | null;
-    selectedSubLines: number[];
-    onSelectSubLine: (subLineId: number) => void;
-    onSelectAll: () => void;
+    bulkSelection: ReturnType<typeof useBulkSelection<SousLigne>>;
+    pagination: ReturnType<typeof usePagination<SousLigne>>;
     sortBy: keyof SousLigne | null;
     sortDirection: "asc" | "desc" | null;
     onSort: (column: keyof SousLigne) => void;
     onEdit: (subLine: SousLigne) => void;
     onDelete: (subLine: SousLigne) => void;
+    onBulkDelete: () => void;
     canManageDocuments: boolean;
     onCreateNew: () => void;
 }
 
 export function SubLinesTableContent({
     subLines,
+    allSubLines,
     isLoading,
     error,
-    selectedSubLines,
-    onSelectSubLine,
-    onSelectAll,
+    bulkSelection,
+    pagination,
     sortBy,
     sortDirection,
     onSort,
     onEdit,
     onDelete,
+    onBulkDelete,
     canManageDocuments,
     onCreateNew,
 }: SubLinesTableContentProps) {
+    // Define bulk actions
+    const bulkActions: BulkAction[] = [
+        ...(canManageDocuments ? [{
+            id: 'delete',
+            label: 'Delete Sub-Lines',
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const,
+            onClick: onBulkDelete,
+            requiresConfirmation: true,
+            shortcut: 'Del',
+        }] : []),
+    ];
+
     // Loading state
     if (isLoading) {
         return (
@@ -64,7 +82,7 @@ export function SubLinesTableContent({
     }
 
     // Empty state
-    if (subLines.length === 0) {
+    if (allSubLines.length === 0) {
         return (
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -79,37 +97,26 @@ export function SubLinesTableContent({
                     <p className="text-muted-foreground mb-6 max-w-md">
                         This line doesn't have any sub-lines yet. Create your first sub-line to get started.
                     </p>
-                    {/* {canManageDocuments && (
-                        <Button
-                            onClick={onCreateNew}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add First Sub-Line
-                        </Button>
-                    )} */}
                 </div>
             </motion.div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 h-full flex flex-col">
             {/* Main Table structure */}
-            <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg">
+            <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg min-h-0">
                 {/* Gradient overlay for visual depth */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-background/5 pointer-events-none z-0"></div>
 
                 {/* Header and Scrollable Body */}
-                <div className="relative flex flex-col z-10">
+                <div className="relative flex flex-col h-full z-10">
                     {/* Fixed Table Header */}
                     <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
                         <div className="min-w-[1000px]">
                             <Table className="table-fixed w-full table-compact">
                                 <SubLinesTableHeader
-                                    selectedCount={selectedSubLines.length}
-                                    totalCount={subLines.length}
-                                    onSelectAll={onSelectAll}
+                                    bulkSelection={bulkSelection}
                                     sortBy={sortBy}
                                     sortDirection={sortDirection}
                                     onSort={onSort}
@@ -118,15 +125,14 @@ export function SubLinesTableContent({
                         </div>
                     </div>
 
-                    {/* Scrollable Table Body */}
-                    <div className="overflow-hidden" style={{ maxHeight: "calc(100vh - 260px)" }}>
-                        <ScrollArea className="table-scroll-area h-full w-full">
+                    {/* Scrollable Table Body - Fixed Height */}
+                    <div className="flex-1 overflow-hidden min-h-0">
+                        <ScrollArea className="h-full w-full">
                             <div className="min-w-[1000px] pb-4">
                                 <Table className="table-fixed w-full table-compact">
                                     <SubLinesTableBody
                                         subLines={subLines}
-                                        selectedSubLines={selectedSubLines}
-                                        onSelectSubLine={onSelectSubLine}
+                                        bulkSelection={bulkSelection}
                                         onEdit={onEdit}
                                         onDelete={onDelete}
                                         canManageDocuments={canManageDocuments}
@@ -137,6 +143,22 @@ export function SubLinesTableContent({
                     </div>
                 </div>
             </div>
+
+            {/* Pagination with Bulk Actions - Always Visible */}
+            {allSubLines.length > 0 && (
+                <div className="flex-shrink-0">
+                    <PaginationWithBulkActions
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        pageSize={pagination.pageSize}
+                        totalItems={pagination.totalItems}
+                        onPageChange={pagination.handlePageChange}
+                        onPageSizeChange={pagination.handlePageSizeChange}
+                        bulkSelection={bulkSelection}
+                        bulkActions={bulkActions}
+                    />
+                </div>
+            )}
         </div>
     );
 } 

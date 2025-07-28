@@ -2,20 +2,17 @@ import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
 import { Ligne } from "@/models/document";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 
 interface LignesTableHeaderProps {
-    selectedCount: number;
-    totalCount: number;
-    onSelectAll: () => void;
+    bulkSelection: ReturnType<typeof useBulkSelection<Ligne>>;
     sortBy: keyof Ligne | null;
     sortDirection: "asc" | "desc" | null;
     onSort: (field: keyof Ligne) => void;
 }
 
 export function LignesTableHeader({
-    selectedCount,
-    totalCount,
-    onSelectAll,
+    bulkSelection,
     sortBy,
     sortDirection,
     onSort,
@@ -37,13 +34,13 @@ export function LignesTableHeader({
 
     return (
         <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">
-            <TableRow>
+            <TableRow className="border-slate-200/50 dark:border-slate-700/50 hover:bg-transparent">
                 <TableHead className="w-[48px]">
                     <div className="flex items-center justify-center">
                         <ProfessionalCheckbox
-                            checked={selectedCount === totalCount && totalCount > 0}
-                            indeterminate={selectedCount > 0 && selectedCount < totalCount}
-                            onCheckedChange={onSelectAll}
+                            checked={bulkSelection.isCurrentPageFullySelected}
+                            indeterminate={bulkSelection.isPartialSelection}
+                            onCheckedChange={bulkSelection.toggleSelectCurrentPage}
                             size="md"
                             variant="header"
                             className="shadow-lg"

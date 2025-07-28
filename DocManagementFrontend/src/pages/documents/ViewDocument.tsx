@@ -371,14 +371,14 @@ const ViewDocument = () => {
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="space-y-6"
+        className="h-full flex flex-col"
       >
         {isLoadingDocument ? (
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} className="flex-1 flex items-center justify-center">
             <DocumentLoadingState />
           </motion.div>
         ) : document ? (
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} className="flex-1 min-h-0">
             <DocumentTabsView
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -395,7 +395,7 @@ const ViewDocument = () => {
             />
           </motion.div>
         ) : (
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} className="flex-1 flex items-center justify-center">
             <DocumentNotFoundCard />
           </motion.div>
         )}

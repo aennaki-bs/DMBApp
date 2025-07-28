@@ -8,11 +8,27 @@ import { useAuth } from "@/context/AuthContext";
 import documentService from "@/services/documentService";
 import sousLigneService from "@/services/documents/sousLigneService";
 import { SousLigne, Ligne } from "@/models/document";
-import { BulkActionsBar } from "@/components/shared/BulkActionsBar";
+import { usePagination } from "@/hooks/usePagination";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { CreateSousLigneDialog } from "@/components/document/ligne/dialogs/CreateSousLigneDialog";
 import { EditSousLigneDialog } from "@/components/document/ligne/dialogs/EditSousLigneDialog";
-import { SubLinesTable } from "@/components/document/sublines/SubLinesTable";
+import { SubLinesTableContent } from "@/components/document/sublines/SubLinesTableContent";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+} from "@/components/ui/popover";
 import {
     ArrowLeft,
     Plus,
@@ -20,7 +36,10 @@ import {
     FileText,
     Layers,
     AlertCircle,
-    Loader2
+    Loader2,
+    Search,
+    Filter,
+    X
 } from "lucide-react";
 
 const SubLinesPage = () => {
@@ -30,8 +49,8 @@ const SubLinesPage = () => {
     const queryClient = useQueryClient();
 
     // State management
-    const [selectedSubLines, setSelectedSubLines] = useState<number[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [searchField, setSearchField] = useState("all");
     const [sortBy, setSortBy] = useState<keyof SousLigne | null>(null);
     const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -41,6 +60,13 @@ const SubLinesPage = () => {
 
     // Check permissions
     const canManageDocuments = user?.role === "Admin" || user?.role === "FullUser";
+
+    // Search fields configuration
+    const searchFields = [
+        { id: "all", label: "All Fields" },
+        { id: "title", label: "Title" },
+        { id: "attribute", label: "Attribute" },
+    ];
 
     // Animation variants
     const containerVariants = {
@@ -108,23 +134,22 @@ const SubLinesPage = () => {
         return 0;
     });
 
+    // Pagination hook
+    const pagination = usePagination({
+        data: sortedSubLines,
+        initialPageSize: 15,
+    });
+
+    // Bulk selection hook
+    const bulkSelection = useBulkSelection<SousLigne>({
+        data: sortedSubLines,
+        paginatedData: pagination.paginatedData,
+        keyField: 'id',
+        currentPage: pagination.currentPage,
+        pageSize: pagination.pageSize,
+    });
+
     // Handlers
-    const handleSelectSubLine = (subLineId: number) => {
-        setSelectedSubLines(prev =>
-            prev.includes(subLineId)
-                ? prev.filter(id => id !== subLineId)
-                : [...prev, subLineId]
-        );
-    };
-
-    const handleSelectAll = () => {
-        setSelectedSubLines(
-            selectedSubLines.length === sortedSubLines.length
-                ? []
-                : sortedSubLines.map(subLine => subLine.id)
-        );
-    };
-
     const handleSort = (column: keyof SousLigne) => {
         if (sortBy === column) {
             setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -148,9 +173,26 @@ const SubLinesPage = () => {
         setIsDeleteDialogOpen(true);
     };
 
-    const handleBulkDelete = () => {
-        if (selectedSubLines.length > 0) {
-            setIsDeleteDialogOpen(true);
+    const handleBulkDelete = async () => {
+        const selectedSubLines = bulkSelection.getSelectedObjects();
+        if (selectedSubLines.length === 0) {
+            toast.error('No sub-lines selected');
+            return;
+        }
+
+        try {
+            // Delete all selected sub-lines
+            await Promise.all(
+                selectedSubLines.map(subLine => sousLigneService.deleteSousLigne(subLine.id))
+            );
+            
+            toast.success(`${selectedSubLines.length} sub-lines deleted successfully`);
+            bulkSelection.deselectAll();
+            refetchSubLines();
+            queryClient.invalidateQueries({ queryKey: ["documentLignes", Number(documentId)] });
+        } catch (error) {
+            console.error('Failed to delete sub-lines:', error);
+            toast.error('Failed to delete selected sub-lines');
         }
     };
 
@@ -188,46 +230,49 @@ const SubLinesPage = () => {
     };
 
     const handleDeleteConfirm = async () => {
-        try {
-            if (selectedSubLines.length > 0) {
-                // Bulk delete
-                await Promise.all(
-                    selectedSubLines.map(id => sousLigneService.deleteSousLigne(id))
-                );
-                toast.success(`${selectedSubLines.length} sub-line(s) deleted successfully`);
-                setSelectedSubLines([]);
-            } else if (currentSubLine) {
-                // Single delete
-                await sousLigneService.deleteSousLigne(currentSubLine.id);
-                toast.success("Sub-line deleted successfully");
-                setCurrentSubLine(null);
-            }
+        if (!currentSubLine) return;
 
+        try {
+            await sousLigneService.deleteSousLigne(currentSubLine.id);
+            toast.success("Sub-line deleted successfully");
             setIsDeleteDialogOpen(false);
+            setCurrentSubLine(null);
             refetchSubLines();
             queryClient.invalidateQueries({ queryKey: ["documentLignes", Number(documentId)] });
         } catch (error) {
-            console.error("Failed to delete sub-line(s):", error);
-            toast.error("Failed to delete sub-line(s)");
+            console.error("Failed to delete sub-line:", error);
+            toast.error("Failed to delete sub-line");
         }
     };
 
     const handleBack = () => {
-        navigate(`/documents/${documentId}`);
+        navigate(`/documents/${documentId}?tab=lignes`);
     };
+
+    const hasActiveFilters = searchQuery.trim() !== "" || searchField !== "all";
+
+    const clearAllFilters = () => {
+        setSearchQuery("");
+        setSearchField("all");
+    };
+
+    // Clear selection when sublines change
+    useEffect(() => {
+        bulkSelection.deselectAll();
+    }, [subLines]);
 
     // Loading state
     if (isLoadingDocument || isLoadingLigne) {
         return (
             <PageLayout
                 title="Loading..."
-                subtitle="Please wait while we load the data"
+                subtitle="Please wait"
                 icon={Loader2}
                 actions={[]}
             >
                 <div className="flex items-center justify-center py-12">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
                         <p className="text-muted-foreground">Loading sub-lines...</p>
                     </div>
                 </div>
@@ -299,51 +344,134 @@ const SubLinesPage = () => {
             icon={Layers}
             actions={pageActions}
         >
+            {/* Main Content */}
             <motion.div
                 initial="hidden"
                 animate="visible"
                 variants={containerVariants}
-                className="space-y-6"
+                className="h-full flex flex-col space-y-2"
             >
-                {/* Bulk Actions */}
-                {selectedSubLines.length > 0 && canManageDocuments && (
-                    <motion.div variants={itemVariants}>
-                        <BulkActionsBar
-                            selectedCount={selectedSubLines.length}
-                            entityName="sub-lines"
-                            actions={[
-                                {
-                                    id: "delete",
-                                    label: "Delete Selected",
-                                    icon: <Trash2 className="h-4 w-4" />,
-                                    variant: "destructive" as const,
-                                    onClick: handleBulkDelete,
-                                },
-                            ]}
-                        />
-                    </motion.div>
-                )}
+                {/* Search and Filter Bar */}
+                <div className="flex-shrink-0 bg-gradient-to-r from-background/80 via-background/60 to-background/80 backdrop-blur-xl border border-border/50 shadow-lg rounded-xl p-4">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                        {/* Search Bar */}
+                        <div className="flex-1 flex gap-3">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                <Input
+                                    placeholder="Search sub-lines..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 bg-background/60 border-border/70 focus:border-primary/50 focus:ring-primary/20"
+                                />
+                            </div>
+                            
+                            {/* Field Selector */}
+                            <Select value={searchField} onValueChange={setSearchField}>
+                                <SelectTrigger className="w-[180px] bg-background/60 border-border/70">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {searchFields.map((field) => (
+                                        <SelectItem key={field.id} value={field.id}>
+                                            {field.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                {/* Sub-Lines Table */}
-                <motion.div variants={itemVariants}>
-                    <SubLinesTable
-                        subLines={sortedSubLines}
+                        {/* Advanced Filters Toggle */}
+                        <div className="flex items-center gap-2">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="bg-background/60 border-border/70 hover:bg-primary/10"
+                                    >
+                                        <Filter className="h-4 w-4 mr-2" />
+                                        Filters
+                                        {hasActiveFilters && (
+                                            <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground">
+                                                {hasActiveFilters ? '1' : '0'}
+                                            </Badge>
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-4" align="end">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-medium">Advanced Filters</h4>
+                                            {hasActiveFilters && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={clearAllFilters}
+                                                    className="text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <X className="h-4 w-4 mr-1" /> Clear All
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        {/* Filter Badges */}
+                                        {hasActiveFilters && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {searchQuery && (
+                                                    <Badge variant="secondary" className="bg-primary/10 text-primary border border-primary/20">
+                                                        Search: "{searchQuery}"
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => setSearchQuery("")}
+                                                            className="ml-1 h-4 w-4 p-0 hover:bg-primary/20"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </Badge>
+                                                )}
+                                                {searchField !== "all" && (
+                                                    <Badge variant="secondary" className="bg-primary/10 text-primary border border-primary/20">
+                                                        Field: {searchFields.find(f => f.id === searchField)?.label}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => setSearchField("all")}
+                                                            className="ml-1 h-4 w-4 p-0 hover:bg-primary/20"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sub-Lines Table - Expandable */}
+                <div className="flex-1 bg-background/50 backdrop-blur-sm border-border/50 rounded-xl border shadow-lg overflow-hidden min-h-0">
+                    <SubLinesTableContent
+                        subLines={pagination.paginatedData}
+                        allSubLines={sortedSubLines}
                         isLoading={isLoadingSubLines}
                         error={subLinesError instanceof Error ? subLinesError.message : null}
-                        selectedSubLines={selectedSubLines}
-                        onSelectSubLine={handleSelectSubLine}
-                        onSelectAll={handleSelectAll}
+                        bulkSelection={bulkSelection}
+                        pagination={pagination}
                         sortBy={sortBy}
                         sortDirection={sortDirection}
                         onSort={handleSort}
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onBulkDelete={handleBulkDelete}
                         canManageDocuments={canManageDocuments}
                         onCreateNew={handleCreate}
                     />
-                </motion.div>
+                </div>
             </motion.div>
 
             {/* Dialogs */}
@@ -362,23 +490,9 @@ const SubLinesPage = () => {
 
             <DeleteConfirmDialog
                 open={isDeleteDialogOpen}
-                onOpenChange={(open) => {
-                    setIsDeleteDialogOpen(open);
-                    if (!open) {
-                        setCurrentSubLine(null);
-                    }
-                }}
+                onOpenChange={setIsDeleteDialogOpen}
                 onConfirm={handleDeleteConfirm}
-                title={
-                    selectedSubLines.length > 0
-                        ? `Delete ${selectedSubLines.length} Sub-Line(s)`
-                        : "Delete Sub-Line"
-                }
-                description={
-                    selectedSubLines.length > 0
-                        ? `Are you sure you want to delete ${selectedSubLines.length} selected sub-line(s)? This action cannot be undone.`
-                        : `Are you sure you want to delete "${currentSubLine?.title}"? This action cannot be undone.`
-                }
+                count={currentSubLine ? 1 : bulkSelection.selectedCount}
             />
         </PageLayout>
     );

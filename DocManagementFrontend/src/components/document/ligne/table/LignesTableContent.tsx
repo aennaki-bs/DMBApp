@@ -1,25 +1,29 @@
 import { Table } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Ligne } from "@/models/document";
 import { LignesTableHeader } from "./LignesTableHeader";
 import { LignesTableBody } from "./LignesTableBody";
 import { LignesTableFooter } from "./LignesTableFooter";
+import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
+import { usePagination } from "@/hooks/usePagination";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
 
 interface LignesTableContentProps {
     lignes: Ligne[];
+    allLignes: Ligne[];
     isLoading: boolean;
     error: string | null;
-    selectedLignes: number[];
-    onSelectLigne: (ligneId: number) => void;
-    onSelectAll: () => void;
+    bulkSelection: ReturnType<typeof useBulkSelection<Ligne>>;
+    pagination: ReturnType<typeof usePagination<Ligne>>;
     sortBy: keyof Ligne | null;
     sortDirection: "asc" | "desc" | null;
     onSort: (column: keyof Ligne) => void;
     onEdit: (ligne: Ligne) => void;
     onDelete: (ligne: Ligne) => void;
+    onBulkDelete: () => void;
     canManageDocuments: boolean;
     onCreateNew: () => void;
     documentId: number;
@@ -27,20 +31,34 @@ interface LignesTableContentProps {
 
 export function LignesTableContent({
     lignes,
+    allLignes,
     isLoading,
     error,
-    selectedLignes,
-    onSelectLigne,
-    onSelectAll,
+    bulkSelection,
+    pagination,
     sortBy,
     sortDirection,
     onSort,
     onEdit,
     onDelete,
+    onBulkDelete,
     canManageDocuments,
     onCreateNew,
     documentId,
 }: LignesTableContentProps) {
+    // Define bulk actions
+    const bulkActions: BulkAction[] = [
+        ...(canManageDocuments ? [{
+            id: 'delete',
+            label: 'Delete Lines',
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive' as const,
+            onClick: onBulkDelete,
+            requiresConfirmation: true,
+            shortcut: 'Del',
+        }] : []),
+    ];
+
     // Loading state
     if (isLoading) {
         return (
@@ -67,7 +85,7 @@ export function LignesTableContent({
     }
 
     // Empty state
-    if (lignes.length === 0) {
+    if (allLignes.length === 0) {
         return (
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -82,37 +100,26 @@ export function LignesTableContent({
                     <p className="text-muted-foreground mb-6 max-w-md">
                         This document doesn't have any lines yet. Create your first line to get started.
                     </p>
-                    {/* {canManageDocuments && (
-                        <Button
-                            onClick={onCreateNew}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add First Line
-                        </Button>
-                    )} */}
                 </div>
             </motion.div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 h-full flex flex-col">
             {/* Main Table structure */}
-            <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg">
+            <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg min-h-0">
                 {/* Gradient overlay for visual depth */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-background/5 pointer-events-none z-0"></div>
 
                 {/* Header and Scrollable Body */}
-                <div className="relative flex flex-col z-10">
+                <div className="relative flex flex-col h-full z-10">
                     {/* Fixed Table Header */}
                     <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
                         <div className="min-w-[1180px]">
                             <Table className="table-fixed w-full table-compact">
                                 <LignesTableHeader
-                                    selectedCount={selectedLignes.length}
-                                    totalCount={lignes.length}
-                                    onSelectAll={onSelectAll}
+                                    bulkSelection={bulkSelection}
                                     sortBy={sortBy}
                                     sortDirection={sortDirection}
                                     onSort={onSort}
@@ -121,15 +128,14 @@ export function LignesTableContent({
                         </div>
                     </div>
 
-                    {/* Scrollable Table Body */}
-                    <div className="overflow-hidden" style={{ maxHeight: "calc(100vh - 260px)" }}>
-                        <ScrollArea className="table-scroll-area h-full w-full">
+                    {/* Scrollable Table Body - Fixed Height */}
+                    <div className="flex-1 overflow-hidden min-h-0">
+                        <ScrollArea className="h-full w-full">
                             <div className="min-w-[1180px] pb-4">
                                 <Table className="table-fixed w-full table-compact">
                                     <LignesTableBody
                                         lignes={lignes}
-                                        selectedLignes={selectedLignes}
-                                        onSelectLigne={onSelectLigne}
+                                        bulkSelection={bulkSelection}
                                         onEdit={onEdit}
                                         onDelete={onDelete}
                                         canManageDocuments={canManageDocuments}
@@ -142,8 +148,26 @@ export function LignesTableContent({
                 </div>
             </div>
 
-            {/* Comprehensive Totals Footer */}
-            <LignesTableFooter lignes={lignes} />
+            {/* Comprehensive Totals Footer - Always Visible */}
+            <div className="flex-shrink-0">
+                <LignesTableFooter lignes={allLignes} />
+            </div>
+
+            {/* Pagination with Bulk Actions - Always Visible */}
+            {allLignes.length > 0 && (
+                <div className="flex-shrink-0">
+                    <PaginationWithBulkActions
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        pageSize={pagination.pageSize}
+                        totalItems={pagination.totalItems}
+                        onPageChange={pagination.handlePageChange}
+                        onPageSizeChange={pagination.handlePageSizeChange}
+                        bulkSelection={bulkSelection}
+                        bulkActions={bulkActions}
+                    />
+                </div>
+            )}
         </div>
     );
 } 

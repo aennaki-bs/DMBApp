@@ -67,94 +67,74 @@ export function LignesTableFooter({ lignes }: LignesTableFooterProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="mt-6"
+            className=""
         >
-            {/* Main Financial Totals - 4 Cards Only */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Main Financial Totals - 4 Compact Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Total Discount */}
-                <Card className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border-blue-500/20 p-6 ring-2 ring-blue-500/20">
+                <Card className="bg-gradient-to-br from-slate-50/80 to-slate-100/80 dark:from-slate-900/20 dark:to-slate-800/20 border-slate-200/50 dark:border-slate-500/20 p-4 hover:shadow-md transition-all duration-200">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-blue-300/60 text-sm font-medium mb-1">
+                        <div className="flex-1">
+                            <p className="text-slate-600 dark:text-slate-400 text-xs font-medium mb-1">
                                 Total Discount
                             </p>
-                            <p className="text-3xl font-bold text-white">
+                            <p className="text-xl font-bold text-slate-700 dark:text-slate-300">
                                 {formatPrice(totals.totalDiscount)}
                             </p>
-                            {/* <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="secondary" className="bg-red-500/10 text-red-300 border-red-500/20 text-xs">
-                                    {metrics.discountPercentage.toFixed(1)}% of total
-                                </Badge>
-                            </div> */}
                         </div>
-                        <div className="bg-red-500/10 p-3 rounded-lg">
-                            <Minus className="h-8 w-8 text-red-400" />
+                        <div className="bg-red-500/10 p-2 rounded-lg">
+                            <Minus className="h-5 w-5 text-red-500" />
                         </div>
                     </div>
                 </Card>
 
                 {/* Total HT */}
-                <Card className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border-blue-500/20 p-6 ring-2 ring-blue-500/20">
+                <Card className="bg-gradient-to-br from-slate-50/80 to-slate-100/80 dark:from-slate-900/20 dark:to-slate-800/20 border-slate-200/50 dark:border-slate-500/20 p-4 hover:shadow-md transition-all duration-200">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-blue-300/60 text-sm font-medium mb-1">
+                        <div className="flex-1">
+                            <p className="text-slate-600 dark:text-slate-400 text-xs font-medium mb-1">
                                 Total HT
                             </p>
-                            <p className="text-3xl font-bold text-white">
+                            <p className="text-xl font-bold text-slate-700 dark:text-slate-300">
                                 {formatPrice(totals.totalAmountHT)}
                             </p>
-                            {/* <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="secondary" className="bg-green-500/10 text-green-300 border-green-500/20 text-xs">
-                                    Avg: {formatPrice(totals.averagePriceHT)}
-                                </Badge>
-                            </div> */}
                         </div>
-                        <div className="bg-green-500/10 p-3 rounded-lg">
-                            <Calculator className="h-8 w-8 text-green-400" />
+                        <div className="bg-green-500/10 p-2 rounded-lg">
+                            <Calculator className="h-5 w-5 text-green-500" />
                         </div>
                     </div>
                 </Card>
 
                 {/* Total VAT */}
-                <Card className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border-blue-500/20 p-6 ring-2 ring-blue-500/20">
+                <Card className="bg-gradient-to-br from-slate-50/80 to-slate-100/80 dark:from-slate-900/20 dark:to-slate-800/20 border-slate-200/50 dark:border-slate-500/20 p-4 hover:shadow-md transition-all duration-200">
                     <div className="flex items-center justify-between">
-                        <div>
-                        <p className="text-blue-300/60 text-sm font-medium mb-1">
+                        <div className="flex-1">
+                            <p className="text-slate-600 dark:text-slate-400 text-xs font-medium mb-1">
                                 Total VAT
                             </p>
-                            <p className="text-3xl font-bold text-white">
+                            <p className="text-xl font-bold text-slate-700 dark:text-slate-300">
                                 {formatPrice(totals.totalAmountVAT)}
                             </p>
-                            {/* <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="secondary" className="bg-purple-500/10 text-purple-300 border-purple-500/20 text-xs">
-                                    {metrics.vatEffectiveRate.toFixed(1)}% effective
-                                </Badge>
-                            </div> */}
                         </div>
-                        <div className="bg-purple-500/10 p-3 rounded-lg">
-                            <Percent className="h-8 w-8 text-purple-400" />
+                        <div className="bg-purple-500/10 p-2 rounded-lg">
+                            <Percent className="h-5 w-5 text-purple-500" />
                         </div>
                     </div>
                 </Card>
 
                 {/* Total TTC - Most prominent */}
-                <Card className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border-blue-500/20 p-6 ring-2 ring-blue-500/20">
+                <Card className="bg-gradient-to-br from-slate-50/80 to-slate-100/80 dark:from-slate-900/20 dark:to-slate-800/20 border-slate-200/50 dark:border-slate-500/20 p-4 hover:shadow-md transition-all duration-200 ring-2 ring-blue-500/20">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-blue-300/60 text-sm font-medium mb-1">
+                        <div className="flex-1">
+                            <p className="text-slate-600 dark:text-slate-400 text-xs font-medium mb-1">
                                 Total TTC
                             </p>
-                            <p className="text-4xl font-bold text-white">
+                            <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">
                                 {formatPrice(totals.totalAmountTTC)}
                             </p>
-                            {/* <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="secondary" className="bg-blue-500/10 text-blue-300 border-blue-500/20 text-xs">
-                                    Final Amount
-                                </Badge>
-                            </div> */}
                         </div>
-                        <div className="bg-blue-500/10 p-3 rounded-lg">
-                            <div className="h-8 w-8 flex items-center justify-center text-blue-400 font-bold text-sm">
+                        <div className="bg-blue-500/10 p-2 rounded-lg">
+                            <div className="h-5 w-5 flex items-center justify-center text-blue-500 font-bold text-xs">
                                 TTC
                             </div>
                         </div>

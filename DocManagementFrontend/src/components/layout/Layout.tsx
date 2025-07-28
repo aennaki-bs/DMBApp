@@ -185,17 +185,17 @@ export function Layout() {
 
             {/* Main content with clean transparent styling and responsive padding */}
             <main
-              className="flex-1 overflow-auto"
+              className="flex-1 overflow-hidden"
               style={{ minHeight: "calc(100vh - 4rem)" }}
             >
               <div
-                className={`h-full rounded-lg overflow-auto ${isStandardTheme
+                className={`h-full rounded-lg overflow-hidden ${isStandardTheme
                   ? ""
                   : "border border-border bg-card/85"
                   } shadow-lg transition-all duration-300`}
                 style={{ minHeight: "100%" }}
               >
-                <div className="h-full overflow-auto p-3">
+                <div className="h-full overflow-hidden p-3">
                   <Outlet />
                 </div>
               </div>

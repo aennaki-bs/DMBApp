@@ -91,19 +91,19 @@ const DocumentLinesTab = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="space-y-2"
+      className="h-full flex flex-col space-y-2"
     >
       {/* Page Header */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background/30 backdrop-blur-xl border border-primary/20 shadow-lg rounded-xl p-3">
+      <div className="flex-shrink-0 bg-gradient-to-r from-primary/10 via-primary/5 to-background/30 backdrop-blur-xl border border-primary/20 shadow-lg rounded-xl p-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-primary/15 backdrop-blur-sm border border-primary/30">
               <Layers className="h-6 w-6 text-primary" />
             </div>
-            <div>
+            {/* <div>
               <h2 className="text-2xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Document Lines</h2>
               <p className="text-muted-foreground mt-1">Manage and organize your document lines efficiently</p>
-            </div>
+            </div> */}
           </div>
           <div className="flex items-center gap-2">
             {canManageDocuments && !isArchivedToERP && (
@@ -119,39 +119,44 @@ const DocumentLinesTab = ({
                           <Plus className="h-4 w-4 mr-2" /> Add New Line
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-gray-900 border-primary/30 text-primary">
-                        <p>{disabledReason}</p>
+                      <TooltipContent>
+                        <p>Line editing is disabled when document has sub-lines</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 ) : (
                   <Button
                     onClick={() => setIsCreateDialogOpen(true)}
-                    className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg border border-primary/30"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg border border-primary/30"
                   >
                     <Plus className="h-4 w-4 mr-2" /> Add New Line
                   </Button>
                 )}
               </>
             )}
-            {isArchivedToERP && (
-              <div className="flex items-center gap-2 text-orange-300 bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-2">
-                <Archive className="h-4 w-4" />
-                <span className="text-sm font-medium">Archived to ERP</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
       {/* Search and Filter Bar */}
-      <div className="bg-background/50 backdrop-blur-sm border-border/50 rounded-xl border p-4 shadow-lg">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          {/* Search Section */}
-          <div className="flex-1 flex items-center gap-2">
+      <div className="flex-shrink-0 bg-gradient-to-r from-background/80 via-background/60 to-background/80 backdrop-blur-xl border border-border/50 shadow-lg rounded-xl p-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search Bar */}
+          <div className="flex-1 flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search lines..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-background/60 border-border/70 focus:border-primary/50 focus:ring-primary/20"
+              />
+            </div>
+            
+            {/* Field Selector */}
             <Select value={searchField} onValueChange={setSearchField}>
-              <SelectTrigger className="w-36 bg-background/80 border-border/70">
-                <SelectValue placeholder="Search by..." />
+              <SelectTrigger className="w-[180px] bg-background/60 border-border/70">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {searchFields.map((field) => (
@@ -161,41 +166,30 @@ const DocumentLinesTab = ({
                 ))}
               </SelectContent>
             </Select>
-
-            <div className="relative flex-1 max-w-md">
-              <Input
-                type="text"
-                placeholder={`Search ${searchField === "all" ? "lines" : searchFields.find(f => f.id === searchField)?.label.toLowerCase()}...`}
-                className="pl-10 bg-background/80 border-border/70"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 transform -translate-y-1/2" />
-            </div>
           </div>
 
-          {/* Advanced Filters */}
+          {/* Advanced Filters Toggle */}
           <div className="flex items-center gap-2">
-            <Popover open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+            <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`bg-background/80 border-border/70 ${hasActiveFilters ? "border-primary/50 text-primary" : ""}`}
+                  className="bg-background/60 border-border/70 hover:bg-primary/10"
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Filters
                   {hasActiveFilters && (
-                    <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                      1
+                    <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground">
+                      {hasActiveFilters ? '1' : '0'}
                     </Badge>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 bg-background/95 backdrop-blur-xl border-border/50" align="end">
+              <PopoverContent className="w-80 p-4" align="end">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-foreground">Advanced Filters</h4>
+                    <h4 className="font-medium">Advanced Filters</h4>
                     {hasActiveFilters && (
                       <Button
                         variant="ghost"
@@ -246,8 +240,8 @@ const DocumentLinesTab = ({
         </div>
       </div>
 
-      {/* Lines Table/List */}
-      <div className="bg-background/50 backdrop-blur-sm border-border/50 rounded-xl border shadow-lg overflow-hidden">
+      {/* Lines Table/List - Expandable */}
+      <div className="flex-1 bg-background/50 backdrop-blur-sm border-border/50 rounded-xl border shadow-lg overflow-hidden min-h-0">
         <LignesList
           document={document}
           lignes={filteredLignes}
