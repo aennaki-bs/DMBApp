@@ -141,7 +141,7 @@ export function Layout() {
         <div className="relative flex w-full min-h-full z-10">
           {/* Sidebar - clean transparent styling with responsive width */}
           <aside
-            className={`h-full ${isMobile ? "hidden" : "w-56 sm:w-60 lg:w-64 xl:w-64 flex-shrink-0"
+            className={`h-full ${isMobile ? "hidden" : "w-72 sm:w-76 lg:w-80 xl:w-80 flex-shrink-0"
               } ${isStandardTheme
                 ? "glass-sidebar"
                 : "border-r border-border bg-card/95"

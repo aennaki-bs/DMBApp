@@ -32,6 +32,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import DocumentApprovalDetails from "./DocumentApprovalDetails";
+import { CustomerVendorDetailsDialog } from "./dialogs/CustomerVendorDetailsDialog";
 import api from "@/services/api";
 import { toast } from "sonner";
 
@@ -128,7 +129,7 @@ const DocumentDetailsTab = ({
   const [documentHistory, setDocumentHistory] = useState<DocumentHistoryEvent[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-  const [showFullContent, setShowFullContent] = useState(false);
+  const [customerVendorDialogOpen, setCustomerVendorDialogOpen] = useState(false);
 
   // Memoized values to prevent unnecessary re-renders
   const memoizedDocumentInfo = useMemo(() => ({
@@ -186,45 +187,39 @@ const DocumentDetailsTab = ({
       icon: Calendar,
       title: "Document Date",
       value: memoizedDocumentInfo.documentDate,
-      copyable: true,
     },
     {
       icon: Calendar,
       title: "Posting Date",
       value: memoizedDocumentInfo.postingDate,
-      copyable: true,
     },
     {
       icon: Tag,
       title: "Document Type",
       value: memoizedDocumentInfo.documentTypeName,
-      copyable: true,
     },
     {
       icon: Hash,
       title: "Series",
       value: memoizedDocumentInfo.seriesName,
-      subtitle: memoizedDocumentInfo.seriesCode ? `Code: ${memoizedDocumentInfo.seriesCode}` : undefined,
-      copyable: true,
+      subtitle: memoizedDocumentInfo.seriesCode ? `` : undefined,
     },
     {
       icon: GitBranch,
       title: "Circuit",
-      value: memoizedDocumentInfo.circuitTitle,
-      subtitle: `Status: ${memoizedDocumentInfo.currentStatus}`,
-      copyable: true,
+      value: `Status: ${memoizedDocumentInfo.currentStatus}`,
+      subtitle: memoizedDocumentInfo.circuitTitle,
     },
     ...(memoizedDocumentInfo.customerVendorName ? [{
       icon: document.documentType?.tierType === 1 ? UserCheck : Package,
       title: document.documentType?.tierType === 1 ? 'Customer' : 'Vendor',
       value: memoizedDocumentInfo.customerVendorName,
       subtitle: memoizedDocumentInfo.customerVendorCode ? `Code: ${memoizedDocumentInfo.customerVendorCode}` : undefined,
-      copyable: true,
       actions: [
         {
-          label: "Show Address",
+          label: "Show Details",
           icon: MapPin,
-          onClick: () => toast.info("Address details coming soon"),
+          onClick: () => setCustomerVendorDialogOpen(true),
         },
       ],
     }] : []),
@@ -232,14 +227,12 @@ const DocumentDetailsTab = ({
       icon: ExternalLink,
       title: "External Document",
       value: memoizedDocumentInfo.documentExterne,
-      copyable: true,
     }] : []),
     {
       icon: User,
       title: "Created By",
       value: memoizedDocumentInfo.createdByUsername,
       subtitle: `${memoizedDocumentInfo.createdDate} at ${memoizedDocumentInfo.createdTime}`,
-      copyable: true,
     },
   ], [memoizedDocumentInfo, document.documentType?.tierType]);
 
@@ -313,8 +306,7 @@ const DocumentDetailsTab = ({
         {/* Document Content Section */}
         <Card className="bg-gradient-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-sm border-slate-600/50">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3">
                 <div className="p-3 rounded-xl bg-blue-500/20 border border-blue-500/30">
                         <FileText className="h-6 w-6 text-blue-400" />
                       </div>
@@ -322,60 +314,14 @@ const DocumentDetailsTab = ({
                         <CardTitle className="text-white">Document Content</CardTitle>
                         <p className="text-slate-300 text-sm">Full document description and details</p>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowFullContent(!showFullContent)}
-                  className="bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600/50"
-                      >
-                        {showFullContent ? (
-                          <>
-                            <EyeOff className="h-4 w-4 mr-2" />
-                            Show Less
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Show More
-                          </>
-                        )}
-                      </Button>
-                      
-                      {document.content && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(document.content, "Content")}
-                    className="bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600/50"
-                        >
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copy
-                        </Button>
-                      )}
-                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   {document.content && document.content.trim() ? (
               <div className="bg-slate-900/50 border border-slate-600/50 rounded-xl p-6">
                         <div className="whitespace-pre-wrap text-slate-200 leading-relaxed">
-                          {showFullContent ? document.content : document.content.length > 500 ? `${document.content.substring(0, 500)}...` : document.content}
+                          {document.content}
                         </div>
-                        
-                        {document.content.length > 500 && (
-                  <div className="mt-4 pt-4 border-t border-slate-600/50">
-                            <Button
-                              variant="ghost"
-                              onClick={() => setShowFullContent(!showFullContent)}
-                              className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                            >
-                              {showFullContent ? "Show less" : `Show ${document.content.length - 500} more characters`}
-                            </Button>
-                          </div>
-                        )}
                     </div>
                   ) : (
                     <div className="text-center py-12">
@@ -536,6 +482,13 @@ const DocumentDetailsTab = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Customer/Vendor Details Dialog */}
+      <CustomerVendorDetailsDialog
+        document={document}
+        isOpen={customerVendorDialogOpen}
+        onOpenChange={setCustomerVendorDialogOpen}
+      />
     </div>
   );
 };

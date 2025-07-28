@@ -17,8 +17,8 @@ export interface SidebarProviderProps extends React.HTMLAttributes<HTMLDivElemen
   onOpenChange?: (value: boolean) => void;
 }
 
-export const SIDEBAR_WIDTH = "16rem";
-export const SIDEBAR_WIDTH_ICON = "3.5rem";
+export const SIDEBAR_WIDTH = "20rem";
+export const SIDEBAR_WIDTH_ICON = "4rem";
 export const SIDEBAR_WIDTH_MOBILE = "85%";
 export const SIDEBAR_COOKIE_NAME = "sidebar-expanded";
 export const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
