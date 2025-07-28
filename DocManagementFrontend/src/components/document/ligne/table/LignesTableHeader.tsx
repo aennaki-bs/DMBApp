@@ -26,86 +26,98 @@ export function LignesTableHeader({
         );
     };
 
-    const headerClass = (field: keyof Ligne) => `
-    text-foreground font-medium cursor-pointer select-none
-    hover:text-primary transition-colors duration-150
-    ${sortBy === field ? "text-primary" : ""}
-  `;
-
     return (
         <TableHeader className="bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">
             <TableRow className="border-slate-200/50 dark:border-slate-700/50 hover:bg-transparent">
-                <TableHead className="w-[48px]">
-                    <div className="flex items-center justify-center">
-                        <ProfessionalCheckbox
-                            checked={bulkSelection.isCurrentPageFullySelected}
-                            indeterminate={bulkSelection.isPartialSelection}
-                            onCheckedChange={bulkSelection.toggleSelectCurrentPage}
-                            size="md"
-                            variant="header"
-                            className="shadow-lg"
-                        />
-                    </div>
+                <TableHead className="w-[50px]">
+                    <ProfessionalCheckbox
+                        checked={bulkSelection.isCurrentPageFullySelected}
+                        indeterminate={bulkSelection.isPartialSelection}
+                        onCheckedChange={bulkSelection.toggleSelectCurrentPage}
+                        size="md"
+                        variant="header"
+                    />
                 </TableHead>
-                <TableHead
-                    className={`${headerClass("ligneKey")} w-[120px]`}
-                    onClick={() => onSort("ligneKey")}
+                <TableHead 
+                    className="w-[200px] cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
+                    onClick={() => onSort('title')}
                 >
-                    <div className="flex items-center">
-                        Line Key {renderSortIcon("ligneKey")}
+                    <div className="flex items-center gap-2">
+                        Title
+                        {sortBy === 'title' && (
+                            <span className="text-xs">
+                                {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                        )}
                     </div>
                 </TableHead>
-                <TableHead
-                    className={`${headerClass("title")} w-[200px]`}
-                    onClick={() => onSort("title")}
+                <TableHead 
+                    className="w-[200px] cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
+                    onClick={() => onSort('article')}
                 >
-                    <div className="flex items-center">
-                        Title {renderSortIcon("title")}
+                    <div className="flex items-center gap-2">
+                        Items
+                        {sortBy === 'article' && (
+                            <span className="text-xs">
+                                {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                        )}
                     </div>
                 </TableHead>
                 <TableHead
-                    className={`${headerClass("article")} w-[200px]`}
-                    onClick={() => onSort("article")}
-                >
-                    <div className="flex items-center">
-                        Article {renderSortIcon("article")}
-                    </div>
-                </TableHead>
-                <TableHead
-                    className={`${headerClass("quantity")} w-[100px] text-right`}
+                    className="w-[100px] text-right cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => onSort("quantity")}
                 >
-                    <div className="flex items-center justify-end">
-                        Quantity {renderSortIcon("quantity")}
+                    <div className="flex items-center justify-end gap-2">
+                        Quantity
+                        {sortBy === 'quantity' && (
+                            <span className="text-xs">
+                                {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                        )}
                     </div>
                 </TableHead>
                 <TableHead
-                    className={`${headerClass("priceHT")} w-[120px] text-right`}
+                    className="w-[120px] text-right cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => onSort("priceHT")}
                 >
-                    <div className="flex items-center justify-end">
-                        Price HT {renderSortIcon("priceHT")}
+                    <div className="flex items-center justify-end gap-2">
+                        Price HT
+                        {sortBy === 'priceHT' && (
+                            <span className="text-xs">
+                                {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                        )}
                     </div>
                 </TableHead>
                 <TableHead
-                    className={`${headerClass("amountHT")} w-[120px] text-right`}
+                    className="w-[120px] text-right cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => onSort("amountHT")}
                 >
-                    <div className="flex items-center justify-end">
-                        Amount HT {renderSortIcon("amountHT")}
+                    <div className="flex items-center justify-end gap-2">
+                        Amount HT
+                        {sortBy === 'amountHT' && (
+                            <span className="text-xs">
+                                {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                        )}
                     </div>
                 </TableHead>
                 <TableHead
-                    className={`${headerClass("amountTTC")} w-[120px] text-right`}
+                    className="w-[120px] text-right cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => onSort("amountTTC")}
                 >
-                    <div className="flex items-center justify-end">
-                        Amount TTC {renderSortIcon("amountTTC")}
+                    <div className="flex items-center justify-end gap-2">
+                        Amount TTC
+                        {sortBy === 'amountTTC' && (
+                            <span className="text-xs">
+                                {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                        )}
                     </div>
                 </TableHead>
-
-                <TableHead className="text-foreground font-medium w-[120px] text-center">
-                    Actions
+                <TableHead className="w-[100px] text-center">
+                    <span className="text-foreground font-medium">Actions</span>
                 </TableHead>
             </TableRow>
         </TableHeader>

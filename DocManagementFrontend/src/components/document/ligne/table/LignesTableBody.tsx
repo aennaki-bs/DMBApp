@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Ligne } from "@/models/document";
 import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
-import { Edit, Trash2, Eye, FileStack } from "lucide-react";
+import { Edit, Trash2, Eye, FileStack, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger
+    DropdownMenuTrigger,
+    DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ interface LignesTableBodyProps {
     bulkSelection: ReturnType<typeof useBulkSelection<Ligne>>;
     onEdit: (ligne: Ligne) => void;
     onDelete: (ligne: Ligne) => void;
+    onViewDetails: (ligne: Ligne) => void;
     canManageDocuments: boolean;
     documentId: number;
 }
@@ -28,6 +30,7 @@ export function LignesTableBody({
     bulkSelection,
     onEdit,
     onDelete,
+    onViewDetails,
     canManageDocuments,
     documentId,
 }: LignesTableBodyProps) {
@@ -80,8 +83,8 @@ export function LignesTableBody({
                     )}
                     onClick={(e) => handleRowClick(ligne, e)}
                 >
-                    {/* Selection Column */}
-                    <TableCell className="w-[48px]">
+                    {/* Checkbox Column */}
+                    <TableCell className="w-[50px]">
                         <div className="flex items-center justify-center">
                             <ProfessionalCheckbox
                                 checked={bulkSelection.isSelected(ligne)}
@@ -92,36 +95,24 @@ export function LignesTableBody({
                         </div>
                     </TableCell>
 
-                    {/* Line Key Column */}
-                    <TableCell className="w-[120px]">
-                        <div className="font-medium text-blue-900 dark:text-blue-100">
-                            {ligne.ligneKey || `L${ligne.id}`}
-                        </div>
-                    </TableCell>
-
                     {/* Title Column */}
                     <TableCell className="w-[200px]">
                         <div className="max-w-[180px]">
                             <div className="font-medium text-blue-900 dark:text-blue-100 truncate">
                                 {ligne.title || "Untitled Line"}
                             </div>
-                            {ligne.description && (
-                                <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
-                                    {ligne.description}
-                                </div>
-                            )}
                         </div>
                     </TableCell>
 
-                    {/* Article Column */}
+                    {/* Items Column */}
                     <TableCell className="w-[200px]">
                         <div className="max-w-[180px]">
                             <div className="font-medium text-blue-900 dark:text-blue-100 truncate">
                                 {ligne.article || "N/A"}
                             </div>
-                            {ligne.code && (
+                            {(ligne.itemCode || ligne.generalAccountsCode) && (
                                 <div className="text-xs text-blue-600 dark:text-blue-400">
-                                    Code: {ligne.code}
+                                    Code: {ligne.itemCode || ligne.generalAccountsCode}
                                 </div>
                             )}
                         </div>
@@ -133,9 +124,9 @@ export function LignesTableBody({
                             <span className="font-medium text-blue-900 dark:text-blue-100">
                                 {formatNumber(ligne.quantity || 0)}
                             </span>
-                            {ligne.unite && (
+                            {ligne.unit?.code && (
                                 <span className="text-xs text-blue-600 dark:text-blue-400">
-                                    {ligne.unite}
+                                    {ligne.unit.code}
                                 </span>
                             )}
                         </div>
@@ -187,6 +178,17 @@ export function LignesTableBody({
                                     >
                                         <FileStack className="h-4 w-4 mr-2 text-blue-500" />
                                         View Sub-lines
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onViewDetails(ligne);
+                                        }}
+                                        className="cursor-pointer"
+                                    >
+                                        <Info className="h-4 w-4 mr-2 text-blue-500" />
+                                        View Details
                                     </DropdownMenuItem>
                                     {canManageDocuments && (
                                         <>

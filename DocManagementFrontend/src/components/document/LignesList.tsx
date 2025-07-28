@@ -5,6 +5,7 @@ import { LignesTableContent } from './ligne/table/LignesTableContent';
 import CreateLigneDialog from './ligne/dialogs/CreateLigneDialog';
 import EditLigneDialog from './ligne/dialogs/EditLigneDialog';
 import DeleteLigneDialog from './ligne/dialogs/DeleteLigneDialog';
+import { ViewLigneDetailsDialog } from './ligne/dialogs/ViewLigneDetailsDialog';
 import { toast } from 'sonner';
 import documentService from '@/services/documentService';
 import { useQueryClient } from '@tanstack/react-query';
@@ -35,6 +36,7 @@ const LignesList = ({
   // Dialog states for lignes
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDetailsDialogOpen, setIsViewDetailsDialogOpen] = useState(false);
   const [currentLigne, setCurrentLigne] = useState<Ligne | null>(null);
 
   // Form states
@@ -86,6 +88,11 @@ const LignesList = ({
   const handleDeleteLigne = (ligne: Ligne) => {
     setCurrentLigne(ligne);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleViewDetails = (ligne: Ligne) => {
+    setCurrentLigne(ligne);
+    setIsViewDetailsDialogOpen(true);
   };
 
   const handleSubmitDeleteLigne = async () => {
@@ -153,6 +160,7 @@ const LignesList = ({
           canManageDocuments={canManageDocuments}
           onCreateNew={() => setIsCreateDialogOpen(true)}
           documentId={document.id}
+          onViewDetails={handleViewDetails}
         />
       </div>
 
@@ -170,6 +178,18 @@ const LignesList = ({
         isOpen={isEditDialogOpen}
         onOpenChange={(open) => {
           setIsEditDialogOpen(open);
+          if (!open) {
+            setCurrentLigne(null);
+          }
+        }}
+      />
+
+      {/* View Ligne Details Dialog */}
+      <ViewLigneDetailsDialog
+        ligne={currentLigne}
+        isOpen={isViewDetailsDialogOpen}
+        onOpenChange={(open) => {
+          setIsViewDetailsDialogOpen(open);
           if (!open) {
             setCurrentLigne(null);
           }

@@ -23,6 +23,7 @@ interface LignesTableContentProps {
     onSort: (column: keyof Ligne) => void;
     onEdit: (ligne: Ligne) => void;
     onDelete: (ligne: Ligne) => void;
+    onViewDetails: (ligne: Ligne) => void;
     onBulkDelete: () => void;
     canManageDocuments: boolean;
     onCreateNew: () => void;
@@ -41,6 +42,7 @@ export function LignesTableContent({
     onSort,
     onEdit,
     onDelete,
+    onViewDetails,
     onBulkDelete,
     canManageDocuments,
     onCreateNew,
@@ -138,6 +140,7 @@ export function LignesTableContent({
                                         bulkSelection={bulkSelection}
                                         onEdit={onEdit}
                                         onDelete={onDelete}
+                                        onViewDetails={onViewDetails}
                                         canManageDocuments={canManageDocuments}
                                         documentId={documentId}
                                     />
