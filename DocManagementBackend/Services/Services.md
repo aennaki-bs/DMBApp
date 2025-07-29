@@ -496,7 +496,7 @@ public async Task<bool> VerifyEmailExistsAsync(string email)
 public async Task<bool> SendVerificationCodeAsync(string phoneNumber)
 {
     var verificationCode = GenerateVerificationCode();
-    var message = $"Your DocuVerse verification code is: {verificationCode}";
+    var message = $"Your DMV verification code is: {verificationCode}";
     
     // Integration with SMS provider (Twilio, etc.)
     return await SendSmsAsync(phoneNumber, message);
@@ -640,8 +640,8 @@ public DocumentWorkflowService(
 ```bash
 # Authentication
 JWT_SECRET=your-jwt-secret-key
-ISSUER=DocuVerse
-AUDIENCE=DocuVerse-Users
+ISSUER=DMV
+AUDIENCE=DMV-Users
 
 # Email
 EMAIL_ADDRESS=notifications@company.com

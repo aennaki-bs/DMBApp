@@ -1,4 +1,4 @@
-# DocuVerse - Document Management Frontend
+# DMV - Document Management Frontend
 
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)](https://www.typescriptlang.org/)
@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.11-blue.svg)](https://tailwindcss.com/)
 [![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-Latest-black.svg)](https://ui.shadcn.com/)
 
-A modern, responsive frontend application for the DocuVerse document management system, built with React 18, TypeScript, and a comprehensive UI component library.
+A modern, responsive frontend application for the DMV document management verse, built with React 18, TypeScript, and a comprehensive UI component library.
 
 ## 📋 Table of Contents
 
@@ -29,7 +29,7 @@ A modern, responsive frontend application for the DocuVerse document management 
 
 ## 🌟 Overview
 
-DocuVerse Frontend is a sophisticated single-page application (SPA) that provides a complete user interface for document management workflows. The application features a modern design system, comprehensive document lifecycle management, and seamless integration with the DocuVerse backend API.
+DMV Frontend is a sophisticated single-page application (SPA) that provides a complete user interface for document management workflows. The application features a modern design system, comprehensive document lifecycle management, and seamless integration with the DMV backend API.
 
 ### Key Capabilities
 
@@ -209,8 +209,8 @@ VITE_API_BASE_URL=http://localhost:5000/api
 VITE_API_TIMEOUT=30000
 
 # Authentication
-VITE_JWT_STORAGE_KEY=docuverse_token
-VITE_REFRESH_TOKEN_KEY=docuverse_refresh
+VITE_JWT_STORAGE_KEY=dmv_token
+VITE_REFRESH_TOKEN_KEY=dmv_refresh
 
 # Features
 VITE_ENABLE_ANALYTICS=true
@@ -548,7 +548,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // DocuVerse custom colors
+        // DMV custom colors
         docuBlue: {
           DEFAULT: '#2563eb',
           50: '#eff6ff',
@@ -723,14 +723,14 @@ export const ProtectedRoute = ({
 ```typescript
 // services/tokenManager.ts
 export const tokenManager = {
-  getToken: () => localStorage.getItem('docuverse_token'),
+  getToken: () => localStorage.getItem('dmv_token'),
   
   setToken: (token: string) => {
-    localStorage.setItem('docuverse_token', token);
+    localStorage.setItem('dmv_token', token);
   },
   
   removeToken: () => {
-    localStorage.removeItem('docuverse_token');
+    localStorage.removeItem('dmv_token');
   },
   
   isTokenExpired: (token: string): boolean => {
@@ -893,7 +893,7 @@ ls -la dist/
 #### Production Environment Variables
 ```env
 # .env.production
-VITE_API_BASE_URL=https://api.docuverse.com/api
+VITE_API_BASE_URL=https://api.dmv.com/api
 VITE_API_TIMEOUT=30000
 VITE_ENABLE_ANALYTICS=true
 VITE_ENABLE_DEBUG=false
@@ -1156,11 +1156,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For technical support and questions:
-- **Email**: frontend-support@docuverse.com
+- **Email**: frontend-support@dmv.com
 - **Documentation**: [Component Docs](./docs/)
-- **GitHub Issues**: [Create an issue](https://github.com/your-org/docuverse/issues)
-- **Community**: [Discussions](https://github.com/your-org/docuverse/discussions)
+- **GitHub Issues**: [Create an issue](https://github.com/your-org/dmv/issues)
+- **Community**: [Discussions](https://github.com/your-org/dmv/discussions)
 
 ---
 
-**DocuVerse Frontend** - Modern React Interface for Advanced Document Management
+**DMV Frontend** - Modern React Interface for Advanced Document Management

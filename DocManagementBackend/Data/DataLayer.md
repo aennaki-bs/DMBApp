@@ -218,7 +218,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=DocuVerse;Integrated Security=true;TrustServerCertificate=true;"
+    "DefaultConnection": "Server=localhost;Database=DMV;Integrated Security=true;TrustServerCertificate=true;"
   }
 }
 ```

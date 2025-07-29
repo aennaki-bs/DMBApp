@@ -146,7 +146,7 @@ export function MainNavbar() {
             "hidden sm:block font-bold text-foreground tracking-tight",
             isMobile ? "text-lg" : "text-xl"
           )}>
-            DocuVerse
+            DMV
           </span>
         </Link>
 

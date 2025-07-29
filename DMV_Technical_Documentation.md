@@ -1,4 +1,4 @@
-# DocuVerse - Advanced Document Management System
+# DMV - Advanced Document Management Verse
 ## Professional Technical Documentation
 
 ---
@@ -25,7 +25,7 @@
 
 ## 1. Executive Summary
 
-DocuVerse is a state-of-the-art enterprise document management system built with modern web technologies. The application provides comprehensive document lifecycle management with sophisticated approval workflows and seamless ERP integration.
+DMV is a state-of-the-art enterprise document management system built with modern web technologies. The application provides comprehensive document lifecycle management with sophisticated approval workflows and seamless ERP integration.
 
 ### Key Highlights
 - **Modern Full-Stack Architecture**: .NET 9.0 backend with React 18.3.1 frontend
@@ -46,7 +46,7 @@ DocuVerse is a state-of-the-art enterprise document management system built with
 
 ### 2.1 Application Purpose
 
-DocuVerse serves as a comprehensive platform for managing the complete document lifecycle from creation to archival, with emphasis on:
+DMV serves as a comprehensive platform for managing the complete document lifecycle from creation to archival, with emphasis on:
 - Structured approval processes
 - Real-time collaboration
 - Integration with existing business systems
@@ -748,8 +748,8 @@ dotnet restore
 
 # Set environment variables
 export JWT_SECRET="your-secret-key"
-export ISSUER="DocuVerse"
-export AUDIENCE="DocuVerse-Users"
+export ISSUER="DMVerse"
+export AUDIENCE="DMVerse-Users"
 
 # Apply migrations and run
 dotnet ef database update
@@ -812,7 +812,7 @@ services:
 
 ### 15.1 Technical Excellence
 
-DocuVerse demonstrates exceptional technical implementation combining modern web technologies with robust business logic. The application showcases:
+DMV demonstrates exceptional technical implementation combining modern web technologies with robust business logic. The application showcases:
 
 **Architectural Strengths**
 - Clean separation of concerns with layered architecture
@@ -856,7 +856,7 @@ DocuVerse demonstrates exceptional technical implementation combining modern web
 
 ### 15.4 Final Assessment
 
-DocuVerse represents a comprehensive, enterprise-grade document management solution that successfully balances technical sophistication with practical usability. The system provides significant value through its advanced workflow capabilities, seamless integration features, and modern user experience.
+DMV represents a comprehensive, enterprise-grade document management solution that successfully balances technical sophistication with practical usability. The system provides significant value through its advanced workflow capabilities, seamless integration features, and modern user experience.
 
 The application sets a new standard for document management systems by combining cutting-edge technology with deep understanding of business processes, resulting in a platform that enhances organizational efficiency while maintaining security and compliance requirements.
 
@@ -868,4 +868,4 @@ The application sets a new standard for document management systems by combining
 - Type: Technical Documentation
 - Classification: Comprehensive System Analysis
 
-*This documentation provides a complete technical and functional overview of the DocuVerse document management system. For specific implementation details or user guides, refer to specialized documentation.* 
+*This documentation provides a complete technical and functional overview of the DMV document management verse. For specific implementation details or user guides, refer to specialized documentation.* 

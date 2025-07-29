@@ -34,7 +34,7 @@ const LeftSideContent: React.FC<LeftSideContentProps> = ({ currentStep }) => {
   const contentByStep = [
     // Step 0: Choose account type
     {
-      title: "Welcome to DocuVerse",
+      title: "Welcome to DMV",
       subtitle: "Choose the account type that best fits your needs",
       icon: <User className="h-12 w-12 text-blue-400" />,
       features: [
@@ -201,7 +201,7 @@ const LeftSideContent: React.FC<LeftSideContentProps> = ({ currentStep }) => {
         },
         {
           icon: <FileText className="h-6 w-6 text-indigo-400" />,
-          title: "Start Using DocuVerse",
+          title: "Start Using DMV",
           description:
             "Access the document management system after registration",
           color: "indigo",

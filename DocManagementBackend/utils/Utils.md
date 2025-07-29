@@ -169,17 +169,17 @@ public static string CreateEmailBody(string verificationLink, string verificatio
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>DocuVerse Email Verification</h1>
+                    <h1>Document Management Verse Email Verification</h1>
                 </div>
                 <div class='content'>
-                    <p>Welcome to DocuVerse! Please verify your email address to complete your registration.</p>
+                    <p>Welcome to DMV! Please verify your email address to complete your registration.</p>
                     <div class='code'>{verificationCode}</div>
                     <p>Or click the link below:</p>
                     <p><a href='{verificationLink}'>Verify Email Address</a></p>
                     <p>This verification code will expire in 24 hours.</p>
                 </div>
                 <div class='footer'>
-                    <p>Thank you for choosing DocuVerse!</p>
+                    <p>Thank you for choosing DMV!</p>
                 </div>
             </div>
         </body>
@@ -737,7 +737,7 @@ public async Task<IActionResult> Login([FromBody] LoginRequest request)
     
     // 4. Send welcome email
     var emailBody = AuthHelper.CreateEmailBody($"https://app.com/welcome", "WELCOME");
-    AuthHelper.SendEmail(user.Email, "Welcome to DocuVerse!", emailBody);
+    AuthHelper.SendEmail(user.Email, "Welcome to DMV!", emailBody);
     
     return Ok(new { accessToken, refreshToken });
 }

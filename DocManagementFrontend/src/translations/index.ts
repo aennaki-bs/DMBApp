@@ -98,7 +98,7 @@ export const translations = {
     // Dashboard
     dashboard: {
       title: 'Dashboard',
-      subtitle: 'Welcome to DocuVerse',
+      subtitle: 'Welcome to DMV',
       overview: 'Overview',
       recentDocuments: 'Recent Documents',
       quickActions: 'Quick Actions',
@@ -469,7 +469,7 @@ export const translations = {
     // Settings (keeping existing translations)
     settings: {
       title: 'Application Settings',
-      subtitle: 'Customize your DocuVerse experience',
+      subtitle: 'Customize your DMV experience',
       theme: 'Theme Settings',
       themeSelection: 'Theme Selection',
       themeDescription: 'Choose from our theme collection: Standard, Light, and Dark',
@@ -490,7 +490,7 @@ export const translations = {
       standardTheme: 'Standard Theme',
       lightTheme: 'Light Theme',
       darkTheme: 'Dark Theme',
-      standardThemeDescription: 'Default DocuVerse theme with optimized colors and spacing',
+      standardThemeDescription: 'Default DMV theme with optimized colors and spacing',
       lightThemeDescription: 'Light theme with bright colors',
       darkThemeDescription: 'Dark theme with muted colors',
       useCustomBg: 'Use Custom Background Image',
@@ -531,7 +531,7 @@ export const translations = {
 
     footer: {
       allRightsReserved: "All rights reserved",
-      copyright: "© 2024 DocuVerse"
+      copyright: "© 2025 DMV"
     },
 
     navigation: {
@@ -872,7 +872,7 @@ export const translations = {
     // Dashboard
     dashboard: {
       title: 'Tableau de bord',
-      subtitle: 'Bienvenue sur DocuVerse',
+      subtitle: 'Bienvenue sur DMV',
       overview: 'Aperçu',
       recentDocuments: 'Documents récents',
       quickActions: 'Actions rapides',
@@ -1247,7 +1247,7 @@ export const translations = {
     // Settings (keeping existing translations)
     settings: {
       title: 'Paramètres de l\'application',
-      subtitle: 'Personnalisez votre expérience DocuVerse',
+      subtitle: 'Personnalisez votre expérience DMV',
       theme: 'Paramètres du thème',
       themeSelection: 'Sélection du thème',
       themeDescription: 'Choisissez parmi notre collection de thèmes : Standard, Clair et Sombre',
@@ -1268,7 +1268,7 @@ export const translations = {
       standardTheme: 'Thème standard',
       lightTheme: 'Thème clair',
       darkTheme: 'Thème sombre',
-      standardThemeDescription: 'Thème DocuVerse par défaut avec couleurs et espacement optimisés',
+      standardThemeDescription: 'Thème DMV par défaut avec couleurs et espacement optimisés',
       lightThemeDescription: 'Thème clair avec couleurs vives',
       darkThemeDescription: 'Thème sombre avec couleurs sourdes',
       useCustomBg: 'Utiliser une image d\'arrière-plan personnalisée',
@@ -1309,7 +1309,7 @@ export const translations = {
 
     footer: {
       allRightsReserved: "Tous droits réservés",
-      copyright: "© 2024 DocuVerse"
+      copyright: "© 2025 DMV"
     },
 
     navigation: {
@@ -1650,7 +1650,7 @@ export const translations = {
     // Dashboard
     dashboard: {
       title: 'Panel de control',
-      subtitle: 'Bienvenido a DocuVerse',
+      subtitle: 'Bienvenido a DMV',
       overview: 'Resumen',
       recentDocuments: 'Documentos recientes',
       quickActions: 'Acciones rápidas',
@@ -2025,7 +2025,7 @@ export const translations = {
     // Settings (keeping existing translations)
     settings: {
       title: 'Configuración de la aplicación',
-      subtitle: 'Personaliza tu experiencia DocuVerse',
+      subtitle: 'Personaliza tu experiencia DMV',
       theme: 'Configuración del tema',
       themeSelection: 'Selección de tema',
       themeDescription: 'Elige de nuestra colección de temas: Estándar, Claro y Oscuro',
@@ -2046,7 +2046,7 @@ export const translations = {
       standardTheme: 'Tema estándar',
       lightTheme: 'Tema claro',
       darkTheme: 'Tema oscuro',
-      standardThemeDescription: 'Tema DocuVerse predeterminado con colores y espaciado optimizados',
+      standardThemeDescription: 'Tema DMV predeterminado con colores y espaciado optimizados',
       lightThemeDescription: 'Tema claro con colores brillantes',
       darkThemeDescription: 'Tema oscuro con colores apagados',
       useCustomBg: 'Usar imagen de fondo personalizada',
@@ -2087,7 +2087,7 @@ export const translations = {
 
     footer: {
       allRightsReserved: "Todos los derechos reservados",
-      copyright: "© 2024 DocuVerse"
+      copyright: "© 2025 DMV"
     },
 
     navigation: {

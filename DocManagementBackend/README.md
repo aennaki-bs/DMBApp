@@ -1,4 +1,4 @@
-# DocuVerse - Document Management Backend
+# DMV - Document Management Backend
 
 [![.NET](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com/download)
 [![Entity Framework Core](https://img.shields.io/badge/Entity%20Framework%20Core-9.0-green.svg)](https://docs.microsoft.com/en-us/ef/)
@@ -29,7 +29,7 @@ A comprehensive document management system backend built with .NET 9.0, featurin
 
 ## 🌟 Overview
 
-DocuVerse Backend is a powerful document management system that provides comprehensive document lifecycle management with integrated Business Central ERP operations. The system handles complex approval workflows, circuit-based document processing, and seamless data synchronization with external systems.
+DMV Backend is a powerful document management system that provides comprehensive document lifecycle management with integrated Business Central ERP operations. The system handles complex approval workflows, circuit-based document processing, and seamless data synchronization with external systems.
 
 ### Key Capabilities
 
@@ -345,8 +345,8 @@ The Action-based workflow system has been completely removed to simplify the arc
 ### Clone Repository
 
 ```bash
-git clone https://github.com/your-org/docuverse.git
-cd docuverse/DocManagementBackend
+git clone https://github.com/your-org/DMV.git
+cd DMV/DocManagementBackend
 ```
 
 ### Restore Dependencies
@@ -370,8 +370,8 @@ Create a `.env` file in the project root:
 ```env
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
-ISSUER=DocuVerse-API
-AUDIENCE=DocuVerse-Clients
+ISSUER=DMV-API
+AUDIENCE=DMV-Clients
 
 # Database Connection
 CONNECTION_STRING=Server=localhost;Database=DocManagementDB;Trusted_Connection=True;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;
@@ -831,7 +831,7 @@ scp -r ./publish user@server:/path/to/app
 #### 5. Service Configuration (systemd)
 ```ini
 [Unit]
-Description=DocuVerse Backend API
+Description=DMV Backend API
 After=network.target
 
 [Service]
@@ -840,7 +840,7 @@ ExecStart=/usr/bin/dotnet /path/to/app/DocManagementBackend.dll
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
-SyslogIdentifier=docuverse-backend
+SyslogIdentifier=DMV-backend
 User=www-data
 Environment=ASPNETCORE_ENVIRONMENT=Production
 
@@ -877,7 +877,7 @@ ENTRYPOINT ["dotnet", "DocManagementBackend.dll"]
 ```yaml
 version: '3.8'
 services:
-  docuverse-backend:
+  DMV-backend:
     build: .
     ports:
       - "5000:80"
@@ -980,10 +980,10 @@ dotnet ef database update --verbose
 #### 4. Background Service Issues
 ```bash
 # Check service logs
-journalctl -u docuverse-backend -f
+journalctl -u DMV-backend -f
 
 # Restart service
-sudo systemctl restart docuverse-backend
+sudo systemctl restart DMV-backend
 
 # Check API sync status
 curl -X GET "https://localhost:5001/api/ApiSync/configurations" -H "Authorization: Bearer {token}"
@@ -1036,12 +1036,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For technical support and questions:
-- **Email**: support@docuverse.com
+- **Email**: support@DMV.com
 - **Documentation**: [docs/](docs/)
-- **GitHub Issues**: [Create an issue](https://github.com/your-org/docuverse/issues)
+- **GitHub Issues**: [Create an issue](https://github.com/your-org/DMV/issues)
 
 ---
 
-**DocuVerse Backend** - Empowering Document Management with Advanced Workflow Capabilities
+**DMV Backend** - Empowering Document Management with Advanced Workflow Capabilities
 
 Built with ❤️ using .NET 9.0, Entity Framework Core, and modern software architecture principles. 

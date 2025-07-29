@@ -94,7 +94,7 @@ namespace DocManagementBackend.Utils
                             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); color: #c3c3c7;}}
                     </style></head>
                 <body><div class='card'>
-                        <h2>Email Verification</h2>
+                        <h2>Document Management Verse Email Verification</h2>
                         <p>Thank you for registering with us! To complete your registration, please
                             verify your email address, your verification code is
                             <br /><span>{verificationCode}</span> <br />
@@ -125,7 +125,7 @@ namespace DocManagementBackend.Utils
                         .card {{padding: 20px; width: 50%; background-color: #555555; margin: auto;
                             border-radius: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}}
                     </style></head>
-                <body><div class='card'><h2>Reset Password</h2>
+                <body><div class='card'><h2>Document Management Verse Reset Password</h2>
                         <p>To reset your password click on the button bellow:</p>
                         <a href='{verificationLink}' class='button'>Reset Password</a>
                         <p>If the button doesn't work, you can also copy and paste the following

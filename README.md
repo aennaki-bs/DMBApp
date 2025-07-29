@@ -1,4 +1,4 @@
-# 📋 DocuVerse - Advanced Document Management System
+# 📋 DMV - Advanced Document Management System
 
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB.svg)](https://reactjs.org/)
@@ -9,7 +9,7 @@
 
 > **Enterprise-Grade Document Management & Workflow Automation Platform**
 
-DocuVerse is a sophisticated, full-stack document management system designed for modern enterprises. Built with cutting-edge technologies, it provides comprehensive workflow automation, intelligent document processing, and seamless collaboration capabilities.
+DMV is a sophisticated, full-stack document management system designed for modern enterprises. Built with cutting-edge technologies, it provides comprehensive workflow automation, intelligent document processing, and seamless collaboration capabilities.
 
 ---
 
@@ -33,7 +33,7 @@ DocuVerse is a sophisticated, full-stack document management system designed for
 
 <div align="center">
 
-### 🎯 **Why Choose DocuVerse?**
+### 🎯 **Why Choose DMV?**
 
 | Feature | Benefit | Impact |
 |---------|---------|--------|
@@ -73,7 +73,7 @@ Secure and streamlined user onboarding experience:
 
 ### 🏠 **Dashboard & Overview**
 
-Experience the power of DocuVerse through its intuitive interface:
+Experience the power of DMV through its intuitive interface:
 
 ![Dashboard Overview](images/Screenshot%202025-07-02%20161130.png)
 *Modern dashboard with key metrics, recent activities, and quick actions*
@@ -317,8 +317,8 @@ Ensure you have the following installed:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/docuverse.git
-cd docuverse
+git clone https://github.com/your-org/DMV.git
+cd DMV
 
 # 2. Backend setup
 cd DocManagementBackend
@@ -392,7 +392,7 @@ docker-compose up -d
 
 #### **Advanced Document Lifecycle**
 
-DocuVerse provides comprehensive document management capabilities:
+DMV provides comprehensive document management capabilities:
 
 - **📝 Rich Text Editing**: WYSIWYG editor with collaboration features
 - **📎 Multi-format Support**: Office documents, PDFs, images, and more
@@ -529,12 +529,12 @@ interface KPIs {
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=DocuVerseDb;Trusted_Connection=true;"
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=DMVDb;Trusted_Connection=true;"
   },
   "JwtSettings": {
     "SecretKey": "your-super-secret-jwt-key-min-256-bits",
-    "Issuer": "DocuVerse",
-    "Audience": "DocuVerse-Users",
+    "Issuer": "DMV",
+    "Audience": "DMV-Users",
     "ExpiryMinutes": 1440
   },
   "Firebase": {
@@ -563,8 +563,8 @@ VITE_API_BASE_URL=https://localhost:7155/api
 VITE_API_TIMEOUT=30000
 
 # Authentication
-VITE_JWT_STORAGE_KEY=docuverse_token
-VITE_REFRESH_TOKEN_KEY=docuverse_refresh
+VITE_JWT_STORAGE_KEY=DMV_token
+VITE_REFRESH_TOKEN_KEY=DMV_refresh
 
 # Features
 VITE_ENABLE_ANALYTICS=true
@@ -692,7 +692,7 @@ services:
       - "8080:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=database;Database=DocuVerseDb;User=sa;Password=YourStrong@Password
+      - ConnectionStrings__DefaultConnection=Server=database;Database=DMVDb;User=sa;Password=YourStrong@Password
     depends_on:
       - database
 
@@ -723,12 +723,12 @@ volumes:
 
 ```bash
 # Backend deployment
-az webapp create --resource-group DocuVerse --plan DocuVerse-Plan --name docuverse-api
-az webapp deployment source config-zip --resource-group DocuVerse --name docuverse-api --src backend.zip
+az webapp create --resource-group DMV --plan DMV-Plan --name DMV-api
+az webapp deployment source config-zip --resource-group DMV --name DMV-api --src backend.zip
 
 # Frontend deployment
-az storage account create --name docuversestorage --resource-group DocuVerse
-az storage blob service-properties update --account-name docuversestorage --static-website --index-document index.html
+az storage account create --name DMVstorage --resource-group DMV
+az storage blob service-properties update --account-name DMVstorage --static-website --index-document index.html
 ```
 
 #### **AWS Deployment**
@@ -748,36 +748,36 @@ option_settings:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: docuverse-backend
+  name: DMV-backend
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: docuverse-backend
+      app: DMV-backend
   template:
     metadata:
       labels:
-        app: docuverse-backend
+        app: DMV-backend
     spec:
       containers:
       - name: backend
-        image: docuverse/backend:latest
+        image: DMV/backend:latest
         ports:
         - containerPort: 80
         env:
         - name: ConnectionStrings__DefaultConnection
           valueFrom:
             secretKeyRef:
-              name: docuverse-secrets
+              name: DMV-secrets
               key: database-connection
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: docuverse-backend-service
+  name: DMV-backend-service
 spec:
   selector:
-    app: docuverse-backend
+    app: DMV-backend
   ports:
   - protocol: TCP
     port: 80
@@ -911,8 +911,8 @@ npm run test:coverage
 
 1. **🍴 Fork the Repository**
    ```bash
-   git clone https://github.com/your-username/docuverse.git
-   cd docuverse
+   git clone https://github.com/your-username/DMV.git
+   cd DMV
    ```
 
 2. **🌿 Create Feature Branch**
@@ -1036,7 +1036,7 @@ Add screenshots of UI changes
 
 ### **🔮 Real-time Collaboration**
 
-DocuVerse supports real-time collaboration through SignalR:
+DMV supports real-time collaboration through SignalR:
 
 ```typescript
 // Real-time document editing
@@ -1077,7 +1077,7 @@ const DocumentCard = () => {
 
 ### **📱 Progressive Web App (PWA)**
 
-DocuVerse includes PWA capabilities:
+DMV includes PWA capabilities:
 
 - **📱 Mobile Installation**: Install as native app
 - **⚡ Offline Support**: Work without internet connection
@@ -1195,10 +1195,10 @@ DocuVerse includes PWA capabilities:
 
 ### **🆘 Getting Help**
 
-- **📧 Email Support**: support@docuverse.com
-- **💬 Community Forum**: [community.docuverse.com](https://community.docuverse.com)
-- **📚 Documentation**: [docs.docuverse.com](https://docs.docuverse.com)
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/your-org/docuverse/issues)
+- **📧 Email Support**: support@DMV.com
+- **💬 Community Forum**: [community.DMV.com](https://community.DMV.com)
+- **📚 Documentation**: [docs.DMV.com](https://docs.DMV.com)
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/your-org/DMV/issues)
 
 ### **🎓 Learning Resources**
 
@@ -1260,16 +1260,16 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🚀 **Ready to Transform Your Document Management?**
 
-### [**🎯 Try DocuVerse Today**](https://demo.docuverse.com) | [**📚 View Documentation**](https://docs.docuverse.com) | [**💬 Join Community**](https://community.docuverse.com)
+### [**🎯 Try DMV Today**](https://demo.DMV.com) | [**📚 View Documentation**](https://docs.DMV.com) | [**💬 Join Community**](https://community.DMV.com)
 
-**DocuVerse** - *Revolutionizing Document Management for the Modern Enterprise*
+**DMV** - *Revolutionizing Document Management for the Modern Enterprise*
 
 ---
 
-⭐ **If you find DocuVerse helpful, please give us a star on GitHub!** ⭐
+⭐ **If you find DMV helpful, please give us a star on GitHub!** ⭐
 
-[![GitHub Stars](https://img.shields.io/github/stars/your-org/docuverse?style=social)](https://github.com/your-org/docuverse)
-[![GitHub Forks](https://img.shields.io/github/forks/your-org/docuverse?style=social)](https://github.com/your-org/docuverse)
-[![GitHub Watchers](https://img.shields.io/github/watchers/your-org/docuverse?style=social)](https://github.com/your-org/docuverse)
+[![GitHub Stars](https://img.shields.io/github/stars/your-org/DMV?style=social)](https://github.com/your-org/DMV)
+[![GitHub Forks](https://img.shields.io/github/forks/your-org/DMV?style=social)](https://github.com/your-org/DMV)
+[![GitHub Watchers](https://img.shields.io/github/watchers/your-org/DMV?style=social)](https://github.com/your-org/DMV)
 
 </div>

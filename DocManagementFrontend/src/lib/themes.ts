@@ -19,7 +19,7 @@ export const themeDefinitions = {
   },
   standard: {
     name: 'Standard Theme',
-    description: 'Default DocuVerse dark theme with optimized colors and spacing',
+    description: 'Default DMV dark theme with optimized colors and spacing',
   },
 } as const;
 

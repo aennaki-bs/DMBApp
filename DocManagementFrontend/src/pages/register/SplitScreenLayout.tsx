@@ -141,7 +141,7 @@ const StepGuidance = () => {
           content: "We'll check if your username and email are available",
         },
       ],
-      note: "You'll use these credentials to access your DocuVerse account.",
+      note: "You'll use these credentials to access your DMV account.",
     },
     // Step 4: Password
     {

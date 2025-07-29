@@ -178,7 +178,7 @@ export default function Dashboard() {
       <DashboardCard title="UI Components" className="border-dashed border-2 border-muted-foreground/20">
         <div className="p-6 text-center">
           <p className="text-muted-foreground mb-4">
-            Explore the enhanced UI components available in DocuVerse with
+            Explore the enhanced UI components available in DMV with
             interactive previews.
           </p>
           <Link to="/ui-showcase">
