@@ -330,7 +330,7 @@ export function SidebarNav() {
       {/* Enhanced submenu with improved animations */}
       <div className={cn(
         "overflow-hidden transition-all duration-500 ease-out",
-        isOpen ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
+        isOpen ? ' opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
       )}>
         <ul className={cn(
           "ml-6 space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-primary/10 pl-4 relative",
@@ -578,7 +578,7 @@ export function SidebarNav() {
                     "transition-all duration-300 group-hover:scale-110",
                     isMobile ? "h-4 w-4" : "h-4 w-4"
                   )} />
-                  <span className={cn(isMobile ? "text-sm" : "text-base")}>Customer Management</span>
+                  <span className={cn(isMobile ? "text-sm" : "text-base")}>Customer </span>
                 </Link>
               </li>
             )}
@@ -594,7 +594,7 @@ export function SidebarNav() {
                     "transition-all duration-300 group-hover:scale-110",
                     isMobile ? "h-4 w-4" : "h-4 w-4"
                   )} />
-                  <span className={cn(isMobile ? "text-sm" : "text-base")}>Vendor Management</span>
+                  <span className={cn(isMobile ? "text-sm" : "text-base")}>Vendor </span>
                 </Link>
               </li>
             )}
@@ -661,8 +661,6 @@ export function SidebarNav() {
               />
             </li>
           )}
-
-
         </ul>
       </div>
     </div>
