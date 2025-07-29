@@ -1,5 +1,6 @@
 import React from "react";
 import { Check, Palette, Monitor, Sun, Moon } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,36 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 }) => {
   const { theme, setVariant, toggleMode, setAutoMode, availableThemes } =
     useTheme();
+  const { t } = useTranslation();
+
+  // Function to get translated theme name and description
+  const getThemeTranslations = (themeId: string) => {
+    const nameKey = themeId.replace('-', '') as keyof typeof t;
+    const descKey = (themeId.replace('-', '') + 'Desc') as keyof typeof t;
+    
+    const nameMap: Record<string, string> = {
+      'standard': t('theme.standard'),
+      'ocean-blue': t('theme.oceanBlue'),
+      'dark-neutral': t('theme.darkNeutral'),
+      'emerald-green': t('theme.emeraldGreen'),
+      'purple-haze': t('theme.purpleHaze'),
+      'orange-sunset': t('theme.orangeSunset'),
+    };
+    
+    const descMap: Record<string, string> = {
+      'standard': t('theme.standardDesc'),
+      'ocean-blue': t('theme.oceanBlueDesc'),
+      'dark-neutral': t('theme.darkNeutralDesc'),
+      'emerald-green': t('theme.emeraldGreenDesc'),
+      'purple-haze': t('theme.purpleHazeDesc'),
+      'orange-sunset': t('theme.orangeSunsetDesc'),
+    };
+    
+    return {
+      name: nameMap[themeId] || themeId,
+      description: descMap[themeId] || '',
+    };
+  };
 
   const ThemePreview: React.FC<{
     themeId: ThemeVariant;
@@ -109,7 +140,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             <h4 className="font-semibold text-sm">{name}</h4>
             {isSelected && (
               <Badge variant="default" className="text-xs px-2 py-0">
-                Active
+                {t('theme.active')}
               </Badge>
             )}
           </div>
@@ -132,17 +163,20 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {availableThemes.map((t) => (
+            {availableThemes.map((t) => {
+              const translations = getThemeTranslations(t.id);
+              return (
               <SelectItem key={t.id} value={t.id}>
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: t.colors.primary }}
                   />
-                  {t.name}
+                    {translations.name}
                 </div>
               </SelectItem>
-            ))}
+              );
+            })}
           </SelectContent>
         </Select>
 
@@ -171,7 +205,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
             <Monitor className="w-5 h-5" />
-            Display Mode
+            {t('theme.displayMode')}
           </h3>
 
           <div className="grid gap-4">
@@ -182,10 +216,10 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                     htmlFor="auto-mode"
                     className="font-medium text-foreground"
                   >
-                    Follow System
+                    {t('theme.followSystem')}
                   </Label>
                   <p className="text-sm text-foreground/70">
-                    Automatically switch between light and dark mode
+                    {t('theme.autoSwitchMode')}
                   </p>
                 </div>
                 <Switch
@@ -210,7 +244,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                   disabled={theme.autoMode}
                 >
                   <Sun className="w-4 h-4 mr-2" />
-                  Light
+                  {t('theme.lightMode')}
                 </Button>
                 <Button
                   variant={theme.mode === "dark" ? "default" : "outline"}
@@ -224,7 +258,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                   disabled={theme.autoMode}
                 >
                   <Moon className="w-4 h-4 mr-2" />
-                  Dark
+                  {t('theme.darkMode')}
                 </Button>
               </div>
             )}
@@ -236,21 +270,24 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
       <div className="space-y-4">
         <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
           <Palette className="w-5 h-5" />
-          Color Theme
+          {t('theme.colorTheme')}
         </h3>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {availableThemes.map((t) => (
+          {availableThemes.map((t) => {
+            const translations = getThemeTranslations(t.id);
+            return (
             <ThemePreview
               key={t.id}
               themeId={t.id}
-              name={t.name}
-              description={t.description}
+                name={translations.name}
+                description={translations.description}
               colors={t.colors}
               isSelected={theme.variant === t.id}
               onClick={() => setVariant(t.id)}
             />
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

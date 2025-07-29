@@ -481,6 +481,13 @@ namespace DocManagementBackend.Mappings
             {
                 RoleId = d.Role!.Id,
                 RoleName = d.Role.RoleName
+            },
+            ResponsibilityCentreId = d.ResponsibilityCentreId,
+            ResponsibilityCentre = d.ResponsibilityCentre == null ? null : new ResponsibilityCentreSimpleDto
+            {
+                Id = d.ResponsibilityCentre.Id,
+                Code = d.ResponsibilityCentre.Code,
+                Descr = d.ResponsibilityCentre.Descr
             }
         };
     }

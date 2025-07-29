@@ -330,7 +330,7 @@ export function SidebarNav() {
       {/* Enhanced submenu with improved animations */}
       <div className={cn(
         "overflow-hidden transition-all duration-500 ease-out",
-        isOpen ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
+        isOpen ? 'max-h-100 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
       )}>
         <ul className={cn(
           "ml-6 space-y-1 border-l-2 border-gradient-to-b from-primary/30 to-primary/10 pl-4 relative",
@@ -378,7 +378,7 @@ export function SidebarNav() {
             "font-semibold text-muted-foreground/80 uppercase tracking-wide flex-1",
             isMobile ? "text-xs" : "text-xs"
           )}>
-            Main Navigation
+            {t('nav.mainNavigation')}
           </p>
           <div className="w-8 h-0.5 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent rounded-full" />
         </div>
@@ -445,7 +445,7 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Activated</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.activated')}</span>
               </Link>
             </li>
             <li>
@@ -460,7 +460,7 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Archived</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.archived')}</span>
               </Link>
             </li>
             <li>
@@ -475,13 +475,13 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Completed</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.completed')}</span>
               </Link>
             </li>
           </SubmenuButton>
 
-          {/* Document Types Management - Only for Admin */}
-          {isAdmin && (
+          {/* Document Types Management - Admin and FullUser */}
+          {!isSimpleUser && (
             <li>
               <NavItem
                 to="/document-types-management"
@@ -511,7 +511,7 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-2" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Element Types</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.elementTypes')}</span>
               </Link>
             </li>
             <li>
@@ -524,7 +524,7 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Items</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.items')}</span>
               </Link>
             </li>
             <li>
@@ -537,7 +537,7 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Unit Codes</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.unitCodes')}</span>
               </Link>
             </li>
             <li>
@@ -550,7 +550,7 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>General Accounts</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.generalAccounts')}</span>
               </Link>
             </li>
             <li>
@@ -563,11 +563,9 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Locations</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.locations')}</span>
               </Link>
             </li>
-            {/* Customer Management - Only for Admin */}
-            {isAdmin && (
               <li>
                 <Link
                   to="/customer-management"
@@ -578,12 +576,9 @@ export function SidebarNav() {
                     "transition-all duration-300 group-hover:scale-110",
                     isMobile ? "h-4 w-4" : "h-4 w-4"
                   )} />
-                  <span className={cn(isMobile ? "text-sm" : "text-base")}>Customer Management</span>
+                  <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.customerManagement')}</span>
                 </Link>
               </li>
-            )}
-            {/* Vendor Management - Only for Admin */}
-            {isAdmin && (
               <li>
                 <Link
                   to="/vendor-management"
@@ -594,14 +589,14 @@ export function SidebarNav() {
                     "transition-all duration-300 group-hover:scale-110",
                     isMobile ? "h-4 w-4" : "h-4 w-4"
                   )} />
-                  <span className={cn(isMobile ? "text-sm" : "text-base")}>Vendor Management</span>
+                  <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.vendorManagement')}</span>
                 </Link>
               </li>
-            )}
+            
           </SubmenuButton>
 
-          {/* Circuits - Only for Admin */}
-          {isAdmin && (
+          {/* Circuits - Admin and FullUser */}
+          {!isSimpleUser && (
             <li>
               <NavItem
                 to="/circuits"
@@ -631,7 +626,7 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Approval Groups</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.approvalGroups')}</span>
               </Link>
             </li>
             <li>
@@ -644,7 +639,7 @@ export function SidebarNav() {
                   "transition-all duration-300 group-hover:scale-110",
                   isMobile ? "h-4 w-4" : "h-4 w-4"
                 )} />
-                <span className={cn(isMobile ? "text-sm" : "text-base")}>Approvers</span>
+                <span className={cn(isMobile ? "text-sm" : "text-base")}>{t('nav.approvers')}</span>
               </Link>
             </li>
           </SubmenuButton>

@@ -36,7 +36,11 @@ namespace DocManagementBackend.Controllers
             var userId = authResult.UserId;
             
             var users = await _context.Users
-                .Include(u => u.Role).Where(u => u.Id != userId).Select(UserMappings.ToUserDto).ToListAsync();
+                .Include(u => u.Role)
+                .Include(u => u.ResponsibilityCentre)
+                .Where(u => u.Id != userId)
+                .Select(UserMappings.ToUserDto)
+                .ToListAsync();
             return Ok(users);
         }
 
@@ -66,7 +70,7 @@ namespace DocManagementBackend.Controllers
             if (!authResult.IsAuthorized)
                 return authResult.ErrorResponse!;
             
-            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users.Include(u => u.Role).Include(u => u.ResponsibilityCentre).FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
                 return NotFound("User not found.");
             return Ok(user);
@@ -129,7 +133,7 @@ namespace DocManagementBackend.Controllers
                 Identity = request.Identity ?? string.Empty,
                 PhoneNumber = request.PhoneNumber ?? string.Empty,
                 WebSite = request.WebSite ?? string.Empty,
-                // ResponsibilityCentreId = request.ResponsibilityCenterId.HasValue ? request.ResponsibilityCenterId.Value : null,
+                ResponsibilityCentreId = request.ResponsibilityCenterId.HasValue ? request.ResponsibilityCenterId.Value : null,
                 UserType = request.UserType
             };
 

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import adminService from "@/services/adminService";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DirectEditUserEmailModalProps {
   user: UserDto | null;
@@ -29,6 +30,7 @@ export function DirectEditUserEmailModal({
   onClose,
   onSave,
 }: DirectEditUserEmailModalProps) {
+  const { t } = useTranslation();
   const [newEmail, setNewEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailError, setEmailError] = useState("");
@@ -275,13 +277,14 @@ export function DirectEditUserEmailModal({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="relative w-full max-w-md bg-gradient-to-b from-[#1a2c6b] to-[#0a1033] rounded-xl border border-blue-500/30 text-white shadow-[0_0_25px_rgba(59,130,246,0.2)] overflow-hidden">
+        {/* Header */}
         <div className="p-4 border-b border-blue-900/30 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-full bg-blue-500/10 text-blue-400">
               <Mail className="h-5 w-5" />
             </div>
             <h2 className="text-xl font-semibold text-blue-100">
-              Update Email
+              {t("userManagement.updateEmailTitle")}
             </h2>
           </div>
           <button
@@ -292,87 +295,89 @@ export function DirectEditUserEmailModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5">
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-blue-200 block mb-1">
-                Current Email
-              </label>
-              <div className="bg-[#111633] border border-blue-900/50 rounded-md p-2.5 text-gray-300">
-                {user.email}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm text-blue-200 block">New Email</label>
-              <div className="relative">
-                <Input
-                  type="email"
-                  value={newEmail}
-                  onChange={handleEmailChange}
-                  placeholder="Enter new email address"
-                  className={`bg-[#111633] border-blue-900/50 text-white pr-8 ${
-                    emailError ? "border-red-500" : ""
-                  }`}
-                />
-                {isCheckingEmail && (
-                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                    <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />
-                  </div>
-                )}
-              </div>
-              {emailError && (
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <AlertCircle className="h-3.5 w-3.5 text-red-400" />
-                  <p className="text-red-400 text-xs">{emailError}</p>
-                </div>
-              )}
-              <p className="text-xs text-blue-400 mt-1 flex items-center gap-1.5">
-                <Mail className="h-3.5 w-3.5" />A verification email will be
-                sent to the new address
-              </p>
-            </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-5">
+          {/* Current Email */}
+          <div className="space-y-2">
+            <label className="text-sm text-blue-200">
+              {t("userManagement.currentEmail")}
+            </label>
+            <Input
+              value={user?.email || ""}
+              disabled
+              className="bg-[#111633] border-blue-900/50 text-white opacity-50"
+            />
           </div>
 
+          {/* New Email */}
+          <div className="space-y-2">
+            <label className="text-sm text-blue-200">
+              {t("userManagement.newEmail")}
+            </label>
+            <div className="relative">
+              <Input
+                type="email"
+                value={newEmail}
+                onChange={handleEmailChange}
+                className={`bg-[#111633] border-blue-900/50 text-white pr-10 ${
+                  emailError ? "border-red-500" : ""
+                }`}
+                placeholder={t("userManagement.enterNewEmailAddress")}
+                required
+              />
+              {isCheckingEmail && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                </div>
+              )}
+            </div>
+            {emailError && (
+              <p className="text-xs text-red-400 flex items-center gap-1">
+                <XCircle className="h-3 w-3" />
+                {emailError}
+              </p>
+            )}
+          </div>
+
+          {/* Info Alert */}
+          <Alert className="bg-blue-900/20 border-blue-800/50">
+            <AlertCircle className="h-4 w-4 text-blue-400" />
+            <AlertDescription className="text-blue-200">
+              {t("userManagement.verificationEmailWillBeSent")}
+            </AlertDescription>
+          </Alert>
+
+          {/* Form Error */}
           {formError && (
-            <Alert
-              variant="destructive"
-              className="mt-4 bg-red-900/30 border-red-500/40 text-red-200"
-            >
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{formError}</AlertDescription>
+            <Alert className="bg-red-900/20 border-red-800/50">
+              <XCircle className="h-4 w-4 text-red-400" />
+              <AlertDescription className="text-red-200">
+                {formError}
+              </AlertDescription>
             </Alert>
           )}
 
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-blue-900/40">
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-blue-900/30">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={isSubmitting}
-              className="bg-transparent border-blue-500/30 text-blue-300 hover:bg-blue-800/20"
+              className="bg-transparent border-blue-800/50 text-blue-300 hover:bg-blue-800/20 hover:text-blue-100"
             >
-              Cancel
+              {t("userManagement.cancel")}
             </Button>
             <Button
               type="submit"
-              disabled={
-                isSubmitting || !newEmail || !!emailError || isCheckingEmail
-              }
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isSubmitting || !newEmail || !!emailError}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
             >
               {isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                  Updating...
-                </>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Update Email
-                </>
+                <Save className="h-4 w-4" />
               )}
+              {t("userManagement.updateEmailButton")}
             </Button>
           </div>
         </form>

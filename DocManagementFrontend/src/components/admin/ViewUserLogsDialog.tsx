@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ViewUserLogsDialogProps {
   userId: number;
@@ -60,6 +61,8 @@ export function ViewUserLogsDialog({
   open,
   onOpenChange,
 }: ViewUserLogsDialogProps) {
+  const { t, tWithParams } = useTranslation();
+  
   // State for filtering and searching
   const [searchQuery, setSearchQuery] = useState("");
   const [actionTypeFilter, setActionTypeFilter] = useState<string>("all");
@@ -302,10 +305,10 @@ export function ViewUserLogsDialog({
         <DialogHeader className="p-6 border-b border-slate-700/50 bg-gradient-to-r from-blue-950/50 to-slate-900/50 backdrop-blur-sm">
           <DialogTitle className="text-xl text-blue-100 flex items-center gap-2">
             <Activity className="h-5 w-5 text-blue-400" />
-            User Activity Logs
+            {t("userManagement.userActivityLogs")}
           </DialogTitle>
           <DialogDescription className="text-slate-400">
-            Comprehensive history of user interactions and system events
+            {t("userManagement.comprehensiveHistory")}
           </DialogDescription>
         </DialogHeader>
 
@@ -315,7 +318,7 @@ export function ViewUserLogsDialog({
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
               <Input
-                placeholder="Search in logs..."
+                placeholder={t("userManagement.searchInLogs")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 bg-slate-800/90 border-slate-600/70 text-slate-200 placeholder:text-slate-500 focus-visible:ring-blue-600"
@@ -333,7 +336,7 @@ export function ViewUserLogsDialog({
                   )}
                 >
                   <Filter className="h-4 w-4 mr-2" />
-                  Filters
+                  {t("userManagement.filters")}
                   {(actionTypeFilter !== "all" || dateFilter !== "all") && (
                     <Badge className="ml-2 bg-blue-600 text-white">
                       {(actionTypeFilter !== "all" && dateFilter !== "all") ? 2 : 1}
@@ -425,14 +428,14 @@ export function ViewUserLogsDialog({
                       className="text-slate-400 hover:text-slate-200"
                     >
                       <X className="h-4 w-4 mr-1" />
-                      Clear Filters
+                      {t("userManagement.clearFilters")}
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => setFilterOpen(false)}
                       className="bg-blue-600 text-white hover:bg-blue-700"
                     >
-                      Apply Filters
+                      {t("userManagement.applyFilters")}
                     </Button>
                   </div>
                 </div>
@@ -445,7 +448,7 @@ export function ViewUserLogsDialog({
             <div className="flex flex-wrap gap-2 mt-3">
               {actionTypeFilter !== "all" && (
                 <Badge className="bg-blue-900/40 text-blue-200 border border-blue-500/30 px-2 py-1 flex items-center gap-1">
-                  Action: {getActionTypeLabel(parseInt(actionTypeFilter))}
+                  {t("userManagement.action")}: {getActionTypeLabel(parseInt(actionTypeFilter))}
                   <X
                     className="h-3 w-3 ml-1 cursor-pointer"
                     onClick={() => setActionTypeFilter("all")}
@@ -454,7 +457,7 @@ export function ViewUserLogsDialog({
               )}
               {dateFilter !== "all" && (
                 <Badge className="bg-blue-900/40 text-blue-200 border border-blue-500/30 px-2 py-1 flex items-center gap-1">
-                  Date: {dateFilter === "today" ? "Today" :
+                  {t("userManagement.date")}: {dateFilter === "today" ? "Today" :
                     dateFilter === "yesterday" ? "Yesterday" :
                       dateFilter === "thisWeek" ? "This Week" :
                         dateFilter === "thisMonth" ? "This Month" :
@@ -471,7 +474,7 @@ export function ViewUserLogsDialog({
               )}
               {searchQuery && (
                 <Badge className="bg-blue-900/40 text-blue-200 border border-blue-500/30 px-2 py-1 flex items-center gap-1">
-                  Search: "{searchQuery}"
+                  {t("userManagement.search")}: "{searchQuery}"
                   <X
                     className="h-3 w-3 ml-1 cursor-pointer"
                     onClick={() => setSearchQuery("")}
@@ -485,7 +488,7 @@ export function ViewUserLogsDialog({
                   onClick={clearFilters}
                   className="text-slate-400 hover:text-slate-200 h-6 px-2 py-0"
                 >
-                  Clear All
+                  {t("userManagement.clearAll")}
                 </Button>
               )}
             </div>
@@ -501,7 +504,7 @@ export function ViewUserLogsDialog({
           ) : isError ? (
             <div className="text-red-400 py-10 flex items-center justify-center bg-red-900/10 rounded-lg border border-red-900/30 m-4">
               <AlertCircle className="h-5 w-5 mr-2" />
-              Error loading activity logs. Please try again.
+              {t("userManagement.errorLoadingLogs")}
             </div>
           ) : filteredLogs.length > 0 ? (
             <div className="relative">
@@ -517,7 +520,7 @@ export function ViewUserLogsDialog({
                           onClick={() => toggleSort("actionType")}
                         >
                           <div className="flex items-center">
-                            Action
+                            {t("userManagement.logAction")}
                             {sortField === "actionType" && (
                               <ChevronDown
                                 className={cn(
@@ -533,7 +536,7 @@ export function ViewUserLogsDialog({
                           onClick={() => toggleSort("timestamp")}
                         >
                           <div className="flex items-center">
-                            Timestamp
+                            {t("userManagement.logTimestamp")}
                             {sortField === "timestamp" && (
                               <ChevronDown
                                 className={cn(
@@ -549,7 +552,7 @@ export function ViewUserLogsDialog({
                           onClick={() => toggleSort("description")}
                         >
                           <div className="flex items-center">
-                            Description
+                            {t("userManagement.logDescription")}
                             {sortField === "description" && (
                               <ChevronDown
                                 className={cn(
@@ -565,7 +568,7 @@ export function ViewUserLogsDialog({
                           onClick={() => toggleSort("user")}
                         >
                           <div className="flex items-center">
-                            User
+                            {t("userManagement.user")}
                             {sortField === "user" && (
                               <ChevronDown
                                 className={cn(
@@ -633,13 +636,13 @@ export function ViewUserLogsDialog({
 
               {/* Results count */}
               <div className="px-4 pb-4 text-sm text-slate-400">
-                Showing {filteredLogs.length} {filteredLogs.length === 1 ? "entry" : "entries"}
+                {tWithParams("userManagement.showingEntries", { count: filteredLogs.length })}
                 {(actionTypeFilter !== "all" || dateFilter !== "all" || searchQuery) && " (filtered)"}
               </div>
             </div>
           ) : (
             <div className="text-center py-10 text-slate-400 bg-slate-900/50 rounded-lg border border-slate-700/50 m-4">
-              No activity logs found {(actionTypeFilter !== "all" || dateFilter !== "all" || searchQuery) && " matching your filters"}
+              {t("userManagement.noLogsFound")} {(actionTypeFilter !== "all" || dateFilter !== "all" || searchQuery) && " matching your filters"}
             </div>
           )}
         </div>

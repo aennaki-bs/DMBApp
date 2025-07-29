@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 type Theme = "light" | "dark";
-type Language = "en" | "fr" | "es";
+type Language = "en" | "fr" | "ar";
 
 interface SettingsContextType {
   theme: Theme;
@@ -28,13 +28,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const [language, setLanguage] = useState<Language>(() => {
     const savedLang = localStorage.getItem("language");
-    if (savedLang === "en" || savedLang === "fr" || savedLang === "es") {
+    if (savedLang === "en" || savedLang === "fr" || savedLang === "ar") {
       return savedLang;
     }
 
     // Try to detect browser language
     const browserLang = navigator.language.split("-")[0];
-    if (browserLang === "fr" || browserLang === "es") {
+    if (browserLang === "fr" || browserLang === "ar") {
       return browserLang as Language;
     }
 

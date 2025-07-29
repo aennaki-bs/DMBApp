@@ -13,6 +13,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { X, UserCog, Save, User, Building2, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
+import responsibilityCentreService from "@/services/responsibilityCentreService";
 
 interface DirectEditUserModalProps {
   user: UserDto | null;
@@ -27,6 +30,7 @@ export function DirectEditUserModal({
   onClose,
   onSave,
 }: DirectEditUserModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<{
     username: string;
     passwordHash: string;
@@ -62,6 +66,7 @@ export function DirectEditUserModal({
   const [passwordError, setPasswordError] = useState("");
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [usernameChecking, setUsernameChecking] = useState(false);
+  const [responsibilityCentres, setResponsibilityCentres] = useState<ResponsibilityCentreSimple[]>([]);
 
   // Detect user type based on name patterns
   const detectUserType = (user: UserDto): "personal" | "company" => {
@@ -89,7 +94,11 @@ export function DirectEditUserModal({
         typeof user.role === "string"
           ? user.role
           : (user.role as any)?.roleName || "SimpleUser";
-      setFormData({
+      
+      const responsibilityCentreId = (user as any).responsibilityCentreId || 0;
+      console.log("Setting responsibility centre ID:", responsibilityCentreId);
+      
+      const newFormData = {
         username: user.username || "",
         passwordHash: "",
         firstName: user.firstName || "",
@@ -97,16 +106,35 @@ export function DirectEditUserModal({
         isEmailConfirmed: user.isEmailConfirmed || false,
         roleName: roleString,
         isActive: user.isActive || false,
-        responsibilityCenterId: (user as any).responsibilityCenterId || 0,
+        responsibilityCenterId: responsibilityCentreId,
         city: (user as any).city || "",
         country: (user as any).country || "",
         address: (user as any).address || "",
         identity: (user as any).identity || "",
         phoneNumber: (user as any).phoneNumber || "",
-      });
+      };
+      
+      console.log("Setting form data with responsibility centre ID:", newFormData.responsibilityCenterId);
+      setFormData(newFormData);
       setUsernameError("");
     }
   }, [user]);
+
+  // Fetch responsibility centres when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const fetchResponsibilityCentres = async () => {
+        try {
+          const data = await responsibilityCentreService.getSimple();
+          setResponsibilityCentres(data || []);
+        } catch (error) {
+          console.error("Failed to fetch responsibility centres:", error);
+          setResponsibilityCentres([]);
+        }
+      };
+      fetchResponsibilityCentres();
+    }
+  }, [isOpen]);
 
   // Debounced username availability check
   useEffect(() => {
@@ -142,11 +170,11 @@ export function DirectEditUserModal({
 
   const validateUsername = (username: string): boolean => {
     if (username.trim().length < 3) {
-      setUsernameError("Username must be at least 3 characters");
+      setUsernameError(t("userManagement.usernameMinLength"));
       return false;
     }
     if (username.includes(" ")) {
-      setUsernameError("Username cannot contain spaces");
+      setUsernameError(t("userManagement.usernameNoSpaces"));
       return false;
     }
     setUsernameError("");
@@ -156,11 +184,11 @@ export function DirectEditUserModal({
   // Password validation function
   const validatePassword = (password: string): string => {
     if (!password) return "";
-    if (password.length < 8) return "Password must be at least 8 characters.";
-    if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
-    if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter.";
-    if (!/[0-9]/.test(password)) return "Password must contain at least one number.";
-    if (!/[^A-Za-z0-9]/.test(password)) return "Password must contain at least one special character.";
+    if (password.length < 8) return t("userManagement.passwordMinLength");
+    if (!/[A-Z]/.test(password)) return t("userManagement.passwordUppercase");
+    if (!/[a-z]/.test(password)) return t("userManagement.passwordLowercase");
+    if (!/[0-9]/.test(password)) return t("userManagement.passwordNumber");
+    if (!/[^A-Za-z0-9]/.test(password)) return t("userManagement.passwordSpecialChar");
     return "";
   };
 
@@ -192,14 +220,14 @@ export function DirectEditUserModal({
     e.preventDefault();
     if (!user) return;
     if (!validateUsername(formData.username)) {
-      toast.error("Please fix username errors before submitting");
+      toast.error(t("userManagement.pleaseFixErrors"));
       return;
     }
     if (
       formData.username !== user.username &&
       (usernameAvailable === false || usernameChecking)
     ) {
-      toast.error("This username is already taken. Please choose a different one.");
+      toast.error(t("userManagement.usernameTaken"));
       return;
     }
     if (formData.passwordHash && passwordError) {
@@ -222,17 +250,17 @@ export function DirectEditUserModal({
     if (formData.identity !== (user as any).identity) updateData.identity = formData.identity;
     if (formData.phoneNumber !== (user as any).phoneNumber) updateData.phoneNumber = formData.phoneNumber;
     if (Object.keys(updateData).length === 0) {
-      toast.info("No changes were made");
+      toast.info(t("userManagement.noChanges"));
       onClose();
       return;
     }
     try {
       await onSave(user.id, updateData);
-      toast.success("User updated successfully");
+      toast.success(t("userManagement.userUpdatedSuccess"));
       onClose();
     } catch (error) {
       console.error("Failed to update user:", error);
-      toast.error("Failed to update user");
+      toast.error(t("userManagement.failedToUpdateUser"));
     } finally {
       setIsSubmitting(false);
     }
@@ -247,9 +275,9 @@ export function DirectEditUserModal({
             <div className="p-1.5 rounded-full bg-blue-500/10 text-blue-400">
               <UserCog className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-semibold text-blue-100">Edit User</h2>
+            <h2 className="text-xl font-semibold text-blue-100">{t("userManagement.editUser")}</h2>
             <span className="text-xs bg-blue-800/40 px-2 py-1 rounded-full text-blue-300 ml-2">
-              {userType === "personal" ? "Personal" : "Company"} Account
+              {userType === "personal" ? t("userManagement.personalAccount") : t("userManagement.companyAccount")}
             </span>
           </div>
           <button
@@ -274,62 +302,66 @@ export function DirectEditUserModal({
                   <Building2 className="h-5 w-5 text-blue-400" />
                 )}
                 <h3 className="text-blue-100 font-medium">
-                  {userType === "personal" ? "Personal Information" : "Company Information"}
+                  {userType === "personal" ? t("userManagement.personalInformation") : t("userManagement.companyInformation")}
                 </h3>
               </div>
               
               {userType === "personal" ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm text-blue-200">First Name</label>
+                    <label className="text-sm text-blue-200">{t("userManagement.firstName")}</label>
                     <Input
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
                       className="bg-[#111633] border-blue-900/50 text-white"
-                      placeholder="Enter first name"
+                      placeholder={t("userManagement.firstNamePlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm text-blue-200">Last Name</label>
+                    <label className="text-sm text-blue-200">{t("userManagement.lastName")}</label>
                     <Input
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
                       className="bg-[#111633] border-blue-900/50 text-white"
-                      placeholder="Enter last name"
+                      placeholder={t("userManagement.lastNamePlaceholder")}
                     />
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Company Name</label>
-                  <Input
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className="bg-[#111633] border-blue-900/50 text-white"
-                    placeholder="Enter company name"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm text-blue-200">{t("userManagement.companyName")}</label>
+                    <Input
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className="bg-[#111633] border-blue-900/50 text-white"
+                      placeholder={t("userManagement.companyNamePlaceholder")}
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Account Information */}
             <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
-              <h3 className="text-blue-100 font-medium mb-3">
-                Account Information
-              </h3>
+              <div className="flex items-center gap-2 mb-3">
+                <Lock className="h-5 w-5 text-blue-400" />
+                <h3 className="text-blue-100 font-medium">{t("userManagement.accountInformation")}</h3>
+              </div>
+              
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Username</label>
+                  <label className="text-sm text-blue-200">{t("userManagement.username")}</label>
                   <div className="relative flex items-center">
                     <Input
                       name="username"
                       value={formData.username}
                       onChange={handleInputChange}
                       className={`bg-[#111633] border-blue-900/50 text-white pr-10 ${usernameError || (usernameAvailable === false) ? "border-red-500" : usernameAvailable === true ? "border-green-500" : ""}`}
-                      placeholder="Enter username"
+                      placeholder={t("userManagement.usernamePlaceholder")}
                     />
                     {usernameChecking && (
                       <Loader2 className="animate-spin absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-300" />
@@ -345,17 +377,17 @@ export function DirectEditUserModal({
                     <p className="text-red-400 text-xs mt-1">{usernameError}</p>
                   )}
                   {formData.username !== user?.username && usernameAvailable === false && !usernameChecking && (
-                    <p className="text-red-400 text-xs mt-1">This username is already taken. Please choose a different one.</p>
+                    <p className="text-red-400 text-xs mt-1">{t("userManagement.usernameTaken")}</p>
                   )}
                   {formData.username !== user?.username && usernameAvailable === true && !usernameChecking && (
-                    <p className="text-green-400 text-xs mt-1">Username is available</p>
+                    <p className="text-green-400 text-xs mt-1">{t("userManagement.usernameAvailable")}</p>
                   )}
                 </div>
 
                 {/* Email field - Read only */}
                 <div className="space-y-2">
                   <label className="text-sm text-blue-200 flex items-center gap-2">
-                    Email Address
+                    {t("userManagement.emailAddress")}
                     <Lock className="h-3 w-3 text-gray-400" />
                   </label>
                   <Input
@@ -365,11 +397,11 @@ export function DirectEditUserModal({
                     placeholder="Email cannot be edited"
                   />
                   <p className="text-xs text-gray-400">
-                    Email address cannot be modified for security reasons
+                    {t("userManagement.emailCannotBeModified")}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Password</label>
+                  <label className="text-sm text-blue-200">{t("userManagement.password")}</label>
                   <div className="relative flex items-center">
                     <Input
                       name="passwordHash"
@@ -377,7 +409,7 @@ export function DirectEditUserModal({
                       onChange={handleInputChange}
                       className={`bg-[#111633] border-blue-900/50 text-white pr-10 ${passwordError ? "border-red-500" : ""}`}
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter new password (leave blank to keep current)"
+                      placeholder={t("userManagement.enterNewPassword")}
                       autoComplete="new-password"
                     />
                     <button
@@ -401,31 +433,52 @@ export function DirectEditUserModal({
 
             {/* Contact & Details */}
             <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
-              <h3 className="text-blue-100 font-medium mb-3">Contact & Details</h3>
+              <div className="flex items-center gap-2 mb-3">
+                <User className="h-5 w-5 text-blue-400" />
+                <h3 className="text-blue-100 font-medium">{t("userManagement.contactAndDetails")}</h3>
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-blue-200">City</label>
-                  <Input name="city" value={formData.city} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder="Enter city" />
+                  <label className="text-sm text-blue-200">{t("userManagement.city")}</label>
+                  <Input name="city" value={formData.city} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder={t("userManagement.cityPlaceholder")} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Country</label>
-                  <Input name="country" value={formData.country} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder="Enter country" />
+                  <label className="text-sm text-blue-200">{t("userManagement.country")}</label>
+                  <Input name="country" value={formData.country} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder={t("userManagement.countryPlaceholder")} />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <label className="text-sm text-blue-200">{t("userManagement.address")}</label>
+                  <Input name="address" value={formData.address} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder={t("userManagement.addressPlaceholder")} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Address</label>
-                  <Input name="address" value={formData.address} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder="Enter address" />
+                  <label className="text-sm text-blue-200">{t("userManagement.phoneNumber")}</label>
+                  <Input name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder={t("userManagement.phoneNumberPlaceholder")} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Phone Number</label>
-                  <Input name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder="Enter phone number" />
+                  <label className="text-sm text-blue-200">{t("userManagement.identityCIN")}</label>
+                  <Input name="identity" value={formData.identity} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder={t("userManagement.enterCINOrIdentity")} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Identity (CIN)</label>
-                  <Input name="identity" value={formData.identity} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" placeholder="Enter CIN or identity" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Responsibility Centre</label>
-                  <Input name="responsibilityCenterId" value={formData.responsibilityCenterId} onChange={handleInputChange} className="bg-[#111633] border-blue-900/50 text-white" type="number" min={0} placeholder="Enter responsibility centre ID" />
+                  <label className="text-sm text-blue-200">{t("userManagement.responsibilityCentre")}</label>
+                  <Select
+                    value={formData.responsibilityCenterId?.toString() || "0"}
+                    onValueChange={(value) =>
+                      handleSelectChange("responsibilityCenterId", parseInt(value) || 0)
+                    }
+                  >
+                    <SelectTrigger className="bg-[#111633] border-blue-900/50 text-white">
+                      <SelectValue placeholder={t("userManagement.selectResponsibilityCentre")} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a2c6b] border-blue-900/50 text-white">
+                      <SelectItem value="0">{t("userManagement.noResponsibilityCentre")}</SelectItem>
+                      {responsibilityCentres.map((centre) => (
+                        <SelectItem key={centre.id} value={centre.id.toString()}>
+                          {centre.code} - {centre.descr}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -433,11 +486,11 @@ export function DirectEditUserModal({
             {/* Role & Permissions */}
             <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/30">
               <h3 className="text-blue-100 font-medium mb-3">
-                Role & Permissions
+                {t("userManagement.roleAndPermissions")}
               </h3>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-blue-200">Role</label>
+                  <label className="text-sm text-blue-200">{t("userManagement.role")}</label>
                   <Select
                     value={formData.roleName}
                     onValueChange={(value) =>
@@ -466,7 +519,7 @@ export function DirectEditUserModal({
               disabled={isSubmitting}
               className="bg-transparent border-blue-500/30 text-blue-300 hover:bg-blue-800/20"
             >
-              Cancel
+              {t("userManagement.cancel")}
             </Button>
             <Button
               type="submit"
@@ -500,7 +553,7 @@ export function DirectEditUserModal({
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save Changes
+                  {t("userManagement.saveChanges")}
                 </>
               )}
             </Button>

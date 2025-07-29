@@ -74,7 +74,7 @@ const Settings = () => {
     return localStorage.getItem("selectedBackground") || "default";
   });
 
-  const handleLanguageChange = (value: "en" | "fr" | "es") => {
+  const handleLanguageChange = (value: "en" | "fr" | "ar") => {
     setLanguage(value);
     toast.success(t("settings.languageUpdated"));
   };
@@ -184,13 +184,13 @@ const Settings = () => {
                       className="text-xs bg-primary/5 backdrop-blur-sm border-primary/20 hover:bg-primary/10"
                     >
                       <Palette className="h-3 w-3 mr-1" />
-                      Preview Themes
+                      {t('theme.previewThemes')}
                     </Button>
                     <Badge
                       variant="outline"
                       className="bg-green-500/10 text-green-400 border-green-500/30 backdrop-blur-sm"
                     >
-                      Active Theme
+                      {t('theme.activeTheme')}
                     </Badge>
                   </div>
                 </div>
@@ -248,12 +248,12 @@ const Settings = () => {
                         </div>
                       </SelectItem>
                       <SelectItem
-                        value="es"
+                        value="ar"
                         className="text-foreground focus:bg-accent/50 py-3"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-xl">🇪🇸</span>
-                          <span>Español</span>
+                          <span className="text-l ">AR</span>
+                          <span>العربية</span>
                         </div>
                       </SelectItem>
                     </SelectContent>

@@ -86,11 +86,11 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel className="text-blue-200">
-                        CIN (National Identity Card) <span className="text-blue-400 text-xs">(Optional)</span>
+                        {t("userManagement.cinLabel")} <span className="text-blue-400 text-xs">({t("userManagement.optional")})</span>
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter CIN number"
+                          placeholder={t("userManagement.cinPlaceholder")}
                           {...field}
                           value={field.value || ""}
                           className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
@@ -149,11 +149,11 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-blue-200">
-                        Registration Number <span className="text-blue-400 text-xs">(Optional)</span>
+                        {t("userManagement.registrationNumber")} <span className="text-blue-400 text-xs">({t("userManagement.optional")})</span>
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter company registration number"
+                          placeholder={t("userManagement.registrationNumberPlaceholder")}
                           {...field}
                           value={field.value || ""}
                           className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50"
@@ -186,8 +186,8 @@ export function AccountDetailsStep({ form }: AccountDetailsStepProps) {
             <path d="M12 8h.01" />
           </svg>
           {userType === "personal" 
-            ? "CIN (National Identity Card)" 
-            : "Registration Number is used for company identification."
+            ? t("userManagement.cinDescription")
+            : t("userManagement.registrationDescription")
           }
         </p>
       </div>

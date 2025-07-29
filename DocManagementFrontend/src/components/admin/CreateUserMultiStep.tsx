@@ -54,29 +54,13 @@ import { PasswordStep } from "./steps/PasswordStep";
 import { RoleStep } from "./steps/RoleStep";
 import { ReviewStep } from "./steps/ReviewStep";
 
-// Password validation schema
-const passwordSchema = z
-  .string()
-  .min(8, { message: "Password must be at least 8 characters." })
-  .refine((value) => /[A-Z]/.test(value), {
-    message: "Password must contain at least one uppercase letter.",
-  })
-  .refine((value) => /[a-z]/.test(value), {
-    message: "Password must contain at least one lowercase letter.",
-  })
-  .refine((value) => /[0-9]/.test(value), {
-    message: "Password must contain at least one number.",
-  })
-  .refine((value) => /[^A-Za-z0-9]/.test(value), {
-    message: "Password must contain at least one special character.",
-  });
+// Password validation schema - will be overridden with translations
+const passwordSchema = z.string();
 
 // Form schema with conditional validation based on user type
 const formSchema = z.object({
   // User type selection
-  userType: z.enum(["personal", "company"], {
-    required_error: "Please select a user type.",
-  }),
+  userType: z.enum(["personal", "company"]),
 
   // Responsibility Centre (optional, default to 0)
   responsibilityCenterId: z.number().default(0),
@@ -90,45 +74,32 @@ const formSchema = z.object({
 
   // Address information
   address: z.string().optional(),
-  city: z.string().min(2, {
-    message: "City is required.",
-  }),
-  country: z.string().min(2, {
-    message: "Country is required.",
-  }),
+  city: z.string(),
+  country: z.string(),
   phoneNumber: z.string().optional(),
   webSite: z.string().optional(),
 
   // Username & Email
-  username: z.string().min(3, {
-    message: "Username must be at least 3 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
+  username: z.string(),
+  email: z.string(),
 
   // Password
   passwordHash: passwordSchema,
-  confirmPassword: z.string().min(1, {
-    message: "Please confirm your password.",
-  }),
+  confirmPassword: z.string(),
 
   // Role selection
-  roleName: z.enum(["Admin", "FullUser", "SimpleUser"], {
-    required_error: "Please select a user role.",
-  }),
-})
-.refine((data) => data.passwordHash === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-})
+  roleName: z.enum(["Admin", "FullUser", "SimpleUser"]),
+});
+
+// Function to create schema with translated messages
+const createFormSchema = (t: (key: string) => string) => formSchema
 .refine((data) => {
   if (data.userType === "personal") {
     return data.firstName && data.firstName.trim().length >= 2;
   }
   return true;
 }, {
-  message: "First name must be at least 2 characters.",
+  message: t("userManagement.firstNameMinLength"),
   path: ["firstName"],
 })
 .refine((data) => {
@@ -137,7 +108,7 @@ const formSchema = z.object({
   }
   return true;
 }, {
-  message: "Last name must be at least 2 characters.",
+  message: t("userManagement.lastNameMinLength"),
   path: ["lastName"],
 })
 .refine((data) => {
@@ -146,8 +117,86 @@ const formSchema = z.object({
   }
   return true;
 }, {
-  message: "Company name must be at least 2 characters.",
+  message: t("userManagement.companyNameMinLength"),
   path: ["companyName"],
+})
+.refine((data) => {
+  return data.city && data.city.trim().length >= 2;
+}, {
+  message: t("userManagement.cityRequired"),
+  path: ["city"],
+})
+.refine((data) => {
+  return data.country && data.country.trim().length >= 2;
+}, {
+  message: t("userManagement.countryRequired"),
+  path: ["country"],
+})
+.refine((data) => {
+  return data.userType && data.userType.length > 0;
+}, {
+  message: t("userManagement.selectUserType"),
+  path: ["userType"],
+})
+.refine((data) => {
+  return data.username && data.username.trim().length >= 3;
+}, {
+  message: t("userManagement.usernameMinLength"),
+  path: ["username"],
+})
+.refine((data) => {
+  return data.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email);
+}, {
+  message: t("userManagement.emailValidation"),
+  path: ["email"],
+})
+.refine((data) => {
+  return data.passwordHash && data.passwordHash.length >= 8;
+}, {
+  message: t("userManagement.passwordMustBe8"),
+  path: ["passwordHash"],
+})
+.refine((data) => {
+  return data.passwordHash && /[A-Z]/.test(data.passwordHash);
+}, {
+  message: t("userManagement.atLeastOneUpper"),
+  path: ["passwordHash"],
+})
+.refine((data) => {
+  return data.passwordHash && /[a-z]/.test(data.passwordHash);
+}, {
+  message: t("userManagement.atLeastOneLower"),
+  path: ["passwordHash"],
+})
+.refine((data) => {
+  return data.passwordHash && /[0-9]/.test(data.passwordHash);
+}, {
+  message: t("userManagement.atLeastOneNumber"),
+  path: ["passwordHash"],
+})
+.refine((data) => {
+  return data.passwordHash && /[^A-Za-z0-9]/.test(data.passwordHash);
+}, {
+  message: t("userManagement.atLeastOneSpecial"),
+  path: ["passwordHash"],
+})
+.refine((data) => {
+  return data.confirmPassword && data.confirmPassword.length > 0;
+}, {
+  message: t("userManagement.confirmPasswordLabel"),
+  path: ["confirmPassword"],
+})
+.refine((data) => {
+  return data.passwordHash === data.confirmPassword;
+}, {
+  message: t("userManagement.passwordsDontMatch"),
+  path: ["confirmPassword"],
+})
+.refine((data) => {
+  return data.roleName && data.roleName.length > 0;
+}, {
+  message: t("userManagement.selectUserRole"),
+  path: ["roleName"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -192,8 +241,8 @@ export function CreateUserMultiStep({
     },
     {
       id: 1,
-      title: "Responsibility Centre",
-      description: "Assign to organizational unit",
+      title: t("userManagement.responsibilityCentreStep"),
+      description: t("userManagement.responsibilityCentreStepDesc"),
       icon: <Building2 className="h-5 w-5" />,
     },
     {
@@ -234,9 +283,12 @@ export function CreateUserMultiStep({
     },
   ];
 
-  // Form initialization
+  // Get current language for form key
+  const { language: currentLanguage } = useTranslation();
+
+  // Form initialization with language dependency
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createFormSchema(t)),
     defaultValues: {
       userType: "personal",
       responsibilityCenterId: 0,
@@ -258,6 +310,12 @@ export function CreateUserMultiStep({
     },
     mode: "onChange",
   });
+
+  // Re-initialize form when language changes
+  useEffect(() => {
+    form.clearErrors();
+    form.reset(form.getValues());
+  }, [currentLanguage, form]);
 
   // Debug form initialization
   console.log("Form initialized with default values:", form.getValues());
@@ -795,7 +853,7 @@ export function CreateUserMultiStep({
                     disabled={isSubmitting}
                     className="bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400/70 transition-all duration-200 flex items-center gap-2"
                   >
-                    {isSubmitting ? "Creating..." : "Create Account"}
+                    {isSubmitting ? t("userManagement.creating") : t("userManagement.createAccount")}
                     {isSubmitting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (

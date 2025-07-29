@@ -22,7 +22,7 @@ export const LanguageSwitcher: React.FC = () => {
   );
 
   const handleLanguageChange = (langCode: string) => {
-    setLanguage(langCode as "en" | "fr" | "es");
+    setLanguage(langCode as "en" | "fr" | "ar");
   };
 
   return (

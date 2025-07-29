@@ -19,7 +19,7 @@ export function ResponsibilityCentreStep({ form }: ResponsibilityCentreStepProps
             <Building2 className="h-5 w-5" />
           </div>
           <h3 className="text-base font-medium text-blue-200">
-            Responsibility Centre Assignment
+            {t("userManagement.responsibilityCentreAssignment")}
           </h3>
         </div>
 
@@ -31,14 +31,15 @@ export function ResponsibilityCentreStep({ form }: ResponsibilityCentreStepProps
               <FormItem>
                 <FormLabel className="text-blue-200 flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
-                  Responsibility Centre
-                  <span className="text-xs text-blue-400 font-normal">(Optional)</span>
+                  {t("userManagement.responsibilityCentre")}
+                  <span className="text-xs text-blue-400 font-normal">({t("userManagement.optional")})</span>
                 </FormLabel>
                 <FormControl>
                   <ResponsibilityCentreSelect
                     value={field.value === 0 ? undefined : field.value}
                     onValueChange={(value) => field.onChange(value || 0)}
-                    placeholder="Select a responsibility centre (optional)"
+                    placeholder={t("userManagement.selectResponsibilityCentre")}
+                    label=""
                     required={false}
                     className="w-full"
                   />

@@ -75,7 +75,7 @@ export function AddressStep({ form }: AddressStepProps) {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-blue-200">{t("userManagement.address")} <span className="text-blue-400 text-xs">(optional)</span></FormLabel>
+                  <FormLabel className="text-blue-200">{t("userManagement.address")} <span className="text-blue-400 text-xs">({t("userManagement.optional")})</span></FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t("userManagement.addressPlaceholder")}
@@ -93,7 +93,7 @@ export function AddressStep({ form }: AddressStepProps) {
               name="phoneNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-blue-200">{t("userManagement.phoneNumber")} <span className="text-blue-400 text-xs">(optional)</span></FormLabel>
+                  <FormLabel className="text-blue-200">{t("userManagement.phoneNumber")} <span className="text-blue-400 text-xs">({t("userManagement.optional")})</span></FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t("userManagement.phoneNumberPlaceholder")}

@@ -313,22 +313,60 @@ const App = () => (
                   />
 
                   {/* Circuit Management routes */}
-                  <Route path="/circuits" element={<CircuitsPage />} />
+                  <Route
+                    path="/circuits"
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <CircuitsPage />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route
                     path="/circuits/:circuitId/steps"
-                    element={<CircuitStepsPage />}
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <CircuitStepsPage />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/circuits/:circuitId/statuses"
-                    element={<CircuitStatusesPage />}
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <CircuitStatusesPage />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/circuit/:circuitId/steps"
-                    element={<CircuitStepsPage />}
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <CircuitStepsPage />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/circuit/:circuitId/transitions"
-                    element={<CircuitStatusStepsPage />}
+                    element={
+                      <ProtectedRoute
+                        requiresManagement
+                        requiredRole={["Admin", "FullUser"]}
+                      >
+                        <CircuitStatusStepsPage />
+                      </ProtectedRoute>
+                    }
                   />
                   {/* <Route
                     path="/circuits/:circuitId/steps/:stepId/statuses"

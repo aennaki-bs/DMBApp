@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "@/hooks/useTranslation";
 import approvalService from "@/services/approvalService";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,6 +43,7 @@ export default function PendingApprovalsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApproval, setSelectedApproval] = useState<any>(null);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
@@ -286,16 +288,16 @@ export default function PendingApprovalsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
+    <div className="container mx-auto py-6 max-w-7xl bg-blue-50 dark:bg-blue-950/10">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-blue-900 dark:text-white">
-          My Approvals
+          {t('approvals.title')}
         </h1>
         <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-blue-600 dark:text-gray-400" />
           <Input
-            placeholder="Search approvals..."
-            className="pl-8 bg-blue-50 border-blue-200 text-blue-900 placeholder:text-blue-500 dark:bg-blue-950/40 dark:border-blue-900/30 dark:text-white dark:placeholder:text-gray-500"
+            placeholder={t('approvals.searchPlaceholder')}
+            className="pl-8 bg-blue-50 border-blue-200 text-blue-900 placeholder:text-blue-900 dark:bg-blue-950/60 dark:border-blue-900/30 dark:text-white dark:placeholder:text-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -312,7 +314,7 @@ export default function PendingApprovalsPage() {
             value="pending"
             className="data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-800/50"
           >
-            Waiting Approvals
+            {t('approvals.waitingApprovals')}
             {pendingApprovals.length > 0 && (
               <Badge variant="destructive" className="ml-2 bg-red-600">
                 {pendingApprovals.length}
@@ -324,7 +326,7 @@ export default function PendingApprovalsPage() {
             className="data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-800/50"
           >
             <Send className="h-4 w-4 mr-1" />
-            Requested Approvals
+            {t('approvals.requestedApprovals')}
             {filteredRequestedApprovals.length > 0 && (
               <Badge variant="secondary" className="ml-2 bg-blue-500/20 text-blue-400">
                 {filteredRequestedApprovals.length}
@@ -335,7 +337,7 @@ export default function PendingApprovalsPage() {
             value="history"
             className="data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-800/50"
           >
-            Approval History
+            {t('approvals.approvalHistory')}
           </TabsTrigger>
         </TabsList>
 
@@ -372,24 +374,24 @@ export default function PendingApprovalsPage() {
                 </Button>
               </div>
             ) : filteredPendingApprovals.length === 0 ? (
-              <div className="p-8 text-center">
+              <div className="p-8 text-center bg-blue-50 dark:bg-blue-950/50">
                 <Clock className="h-16 w-16 mx-auto text-blue-600 dark:text-blue-400 mb-2" />
                 {searchQuery ? (
                   <>
                     <h3 className="text-xl font-medium text-blue-800 dark:text-blue-300">
-                      No matching approvals
+                      {t('approvals.noMatchingApprovals')}
                     </h3>
                     <p className="text-blue-600 dark:text-gray-400">
-                      No approvals match your search criteria.
+                      {t('approvals.noMatchingApprovalsDesc')}
                     </p>
                   </>
                 ) : (
                   <>
                     <h3 className="text-xl font-medium text-blue-800 dark:text-blue-300">
-                      No waiting approvals
+                      {t('approvals.noWaitingApprovals')}
                     </h3>
                     <p className="text-blue-600 dark:text-gray-400">
-                      You don't have any documents waiting for your approval.
+                      {t('approvals.noWaitingApprovalsDesc')}
                     </p>
                   </>
                 )}
@@ -400,25 +402,25 @@ export default function PendingApprovalsPage() {
                   <TableHeader className="bg-blue-100 dark:bg-blue-900/20 sticky top-0 z-10">
                     <TableRow className="border-blue-200 hover:bg-blue-200 dark:border-blue-900/50 dark:hover:bg-blue-900/30">
                       <TableHead className="text-blue-900 dark:text-blue-300">
-                        Document
+                        {t('approvals.document')}
                       </TableHead>
                       <TableHead className="text-blue-900 dark:text-blue-300">
-                        Step
+                        {t('approvals.step')}
                       </TableHead>
                       <TableHead className="text-blue-900 dark:text-blue-300">
-                        Current Status
+                        {t('approvals.currentStatus')}
                       </TableHead>
                       <TableHead className="text-blue-900 dark:text-blue-300">
-                        Next Status
+                        {t('approvals.nextStatus')}
                       </TableHead>
                       <TableHead className="text-blue-900 dark:text-blue-300">
-                        Requested By
+                        {t('approvals.requestedBy')}
                       </TableHead>
                       <TableHead className="text-blue-900 dark:text-blue-300">
-                        Requested On
+                        {t('approvals.requestedOn')}
                       </TableHead>
                       <TableHead className="text-blue-900 dark:text-blue-300">
-                        Actions
+                        {t('approvals.actions')}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -455,14 +457,14 @@ export default function PendingApprovalsPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-blue-800 dark:text-blue-200">
-                            {approval.stepTitle || "Unknown Step"}
+                            {approval.stepTitle || t('approvals.unknownStep')}
                           </TableCell>
                           <TableCell className="text-blue-800 dark:text-blue-200">
                             <Badge 
                               variant="outline" 
                               className="bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300"
                             >
-                              {approval.currentStatusTitle || "Unknown"}
+                              {approval.currentStatusTitle || t('approvals.unknown')}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-blue-800 dark:text-blue-200">
@@ -470,11 +472,11 @@ export default function PendingApprovalsPage() {
                               variant="outline" 
                               className="bg-green-100 border-green-300 text-green-800 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300"
                             >
-                              {approval.nextStatusTitle || "Unknown"}
+                              {approval.nextStatusTitle || t('approvals.unknown')}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-blue-800 dark:text-blue-200">
-                            {approval.requestedBy || "Unknown User"}
+                            {approval.requestedBy || t('approvals.unknownUser')}
                           </TableCell>
                           <TableCell className="text-blue-800 dark:text-blue-200">
                             {formatDate(
@@ -491,7 +493,7 @@ export default function PendingApprovalsPage() {
                                 }
                               >
                                 <CircleCheck className="h-4 w-4 mr-1" />
-                                Approve
+                                {t('approvals.approve')}
                               </Button>
                               <Button
                                 size="sm"
@@ -501,7 +503,7 @@ export default function PendingApprovalsPage() {
                                 }
                               >
                                 <CircleX className="h-4 w-4 mr-1" />
-                                Reject
+                                {t('approvals.reject')}
                               </Button>
                             </div>
                           </TableCell>
@@ -534,17 +536,17 @@ export default function PendingApprovalsPage() {
               <div className="p-6 text-center">
                 <FileWarning className="h-16 w-16 mx-auto text-red-500 mb-2" />
                 <h3 className="text-xl font-medium text-red-600 dark:text-red-400">
-                  Failed to load requested approvals
+                  {t('approvals.failedToLoad')}
                 </h3>
                 <p className="text-blue-600 dark:text-gray-400">
-                  There was an error retrieving approvals you have requested.
+                  {t('approvals.noWaitingApprovalsDesc')}
                 </p>
                 <Button
                   variant="destructive"
                   className="mt-4"
                   onClick={() => refetchRequested()}
                 >
-                  Try Again
+                  {t('approvals.tryAgain')}
                 </Button>
               </div>
             ) : (
@@ -556,7 +558,7 @@ export default function PendingApprovalsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Waiting
+                      {t('approvals.waiting')}
                       {requestedPendingApprovals.length > 0 && (
                         <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 text-xs">
                           {requestedPendingApprovals.length}
@@ -570,7 +572,7 @@ export default function PendingApprovalsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <CircleCheck className="h-4 w-4" />
-                      Accepted
+                      {t('approvals.accepted')}
                       {requestedCompletedApprovals.length > 0 && (
                         <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
                           {requestedCompletedApprovals.length}
@@ -584,7 +586,7 @@ export default function PendingApprovalsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <CircleX className="h-4 w-4" />
-                      Rejected
+                      {t('approvals.rejected')}
                       {requestedRejectedApprovals.length > 0 && (
                         <Badge variant="secondary" className="bg-red-500/20 text-red-400 text-xs">
                           {requestedRejectedApprovals.length}
@@ -630,15 +632,15 @@ export default function PendingApprovalsPage() {
                                   </div>
                                 </button>
                                 <div className="text-sm text-amber-700 dark:text-amber-200/80">
-                                  Step: {approval.stepTitle || "Unknown Step"}
+                                  {t('approvals.step')}: {approval.stepTitle || t('approvals.unknownStep')}
                                 </div>
                                 <div className="text-sm text-amber-600 dark:text-amber-200/60">
-                                  Assigned to: {approval.processedBy || "Unknown"}
+                                  {t('approvals.assignedTo')} {approval.processedBy || t('approvals.unknown')}
                                 </div>
                               </div>
                               <div className="text-right">
                                 <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                                  {approval.status === "InProgress" ? "In Progress" : "Waiting"}
+                                  {approval.status === "InProgress" ? t('approvals.inProgress') : t('approvals.waiting')}
                                 </Badge>
                                 <div className="text-xs text-amber-600 dark:text-amber-200/60 mt-1">
                                   {formatDate(approval.requestDate || "")}
@@ -695,15 +697,15 @@ export default function PendingApprovalsPage() {
                                   </div>
                                 </button>
                                 <div className="text-sm text-green-700 dark:text-green-200/80">
-                                  Step: {approval.stepTitle || "Unknown Step"}
+                                  {t('approvals.step')}: {approval.stepTitle || t('approvals.unknownStep')}
                                 </div>
                                 <div className="text-sm text-green-600 dark:text-green-200/60">
-                                  Approved by: {approval.processedBy || "Unknown"}
+                                  {t('approvals.approvedBy')} {approval.processedBy || t('approvals.unknown')}
                                 </div>
                               </div>
                               <div className="text-right">
                                 <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                  Accepted
+                                  {t('approvals.accepted')}
                                 </Badge>
                                 <div className="text-xs text-green-600 dark:text-green-200/60 mt-1">
                                   {formatDate(approval.requestDate || "")}
@@ -760,15 +762,15 @@ export default function PendingApprovalsPage() {
                                   </div>
                                 </button>
                                 <div className="text-sm text-red-700 dark:text-red-200/80">
-                                  Step: {approval.stepTitle || "Unknown Step"}
+                                  {t('approvals.step')}: {approval.stepTitle || t('approvals.unknownStep')}
                                 </div>
                                 <div className="text-sm text-red-600 dark:text-red-200/60">
-                                  Rejected by: {approval.processedBy || "Unknown"}
+                                  {t('approvals.rejectedBy')} {approval.processedBy || t('approvals.unknown')}
                                 </div>
                               </div>
                               <div className="text-right">
                                 <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-                                  Rejected
+                                  {t('approvals.rejected')}
                                 </Badge>
                                 <div className="text-xs text-red-600 dark:text-red-200/60 mt-1">
                                   {formatDate(approval.requestDate || "")}
@@ -812,10 +814,10 @@ export default function PendingApprovalsPage() {
               <div className="p-6 text-center">
                 <FileWarning className="h-16 w-16 mx-auto text-red-500 mb-2" />
                 <h3 className="text-xl font-medium text-red-600 dark:text-red-400">
-                  Failed to load approval history
+                  {t('approvals.failedToLoadHistory')}
                 </h3>
                 <p className="text-blue-600 dark:text-gray-400">
-                  There was an error retrieving your approval history.
+                  {t('approvals.failedToLoadHistoryDesc')}
                 </p>
                 <Button
                   variant="destructive"
@@ -826,7 +828,7 @@ export default function PendingApprovalsPage() {
                     refetchRejected();
                   }}
                 >
-                  Try Again
+                  {t('approvals.tryAgain')}
                 </Button>
               </div>
             ) : (
@@ -846,7 +848,7 @@ export default function PendingApprovalsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Waiting
+                      {t('approvals.waiting')}
                       {waitingApprovals.length > 0 && (
                         <Badge
                           variant="secondary"
@@ -867,7 +869,7 @@ export default function PendingApprovalsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <CircleCheck className="h-4 w-4" />
-                      Accepted
+                      {t('approvals.accepted')}
                       {acceptedApprovals.length > 0 && (
                         <Badge
                           variant="secondary"
@@ -888,7 +890,7 @@ export default function PendingApprovalsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <CircleX className="h-4 w-4" />
-                      Rejected
+                      {t('approvals.rejected')}
                       {rejectedApprovals.length > 0 && (
                         <Badge
                           variant="secondary"
@@ -908,10 +910,10 @@ export default function PendingApprovalsPage() {
                       <div className="text-center py-8">
                         <Clock className="h-12 w-12 mx-auto text-amber-500 dark:text-amber-400/50 mb-3" />
                         <h3 className="text-lg font-medium text-amber-700 dark:text-amber-300">
-                          No waiting approvals
+                          {t('approvals.noWaitingApprovals')}
                         </h3>
                         <p className="text-blue-600 dark:text-gray-400 text-sm">
-                          No approvals are currently waiting for action.
+                          {t('approvals.noWaitingApprovalsDesc')}
                         </p>
                       </div>
                     ) : (
@@ -982,8 +984,8 @@ export default function PendingApprovalsPage() {
                                   <div className="text-right">
                                     <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
                                       {approval.status === "inprogress"
-                                        ? "In Progress"
-                                        : "Waiting"}
+                                        ? t('approvals.inProgress')
+                                        : t('approvals.waiting')}
                                     </Badge>
                                     <div className="text-xs text-amber-600 dark:text-amber-200/60 mt-1">
                                       {formatDate(
@@ -1016,10 +1018,10 @@ export default function PendingApprovalsPage() {
                       <div className="text-center py-8">
                         <CircleCheck className="h-12 w-12 mx-auto text-green-500 dark:text-green-400/50 mb-3" />
                         <h3 className="text-lg font-medium text-green-700 dark:text-green-300">
-                          No accepted approvals
+                          {t('approvals.noAcceptedApprovals')}
                         </h3>
                         <p className="text-blue-600 dark:text-gray-400 text-sm">
-                          No approvals have been accepted yet.
+                          {t('approvals.noAcceptedApprovalsDesc')}
                         </p>
                       </div>
                     ) : (
@@ -1110,8 +1112,8 @@ export default function PendingApprovalsPage() {
                                           >
                                             • {response.username}:{" "}
                                             {response.isApproved
-                                              ? "Approved"
-                                              : "Rejected"}
+                                              ? t('approvals.approved')
+                                              : t('approvals.rejected')}
                                             {response.comments &&
                                               ` - "${response.comments}"`}
                                             <span className="text-green-200/60">
@@ -1142,10 +1144,10 @@ export default function PendingApprovalsPage() {
                       <div className="text-center py-8">
                         <CircleX className="h-12 w-12 mx-auto text-red-500 dark:text-red-400/50 mb-3" />
                         <h3 className="text-lg font-medium text-red-700 dark:text-red-300">
-                          No rejected approvals
+                          {t('approvals.noRejectedApprovals')}
                         </h3>
                         <p className="text-blue-600 dark:text-gray-400 text-sm">
-                          No approvals have been rejected.
+                          {t('approvals.noRejectedApprovalsDesc')}
                         </p>
                       </div>
                     ) : (
@@ -1236,8 +1238,8 @@ export default function PendingApprovalsPage() {
                                           >
                                             • {response.username}:{" "}
                                             {response.isApproved
-                                              ? "Approved"
-                                              : "Rejected"}
+                                              ? t('approvals.approved')
+                                              : t('approvals.rejected')}
                                             {response.comments &&
                                               ` - "${response.comments}"`}
                                             <span className="text-red-600 dark:text-red-200/60">
@@ -1273,13 +1275,13 @@ export default function PendingApprovalsPage() {
           <DialogHeader>
             <DialogTitle>
               {responseType === "approve"
-                ? "Approve Document"
-                : "Reject Document"}
+                ? t('approvals.approveDocument')
+                : t('approvals.rejectDocument')}
             </DialogTitle>
             <DialogDescription className="text-blue-600 dark:text-gray-400">
               {responseType === "approve"
-                ? "You're about to approve this document. Please provide any comments if needed."
-                : "You're about to reject this document. Please provide a reason for rejection."}
+                ? t('approvals.approveDialogDesc')
+                : t('approvals.rejectDialogDesc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -1287,16 +1289,16 @@ export default function PendingApprovalsPage() {
             {selectedApproval && (
               <div className="bg-blue-50 p-3 rounded-md border border-blue-200 dark:bg-blue-950/50 dark:border-blue-900/30">
                 <p className="text-sm text-blue-600 dark:text-gray-400">
-                  Document
+                  {t('approvals.document')}
                 </p>
                 <p className="font-medium text-blue-900 dark:text-blue-300">
-                  {selectedApproval.documentTitle || "Untitled Document"}
+                  {selectedApproval.documentTitle || t('approvals.untitledDocument')}
                 </p>
                 <p className="text-sm text-blue-600 dark:text-gray-400 mt-2">
-                  Step
+                  {t('approvals.step')}
                 </p>
                 <p className="font-medium text-blue-900 dark:text-blue-300">
-                  {selectedApproval.stepTitle || "Unknown Step"}
+                  {selectedApproval.stepTitle || t('approvals.unknownStep')}
                 </p>
               </div>
             )}
@@ -1306,7 +1308,7 @@ export default function PendingApprovalsPage() {
                 htmlFor="comments"
                 className="text-sm font-medium text-blue-700 dark:text-gray-400"
               >
-                Comments
+                {responseType === "reject" ? t('approvals.commentsRequired') : t('approvals.commentsOptional')}
                 {responseType === "reject" && (
                   <span className="text-red-500 ml-1">*</span>
                 )}
@@ -1315,8 +1317,8 @@ export default function PendingApprovalsPage() {
                 id="comments"
                 placeholder={
                   responseType === "approve"
-                    ? "Optional comments..."
-                    : "Reason for rejection..."
+                    ? t('approvals.commentsPlaceholder')
+                    : t('approvals.rejectCommentsPlaceholder')
                 }
                 className="mt-1 bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/40 dark:border-blue-900/30 dark:text-white"
                 value={comments}
@@ -1325,7 +1327,7 @@ export default function PendingApprovalsPage() {
               />
               {responseType === "reject" && !comments.trim() && (
                 <p className="text-xs text-red-500 mt-1">
-                  Comments are required for rejection
+                  {t('approvals.commentsRequired')}
                 </p>
               )}
             </div>
@@ -1338,7 +1340,7 @@ export default function PendingApprovalsPage() {
               onClick={() => setApprovalDialogOpen(false)}
               className="border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300"
             >
-              Cancel
+              {t('approvals.cancel')}
             </Button>
             <Button
               type="button"
@@ -1350,7 +1352,7 @@ export default function PendingApprovalsPage() {
                   : "bg-red-600 hover:bg-red-700 text-white"
               }
             >
-              {responseType === "approve" ? "Approve" : "Reject"}
+              {responseType === "approve" ? t('approvals.approve') : t('approvals.reject')}
             </Button>
           </DialogFooter>
         </DialogContent>
