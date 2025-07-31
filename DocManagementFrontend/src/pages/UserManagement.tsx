@@ -21,28 +21,28 @@ const UserManagement = () => {
             return;
         }
 
-        if (user?.role !== "Admin") {
-            toast.error("You don't have permission to access this page");
-            navigate("/dashboard");
-        }
+            if (user?.role !== "Admin") {
+      toast.error(t("userManagement.noPermission"));
+      navigate("/dashboard");
+    }
     }, [isAuthenticated, user, navigate]);
 
-    const pageActions = [
-        {
-            label: "Create User",
-            variant: "default" as const,
-            icon: UserPlus,
-            onClick: () => setIsCreateUserOpen(true),
-        },
-    ];
+      const pageActions = [
+    {
+      label: t("userManagement.createUser"),
+      variant: "default" as const,
+      icon: UserPlus,
+      onClick: () => setIsCreateUserOpen(true),
+    },
+  ];
 
-    return (
-        <PageLayout
-            title="User Management"
-            subtitle="Manage users and their permissions"
-            icon={Users}
-            actions={pageActions}
-        >
+  return (
+    <PageLayout
+      title={t("userManagement.title")}
+      subtitle={t("userManagement.subtitle")}
+      icon={Users}
+      actions={pageActions}
+    >
             <UserTable />
             <CreateUserMultiStep
                 open={isCreateUserOpen}

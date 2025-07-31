@@ -1,7 +1,7 @@
 import { useSettings } from '@/context/SettingsContext';
 import { translations } from '@/translations';
 
-type Language = 'en' | 'fr' | 'es';
+type Language = 'en' | 'fr' | 'ar';
 
 // Helper type to get nested object paths
 type NestedKeyOf<ObjectType extends object> = {
@@ -55,19 +55,21 @@ export const useTranslation = () => {
     return [
       { code: 'en', name: 'English', flag: '🇺🇸' },
       { code: 'fr', name: 'Français', flag: '🇫🇷' },
-      { code: 'es', name: 'Español', flag: '🇪🇸' },
+      { code: 'ar', name: 'العربية', flag: 'AR' },
     ];
   };
 
   // Format date according to current language
   const formatDate = (date: Date | string, options?: Intl.DateTimeFormatOptions) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    const locale = language === 'en' ? 'en-US' : language === 'fr' ? 'fr-FR' : 'es-ES';
+    // Use Gregorian calendar for all languages
+    const locale = language === 'en' ? 'en-US' : language === 'fr' ? 'fr-FR' : 'en-US';
     
     return new Intl.DateTimeFormat(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      calendar: 'gregory', // Force Gregorian calendar for all languages
       ...options,
     }).format(dateObj);
   };

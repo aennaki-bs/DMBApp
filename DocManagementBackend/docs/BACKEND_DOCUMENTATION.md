@@ -1,4 +1,4 @@
-# DocuVerse Backend Documentation
+# DMV Backend Documentation
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -14,7 +14,7 @@
 
 ## Overview
 
-DocuVerse Backend is a .NET 9.0 ASP.NET Core application that provides comprehensive document management functionality with integrated ERP (Business Central) operations. The system handles document workflows, circuit approvals, and seamless integration with Microsoft Dynamics 365 Business Central for archival and line operations.
+DMV Backend is a .NET 9.0 ASP.NET Core application that provides comprehensive document management functionality with integrated ERP (Business Central) operations. The system handles document workflows, circuit approvals, and seamless integration with Microsoft Dynamics 365 Business Central for archival and line operations.
 
 ### Key Features
 - Document lifecycle management with approval circuits
@@ -594,7 +594,7 @@ CREATE INDEX IX_Lignes_ERPLineCode ON Lignes(ERPLineCode);
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=DocuVerse;Integrated Security=true;"
+    "DefaultConnection": "Server=localhost;Database=DMV;Integrated Security=true;"
   },
   "BusinessCentralApi": {
     "BaseUrl": "https://your-bc-server/BC200/api/v2.0/",
@@ -605,8 +605,8 @@ CREATE INDEX IX_Lignes_ERPLineCode ON Lignes(ERPLineCode);
   },
   "Jwt": {
     "Key": "your-secret-key-minimum-256-bits",
-    "Issuer": "DocuVerse",
-    "Audience": "DocuVerse-Users",
+    "Issuer": "DMV",
+    "Audience": "DMV-Users",
     "ExpireMinutes": 1440
   },
   "Logging": {
@@ -677,5 +677,5 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 4. **API Monitoring**: Monitor API usage, success rates, and performance
 5. **Error Classification**: Implement proper error categorization for user feedback
 
-This comprehensive documentation covers the DocuVerse backend system with focus on ERP integration and enhanced error handling. For specific implementation details, refer to the source code and inline documentation.
+This comprehensive documentation covers the DMV backend system with focus on ERP integration and enhanced error handling. For specific implementation details, refer to the source code and inline documentation.
 

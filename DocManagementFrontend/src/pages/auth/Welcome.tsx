@@ -15,7 +15,7 @@ const Welcome = () => {
   useEffect(() => {
     if (verified) {
       toast.success("Registration completed successfully!", {
-        description: "Welcome to DocuVerse!",
+        description: "Welcome to DMV!",
       });
     }
   }, [verified]);

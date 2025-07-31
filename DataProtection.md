@@ -2,7 +2,7 @@
 
 ### **1. BCrypt Password Hashing**
 
-DocuVerse implements robust password security using BCrypt hashing:
+DMV implements robust password security using BCrypt hashing:
 
 **Implementation Details:**
 - **Library**: `BCrypt.Net-Next` version 4.0.3
@@ -35,7 +35,7 @@ if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
 
 ### **2. SQL Injection Prevention**
 
-DocuVerse prevents SQL injection through multiple layers:
+DMV prevents SQL injection through multiple layers:
 
 **Entity Framework Core Protection:**
 - **Parameterized Queries**: All database operations use EF Core's built-in parameterization
@@ -226,4 +226,4 @@ _context.LogHistories.Add(login);
 ✅ **Error Handling**: Secure error responses  
 ✅ **Configuration Security**: Environment-based secrets  
 
-This comprehensive security implementation ensures DocuVerse maintains enterprise-grade security standards while providing a seamless user experience.
+This comprehensive security implementation ensures DMV maintains enterprise-grade security standards while providing a seamless user experience.

@@ -87,7 +87,7 @@ export function UsernameEmailStep({
                       <User className="h-4 w-4" />
                     </div>
                     <Input
-                      placeholder="Enter username"
+                      placeholder={t("userManagement.enterUsername")}
                       {...field}
                       className={`pl-10 pr-10 bg-[#111633] text-white placeholder:text-blue-300/50 focus:border-blue-500/50 ${
                         usernameAvailable === false 
@@ -108,16 +108,16 @@ export function UsernameEmailStep({
                 {usernameAvailable === true && (
                   <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
                     <Check className="h-3 w-3" />
-                    Username is available and ready to use
+                    {t("userManagement.usernameAvailable")}
                   </p>
                 )}
                 {usernameAvailable === false && (
                   <div className="text-xs text-red-400 mt-1 space-y-1">
                     <p className="flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      This username is already taken
+                      {t("userManagement.usernameTaken")}
                     </p>
-                    <p className="text-blue-300">Try adding numbers or letters to make it unique</p>
+                    <p className="text-blue-300">{t("userManagement.usernameSuggestion")}</p>
                   </div>
                 )}
               </FormItem>
@@ -127,12 +127,12 @@ export function UsernameEmailStep({
           {usernameChecking && (
             <p className="text-xs text-blue-400 mt-1 flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Checking username availability...
+              {t("userManagement.checkingUsername")}
             </p>
           )}
           {!usernameChecking && (
             <p className="text-xs text-blue-400 mt-1">
-              Username must be at least 3 characters and unique in the system
+              {t("userManagement.usernameValidation")}
             </p>
           )}
         </div>
@@ -162,7 +162,7 @@ export function UsernameEmailStep({
                     </div>
                     <Input
                       type="email"
-                      placeholder="user@example.com"
+                      placeholder={t("userManagement.enterEmail")}
                       {...field}
                       className={`pl-10 pr-10 bg-[#111633] text-white placeholder:text-blue-300/50 focus:border-blue-500/50 ${
                         emailAvailable === false 
@@ -183,16 +183,16 @@ export function UsernameEmailStep({
                 {emailAvailable === true && (
                   <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
                     <Check className="h-3 w-3" />
-                    Email address is valid and ready to use
+                    {t("userManagement.emailValid")}
                   </p>
                 )}
                 {emailAvailable === false && (
                   <div className="text-xs text-red-400 mt-1 space-y-1">
                     <p className="flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      This email address is already registered
+                      {t("userManagement.emailRegistered")}
                     </p>
-                    <p className="text-blue-300">Please use a different email address or contact support if this is your email</p>
+                    <p className="text-blue-300">{t("userManagement.emailSuggestion")}</p>
                   </div>
                 )}
               </FormItem>
@@ -202,12 +202,12 @@ export function UsernameEmailStep({
           {emailChecking && (
             <p className="text-xs text-blue-400 mt-1 flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Checking email availability...
+              {t("userManagement.checkingEmail")}
             </p>
           )}
           {!emailChecking && (
             <p className="text-xs text-blue-400 mt-1">
-              A verification email will be sent to this address
+              {t("userManagement.emailVerification")}
             </p>
           )}
         </div>

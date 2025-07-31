@@ -118,12 +118,12 @@ export function PasswordStep({
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-blue-200">Confirm Password</FormLabel>
+                <FormLabel className="text-blue-200">{t("userManagement.confirmPasswordLabel")}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
+                      placeholder={t("userManagement.confirmPasswordPlaceholder")}
                       {...field}
                       className="bg-[#111633] border-blue-900/50 text-white placeholder:text-blue-300/50 focus:border-blue-500/50 pr-10"
                     />
@@ -146,15 +146,15 @@ export function PasswordStep({
                 {/* Password match indicator */}
                 {confirmPassword && password && (
                   <div className="flex items-center gap-2 text-sm">
-                    {confirmPassword === password ? (
-                      <>
-                        <Check className="h-4 w-4 text-green-400" />
-                        <span className="text-green-300">Passwords match</span>
-                      </>
-                    ) : (
+                                    {confirmPassword === password ? (
+                  <>
+                    <Check className="h-4 w-4 text-green-400" />
+                    <span className="text-green-300">{t("userManagement.passwordsMatch")}</span>
+                  </>
+                ) : (
                       <>
                         <X className="h-4 w-4 text-red-400" />
-                        <span className="text-red-300">Passwords don't match</span>
+                        <span className="text-red-300">{t("userManagement.passwordsDontMatch")}</span>
                       </>
                     )}
                   </div>
@@ -182,7 +182,7 @@ export function PasswordStep({
                         : "text-blue-300"
                     }
                   >
-                    {password ? getStrengthText() : "None"}
+                    {password ? getStrengthText() : t("userManagement.none")}
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-blue-950/50 rounded-full overflow-hidden">

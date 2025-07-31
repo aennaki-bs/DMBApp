@@ -515,7 +515,7 @@ const Login = () => {
 
                       {errors.type === "deactivated" && (
                         <a
-                          href="mailto:support@docuverse.com"
+                          href="mailto:support@dmverse.com"
                           className="text-xs py-1 px-2 bg-red-800/40 hover:bg-red-800/60 rounded border border-red-700/40 transition-colors text-red-200 flex items-center gap-1"
                         >
                           <HelpCircle className="w-3 h-3" />
@@ -525,7 +525,7 @@ const Login = () => {
 
                       {errors.type === "server" && (
                         <a
-                          href="mailto:support@docuverse.com"
+                          href="mailto:support@dmverse.com"
                           className="text-xs py-1 px-2 bg-purple-800/40 hover:bg-purple-800/60 rounded border border-purple-700/40 transition-colors text-purple-200 flex items-center gap-1"
                         >
                           <svg
@@ -811,10 +811,10 @@ const Login = () => {
                 <p>
                   Need help? Contact our support team at{" "}
                   <a
-                    href="mailto:support@docuverse.com"
+                    href="mailto:support@dmverse.com"
                     className="text-blue-400 hover:text-blue-300 underline decoration-blue-500/30 underline-offset-2 hover:decoration-blue-500/60"
                   >
-                    support@docuverse.com
+                    support@dmverse.com
                   </a>{" "}
                   or check our{" "}
                   <a

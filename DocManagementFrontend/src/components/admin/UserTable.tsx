@@ -127,7 +127,7 @@ export function UserTable() {
 
   const handleBulkRoleChange = async () => {
     if (!selectedRole || selectedUsers.length === 0) {
-      toast.error("Please select a role and at least one user");
+      toast.error(t("userManagement.pleaseSelectRole"));
       return;
     }
 

@@ -44,7 +44,7 @@ export function RoleStep({ form }: RoleStepProps) {
                     <RoleOption
                       id="Admin"
                       title={t("userManagement.adminRole")}
-                      description={t("userManagement.adminDescription")}
+                      description={t("userManagement.fullSystemAccess")}
                       features={[
                         t("userManagement.userManagementFeature"),
                         t("userManagement.systemConfiguration"),
@@ -63,7 +63,7 @@ export function RoleStep({ form }: RoleStepProps) {
                     <RoleOption
                       id="FullUser"
                       title={t("userManagement.fullUserRole")}
-                      description={t("userManagement.fullUserDescription")}
+                      description={t("userManagement.extendedAccess")}
                       features={[
                         t("userManagement.documentCreation"),
                         t("userManagement.workflowApproval"),
@@ -82,9 +82,9 @@ export function RoleStep({ form }: RoleStepProps) {
                     <RoleOption
                       id="SimpleUser"
                       title={t("userManagement.simpleUserRole")}
-                      description={t("userManagement.simpleUserDescription")}
+                      description={t("userManagement.basicAccess")}
                       features={[
-                        t("userManagement.viewEditDocs"),
+                        t("userManagement.viewDocsWorkflows"),
                         // t("userManagement.basicWorkflowParticipation"),
                         t("userManagement.limitedFeatureAccess")
                       ]}

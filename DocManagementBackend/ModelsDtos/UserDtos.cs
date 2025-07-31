@@ -22,7 +22,8 @@ namespace DocManagementBackend.Models {
         // public DateTime? LastLogin { get; set; }
         public string? ProfilePicture { get; set; }
         public RoleDto? Role { get; set; } = new RoleDto();
-
+        public int? ResponsibilityCentreId { get; set; }
+        public ResponsibilityCentreSimpleDto? ResponsibilityCentre { get; set; } = new ResponsibilityCentreSimpleDto();
     }
 
     public class RoleDto {

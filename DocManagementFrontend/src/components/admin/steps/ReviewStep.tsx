@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResponsibilityCentreSimple } from "@/models/responsibilityCentre";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ReviewStepProps {
   form: UseFormReturn<any>;
@@ -20,11 +21,12 @@ interface ReviewStepProps {
 
 export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: ReviewStepProps) {
   const values = form.getValues();
+  const { t } = useTranslation();
 
   // Helper function to get responsibility centre display text
   const getResponsibilityCentreDisplay = () => {
     if (!values.responsibilityCenterId || values.responsibilityCenterId === 0) {
-      return "No responsibility centre assigned";
+      return t("userManagement.noResponsibilityCentre");
     }
     
     const centre = responsibilityCentres.find(c => c.id === values.responsibilityCenterId);
@@ -43,25 +45,25 @@ export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: Rev
             <CircleCheck className="h-5 w-5" />
           </div>
           <h3 className="text-base font-medium text-blue-200">
-            Review Information
+            {t("userManagement.reviewInformation")}
           </h3>
           <div className="ml-auto text-xs text-blue-400">
-            Click "Edit" to modify any section
+            {t("userManagement.clickEditToModify")}
           </div>
         </div>
 
         <div className="space-y-5">
           {/* User Type */}
           <ReviewSection
-            title="Account Type"
+            title={t("userManagement.accountType")}
             icon={<User className="h-5 w-5" />}
             items={[
               {
-                label: "User Type",
+                label: t("userManagement.userType"),
                 value:
                   values.userType === "personal"
-                    ? "Personal User"
-                    : "Company Account",
+                    ? t("userManagement.personalUser")
+                    : t("userManagement.companyAccount"),
               },
             ]}
             onEdit={() => onEditStep?.(0)}
@@ -69,11 +71,11 @@ export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: Rev
 
           {/* Responsibility Centre */}
           <ReviewSection
-            title="Responsibility Centre"
+            title={t("userManagement.responsibilityCentreStep")}
             icon={<Building2 className="h-5 w-5" />}
             items={[
               {
-                label: "Assignment",
+                label: t("userManagement.assignment"),
                 value: getResponsibilityCentreDisplay(),
                 valueClass: values.responsibilityCenterId && values.responsibilityCenterId !== 0 ? "text-blue-300" : "text-gray-400",
               },
@@ -85,8 +87,8 @@ export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: Rev
           <ReviewSection
             title={
               values.userType === "personal"
-                ? "Personal Information"
-                : "Company Information"
+                ? t("userManagement.personalInformation")
+                : t("userManagement.companyInformation")
             }
             icon={
               values.userType === "personal" ? (
@@ -98,19 +100,19 @@ export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: Rev
             items={
               values.userType === "personal"
                 ? [
-                    { label: "First Name", value: values.firstName },
-                    { label: "Last Name", value: values.lastName },
+                    { label: t("userManagement.firstName"), value: values.firstName },
+                    { label: t("userManagement.lastName"), value: values.lastName },
                     { 
                       label: "CIN", 
-                      value: values.cin || "Not provided",
+                      value: values.cin || t("userManagement.notProvided"),
                       valueClass: values.cin ? "text-blue-100" : "text-gray-400"
                     },
                   ]
                 : [
-                    { label: "Company Name", value: values.companyName },
+                    { label: t("userManagement.companyName"), value: values.companyName },
                     { 
-                      label: "Registration Number", 
-                      value: values.registrationNumber || "Not provided",
+                      label: t("userManagement.registrationNumber"), 
+                      value: values.registrationNumber || t("userManagement.notProvided"),
                       valueClass: values.registrationNumber ? "text-blue-100" : "text-gray-400"
                     },
                   ]
@@ -120,29 +122,29 @@ export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: Rev
 
           {/* Address */}
           <ReviewSection
-            title="Address Information"
+            title={t("userManagement.addressInformation")}
             icon={<MapPin className="h-5 w-5" />}
             items={[
               { 
-                label: "Address", 
-                value: values.address || "Not provided",
+                label: t("userManagement.address"), 
+                value: values.address || t("userManagement.notProvided"),
                 valueClass: values.address ? "text-blue-100" : "text-gray-400"
               },
-              { label: "City", value: values.city },
-              { label: "Country", value: values.country },
+              { label: t("userManagement.city"), value: values.city },
+              { label: t("userManagement.country"), value: values.country },
               { 
-                label: "Phone Number", 
-                value: values.phoneNumber || "Not provided",
+                label: t("userManagement.phoneNumber"), 
+                value: values.phoneNumber || t("userManagement.notProvided"),
                 valueClass: values.phoneNumber ? "text-blue-100" : "text-gray-400"
               },
               ...(values.userType === "company"
                 ? [{ 
-                    label: "Website", 
-                    value: values.webSite || "Not provided",
+                    label: t("userManagement.website"), 
+                    value: values.webSite || t("userManagement.notProvided"),
                     valueClass: values.webSite ? "text-blue-100" : "text-gray-400"
                   }]
                 : values.webSite 
-                  ? [{ label: "Website", value: values.webSite }]
+                  ? [{ label: t("userManagement.website"), value: values.webSite }]
                   : []),
             ]}
             onEdit={() => onEditStep?.(3)}
@@ -150,31 +152,35 @@ export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: Rev
 
           {/* Username & Email */}
           <ReviewSection
-            title="Account Credentials"
+            title={t("userManagement.accountCredentials")}
             icon={<AtSign className="h-5 w-5" />}
             items={[
-              { label: "Username", value: values.username },
-              { label: "Email", value: values.email },
+              { label: t("userManagement.username"), value: values.username },
+              { label: t("userManagement.emailAddress"), value: values.email },
             ]}
             onEdit={() => onEditStep?.(4)}
           />
 
           {/* Password (for security, just show placeholder) */}
           <ReviewSection
-            title="Password"
+            title={t("userManagement.password")}
             icon={<Key className="h-5 w-5" />}
-            items={[{ label: "Password", value: "●●●●●●●●" }]}
+            items={[{ label: t("userManagement.password"), value: "●●●●●●●●" }]}
             onEdit={() => onEditStep?.(5)}
           />
 
           {/* Role */}
           <ReviewSection
-            title="User Role"
+            title={t("userManagement.roleAssignment")}
             icon={<Shield className="h-5 w-5" />}
             items={[
               {
-                label: "Role",
-                value: values.roleName,
+                label: t("userManagement.role"),
+                value: values.roleName === "Admin" 
+                  ? t("userManagement.roleAdmin")
+                  : values.roleName === "FullUser"
+                  ? t("userManagement.roleFullUser")
+                  : t("userManagement.roleSimpleUser"),
                 valueClass:
                   values.roleName === "Admin"
                     ? "text-red-300"
@@ -191,8 +197,7 @@ export function ReviewStep({ form, onEditStep, responsibilityCentres = [] }: Rev
       <div className="bg-green-900/30 rounded-lg p-4 text-sm text-green-300 border border-green-800/30 flex items-center gap-3">
         <CircleCheck className="h-5 w-5 text-green-400 flex-shrink-0" />
         <p>
-          Please review all information carefully before creating the account.
-          You can edit any section above if needed, then click "Create Account" to proceed.
+          {t("userManagement.reviewMessage")}
         </p>
       </div>
     </div>
@@ -212,6 +217,8 @@ interface ReviewSectionProps {
 }
 
 function ReviewSection({ title, icon, items, onEdit }: ReviewSectionProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className="border border-blue-900/30 rounded-lg p-4 hover:border-blue-800/50 transition-colors group">
       <div className="flex items-center justify-between mb-3">
@@ -228,7 +235,7 @@ function ReviewSection({ title, icon, items, onEdit }: ReviewSectionProps) {
             className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 h-8 px-3"
           >
             <Edit2 className="h-3 w-3 mr-1" />
-            Edit
+            {t("userManagement.edit")}
           </Button>
         )}
       </div>

@@ -1,6 +1,6 @@
 # Enhanced ERP Error Handling
 
-This document describes the comprehensive error handling system implemented for ERP operations in DocuVerse, specifically for Business Central API integration.
+This document describes the comprehensive error handling system implemented for ERP operations in DMV, specifically for Business Central API integration.
 
 ## Overview
 

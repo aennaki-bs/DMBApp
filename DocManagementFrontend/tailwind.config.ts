@@ -57,7 +57,7 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// DocuVerse custom colors
+				// DMV custom colors
 				docuBlue: {
 					DEFAULT: '#2563eb',
 					50: '#eff6ff',
