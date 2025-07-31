@@ -237,10 +237,10 @@ const DocumentDetailsTab = ({
   ], [memoizedDocumentInfo, document.documentType?.tierType]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 overflow-y-auto h-full pb-4">
       {/* Document Header */}
       <div className="bg-gradient-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-scroll">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-500/15 border border-blue-500/30">
               <FileText className="h-5 w-5 text-blue-400" />
@@ -283,8 +283,8 @@ const DocumentDetailsTab = ({
           />
       )}
 
-      {/* Document Content */}
-      <div className="space-y-6">
+             {/* Document Content */}
+       <div className="space-y-4">
             {/* ERP Archival Status */}
             {document.status === 2 && (
           <div className="bg-gradient-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-6">
