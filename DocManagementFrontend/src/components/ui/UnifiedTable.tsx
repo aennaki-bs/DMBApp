@@ -147,7 +147,7 @@ export interface UnifiedTableProps<T> {
 
   // Pagination
   initialPageSize?: number;
-  pageSizeOptions?: number[];
+  pageSizeOptions?: (number | "all")[];
 
   // Styling
   className?: string;
@@ -183,7 +183,7 @@ export function UnifiedTable<T extends Record<string, any>>({
   errorMessage = "Failed to load data. Please try again.",
   emptyMessage = "No data found.",
   initialPageSize = 15,
-  pageSizeOptions = [10, 15, 25, 50],
+  pageSizeOptions = [10, 15, 25, 50, "all"],
   className,
   containerClassName,
 }: UnifiedTableProps<T>) {

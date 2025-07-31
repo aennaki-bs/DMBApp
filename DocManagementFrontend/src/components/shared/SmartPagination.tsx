@@ -23,7 +23,7 @@ interface SmartPaginationProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   className?: string;
-  pageSizeOptions?: number[];
+  pageSizeOptions?: (number | "all")[];
   showFirstLast?: boolean;
   maxVisiblePages?: number;
 }
@@ -36,7 +36,7 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
   onPageChange,
   onPageSizeChange,
   className = "",
-  pageSizeOptions = [10, 15, 25, 50, 100],
+  pageSizeOptions = [10, 15, 25, 50, 100, "all"],
   showFirstLast = true,
   maxVisiblePages = 7,
 }) => {
@@ -87,6 +87,23 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
 
   const visiblePages = getVisiblePages();
 
+  // Handle page size change with "all" option
+  const handlePageSizeChange = (value: string) => {
+    if (value === "all") {
+      onPageSizeChange(totalItems);
+    } else {
+      onPageSizeChange(Number(value));
+    }
+  };
+
+  // Get current page size value for display
+  const getCurrentPageSizeValue = () => {
+    if (pageSize >= totalItems) {
+      return "all";
+    }
+    return pageSize.toString();
+  };
+
   return (
     <div
       className={`flex flex-col sm:flex-row items-center justify-center gap-4 p-3 bg-gradient-to-r from-primary/5 via-background/50 to-primary/5 backdrop-blur-xl rounded-xl border border-primary/20 shadow-lg ${className}`}
@@ -97,8 +114,8 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
           Show
         </span>
         <Select
-          value={pageSize.toString()}
-          onValueChange={(value) => onPageSizeChange(Number(value))}
+          value={getCurrentPageSizeValue()}
+          onValueChange={handlePageSizeChange}
         >
           <SelectTrigger className="w-[60px] h-8 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-md rounded-lg">
             <SelectValue />
@@ -110,7 +127,7 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
                 value={size.toString()}
                 className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-md text-sm"
               >
-                {size}
+                {size === "all" ? "All" : size}
               </SelectItem>
             ))}
           </SelectContent>

@@ -694,7 +694,7 @@ const ItemsManagement = ({ searchTerm, elementType }: ItemsManagementProps) => {
           totalItems={totalItems}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
-          pageSizeOptions={[10, 15, 25, 50, 100]}
+          pageSizeOptions={[10, 15, 25, 50, 100, "all"]}
         />
       )}
 

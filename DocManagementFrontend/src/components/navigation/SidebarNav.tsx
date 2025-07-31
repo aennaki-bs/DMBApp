@@ -368,7 +368,7 @@ export function SidebarNav() {
 
       <div className={cn(
         "py-2",
-        isMobile ? "px-2" : "px-6"
+        isMobile ? "px-2" : "px-2"
       )}>
         <div className={cn(
           "flex items-center gap-2 px-2 py-3",
