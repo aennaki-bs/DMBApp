@@ -211,7 +211,7 @@ export function ApprovalGroupTableRow({
             <div className="flex items-center gap-1">
               <UsersRound className="w-4 h-4 text-primary/60" />
               <span className="font-medium text-foreground">
-                {approverCount}
+                {/* {approverCount} */}
               </span>
             </div>
             {approverCount > 0 && (
