@@ -6,6 +6,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
+  Sidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSettings } from "@/context/SettingsContext";
@@ -35,9 +36,8 @@ const backgroundOptions = [
 
 export function Layout() {
   const isMobile = useIsMobile();
-  const { theme } = useSettings();
-  const { theme: themeConfig } = useTheme();
-  const [backgroundUrl, setBackgroundUrl] = useState("");
+  const { theme } = useTheme();
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
 
   // Get the selected background from localStorage
   useEffect(() => {
@@ -117,7 +117,7 @@ export function Layout() {
   }, []);
 
   // Use Standard theme styling but allow background images
-  const isStandardTheme = themeConfig.variant === "standard";
+  const isStandardTheme = theme?.variant === "standard";
 
   return (
     <SidebarProvider>
@@ -139,16 +139,15 @@ export function Layout() {
 
         {/* Main layout structure - elevated above overlay */}
         <div className="relative flex w-full min-h-full z-10">
-          {/* Sidebar - clean transparent styling with responsive width */}
-          <aside
-            className={`h-full ${isMobile ? "hidden" : "w-72 sm:w-76 lg:w-80 xl:w-80 flex-shrink-0"
-              } ${isStandardTheme
-                ? "glass-sidebar"
-                : "border-r border-border bg-card/95"
-              } transition-all duration-300 ease-in-out shadow-lg z-20 overflow-hidden`}
+          {/* Sidebar - using proper Sidebar component for mobile support */}
+          <Sidebar
+            className={`${isStandardTheme
+              ? "glass-sidebar"
+              : "border-r border-border bg-card/95"
+            } transition-all duration-300 ease-in-out shadow-lg z-20 overflow-hidden`}
           >
             <SidebarNav />
-          </aside>
+          </Sidebar>
 
           {/* Main content area */}
           <div className="flex-1 flex flex-col min-h-full">

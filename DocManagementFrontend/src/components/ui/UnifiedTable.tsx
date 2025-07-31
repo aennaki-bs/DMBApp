@@ -642,7 +642,7 @@ export function UnifiedTable<T extends Record<string, any>>({
 
       <div
         className={cn(
-          "relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg",
+          "relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 shadow-lg",
           className
         )}
       >

@@ -117,10 +117,10 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
           value={getCurrentPageSizeValue()}
           onValueChange={handlePageSizeChange}
         >
-          <SelectTrigger className="w-[60px] h-8 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-md rounded-lg">
+          <SelectTrigger className="w-[60px] h-8 bg-background text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-accent shadow-md rounded-lg z-10">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-lg shadow-xl">
+          <SelectContent className="bg-background text-foreground border border-primary/20 rounded-lg shadow-xl z-50">
             {pageSizeOptions.map((size) => (
               <SelectItem
                 key={size}
@@ -143,7 +143,7 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
               size="sm"
               onClick={() => onPageChange(1)}
               disabled={currentPage === 1}
-              className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+              className="h-8 w-8 p-0 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm z-10"
               title="First page"
             >
               <ChevronsLeft className="h-4 w-4" />
@@ -155,7 +155,7 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+            className="h-8 w-8 p-0 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm z-10"
             title="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -181,8 +181,8 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
                 onClick={() => onPageChange(page)}
                 className={
                   page === currentPage
-                    ? "h-8 min-w-[32px] px-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 border-blue-500 shadow-md font-semibold"
-                    : "h-8 min-w-[32px] px-2 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 transition-all duration-200 shadow-sm"
+                    ? "h-8 min-w-[32px] px-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 border-blue-500 shadow-md font-semibold z-10"
+                    : "h-8 min-w-[32px] px-2 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary transition-all duration-200 shadow-sm z-10"
                 }
                 title={`Page ${page}`}
               >
@@ -196,7 +196,7 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
             size="sm"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+            className="h-8 w-8 p-0 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm z-10"
             title="Next page"
           >
             <ChevronRight className="h-4 w-4" />
@@ -208,7 +208,7 @@ const SmartPagination: React.FC<SmartPaginationProps> = ({
               size="sm"
               onClick={() => onPageChange(totalPages)}
               disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0 bg-white dark:bg-[#1e2a4a] text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800/50 hover:text-blue-900 dark:hover:text-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+              className="h-8 w-8 p-0 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm z-10"
               title="Last page"
             >
               <ChevronsRight className="h-4 w-4" />
