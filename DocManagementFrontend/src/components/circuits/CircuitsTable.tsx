@@ -296,7 +296,7 @@ export function CircuitsTable({
     }
 
     return (
-        <div className="h-full flex flex-col gap-6">
+        <div className="h-full flex flex-col gap-2">
             {/* Professional Filter Bar */}
             <div className={filterCardClass}>
                 {/* Search and field select */}

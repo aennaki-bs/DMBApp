@@ -5,8 +5,11 @@ import { UserTableBody } from "./content/UserTableBody";
 import { UserTableEmpty } from "./UserTableEmpty";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import PaginationWithBulkActions, { BulkAction } from "@/components/shared/PaginationWithBulkActions";
-import { Loader2, UserCheck, Trash2 } from "lucide-react";
+import { Loader2, UserCheck, Trash2, Printer } from "lucide-react";
 import { BulkSelectionState } from "@/hooks/useBulkSelection";
+import { printSelectedUsers } from "@/utils/printUtils";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
 interface UserTableContentProps {
   users: UserDto[] | undefined;
@@ -75,8 +78,44 @@ export function UserTableContent({
   // Check if we have users to display
   const hasUsers = users && users.length > 0;
 
+  // Handle print selected users
+  const handlePrintSelectedUsers = () => {
+    const selectedUserObjects = bulkSelection.getSelectedObjects();
+    if (selectedUserObjects.length === 0) {
+      toast.error("No users selected for printing");
+      return;
+    }
+    
+    printSelectedUsers(selectedUserObjects, `Selected Users Report (${selectedUserObjects.length} users)`);
+    toast.success(`Opening print preview for ${selectedUserObjects.length} selected users`);
+  };
+
+  // Keyboard shortcuts for bulk actions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only trigger shortcuts when users are selected
+      if (bulkSelection.selectedCount === 0) return;
+      
+      if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        handlePrintSelectedUsers();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [bulkSelection.selectedCount, handlePrintSelectedUsers]);
+
   // Define bulk actions
   const bulkActions: BulkAction[] = [
+    {
+      id: 'print',
+      label: 'Imprime',
+      icon: <Printer className="h-4 w-4" />,
+      variant: 'outline',
+      onClick: handlePrintSelectedUsers,
+      shortcut: 'P',
+    },
     {
       id: 'change-role',
       label: 'Change Role',
@@ -95,6 +134,8 @@ export function UserTableContent({
       shortcut: 'Del',
     },
   ];
+
+
 
   // Loading state
   if (isLoading) {
