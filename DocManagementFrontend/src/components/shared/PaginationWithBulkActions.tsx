@@ -71,7 +71,7 @@ interface PaginationWithBulkActionsProps {
     onPageChange: (page: number) => void;
     onPageSizeChange: (pageSize: number) => void;
     className?: string;
-    pageSizeOptions?: number[];
+    pageSizeOptions?: (number | "all")[];
     showFirstLast?: boolean;
     maxVisiblePages?: number;
 
@@ -88,7 +88,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
     onPageChange,
     onPageSizeChange,
     className = "",
-    pageSizeOptions = [10, 15, 25, 50, 100],
+    pageSizeOptions = [10, 15, 25, 50, 100, "all"],
     showFirstLast = true,
     maxVisiblePages = 7,
     bulkSelection,
@@ -138,6 +138,23 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
 
     const visiblePages = getVisiblePages();
     const hasBulkSelection = bulkSelection && bulkSelection.selectedCount > 0;
+
+    // Handle page size change with "all" option
+    const handlePageSizeChange = (value: string) => {
+        if (value === "all") {
+            onPageSizeChange(totalItems);
+        } else {
+            onPageSizeChange(Number(value));
+        }
+    };
+
+    // Get current page size value for display
+    const getCurrentPageSizeValue = () => {
+        if (pageSize >= totalItems) {
+            return "all";
+        }
+        return pageSize.toString();
+    };
 
     return (
         <div
@@ -269,20 +286,20 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                         Show
                     </span>
                     <Select
-                        value={pageSize.toString()}
-                        onValueChange={(value) => onPageSizeChange(Number(value))}
+                        value={getCurrentPageSizeValue()}
+                        onValueChange={handlePageSizeChange}
                     >
-                        <SelectTrigger className="w-[60px] h-8 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-md rounded-lg">
+                        <SelectTrigger className="w-[60px] h-8 bg-background text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-accent shadow-md rounded-lg z-10">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-lg shadow-xl">
+                        <SelectContent className="bg-background text-foreground border border-primary/20 rounded-lg shadow-xl z-50">
                             {pageSizeOptions.map((size) => (
                                 <SelectItem
                                     key={size}
                                     value={size.toString()}
                                     className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-md text-sm"
                                 >
-                                    {size}
+                                    {size === "all" ? "All" : size}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -298,7 +315,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                                 size="sm"
                                 onClick={() => onPageChange(1)}
                                 disabled={currentPage === 1}
-                                className="h-8 w-8 p-0 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                                className="h-8 w-8 p-0 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm z-10"
                                 title="First page"
                             >
                                 <ChevronsLeft className="h-4 w-4" />
@@ -310,7 +327,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                             size="sm"
                             onClick={() => onPageChange(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="h-8 w-8 p-0 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                            className="h-8 w-8 p-0 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm z-10"
                             title="Previous page"
                         >
                             <ChevronLeft className="h-4 w-4" />
@@ -336,8 +353,8 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                                     onClick={() => onPageChange(page)}
                                     className={
                                         page === currentPage
-                                            ? "h-8 min-w-[32px] px-2 bg-primary text-primary-foreground hover:bg-primary/90 border border-primary shadow-md font-semibold"
-                                            : "h-8 min-w-[32px] px-2 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary transition-all duration-200 shadow-sm"
+                                            ? "h-8 min-w-[32px] px-2 bg-primary text-primary-foreground hover:bg-primary/90 border border-primary shadow-md font-semibold z-10"
+                                            : "h-8 min-w-[32px] px-2 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary transition-all duration-200 shadow-sm z-10"
                                     }
                                     title={`Page ${page}`}
                                 >
@@ -351,7 +368,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                             size="sm"
                             onClick={() => onPageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
-                            className="h-8 w-8 p-0 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                            className="h-8 w-8 p-0 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm z-10"
                             title="Next page"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -363,7 +380,7 @@ const PaginationWithBulkActions: React.FC<PaginationWithBulkActionsProps> = ({
                                 size="sm"
                                 onClick={() => onPageChange(totalPages)}
                                 disabled={currentPage === totalPages}
-                                className="h-8 w-8 p-0 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                                className="h-8 w-8 p-0 bg-background text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm z-10"
                                 title="Last page"
                             >
                                 <ChevronsRight className="h-4 w-4" />

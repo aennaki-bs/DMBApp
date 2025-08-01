@@ -239,7 +239,7 @@ const DocumentDetailsTab = ({
   ], [memoizedDocumentInfo, document.documentType?.tierType, t]);
 
   return (
-    <div className="space-y-6 overflow-y-auto h-full p-1">
+    <div className="space-y-4 overflow-y-auto h-full pb-4">
       {/* Document Header */}
       <div className="bg-gradient-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -285,8 +285,8 @@ const DocumentDetailsTab = ({
           />
       )}
 
-      {/* Document Content */}
-      <div className="space-y-6">
+             {/* Document Content */}
+       <div className="space-y-4">
             {/* ERP Archival Status */}
             {document.status === 2 && (
           <div className="bg-gradient-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-6">

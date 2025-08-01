@@ -134,14 +134,14 @@ export function UserTableContent({
 
   return (
     <div className="h-full flex flex-col gap-4" style={{ minHeight: "100%" }}>
-      <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 backdrop-blur-xl shadow-lg min-h-0">
+      <div className="flex-1 relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-br from-background/80 via-background/60 to-background/80 shadow-lg min-h-0">
         {/* Subtle animated background */}
         <div className="absolute inset-0 bg-gradient-to-r from-primary/2 via-transparent to-primary/2 animate-pulse"></div>
 
         {hasUsers ? (
           <div className="relative h-full flex flex-col z-10">
             {/* Fixed Header - Never Scrolls */}
-            <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm">
+            <div className="flex-shrink-0 overflow-x-auto border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent">
               <div className="min-w-[1026px]">
                 <Table className="table-fixed w-full table-compact">
                   <UserTableHeader
