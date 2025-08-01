@@ -86,28 +86,28 @@ export function ViewUserLogsDialog({
 
   // Action type mapping
   const actionTypes = {
-    0: "Logout",
-    1: "Login",
-    2: "Profile Create",
-    3: "Profile Update",
-    4: "Document Create",
-    5: "Document Update",
-    6: "Document Delete",
-    7: "Profile Create",
-    8: "Profile Update",
-    9: "Profile Delete",
-    10: "Line Create",
-    11: "Line Update",
-    12: "Line Delete",
-    13: "SubLine Create",
-    14: "SubLine Update",
-    15: "SubLine Delete",
+    0: t("userManagement.logout"),
+    1: t("userManagement.login"),
+    2: t("userManagement.profileCreate"),
+    3: t("userManagement.profileUpdate"),
+    4: t("userManagement.documentCreate"),
+    5: t("userManagement.documentUpdate"),
+    6: t("userManagement.documentDelete"),
+    7: t("userManagement.profileCreate"),
+    8: t("userManagement.profileUpdate"),
+    9: t("userManagement.profileDelete"),
+    10: t("userManagement.lineCreate"),
+    11: t("userManagement.lineUpdate"),
+    12: t("userManagement.lineDelete"),
+    13: t("userManagement.subLineCreate"),
+    14: t("userManagement.subLineUpdate"),
+    15: t("userManagement.subLineDelete"),
   };
 
   const getActionTypeLabel = (actionType: number): string => {
     return (
       actionTypes[actionType as keyof typeof actionTypes] ||
-      `Action ${actionType}`
+      `${t("userManagement.logAction")} ${actionType}`
     );
   };
 
@@ -346,16 +346,16 @@ export function ViewUserLogsDialog({
               </PopoverTrigger>
               <PopoverContent className="w-80 p-4 bg-slate-900 border border-slate-700/50 shadow-xl">
                 <div className="space-y-4">
-                  <h3 className="font-medium text-slate-200">Filter Logs</h3>
+                  <h3 className="font-medium text-slate-200">{t("userManagement.filterLogs")}</h3>
 
                   <div className="space-y-2">
-                    <label className="text-sm text-slate-400">Action Type</label>
+                    <label className="text-sm text-slate-400">{t("userManagement.actionType")}</label>
                     <Select value={actionTypeFilter} onValueChange={setActionTypeFilter}>
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-200">
-                        <SelectValue placeholder="Select action type" />
+                        <SelectValue placeholder={t("userManagement.actionType")} />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="all">All Actions</SelectItem>
+                        <SelectItem value="all">{t("userManagement.allActions")}</SelectItem>
                         {uniqueActionTypes.map((type) => (
                           <SelectItem key={type} value={type.toString()}>
                             {getActionTypeLabel(type)}
@@ -366,7 +366,7 @@ export function ViewUserLogsDialog({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm text-slate-400">Date Range</label>
+                    <label className="text-sm text-slate-400">{t("userManagement.dateRange")}</label>
                     <Select
                       value={dateFilter}
                       onValueChange={(value) => {
@@ -377,36 +377,36 @@ export function ViewUserLogsDialog({
                       }}
                     >
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-200">
-                        <SelectValue placeholder="Select date range" />
+                        <SelectValue placeholder={t("userManagement.dateRange")} />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="all">All Time</SelectItem>
-                        <SelectItem value="today">Today</SelectItem>
-                        <SelectItem value="yesterday">Yesterday</SelectItem>
-                        <SelectItem value="thisWeek">This Week</SelectItem>
-                        <SelectItem value="thisMonth">This Month</SelectItem>
-                        <SelectItem value="specific">Specific Date</SelectItem>
+                        <SelectItem value="all">{t("userManagement.allTime")}</SelectItem>
+                        <SelectItem value="today">{t("userManagement.today")}</SelectItem>
+                        <SelectItem value="yesterday">{t("userManagement.yesterday")}</SelectItem>
+                        <SelectItem value="thisWeek">{t("userManagement.thisWeek")}</SelectItem>
+                        <SelectItem value="thisMonth">{t("userManagement.thisMonth")}</SelectItem>
+                        <SelectItem value="specific">{t("userManagement.specificDate")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Date picker for specific date */}
-                  {dateFilter === "specific" && (
-                    <div className="space-y-2">
-                      <label className="text-sm text-slate-400">Select Date</label>
-                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal bg-slate-800 border-slate-700 text-slate-200",
-                              !specificDate && "text-slate-400"
-                            )}
-                          >
-                            <Calendar className="mr-2 h-4 w-4" />
-                            {specificDate ? format(specificDate, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
+                                     {/* Date picker for specific date */}
+                   {dateFilter === "specific" && (
+                     <div className="space-y-2">
+                       <label className="text-sm text-slate-400">{t("userManagement.selectDate")}</label>
+                       <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                         <PopoverTrigger asChild>
+                           <Button
+                             variant="outline"
+                             className={cn(
+                               "w-full justify-start text-left font-normal bg-slate-800 border-slate-700 text-slate-200",
+                               !specificDate && "text-slate-400"
+                             )}
+                           >
+                             <Calendar className="mr-2 h-4 w-4" />
+                             {specificDate ? format(specificDate, "PPP") : t("userManagement.pickDate")}
+                           </Button>
+                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-700">
                           <CalendarComponent
                             mode="single"
@@ -448,33 +448,33 @@ export function ViewUserLogsDialog({
             <div className="flex flex-wrap gap-2 mt-3">
               {actionTypeFilter !== "all" && (
                 <Badge className="bg-blue-900/40 text-blue-200 border border-blue-500/30 px-2 py-1 flex items-center gap-1">
-                  {t("userManagement.action")}: {getActionTypeLabel(parseInt(actionTypeFilter))}
+                  {t("userManagement.logAction")}: {getActionTypeLabel(parseInt(actionTypeFilter))}
                   <X
                     className="h-3 w-3 ml-1 cursor-pointer"
                     onClick={() => setActionTypeFilter("all")}
                   />
                 </Badge>
               )}
-              {dateFilter !== "all" && (
-                <Badge className="bg-blue-900/40 text-blue-200 border border-blue-500/30 px-2 py-1 flex items-center gap-1">
-                  {t("userManagement.date")}: {dateFilter === "today" ? "Today" :
-                    dateFilter === "yesterday" ? "Yesterday" :
-                      dateFilter === "thisWeek" ? "This Week" :
-                        dateFilter === "thisMonth" ? "This Month" :
-                          dateFilter === "specific" && specificDate ? format(specificDate, "MMM d, yyyy") :
-                            "All Time"}
-                  <X
-                    className="h-3 w-3 ml-1 cursor-pointer"
-                    onClick={() => {
-                      setDateFilter("all");
-                      setSpecificDate(undefined);
-                    }}
-                  />
-                </Badge>
-              )}
+                             {dateFilter !== "all" && (
+                 <Badge className="bg-blue-900/40 text-blue-200 border border-blue-500/30 px-2 py-1 flex items-center gap-1">
+                   {t("common.date")}: {dateFilter === "today" ? t("userManagement.today") :
+                     dateFilter === "yesterday" ? t("userManagement.yesterday") :
+                       dateFilter === "thisWeek" ? t("userManagement.thisWeek") :
+                         dateFilter === "thisMonth" ? t("userManagement.thisMonth") :
+                           dateFilter === "specific" && specificDate ? format(specificDate, "MMM d, yyyy") :
+                             t("userManagement.allTime")}
+                   <X
+                     className="h-3 w-3 ml-1 cursor-pointer"
+                     onClick={() => {
+                       setDateFilter("all");
+                       setSpecificDate(undefined);
+                     }}
+                   />
+                 </Badge>
+               )}
               {searchQuery && (
                 <Badge className="bg-blue-900/40 text-blue-200 border border-blue-500/30 px-2 py-1 flex items-center gap-1">
-                  {t("userManagement.search")}: "{searchQuery}"
+                  {t("common.search")}: "{searchQuery}"
                   <X
                     className="h-3 w-3 ml-1 cursor-pointer"
                     onClick={() => setSearchQuery("")}
@@ -641,9 +641,9 @@ export function ViewUserLogsDialog({
               </div>
             </div>
           ) : (
-            <div className="text-center py-10 text-slate-400 bg-slate-900/50 rounded-lg border border-slate-700/50 m-4">
-              {t("userManagement.noLogsFound")} {(actionTypeFilter !== "all" || dateFilter !== "all" || searchQuery) && " matching your filters"}
-            </div>
+                         <div className="text-center py-10 text-slate-400 bg-slate-900/50 rounded-lg border border-slate-700/50 m-4">
+               {t("userManagement.noLogsFound")} {(actionTypeFilter !== "all" || dateFilter !== "all" || searchQuery) && ` ${t("userManagement.matchingFilters")}`}
+             </div>
           )}
         </div>
       </DialogContent>

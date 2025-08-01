@@ -19,6 +19,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import DocumentsFilterBar from "./DocumentsFilterBar";
+import { DEFAULT_DOCUMENT_SEARCH_FIELDS } from "@/components/table/constants/filters";
 
 interface DocumentsSearchBarProps {
   hasActiveFilters?: boolean;
@@ -37,13 +38,10 @@ export const DocumentsSearchBar = ({
   const [filterOpen, setFilterOpen] = useState(false);
 
   // Field options for search
-  const fieldOptions = [
-    { id: "all", label: t("documents.allFields") },
-    { id: "title", label: t("documents.documentTitle") },
-    { id: "documentKey", label: t("documents.documentCode") },
-    // { id: "documentType", label: t("documents.documentType") },
-    { id: "responsibilityCentre", label: "Responsibility Center" },
-  ];
+  const fieldOptions = DEFAULT_DOCUMENT_SEARCH_FIELDS.map(field => ({
+    id: field.id,
+    label: t(field.label as any)
+  }));
 
   // Sync local state with filter state
   useEffect(() => {
@@ -127,7 +125,7 @@ export const DocumentsSearchBar = ({
         <div className="flex-1 flex items-center gap-4 min-w-0">
           <div className="relative">
             <Select value={searchField} onValueChange={handleSearchFieldChange}>
-              <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+              <SelectTrigger className="w-[180px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
                 <SelectValue>
                   {selectedField?.label || t("documents.allFields")}
                 </SelectValue>

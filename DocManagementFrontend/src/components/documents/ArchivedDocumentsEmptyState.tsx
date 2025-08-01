@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Archive, FilterX, Search } from "lucide-react";
 import { useArchivedDocumentsFilter } from "@/hooks/documents/useArchivedDocumentsFilter";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ArchivedDocumentsEmptyStateProps {
   hasFilters?: boolean;
@@ -12,6 +13,7 @@ export default function ArchivedDocumentsEmptyState({
   hasFilters = false,
   onClearFilters,
 }: ArchivedDocumentsEmptyStateProps) {
+  const { t, tWithParams } = useTranslation();
   const { searchQuery } = useArchivedDocumentsFilter();
 
   const isSearching = !!searchQuery;
@@ -34,25 +36,21 @@ export default function ArchivedDocumentsEmptyState({
       </div>
 
       <h3 className="text-xl font-semibold text-white">
-        {hasFilters ? "No matching archived documents" : "No archived documents found"}
+        {hasFilters ? t('documents.noMatchingArchivedDocuments') : t('documents.noArchivedDocumentsFound')}
       </h3>
 
       <p className="text-blue-100/70 text-sm mt-2 max-w-lg mx-auto">
         {hasFilters ? (
           <>
-            No archived documents match your current filter criteria. Try adjusting your
-            filters or clearing them to see all archived documents.
+            {t('documents.noArchivedDocumentsMatchFilters')}
           </>
         ) : searchQuery ? (
           <>
-            No archived documents match your search for{" "}
-            <span className="text-orange-300 font-medium">"{searchQuery}"</span>.
-            Try a different search term or browse all archived documents.
+            {tWithParams('documents.noArchivedDocumentsMatchSearch', { searchQuery })}
           </>
         ) : (
           <>
-            There are currently no archived documents. Documents that have been
-            successfully archived to the ERP system will appear here.
+            {t('documents.noArchivedDocumentsYet')}
           </>
         )}
       </p>
@@ -65,7 +63,7 @@ export default function ArchivedDocumentsEmptyState({
             onClick={onClearFilters}
           >
             <FilterX className="mr-2 h-4 w-4" />
-            Clear Filters
+            {t('documents.clearFilters')}
           </Button>
         )}
       </div>

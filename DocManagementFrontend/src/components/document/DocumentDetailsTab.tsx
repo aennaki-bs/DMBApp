@@ -35,6 +35,7 @@ import DocumentApprovalDetails from "./DocumentApprovalDetails";
 import { CustomerVendorDetailsDialog } from "./dialogs/CustomerVendorDetailsDialog";
 import api from "@/services/api";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DocumentDetailsTabProps {
   document: Document;
@@ -126,6 +127,7 @@ const DocumentDetailsTab = ({
   approvalHistory,
   isLoadingApproval,
 }: DocumentDetailsTabProps) => {
+  const { t } = useTranslation();
   const [documentHistory, setDocumentHistory] = useState<DocumentHistoryEvent[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
@@ -185,39 +187,39 @@ const DocumentDetailsTab = ({
   const infoCardsData = useMemo(() => [
     {
       icon: Calendar,
-      title: "Document Date",
+      title: t('documents.documentDate'),
       value: memoizedDocumentInfo.documentDate,
     },
     {
       icon: Calendar,
-      title: "Posting Date",
+      title: t('documents.postingDate'),
       value: memoizedDocumentInfo.postingDate,
     },
     {
       icon: Tag,
-      title: "Document Type",
+      title: t('documents.documentType'),
       value: memoizedDocumentInfo.documentTypeName,
     },
     {
       icon: Hash,
-      title: "Series",
+      title: t('documents.series'),
       value: memoizedDocumentInfo.seriesName,
       subtitle: memoizedDocumentInfo.seriesCode ? `` : undefined,
     },
     {
       icon: GitBranch,
-      title: "Circuit",
-      value: `Status: ${memoizedDocumentInfo.currentStatus}`,
+      title: t('documents.circuit'),
+      value: `${t('documents.status')}: ${memoizedDocumentInfo.currentStatus}`,
       subtitle: memoizedDocumentInfo.circuitTitle,
     },
     ...(memoizedDocumentInfo.customerVendorName ? [{
       icon: document.documentType?.tierType === 1 ? UserCheck : Package,
-      title: document.documentType?.tierType === 1 ? 'Customer' : 'Vendor',
+      title: document.documentType?.tierType === 1 ? t('documents.customer') : t('documents.vendor'),
       value: memoizedDocumentInfo.customerVendorName,
-      subtitle: memoizedDocumentInfo.customerVendorCode ? `Code: ${memoizedDocumentInfo.customerVendorCode}` : undefined,
+      subtitle: memoizedDocumentInfo.customerVendorCode ? `${t('documents.code')}: ${memoizedDocumentInfo.customerVendorCode}` : undefined,
       actions: [
         {
-          label: "Show Details",
+          label: t('documents.showDetails'),
           icon: MapPin,
           onClick: () => setCustomerVendorDialogOpen(true),
         },
@@ -225,19 +227,19 @@ const DocumentDetailsTab = ({
     }] : []),
     ...(memoizedDocumentInfo.documentExterne ? [{
       icon: ExternalLink,
-      title: "External Document",
+      title: t('documents.externalDocument'),
       value: memoizedDocumentInfo.documentExterne,
     }] : []),
     {
       icon: User,
-      title: "Created By",
+      title: t('documents.createdBy'),
       value: memoizedDocumentInfo.createdByUsername,
       subtitle: `${memoizedDocumentInfo.createdDate} at ${memoizedDocumentInfo.createdTime}`,
     },
-  ], [memoizedDocumentInfo, document.documentType?.tierType]);
+  ], [memoizedDocumentInfo, document.documentType?.tierType, t]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-y-auto h-full p-1">
       {/* Document Header */}
       <div className="bg-gradient-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -246,9 +248,9 @@ const DocumentDetailsTab = ({
               <FileText className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Document Information</h2>
+              <h2 className="text-lg font-bold text-white">{t('documents.documentInformation')}</h2>
               <p className="text-sm text-slate-300">
-                Last Updated At {memoizedDocumentInfo.updatedDate} • By {memoizedDocumentInfo.updatedBy}
+                {t('documents.lastUpdatedAt')} {memoizedDocumentInfo.updatedDate} • {t('documents.by')} {memoizedDocumentInfo.updatedBy}
               </p>
             </div>
           </div>
@@ -259,13 +261,13 @@ const DocumentDetailsTab = ({
                 <Building2 className="h-4 w-4 text-blue-400" />
               </div>
               <div>
-                <div className="text-xs font-medium text-blue-300 uppercase tracking-wider">Centre</div>
+                <div className="text-xs font-medium text-blue-300 uppercase tracking-wider">{t('documents.centre')}</div>
                 <div className="font-semibold text-white text-sm">
-                  {memoizedDocumentInfo.responsibilityCentre.descr || "No Centre"}
+                  {memoizedDocumentInfo.responsibilityCentre.descr || t('documents.centre')}
                 </div>
                 {memoizedDocumentInfo.responsibilityCentre.code && (
                   <div className="text-xs text-slate-300 font-medium">
-                    Code: {memoizedDocumentInfo.responsibilityCentre.code}
+                    {t('documents.code')}: {memoizedDocumentInfo.responsibilityCentre.code}
                   </div>
                 )}
               </div>
@@ -311,8 +313,8 @@ const DocumentDetailsTab = ({
                         <FileText className="h-6 w-6 text-blue-400" />
                       </div>
                       <div>
-                        <CardTitle className="text-white">Document Content</CardTitle>
-                        <p className="text-slate-300 text-sm">Full document description and details</p>
+                        <CardTitle className="text-white">{t('documents.documentContent')}</CardTitle>
+                        <p className="text-slate-300 text-sm">{t('documents.fullDocumentDescription')}</p>
                       </div>
                   </div>
                 </CardHeader>
@@ -327,8 +329,8 @@ const DocumentDetailsTab = ({
                     <div className="text-center py-12">
                 <div className="bg-slate-800/30 border border-slate-600/30 rounded-xl p-8">
                         <FileText className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-                        <p className="text-slate-400 text-lg font-medium">No content available</p>
-                        <p className="text-slate-500 text-sm mt-2">This document doesn't have any content description</p>
+                        <p className="text-slate-400 text-lg font-medium">{t('documents.noContentAvailable')}</p>
+                        <p className="text-slate-500 text-sm mt-2">{t('documents.noContentDescription')}</p>
                       </div>
                     </div>
                   )}

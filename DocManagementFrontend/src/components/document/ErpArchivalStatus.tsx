@@ -15,6 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import erpArchivalService from '@/services/erpArchivalService';
 import { DocumentErpStatus } from '@/models/erpArchival';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ErpArchivalStatusProps {
   documentId: number;
@@ -29,6 +30,7 @@ export default function ErpArchivalStatus({
 }: ErpArchivalStatusProps) {
   const [isRetrying, setIsRetrying] = useState(false);
   const { hasRole } = useAuth();
+  const { t, tWithParams } = useTranslation();
 
   const queryClient = useQueryClient();
   
@@ -47,15 +49,15 @@ export default function ErpArchivalStatus({
     try {
       // First try manual ERP archival endpoint
       try {
-        await erpArchivalService.manualErpArchival(documentId);
-        toast.success('Document archival initiated successfully');
-      } catch (manualError) {
-        // If manual archival fails, try the retry endpoint
-        await erpArchivalService.retryDocumentArchival(documentId, {
-          reason: 'Manual archival triggered by user'
-        });
-        toast.success('Document archival retry initiated');
-      }
+              await erpArchivalService.manualErpArchival(documentId);
+      toast.success(t('documents.documentArchivalInitiated'));
+    } catch (manualError) {
+      // If manual archival fails, try the retry endpoint
+      await erpArchivalService.retryDocumentArchival(documentId, {
+        reason: 'Manual archival triggered by user'
+      });
+      toast.success(t('documents.documentArchivalRetry'));
+    }
       
       // Refresh the ERP status after a short delay to allow processing
       setTimeout(() => {
@@ -64,7 +66,7 @@ export default function ErpArchivalStatus({
       
     } catch (error) {
       console.error('Error initiating archival:', error);
-      toast.error('Failed to initiate archival. Please check if the document is ready for ERP processing.');
+      toast.error(t('documents.failedToInitiateArchival'));
     } finally {
       setIsRetrying(false);
     }
@@ -76,15 +78,15 @@ export default function ErpArchivalStatus({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Archive className="h-5 w-5" />
-            ERP Archival Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span>Loading ERP status...</span>
-          </div>
+                  <CardTitle className="flex items-center gap-2">
+          <Archive className="h-5 w-5" />
+          {t('documents.erpArchivalStatus')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <span>{t('documents.loadingErpStatus')}</span>
+        </div>
         </CardContent>
       </Card>
     );
@@ -93,11 +95,11 @@ export default function ErpArchivalStatus({
   if (error) {
     return (
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-2 text-red-600">
-            <AlertCircle className="h-4 w-4" />
-            <span>Failed to load ERP archival status. Please try refreshing the page.</span>
-          </div>
+              <CardContent className="pt-6">
+        <div className="flex items-center gap-2 text-red-600">
+          <AlertCircle className="h-4 w-4" />
+          <span>{t('documents.failedToLoadErpStatus')}</span>
+        </div>
         </CardContent>
       </Card>
     );
@@ -124,10 +126,10 @@ export default function ErpArchivalStatus({
   return (
     <Card>
               <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Archive className="h-5 w-5" />
-            ERP Archival Status
-          </CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+          <Archive className="h-5 w-5" />
+          {t('documents.erpArchivalStatus')}
+        </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Main Status Indicator */}
@@ -138,7 +140,7 @@ export default function ErpArchivalStatus({
               <AlertTriangle className="h-5 w-5 text-amber-600" />
             )}
             <span className="font-medium">
-              {isDocumentArchivedToErp ? 'Document successfully archived to ERP' : 'Document not yet archived'}
+              {isDocumentArchivedToErp ? t('documents.documentSuccessfullyArchived') : t('documents.documentNotYetArchived')}
             </span>
           </div>
 
@@ -148,18 +150,18 @@ export default function ErpArchivalStatus({
               ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
               : 'bg-muted/30'
           }`}>
-            <div className="font-medium">ERP Archival Process Status:</div>
+            <div className="font-medium">{t('documents.erpArchivalProcessStatus')}:</div>
             
             {isDocumentArchivedToErp ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="text-green-600">✅</span>
-                  <span>Document header successfully archived to ERP</span>
+                  <span>{t('documents.documentHeaderSuccessfullyArchived')}</span>
                 </div>
                 {erpStatus.erpDocumentCode && (
                   <div className="flex items-center gap-2">
                     <span>📋</span>
-                    <span>ERP Document Code: </span>
+                    <span>{t('documents.erpDocumentCode')}: </span>
                     <Badge variant="outline" className="font-mono">
                       {erpStatus.erpDocumentCode}
                     </Badge>
@@ -172,18 +174,18 @@ export default function ErpArchivalStatus({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="text-red-600">❌</span>
-                      <span className="font-medium">Archival Failed</span>
+                      <span className="font-medium">{t('documents.archivalFailed')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span>📝</span>
-                      <span>The system attempted to archive this document but encountered errors</span>
+                      <span>{t('documents.systemAttemptedToArchive')}</span>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="text-blue-600">🔄</span>
-                      <span className="font-medium">Not Yet Processed</span>
+                      <span className="font-medium">{t('documents.notYetProcessed')}</span>
                     </div>
                   </div>
                 )}
@@ -194,27 +196,27 @@ export default function ErpArchivalStatus({
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 font-medium text-amber-800 dark:text-amber-200">
                         <AlertTriangle className="h-4 w-4" />
-                        <span>Archival Status: DELAYED</span>
+                        <span>{t('documents.archivalStatusDelayed')}</span>
                       </div>
                       
                       <div>
-                        <div className="font-medium text-amber-900 dark:text-amber-100 mb-2">Possible reasons:</div>
+                        <div className="font-medium text-amber-900 dark:text-amber-100 mb-2">{t('documents.possibleReasons')}</div>
                         <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-200">
-                          <li>• ERP system temporarily unavailable or under maintenance</li>
-                          <li>• Scheduled archival background service hasn't processed this document yet</li>
-                          <li>• Network connectivity issues between systems</li>
+                          <li>• {t('documents.erpSystemUnavailable')}</li>
+                          <li>• {t('documents.scheduledArchivalNotProcessed')}</li>
+                          <li>• {t('documents.networkConnectivityIssues')}</li>
                         </ul>
                       </div>
 
                       <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-700 p-3 rounded">
-                        <div className="font-medium text-blue-900 dark:text-blue-100 mb-2">💡 Next Steps:</div>
+                        <div className="font-medium text-blue-900 dark:text-blue-100 mb-2">💡 {t('documents.nextSteps')}</div>
                         <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                           {canArchiveDocuments ? (
-                            <div>• Try the "Archive Now" button above to manually trigger archival</div>
+                            <div>• {t('documents.tryArchiveNowButton')}</div>
                           ) : (
-                            <div>• Contact an administrator to manually trigger archival</div>
+                            <div>• {t('documents.contactAdministrator')}</div>
                           )}
-                          <div>• Contact IT support if the issue persists</div>
+                          <div>• {t('documents.contactItSupport')}</div>
                         </div>
                       </div>
                     </div>
@@ -229,9 +231,9 @@ export default function ErpArchivalStatus({
             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-700 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <div className="font-medium text-blue-900 dark:text-blue-100">Manual Archival</div>
+                  <div className="font-medium text-blue-900 dark:text-blue-100">{t('documents.manualArchival')}</div>
                   <div className="text-sm text-blue-700 dark:text-blue-200">
-                    If automatic archival hasn't occurred, you can manually trigger it
+                    {t('documents.automaticArchivalNotOccurred')}
                   </div>
                 </div>
                 <Button
@@ -240,7 +242,7 @@ export default function ErpArchivalStatus({
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <Archive className={`h-4 w-4 mr-2 ${isRetrying ? 'animate-spin' : ''}`} />
-                  {isRetrying ? 'Processing...' : 'Archive Now'}
+                  {isRetrying ? t('documents.processing') : t('documents.archiveNow')}
                 </Button>
               </div>
             </div>
@@ -268,12 +270,15 @@ export default function ErpArchivalStatus({
             <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4 rounded-lg">
               <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 mb-3">
                 <AlertTriangle className="h-4 w-4" />
-                <span className="font-medium">Some lines failed to archive:</span>
+                <span className="font-medium">{t('documents.someLinesFailedToArchive')}</span>
               </div>
               <Collapsible>
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="p-0 h-auto font-normal text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100">
-                    View {lineErrors.length} failed line{lineErrors.length > 1 ? 's' : ''}
+                    {tWithParams('documents.viewFailedLines', { 
+                      count: lineErrors.length, 
+                      plural: lineErrors.length > 1 ? 's' : '' 
+                    })}
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-2 mt-3">
@@ -281,7 +286,7 @@ export default function ErpArchivalStatus({
                     <div key={`${error.ligneId}-${error.id}`} className="bg-background/80 p-3 rounded border border-amber-200 dark:border-amber-700">
                       <div className="space-y-1">
                         <div className="font-medium text-amber-900 dark:text-amber-100">
-                          Line: {error.ligneCode || `ACC_${error.ligneId}`}
+                          {t('documents.line')}: {error.ligneCode || `ACC_${error.ligneId}`}
                         </div>
                         <div className="text-sm text-amber-700 dark:text-amber-300">
                           {error.errorMessage}

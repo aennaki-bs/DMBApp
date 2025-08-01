@@ -11,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DateRangePickerProps {
   date: DateRange | undefined;
@@ -29,6 +30,7 @@ export function DateRangePicker({
   children,
   disabled = false,
 }: DateRangePickerProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   
   return (
@@ -57,7 +59,7 @@ export function DateRangePicker({
                   format(date.from, "MMM d, yyyy")
                 )
               ) : (
-                <span>Filter by date</span>
+                <span>{t("documents.filterByDate")}</span>
               )}
             </Button>
           )}
@@ -83,7 +85,7 @@ export function DateRangePicker({
               onClick={() => onDateChange(undefined)}
               className="border-blue-800/50 text-blue-300 hover:bg-blue-900/30"
             >
-              Clear
+              {t("common.clear")}
             </Button>
             <Button
               size="sm"
@@ -95,7 +97,7 @@ export function DateRangePicker({
               }}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              Close
+              {t("common.close")}
             </Button>
           </div>
         </PopoverContent>

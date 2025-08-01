@@ -14,21 +14,21 @@ export const DEFAULT_TYPE_FILTERS: FilterOption[] = [
 ];
 
 export const DEFAULT_DOCUMENT_SEARCH_FIELDS = [
-  { id: 'all', label: 'All fields' },
-  { id: 'documentKey', label: 'Document Code' },
-  { id: 'title', label: 'Title' },
-  { id: 'documentType.typeName', label: 'Type' },
-  { id: 'docDate', label: 'Document Date' },
-  { id: 'createdBy.username', label: 'Created By' }
+  { id: 'all', label: 'documents.allFields' },
+  { id: 'documentKey', label: 'documents.documentCode' },
+  { id: 'title', label: 'common.title' },
+  { id: 'documentType.typeName', label: 'common.type' },
+  { id: 'docDate', label: 'documents.documentDate' },
+  { id: 'documents.createdBy', label: 'documents.createdBy' },
+  { id: 'responsibilityCentre', label: 'documents.responsibilityCentre' }
 ];
 
 export const DEFAULT_USER_SEARCH_FIELDS = [
-  { id: 'all', label: 'All fields' },
-  { id: 'username', label: 'Username' },
-  { id: 'email', label: 'Email' },
-  { id: 'firstName', label: 'First Name' },
-  { id: 'lastName', label: 'Last Name' },
-  { id: 'role.roleName', label: 'Role' }
+  { id: 'all', label: 'userManagement.allFields' },
+  { id: 'username', label: 'userManagement.username' },
+  { id: 'email', label: 'userManagement.email' },
+  { id: 'firstName', label: 'userManagement.firstName' },
+  { id: 'lastName', label: 'userManagement.lastName' }
 ];
 
 export const DEFAULT_ITEM_SEARCH_FIELDS = [

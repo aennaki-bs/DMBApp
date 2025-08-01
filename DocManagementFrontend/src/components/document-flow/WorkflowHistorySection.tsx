@@ -1,5 +1,6 @@
 import { DocumentCircuitHistory } from "@/models/documentCircuit";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   Clock,
   CheckCircle,
@@ -24,6 +25,8 @@ export function WorkflowHistorySection({
   isLoading = false,
   isEmbedded = true,
 }: WorkflowHistorySectionProps) {
+  const { t } = useTranslation();
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -35,7 +38,7 @@ export function WorkflowHistorySection({
   if (history.length === 0) {
     return (
       <div className="text-center py-8 text-gray-400">
-        No history available for this document
+        {t('documents.noHistoryAvailable')}
       </div>
     );
   }
@@ -101,14 +104,14 @@ export function WorkflowHistorySection({
                         : "border-amber-500/30 text-amber-400 bg-amber-900/20"
                     )}
                   >
-                    {historyItem.isApproved ? "Approved" : "Pending"}
+                    {historyItem.isApproved ? t('documents.approved') : t('documents.pending')}
                   </Badge>
                 </div>
 
                 <div className="flex items-center gap-4 text-xs mb-2 flex-wrap">
                   <div className="flex items-center text-gray-400">
                     <User className="h-3 w-3 mr-1 text-blue-400" />
-                    <span>{historyItem.processedBy || "System"}</span>
+                    <span>{historyItem.processedBy || t('documents.system')}</span>
                   </div>
 
                   <div className="flex items-center text-gray-400">
@@ -126,7 +129,7 @@ export function WorkflowHistorySection({
                   <div className="mt-1 p-2 bg-blue-900/20 rounded-md border border-blue-900/30">
                     <div className="flex items-center text-blue-300 text-xs mb-1">
                       <MessageCircle className="h-3 w-3 mr-1" />
-                      Comments:
+                      {t('documents.comments')}:
                     </div>
                     <div className="text-xs text-gray-300">
                       {historyItem.comments}

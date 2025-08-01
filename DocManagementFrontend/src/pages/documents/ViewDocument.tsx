@@ -11,6 +11,7 @@ import { navigateToDocumentList } from "@/utils/navigationUtils";
 import api from "@/services/api";
 import { DocumentHistoryEvent } from "@/models/document";
 import { useDocumentEditingStatus } from "@/hooks/useDocumentEditingStatus";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Component imports
 import DocumentTitle from "@/components/document/DocumentTitle";
@@ -41,6 +42,7 @@ import {
 } from "lucide-react";
 
 const ViewDocument = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -270,14 +272,14 @@ const ViewDocument = () => {
   // Page actions for the PageLayout
   const pageActions = [
     {
-      label: "Back to Documents",
+      label: t('documents.backToDocuments'),
       variant: "outline" as const,
       icon: ArrowLeft,
       onClick: () => navigateToDocumentList(navigate),
     },
     ...(document && canManageDocuments ? [
       {
-        label: "Edit Document",
+        label: t('documents.editDocument'),
         variant: "outline" as const,
         icon: Edit,
         onClick: () => navigate(`/documents/${document.id}/edit`),
@@ -285,19 +287,19 @@ const ViewDocument = () => {
         tooltip: shouldDisableActions ? actionDisabledReason : undefined,
       },
       {
-        label: "Execute Steps",
+        label: t('documents.executeSteps'),
         variant: "outline" as const,
         icon: GitBranch,
         onClick: handleDocumentFlow,
       },
       {
-        label: "Show History",
+        label: t('documents.showHistory'),
         variant: "outline" as const,
         icon: History,
         onClick: handleShowHistory,
       },
       {
-        label: "Delete",
+        label: t('common.delete'),
         variant: "destructive" as const,
         icon: Trash2,
         onClick: () => setDeleteDialogOpen(true),
@@ -306,13 +308,13 @@ const ViewDocument = () => {
       },
     ] : document ? [
       {
-        label: "View Flow",
+        label: t('documents.viewFlow'),
         variant: "outline" as const,
         icon: Eye,
         onClick: handleDocumentFlow,
       },
       {
-        label: "Show History",
+        label: t('documents.showHistory'),
         variant: "outline" as const,
         icon: History,
         onClick: handleShowHistory,
@@ -324,7 +326,7 @@ const ViewDocument = () => {
   
   // Get current status information
   const getCurrentStatus = () => {
-    if (!document) return "Unknown Status";
+    if (!document) return t('documents.unknownStatus');
     
     // Priority 1: Check workflow status for more detailed info
     if (workflowStatus?.currentStatusTitle) {
@@ -351,11 +353,11 @@ const ViewDocument = () => {
       // }
     };
     
-  const documentTitle = document ? document.documentKey : "Loading Document...";
+  const documentTitle = document ? document.documentKey : t('documents.loadingDocument');
   const documentStatus = document ? getCurrentStatus() : undefined;
   const documentSubtitle = document
-    ? `Created At ${new Date(document.createdAt).toLocaleDateString()}`
-    : "Document details and information";
+    ? `${t('documents.createdAt')} ${new Date(document.createdAt).toLocaleDateString()}`
+    : t('documents.documentDetailsAndInformation');
 
   return (
     <PageLayout

@@ -6,6 +6,7 @@ import { WorkflowStatus } from "@/services/workflowService";
 import { ApprovalHistoryItem, ApprovalInfo } from "@/services/approvalService";
 import DocumentDetailsTab from "./DocumentDetailsTab";
 import DocumentLinesTab from "./DocumentLinesTab";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DocumentTabsViewProps {
   activeTab: string;
@@ -36,6 +37,7 @@ const DocumentTabsView = ({
   approvalHistory,
   isLoadingApproval
 }: DocumentTabsViewProps) => {
+  const { t } = useTranslation();
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
       <TabsList className="bg-gradient-to-r from-background/50 via-background/30 to-background/50 backdrop-blur-xl border border-border/50 w-full grid grid-cols-2 p-1 h-auto shadow-lg sticky top-0 z-10 flex-shrink-0">
@@ -44,14 +46,14 @@ const DocumentTabsView = ({
           className="py-3 px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/80 data-[state=active]:to-primary/60 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-primary/30 text-muted-foreground hover:text-foreground transition-all duration-300 rounded-lg"
         >
           <FileText className="h-4 w-4 mr-2" />
-          Document Details
+          {t('documents.documentDetails')}
         </TabsTrigger>
         <TabsTrigger
           value="lignes"
           className="py-3 px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/80 data-[state=active]:to-primary/60 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-primary/30 text-muted-foreground hover:text-foreground transition-all duration-300 rounded-lg"
         >
           <Layers className="h-4 w-4 mr-2" />
-          Lines
+          {t('documents.lines')}
           <Badge 
             variant="secondary" 
             className="ml-2 bg-primary/20 text-primary border-primary/30 text-xs font-medium"

@@ -275,11 +275,11 @@ export function UserTable() {
         <div className="flex-1 flex items-center gap-4 min-w-0">
           <div className="relative">
             <Select value={searchField} onValueChange={setSearchField}>
-              <SelectTrigger className="w-[140px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
+              <SelectTrigger className="w-[180px] h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg rounded-xl">
                 <SelectValue>
-                  {DEFAULT_USER_SEARCH_FIELDS.find(
+                  {t(DEFAULT_USER_SEARCH_FIELDS.find(
                     (opt) => opt.id === searchField
-                  )?.label || t("userManagement.allFields")}
+                  )?.label as any) || t("userManagement.allFields")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20 rounded-xl shadow-2xl">
@@ -289,7 +289,7 @@ export function UserTable() {
                     value={opt.id as string}
                     className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary rounded-lg"
                   >
-                    {opt.label}
+                    {t(opt.label as any)}
                   </SelectItem>
                 ))}
               </SelectContent>

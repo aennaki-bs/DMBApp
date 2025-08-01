@@ -29,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { ApprovalHistory } from "@/models/approval";
 import approvalService from "@/services/approvalService";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ApprovalHistoryComponentProps {
   documentId: number;
@@ -37,6 +38,7 @@ interface ApprovalHistoryComponentProps {
 export function ApprovalHistoryComponent({
   documentId,
 }: ApprovalHistoryComponentProps) {
+  const { t, tWithParams } = useTranslation();
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -77,13 +79,13 @@ export function ApprovalHistoryComponent({
     if (!status) return null;
 
     if (status.toLowerCase().includes("approved")) {
-      return <Badge className="bg-green-600">Approved</Badge>;
+      return <Badge className="bg-green-600">{t('documents.approved')}</Badge>;
     }
     if (status.toLowerCase().includes("rejected")) {
-      return <Badge className="bg-red-600">Rejected</Badge>;
+      return <Badge className="bg-red-600">{t('documents.rejected')}</Badge>;
     }
             if (status.toLowerCase() === 'open' || status.toLowerCase() === 'inprogress' || status.toLowerCase().includes("pending")) {
-  return <Badge className="bg-amber-500">Waiting</Badge>;
+  return <Badge className="bg-amber-500">{t('documents.waiting')}</Badge>;
     }
 
     return <Badge>{status}</Badge>;
@@ -109,16 +111,16 @@ export function ApprovalHistoryComponent({
     return (
       <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-xl text-white">Approval History</CardTitle>
-          <CardDescription>Failed to load approval history</CardDescription>
+          <CardTitle className="text-xl text-white">{t('documents.approvalHistory')}</CardTitle>
+          <CardDescription>{t('documents.failedToLoadApprovalHistory')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4">
             <p className="text-red-400">
-              There was an error loading the approval history.
+              {t('documents.errorLoadingApprovalHistory')}
             </p>
             <Button className="mt-4" onClick={() => window.location.reload()}>
-              Try Again
+              {t('documents.tryAgain')}
             </Button>
           </div>
         </CardContent>
@@ -130,15 +132,15 @@ export function ApprovalHistoryComponent({
     return (
       <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-xl text-white">Approval History</CardTitle>
+          <CardTitle className="text-xl text-white">{t('documents.approvalHistory')}</CardTitle>
           <CardDescription>
-            No approval history found for this document
+            {t('documents.noApprovalHistoryFound')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4">
             <p className="text-gray-400">
-              This document has no approval history yet.
+              {t('documents.noApprovalHistoryYet')}
             </p>
           </div>
         </CardContent>
@@ -151,10 +153,12 @@ export function ApprovalHistoryComponent({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl text-white">Approval History</CardTitle>
+            <CardTitle className="text-xl text-white">{t('documents.approvalHistory')}</CardTitle>
             <CardDescription>
-              {approvalHistory.length} approval request
-              {approvalHistory.length !== 1 ? "s" : ""} • Scroll to see all
+              {tWithParams('documents.approvalRequests', {
+                count: approvalHistory.length,
+                plural: approvalHistory.length !== 1 ? "s" : ""
+              })}
             </CardDescription>
           </div>
           <Button
@@ -169,7 +173,7 @@ export function ApprovalHistoryComponent({
             }}
             className="bg-blue-950/40 border-blue-900/30 text-blue-300 hover:bg-blue-900/40 hover:text-blue-200"
           >
-            {expandedItems.length === approvalHistory.length ? 'Collapse All' : 'Expand All'}
+            {expandedItems.length === approvalHistory.length ? t('documents.collapseAll') : t('documents.expandAll')}
           </Button>
         </div>
       </CardHeader>
@@ -229,11 +233,11 @@ export function ApprovalHistoryComponent({
                   <Separator className="bg-blue-900/50" />
                   <div className="p-4 space-y-3">
                     <h4 className="text-sm font-medium text-gray-300">
-                      Responses
+                      {t('documents.responses')}
                     </h4>
 
                     {!approval.responses || approval.responses.length === 0 ? (
-                      <p className="text-sm text-gray-400">No responses yet</p>
+                      <p className="text-sm text-gray-400">{t('documents.noResponsesYet')}</p>
                     ) : (
                       <div className="space-y-3">
                         {approval.responses.map((response, index) => (
@@ -280,7 +284,7 @@ export function ApprovalHistoryComponent({
           </ScrollArea>
           {/* Scroll indicator */}
           <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#1a2c6b]/80 to-transparent pointer-events-none flex items-end justify-center pb-1">
-            <div className="text-xs text-blue-300/60">↓ Scroll for more ↓</div>
+            <div className="text-xs text-blue-300/60">{t('documents.scrollForMore')}</div>
           </div>
         </div>
       </CardContent>

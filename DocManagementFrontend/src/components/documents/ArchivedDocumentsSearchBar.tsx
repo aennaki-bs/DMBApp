@@ -29,7 +29,7 @@ export const ArchivedDocumentsSearchBar = ({
   hasActiveFilters = false,
   className = "",
 }: ArchivedDocumentsSearchBarProps) => {
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
   const { searchQuery, setSearchQuery, activeFilters, applyFilters, resetFilters } = useArchivedDocumentsFilter();
 
   const [searchField, setSearchField] = useState(activeFilters.searchField || "all");
@@ -38,12 +38,12 @@ export const ArchivedDocumentsSearchBar = ({
 
   // Field options for search - includes ERP code for archived documents
   const fieldOptions = [
-    { id: "all", label: "All Fields" },
-    { id: "title", label: "Document Title" },
-    { id: "documentKey", label: "Document Code" },
+    { id: "all", label: t('documents.allFields') },
+    { id: "title", label: t('documents.documentTitle') },
+    { id: "documentKey", label: t('documents.documentCode') },
     // { id: "documentType", label: "Document Type" },
-    { id: "createdBy", label: "Created By" },
-    { id: "erpDocumentCode", label: "ERP Code" },
+    { id: "createdBy", label: t('documents.createdBy') },
+    { id: "erpDocumentCode", label: t('documents.erpCode') },
   ];
 
   // Sync local state with filter state
@@ -92,7 +92,7 @@ export const ArchivedDocumentsSearchBar = ({
   };
 
   const selectedField = fieldOptions.find(f => f.id === searchField);
-  const fieldLabel = selectedField?.label?.toLowerCase() || "all fields";
+  const fieldLabel = selectedField?.label?.toLowerCase() || t('documents.allFields').toLowerCase();
 
   // Count active filters (excluding search query)
   const activeFilterCount = Object.entries(activeFilters).filter(([key, value]) => {
@@ -150,7 +150,7 @@ export const ArchivedDocumentsSearchBar = ({
           <div className="relative flex-1 group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
             <Input
-              placeholder={`Search archived documents ${fieldLabel}...`}
+              placeholder={tWithParams('documents.searchArchivedDocuments', { field: fieldLabel })}
               value={localSearchQuery}
               onChange={handleSearchChange}
               className="relative h-12 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 pl-12 pr-10 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-lg group-hover:shadow-xl placeholder:text-muted-foreground/60"
@@ -178,7 +178,7 @@ export const ArchivedDocumentsSearchBar = ({
                 className="h-12 px-6 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-xl flex items-center gap-3 transition-all duration-300 hover:shadow-xl"
               >
                 <SlidersHorizontal className="h-5 w-5" />
-                Filter Documents
+                {t('documents.filterDocuments')}
                 <span className="ml-2 px-2 py-0.5 rounded border border-primary/30 text-xs text-primary/70 bg-primary/10 font-mono">Alt+F</span>
                 {hasActiveFilters && activeFilterCount > 0 && (
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
@@ -203,7 +203,7 @@ export const ArchivedDocumentsSearchBar = ({
                 setFilterOpen(false);
               }}
               className="h-12 px-4 text-primary/60 hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-xl"
-              title="Reset all filters"
+              title={t('documents.resetAllFilters')}
             >
               <FilterX className="h-4 w-4" />
             </Button>

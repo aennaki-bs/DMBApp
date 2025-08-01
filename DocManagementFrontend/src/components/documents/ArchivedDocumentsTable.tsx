@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface BulkSelectionType {
   selectedItems: any[];
@@ -53,6 +54,7 @@ export default function ArchivedDocumentsTable({
   page = 1,
   pageSize = 25,
 }: ArchivedDocumentsTableProps) {
+  const { t } = useTranslation();
   const getSortIndicator = (columnKey: string) => {
     if (sortConfig && sortConfig.key === columnKey) {
       return sortConfig.direction === "ascending" ? "↑" : "↓";
@@ -125,41 +127,41 @@ export default function ArchivedDocumentsTable({
               </TableHead>
               <TableHead className="w-[160px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Document Code",
+                  t('documents.documentCode'),
                   "documentKey",
                   <Tag className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[250px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Title",
+                  t('documents.documentTitle'),
                   "title",
                   <FileText className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[150px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Type",
+                  t('common.type'),
                   "documentType",
                   <Filter className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[140px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Document Date",
+                  t('documents.documentDate'),
                   "docDate",
                   <CalendarDays className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[150px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Responsibility Center",
+                  t('documents.responsibilityCenter'),
                   "responsibilityCentre.code",
                   <User className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[140px] text-foreground font-medium">
-                ERP Code
+                {t('documents.erpCode')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -230,7 +232,7 @@ export default function ArchivedDocumentsTable({
                     </Badge>
                   ) : showErpStatus ? (
                     <Badge variant="destructive" className="text-xs">
-                                              Waiting
+                                              {t('documents.waiting')}
                     </Badge>
                   ) : (
                     <span className="text-muted-foreground text-sm">N/A</span>

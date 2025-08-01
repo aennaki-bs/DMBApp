@@ -1,12 +1,15 @@
 import { UserPlus, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface UserTableEmptyProps {
   onClearFilters: () => void;
 }
 
 export function UserTableEmpty({ onClearFilters }: UserTableEmptyProps) {
+  const { t } = useTranslation();
+  
   return (
     <motion.div
       className="flex flex-col items-center justify-center py-10 px-6 text-center"
@@ -38,7 +41,7 @@ export function UserTableEmpty({ onClearFilters }: UserTableEmptyProps) {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        No users found
+        {t("userManagement.noUsersFound")}
       </motion.h3>
 
       <motion.p
@@ -47,8 +50,7 @@ export function UserTableEmpty({ onClearFilters }: UserTableEmptyProps) {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
       >
-        Try adjusting your search criteria or filters to find what you're
-        looking for. You can also add new users to the system.
+        {t("userManagement.noUsersFoundDescription")}
       </motion.p>
 
       <motion.div
@@ -64,16 +66,9 @@ export function UserTableEmpty({ onClearFilters }: UserTableEmptyProps) {
           onClick={onClearFilters}
         >
           <Search className="h-4 w-4 mr-2" />
-          Clear Filters
+          {t("userManagement.clearFilters")}
         </Button>
 
-        <Button
-          size="sm"
-          className="min-w-[130px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-900/30 border border-blue-500/30 transition-all duration-300"
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add New User
-        </Button>
       </motion.div>
 
       {/* Decorative elements */}

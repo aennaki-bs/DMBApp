@@ -14,6 +14,7 @@ import { ApproverInfo, StepApprovalConfigDetailDto } from '@/models/approval';
 import approvalService from '@/services/approvalService';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DocumentApprovalDetailsProps {
   pendingApproval?: ApprovalHistoryItem;
@@ -26,6 +27,7 @@ const DocumentApprovalDetails = ({
   approvalHistory, 
   isLoadingApproval 
 }: DocumentApprovalDetailsProps) => {
+  const { t } = useTranslation();
   const [groupDetails, setGroupDetails] = useState<ApproversGroup | null>(null);
   const [isLoadingGroup, setIsLoadingGroup] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
@@ -174,7 +176,7 @@ const DocumentApprovalDetails = ({
       case 'sequential':
         return (
           <Badge className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800/30">
-            Sequential
+            {t('documents.sequential')}
           </Badge>
         );
       case 'all':
@@ -216,8 +218,8 @@ const DocumentApprovalDetails = ({
           </div>
           
           <div className="flex-1">
-            <h3 className="font-bold text-amber-900 dark:text-amber-100 text-xl mb-1">Waiting for Approval</h3>
-            <p className="text-amber-700 dark:text-amber-200/70 text-sm">Document requires approval to proceed</p>
+            <h3 className="font-bold text-amber-900 dark:text-amber-100 text-xl mb-1">{t('documents.waitingForApproval')}</h3>
+            <p className="text-amber-700 dark:text-amber-200/70 text-sm">{t('documents.documentRequiresApproval')}</p>
           </div>
           
           {/* Hide/View Button */}
@@ -230,12 +232,12 @@ const DocumentApprovalDetails = ({
             {showDetails ? (
               <>
                 <EyeOff className="h-4 w-4 mr-2" />
-                Hide Details
+                {t('documents.hideDetails')}
               </>
             ) : (
               <>
                 <Eye className="h-4 w-4 mr-2" />
-                View Details
+                {t('documents.viewDetails')}
               </>
             )}
           </Button>
@@ -253,14 +255,14 @@ const DocumentApprovalDetails = ({
                   <Clock8 className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <div className="text-blue-700 dark:text-blue-200/80 text-sm">Current Step</div>
+                  <div className="text-blue-700 dark:text-blue-200/80 text-sm">{t('documents.currentStep')}</div>
                   <div className="text-blue-900 dark:text-blue-100 font-semibold">{stepConfig.title}</div>
                 </div>
               </div>
               
               {/* Status Transition */}
               <div className="bg-muted/30 dark:bg-muted/20 rounded-lg p-4 border border-border/30">
-                <div className="text-muted-foreground text-sm mb-3">Status Transition</div>
+                <div className="text-muted-foreground text-sm mb-3">{t('documents.statusTransition')}</div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/30 px-3 py-1">
@@ -284,7 +286,7 @@ const DocumentApprovalDetails = ({
                   <Users className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <div className="text-purple-700 dark:text-purple-200/80 text-sm">Approvers Group</div>
+                  <div className="text-purple-700 dark:text-purple-200/80 text-sm">{t('documents.approversGroup')}</div>
                   <div className="text-purple-900 dark:text-purple-100 font-semibold">
                     {pendingApproval.assignedToGroup?.replace(/\s*\(ID:\s*\d+\)/, '')}
                   </div>
@@ -305,7 +307,7 @@ const DocumentApprovalDetails = ({
                         <Shield className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <div className="text-indigo-700 dark:text-indigo-200/80 text-sm">Approval Rule</div>
+                        <div className="text-indigo-700 dark:text-indigo-200/80 text-sm">{t('documents.approvalRule')}</div>
                     {getRuleTypeBadge(groupDetails.ruleType)}
                       </div>
                     </div>
@@ -315,7 +317,7 @@ const DocumentApprovalDetails = ({
                   {groupMembers.length > 0 && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground text-sm">Approval Progress</span>
+                        <span className="text-muted-foreground text-sm">{t('documents.approvalProgress')}</span>
                         <span className="text-foreground text-sm font-medium">
                           {groupMembers.filter(member => {
                             const status = getUserApprovalStatus(member.username);
@@ -330,7 +332,7 @@ const DocumentApprovalDetails = ({
                   {/* Group Members */}
                 {groupMembers.length > 0 && (
                     <div className="space-y-3">
-                      <div className="text-muted-foreground text-sm font-medium">Group Members</div>
+                      <div className="text-muted-foreground text-sm font-medium">{t('documents.groupMembers')}</div>
                       <div className="space-y-2">
                       {groupMembers.map((member, index) => {
                         const userStatus = getUserApprovalStatus(member.username);
@@ -402,7 +404,7 @@ const DocumentApprovalDetails = ({
                                         "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/30"
                                     )}
                             >
-                              {hasApproved ? 'Accepted' : hasRejected ? 'Rejected' : 'Waiting'}
+                              {hasApproved ? t('documents.accepted') : hasRejected ? t('documents.rejected') : t('documents.waiting')}
                             </Badge>
                             {userStatus && (
                                     <span className="text-xs text-muted-foreground">
@@ -442,7 +444,7 @@ const DocumentApprovalDetails = ({
                 <Timer className="h-4 w-4 text-muted-foreground" />
       </div>
               <div>
-                <div className="text-muted-foreground text-sm">Waiting since</div>
+                <div className="text-muted-foreground text-sm">{t('documents.waitingSince')}</div>
                 <div className="text-foreground font-medium">
                   {new Date(pendingApproval.createdAt).toLocaleString()}
                 </div>

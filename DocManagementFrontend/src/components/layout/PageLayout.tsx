@@ -110,7 +110,7 @@ export function PageLayout({
       </div>
 
       {/* Main Content Section */}
-      <div className="flex-1 overflow-hidden min-h-0">{children}</div>
+      <div className="flex-1 overflow-y-auto min-h-0">{children}</div>
     </div>
   );
 }

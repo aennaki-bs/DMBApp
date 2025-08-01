@@ -145,8 +145,8 @@ function CompletedNotArchivedDocumentsContent() {
 
   return (
     <PageLayout
-      title="Completed Documents"
-      subtitle="These documents have completed their workflow circuit but are not yet archived to the ERP system. ERP archival may be in progress or may have failed and requires manual intervention."
+      title={t('documents.completedDocuments')}
+      subtitle={t('documents.completedDocumentsSubtitle')}
       icon={FileCheck}
       actions={pageActions}
     >

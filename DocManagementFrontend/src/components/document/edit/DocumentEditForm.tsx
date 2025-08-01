@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Save, Archive, AlertTriangle, Building2, UserCheck, Package } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,8 @@ const DocumentEditForm = ({
   onSubmit,
   onCancel,
 }: DocumentEditFormProps) => {
+  const { t, tWithParams } = useTranslation();
+  
   // Form data
   const [title, setTitle] = useState("");
   const [accountingDate, setAccountingDate] = useState<string>(
@@ -89,9 +92,9 @@ const DocumentEditForm = ({
   const getTierTypeString = (type: TierType): string => {
     switch (type) {
       case TierType.Customer:
-        return "customer";
+        return t('documents.customer');
       case TierType.Vendor:
-        return "vendor";
+        return t('documents.vendor');
       default:
         return "none";
     }
@@ -319,26 +322,29 @@ const DocumentEditForm = ({
 
   const validateForm = () => {
     if (!Object.values(editedFields).some((edited) => edited)) {
-      toast.info("No changes detected");
+      toast.info(t('documents.noChangesDetected'));
       return false;
     }
 
     if (editedFields.title && !title.trim()) {
-      toast.error("Please enter a document title");
+      toast.error(t('documents.pleaseEnterDocumentTitle'));
       return false;
     }
     if (editedFields.accountingDate && !accountingDate) {
-      toast.error("Please select an accounting date");
+      toast.error(t('documents.pleaseSelectAccountingDate'));
       return false;
     }
     if (editedFields.content && !content.trim()) {
-      toast.error("Please enter document content");
+      toast.error(t('documents.pleaseEnterDocumentContent'));
       return false;
     }
     
     // Validate customer/vendor if it's being edited
     if (shouldShowCustomerVendor && editedFields.customerVendorName && !customerVendorName.trim()) {
-      toast.error(`Please enter a ${getTierTypeString(tierType!)} name`);
+      toast.error(tierType === TierType.Customer 
+        ? t('documents.pleaseEnterCustomerName')
+        : t('documents.pleaseEnterVendorName')
+      );
       return false;
     }
     
@@ -412,7 +418,7 @@ const DocumentEditForm = ({
       <Card className="bg-[#0a1033] border border-blue-900/30 shadow-lg">
         <CardContent className="p-8 text-center">
           <p className="text-lg text-gray-400">
-            Document not found or you don't have permission to edit it.
+            {t('documents.documentNotFound')}
           </p>
           <Button
             onClick={onCancel}
@@ -420,7 +426,7 @@ const DocumentEditForm = ({
             variant="outline"
             size="lg"
           >
-            Back to Documents
+            {t('documents.backToDocuments')}
           </Button>
         </CardContent>
       </Card>
@@ -433,7 +439,7 @@ const DocumentEditForm = ({
     <Card className="bg-[#0a1033] border border-blue-900/30 shadow-lg">
       <CardHeader>
         <CardTitle className="text-2xl text-white">
-          Edit Document Details
+          {t('documents.editDocumentDetails')}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
@@ -441,7 +447,10 @@ const DocumentEditForm = ({
           <Alert className="mb-6 bg-orange-900/20 border-orange-700/30 text-orange-200">
             <Archive className="h-4 w-4" />
             <AlertDescription>
-              This document has been fully archived {document.erpDocumentCode && `(ERP Code: ${document.erpDocumentCode})`} and cannot be modified.
+              {document.erpDocumentCode 
+                ? tWithParams('documents.documentArchivedWithCode', { code: document.erpDocumentCode })
+                : t('documents.documentArchived')
+              }
             </AlertDescription>
           </Alert>
         )}
@@ -452,19 +461,19 @@ const DocumentEditForm = ({
               htmlFor="title"
               className="text-base font-medium text-blue-100"
             >
-              Document Title*
+              {t('documents.documentTitle')}*
             </Label>
             <Input
               id="title"
               value={title}
               onChange={handleTitleChange}
-              placeholder="Enter document title"
+              placeholder={t('documents.enterDocumentTitle')}
               className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
               disabled={isArchived}
             />
             {editedFields.title && (
               <p className="text-xs text-blue-400">
-                ℹ️ Title has been modified
+                ℹ️ {t('documents.titleModified')}
               </p>
             )}
           </div>
@@ -474,7 +483,7 @@ const DocumentEditForm = ({
               htmlFor="accountingDate"
               className="text-base font-medium text-blue-100"
             >
-              Posting Date*
+              {t('documents.postingDate')}*
             </Label>
             <Input
               id="accountingDate"
@@ -486,7 +495,7 @@ const DocumentEditForm = ({
             />
             {editedFields.accountingDate && (
               <p className="text-xs text-blue-400">
-                ℹ️ Posting date has been modified
+                ℹ️ {t('documents.postingDateModified')}
               </p>
             )}
           </div>
@@ -496,20 +505,20 @@ const DocumentEditForm = ({
               htmlFor="content"
               className="text-base font-medium text-blue-100"
             >
-              Document Content*
+              {t('documents.documentContent')}*
             </Label>
             <Textarea
               id="content"
               value={content}
               onChange={handleContentChange}
-              placeholder="Enter document content"
+              placeholder={t('documents.enterDocumentContent')}
               rows={10}
               className="text-base resize-y bg-[#111633] border-blue-900/30 text-white"
               disabled={isArchived}
             />
             {editedFields.content && (
               <p className="text-xs text-blue-400">
-                ℹ️ Content has been modified
+                ℹ️ {t('documents.contentModified')}
               </p>
             )}
           </div>
@@ -519,31 +528,31 @@ const DocumentEditForm = ({
               htmlFor="documentExterne"
               className="text-base font-medium text-blue-100"
             >
-              Document Externe
+              {t('documents.documentExterne')}
             </Label>
             <Input
               id="documentExterne"
               value={documentExterne}
               onChange={handleDocumentExterneChange}
-              placeholder="Enter document externe"
+              placeholder={t('documents.enterDocumentExterne')}
               className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
               disabled={isArchived}
             />
             {editedFields.documentExterne && (
               <p className="text-xs text-blue-400">
-                ℹ️ Document externe has been modified
+                ℹ️ {t('documents.documentExterneModified')}
               </p>
             )}
           </div>
 
           {shouldShowCustomerVendor && (
             <div className="space-y-3">
-                             <Label
-                 htmlFor="customerVendor"
-                 className="text-base font-medium text-blue-100 flex items-center gap-2"
-               >
-                 {getTierTypeIcon()} {tierType === TierType.Customer ? "Customer" : "Vendor"}*
-               </Label>
+                                                          <Label
+                  htmlFor="customerVendor"
+                  className="text-base font-medium text-blue-100 flex items-center gap-2"
+                >
+                  {getTierTypeIcon()} {tierType === TierType.Customer ? t('documents.customer') : t('documents.vendor')}*
+                </Label>
                              <Popover open={open} onOpenChange={setOpen}>
                  <PopoverTrigger asChild>
                    <Button
@@ -565,28 +574,28 @@ const DocumentEditForm = ({
                        </div>
                      ) : customerVendorName ? (
                        <span>{customerVendorName}</span>
-                     ) : isLoadingCustomerVendor ? (
-                       `Loading ${getTierTypeString(tierType!)}s...`
-                     ) : (
-                       `Select ${getTierTypeString(tierType!)}`
-                     )}
+                                           ) : isLoadingCustomerVendor ? (
+                        tWithParams('documents.loadingItems', { type: getTierTypeString(tierType!) })
+                      ) : (
+                        tWithParams('documents.selectItem', { type: getTierTypeString(tierType!) })
+                      )}
                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                    </Button>
                  </PopoverTrigger>
                                  <PopoverContent className="w-full p-0 bg-[#111633] border-blue-900/30">
                    <div className="p-2">
-                     <input
-                       type="text"
-                       placeholder={`Search ${getTierTypeString(tierType!)}...`}
-                       value={searchQuery}
-                       onChange={(e) => setSearchQuery(e.target.value)}
-                       className="w-full px-3 py-2 bg-[#111633] border border-blue-900/30 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                     />
+                                           <input
+                        type="text"
+                        placeholder={tWithParams('documents.searchItems', { type: getTierTypeString(tierType!) })}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full px-3 py-2 bg-[#111633] border border-blue-900/30 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
                    </div>
                    <div className="max-h-[200px] overflow-y-auto">
-                     {filteredItems.length === 0 ? (
-                       <div className="p-2 text-gray-400 text-center">No {getTierTypeString(tierType!)} found.</div>
-                     ) : (
+                                           {filteredItems.length === 0 ? (
+                        <div className="p-2 text-gray-400 text-center">{tWithParams('documents.noItemsFound', { type: getTierTypeString(tierType!) })}</div>
+                      ) : (
                        filteredItems.map((item) => {
                          const itemCode = getCodeProperty(item, tierType!);
                          const isSelected = selectedCustomerVendor && getCodeProperty(selectedCustomerVendor, tierType!) === itemCode;
@@ -619,89 +628,89 @@ const DocumentEditForm = ({
 
           {shouldShowCustomerVendor && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <Label
-                  htmlFor="customerVendorName"
-                  className="text-base font-medium text-blue-100"
-                >
-                  {tierType === TierType.Customer ? "Customer" : "Vendor"} Name*
-                </Label>
-                <Input
-                  id="customerVendorName"
-                  value={customerVendorName}
-                  onChange={handleCustomerVendorNameChange}
-                  placeholder={`Enter ${getTierTypeString(tierType!)} name`}
-                  className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
-                />
-                {editedFields.customerVendorName && (
-                  <p className="text-xs text-blue-400">
-                    ℹ️ {getTierTypeString(tierType!)} name has been modified
-                  </p>
-                )}
-              </div>
+                             <div className="space-y-3">
+                                   <Label
+                    htmlFor="customerVendorName"
+                    className="text-base font-medium text-blue-100"
+                  >
+                    {tierType === TierType.Customer ? t('documents.customerName') : t('documents.vendorName')}*
+                  </Label>
+                 <Input
+                   id="customerVendorName"
+                   value={customerVendorName}
+                   onChange={handleCustomerVendorNameChange}
+                   placeholder={t('documents.enterName')}
+                   className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
+                 />
+                 {editedFields.customerVendorName && (
+                   <p className="text-xs text-blue-400">
+                     ℹ️ {tierType === TierType.Customer ? t('documents.customerNameModified') : t('documents.vendorNameModified')}
+                   </p>
+                 )}
+               </div>
 
-              <div className="space-y-3">
-                <Label
-                  htmlFor="customerVendorCity"
-                  className="text-base font-medium text-blue-100"
-                >
-                  City
-                </Label>
-                <Input
-                  id="customerVendorCity"
-                  value={customerVendorCity}
-                  onChange={handleCustomerVendorCityChange}
-                  placeholder="Enter city"
-                  className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
-                />
-                {editedFields.customerVendorCity && (
-                  <p className="text-xs text-blue-400">
-                    ℹ️ City has been modified
-                  </p>
-                )}
-              </div>
+                             <div className="space-y-3">
+                 <Label
+                   htmlFor="customerVendorCity"
+                   className="text-base font-medium text-blue-100"
+                 >
+                   {t('documents.city')}
+                 </Label>
+                 <Input
+                   id="customerVendorCity"
+                   value={customerVendorCity}
+                   onChange={handleCustomerVendorCityChange}
+                   placeholder={t('documents.enterCity')}
+                   className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
+                 />
+                 {editedFields.customerVendorCity && (
+                   <p className="text-xs text-blue-400">
+                     ℹ️ {t('documents.cityModified')}
+                   </p>
+                 )}
+               </div>
 
-              <div className="space-y-3">
-                <Label
-                  htmlFor="customerVendorAddress"
-                  className="text-base font-medium text-blue-100"
-                >
-                  Address
-                </Label>
-                <Input
-                  id="customerVendorAddress"
-                  value={customerVendorAddress}
-                  onChange={handleCustomerVendorAddressChange}
-                  placeholder="Enter address"
-                  className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
-                />
-                {editedFields.customerVendorAddress && (
-                  <p className="text-xs text-blue-400">
-                    ℹ️ Address has been modified
-                  </p>
-                )}
-              </div>
+                             <div className="space-y-3">
+                 <Label
+                   htmlFor="customerVendorAddress"
+                   className="text-base font-medium text-blue-100"
+                 >
+                   {t('documents.address')}
+                 </Label>
+                 <Input
+                   id="customerVendorAddress"
+                   value={customerVendorAddress}
+                   onChange={handleCustomerVendorAddressChange}
+                   placeholder={t('documents.enterAddress')}
+                   className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
+                 />
+                 {editedFields.customerVendorAddress && (
+                   <p className="text-xs text-blue-400">
+                     ℹ️ {t('documents.addressModified')}
+                   </p>
+                 )}
+               </div>
 
-              <div className="space-y-3">
-                <Label
-                  htmlFor="customerVendorCountry"
-                  className="text-base font-medium text-blue-100"
-                >
-                  Country
-                </Label>
-                <Input
-                  id="customerVendorCountry"
-                  value={customerVendorCountry}
-                  onChange={handleCustomerVendorCountryChange}
-                  placeholder="Enter country"
-                  className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
-                />
-                {editedFields.customerVendorCountry && (
-                  <p className="text-xs text-blue-400">
-                    ℹ️ Country has been modified
-                  </p>
-                )}
-              </div>
+                             <div className="space-y-3">
+                 <Label
+                   htmlFor="customerVendorCountry"
+                   className="text-base font-medium text-blue-100"
+                 >
+                   {t('documents.country')}
+                 </Label>
+                 <Input
+                   id="customerVendorCountry"
+                   value={customerVendorCountry}
+                   onChange={handleCustomerVendorCountryChange}
+                   placeholder={t('documents.enterCountry')}
+                   className="h-12 text-base bg-[#111633] border-blue-900/30 text-white"
+                 />
+                 {editedFields.customerVendorCountry && (
+                   <p className="text-xs text-blue-400">
+                     ℹ️ {t('documents.countryModified')}
+                   </p>
+                 )}
+               </div>
             </div>
           )}
 
@@ -712,7 +721,7 @@ const DocumentEditForm = ({
               onClick={onCancel}
               className="px-6 border-blue-900/30 text-white hover:bg-blue-900/20"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -731,7 +740,7 @@ const DocumentEditForm = ({
               }`}
             >
               <Save className="mr-2 h-5 w-5" />
-              {(isArchived && !hasOnlyCustomerVendorChanges()) ? "Document Archived" : isSubmitting ? "Saving..." : "Save Changes"}
+              {(isArchived && !hasOnlyCustomerVendorChanges()) ? t('documents.documentArchivedButton') : isSubmitting ? t('documents.saving') : t('documents.saveChanges')}
             </Button>
           </div>
         </div>

@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 import { Document } from '@/models/document';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface CustomerVendorDetailsDialogProps {
   document: Document;
@@ -26,8 +27,9 @@ export function CustomerVendorDetailsDialog({
   isOpen,
   onOpenChange,
 }: CustomerVendorDetailsDialogProps) {
-  const isCustomer = document.documentType?.tierType === 1;
-  const tierType = isCustomer ? 'Customer' : 'Vendor';
+  const { t, tWithParams } = useTranslation();
+  const isCustomer = document.documentType?.tierType === 1; 
+  const tierType = isCustomer ? t('customer') : t('vendor'); 
   const tierIcon = isCustomer ? UserCheck : Package;
 
   // Customer/Vendor information
@@ -50,9 +52,11 @@ export function CustomerVendorDetailsDialog({
               {React.createElement(tierIcon, { className: "h-8 w-8 text-blue-400" })}
             </div>
             <div className="flex flex-col items-start">
-              <span className="text-white font-bold">{tierType} Address</span>
+              <span className="text-white font-bold">
+                {isCustomer ? t('documents.customerAddress') : t('documents.vendorAddress')}
+              </span>
               <span className="text-slate-300 text-sm font-normal">
-                Contact and location information
+                {t('documents.contactAndLocationInformation')}
               </span>
             </div>
             <Button
@@ -71,21 +75,21 @@ export function CustomerVendorDetailsDialog({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
               <MapPin className="h-5 w-5 text-blue-400" />
-              Basic Information
+              {t('documents.basicInformation')}
             </h3>
             
             <div className="grid grid-cols-1 gap-4">
               {/* Name */}
               <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-4">
-                <label className="text-sm font-medium text-slate-300 mb-2 block">Name</label>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">{t('common.name')}</label>
                 <p className="text-white font-semibold text-lg">
-                  {customerVendorInfo.name || 'Not specified'}
+                  {customerVendorInfo.name || t('documents.notSpecified')}
                 </p>
               </div>
 
               {/* Code */}
               <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-4">
-                <label className="text-sm font-medium text-slate-300 mb-2 block">Code</label>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">{t('common.code')}</label>
                 <p className="text-white font-mono text-lg">
                   {customerVendorInfo.code || 'N/A'}
                 </p>
@@ -98,7 +102,7 @@ export function CustomerVendorDetailsDialog({
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-green-400" />
-                Address Information
+                {t('documents.addressInformation')}
               </h3>
               
               <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-4">
@@ -106,7 +110,7 @@ export function CustomerVendorDetailsDialog({
                   {/* Street Address */}
                   {customerVendorInfo.address && (
                     <div>
-                      <label className="text-sm font-medium text-slate-300 mb-1 block">Street Address</label>
+                      <label className="text-sm font-medium text-slate-300 mb-1 block">{t('documents.streetAddress')}</label>
                       <p className="text-white">{customerVendorInfo.address}</p>
                     </div>
                   )}
@@ -115,14 +119,14 @@ export function CustomerVendorDetailsDialog({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {customerVendorInfo.city && (
                       <div>
-                        <label className="text-sm font-medium text-slate-300 mb-1 block">City</label>
+                        <label className="text-sm font-medium text-slate-300 mb-1 block">{t('city')}</label>
                         <p className="text-white">{customerVendorInfo.city}</p>
                       </div>
                     )}
                     
                     {customerVendorInfo.country && (
                       <div>
-                        <label className="text-sm font-medium text-slate-300 mb-1 block">Country</label>
+                        <label className="text-sm font-medium text-slate-300 mb-1 block">{t('country')}</label>
                         <div className="flex items-center gap-2">
                           <Globe className="h-4 w-4 text-slate-400" />
                           <p className="text-white">{customerVendorInfo.country}</p>
@@ -141,9 +145,9 @@ export function CustomerVendorDetailsDialog({
               <div className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 text-amber-400" />
                 <div>
-                  <h4 className="text-amber-300 font-medium">No Address Information</h4>
+                  <h4 className="text-amber-300 font-medium">{t('documents.noAddressInformation')}</h4>
                   <p className="text-amber-200/70 text-sm mt-1">
-                    This {tierType.toLowerCase()} doesn't have any address information available.
+                    {tWithParams('documents.noAddressAvailable', { type: tierType.toLowerCase() })}
                   </p>
                 </div>
               </div>
@@ -158,7 +162,7 @@ export function CustomerVendorDetailsDialog({
             onClick={() => onOpenChange(false)}
             className="bg-slate-800/50 border-slate-600 text-slate-300 hover:bg-slate-700/50"
           >
-            Close
+            {t('common.close')}
           </Button>
         </div>
       </DialogContent>

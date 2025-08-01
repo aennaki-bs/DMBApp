@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { History } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 import circuitService from "@/services/circuitService";
 import { WorkflowHistorySection } from "./WorkflowHistorySection";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export function WorkflowHistoryDialog({
   documentId,
   documentTitle,
 }: WorkflowHistoryDialogProps) {
+  const { t } = useTranslation();
   // Fetch document circuit history
   const {
     data: circuitHistory,
@@ -45,11 +47,11 @@ export function WorkflowHistoryDialog({
             <div>
               <DialogTitle className="text-lg font-medium text-white flex items-center">
                 <History className="h-5 w-5 mr-2 text-blue-400" />
-                Document Workflow History
+                {t('documents.documentHistory')}
               </DialogTitle>
               <DialogDescription className="text-blue-300/70">
                 {documentTitle ? `${documentTitle} - ` : ""}
-                Timeline of status changes and actions
+                {t('documents.viewWorkflowHistoryAndActivity')}
               </DialogDescription>
             </div>
           </div>

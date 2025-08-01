@@ -18,6 +18,7 @@ import { Filter, X, Calendar, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DocumentsTableHeaderProps {
     searchQuery: string;
@@ -54,6 +55,7 @@ export function DocumentsTableHeader({
     hasActiveFilters,
     searchFields,
 }: DocumentsTableHeaderProps) {
+    const { t } = useTranslation();
     const filterBadges = [
         ...(searchQuery ? [{ id: "search", label: `Search: ${searchQuery}`, onRemove: () => onSearchChange("") }] : []),
         ...(statusFilter !== "any" ? [{ id: "status", label: `Status: ${statusFilter}`, onRemove: () => onStatusFilterChange("any") }] : []),
@@ -70,7 +72,7 @@ export function DocumentsTableHeader({
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search documents..."
+                                placeholder={t("documents.searchDocuments")}
                                 value={searchQuery}
                                 onChange={(e) => onSearchChange(e.target.value)}
                                 className="pl-10 bg-background/50 border-border/50"
@@ -123,32 +125,32 @@ export function DocumentsTableHeader({
                         </PopoverTrigger>
                         <PopoverContent className="w-80 bg-background/95 backdrop-blur-sm border-border/50" align="end">
                             <div className="space-y-4">
-                                <h4 className="font-medium text-foreground">Filter Documents</h4>
+                                <h4 className="font-medium text-foreground">{t("documents.filterDocuments")}</h4>
 
                                 {/* Status Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium mb-1 text-muted-foreground">Status</label>
+                                    <label className="block text-sm font-medium mb-1 text-muted-foreground">{t("common.status")}</label>
                                     <Select value={statusFilter} onValueChange={onStatusFilterChange}>
                                         <SelectTrigger className="bg-background/50 border-border/50">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="any">Any Status</SelectItem>
-                                            <SelectItem value="0">Draft</SelectItem>
-                                            <SelectItem value="1">In Progress</SelectItem>
+                                            <SelectItem value="any">{t("common.anyStatus")}</SelectItem>
+                                            <SelectItem value="0">{t("documents.statusDraft")}</SelectItem>
+                                            <SelectItem value="1">{t("documents.statusInProgress")}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
                                 {/* Type Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium mb-1 text-muted-foreground">Document Type</label>
+                                    <label className="block text-sm font-medium mb-1 text-muted-foreground">{t("documents.documentType")}</label>
                                     <Select value={typeFilter} onValueChange={onTypeFilterChange}>
                                         <SelectTrigger className="bg-background/50 border-border/50">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="any">Any Type</SelectItem>
+                                            <SelectItem value="any">{t("common.anyType")}</SelectItem>
                                             {/* TODO: Add document types dynamically */}
                                         </SelectContent>
                                     </Select>
@@ -162,7 +164,7 @@ export function DocumentsTableHeader({
                                             onClick={onClearAllFilters}
                                             className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
                                         >
-                                            <X className="h-4 w-4 mr-2" /> Clear All
+                                            <X className="h-4 w-4 mr-2" /> {t("common.clearAll")}
                                         </Button>
                                     )}
                                 </div>

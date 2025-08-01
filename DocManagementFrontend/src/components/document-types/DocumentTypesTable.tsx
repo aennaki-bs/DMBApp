@@ -3,6 +3,7 @@ import { DocumentTypeTableContent } from "./DocumentTypeTableContent";
 import { useDocumentTypeManagement } from "@/hooks/useDocumentTypeManagement";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
     Select,
     SelectContent,
@@ -33,7 +34,8 @@ import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { DocumentType } from "@/models/document";
 import { Badge } from "@/components/ui/badge";
 
-const SEARCH_FIELDS = [
+    // Tier type options with translations
+    const SEARCH_FIELDS = [
     { id: "all", label: "All fields" },
     { id: "typeName", label: "Type Name" },
     { id: "typeAttr", label: "Description" },
@@ -69,6 +71,8 @@ interface DocumentTypesTableProps {
 }
 
 export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTableProps) {
+    const { t, tWithParams } = useTranslation();
+    
     const {
         selectedTypes,
         bulkSelection,
@@ -193,7 +197,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
         console.log("selectedTypes length:", selectedTypes.length);
         
         if (selectedTypes.length === 0) {
-            toast.error("No document types selected");
+                         toast.error("No document types selected");
             return;
         }
 
@@ -247,7 +251,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
         return (
             <div className="text-destructive py-10 text-center">
                 <AlertTriangle className="h-10 w-10 mx-auto mb-2" />
-                Failed to load document types
+                                 Failed to load document types
             </div>
         );
     }
@@ -275,7 +279,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
                                 className="h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-lg transition-all duration-300"
                             >
                                 <Filter className="h-4 w-4 mr-2" />
-                                Filters
+                                {t('common.filters')}
                                 {isFilterActive && (
                                     <span className="ml-2 px-2 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
                                         {[
@@ -294,7 +298,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
                         >
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h4 className="font-medium text-foreground">Advanced Filters</h4>
+                                                                         <h4 className="font-medium text-foreground">Advanced Filters</h4>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -307,7 +311,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
 
                                 {/* Search Field Filter */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-foreground">Search In</label>
+                                                                         <label className="text-sm font-medium text-foreground">Search In</label>
                                     <Select value={searchField} onValueChange={setSearchField}>
                                         <SelectTrigger className="h-9 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-md rounded-lg">
                                             <SelectValue />
@@ -328,7 +332,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
 
                                 {/* Tier Type Filter */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-foreground">Tier Type</label>
+                                                                         <label className="text-sm font-medium text-foreground">{t('common.type')}</label>
                                     <Select value={tierTypeFilter} onValueChange={setTierTypeFilter}>
                                         <SelectTrigger className="h-9 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-md rounded-lg">
                                             <SelectValue />
@@ -370,7 +374,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
 
                                 {/* ERP Type Filter */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-foreground">ERP Type</label>
+                                                                         <label className="text-sm font-medium text-foreground">{t('common.type')}</label>
                                     <Select value={erpTypeFilter} onValueChange={setErpTypeFilter}>
                                         <SelectTrigger className="h-9 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 hover:bg-background/80 shadow-md rounded-lg">
                                             <SelectValue />
@@ -395,7 +399,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
                                         onClick={clearAllFilters}
                                         className="mt-2 h-10 bg-background/60 backdrop-blur-md text-foreground border border-primary/20 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-lg rounded-lg transition-all duration-300"
                                     >
-                                        Clear All Filters
+                                                                                 {t('common.clearAll')}
                                     </Button>
                                 )}
                             </div>
@@ -430,7 +434,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
                 open={!!deletingType}
                 onOpenChange={(open) => !open && setDeletingType(null)}
                 onConfirm={confirmDeleteType}
-                title="Delete Document Type"
+                                 title={t('common.delete')}
                 description={
                     deletingType
                         ? `Are you sure you want to delete this document type? This action cannot be undone.`
@@ -444,7 +448,7 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2 text-destructive">
                             <Trash2 className="h-5 w-5" />
-                            Delete Document Types
+                                                         {t('common.delete')}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             Are you sure you want to delete {selectedTypes.length} document
@@ -452,15 +456,15 @@ export function DocumentTypesTable({ onCreateType, onEditType }: DocumentTypesTa
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-background/50 border-border hover:bg-muted">
-                            Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={confirmBulkDelete}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                            Delete
-                        </AlertDialogAction>
+                                                 <AlertDialogCancel className="bg-background/50 border-border hover:bg-muted">
+                             {t('common.cancel')}
+                         </AlertDialogCancel>
+                                                 <AlertDialogAction
+                             onClick={confirmBulkDelete}
+                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                         >
+                             {t('common.delete')}
+                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

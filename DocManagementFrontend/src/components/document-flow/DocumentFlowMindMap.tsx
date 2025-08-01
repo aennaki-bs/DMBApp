@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DocumentFlowMindMapProps {
   workflowStatus: any;
@@ -58,6 +59,7 @@ export function DocumentFlowMindMap({
   hasNoLines = false,
 }: DocumentFlowMindMapProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { completeStatus } = useWorkflowStepStatuses(documentId);
   const [nextSteps, setNextSteps] = useState<NextStep[]>([]);
   const [processedStatuses, setProcessedStatuses] = useState<any[]>([]);
@@ -165,7 +167,7 @@ export function DocumentFlowMindMap({
       <div className="lg:w-1/3">
         <h3 className="text-lg font-semibold text-blue-300 mb-4 flex items-center">
           <Clock className="h-5 w-5 mr-2" />
-          Processed Status History
+          {t('documents.processedStatusHistory')}
         </h3>
 
         <div className="space-y-3">
@@ -196,7 +198,7 @@ export function DocumentFlowMindMap({
                         variant="outline"
                         className="bg-green-900/30 text-green-300 border-green-500/30"
                       >
-                        Processed
+                        {t('documents.processed')}
                       </Badge>
                     </div>
                     <div className="mt-2 text-xs text-gray-400">
@@ -219,7 +221,7 @@ export function DocumentFlowMindMap({
           ) : (
             <Card className="border border-blue-900/30 bg-blue-900/10 p-4">
               <p className="text-sm text-gray-400 text-center">
-                No processed statuses yet
+                {t('documents.noProcessedStatusesYet')}
               </p>
             </Card>
           )}
@@ -230,7 +232,7 @@ export function DocumentFlowMindMap({
       <div className="lg:w-1/3">
         <h3 className="text-lg font-semibold text-blue-300 mb-4 flex items-center">
           <AlertCircle className="h-5 w-5 mr-2" />
-          Current Status
+          {t('documents.currentStatus')}
         </h3>
 
         <motion.div
@@ -269,9 +271,9 @@ export function DocumentFlowMindMap({
                   <h3 className="text-xl font-bold text-white mb-2 text-center">
                     {currentStatus.title}
                     {wasRejected ? (
-                      <span className="text-red-300 ml-2">(Rejected)</span>
+                      <span className="text-red-300 ml-2">({t('documents.rejected')})</span>
                     ) : (requiresApproval || hasPendingApprovals) && (
-                      <span className="text-amber-300 ml-2">(Awaiting Approval)</span>
+                      <span className="text-amber-300 ml-2">({t('documents.awaitingApproval')})</span>
                     )}
                   </h3>
 
@@ -296,12 +298,12 @@ export function DocumentFlowMindMap({
                       }
                     >
                       {wasRejected
-                        ? "Rejected"
+                        ? t('documents.rejected')
                         : currentStatus.isComplete 
                         ? (requiresApproval || hasPendingApprovals) 
-                          ? "Waiting for Approval" 
-                          : (nextSteps.length === 0 ? "Complete" : "In Progress")
-                        : "In Progress"}
+                          ? t('documents.waitingForApproval')
+                          : (nextSteps.length === 0 ? t('documents.complete') : t('documents.inProgress'))
+                        : t('documents.inProgress')}
                     </Badge>
                   </div>
 
@@ -313,10 +315,10 @@ export function DocumentFlowMindMap({
                         : "text-amber-300 border-amber-500/30 bg-amber-900/20"
                     )}>
                       {wasRejected 
-                        ? "This document was rejected. Please check the approval history for details."
+                        ? t('documents.documentRejected')
                         : requiresApproval 
-                        ? "This step requires approval. An approval request has been initiated."
-                        : "This document is waiting for approval before it can proceed."
+                        ? t('documents.stepRequiresApproval')
+                        : t('documents.waitingForApprovalBeforeProceed')
                       }
                     </p>
                   )}
@@ -329,7 +331,7 @@ export function DocumentFlowMindMap({
                 </>
               ) : (
                 <div className="text-gray-400 text-center py-8">
-                  No current status
+                  {t('documents.noCurrentStatus')}
                 </div>
               )}
             </CardContent>
@@ -341,7 +343,7 @@ export function DocumentFlowMindMap({
       <div className="lg:w-1/3">
         <h3 className="text-lg font-semibold text-blue-300 mb-4 flex items-center">
           <ArrowRight className="h-5 w-5 mr-2" />
-          Next Steps
+          {t('documents.nextSteps')}
         </h3>
 
         <div className="space-y-3">
@@ -397,20 +399,20 @@ export function DocumentFlowMindMap({
                             : undefined
                         }
                       >
-                        {isSimpleUser ? "View" : "Move"}
+                        {isSimpleUser ? t('common.view') : t('documents.move')}
                       </Button>
                     </div>
 
                     {/* Code */}
                     <div className="text-sm text-gray-300 mb-2">
-                      <span className="text-gray-400">Code:</span> {step.stepKey} ({step.title})
+                      <span className="text-gray-400">{t('common.code')}:</span> {step.stepKey} ({step.title})
                     </div>
 
                     {/* Approval */}
                     <div className="text-sm">
-                      <span className="text-gray-400">Approval:</span>{" "}
+                      <span className="text-gray-400">{t('documents.approvalStatus')}:</span>{" "}
                       <span className={step.requiresApproval ? "text-amber-300" : "text-green-300"}>
-                        {step.requiresApproval ? "Requires approval" : "No approval required"}
+                        {step.requiresApproval ? t('documents.requiresApproval') : t('documents.noApprovalRequiredForStep')}
                       </span>
                     </div>
                   </CardContent>
@@ -421,8 +423,8 @@ export function DocumentFlowMindMap({
             <Card className="border border-blue-900/30 bg-blue-900/10 p-4">
               <p className="text-sm text-gray-400 text-center">
                 {currentStatus?.isComplete
-                  ? "No next steps available"
-                  : "Complete current status to see next steps"}
+                  ? t('documents.noNextStepsAvailable')
+                  : t('documents.completeCurrentStatusToSeeNextSteps')}
               </p>
             </Card>
           )}

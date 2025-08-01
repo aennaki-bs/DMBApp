@@ -19,6 +19,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { ProfessionalCheckbox } from "@/components/shared/ProfessionalCheckbox";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -45,6 +46,7 @@ export default function DocumentsTable({
   sortConfig,
   requestSort,
 }: DocumentsTableProps) {
+  const { t } = useTranslation();
   const getSortIndicator = (columnKey: string) => {
     if (sortConfig && sortConfig.key === columnKey) {
       return sortConfig.direction === "ascending" ? "↑" : "↓";
@@ -100,41 +102,41 @@ export default function DocumentsTable({
               </TableHead>
               <TableHead className="w-[160px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Document Code",
+                  t("documents.documentCode"),
                   "documentKey",
                   <Tag className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[250px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Title",
+                  t("documents.title"),
                   "title",
                   <FileText className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[150px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Type",
+                  t("documents.type"),
                   "documentType",
                   <Filter className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[140px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Document Date",
+                  t("documents.documentDate"),
                   "docDate",
                   <CalendarDays className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[150px] text-foreground font-medium">
                 {renderSortableHeader(
-                  "Responsibility Center",
+                  t("documents.responsibilityCenter"),
                   "responsibilityCentre.code",
                   <Building2 className="h-4 w-4 text-primary" />
                 )}
               </TableHead>
               <TableHead className="w-[100px] text-right text-foreground font-medium">
-                Actions
+                {t("documents.actions")}
               </TableHead>
             </TableRow>
           </TableHeader>

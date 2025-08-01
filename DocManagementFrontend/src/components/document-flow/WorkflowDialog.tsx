@@ -28,6 +28,7 @@ import { ErrorMessage } from "./ErrorMessage";
 import { DocumentApprovalStatus } from "@/components/document-flow/DocumentApprovalStatus";
 import { ApprovalHistoryComponent } from '@/components/document-workflow/ApprovalHistory';
 import { useErpArchivalDetection } from '@/hooks/useErpArchivalDetection';
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface WorkflowDialogProps {
   open: boolean;
@@ -43,6 +44,7 @@ export function WorkflowDialog({
   onWorkflowUpdate,
 }: WorkflowDialogProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isSimpleUser = user?.role === "SimpleUser";
   const [approvalRefreshTrigger, setApprovalRefreshTrigger] = useState(0);
@@ -262,10 +264,10 @@ export function WorkflowDialog({
           <div className="flex items-center">
             <div>
               <DialogTitle className="text-lg font-medium text-white">
-                Document Workflow
+                {t('documents.documentWorkflow')}
               </DialogTitle>
               <DialogDescription className="text-blue-300/70">
-                Document Code: {document?.documentKey || "Document workflow status"}
+                {t('common.code')}: {document?.documentKey || t('documents.documentWorkflow')}
               </DialogDescription>
             </div>
           </div>
@@ -330,7 +332,7 @@ export function WorkflowDialog({
                                 : "text-xs"
                             }
                           >
-                            {isCircuitCompleted ? "Completed" : "In Progress"}
+                            {isCircuitCompleted ? t('documents.completed') : t('documents.inProgress')}
                           </Badge>
                           {/* {workflowStatus && (
                             <span className="text-xs text-blue-300">
@@ -393,10 +395,10 @@ export function WorkflowDialog({
                         </div>
                         <div>
                           <h3 className="text-base font-medium text-amber-200">
-                            Document Lines Required
+                            {t('documents.documentLinesRequired')}
                           </h3>
                           <p className="text-sm text-amber-300/80">
-                            Add at least one line to the document before moving to the next step in the workflow.
+                            {t('documents.addAtLeastOneLineToDocument')}
                           </p>
                         </div>
                       </div>
@@ -442,7 +444,7 @@ export function WorkflowDialog({
             onClick={() => onOpenChange(false)}
             className="gap-1"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Document
+            <ArrowLeft className="h-4 w-4" /> {t('documents.backToDocument')}
           </Button>
         </DialogFooter>
       </DialogContent>

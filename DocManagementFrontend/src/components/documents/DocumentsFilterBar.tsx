@@ -53,37 +53,37 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 const DATE_PRESETS = [
   {
-    label: "Today",
+    label: "common.today",
     value: "today",
     icon: <Clock className="h-3.5 w-3.5 mr-1.5" />,
   },
   {
-    label: "Yesterday",
+    label: "common.yesterday",
     value: "yesterday",
     icon: <Clock className="h-3.5 w-3.5 mr-1.5" />,
   },
   {
-    label: "This Week",
+    label: "common.thisWeek",
     value: "thisWeek",
     icon: <CalendarRange className="h-3.5 w-3.5 mr-1.5" />,
   },
   {
-    label: "Last Week",
+    label: "common.lastWeek",
     value: "lastWeek",
     icon: <CalendarRange className="h-3.5 w-3.5 mr-1.5" />,
   },
   {
-    label: "This Month",
+    label: "common.thisMonth",
     value: "thisMonth",
     icon: <CalendarRange className="h-3.5 w-3.5 mr-1.5" />,
   },
   {
-    label: "Last Month",
+    label: "common.lastMonth",
     value: "lastMonth",
     icon: <CalendarRange className="h-3.5 w-3.5 mr-1.5" />,
   },
   {
-    label: "Custom Range",
+    label: "common.customRange",
     value: "custom",
     icon: <Calendar className="h-3.5 w-3.5 mr-1.5" />,
   },
@@ -128,10 +128,10 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
 
   // Date field options
   const dateFieldOptions = [
-    { id: "docDate", label: "Document Date" },
-    { id: "comptableDate", label: "Posting Date" },
-    { id: "createdAt", label: "Created Date" },
-    { id: "updatedAt", label: "Updated Date" }
+    { id: "docDate", label: t("documents.documentDate") },
+    { id: "comptableDate", label: t("documents.postingDate") },
+    { id: "createdAt", label: t("documents.createdDate") },
+    { id: "updatedAt", label: t("documents.updatedDate") }
   ];
 
   // Fetch document types for the filter
@@ -401,10 +401,10 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
       >
         <h3 className="text-lg font-medium text-foreground flex items-center">
           <Filter className="h-5 w-5 mr-2 text-primary" />
-          Filter Documents
+          {t("documents.filterDocuments")}
         </h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Refine your document list using the filters below
+          {t("documents.filterDescription")}
         </p>
       </motion.div>
 
@@ -419,13 +419,13 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
             value="filters"
             className="flex-1 data-[state=active]:bg-primary/15 data-[state=active]:text-primary text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Tag className="h-4 w-4 mr-2" /> Filters
+            <Tag className="h-4 w-4 mr-2" /> {t("common.filters")}
           </TabsTrigger>
           <TabsTrigger
             value="date"
             className="flex-1 data-[state=active]:bg-primary/15 data-[state=active]:text-primary text-muted-foreground hover:text-foreground transition-colors"
           >
-            <CalendarRange className="h-4 w-4 mr-2" /> Date Range
+            <CalendarRange className="h-4 w-4 mr-2" /> {t("common.dateRange")}
           </TabsTrigger>
         </TabsList>
 
@@ -436,12 +436,12 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
             <div>
               <label className="text-sm font-medium text-foreground block mb-2 flex items-center">
                 <Tag className="h-4 w-4 mr-2 text-primary" />
-                Document Type
+                {t("documents.documentType")}
               </label>
 
               <Select value={typeFilter} onValueChange={handleTypeChange}>
                 <SelectTrigger className="w-full bg-background/60 backdrop-blur-sm text-foreground border border-primary/20 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 hover:bg-background/80 shadow-sm">
-                  <SelectValue placeholder="Select document type" />
+                  <SelectValue placeholder={t("documents.selectDocumentType")} />
                 </SelectTrigger>
                 <SelectContent className="bg-background/95 backdrop-blur-xl text-foreground border border-primary/20">
                   {typeFilterOptions.map((option) => (
@@ -463,7 +463,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
             <div>
               <label className="text-sm font-medium text-foreground block mb-2 flex items-center">
                 <Clock className="h-4 w-4 mr-2 text-primary" />
-                Quick Date Ranges
+                {t("documents.quickDateRanges")}
               </label>
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {DATE_PRESETS.map((preset) => (
@@ -480,7 +480,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
                     onClick={() => applyDatePreset(preset.value)}
                   >
                     {preset.icon}
-                    {preset.label}
+                    {t(preset.label as any)}
                   </Button>
                 ))}
               </div>
@@ -490,7 +490,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
             <div>
               <label className="text-sm font-medium text-foreground block mb-2 flex items-center">
                 <CalendarRange className="h-4 w-4 mr-2 text-primary" />
-                Date Filter
+                {t("documents.dateFilter")}
               </label>
 
               {/* Date field selector */}
@@ -552,7 +552,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
           className="text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-200"
         >
           <RefreshCw className="h-4 w-4 mr-1.5" />
-          Reset All
+          {t("common.resetAll")}
           <kbd className="sr-only md:not-sr-only text-[10px] text-muted-foreground/70 bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 ml-1.5 hidden md:inline-block">
             Alt+C
           </kbd>
@@ -563,7 +563,7 @@ export default function DocumentsFilterBar({ onClose }: DocumentsFilterBarProps)
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
           size="sm"
         >
-          Apply Filters
+          {t("common.applyFilters")}
         </Button>
       </div>
     </div>

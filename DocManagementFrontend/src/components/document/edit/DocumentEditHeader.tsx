@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, GitBranch } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
   onBack,
   onDocumentFlow,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -37,7 +39,7 @@ const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
                     to="/documents"
                     className="text-blue-400/80 hover:text-blue-300"
                   >
-                    Documents
+                    {t('nav.documents')}
                   </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -54,43 +56,30 @@ const DocumentEditHeader: React.FC<DocumentEditHeaderProps> = ({
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <span className="text-blue-100">Edit</span>
+                <span className="text-blue-100">{t('common.edit')}</span>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
 
-          <h1 className="text-3xl font-bold text-white mt-2">Edit Document</h1>
+          <h1 className="text-3xl font-bold text-white mt-2">{t('documents.editDocument')}</h1>
         </div>
 
         <div className="flex space-x-3">
-          {/* {document?.circuitId && (
-            <Button
+                      <Button
               variant="outline"
               size="lg"
-              onClick={onDocumentFlow}
+              onClick={onBack}
               className="border-blue-900/30 text-white hover:bg-blue-900/20"
             >
-              <GitBranch className="h-5 w-5 mr-2" /> Document Flow
+              <ArrowLeft className="h-5 w-5 mr-2" /> {t('documents.backToDocument')}
             </Button>
-          )} */}
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={onBack}
-            className="border-blue-900/30 text-white hover:bg-blue-900/20"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" /> Back to Document
-          </Button>
         </div>
       </div>
 
       {document && (
         <div className="flex items-center">
-          <Badge variant="outline" className="font-mono text-sm mr-3">
-            {document.documentKey}
-          </Badge>
           <p className="text-sm text-gray-400">
-            Last updated: {new Date(document.updatedAt).toLocaleDateString()}
+            {t('documents.lastUpdatedAt')}: {new Date(document.updatedAt).toLocaleDateString()}
           </p>
         </div>
       )}

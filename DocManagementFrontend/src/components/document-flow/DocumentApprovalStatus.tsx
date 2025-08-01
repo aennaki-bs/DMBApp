@@ -24,6 +24,7 @@ import {
 import { ApproverInfo, StepApprovalConfigDetailDto, ApprovalHistory, PendingApproval } from "@/models/approval";
 import approvalService from "@/services/approvalService";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface DocumentApprovalStatusProps {
   documentId: number;
@@ -41,6 +42,7 @@ export function DocumentApprovalStatus({
   onToggleApprovalHistory,
 }: DocumentApprovalStatusProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const {
     approvalHistory,
@@ -199,11 +201,11 @@ export function DocumentApprovalStatus({
     return (
       <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg text-white">Approval Status</CardTitle>
+          <CardTitle className="text-lg text-white">{t('documents.approvalStatus')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-2 text-gray-400">
-            <p>No approval required for this document</p>
+            <p>{t('documents.noApprovalRequired')}</p>
           </div>
         </CardContent>
       </Card>
@@ -215,7 +217,7 @@ export function DocumentApprovalStatus({
       <Card className="rounded-xl border border-blue-900/30 bg-gradient-to-b from-[#1a2c6b]/50 to-[#0a1033]/50 shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg text-white">Approval Status</CardTitle>
+            <CardTitle className="text-lg text-white">{t('documents.approvalStatus')}</CardTitle>
             {onToggleApprovalHistory && (
               <Button
                 variant="outline"
@@ -226,12 +228,12 @@ export function DocumentApprovalStatus({
                 <History className="h-4 w-4" />
                 {showApprovalHistory ? (
                   <>
-                    Hide History
+                    {t('documents.hideDetails')}
                     <ChevronUp className="h-4 w-4" />
                   </>
                 ) : (
                   <>
-                    Show History
+                    {t('documents.showHistory')}
                     <ChevronDown className="h-4 w-4" />
                   </>
                 )}
@@ -252,10 +254,10 @@ export function DocumentApprovalStatus({
                 )}
                 <span className="text-white">
                   {wasRejected
-                    ? "Approval Rejected"
+                    ? t('documents.approvalRejected')
                     : hasPendingApprovals
-                    ? "Waiting for Approval"
-                    : "Approval Accepted"}
+                    ? t('documents.waitingForApproval')
+                    : t('documents.accepted')}
                 </span>
               </div>
               {getStatusBadge()}

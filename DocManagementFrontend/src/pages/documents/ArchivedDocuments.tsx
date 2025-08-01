@@ -13,7 +13,7 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { useTranslation } from "@/hooks/useTranslation";
 
 function ArchivedDocumentsContent() {
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
@@ -71,7 +71,7 @@ function ArchivedDocumentsContent() {
       <div className="flex items-center justify-center min-h-[400px] bg-background/50 backdrop-blur-sm shadow-lg rounded-xl border border-border/50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-          <p className="text-muted-foreground">Loading archived documents...</p>
+          <p className="text-muted-foreground">{t('documents.loadingArchivedDocuments')}</p>
         </div>
       </div>
     );
@@ -81,7 +81,7 @@ function ArchivedDocumentsContent() {
     return (
       <div className="flex items-center justify-center min-h-[400px] bg-background/50 backdrop-blur-sm shadow-lg rounded-xl border border-border/50">
         <div className="text-center">
-          <p className="text-destructive">Error loading archived documents</p>
+          <p className="text-destructive">{t('documents.errorLoadingArchivedDocuments')}</p>
         </div>
       </div>
     );
@@ -132,8 +132,12 @@ function ArchivedDocumentsContent() {
 
   return (
     <PageLayout
-      title="Archived Documents"
-      subtitle={`${filteredCount} of ${totalCount} documents${isFilterActive ? ' (filtered)' : ''}`}
+      title={t('documents.archivedDocuments')}
+      subtitle={tWithParams('documents.archivedDocumentsSubtitle', {
+        filteredCount,
+        totalCount,
+        filtered: isFilterActive ? ' (filtered)' : ''
+      })}
       icon={FileArchive}
       actions={pageActions}
     >
