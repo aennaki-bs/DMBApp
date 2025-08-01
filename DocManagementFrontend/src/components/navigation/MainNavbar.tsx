@@ -146,7 +146,7 @@ export function MainNavbar() {
             "hidden sm:block font-bold text-foreground tracking-tight",
             isMobile ? "text-lg" : "text-xl"
           )}>
-            DMV
+            DM<span className="text-blue-400">V</span>
           </span>
         </Link>
 
